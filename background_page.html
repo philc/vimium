@@ -1,0 +1,32 @@
+<html>
+<head>
+<script type="text/javascript" charset="utf-8">
+  chrome.extension.onConnect.addListener(function(port, name) {
+    if (port.name == "nativeCommand")
+      port.onMessage.addListener(handleNativeCommand);
+  });
+  
+  function handleNativeCommand(args) {
+    console.log("received native command:", args);
+
+    switch(args.command) {
+      case "tabs.create":
+        chrome.tabs.create({});
+      break;
+      case "tabs.remove":
+        console.log("removing");
+        chrome.tabs.getSelected(null, function(tab) {
+          chrome.tabs.remove(tab.id);
+        });
+      break;
+    }
+  }
+</script>
+
+</head>
+
+<body>
+  howdy
+</body>
+
+</html>
