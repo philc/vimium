@@ -1,19 +1,25 @@
 <html>
 <head>
 <script type="text/javascript" charset="utf-8">
+  var tabQueue = [];
+  var keyQueue = "";
+
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "keyDown")
       port.onMessage.addListener(handleKeyDown);
   });
   
-  function createTab() {
-    console.log("createTab()");
-    chrome.tabs.create({});
-  }
+  function createTab() { chrome.tabs.create({}); }
 
   function removeTab() {
-    console.log("removeTab()");
-    chrome.tabs.getSelected(null, function(tab) { chrome.tabs.remove(tab.id); });
+    chrome.tabs.getSelected(null, function(tab) {
+                                      tabQueue.push(tab.url);
+                                      chrome.tabs.remove(tab.id);
+                                  });
+  }
+
+  function restoreTab() {
+    if (tabQueue.length > 0) { chrome.tabs.create({url: tabQueue.pop()}); }
   }
 
   var keyToCommandRegistry = {};
@@ -26,8 +32,7 @@
   keyToCommandRegistry['r']  = 'reload';
   keyToCommandRegistry['t']  = createTab;
   keyToCommandRegistry['d']  = removeTab;
-
-  var keyQueue = "";
+  keyToCommandRegistry['u']  = restoreTab;
 
   function handleKeyDown(key) {
     keyQueue = keyQueue + key;
