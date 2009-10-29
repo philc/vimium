@@ -35,10 +35,10 @@
   }
 
   var keyToCommandRegistry = {};
-  keyToCommandRegistry['gg'] = {command: 'scrollToTop'};
-  keyToCommandRegistry['G']  = {command: 'scrollToBottom'};
-  keyToCommandRegistry['t']  = {command: createTab};
-  keyToCommandRegistry['d']  = {command: removeTab};
+  keyToCommandRegistry['gg'] = 'scrollToTop';
+  keyToCommandRegistry['G']  = 'scrollToBottom';
+  keyToCommandRegistry['t']  = createTab;
+  keyToCommandRegistry['d']  = removeTab;
 
   var commandRegistry = {}; 
   var keyQueue = "";
@@ -53,16 +53,16 @@
     if (keyToCommandRegistry[keyQueue])
     {
       registryEntry = keyToCommandRegistry[keyQueue];
-      console.log("command found for [", keyQueue, "],", registryEntry.command);
+      console.log("command found for [", keyQueue, "],", registryEntry);
 
-      if (typeof(registryEntry.command) == "string")
+      if (typeof(registryEntry) == "string")
       {
         chrome.tabs.getSelected(null, function (tab) {
           var port = chrome.tabs.connect(tab.id, {name: "executePageCommand"});
-          port.postMessage({command: registryEntry.command});
+          port.postMessage({command: registryEntry});
         });
       }
-      else { registryEntry.command.call(); }
+      else { registryEntry.call(); }
       
       keyQueue = "";
     }
