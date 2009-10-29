@@ -1,3 +1,5 @@
+var SCROLL_STEP_SIZE = 100; // Pixels
+
 document.addEventListener("keydown", onKeydown);
 document.addEventListener("focus", onFocusCapturePhase, true);
 document.addEventListener("blur", onBlurCapturePhase, true);
@@ -5,26 +7,19 @@ document.addEventListener("blur", onBlurCapturePhase, true);
 // Send the key to the key handler in the background page.
 var keyPort = chrome.extension.connect({name: "keyDown"});
 
-function scrollToBottom() {
-  console.log("scrollToBottom()");
-  window.scrollTo(0, document.body.scrollHeight);
-}
-
-function scrollToTop() {
-  console.log("scrollToTop()");
-  window.scrollTo(0, 0);
-}
-
-var commandRegistry = {
-  'scrollToBottom': scrollToBottom,
-  'scrollToTop':    scrollToTop
-};
+function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
+function scrollToTop() { window.scrollTo(0, 0); }
+function scrollUp() { window.scrollBy(0, -1 * SCROLL_STEP_SIZE); }
+function scrollDown() { window.scrollBy(0, SCROLL_STEP_SIZE); }
+function scrollLeft() { window.scrollBy(-1 * SCROLL_STEP_SIZE, 0); }
+function scrollRight() { window.scrollBy(SCROLL_STEP_SIZE, 0); }
 
 chrome.extension.onConnect.addListener(function (port, name) {
   if (port.name == "executePageCommand")
   {
     port.onMessage.addListener(function (args) {
-      commandRegistry[args.command].call();
+      if (this[args.command])
+        this[args.command].call();
     });
   }
 });
