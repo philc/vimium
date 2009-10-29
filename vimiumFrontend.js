@@ -6,6 +6,33 @@ document.addEventListener("blur", onBlurCapturePhase, true);
 // we want executed.
 var commandPort = chrome.extension.connect({name: "nativeCommand"});
 
+// Send the key to the key handler in the background page.
+var keyPort = chrome.extension.connect({name: "keyDown"});
+
+function scrollToBottom() {
+  console.log("scrollToBottom()");
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+function scrollToTop() {
+  console.log("scrollToTop()");
+  window.scrollTo(0, 0);
+}
+
+var commandRegistry = {
+  'scrollToBottom': scrollToBottom,
+  'scrollToTop':    scrollToTop
+};
+
+chrome.extension.onConnect.addListener(function (port, name) {
+  if (port.name == "executePageCommand")
+  {
+    port.onMessage.addListener(function (args) {
+      commandRegistry[args.command].call();
+    });
+  }
+});
+
 var keymap = {
   ESC: 27,
   a: 65,
@@ -20,7 +47,7 @@ var insertMode = false;
  * Executes commands based on the keystroke.
  * Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
  */
-function onKeydown(event) { 
+function onKeydown(event) {
   var key = event.keyCode;
   console.log(key);
 
@@ -28,6 +55,16 @@ function onKeydown(event) {
     if (key == keymap.ESC)
       exitInsertMode();
     return;
+  }
+
+  // Ignore modifier keys by themselves.
+  if (key > 31 && key < 127)
+  {
+    var keyChar = String.fromCharCode(key);
+    if (event.shiftKey)
+      keyPort.postMessage(keyChar.toUpperCase());
+    else
+      keyPort.postMessage(keyChar.toLowerCase());
   }
 
   var request;

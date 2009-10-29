@@ -4,6 +4,8 @@
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "nativeCommand")
       port.onMessage.addListener(handleNativeCommand);
+    else if (port.name == "keyDown")
+      port.onMessage.addListener(handleKeyDown);
   });
   
   function handleNativeCommand(args) {
@@ -20,6 +22,42 @@
         });
       break;
     }
+  }
+
+  var keyToCommandRegistry = {};
+  keyToCommandRegistry['gg'] = {command: 'scrollToTop',    executeInPage: true};
+  keyToCommandRegistry['G']  = {command: 'scrollToBottom', executeInPage: true};
+
+  var commandRegistry = {}; 
+  var keyQueue = "";
+
+  function handleKeyDown(key) {
+    keyQueue = keyQueue + key;
+    console.log("current keyQueue: [", keyQueue, "]");
+    checkKeyQueue();
+  }
+
+  function checkKeyQueue() {
+    if (keyToCommandRegistry[keyQueue])
+    {
+      registryEntry = keyToCommandRegistry[keyQueue];
+      console.log("command found for [", keyQueue, "],", registryEntry.command);
+
+      if (registryEntry.executeInPage)
+      {
+        chrome.tabs.getSelected(null, function (tab) {
+          var port = chrome.tabs.connect(tab.id, {name: "executePageCommand"});
+          port.postMessage({command: registryEntry.command});
+        });
+      }
+      else
+      {
+      }
+      
+      keyQueue = "";
+    }
+    else if (keyQueue.length > 1)
+      keyQueue = "";
   }
 </script>
 
