@@ -14,6 +14,8 @@ function scrollDown() { window.scrollBy(0, SCROLL_STEP_SIZE); }
 function scrollLeft() { window.scrollBy(-1 * SCROLL_STEP_SIZE, 0); }
 function scrollRight() { window.scrollBy(SCROLL_STEP_SIZE, 0); }
 
+function reload() { window.location.reload(); }
+
 chrome.extension.onConnect.addListener(function (port, name) {
   if (port.name == "executePageCommand")
   {
