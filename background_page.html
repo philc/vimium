@@ -2,28 +2,10 @@
 <head>
 <script type="text/javascript" charset="utf-8">
   chrome.extension.onConnect.addListener(function(port, name) {
-    if (port.name == "nativeCommand")
-      port.onMessage.addListener(handleNativeCommand);
-    else if (port.name == "keyDown")
+    if (port.name == "keyDown")
       port.onMessage.addListener(handleKeyDown);
   });
   
-  function handleNativeCommand(args) {
-    console.log("received native command:", args);
-
-    switch(args.command) {
-      case "tabs.create":
-        chrome.tabs.create({});
-      break;
-      case "tabs.remove":
-        console.log("removing");
-        chrome.tabs.getSelected(null, function(tab) {
-          chrome.tabs.remove(tab.id);
-        });
-      break;
-    }
-  }
-
   function createTab() {
     console.log("createTab()");
     chrome.tabs.create({});
@@ -40,7 +22,6 @@
   keyToCommandRegistry['t']  = createTab;
   keyToCommandRegistry['d']  = removeTab;
 
-  var commandRegistry = {}; 
   var keyQueue = "";
 
   function handleKeyDown(key) {

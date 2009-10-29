@@ -2,10 +2,6 @@ document.addEventListener("keydown", onKeydown);
 document.addEventListener("focus", onFocusCapturePhase, true);
 document.addEventListener("blur", onBlurCapturePhase, true);
 
-// Used to communicate with the background page and send it native browser commands that
-// we want executed.
-var commandPort = chrome.extension.connect({name: "nativeCommand"});
-
 // Send the key to the key handler in the background page.
 var keyPort = chrome.extension.connect({name: "keyDown"});
 
@@ -49,7 +45,6 @@ var insertMode = false;
  */
 function onKeydown(event) {
   var key = event.keyCode;
-  console.log(key);
 
   if (insertMode) {
     if (key == keymap.ESC)
@@ -67,21 +62,13 @@ function onKeydown(event) {
       keyPort.postMessage(keyChar.toLowerCase());
   }
 
-  var request;
-  if (key == keymap.d)
-    request = { command: "tabs.remove" };
-  else if (key == keymap.t)
-    request = { command: "tabs.create" };
-  else if (key == keymap.i)
+  if (key == keymap.i)
     enterInsertMode();
   else
     return;
 
   event.preventDefault();
-  //commandPort.postMessage(request);
-  //console.log(event);
 }
-
 
 function onFocusCapturePhase(event) {
   if (event.target.tagName == "INPUT" || event.target.tagName == "TEXTAREA")
