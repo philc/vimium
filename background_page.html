@@ -24,9 +24,21 @@
     }
   }
 
+  function createTab() {
+    console.log("createTab()");
+    chrome.tabs.create({});
+  }
+
+  function removeTab() {
+    console.log("removeTab()");
+    chrome.tabs.getSelected(null, function(tab) { chrome.tabs.remove(tab.id); });
+  }
+
   var keyToCommandRegistry = {};
-  keyToCommandRegistry['gg'] = {command: 'scrollToTop',    executeInPage: true};
-  keyToCommandRegistry['G']  = {command: 'scrollToBottom', executeInPage: true};
+  keyToCommandRegistry['gg'] = {command: 'scrollToTop'};
+  keyToCommandRegistry['G']  = {command: 'scrollToBottom'};
+  keyToCommandRegistry['t']  = {command: createTab};
+  keyToCommandRegistry['d']  = {command: removeTab};
 
   var commandRegistry = {}; 
   var keyQueue = "";
@@ -43,16 +55,14 @@
       registryEntry = keyToCommandRegistry[keyQueue];
       console.log("command found for [", keyQueue, "],", registryEntry.command);
 
-      if (registryEntry.executeInPage)
+      if (typeof(registryEntry.command) == "string")
       {
         chrome.tabs.getSelected(null, function (tab) {
           var port = chrome.tabs.connect(tab.id, {name: "executePageCommand"});
           port.postMessage({command: registryEntry.command});
         });
       }
-      else
-      {
-      }
+      else { registryEntry.command.call(); }
       
       keyQueue = "";
     }

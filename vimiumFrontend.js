@@ -78,8 +78,8 @@ function onKeydown(event) {
     return;
 
   event.preventDefault();
-  commandPort.postMessage(request);
-  console.log(event);
+  //commandPort.postMessage(request);
+  //console.log(event);
 }
 
 
