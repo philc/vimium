@@ -41,23 +41,33 @@
   }
 
   function checkKeyQueue() {
-    if (keyToCommandRegistry[keyQueue])
+    var match = /([0-9]*)(.*)/.exec(keyQueue);
+    var count = parseInt(match[1]);
+    var command = match[2];
+
+    if (command.length == 0) { return; }
+    if (isNaN(count)) { count = 1; }
+
+    if (keyToCommandRegistry[command])
     {
-      registryEntry = keyToCommandRegistry[keyQueue];
+      registryEntry = keyToCommandRegistry[command];
       console.log("command found for [", keyQueue, "],", registryEntry);
 
       if (typeof(registryEntry) == "string")
       {
         chrome.tabs.getSelected(null, function (tab) {
           var port = chrome.tabs.connect(tab.id, {name: "executePageCommand"});
-          port.postMessage({command: registryEntry});
+          port.postMessage({command: registryEntry, count: count});
         });
       }
-      else { registryEntry.call(); }
+      else
+      {
+        for (var i = 0; i < count; i++) { registryEntry.call(); }
+      }
       
       keyQueue = "";
     }
-    else if (keyQueue.length > 1)
+    else if (command.length > 1)
       keyQueue = "";
   }
 </script>

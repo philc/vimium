@@ -21,7 +21,9 @@ chrome.extension.onConnect.addListener(function (port, name) {
   {
     port.onMessage.addListener(function (args) {
       if (this[args.command])
-        this[args.command].call();
+      {
+        for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+      }
     });
   }
 });
