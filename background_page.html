@@ -2,25 +2,53 @@
 <head>
 <script type="text/javascript" charset="utf-8">
   var tabQueue = [];
+  var selectionChangedHandlers = [];
   var keyQueue = "";
 
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "keyDown")
       port.onMessage.addListener(handleKeyDown);
   });
-  
-  function createTab() { chrome.tabs.create({}); }
 
-  function removeTab() {
+  chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
+    if (selectionChangedHandlers.length > 0)
+    {
+      selectionChangedHandlers.pop().call();
+    }
+  });
+
+  function registerSelectionChangedHandler(handler) {
+    selectionChangedHandlers.push(handler);
+  }
+
+  function repeatFunction(func, totalCount, currentCount) {
+    if (currentCount < totalCount)
+    {
+      func(function () { repeatFunction(func, totalCount, currentCount + 1); });
+    }
+  }
+
+  // Start action functions
+  function createTab(callback) {
+    chrome.tabs.create({}, function (tab) { callback(); });
+  }
+
+  function removeTab(callback) {
     chrome.tabs.getSelected(null, function(tab) {
                                       tabQueue.push(tab.url);
                                       chrome.tabs.remove(tab.id);
+                                      // We can't just call the callback here because we actually need to wait
+                                      // for the selection to change to consider this action done.
+                                      registerSelectionChangedHandler(callback);
                                   });
   }
 
-  function restoreTab() {
-    if (tabQueue.length > 0) { chrome.tabs.create({url: tabQueue.pop()}); }
+  function restoreTab(callback) {
+    if (tabQueue.length > 0) {
+      chrome.tabs.create({url: tabQueue.pop()}, function (tab) { callback(); });
+    }
   }
+  // End action functions
 
   var keyToCommandRegistry = {};
   keyToCommandRegistry['j']  = 'scrollDown';
@@ -60,10 +88,7 @@
           port.postMessage({command: registryEntry, count: count});
         });
       }
-      else
-      {
-        for (var i = 0; i < count; i++) { registryEntry.call(); }
-      }
+      else { repeatFunction(registryEntry, count, 0); }
       
       keyQueue = "";
     }
