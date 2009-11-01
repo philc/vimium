@@ -40,9 +40,9 @@ function onKeydown(event) {
   var key = event.keyCode;
 
   if (insertMode && key == keymap.ESC) { exitInsertMode(); }
-  else if (key == keymap.i) { enterInsertMode(); }
+  else if (!insertMode && key == keymap.i) { enterInsertMode(); }
   // Ignore modifier keys by themselves.
-  else if (key > 31 && key < 127)
+  else if (!insertMode && key > 31 && key < 127)
   {
     var keyChar = String.fromCharCode(key);
     if (event.shiftKey)
