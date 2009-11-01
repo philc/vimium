@@ -6,6 +6,8 @@ document.addEventListener("blur", onBlurCapturePhase, true);
 
 // Send the key to the key handler in the background page.
 var keyPort = chrome.extension.connect({name: "keyDown"});
+var keymap = { ESC: 27, i: 73 };
+var insertMode = false;
 
 function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(0, 0); }
@@ -28,31 +30,19 @@ chrome.extension.onConnect.addListener(function (port, name) {
   }
 });
 
-var keymap = {
-  ESC: 27,
-  a: 65,
-  d: 68,
-  i: 73,
-  t: 84
-};
-
-var insertMode = false;
-
-/*
- * Executes commands based on the keystroke.
+/**
+ * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
+ * insert mode which is local state to the page.
+ *
  * Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
  */
 function onKeydown(event) {
   var key = event.keyCode;
 
-  if (insertMode) {
-    if (key == keymap.ESC)
-      exitInsertMode();
-    return;
-  }
-
+  if (insertMode && key == keymap.ESC) { exitInsertMode(); }
+  else if (key == keymap.i) { enterInsertMode(); }
   // Ignore modifier keys by themselves.
-  if (key > 31 && key < 127)
+  else if (key > 31 && key < 127)
   {
     var keyChar = String.fromCharCode(key);
     if (event.shiftKey)
@@ -60,13 +50,6 @@ function onKeydown(event) {
     else
       keyPort.postMessage(keyChar.toLowerCase());
   }
-
-  if (key == keymap.i)
-    enterInsertMode();
-  else
-    return;
-
-  event.preventDefault();
 }
 
 function onFocusCapturePhase(event) {
