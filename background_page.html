@@ -1,20 +1,22 @@
 <html>
 <head>
 <script type="text/javascript" charset="utf-8">
-  var tabQueue = [];
+  var tabQueue = []; // Queue of tabs to restore with scroll info
+  var keyQueue = ""; // Queue of keys typed
+
+  // Port handler mapping
+  var portHandlers = { "keyDown":              handleKeyDown,
+                       "returnScrollPosition": handleReturnScrollPosition };
+
+  // Event handlers
   var selectionChangedHandlers = [];
   var getScrollPositionHandlers = {}; // tabId -> function (tab, scrollTop, scrollLeft)
   var tabLoadedHandlers = {}; // tabId -> function ()
-  var keyQueue = "";
 
   chrome.extension.onConnect.addListener(function(port, name) {
-    if (port.name == "keyDown")
+    if (portHandlers[port.name])
     {
-      port.onMessage.addListener(handleKeyDown);
-    }
-    else if (port.name == "returnScrollPosition")
-    {
-      port.onMessage.addListener(handleReturnScrollPosition);
+      port.onMessage.addListener(portHandlers[port.name]);
     }
   });
 
@@ -28,14 +30,6 @@
     }
   }
 
-  // TODO(ilya): Move this handler over to a dictionary like below.
-  chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
-    if (selectionChangedHandlers.length > 0)
-    {
-      selectionChangedHandlers.pop().call();
-    }
-  });
-
   chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
     if (changeInfo.status == "complete" && tabLoadedHandlers[tabId])
     {
@@ -46,9 +40,9 @@
     }
   });
 
-  function registerSelectionChangedHandler(handler) {
-    selectionChangedHandlers.push(handler);
-  }
+  chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
+    if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
+  });
 
   function repeatFunction(func, totalCount, currentCount) {
     if (currentCount < totalCount)
@@ -79,7 +73,7 @@
                                       chrome.tabs.remove(tab.id);
                                       // We can't just call the callback here because we actually need to wait
                                       // for the selection to change to consider this action done.
-                                      registerSelectionChangedHandler(callback);
+                                      selectionChangedHandlers.push(callback);
                                     });
   }
 
