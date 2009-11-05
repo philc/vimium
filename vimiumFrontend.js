@@ -31,10 +31,21 @@ chrome.extension.onConnect.addListener(function (port, name) {
   else if (port.name == "getScrollPosition")
   {
     port.onMessage.addListener(function (args) {
+
+      // These conditionals are necessary due to the following chrome/webkit bug:
+      //   http://code.google.com/p/chromium/issues/detail?id=2891
+      //
+      // There may be another bug or some javascript trickery necessary because scrollTop occasionally returns
+      // 3 or 108 on some sites (cnn.com, nytimes.com for example).
+      //
+      // TODO(ilya): Is this actually also necessary for scrollLeft?
+      var scrollTop = document.documentElement.scrollTop >= document.body.scrollTop ? document.documentElement.scrollTop :
+                                                                                      document.body.scrollTop;
+      var scrollLeft = document.documentElement.scrollLeft >= document.body.scrollLeft ? document.documentElement.scrollLeft :
+                                                                                         document.body.scrollLeft;
       var scrollPort = chrome.extension.connect({name: "returnScrollPosition"});
-      scrollPort.postMessage({ scrollTop: document.body.scrollTop,
-                               scrollLeft: document.body.scrollLeft,
-                               currentTab: args.currentTab });
+      scrollPort.postMessage({ scrollTop: scrollTop, scrollLeft: scrollLeft, currentTab: args.currentTab });
+
     });
   }
   else if (port.name == "setScrollPosition")
