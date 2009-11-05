@@ -3,17 +3,46 @@
 <script type="text/javascript" charset="utf-8">
   var tabQueue = [];
   var selectionChangedHandlers = [];
+  var getScrollPositionHandlers = {}; // tabId -> function (tab, scrollTop, scrollLeft)
+  var tabLoadedHandlers = {}; // tabId -> function ()
   var keyQueue = "";
 
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "keyDown")
+    {
       port.onMessage.addListener(handleKeyDown);
+    }
+    else if (port.name == "returnScrollPosition")
+    {
+      port.onMessage.addListener(handleReturnScrollPosition);
+    }
   });
 
+  function handleReturnScrollPosition(args) {
+    if (getScrollPositionHandlers[args.currentTab.id])
+    {
+      // Delete first to be sure there's no circular events.
+      var toCall = getScrollPositionHandlers[args.currentTab.id];
+      delete getScrollPositionHandlers[args.currentTab.id];
+      toCall(args.currentTab, args.scrollTop, args.scrollLeft);
+    }
+  }
+
+  // TODO(ilya): Move this handler over to a dictionary like below.
   chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
     if (selectionChangedHandlers.length > 0)
     {
       selectionChangedHandlers.pop().call();
+    }
+  });
+
+  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
+    if (changeInfo.status == "complete" && tabLoadedHandlers[tabId])
+    {
+      // Delete first to be sure there's no circular events.
+      var toCall = tabLoadedHandlers[tabId];
+      delete tabLoadedHandlers[tabId];
+      toCall.call();
     }
   });
 
@@ -28,24 +57,47 @@
     }
   }
 
+  // Returns the currently selected tab along with scroll coordinates. Pass in a callback of the form:
+  //   function (tab, scrollTop, scrollLeft) { .. }
+  function getCurrentTabWithScrollPosition(callback) {
+    chrome.tabs.getSelected(null, function (tab) {
+      getScrollPositionHandlers[tab.id] = callback;
+      var scrollPort = chrome.tabs.connect(tab.id, {name: "getScrollPosition"});
+      scrollPort.postMessage({currentTab: tab});
+    });
+  }
+
   // Start action functions
   function createTab(callback) {
     chrome.tabs.create({}, function (tab) { callback(); });
   }
 
   function removeTab(callback) {
-    chrome.tabs.getSelected(null, function(tab) {
-                                      tabQueue.push(tab.url);
+    getCurrentTabWithScrollPosition(function(tab, scrollTop, scrollLeft) {
+                                      tabQueue.push({ tabUrl: tab.url, scrollTop: scrollTop,
+                                                      scrollLeft: scrollLeft });
                                       chrome.tabs.remove(tab.id);
                                       // We can't just call the callback here because we actually need to wait
                                       // for the selection to change to consider this action done.
                                       registerSelectionChangedHandler(callback);
-                                  });
+                                    });
   }
 
   function restoreTab(callback) {
     if (tabQueue.length > 0) {
-      chrome.tabs.create({url: tabQueue.pop()}, function (tab) { callback(); });
+      var tabQueueEntry = tabQueue.pop();
+
+      // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
+      // tab is created because the content script is not available during the "loading" state. We need to
+      // wait until that's over before we can call setScrollPosition.
+      chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function (tab) {
+        tabLoadedHandlers[tab.id] = function () {
+          var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
+          scrollPort.postMessage({ scrollTop: tabQueueEntry.scrollTop, scrollLeft: tabQueueEntry.scrollLeft });
+        };
+
+        callback();
+      });
     }
   }
   // End action functions

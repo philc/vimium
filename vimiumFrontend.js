@@ -28,6 +28,21 @@ chrome.extension.onConnect.addListener(function (port, name) {
       }
     });
   }
+  else if (port.name == "getScrollPosition")
+  {
+    port.onMessage.addListener(function (args) {
+      var scrollPort = chrome.extension.connect({name: "returnScrollPosition"});
+      scrollPort.postMessage({ scrollTop: document.body.scrollTop,
+                               scrollLeft: document.body.scrollLeft,
+                               currentTab: args.currentTab });
+    });
+  }
+  else if (port.name == "setScrollPosition")
+  {
+    port.onMessage.addListener(function (args) {
+      if (args.scrollTop > 0 || args.scrollLeft > 0) { window.scrollBy(args.scrollLeft, args.scrollTop); }
+    });
+  }
 });
 
 /**
