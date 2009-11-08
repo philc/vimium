@@ -10,7 +10,7 @@
 
   // Event handlers
   var selectionChangedHandlers = [];
-  var getScrollPositionHandlers = {}; // tabId -> function (tab, scrollTop, scrollLeft)
+  var getScrollPositionHandlers = {}; // tabId -> function (tab, scrollX, scrollY);
   var tabLoadedHandlers = {}; // tabId -> function ()
 
   chrome.extension.onConnect.addListener(function(port, name) {
@@ -26,7 +26,7 @@
       // Delete first to be sure there's no circular events.
       var toCall = getScrollPositionHandlers[args.currentTab.id];
       delete getScrollPositionHandlers[args.currentTab.id];
-      toCall(args.currentTab, args.scrollTop, args.scrollLeft);
+      toCall(args.currentTab, args.scrollX, args.scrollY);
     }
   }
 
@@ -52,7 +52,7 @@
   }
 
   // Returns the currently selected tab along with scroll coordinates. Pass in a callback of the form:
-  //   function (tab, scrollTop, scrollLeft) { .. }
+  //   function (tab, scrollX, scrollY) { .. }
   function getCurrentTabWithScrollPosition(callback) {
     chrome.tabs.getSelected(null, function (tab) {
       getScrollPositionHandlers[tab.id] = callback;
@@ -67,9 +67,8 @@
   }
 
   function removeTab(callback) {
-    getCurrentTabWithScrollPosition(function(tab, scrollTop, scrollLeft) {
-                                      tabQueue.push({ tabUrl: tab.url, scrollTop: scrollTop,
-                                                      scrollLeft: scrollLeft });
+    getCurrentTabWithScrollPosition(function(tab, scrollX, scrollY) {
+                                      tabQueue.push({ tabUrl: tab.url, scrollX: scrollX, scrollY: scrollY });
                                       chrome.tabs.remove(tab.id);
                                       // We can't just call the callback here because we actually need to wait
                                       // for the selection to change to consider this action done.
@@ -87,7 +86,7 @@
       chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function (tab) {
         tabLoadedHandlers[tab.id] = function () {
           var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
-          scrollPort.postMessage({ scrollTop: tabQueueEntry.scrollTop, scrollLeft: tabQueueEntry.scrollLeft });
+          scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
         };
 
         callback();
