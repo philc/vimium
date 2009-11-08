@@ -1,4 +1,4 @@
-var SCROLL_STEP_SIZE = 100; // Pixels
+var SCROLL_STEP_SIZE = 60; // Pixels
 
 document.addEventListener("keydown", onKeydown);
 document.addEventListener("focus", onFocusCapturePhase, true);
@@ -13,6 +13,8 @@ function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(0, 0); }
 function scrollUp() { window.scrollBy(0, -1 * SCROLL_STEP_SIZE); }
 function scrollDown() { window.scrollBy(0, SCROLL_STEP_SIZE); }
+function scrollPageUp() { window.scrollBy(0, -6 * SCROLL_STEP_SIZE); }
+function scrollPageDown() { window.scrollBy(0, 6 * SCROLL_STEP_SIZE); }
 function scrollLeft() { window.scrollBy(-1 * SCROLL_STEP_SIZE, 0); }
 function scrollRight() { window.scrollBy(SCROLL_STEP_SIZE, 0); }
 
