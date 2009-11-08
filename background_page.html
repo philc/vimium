@@ -30,8 +30,7 @@
   });
 
   function handleReturnScrollPosition(args) {
-    if (getScrollPositionHandlers[args.currentTab.id])
-    {
+    if (getScrollPositionHandlers[args.currentTab.id]) {
       // Delete first to be sure there's no circular events.
       var toCall = getScrollPositionHandlers[args.currentTab.id];
       delete getScrollPositionHandlers[args.currentTab.id];
@@ -45,24 +44,22 @@
 
   function repeatFunction(func, totalCount, currentCount) {
     if (currentCount < totalCount)
-    {
       func(function () { repeatFunction(func, totalCount, currentCount + 1); });
-    }
   }
 
   // Returns the currently selected tab along with scroll coordinates. Pass in a callback of the form:
   //   function (tab, scrollX, scrollY) { .. }
   function getCurrentTabWithScrollPosition(callback) {
-    chrome.tabs.getSelected(null, function (tab) {
+    chrome.tabs.getSelected(null, function(tab) {
       getScrollPositionHandlers[tab.id] = callback;
-      var scrollPort = chrome.tabs.connect(tab.id, {name: "getScrollPosition"});
+      var scrollPort = chrome.tabs.connect(tab.id, { name: "getScrollPosition" });
       scrollPort.postMessage({currentTab: tab});
     });
   }
 
   // Start action functions
   function createTab(callback) {
-    chrome.tabs.create({}, function (tab) { callback(); });
+    chrome.tabs.create({}, function(tab) { callback(); });
   }
 
   function removeTab(callback) {
@@ -82,8 +79,8 @@
       // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
       // tab is created because the content script is not available during the "loading" state. We need to
       // wait until that's over before we can call setScrollPosition.
-      chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function (tab) {
-        tabLoadedHandlers[tab.id] = function () {
+      chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function(tab) {
+        tabLoadedHandlers[tab.id] = function() {
           var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
           scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
         };
@@ -127,24 +124,23 @@
     if (command.length == 0) { return; }
     if (isNaN(count)) { count = 1; }
 
-    if (keyToCommandRegistry[command])
-    {
+    if (keyToCommandRegistry[command]) {
       registryEntry = keyToCommandRegistry[command];
       console.log("command found for [", keyQueue, "],", registryEntry);
 
-      if (typeof(registryEntry) == "string")
-      {
-        chrome.tabs.getSelected(null, function (tab) {
-          var port = chrome.tabs.connect(tab.id, {name: "executePageCommand"});
-          port.postMessage({command: registryEntry, count: count});
+      if (typeof(registryEntry) == "string") {
+        chrome.tabs.getSelected(null, function(tab) {
+          var port = chrome.tabs.connect(tab.id, { name: "executePageCommand" });
+          port.postMessage({ command: registryEntry, count: count });
         });
+      } else {
+        repeatFunction(registryEntry, count, 0);
       }
-      else { repeatFunction(registryEntry, count, 0); }
 
       keyQueue = "";
-    }
-    else if (command.length > 1)
+    } else if (command.length > 1) {
       keyQueue = "";
+    }
   }
 </script>
 

@@ -21,8 +21,7 @@ function goBack() { history.back(); }
 function goForward() { history.forward(); }
 
 chrome.extension.onConnect.addListener(function (port, name) {
-  if (port.name == "executePageCommand")
-  {
+  if (port.name == "executePageCommand") {
     port.onMessage.addListener(function (args) {
       if (this[args.command])
       {
@@ -30,8 +29,7 @@ chrome.extension.onConnect.addListener(function (port, name) {
       }
     });
   }
-  else if (port.name == "getScrollPosition")
-  {
+  else if (port.name == "getScrollPosition") {
     port.onMessage.addListener(function (args) {
       var scrollPort = chrome.extension.connect({ name: "returnScrollPosition" });
       scrollPort.postMessage({
@@ -40,9 +38,7 @@ chrome.extension.onConnect.addListener(function (port, name) {
         currentTab: args.currentTab
       });
     });
-  }
-  else if (port.name == "setScrollPosition")
-  {
+  } else if (port.name == "setScrollPosition") {
     port.onMessage.addListener(function (args) {
       if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
     });
