@@ -14,10 +14,19 @@
   var tabLoadedHandlers = {}; // tabId -> function ()
 
   chrome.extension.onConnect.addListener(function(port, name) {
-    if (portHandlers[port.name])
-    {
-      port.onMessage.addListener(portHandlers[port.name]);
+    var senderTabId = port.sender.tab ? port.sender.tab.id : null;
+    // If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
+    // the tab's scroll position.
+    if (senderTabId && tabLoadedHandlers[senderTabId]) {
+      var toCall = tabLoadedHandlers[senderTabId];
+      // Delete first to be sure there's no circular events.
+      delete tabLoadedHandlers[senderTabId];
+      toCall.call();
     }
+
+    if (portHandlers[port.name])
+      port.onMessage.addListener(portHandlers[port.name]);
+
   });
 
   function handleReturnScrollPosition(args) {
@@ -29,16 +38,6 @@
       toCall(args.currentTab, args.scrollX, args.scrollY);
     }
   }
-
-  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
-    if (changeInfo.status == "complete" && tabLoadedHandlers[tabId])
-    {
-      // Delete first to be sure there's no circular events.
-      var toCall = tabLoadedHandlers[tabId];
-      delete tabLoadedHandlers[tabId];
-      toCall.call();
-    }
-  });
 
   chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
     if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
@@ -141,7 +140,7 @@
         });
       }
       else { repeatFunction(registryEntry, count, 0); }
-      
+
       keyQueue = "";
     }
     else if (command.length > 1)
