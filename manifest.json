@@ -1,8 +1,7 @@
 {
   "name": "Vimium",
   "version": "1.0",
-  "description": "The hacker's browser.",
-  "toolstrips": [ "toolstrip.html" ],
+  "description": "The Hacker's Browser.",
   "background_page": "background_page.html",
   "permissions": [
     "tabs"
