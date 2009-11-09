@@ -1,7 +1,7 @@
 <html>
 <head>
 <script type="text/javascript" charset="utf-8">
-  var tabQueue = []; // Queue of tabs to restore with scroll info
+  var tabQueue = {}; // windowId -> Array
   var keyQueue = ""; // Queue of keys typed
 
   // Port handler mapping
@@ -85,7 +85,15 @@
 
   function removeTab(callback) {
     getCurrentTabWithScrollPosition(function(tab, scrollX, scrollY) {
-                                      tabQueue.push({ tabUrl: tab.url, scrollX: scrollX, scrollY: scrollY });
+                                      var tabQueueEntry = { tabUrl: tab.url,
+                                                            scrollX: scrollX,
+                                                            scrollY: scrollY };
+
+                                      if (tabQueue[tab.windowId])
+                                        tabQueue[tab.windowId].push(tabQueueEntry);
+                                      else
+                                        tabQueue[tab.windowId] = [tabQueueEntry];
+
                                       chrome.tabs.remove(tab.id);
                                       // We can't just call the callback here because we actually need to wait
                                       // for the selection to change to consider this action done.
@@ -94,21 +102,29 @@
   }
 
   function restoreTab(callback) {
-    if (tabQueue.length > 0) {
-      var tabQueueEntry = tabQueue.pop();
+    // TODO(ilya): Should this be getLastFocused instead?
+    chrome.windows.getCurrent(function (window) {
+      if (tabQueue[window.id] && tabQueue[window.id].length > 0)
+      {
+        var tabQueueEntry = tabQueue[window.id].pop();
 
-      // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-      // tab is created because the content script is not available during the "loading" state. We need to
-      // wait until that's over before we can call setScrollPosition.
-      chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function(tab) {
-        tabLoadedHandlers[tab.id] = function() {
-          var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
-          scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
-        };
+        // Clean out the tabQueue so we don't have unused windows laying about.
+        if (tabQueue[window.id].length == 0)
+          delete tabQueue[window.id];
 
-        callback();
-      });
-    }
+        // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
+        // tab is created because the content script is not available during the "loading" state. We need to
+        // wait until that's over before we can call setScrollPosition.
+        chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function(tab) {
+          tabLoadedHandlers[tab.id] = function() {
+            var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
+            scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
+          };
+
+          callback();
+        });
+      }
+    });
   }
   // End action functions
 
