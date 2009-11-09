@@ -1,4 +1,5 @@
 var SCROLL_STEP_SIZE = 60; // Pixels
+var getCurrentUrlHandlers = []; // function (url)
 
 document.addEventListener("keydown", onKeydown);
 document.addEventListener("focus", onFocusCapturePhase, true);
@@ -22,6 +23,21 @@ function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }
 
+function toggleViewSource() {
+  getCurrentUrlHandlers.push(toggleViewSourceCallback);
+
+  var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
+  getCurrentUrlPort.postMessage({});
+}
+
+function toggleViewSourceCallback(url) {
+  if (url.substr(0, 12) == "view-source:")
+  {
+    window.location.href = url.substr(12, url.length - 12);
+  }
+  else { window.location.href = "view-source:" + url; }
+}
+
 chrome.extension.onConnect.addListener(function (port, name) {
   if (port.name == "executePageCommand") {
     port.onMessage.addListener(function (args) {
@@ -43,6 +59,10 @@ chrome.extension.onConnect.addListener(function (port, name) {
   } else if (port.name == "setScrollPosition") {
     port.onMessage.addListener(function (args) {
       if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
+    });
+  } else if (port.name == "returnCurrentTabUrl") {
+    port.onMessage.addListener(function (args) {
+      if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
     });
   }
 });
