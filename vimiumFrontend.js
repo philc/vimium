@@ -1,13 +1,8 @@
 var SCROLL_STEP_SIZE = 60; // Pixels
 
-document.addEventListener("keydown", onKeydown);
-document.addEventListener("focus", onFocusCapturePhase, true);
-document.addEventListener("blur", onBlurCapturePhase, true);
-
-// Send the key to the key handler in the background page.
-var keyPort = chrome.extension.connect({name: "keyDown"});
 var keyCodes = { ESC: 27 };
 var insertMode = false;
+var keyPort;
 
 function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(0, 0); }
@@ -22,30 +17,39 @@ function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }
 
-chrome.extension.onConnect.addListener(function (port, name) {
-  if (port.name == "executePageCommand") {
-    port.onMessage.addListener(function (args) {
-      if (this[args.command])
-      {
-        for (var i = 0; i < args.count; i++) { this[args.command].call(); }
-      }
-    });
-  }
-  else if (port.name == "getScrollPosition") {
-    port.onMessage.addListener(function (args) {
-      var scrollPort = chrome.extension.connect({ name: "returnScrollPosition" });
-      scrollPort.postMessage({
-        scrollX: window.scrollX,
-        scrollY: window.scrollY,
-        currentTab: args.currentTab
+function initializeFrontend() {
+  document.addEventListener("keydown", onKeydown);
+  document.addEventListener("focus", onFocusCapturePhase, true);
+  document.addEventListener("blur", onBlurCapturePhase, true);
+
+  // Send the key to the key handler in the background page.
+  keyPort = chrome.extension.connect({name: "keyDown"});
+
+  chrome.extension.onConnect.addListener(function (port, name) {
+    if (port.name == "executePageCommand") {
+      port.onMessage.addListener(function (args) {
+        if (this[args.command])
+        {
+          for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+        }
       });
-    });
-  } else if (port.name == "setScrollPosition") {
-    port.onMessage.addListener(function (args) {
-      if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
-    });
-  }
-});
+    }
+    else if (port.name == "getScrollPosition") {
+      port.onMessage.addListener(function (args) {
+        var scrollPort = chrome.extension.connect({ name: "returnScrollPosition" });
+        scrollPort.postMessage({
+          scrollX: window.scrollX,
+          scrollY: window.scrollY,
+          currentTab: args.currentTab
+        });
+      });
+    } else if (port.name == "setScrollPosition") {
+      port.onMessage.addListener(function (args) {
+        if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
+      });
+    }
+  });
+};
 
 /**
  * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -127,3 +131,10 @@ HUD = {
     HUD.displayElement().style.display = "none";
   }
 };
+
+// Prevent our content script from being run on iframes -- only allow it to run on the top level DOM "window".
+// TODO(philc): We don't want to process multiple keyhandlers etc. when embedded on a page containing IFrames.
+// This should be revisited, because sometimes we *do* want to listen inside of the currently focused iframe.
+var isIframe = (window.self != window.parent);
+if (!isIframe)
+  initializeFrontend();
