@@ -5,27 +5,8 @@ var keyCodes = { ESC: 27 };
 var insertMode = false;
 var keyPort;
 
-function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
-function scrollToTop() { window.scrollTo(0, 0); }
-function scrollUp() { window.scrollBy(0, -1 * SCROLL_STEP_SIZE); }
-function scrollDown() { window.scrollBy(0, SCROLL_STEP_SIZE); }
-function scrollPageUp() { window.scrollBy(0, -6 * SCROLL_STEP_SIZE); }
-function scrollPageDown() { window.scrollBy(0, 6 * SCROLL_STEP_SIZE); }
-function scrollLeft() { window.scrollBy(-1 * SCROLL_STEP_SIZE, 0); }
-function scrollRight() { window.scrollBy(SCROLL_STEP_SIZE, 0); }
-
-function reload() { window.location.reload(); }
-function goBack() { history.back(); }
-function goForward() { history.forward(); }
-
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
-
-/*
- * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
- */
-function zoomIn() { document.body.style.zoom = (currentZoomLevel += 20) + "%"; }
-function zoomOut() { document.body.style.zoom = (currentZoomLevel -= 20) + "%"; }
 
 function initializeFrontend() {
   document.addEventListener("keydown", onKeydown);
@@ -64,6 +45,25 @@ function initializeFrontend() {
     }
   });
 };
+
+/*
+ * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
+ */
+function zoomIn() { document.body.style.zoom = (currentZoomLevel += 20) + "%"; }
+function zoomOut() { document.body.style.zoom = (currentZoomLevel -= 20) + "%"; }
+
+function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
+function scrollToTop() { window.scrollTo(0, 0); }
+function scrollUp() { window.scrollBy(0, -1 * SCROLL_STEP_SIZE); }
+function scrollDown() { window.scrollBy(0, SCROLL_STEP_SIZE); }
+function scrollPageUp() { window.scrollBy(0, -6 * SCROLL_STEP_SIZE); }
+function scrollPageDown() { window.scrollBy(0, 6 * SCROLL_STEP_SIZE); }
+function scrollLeft() { window.scrollBy(-1 * SCROLL_STEP_SIZE, 0); }
+function scrollRight() { window.scrollBy(SCROLL_STEP_SIZE, 0); }
+
+function reload() { window.location.reload(); }
+function goBack() { history.back(); }
+function goForward() { history.forward(); }
 
 function toggleViewSource() {
   getCurrentUrlHandlers.push(toggleViewSourceCallback);
