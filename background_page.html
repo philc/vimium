@@ -1,12 +1,13 @@
 <html>
 <head>
 <script type="text/javascript" charset="utf-8">
-  var tabQueue = []; // Queue of tabs to restore with scroll info
+  var tabQueue = {}; // windowId -> Array
   var keyQueue = ""; // Queue of keys typed
 
   // Port handler mapping
   var portHandlers = { "keyDown":              handleKeyDown,
-                       "returnScrollPosition": handleReturnScrollPosition };
+                       "returnScrollPosition": handleReturnScrollPosition,
+                       "getCurrentTabUrl":     getCurrentTabUrl };
 
   // Event handlers
   var selectionChangedHandlers = [];
@@ -36,6 +37,17 @@
       delete getScrollPositionHandlers[args.currentTab.id];
       toCall(args.currentTab, args.scrollX, args.scrollY);
     }
+  }
+
+  /*
+   * Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:// .."
+   * because window.location doesn't know anything about the Chrome-specific "view-source:".
+   */
+  function getCurrentTabUrl(args) {
+    chrome.tabs.getSelected(null, function (tab) {
+      var returnPort = chrome.tabs.connect(tab.id, { name: "returnCurrentTabUrl" });
+      returnPort.postMessage({ url: tab.url });
+    });
   }
 
   chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
@@ -85,7 +97,15 @@
 
   function removeTab(callback) {
     getCurrentTabWithScrollPosition(function(tab, scrollX, scrollY) {
-                                      tabQueue.push({ tabUrl: tab.url, scrollX: scrollX, scrollY: scrollY });
+                                      var tabQueueEntry = { tabUrl: tab.url,
+                                                            scrollX: scrollX,
+                                                            scrollY: scrollY };
+
+                                      if (tabQueue[tab.windowId])
+                                        tabQueue[tab.windowId].push(tabQueueEntry);
+                                      else
+                                        tabQueue[tab.windowId] = [tabQueueEntry];
+
                                       chrome.tabs.remove(tab.id);
                                       // We can't just call the callback here because we actually need to wait
                                       // for the selection to change to consider this action done.
@@ -94,21 +114,29 @@
   }
 
   function restoreTab(callback) {
-    if (tabQueue.length > 0) {
-      var tabQueueEntry = tabQueue.pop();
+    // TODO(ilya): Should this be getLastFocused instead?
+    chrome.windows.getCurrent(function (window) {
+      if (tabQueue[window.id] && tabQueue[window.id].length > 0)
+      {
+        var tabQueueEntry = tabQueue[window.id].pop();
 
-      // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-      // tab is created because the content script is not available during the "loading" state. We need to
-      // wait until that's over before we can call setScrollPosition.
-      chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function(tab) {
-        tabLoadedHandlers[tab.id] = function() {
-          var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
-          scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
-        };
+        // Clean out the tabQueue so we don't have unused windows laying about.
+        if (tabQueue[window.id].length == 0)
+          delete tabQueue[window.id];
 
-        callback();
-      });
-    }
+        // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
+        // tab is created because the content script is not available during the "loading" state. We need to
+        // wait until that's over before we can call setScrollPosition.
+        chrome.tabs.create({ url: tabQueueEntry.tabUrl }, function(tab) {
+          tabLoadedHandlers[tab.id] = function() {
+            var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
+            scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
+          };
+
+          callback();
+        });
+      }
+    });
   }
   // End action functions
 
@@ -122,6 +150,7 @@
   keyToCommandRegistry['<c-d>'] = "scrollPageDown";
   keyToCommandRegistry['<c-u>'] = "scrollPageUp";
   keyToCommandRegistry['r']  = 'reload';
+  keyToCommandRegistry['gf'] = 'toggleViewSource';
 
   keyToCommandRegistry['ba'] = 'goBack';
   keyToCommandRegistry['H']  = 'goBack';

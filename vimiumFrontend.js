@@ -1,4 +1,5 @@
 var SCROLL_STEP_SIZE = 60; // Pixels
+var getCurrentUrlHandlers = []; // function (url)
 
 var keyCodes = { ESC: 27 };
 var insertMode = false;
@@ -56,9 +57,28 @@ function initializeFrontend() {
       port.onMessage.addListener(function (args) {
         if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
       });
+    } else if (port.name == "returnCurrentTabUrl") {
+      port.onMessage.addListener(function (args) {
+        if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
+      });
     }
   });
 };
+
+function toggleViewSource() {
+  getCurrentUrlHandlers.push(toggleViewSourceCallback);
+
+  var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
+  getCurrentUrlPort.postMessage({});
+}
+
+function toggleViewSourceCallback(url) {
+  if (url.substr(0, 12) == "view-source:")
+  {
+    window.location.href = url.substr(12, url.length - 12);
+  }
+  else { window.location.href = "view-source:" + url; }
+}
 
 /**
  * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
