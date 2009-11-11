@@ -17,6 +17,15 @@ function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }
 
+// TODO(philc): This should be pulled from the extension's storage when the page loads.
+var currentZoomLevel = 100;
+
+/*
+ * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
+ */
+function zoomIn() { document.body.style.zoom = (currentZoomLevel += 20) + "%"; }
+function zoomOut() { document.body.style.zoom = (currentZoomLevel -= 20) + "%"; }
+
 function initializeFrontend() {
   document.addEventListener("keydown", onKeydown);
   document.addEventListener("focus", onFocusCapturePhase, true);
