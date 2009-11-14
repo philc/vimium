@@ -44,6 +44,11 @@ function initializeFrontend() {
       });
     }
   });
+
+  // Enter insert mode automatically if there's already a text box focused.
+  var focusNode = window.getSelection().focusNode;
+  var focusOffset = window.getSelection().focusOffset;
+  if (isInputOrText(focusNode.children[focusOffset])) { enterInsertMode(); }
 };
 
 /*
@@ -100,7 +105,11 @@ function onKeydown(event) {
   }
 
   if (insertMode && event.keyCode == keyCodes.ESC)
+  {
+    // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
+    if (isInputOrText(event.srcElement)) { event.srcElement.blur(); }
     exitInsertMode();
+  }
   else if (!insertMode && keyChar)
     keyPort.postMessage(keyChar);
 }
@@ -113,6 +122,10 @@ function onFocusCapturePhase(event) {
 function onBlurCapturePhase(event) {
   if (event.target.tagName == "INPUT" || event.target.tagName == "TEXTAREA")
     exitInsertMode();
+}
+
+function isInputOrText(target) {
+  return (target.tagName == "INPUT" || target.tagName == "TEXTAREA");
 }
 
 function enterInsertMode() {
