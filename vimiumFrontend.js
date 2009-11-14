@@ -115,12 +115,12 @@ function onKeydown(event) {
 }
 
 function onFocusCapturePhase(event) {
-  if (event.target.tagName == "INPUT" || event.target.tagName == "TEXTAREA")
+  if (isInputOrText(event.target))
     enterInsertMode();
 }
 
 function onBlurCapturePhase(event) {
-  if (event.target.tagName == "INPUT" || event.target.tagName == "TEXTAREA")
+  if (isInputOrText(event.target))
     exitInsertMode();
 }
 
