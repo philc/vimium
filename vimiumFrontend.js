@@ -101,8 +101,6 @@ function onKeydown(event) {
 
   if (insertMode && event.keyCode == keyCodes.ESC)
     exitInsertMode();
-  else if (!insertMode && keyChar == "i")
-    enterInsertMode();
   else if (!insertMode && keyChar)
     keyPort.postMessage(keyChar);
 }
