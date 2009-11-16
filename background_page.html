@@ -4,10 +4,13 @@
   var tabQueue = {}; // windowId -> Array
   var keyQueue = ""; // Queue of keys typed
 
+  var defaultSettings = { "scrollStepSize": 60 };
+
   // Port handler mapping
   var portHandlers = { "keyDown":              handleKeyDown,
                        "returnScrollPosition": handleReturnScrollPosition,
-                       "getCurrentTabUrl":     getCurrentTabUrl };
+                       "getCurrentTabUrl":     getCurrentTabUrl,
+                       "getSetting":           getSetting};
 
   // Event handlers
   var selectionChangedHandlers = [];
@@ -47,6 +50,18 @@
     chrome.tabs.getSelected(null, function (tab) {
       var returnPort = chrome.tabs.connect(tab.id, { name: "returnCurrentTabUrl" });
       returnPort.postMessage({ url: tab.url });
+    });
+  }
+
+  /*
+   * Used by the content scripts to get settings from the local storage.
+   */
+  function getSetting(args) {
+    var value = localStorage[args.key] ? localStorage[args.key] : defaultSettings[args.key];
+
+    chrome.tabs.getSelected(null, function (tab) {
+      var returnPort = chrome.tabs.connect(tab.id, { name: "returnSetting" });
+      returnPort.postMessage({ key: args.key, value: value });
     });
   }
 

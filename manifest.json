@@ -3,6 +3,7 @@
   "version": "1.0",
   "description": "The Hacker's Browser.",
   "background_page": "background_page.html",
+  "options_page": "settings.html",
   "permissions": [
     "tabs"
   ],

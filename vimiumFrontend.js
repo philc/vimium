@@ -1,14 +1,29 @@
-var SCROLL_STEP_SIZE = 60; // Pixels
+var settings = {};
+var settingsToLoad = ["scrollStepSize"];
+
 var getCurrentUrlHandlers = []; // function (url)
 
 var keyCodes = { ESC: 27 };
 var insertMode = false;
 var keyPort;
+var settingPort;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
 
+function getSetting(key) {
+  if (!settingPort)
+  {
+    settingPort = chrome.extension.connect({ name: "getSetting" });
+  }
+  settingPort.postMessage({ key: key });
+}
+
+function setSetting(args) { settings[args.key] = args.value; }
+
 function initializeFrontend() {
+  for (var i in settingsToLoad) { getSetting(settingsToLoad[i]); }
+
   document.addEventListener("keydown", onKeydown);
   document.addEventListener("focus", onFocusCapturePhase, true);
   document.addEventListener("blur", onBlurCapturePhase, true);
@@ -42,6 +57,8 @@ function initializeFrontend() {
       port.onMessage.addListener(function (args) {
         if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
       });
+    } else if (port.name == "returnSetting") {
+      port.onMessage.addListener(setSetting);
     }
   });
 
@@ -60,12 +77,12 @@ function zoomOut() { document.body.style.zoom = (currentZoomLevel -= 20) + "%"; 
 
 function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(0, 0); }
-function scrollUp() { window.scrollBy(0, -1 * SCROLL_STEP_SIZE); }
-function scrollDown() { window.scrollBy(0, SCROLL_STEP_SIZE); }
-function scrollPageUp() { window.scrollBy(0, -6 * SCROLL_STEP_SIZE); }
-function scrollPageDown() { window.scrollBy(0, 6 * SCROLL_STEP_SIZE); }
-function scrollLeft() { window.scrollBy(-1 * SCROLL_STEP_SIZE, 0); }
-function scrollRight() { window.scrollBy(SCROLL_STEP_SIZE, 0); }
+function scrollUp() { window.scrollBy(0, -1 * settings["scrollStepSize"]); }
+function scrollDown() { window.scrollBy(0, settings["scrollStepSize"]); }
+function scrollPageUp() { window.scrollBy(0, -6 * settings["scrollStepSize"]); }
+function scrollPageDown() { window.scrollBy(0, 6 * settings["scrollStepSize"]); }
+function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
+function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
 
 function reload() { window.location.reload(); }
 function goBack() { history.back(); }
