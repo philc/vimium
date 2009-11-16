@@ -48,7 +48,8 @@ function initializeFrontend() {
   // Enter insert mode automatically if there's already a text box focused.
   var focusNode = window.getSelection().focusNode;
   var focusOffset = window.getSelection().focusOffset;
-  if (isInputOrText(focusNode.children[focusOffset])) { enterInsertMode(); }
+  if (focusNode && focusOffset &&
+      isInputOrText(focusNode.children[focusOffset])) { enterInsertMode(); }
 };
 
 /*
