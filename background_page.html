@@ -22,8 +22,9 @@
   chrome.extension.onConnect.addListener(function(port, name) {
     var senderTabId = port.sender.tab ? port.sender.tab.id : null;
     // If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
-    // the tab's scroll position.
-    if (senderTabId && tabLoadedHandlers[senderTabId]) {
+    // the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
+    // the scroll position will not be possible.
+    if (port.name == "domReady" && senderTabId && tabLoadedHandlers[senderTabId]) {
       var toCall = tabLoadedHandlers[senderTabId];
       // Delete first to be sure there's no circular events.
       delete tabLoadedHandlers[senderTabId];

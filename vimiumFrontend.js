@@ -1,3 +1,9 @@
+/*
+ * This content script takes input from its webpage and executes commands locally on behalf of the background
+ * page. It must be run prior to domReady so that we perform some operations very early, like setting
+ * the page's zoom level. We tell the background page that we're in domReady and ready to accept normal
+ * commands by connectiong to a port named "domReady".
+ */
 var settings = {};
 var settingsToLoad = ["scrollStepSize"];
 
@@ -20,7 +26,10 @@ function getSetting(key) {
 
 function setSetting(args) { settings[args.key] = args.value; }
 
-function initializeFrontend() {
+/*
+ * Complete initialization work that sould be done prior to DOMReady, like setting the page's zoom level.
+ */
+function initializePreDomReady() {
   for (var i in settingsToLoad) { getSetting(settingsToLoad[i]); }
 
   document.addEventListener("keydown", onKeydown);
@@ -36,8 +45,7 @@ function initializeFrontend() {
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
-        if (this[args.command])
-        {
+        if (this[args.command]) {
           for (var i = 0; i < args.count; i++) { this[args.command].call(); }
         }
       });
@@ -68,12 +76,19 @@ function initializeFrontend() {
       port.onMessage.addListener(setSetting);
     }
   });
+}
 
+/*
+ * Initialization tasks that must wait for the document to be ready.
+ */
+function initializeOnDomReady() {
   // Enter insert mode automatically if there's already a text box focused.
   var focusNode = window.getSelection().focusNode;
   var focusOffset = window.getSelection().focusOffset;
   if (focusNode && focusOffset &&
       isInputOrText(focusNode.children[focusOffset])) { enterInsertMode(); }
+  // Tell the background page we're in the dom ready state.
+  chrome.extension.connect({ name: "domReady" });
 };
 
 /*
@@ -87,8 +102,9 @@ function saveZoomLevel(domain, zoomLevel) {
 
 /*
  * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
+ * Set the zoom style on documentElement because document.body does not exist pre-page load.
  */
-function setPageZoomLevel(zoomLevel) { document.body.style.zoom = zoomLevel + "%"; }
+function setPageZoomLevel(zoomLevel) { document.documentElement.style.zoom = zoomLevel + "%"; }
 
 function zoomIn() {
   setPageZoomLevel(currentZoomLevel += 20);
@@ -219,5 +235,7 @@ HUD = {
 // TODO(philc): We don't want to process multiple keyhandlers etc. when embedded on a page containing IFrames.
 // This should be revisited, because sometimes we *do* want to listen inside of the currently focused iframe.
 var isIframe = (window.self != window.parent);
-if (!isIframe)
-  initializeFrontend();
+if (!isIframe) {
+  initializePreDomReady();
+  window.addEventListener("DOMContentLoaded", initializeOnDomReady);
+}
