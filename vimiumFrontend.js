@@ -1,7 +1,7 @@
 var settings = {};
 var settingsToLoad = ["scrollStepSize"];
 
-var getCurrentUrlHandlers = []; // function (url)
+var getCurrentUrlHandlers = []; // function(url)
 
 var keyCodes = { ESC: 27 };
 var insertMode = false;
@@ -33,9 +33,9 @@ function initializeFrontend() {
   // Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({name: "keyDown"});
 
-  chrome.extension.onConnect.addListener(function (port, name) {
+  chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
-      port.onMessage.addListener(function (args) {
+      port.onMessage.addListener(function(args) {
         if (this[args.command])
         {
           for (var i = 0; i < args.count; i++) { this[args.command].call(); }
@@ -43,7 +43,7 @@ function initializeFrontend() {
       });
     }
     else if (port.name == "getScrollPosition") {
-      port.onMessage.addListener(function (args) {
+      port.onMessage.addListener(function(args) {
         var scrollPort = chrome.extension.connect({ name: "returnScrollPosition" });
         scrollPort.postMessage({
           scrollX: window.scrollX,
@@ -52,15 +52,15 @@ function initializeFrontend() {
         });
       });
     } else if (port.name == "setScrollPosition") {
-      port.onMessage.addListener(function (args) {
+      port.onMessage.addListener(function(args) {
         if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
       });
     } else if (port.name == "returnCurrentTabUrl") {
-      port.onMessage.addListener(function (args) {
+      port.onMessage.addListener(function(args) {
         if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
       });
     } else if (port.name == "returnZoomLevel") {
-      port.onMessage.addListener(function (args) {
+      port.onMessage.addListener(function(args) {
         currentZoomLevel = args.zoomLevel;
         setPageZoomLevel(currentZoomLevel);
       });
