@@ -7,15 +7,14 @@ var keyCodes = { ESC: 27 };
 var insertMode = false;
 var keyPort;
 var settingPort;
+var saveZoomLevelPort;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
 
 function getSetting(key) {
   if (!settingPort)
-  {
     settingPort = chrome.extension.connect({ name: "getSetting" });
-  }
   settingPort.postMessage({ key: key });
 }
 
@@ -27,6 +26,9 @@ function initializeFrontend() {
   document.addEventListener("keydown", onKeydown);
   document.addEventListener("focus", onFocusCapturePhase, true);
   document.addEventListener("blur", onBlurCapturePhase, true);
+
+  var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
+  getZoomLevelPort.postMessage({ domain: window.location.host });
 
   // Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({name: "keyDown"});
@@ -57,6 +59,11 @@ function initializeFrontend() {
       port.onMessage.addListener(function (args) {
         if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
       });
+    } else if (port.name == "returnZoomLevel") {
+      port.onMessage.addListener(function (args) {
+        currentZoomLevel = args.zoomLevel;
+        setPageZoomLevel(currentZoomLevel);
+      });
     } else if (port.name == "returnSetting") {
       port.onMessage.addListener(setSetting);
     }
@@ -70,10 +77,28 @@ function initializeFrontend() {
 };
 
 /*
+ * Asks the background page to persist the zoom level for the given domain to localStorage.
+ */
+function saveZoomLevel(domain, zoomLevel) {
+  if (!saveZoomLevelPort)
+    saveZoomLevelPort = chrome.extension.connect({ name: "saveZoomLevel" });
+  saveZoomLevelPort.postMessage({ domain: domain, zoomLevel: zoomLevel });
+}
+
+/*
  * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
  */
-function zoomIn() { document.body.style.zoom = (currentZoomLevel += 20) + "%"; }
-function zoomOut() { document.body.style.zoom = (currentZoomLevel -= 20) + "%"; }
+function setPageZoomLevel(zoomLevel) { document.body.style.zoom = zoomLevel + "%"; }
+
+function zoomIn() {
+  setPageZoomLevel(currentZoomLevel += 20);
+  saveZoomLevel(window.location.host, currentZoomLevel);
+}
+
+function zoomOut() {
+  setPageZoomLevel(currentZoomLevel -= 20);
+  saveZoomLevel(window.location.host, currentZoomLevel);
+}
 
 function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(0, 0); }

@@ -10,6 +10,8 @@
   var portHandlers = { "keyDown":              handleKeyDown,
                        "returnScrollPosition": handleReturnScrollPosition,
                        "getCurrentTabUrl":     getCurrentTabUrl,
+                       "getZoomLevel":         getZoomLevel,
+                       "saveZoomLevel":        saveZoomLevel,
                        "getSetting":           getSetting};
 
   // Event handlers
@@ -47,9 +49,22 @@
    * because window.location doesn't know anything about the Chrome-specific "view-source:".
    */
   function getCurrentTabUrl(args) {
-    chrome.tabs.getSelected(null, function (tab) {
+    chrome.tabs.getSelected(null, function(tab) {
       var returnPort = chrome.tabs.connect(tab.id, { name: "returnCurrentTabUrl" });
       returnPort.postMessage({ url: tab.url });
+    });
+  }
+
+  /*
+   * Returns the previously saved zoom level for the current tab, or the default zoom level
+   */
+  function getZoomLevel(args) {
+    chrome.tabs.getSelected(null, function(tab) {
+      var returnPort = chrome.tabs.connect(tab.id, { name: "returnZoomLevel" });
+      var localStorageKey = "zoom" + args.domain;
+      var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
+      var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] || 100);
+      returnPort.postMessage({ zoomLevel: zoomLevel });
     });
   }
 
@@ -59,19 +74,31 @@
   function getSetting(args) {
     var value = localStorage[args.key] ? localStorage[args.key] : defaultSettings[args.key];
 
-    chrome.tabs.getSelected(null, function (tab) {
+    chrome.tabs.getSelected(null, function(tab) {
       var returnPort = chrome.tabs.connect(tab.id, { name: "returnSetting" });
       returnPort.postMessage({ key: args.key, value: value });
     });
   }
 
-  chrome.tabs.onSelectionChanged.addListener(function (tabId, selectionInfo) {
+  /*
+   * Persists the current zoom level for a given domain
+   */
+  function saveZoomLevel(args) {
+    var localStorageKey = "zoom" + args.domain;
+    // TODO(philc): We might want to consider expiring these entries after X months as NoSquint does.
+    // Note(philc): We might also want to jsonify this hash instead of polluting our local storage keyspace.
+    localStorage[localStorageKey] = [getCurrentTimeInSeconds(), args.zoomLevel].join(",");
+  }
+
+  function getCurrentTimeInSeconds() { Math.floor((new Date()).getTime() / 1000); }
+
+  chrome.tabs.onSelectionChanged.addListener(function(tabId, selectionInfo) {
     if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
   });
 
   function repeatFunction(func, totalCount, currentCount) {
     if (currentCount < totalCount)
-      func(function () { repeatFunction(func, totalCount, currentCount + 1); });
+      func(function() { repeatFunction(func, totalCount, currentCount + 1); });
   }
 
   // Returns the currently selected tab along with scroll coordinates. Pass in a callback of the form:
