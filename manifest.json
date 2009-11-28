@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["vimiumFrontend.js"],
+      "js": ["vimiumFrontend.js", "linkHints.js"],
       "run_at": "document_start"
     }
   ]

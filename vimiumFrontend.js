@@ -9,7 +9,7 @@ var settingsToLoad = ["scrollStepSize"];
 
 var getCurrentUrlHandlers = []; // function(url)
 
-var keyCodes = { ESC: 27 };
+var keyCodes = { ESC: 27, backspace: 8, deleteKey: 46 };
 var insertMode = false;
 var keyPort;
 var settingPort;
@@ -153,6 +153,9 @@ function toggleViewSourceCallback(url) {
  */
 function onKeydown(event) {
   var keyChar = "";
+
+  if (linkHintsModeActivated)
+    return;
 
   // Ignore modifier keys by themselves.
   if (event.keyCode > 31 && event.keyCode < 127) {
