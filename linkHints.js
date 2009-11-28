@@ -3,12 +3,12 @@
  * the page have a hint marker displayed containing a sequence of letters. Typing those letters will select
  * a link.
  */
-var linkHintsCss = 
+var linkHintsCss =
   '.vimiumHintMarker {' +
     'background-color:yellow;' +
     'color:black;' +
     'font-weight:bold;' +
-    'font-size:13px;' +
+    'font-size:12px;' +
     'padding:0 1px;' +
     'line-height:100%;' +
     'border:1px solid #E3BE23;' +
@@ -73,7 +73,7 @@ function getVisibleClickableElements() {
     var boundingRect = element.getBoundingClientRect();
     if (boundingRect.bottom < 0 || boundingRect.top > window.innerHeight)
       continue;
-    
+
     // Using getElementFromPoint will omit elements which have visibility=hidden or display=none, and
     // elements inside of containers that are also hidden.
     if (element != getElementFromPoint(boundingRect.left, boundingRect.top))
@@ -89,8 +89,8 @@ function getVisibleClickableElements() {
  * to do. This should become unnecessary when webkit fixes their bug.
  */
 function getElementFromPoint(x, y) {
-  var zoomLevel = parseInt(document.documentElement.style.zoom || 100) / 100.0;
-  return document.elementFromPoint(Math.ceil(x * zoomLevel), Math.ceil(y * zoomLevel));
+  var zoomFactor = currentZoomLevel / 100.0;
+  return document.elementFromPoint(Math.ceil(x * zoomFactor), Math.ceil(y * zoomFactor));
 }
 
 /*
@@ -114,7 +114,7 @@ function onKeyDownInLinkHintsMode(event) {
   if (!keyChar)
     return;
 
-  // TODO(philc): Ignore keys that have modifiers. 
+  // TODO(philc): Ignore keys that have modifiers.
   if (event.keyCode == keyCodes.ESC) {
     deactivateLinkHintsMode();
   } else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
@@ -227,8 +227,11 @@ function addMarkerFor(link, linkHintNumber) {
   marker.style.position = "absolute";
 
   var boundingRect = link.getBoundingClientRect();
-  marker.style.left = boundingRect.left + window.scrollX + "px";
-  marker.style.top = boundingRect.top + window.scrollY + "px";
+  // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
+  // the document node.
+  var zoomFactor = currentZoomLevel / 100.0;
+  marker.style.left = boundingRect.left + window.scrollX / zoomFactor + "px";
+  marker.style.top = boundingRect.top  + window.scrollY / zoomFactor + "px";
 
   marker.clickableItem = link;
   // Note(philc): Append these markers to document.body instead of as child nodes to the link itself,
