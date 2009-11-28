@@ -187,7 +187,8 @@ function onBlurCapturePhase(event) {
 }
 
 function isInputOrText(target) {
-  return ((target.tagName == "INPUT" && target.type == "text") || target.tagName == "TEXTAREA");
+  return ((target.tagName == "INPUT" && (target.type == "text" || target.type == "password")) ||
+          target.tagName == "TEXTAREA");
 }
 
 function enterInsertMode() {
