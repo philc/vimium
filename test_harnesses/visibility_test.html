@@ -1,0 +1,58 @@
+<!--
+  This demonstrates the effectiveness a method for testing for visibility elements on various conditions.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>Visibility test</title>
+  <style type="text/css" media="screen">
+    span {
+      display:block;
+      width:30px;
+      height:20px;
+      background-color:blue;
+    }
+  </style>
+
+  <script type="text/javascript" charset="utf-8">
+    window.addEventListener("load", checkDivsForVisibility, false);
+    
+    function checkDivsForVisibility() {
+      var divs = document.getElementsByTagName("span");
+      for (var i = 0; i < divs.length; i++) {
+        console.log(divs[i].id, isVisible(divs[i]));
+      }
+    }
+    /*
+     * Determines whether this element is on screen and visible.
+     * See this for some helpful discussion:
+     * http://stackoverflow.com/questions/704758/how-to-check-if-an-element-is-really-visible-with-javascript
+     */
+    function isVisible(element) {
+      var boundingRect = element.getBoundingClientRect();
+      var elementFromPoint = document.elementFromPoint(boundingRect.left, boundingRect.top);
+      return elementFromPoint == element;
+    }
+  </script>
+</head>
+
+<body>
+  <span id="div1true"></span>
+  
+  <span id="div2false" style="visibility:hidden"></span>
+
+  <span id="div3false" style="display:none"></span>
+
+  <span id="div4false" style="position:absolute;top:2000px"></span>
+
+  <div style="visibility:hidden">
+    <span id="div5false"></span>
+  </div>
+  <div style="display:none">
+    <span id="div6false"></span>
+  </div>
+  <div style="opacity:0">
+    <span id="div7true" style="opacity:0"></span>
+  </div>
+</html>
