@@ -76,7 +76,7 @@ function getVisibleClickableElements() {
 
     // Using getElementFromPoint will omit elements which have visibility=hidden or display=none, and
     // elements inside of containers that are also hidden.
-    if (element != getElementFromPoint(boundingRect.left, boundingRect.top))
+    if (!elementOccupiesPoint(element, boundingRect.left, boundingRect.top))
       continue;
 
     visibleElements.push(element);
@@ -84,6 +84,20 @@ function getVisibleClickableElements() {
   return visibleElements;
 }
 
+/*
+ * Checks whether the clickable element or one of its descendents is at the given point. We must check
+ * descendents because some clickable elements like "<a>" can have many nested children.
+ */
+function elementOccupiesPoint(clickableElement, x, y) {
+  var elementAtPoint = getElementFromPoint(x, y);
+  // Recurse up to 5 parents.
+  for (var i = 0; i < 5 && elementAtPoint; i++) {
+    if (elementAtPoint == clickableElement)
+      return true;
+    elementAtPoint = elementAtPoint.parentNode;
+  }
+  return false;
+}
 /*
  * Returns the element at the given point and factors in the page's CSS zoom level, which Webkit neglects
  * to do. This should become unnecessary when webkit fixes their bug.
