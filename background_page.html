@@ -59,26 +59,22 @@
   /*
    * Returns the previously saved zoom level for the current tab, or the default zoom level
    */
-  function getZoomLevel(args) {
-    chrome.tabs.getSelected(null, function(tab) {
-      var returnPort = chrome.tabs.connect(tab.id, { name: "returnZoomLevel" });
-      var localStorageKey = "zoom" + args.domain;
-      var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
-      var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] || 100);
-      returnPort.postMessage({ zoomLevel: zoomLevel });
-    });
+  function getZoomLevel(args, port) {
+    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnZoomLevel" });
+    var localStorageKey = "zoom" + args.domain;
+    var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
+    var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] || 100);
+    returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
   /*
    * Used by the content scripts to get settings from the local storage.
    */
-  function getSetting(args) {
+  function getSetting(args, port) {
     var value = localStorage[args.key] ? localStorage[args.key] : defaultSettings[args.key];
 
-    chrome.tabs.getSelected(null, function(tab) {
-      var returnPort = chrome.tabs.connect(tab.id, { name: "returnSetting" });
-      returnPort.postMessage({ key: args.key, value: value });
-    });
+    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnSetting" });
+    returnPort.postMessage({ key: args.key, value: value });
   }
 
   /*
