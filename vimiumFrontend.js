@@ -239,11 +239,11 @@ function handleEnterForFindMode() {
 }
 
 function performFind(backwards) {
-  window.find(findModeQuery, true, false, true, false, true, false);
+  window.find(findModeQuery, false, false, true, false, true, false);
 }
 
 function performBackwardsFind() {
-  window.find(findModeQuery, true, true, true, false, true, false);
+  window.find(findModeQuery, false, true, true, false, true, false);
 }
 
 function enterFindMode() {
