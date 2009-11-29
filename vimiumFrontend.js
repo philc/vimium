@@ -9,8 +9,10 @@ var settingsToLoad = ["scrollStepSize"];
 
 var getCurrentUrlHandlers = []; // function(url)
 
-var keyCodes = { ESC: 27, backspace: 8, deleteKey: 46 };
+var keyCodes = { ESC: 27, backspace: 8, deleteKey: 46, enter: 13 };
 var insertMode = false;
+var findMode = false;
+var findModeQuery = "";
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
@@ -166,13 +168,31 @@ function onKeydown(event) {
       keyChar = "<c-" + keyChar + ">";
   }
 
+  // NOTE(ilya): Not really sure why yet but / yields 191 (¿) on my mac.
+  if (event.keyCode == 191) { keyChar = "/"; }
+
   if (insertMode && event.keyCode == keyCodes.ESC)
   {
     // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
     if (isInputOrText(event.srcElement)) { event.srcElement.blur(); }
     exitInsertMode();
   }
-  else if (!insertMode && keyChar)
+  else if (findMode && event.keyCode == keyCodes.ESC)
+    exitFindMode();
+  else if (findMode)
+  {
+    if (keyChar)
+      handleKeyCharForFindMode(keyChar);
+    // Don't let backspace take us back in history.
+    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
+    {
+      handleDeleteForFindMode();
+      event.preventDefault();
+    }
+    else if (event.keyCode == keyCodes.enter)
+      handleEnterForFindMode();
+  }
+  else if (!insertMode && !findMode && keyChar)
     keyPort.postMessage(keyChar);
 }
 
@@ -198,6 +218,42 @@ function enterInsertMode() {
 
 function exitInsertMode() {
   insertMode = false;
+  HUD.hide();
+}
+
+function handleKeyCharForFindMode(keyChar) {
+  findModeQuery = findModeQuery + keyChar;
+  HUD.show("/" + findModeQuery);
+  performFind();
+}
+
+function handleDeleteForFindMode() {
+  findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
+  HUD.show("/" + findModeQuery);
+  performFind();
+}
+
+function handleEnterForFindMode() {
+  exitFindMode();
+  performFind();
+}
+
+function performFind(backwards) {
+  window.find(findModeQuery, true, false, true, false, true, false);
+}
+
+function performBackwardsFind() {
+  window.find(findModeQuery, true, true, true, false, true, false);
+}
+
+function enterFindMode() {
+  findModeQuery = "";
+  findMode = true;
+  HUD.show("/");
+}
+
+function exitFindMode() {
+  findMode = false;
   HUD.hide();
 }
 
