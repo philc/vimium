@@ -6,9 +6,12 @@
   <script type="text/javascript">
 
   // Saves options to localStorage.
-  function save_options() {
+  function saveOptions() {
     var scrollStepSize = document.getElementById("scrollStepSize").value;
     localStorage["scrollStepSize"] = scrollStepSize;
+
+    var defaultZoomLevel = document.getElementById("defaultZoomLevel").value;
+    localStorage["defaultZoomLevel"] = defaultZoomLevel;
 
     // Update status to let user know options were saved.
     var status = document.getElementById("status");
@@ -17,21 +20,23 @@
   }
 
   // Restores select box state to saved value from localStorage.
-  function restore_options() {
+  function restoreOptions() {
     // TODO(ilya): Create a single option list with defaults somewhere to share across various scripts. 
-    var scrollStepSize = localStorage["scrollStepSize"];
-    if (!scrollStepSize) { scrollStepSize = 60; }
+    var scrollStepSize = localStorage["scrollStepSize"] || 60;
+    var defaultZoomLvel = localStorage["defaultZoomLevel"] || 100;
 
     document.getElementById("scrollStepSize").value = scrollStepSize;
+    document.getElementById("defaultZoomLevel").value = defaultZoomLvel
   }
   </script>
 
-  <body onload="restore_options()">
+  <body onload="restoreOptions()">
     <h1>Vimium - Settings</h1>
     Scroll Step Size: <input id="scrollStepSize" type="text"> px (default: 60)
     <br>
+    Scroll Step Size: <input id="defaultZoomLevel" type="text" value="100"> % (default: 100)
 
-    <button onclick="save_options()">Save Settings</button>
+    <button onclick="saveOptions()">Save Settings</button>
     <div id="status"></div>
   </body>
 </html>
