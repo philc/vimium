@@ -223,13 +223,13 @@ function exitInsertMode() {
 
 function handleKeyCharForFindMode(keyChar) {
   findModeQuery = findModeQuery + keyChar;
-  HUD.show("/" + findModeQuery);
+  showFindModeHUDForQuery();
   performFind();
 }
 
 function handleDeleteForFindMode() {
   findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
-  HUD.show("/" + findModeQuery);
+  showFindModeHUDForQuery();
   performFind();
 }
 
@@ -244,6 +244,22 @@ function performFind() {
 
 function performBackwardsFind() {
   window.find(findModeQuery, false, true, true, false, true, false);
+}
+
+function showFindModeHUDForQuery() {
+  HUD.show("/" + insertSpaces(findModeQuery));
+}
+
+/*
+ * We need this so that the find mode HUD doesn't match its own searches.
+ */
+function insertSpaces(query) {
+  var newQuery = "";
+
+  for (var i = 0; i < query.length; i++)
+    newQuery = newQuery + query[i] + "<span style=\"font-size: 0px;\"> </span>";
+
+  return newQuery;
 }
 
 function enterFindMode() {
