@@ -177,11 +177,11 @@ function onKeydown(event) {
     if (isInputOrText(event.srcElement)) { event.srcElement.blur(); }
     exitInsertMode();
   }
-  else if (findMode && event.keyCode == keyCodes.ESC)
-    exitFindMode();
   else if (findMode)
   {
-    if (keyChar)
+    if (event.keyCode == keyCodes.ESC)
+      exitFindMode();
+    else if (keyChar)
       handleKeyCharForFindMode(keyChar);
     // Don't let backspace take us back in history.
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
@@ -238,7 +238,7 @@ function handleEnterForFindMode() {
   performFind();
 }
 
-function performFind(backwards) {
+function performFind() {
   window.find(findModeQuery, false, false, true, false, true, false);
 }
 
