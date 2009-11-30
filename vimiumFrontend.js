@@ -87,7 +87,7 @@ function initializeOnDomReady() {
   // Enter insert mode automatically if there's already a text box focused.
   var focusNode = window.getSelection().focusNode;
   var focusOffset = window.getSelection().focusOffset;
-  if (focusNode && focusOffset &&
+  if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
       isInputOrText(focusNode.children[focusOffset])) { enterInsertMode(); }
   // Tell the background page we're in the dom ready state.
   chrome.extension.connect({ name: "domReady" });
