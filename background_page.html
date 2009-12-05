@@ -3,6 +3,7 @@
 <script type="text/javascript" charset="utf-8">
   var tabQueue = {}; // windowId -> Array
   var keyQueue = ""; // Queue of keys typed
+  var validFirstKeys = {};
 
   var defaultSettings = { "scrollStepSize": 60 };
 
@@ -215,23 +216,32 @@
   keyToCommandRegistry['d']  = removeTab;
   keyToCommandRegistry['u']  = restoreTab;
 
-  function handleKeyDown(key) {
-    keyQueue = keyQueue + key;
-    console.log("current keyQueue: [", keyQueue, "]");
-    checkKeyQueue();
+
+  function populateValidFirstKeys() {
+    for (var key in keyToCommandRegistry)
+    {
+      if (key.length == 2)
+        validFirstKeys[key[0]] = true;
+    }
   }
 
-  function checkKeyQueue() {
-    var match = /([0-9]*)(.*)/.exec(keyQueue);
+  function handleKeyDown(key) {
+    console.log("checking keyQueue: [", keyQueue + key, "]");
+    keyQueue = checkKeyQueue(keyQueue + key);
+    console.log("new KeyQueue: " + keyQueue);
+  }
+
+  function checkKeyQueue(keysToCheck) {
+    var match = /([0-9]*)(.*)/.exec(keysToCheck);
     var count = parseInt(match[1]);
     var command = match[2];
 
-    if (command.length == 0) { return; }
+    if (command.length == 0) { return keysToCheck; }
     if (isNaN(count)) { count = 1; }
 
     if (keyToCommandRegistry[command]) {
       registryEntry = keyToCommandRegistry[command];
-      console.log("command found for [", keyQueue, "],", registryEntry);
+      console.log("command found for [", keysToCheck, "],", registryEntry);
 
       if (typeof(registryEntry) == "string") {
         chrome.tabs.getSelected(null, function(tab) {
@@ -242,11 +252,23 @@
         repeatFunction(registryEntry, count, 0);
       }
 
-      keyQueue = "";
+      return "";
     } else if (command.length > 1) {
-      keyQueue = "";
+      // The second key might be a valid command by its self.
+      if (keyToCommandRegistry[command[1]])
+        return checkKeyQueue(command[1]);
+      else
+        return (validFirstKeys[command[1]] ? command[1] : "");
+    } else {
+      return (validFirstKeys[command] ? count.toString() + command : "");
     }
   }
+
+  function init() {
+    populateValidFirstKeys();
+  }
+
+  init();
 </script>
 
 </head>
