@@ -228,8 +228,14 @@ function handleKeyCharForFindMode(keyChar) {
 }
 
 function handleDeleteForFindMode() {
-  findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
-  showFindModeHUDForQuery();
+  if (findModeQuery.length == 0)
+    exitFindMode();
+  else
+  {
+    findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
+    showFindModeHUDForQuery();
+  }
+
   performFind();
 }
 
