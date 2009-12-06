@@ -173,9 +173,12 @@ function onKeydown(event) {
 
   if (insertMode && event.keyCode == keyCodes.ESC)
   {
-    // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
-    if (isInputOrText(event.srcElement)) { event.srcElement.blur(); }
-    exitInsertMode();
+    // Note that we can't programmatically blur out of Flash embeds from Javascript.
+    if (event.srcElement.tagName != "EMBED") {
+      // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
+      if (isInputOrText(event.srcElement)) { event.srcElement.blur(); }
+      exitInsertMode();
+    }
   }
   else if (findMode)
   {
@@ -197,14 +200,19 @@ function onKeydown(event) {
 }
 
 function onFocusCapturePhase(event) {
-  if (isInputOrText(event.target))
+  if (isFocusable(event.target))
     enterInsertMode();
 }
 
 function onBlurCapturePhase(event) {
-  if (isInputOrText(event.target))
+  if (isFocusable(event.target))
     exitInsertMode();
 }
+
+/*
+ * Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
+ */
+function isFocusable(element) { return isInputOrText(element) || element.tagName == "EMBED"; }
 
 function isInputOrText(target) {
   return ((target.tagName == "INPUT" && (target.type == "text" || target.type == "password")) ||
