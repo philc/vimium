@@ -154,11 +154,15 @@ function updateLinkHints() {
     deactivateLinkHintsMode();
   else if (linksMatched.length == 1) {
     var matchedLink = linksMatched[0];
-    // Don't navigate to the selected link immediately; we want to give the user some feedback depicting
-    // which link they've selected by focusing it. Note that for textareas and inputs, the click
-    // event is ignored, but focus causes the desired behavior.
-    setTimeout(function() { simulateClick(matchedLink); }, 600);
-    matchedLink.focus();
+    if (isInputOrText(matchedLink)) {
+      matchedLink.focus();
+      matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
+    } else {
+      // Don't navigate to the selected link immediately; we want to give the user some feedback depicting
+      // which link they've selected by focusing it.
+      setTimeout(function() { simulateClick(matchedLink); }, 400);
+      matchedLink.focus();
+    }
     deactivateLinkHintsMode();
   }
 }
