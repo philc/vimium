@@ -20,7 +20,7 @@ var linkHintsCss =
   '}';
 
 var hintMarkers = [];
-var hintCharacters = "asdfjkl";
+var hintCharacters = "sadfjkluewcm";
 // The characters that were typed in while in "link hints" mode.
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
@@ -52,13 +52,15 @@ function buildLinkHints() {
 
   // Initialize the number used to generate the character hints to be as many digits as we need to
   // highlight all the links on the page; we don't want some link hints to have more chars than others.
-  var digitsNeeded = digitsNeededToRepresentLinks(visibleElements.length);
-  var linkHintNumber = Math.pow(hintCharacters.length, digitsNeeded - 1);
+  var digitsNeeded = Math.ceil(logXOfBase(visibleElements.length, hintCharacters.length));
+  var linkHintNumber = 0;
   for (var i = 0; i < visibleElements.length; i++) {
-    hintMarkers.push(addMarkerFor(visibleElements[i], linkHintNumber));
+    hintMarkers.push(addMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
     linkHintNumber++;
   }
 }
+
+function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
 
 /*
  * Returns all clickable elements that are not hidden and are in the current viewport.
@@ -110,22 +112,6 @@ function elementOccupiesPoint(clickableElement, x, y) {
 function getElementFromPoint(x, y) {
   var zoomFactor = currentZoomLevel / 100.0;
   return document.elementFromPoint(Math.ceil(x * zoomFactor), Math.ceil(y * zoomFactor));
-}
-
-/*
- * Returns the number of digits that will be needed by the link hints to represent all of the elements
- * on screen. This assumes that we want all of the elements to have the same number of characters in
- * their link hints.
- */
-function digitsNeededToRepresentLinks(numElements) {
-  for (var i = 1; i < 5; i++) {
-    var maxCharactersRepresented = Math.pow(hintCharacters.length, i);
-    for (var j = 1; j < i; j++)
-      maxCharactersRepresented -= Math.pow(hintCharacters.length, j);
-    if (maxCharactersRepresented >= numElements)
-      return i;
-  }
-  return 6;
 }
 
 function onKeyDownInLinkHintsMode(event) {
@@ -197,9 +183,9 @@ function highlightLinkMatches(searchString) {
 
 /*
  * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
- * the hint text.
+ * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
  */
-function numberToHintString(number) {
+function numberToHintString(number, numHintDigits) {
   var base = hintCharacters.length;
   var hintString = [];
   var remainder = 0;
@@ -209,6 +195,11 @@ function numberToHintString(number) {
     number -= remainder;
     number /= Math.floor(base);
   } while (number > 0);
+
+  // Pad the hint string we're returning so that it matches numHintDigits.
+  var hintStringLength = hintString.length;
+  for (var i = 0; i < numHintDigits - hintStringLength; i++)
+    hintString.unshift(hintCharacters[0]);
   return hintString.join("");
 }
 
@@ -236,8 +227,8 @@ function deactivateLinkHintsMode() {
  * Adds a link marker for the given link by adding a new element to <body> and positioning it on top of
  * the link.
  */
-function addMarkerFor(link, linkHintNumber) {
-  var hintString = numberToHintString(linkHintNumber);
+function addMarkerFor(link, linkHintNumber, linkHintDigits) {
+  var hintString = numberToHintString(linkHintNumber, linkHintDigits);
   var marker = document.createElement("div");
   marker.className = "vimiumHintMarker";
   var innerHTML = [];
