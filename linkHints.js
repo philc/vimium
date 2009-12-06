@@ -82,8 +82,11 @@ function getVisibleClickableElements() {
       continue;
 
     // Using getElementFromPoint will omit elements which have visibility=hidden or display=none, and
-    // elements inside of containers that are also hidden.
-    if (!elementOccupiesPoint(element, boundingRect.left, boundingRect.top))
+    // elements inside of containers that are also hidden. Check for whether the element occupies the center
+    // of its bounding box instead of simply the upper-left corner of that box because this is more accurate
+    // when inline links have vertical padding, like in the links ("Source", "Commits") at the top of github.com.
+    if (!elementOccupiesPoint(element, boundingRect.left + boundingRect.width / 2,
+          boundingRect.top + boundingRect.height / 2))
       continue;
 
     visibleElements.push(element);
