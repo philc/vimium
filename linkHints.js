@@ -158,9 +158,12 @@ function updateLinkHints() {
       matchedLink.focus();
       matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
     } else {
-      // Don't navigate to the selected link immediately; we want to give the user some feedback depicting
-      // which link they've selected by focusing it.
-      setTimeout(function() { simulateClick(matchedLink); }, 400);
+      // When we're opening the link in the current tab, don't navigate to the selected link immediately;
+      // we want to give the user some feedback depicting which link they've selected by focusing it.
+      if (!shouldOpenLinkHintInNewTab)
+        setTimeout(function() { simulateClick(matchedLink); }, 400);
+      else
+        simulateClick(matchedLink);
       matchedLink.focus();
     }
     deactivateLinkHintsMode();
