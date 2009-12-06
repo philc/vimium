@@ -85,6 +85,7 @@ function getVisibleClickableElements() {
     // elements inside of containers that are also hidden. Check for whether the element occupies the center
     // of its bounding box instead of simply the upper-left corner of that box because this is more accurate
     // when inline links have vertical padding, like in the links ("Source", "Commits") at the top of github.com.
+    // This will not exclude links with "opacity=0", like the links on Google's homepage (see bug #16).
     if (!elementOccupiesPoint(element, boundingRect.left + boundingRect.width / 2,
           boundingRect.top + boundingRect.height / 2))
       continue;
