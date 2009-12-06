@@ -24,6 +24,7 @@ var hintCharacters = "asdfjkl";
 // The characters that were typed in while in "link hints" mode.
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
+var shouldOpenLinkHintInNewTab = false;
 // Whether we have added to the page the CSS needed to display link hints.
 var linkHintsCssAdded = false;
 
@@ -31,10 +32,14 @@ var linkHintsCssAdded = false;
 // attribute, but let's wait to see if that really is necessary.
 var clickableElementsXPath = "//a | //textarea | //button | //select | //input[not(@type='hidden')]";
 
-function activateLinkHintsMode() {
+// We need this as a top-level function because our command system doesn't yet support arguments.
+function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
+
+function activateLinkHintsMode(openInNewTab) {
   if (!linkHintsCssAdded)
     addCssToPage(linkHintsCss);
   linkHintsModeActivated = true;
+  shouldOpenLinkHintInNewTab = openInNewTab
   buildLinkHints();
   document.addEventListener("keydown", onKeyDownInLinkHintsMode, true);
 }
@@ -209,7 +214,10 @@ function numberToHintString(number) {
 
 function simulateClick(link) {
   var event = document.createEvent("MouseEvents");
-  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+  // When "clicking" on a link, dispatch the event with the meta key on Mac to open it in a new tab.
+  // TODO(philc): We should dispatch this event with CTRL down on Windows and Linux.
+  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false,
+      shouldOpenLinkHintInNewTab, 0, null);
   // Debugging note: Firefox will not execute the link's default action if we dispatch this click event,
   // but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
   link.dispatchEvent(event);
