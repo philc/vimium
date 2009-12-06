@@ -164,13 +164,8 @@ function onKeydown(event) {
 
   // Ignore modifier keys by themselves.
   if (event.keyCode > 31) {
-    if (event.keyCode < 127)
-      keyChar = String.fromCharCode(event.keyCode).toLowerCase();
-    else
-    {
-      unicodeKeyInHex = "0x" + event.keyIdentifier.substring(2);
-      keyChar = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
-    }
+    unicodeKeyInHex = "0x" + event.keyIdentifier.substring(2);
+    keyChar = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
 
     if (event.shiftKey)
       keyChar = keyChar.toUpperCase();
