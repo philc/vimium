@@ -203,12 +203,12 @@ function numberToHintString(number) {
   var base = hintCharacters.length;
   var hintString = [];
   var remainder = 0;
-  while (number > 0) {
+  do {
     remainder = number % base;
     hintString.unshift(hintCharacters[remainder]);
     number -= remainder;
     number /= Math.floor(base);
-  }
+  } while (number > 0);
   return hintString.join("");
 }
 
