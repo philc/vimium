@@ -11,6 +11,8 @@ var linkHintsCss =
     'font-size:12px;' +
     'padding:0 1px;' +
     'line-height:100%;' +
+    'width:auto;' +
+    'display:block;' +
     'border:1px solid #E3BE23;' +
     'z-index:99999999;' +
     'font-family:"Helvetica Neue", "Helvetica", "Arial", "Sans";' +
