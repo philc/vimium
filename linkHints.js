@@ -11,6 +11,8 @@ var linkHintsCss =
     'font-size:12px;' +
     'padding:0 1px;' +
     'line-height:100%;' +
+    'width:auto;' +
+    'display:block;' +
     'border:1px solid #E3BE23;' +
     'z-index:99999999;' +
     'font-family:"Helvetica Neue", "Helvetica", "Arial", "Sans";' +
@@ -20,10 +22,11 @@ var linkHintsCss =
   '}';
 
 var hintMarkers = [];
-var hintCharacters = "asdfjkl";
+var hintCharacters = "sadfjkluewcm";
 // The characters that were typed in while in "link hints" mode.
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
+var shouldOpenLinkHintInNewTab = false;
 // Whether we have added to the page the CSS needed to display link hints.
 var linkHintsCssAdded = false;
 
@@ -31,10 +34,14 @@ var linkHintsCssAdded = false;
 // attribute, but let's wait to see if that really is necessary.
 var clickableElementsXPath = "//a | //textarea | //button | //select | //input[not(@type='hidden')]";
 
-function activateLinkHintsMode() {
+// We need this as a top-level function because our command system doesn't yet support arguments.
+function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
+
+function activateLinkHintsMode(openInNewTab) {
   if (!linkHintsCssAdded)
     addCssToPage(linkHintsCss);
   linkHintsModeActivated = true;
+  shouldOpenLinkHintInNewTab = openInNewTab
   buildLinkHints();
   document.addEventListener("keydown", onKeyDownInLinkHintsMode, true);
 }
@@ -47,13 +54,15 @@ function buildLinkHints() {
 
   // Initialize the number used to generate the character hints to be as many digits as we need to
   // highlight all the links on the page; we don't want some link hints to have more chars than others.
-  var digitsNeeded = digitsNeededToRepresentLinks(visibleElements.length);
-  var linkHintNumber = Math.pow(hintCharacters.length, digitsNeeded - 1);
+  var digitsNeeded = Math.ceil(logXOfBase(visibleElements.length, hintCharacters.length));
+  var linkHintNumber = 0;
   for (var i = 0; i < visibleElements.length; i++) {
-    hintMarkers.push(addMarkerFor(visibleElements[i], linkHintNumber));
+    hintMarkers.push(addMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
     linkHintNumber++;
   }
 }
+
+function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
 
 /*
  * Returns all clickable elements that are not hidden and are in the current viewport.
@@ -75,8 +84,12 @@ function getVisibleClickableElements() {
       continue;
 
     // Using getElementFromPoint will omit elements which have visibility=hidden or display=none, and
-    // elements inside of containers that are also hidden.
-    if (!elementOccupiesPoint(element, boundingRect.left, boundingRect.top))
+    // elements inside of containers that are also hidden. Check for whether the element occupies the center
+    // of its bounding box instead of simply the upper-left corner of that box because this is more accurate
+    // when inline links have vertical padding, like in the links ("Source", "Commits") at the top of github.com.
+    // This will not exclude links with "opacity=0", like the links on Google's homepage (see bug #16).
+    if (!elementOccupiesPoint(element, boundingRect.left + boundingRect.width / 2,
+          boundingRect.top + boundingRect.height / 2))
       continue;
 
     visibleElements.push(element);
@@ -105,22 +118,6 @@ function elementOccupiesPoint(clickableElement, x, y) {
 function getElementFromPoint(x, y) {
   var zoomFactor = currentZoomLevel / 100.0;
   return document.elementFromPoint(Math.ceil(x * zoomFactor), Math.ceil(y * zoomFactor));
-}
-
-/*
- * Returns the number of digits that will be needed by the link hints to represent all of the elements
- * on screen. This assumes that we want all of the elements to have the same number of characters in
- * their link hints.
- */
-function digitsNeededToRepresentLinks(numElements) {
-  for (var i = 1; i < 5; i++) {
-    var maxCharactersRepresented = Math.pow(hintCharacters.length, i);
-    for (var j = 1; j < i; j++)
-      maxCharactersRepresented -= Math.pow(hintCharacters.length, j);
-    if (maxCharactersRepresented >= numElements)
-      return i;
-  }
-  return 6;
 }
 
 function onKeyDownInLinkHintsMode(event) {
@@ -160,11 +157,18 @@ function updateLinkHints() {
     deactivateLinkHintsMode();
   else if (linksMatched.length == 1) {
     var matchedLink = linksMatched[0];
-    // Don't navigate to the selected link immediately; we want to give the user some feedback depicting
-    // which link they've selected by focusing it. Note that for textareas and inputs, the click
-    // event is ignored, but focus causes the desired behavior.
-    setTimeout(function() { simulateClick(matchedLink); }, 600);
-    matchedLink.focus();
+    if (isInputOrText(matchedLink)) {
+      matchedLink.focus();
+      matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
+    } else {
+      // When we're opening the link in the current tab, don't navigate to the selected link immediately;
+      // we want to give the user some feedback depicting which link they've selected by focusing it.
+      if (!shouldOpenLinkHintInNewTab)
+        setTimeout(function() { simulateClick(matchedLink); }, 400);
+      else
+        simulateClick(matchedLink);
+      matchedLink.focus();
+    }
     deactivateLinkHintsMode();
   }
 }
@@ -192,24 +196,32 @@ function highlightLinkMatches(searchString) {
 
 /*
  * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
- * the hint text.
+ * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
  */
-function numberToHintString(number) {
+function numberToHintString(number, numHintDigits) {
   var base = hintCharacters.length;
   var hintString = [];
   var remainder = 0;
-  while (number > 0) {
+  do {
     remainder = number % base;
     hintString.unshift(hintCharacters[remainder]);
     number -= remainder;
     number /= Math.floor(base);
-  }
+  } while (number > 0);
+
+  // Pad the hint string we're returning so that it matches numHintDigits.
+  var hintStringLength = hintString.length;
+  for (var i = 0; i < numHintDigits - hintStringLength; i++)
+    hintString.unshift(hintCharacters[0]);
   return hintString.join("");
 }
 
 function simulateClick(link) {
   var event = document.createEvent("MouseEvents");
-  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+  // When "clicking" on a link, dispatch the event with the meta key on Mac to open it in a new tab.
+  // TODO(philc): We should dispatch this event with CTRL down on Windows and Linux.
+  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false,
+      shouldOpenLinkHintInNewTab, 0, null);
   // Debugging note: Firefox will not execute the link's default action if we dispatch this click event,
   // but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
   link.dispatchEvent(event);
@@ -228,8 +240,8 @@ function deactivateLinkHintsMode() {
  * Adds a link marker for the given link by adding a new element to <body> and positioning it on top of
  * the link.
  */
-function addMarkerFor(link, linkHintNumber) {
-  var hintString = numberToHintString(linkHintNumber);
+function addMarkerFor(link, linkHintNumber, linkHintDigits) {
+  var hintString = numberToHintString(linkHintNumber, linkHintDigits);
   var marker = document.createElement("div");
   marker.className = "vimiumHintMarker";
   var innerHTML = [];

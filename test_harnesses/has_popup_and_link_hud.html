@@ -1,0 +1,51 @@
+<!--
+  This page when loaded causes Chrome to show both its "link" and "popup blocked" HUDs.
+  (mouse over the giant link to see the link HUD)
+  -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>Link and popup HUD</title>
+  <style type="text/css" media="screen">
+    body {
+      height:900px;
+      width:800px;
+    }
+    
+    #biglink {
+      display:block;
+      width:400px;
+      height:400px;
+      background-color:#123456;
+    }
+
+    #hud {
+      position:absolute;
+      height:13px;
+      right:150px;
+      bottom:0;
+      background-color:#ebebeb;
+      font-family: "Lucida Grande";
+      font-size:11px;
+      padding:3px 2px 0 2px;
+      padding:3px 3px 2px 3px;
+      text-shadow: 0px 1px 2px #FFF;
+      border:1px solid #b3b3b3;
+      border-radius:4px 4px 0 0;
+    }
+      
+  </style>
+  <script type="text/javascript" charset="utf-8">
+    // Trigger the popup warning.
+    window.open("http://www.google.com");
+  </script>
+
+</head>
+<body>
+  <h2>Loading and popup HUD</h2>
+  <a id="biglink" href="http://ninjawords.com/one,two,three,four,five,six,seven,eight,nine">Big link</a>
+
+  <!-- <div id="hud">Pop-ups Blocked</div> -->
+</body>
+</html>
