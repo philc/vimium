@@ -106,7 +106,10 @@ function saveZoomLevel(domain, zoomLevel) {
  * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
  * Set the zoom style on documentElement because document.body does not exist pre-page load.
  */
-function setPageZoomLevel(zoomLevel) { document.documentElement.style.zoom = zoomLevel + "%"; }
+function setPageZoomLevel(zoomLevel) {
+  document.documentElement.style.zoom = zoomLevel + "%";
+  HUD.updatePageZoomLevel(zoomLevel);
+}
 
 function zoomIn() {
   setPageZoomLevel(currentZoomLevel += 20);
@@ -293,27 +296,41 @@ HUD = {
     HUD.displayElement().style.display = "";
   },
 
+  updatePageZoomLevel: function(pageZoomLevel) {
+    // Since the chrome HUD does not scale with the page's zoom level, neither will this HUD.
+    HUD.displayElement().style.zoom = (100.0 / pageZoomLevel) * 100 + "%";
+  },
+
   /*
    * Retrieves the HUD HTML element, creating it if necessary.
    */
   displayElement: function() {
     if (!HUD._displayElement) {
+      // This is styled to precisely mimick the chrome HUD. Use the "has_popup_and_link_hud.html" test harness
+      // to tweak these styles to match Chrome's. One limitation of our HUD display is that it doesn't sit
+      // on top of horizontal scrollbars like Chrome's HUD does.
       var element = document.createElement("div");
-      element.innerHTML = "howdy";
       element.style.position = "fixed";
       element.style.bottom = "0px";
-      element.style.right = "20px";
-      element.style.backgroundColor = " #e5e5e5";
+      // Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
+      element.style.right = "150px";
+      element.style.height = "13px";
       element.style.maxWidth = "400px";
+      element.style.minWidth = "150px";
+      element.style.backgroundColor = "#ebebeb";
       element.style.fontSize = "11px";
-      element.style.padding = "3px";
-      element.style.border = "1px solid #cccccc";
-      element.style.borderBottomWidth = "0px";
-      // element.style.fontFamily = "monospace";
+      element.style.padding = "3px 3px 2px 3px";
+      element.style.border = "1px solid #b3b3b3";
+      element.style.borderRadius = "4px 4px 0 0";
+      element.style.fontFamily = "Lucida Grande";
+      element.style.textShadow = "0px 1px 2px #FFF";
+      element.style.display = "none";
+
       document.body.appendChild(element);
       HUD._displayElement = element
+      HUD.updatePageZoomLevel(currentZoomLevel);
     }
-    return HUD._displayElement
+    return HUD._displayElement;
   },
 
   hide: function() {
