@@ -108,7 +108,8 @@ function saveZoomLevel(domain, zoomLevel) {
  */
 function setPageZoomLevel(zoomLevel, showUINotification) {
   document.documentElement.style.zoom = zoomLevel + "%";
-  HUD.updatePageZoomLevel(zoomLevel);
+  if (document.body)
+    HUD.updatePageZoomLevel(zoomLevel);
   if (showUINotification)
     HUD.showForDuration("Zoom: " + currentZoomLevel + "%", 1000);
 }
@@ -292,6 +293,10 @@ function exitFindMode() {
   HUD.hide();
 }
 
+/*
+ * A heads-up-display for showing Vimium page operations.
+ * Note: you cannot interact with the HUD until document.body is available.
+ */
 HUD = {
   showForDuration: function(text, duration) {
     HUD.show(text);
