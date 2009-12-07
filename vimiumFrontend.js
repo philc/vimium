@@ -166,16 +166,15 @@ function onKeydown(event) {
     return;
 
   // Ignore modifier keys by themselves.
-  if (event.keyCode > 31 && event.keyCode < 127) {
-    keyChar = String.fromCharCode(event.keyCode).toLowerCase();
+  if (event.keyCode > 31) {
+    unicodeKeyInHex = "0x" + event.keyIdentifier.substring(2);
+    keyChar = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
+
     if (event.shiftKey)
       keyChar = keyChar.toUpperCase();
     if (event.ctrlKey)
       keyChar = "<c-" + keyChar + ">";
   }
-
-  // NOTE(ilya): Not really sure why yet but / yields 191 (¿) on my mac.
-  if (event.keyCode == 191) { keyChar = "/"; }
 
   if (insertMode && event.keyCode == keyCodes.ESC)
   {
@@ -277,7 +276,12 @@ function insertSpaces(query) {
   var newQuery = "";
 
   for (var i = 0; i < query.length; i++)
-    newQuery = newQuery + query[i] + "<span style=\"font-size: 0px;\"> </span>";
+  {
+    if (query[i] == " " || (i + 1 < query.length && query[i + 1] == " "))
+      newQuery = newQuery + query[i];
+    else
+      newQuery = newQuery + query[i] + "<span style=\"font-size: 0px;\"> </span>";
+  }
 
   return newQuery;
 }
