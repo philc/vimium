@@ -106,19 +106,21 @@ function saveZoomLevel(domain, zoomLevel) {
  * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
  * Set the zoom style on documentElement because document.body does not exist pre-page load.
  */
-function setPageZoomLevel(zoomLevel) {
+function setPageZoomLevel(zoomLevel, showUINotification) {
   document.documentElement.style.zoom = zoomLevel + "%";
   HUD.updatePageZoomLevel(zoomLevel);
+  if (showUINotification)
+    HUD.showForDuration("Zoom: " + currentZoomLevel + "%", 1000);
 }
 
 function zoomIn() {
-  setPageZoomLevel(currentZoomLevel += 20);
+  setPageZoomLevel(currentZoomLevel += 20, true);
   saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
 function zoomOut() {
-  setPageZoomLevel(currentZoomLevel -= 20);
-  saveZoomLevel(window.location.host, currentZoomLevel);
+  setPageZoomLevel(currentZoomLevel -= 20, true);
+  saveZoomLevel(window.location.host, currentZoomLevel, showUINotification);
 }
 
 function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
@@ -291,7 +293,13 @@ function exitFindMode() {
 }
 
 HUD = {
-  show:function(text) {
+  showForDuration: function(text, duration) {
+    HUD.show(text);
+    HUD._showForDurationTimerId = setTimeout(function() { HUD.hide(); }, duration);
+  },
+
+  show: function(text) {
+    clearTimeout(HUD._showForDurationTimerId);
     HUD.displayElement().innerHTML = text;
     if (HUD.displayElement().style.opacity == 0) {
       Tween.fade(HUD.displayElement(), 1.0, 150);
