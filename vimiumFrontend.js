@@ -293,7 +293,10 @@ function exitFindMode() {
 HUD = {
   show:function(text) {
     HUD.displayElement().innerHTML = text;
-    HUD.displayElement().style.display = "";
+    if (HUD.displayElement().style.opacity == 0) {
+      Tween.fade(HUD.displayElement(), 1.0, 150);
+      HUD.displayElement().style.display = "";
+    }
   },
 
   updatePageZoomLevel: function(pageZoomLevel) {
@@ -324,7 +327,7 @@ HUD = {
       element.style.borderRadius = "4px 4px 0 0";
       element.style.fontFamily = "Lucida Grande";
       element.style.textShadow = "0px 1px 2px #FFF";
-      element.style.display = "none";
+      element.style.opacity = 0;
 
       document.body.appendChild(element);
       HUD._displayElement = element
@@ -334,7 +337,38 @@ HUD = {
   },
 
   hide: function() {
-    HUD.displayElement().style.display = "none";
+    Tween.fade(HUD.displayElement(), 0, 150, function() { HUD.displayElement().display == "none"; });
+  }
+};
+
+Tween = {
+  /*
+   * Fades an element's alpha. Returns a timer ID which can be used to stop the tween via clearInterval.
+   */
+  fade: function(element, toAlpha, duration, onComplete) {
+    var state = {};
+    state.duration = duration;
+    state.startTime = (new Date()).getTime();
+    state.from = parseInt(element.style.opacity) || 0;
+    state.to = toAlpha;
+    state.onUpdate = function(value) {
+      element.style.opacity = value;
+      if (value == state.to && onComplete)
+        onComplete();
+    };
+    state.timerId = setInterval(function() { Tween.performTweenStep(state); }, 50);
+    return state.timerId;
+  },
+
+  performTweenStep: function(state) {
+    var elapsed = (new Date()).getTime() - state.startTime;
+    if (elapsed >= state.duration) {
+      clearInterval(state.timerId);
+      state.onUpdate(state.to)
+    } else {
+      var value = (elapsed / state.duration)  * (state.to - state.from) + state.from;
+      state.onUpdate(value);
+    }
   }
 };
 
