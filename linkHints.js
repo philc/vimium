@@ -22,7 +22,7 @@ var linkHintsCss =
   '}';
 
 var hintMarkers = [];
-var hintCharacters = "sadfjkluewcm";
+var hintCharacters = "sadfjklewcmp";
 // The characters that were typed in while in "link hints" mode.
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
