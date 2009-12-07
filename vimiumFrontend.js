@@ -343,6 +343,7 @@ HUD = {
       element.style.border = "1px solid #b3b3b3";
       element.style.borderRadius = "4px 4px 0 0";
       element.style.fontFamily = "Lucida Grande";
+      element.style.zIndex = 99999999999;
       element.style.textShadow = "0px 1px 2px #FFF";
       element.style.lineHeight = "1.0";
       element.style.opacity = 0;
