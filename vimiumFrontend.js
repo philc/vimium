@@ -237,7 +237,7 @@ function exitInsertMode() {
 function handleKeyCharForFindMode(keyChar) {
   findModeQuery = findModeQuery + keyChar;
   showFindModeHUDForQuery();
-  performFind();
+  performFindInPlace();
 }
 
 function handleDeleteForFindMode() {
@@ -249,12 +249,26 @@ function handleDeleteForFindMode() {
     showFindModeHUDForQuery();
   }
 
-  performFind();
+  performFindInPlace();
 }
 
 function handleEnterForFindMode() {
   exitFindMode();
+  performFindInPlace();
+}
+
+function performFindInPlace() {
+  var cachedScrollX = window.scrollX;
+  var cachedScrollY = window.scrollY;
+
+  // Search backwards first to "free up" the current word as eligible for the real forward search. This allows
+  // us to search in place without jumping around between matches as the query grows.
+  window.find(findModeQuery, false, true, true, false, true, false);
   performFind();
+
+  // We need to restore the scroll position because we might've lost the right position by searching
+  // backwards.
+  window.scrollTo(cachedScrollX, cachedScrollY);
 }
 
 function performFind() {
@@ -399,3 +413,4 @@ if (!isIframe) {
   initializePreDomReady();
   window.addEventListener("DOMContentLoaded", initializeOnDomReady);
 }
+
