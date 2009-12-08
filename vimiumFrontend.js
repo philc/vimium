@@ -270,11 +270,12 @@ function performFindInPlace() {
   // Search backwards first to "free up" the current word as eligible for the real forward search. This allows
   // us to search in place without jumping around between matches as the query grows.
   window.find(findModeQuery, false, true, true, false, true, false);
-  performFind();
 
   // We need to restore the scroll position because we might've lost the right position by searching
   // backwards.
   window.scrollTo(cachedScrollX, cachedScrollY);
+
+  performFind();
 }
 
 function performFind() {
