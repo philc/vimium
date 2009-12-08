@@ -9,7 +9,7 @@ var settingsToLoad = ["scrollStepSize"];
 
 var getCurrentUrlHandlers = []; // function(url)
 
-var keyCodes = { ESC: 27, backspace: 8, deleteKey: 46, enter: 13 };
+var keyCodes = { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, space: 32 };
 var insertMode = false;
 var findMode = false;
 var findModeQuery = "";
@@ -190,7 +190,13 @@ function onKeydown(event) {
     if (event.keyCode == keyCodes.ESC)
       exitFindMode();
     else if (keyChar)
+    {
       handleKeyCharForFindMode(keyChar);
+
+      // Don't let the space scroll us if we're searching.
+      if (event.keyCode == keyCodes.space)
+        event.preventDefault();
+    }
     // Don't let backspace take us back in history.
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
     {
