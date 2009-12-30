@@ -4,6 +4,7 @@
   var tabQueue = {}; // windowId -> Array
   var keyQueue = ""; // Queue of keys typed
   var validFirstKeys = {};
+  var oneKeyCommands = [];
 
   var defaultSettings = { scrollStepSize: 60 };
 
@@ -246,6 +247,12 @@
   keyToCommandRegistry['d']  = removeTab;
   keyToCommandRegistry['u']  = restoreTab;
 
+  function getActualKeyStrokeLength(key) {
+    if (key.slice(0, 3) == "<c-" && key[key.length - 1] == ">")
+      return 1;
+    else
+      return key.length;
+  }
 
   function populateValidFirstKeys() {
     for (var key in keyToCommandRegistry)
@@ -255,6 +262,43 @@
     }
   }
 
+  function populateOneKeyCommands() {
+    for (var key in keyToCommandRegistry)
+    {
+      if (getActualKeyStrokeLength(key) == 1)
+        oneKeyCommands.push(key);
+    }
+  }
+
+  function generateCompletionKeys() {
+    var splitHash = splitKeyQueue(keyQueue);
+    command = splitHash.command;
+    count = splitHash.count;
+
+    var completionKeys = oneKeyCommands.slice(0);
+
+    if (getActualKeyStrokeLength(command) == 1)
+    {
+      for (var key in keyToCommandRegistry)
+      {
+        // NOTE(ilya): This won't work if we allow keys like <c-x><c-y>.
+        if (key[0] == command)
+          completionKeys.push(key.substring(1));
+      }
+    }
+
+    return completionKeys;
+  }
+
+  function splitKeyQueue(queue)
+  {
+    var match = /([0-9]*)(.*)/.exec(queue);
+    var count = parseInt(match[1]);
+    var command = match[2];
+
+    return {count: count, command: command};
+  }
+
   function handleKeyDown(key) {
     console.log("checking keyQueue: [", keyQueue + key, "]");
     keyQueue = checkKeyQueue(keyQueue + key);
@@ -262,9 +306,9 @@
   }
 
   function checkKeyQueue(keysToCheck) {
-    var match = /([0-9]*)(.*)/.exec(keysToCheck);
-    var count = parseInt(match[1]);
-    var command = match[2];
+    var splitHash = splitKeyQueue(keysToCheck);
+    command = splitHash.command;
+    count = splitHash.count;
 
     if (command.length == 0) { return keysToCheck; }
     if (isNaN(count)) { count = 1; }
@@ -296,6 +340,7 @@
 
   function init() {
     populateValidFirstKeys();
+    populateOneKeyCommands();
   }
 
   init();
