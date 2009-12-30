@@ -204,7 +204,10 @@ function onKeydown(event) {
     // Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && !event.shiftKey && ((platform == "Mac" && event.metaKey) ||
                                               (platform != "Mac" && event.ctrlKey)))
+    {
       enterInsertMode();
+      return;
+    }
 
     if (event.shiftKey)
       keyChar = keyChar.toUpperCase();
