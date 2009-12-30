@@ -18,6 +18,7 @@ var settingPort;
 var saveZoomLevelPort;
 // Users can disable Vimium on URL patterns via the settings page.
 var isEnabledForUrl = true;
+var platform;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
@@ -44,6 +45,13 @@ function initializePreDomReady() {
 
   // Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({ name: "keyDown" });
+
+  if (navigator.userAgent.indexOf("Mac") != -1)
+    platform = "Mac";
+  else if (navigator.userAgent.indexOf("Linux") != -1)
+    platform = "Linux";
+  else
+    platform = "Windows";
 
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
@@ -193,10 +201,17 @@ function onKeydown(event) {
     unicodeKeyInHex = "0x" + event.keyIdentifier.substring(2);
     keyChar = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
 
+    // Enter insert mode when the user enables the native find interface.
+    if (keyChar == "f" && !event.shiftKey && ((platform == "Mac" && event.metaKey) ||
+                                              (platform != "Mac" && event.ctrlKey)))
+      enterInsertMode();
+
     if (event.shiftKey)
       keyChar = keyChar.toUpperCase();
     if (event.ctrlKey)
       keyChar = "<c-" + keyChar + ">";
+    if (event.metaKey)
+      keyChar = null;
   }
 
   if (insertMode && event.keyCode == keyCodes.ESC)
