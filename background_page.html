@@ -332,11 +332,10 @@
       console.log("command found for [", keysToCheck, "],", registryEntry);
 
       if (typeof(registryEntry) == "string") {
-        chrome.tabs.getSelected(null, function(tab) {
-          var port = chrome.tabs.connect(tab.id, { name: "executePageCommand" });
-          port.postMessage({ command: registryEntry, count: count,
-                             completionKeys: generateCompletionKeys("") });
-        });
+        var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
+        port.postMessage({ command: registryEntry, count: count,
+                            completionKeys: generateCompletionKeys("") });
+
         refreshedCompletionKeys = true;
       } else {
         repeatFunction(registryEntry, count, 0);
