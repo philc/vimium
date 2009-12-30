@@ -5,15 +5,17 @@
   var keyQueue = ""; // Queue of keys typed
   var validFirstKeys = {};
 
-  var defaultSettings = { "scrollStepSize": 60 };
+  var defaultSettings = { scrollStepSize: 60 };
 
   // Port handler mapping
-  var portHandlers = { "keyDown":              handleKeyDown,
-                       "returnScrollPosition": handleReturnScrollPosition,
-                       "getCurrentTabUrl":     getCurrentTabUrl,
-                       "getZoomLevel":         getZoomLevel,
-                       "saveZoomLevel":        saveZoomLevel,
-                       "getSetting":           getSetting};
+  var portHandlers = {
+    keyDown:              handleKeyDown,
+    returnScrollPosition: handleReturnScrollPosition,
+    getCurrentTabUrl:     getCurrentTabUrl,
+    getZoomLevel:         getZoomLevel,
+    saveZoomLevel:        saveZoomLevel,
+    getSetting:           getSetting
+  };
 
   // Event handlers
   var selectionChangedHandlers = [];
@@ -137,20 +139,20 @@
 
   function removeTab(callback) {
     getCurrentTabWithScrollPosition(function(tab, scrollX, scrollY) {
-                                      var tabQueueEntry = { tabUrl: tab.url,
-                                                            scrollX: scrollX,
-                                                            scrollY: scrollY };
+      var tabQueueEntry = { tabUrl: tab.url,
+                            scrollX: scrollX,
+                            scrollY: scrollY };
 
-                                      if (tabQueue[tab.windowId])
-                                        tabQueue[tab.windowId].push(tabQueueEntry);
-                                      else
-                                        tabQueue[tab.windowId] = [tabQueueEntry];
+      if (tabQueue[tab.windowId])
+        tabQueue[tab.windowId].push(tabQueueEntry);
+      else
+        tabQueue[tab.windowId] = [tabQueueEntry];
 
-                                      chrome.tabs.remove(tab.id);
-                                      // We can't just call the callback here because we actually need to wait
-                                      // for the selection to change to consider this action done.
-                                      selectionChangedHandlers.push(callback);
-                                    });
+      chrome.tabs.remove(tab.id);
+      // We can't just call the callback here because we actually need to wait
+      // for the selection to change to consider this action done.
+      selectionChangedHandlers.push(callback);
+    });
   }
 
   function restoreTab(callback) {
@@ -271,11 +273,5 @@
 
   init();
 </script>
-
 </head>
-
-<body>
-  howdy
-</body>
-
 </html>
