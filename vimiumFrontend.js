@@ -16,6 +16,8 @@ var findModeQuery = "";
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
+// Users can disable Vimium on URL patterns via the settings page.
+var isEnabledForUrl = true;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
@@ -34,15 +36,14 @@ function setSetting(args) { settings[args.key] = args.value; }
 function initializePreDomReady() {
   for (var i in settingsToLoad) { getSetting(settingsToLoad[i]); }
 
-  document.addEventListener("keydown", onKeydown);
-  document.addEventListener("focus", onFocusCapturePhase, true);
-  document.addEventListener("blur", onBlurCapturePhase, true);
+  var isEnabledForUrlPort = chrome.extension.connect({ name: "isEnabledForUrl" });
+  isEnabledForUrlPort.postMessage({ url: window.location.toString() });
 
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
   getZoomLevelPort.postMessage({ domain: window.location.host });
 
   // Send the key to the key handler in the background page.
-  keyPort = chrome.extension.connect({name: "keyDown"});
+  keyPort = chrome.extension.connect({ name: "keyDown" });
 
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
@@ -72,7 +73,17 @@ function initializePreDomReady() {
     } else if (port.name == "returnZoomLevel") {
       port.onMessage.addListener(function(args) {
         currentZoomLevel = args.zoomLevel;
-        setPageZoomLevel(currentZoomLevel);
+        if (isEnabledForUrl)
+          setPageZoomLevel(currentZoomLevel);
+      });
+    } else if (port.name == "returnIsEnabledForUrl") {
+      port.onMessage.addListener(function(args) {
+        isEnabledForUrl = args.isEnabledForUrl;
+        if (isEnabledForUrl)
+          initializeWhenEnabled();
+        else if (HUD.isReady())
+          // Quickly hide any HUD we might already be showing, e.g. if we entered insertMode on page load.
+          HUD.hide();
       });
     } else if (port.name == "returnSetting") {
       port.onMessage.addListener(setSetting);
@@ -81,14 +92,26 @@ function initializePreDomReady() {
 }
 
 /*
+ * This is called once the background page has told us that Vimium should be enabled for the current URL.
+ */
+function initializeWhenEnabled() {
+  document.addEventListener("keydown", onKeydown);
+  document.addEventListener("focus", onFocusCapturePhase, true);
+  document.addEventListener("blur", onBlurCapturePhase, true);
+}
+
+/*
  * Initialization tasks that must wait for the document to be ready.
  */
 function initializeOnDomReady() {
-  // Enter insert mode automatically if there's already a text box focused.
-  var focusNode = window.getSelection().focusNode;
-  var focusOffset = window.getSelection().focusOffset;
-  if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
-      isInputOrText(focusNode.children[focusOffset])) { enterInsertMode(); }
+  if (isEnabledForUrl) {
+    // Enter insert mode automatically if there's already a text box focused.
+    var focusNode = window.getSelection().focusNode;
+    var focusOffset = window.getSelection().focusOffset;
+    if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
+        isInputOrText(focusNode.children[focusOffset]))
+      enterInsertMode();
+  }
   // Tell the background page we're in the dom ready state.
   chrome.extension.connect({ name: "domReady" });
 };
@@ -378,7 +401,9 @@ HUD = {
 
   hide: function() {
     Tween.fade(HUD.displayElement(), 0, 150, function() { HUD.displayElement().display == "none"; });
-  }
+  },
+
+  isReady: function() { return document.body != null; }
 };
 
 Tween = {
@@ -420,4 +445,3 @@ if (!isIframe) {
   initializePreDomReady();
   window.addEventListener("DOMContentLoaded", initializeOnDomReady);
 }
-

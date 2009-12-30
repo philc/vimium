@@ -11,6 +11,7 @@
   var portHandlers = {
     keyDown:              handleKeyDown,
     returnScrollPosition: handleReturnScrollPosition,
+    isEnabledForUrl:      isEnabledForUrl,
     getCurrentTabUrl:     getCurrentTabUrl,
     getZoomLevel:         getZoomLevel,
     saveZoomLevel:        saveZoomLevel,
@@ -57,6 +58,23 @@
       var returnPort = chrome.tabs.connect(tab.id, { name: "returnCurrentTabUrl" });
       returnPort.postMessage({ url: tab.url });
     });
+  }
+
+  /*
+   * Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL.
+   */
+  function isEnabledForUrl(args, port) {
+    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnIsEnabledForUrl" });
+    // excludedUrls are stored as a series of URL expressions separated by newlines.
+    var excludedUrls = (localStorage["excludedUrls"] || "").split("\n");
+    var isEnabled = true;
+    for (var i = 0; i < excludedUrls.length; i++) {
+      // The user can add "*" to the URL which means ".*"
+      var regexp = new RegExp("^" + excludedUrls[i].replace(/\*/g, ".*") + "$");
+      if (args.url.match(regexp))
+        isEnabled = false;
+    }
+    returnPort.postMessage({ isEnabledForUrl: isEnabled });
   }
 
   /*
