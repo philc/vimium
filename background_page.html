@@ -19,7 +19,9 @@
     getSetting:           getSetting
   };
 
-  var sendRequestHandlers = {};
+  var sendRequestHandlers = {
+    getCompletionKeys:    getCompletionKeys
+  };
 
   // Event handlers
   var selectionChangedHandlers = [];
@@ -96,6 +98,13 @@
     var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
     var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] || 100);
     returnPort.postMessage({ zoomLevel: zoomLevel });
+  }
+
+  /**
+   * Returns the keys that can complete a valid command given the current key queue.
+   */
+  function getCompletionKeys(request) {
+    return {completionKeys: generateCompletionKeys()};
   }
 
   /*
