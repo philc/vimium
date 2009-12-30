@@ -4,7 +4,7 @@
     <style type="text/css" media="screen">
       body {
         font-family:"helvetica neue", "helvetica", "arial", "sans";
-        width:800px;
+        width:600px;
         margin:10px auto;
       }
       .example {
@@ -16,10 +16,23 @@
         margin-right:10px;
       }
       td {
-        margin:3px 0;
+        padding:5px 0;
       }
       button#saveSettings {
         margin-top:20px;
+      }
+      textarea#excludedUrls {
+        width:450px;
+        min-height:100px;
+      }
+      #status {
+        margin-left:10px;
+        font-size:80%;
+      }
+      /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
+      td:nth-child(1), td:nth-child(2) {
+        width:1px;
+        white-space:nowrap;
       }
     </style>
   </head>
@@ -28,30 +41,30 @@
 
   // Saves options to localStorage.
   function saveOptions() {
-    var scrollStepSize = document.getElementById("scrollStepSize").value;
-    localStorage["scrollStepSize"] = scrollStepSize;
+    localStorage["scrollStepSize"] = document.getElementById("scrollStepSize").value
+    localStorage["defaultZoomLevel"] = document.getElementById("defaultZoomLevel").value
+    localStorage["excludedUrls"] = document.getElementById("excludedUrls").value;
 
-    var defaultZoomLevel = document.getElementById("defaultZoomLevel").value;
-    localStorage["defaultZoomLevel"] = defaultZoomLevel;
-
-    // Update status to let user know options were saved.
+    // Give the user some feedback that their options were saved.
     var status = document.getElementById("status");
     status.innerHTML = "Settings Saved.";
     setTimeout(function() { status.innerHTML = ""; }, 750);
   }
 
   // Restores select box state to saved value from localStorage.
-  function restoreOptions() {
+  function populateOptions() {
     // TODO(ilya): Create a single option list with defaults somewhere to share across various scripts. 
     var scrollStepSize = localStorage["scrollStepSize"] || 60;
     var defaultZoomLevel = localStorage["defaultZoomLevel"] || 100;
+    var defaultExcludedUrls = localStorage["excludedUrls"] || "";
 
     document.getElementById("scrollStepSize").value = scrollStepSize;
     document.getElementById("defaultZoomLevel").value = defaultZoomLevel;
+    document.getElementById("excludedUrls").value = defaultExcludedUrls;
   }
   </script>
 
-  <body onload="restoreOptions()">
+  <body onload="populateOptions()">
     <h1>Vimium - Settings</h1>
     <table>
       <tr>
@@ -64,8 +77,24 @@
         <td><input id="defaultZoomLevel" type="text" value="100" style="width:50px">%</td>
         <td><span class="example">(default: 100)</span></td>
       </tr>
+      <tr>
+        <td colspan="3">
+          <div style="position:relative">
+            Excluded URLs<br/>
+            <div style="position:absolute; right:-240px; width:240px">
+              <div class="example">
+                e.g. http*://mail.google.com/*<br/>
+                This will disable Vimium on Gmail.<br/><br/>
+                Enter one URL per line.<br/>
+              </div>
+            </div>
+            <textarea id="excludedUrls"></textarea>
+          </div>
+        </td>
+      </tr>
     </table>
 
     <button id="saveSettings" onclick="saveOptions()">Save Settings</button>
+    <span id="status"></status>
   </body>
 </html>
