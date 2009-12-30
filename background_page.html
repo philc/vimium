@@ -65,11 +65,9 @@
    * Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:// .."
    * because window.location doesn't know anything about the Chrome-specific "view-source:".
    */
-  function getCurrentTabUrl(args) {
-    chrome.tabs.getSelected(null, function(tab) {
-      var returnPort = chrome.tabs.connect(tab.id, { name: "returnCurrentTabUrl" });
-      returnPort.postMessage({ url: tab.url });
-    });
+  function getCurrentTabUrl(args, port) {
+    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnCurrentTabUrl" });
+    returnPort.postMessage({ url: port.tab.url });
   }
 
   /*
