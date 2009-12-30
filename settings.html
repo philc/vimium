@@ -1,6 +1,27 @@
 <html>
   <head>
     <title>Vimium Settings</title>
+    <style type="text/css" media="screen">
+      body {
+        font-family:"helvetica neue", "helvetica", "arial", "sans";
+        width:800px;
+        margin:10px auto;
+      }
+      .example {
+        font-size:80%;
+        color:#555;
+        margin-left:20px;
+      }
+      .caption {
+        margin-right:10px;
+      }
+      td {
+        margin:3px 0;
+      }
+      button#saveSettings {
+        margin-top:20px;
+      }
+    </style>
   </head>
 
   <script type="text/javascript">
@@ -32,11 +53,19 @@
 
   <body onload="restoreOptions()">
     <h1>Vimium - Settings</h1>
-    Scroll Step Size: <input id="scrollStepSize" type="text"> px (default: 60)
-    <br>
-    Scroll Step Size: <input id="defaultZoomLevel" type="text" value="100"> % (default: 100)
+    <table>
+      <tr>
+        <td class="caption">Scroll Step Size</td>
+        <td><input id="scrollStepSize" type="text" style="width:50px">px</td>
+        <td><span class="example">(default: 60)</td>
+      </tr>
+      <tr>
+        <td><span class="caption">Default zoom level</span></td>
+        <td><input id="defaultZoomLevel" type="text" value="100" style="width:50px">%</td>
+        <td><span class="example">(default: 100)</span></td>
+      </tr>
+    </table>
 
-    <button onclick="saveOptions()">Save Settings</button>
-    <div id="status"></div>
+    <button id="saveSettings" onclick="saveOptions()">Save Settings</button>
   </body>
 </html>
