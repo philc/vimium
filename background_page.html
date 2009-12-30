@@ -18,6 +18,8 @@
     getSetting:           getSetting
   };
 
+  var sendRequestHandlers = {};
+
   // Event handlers
   var selectionChangedHandlers = [];
   var getScrollPositionHandlers = {}; // tabId -> function(tab, scrollX, scrollY);
@@ -38,6 +40,13 @@
     if (portHandlers[port.name])
       port.onMessage.addListener(portHandlers[port.name]);
 
+  });
+
+  chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+    var senderTabId = sender.tab ? sender.tab.id : null;
+
+    if (sendRequestHandlers[request.handler])
+      sendResponse(sendRequestHandlers[request.handler](request));
   });
 
   function handleReturnScrollPosition(args) {
