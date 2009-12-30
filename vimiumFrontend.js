@@ -19,6 +19,7 @@ var saveZoomLevelPort;
 // Users can disable Vimium on URL patterns via the settings page.
 var isEnabledForUrl = true;
 var platform;
+var currentCompletionKeys;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
@@ -42,6 +43,10 @@ function initializePreDomReady() {
 
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
   getZoomLevelPort.postMessage({ domain: window.location.host });
+
+  chrome.extension.sendRequest({handler: "getCompletionKeys"}, function (response) {
+    currentCompletionKeys = response.completionKeys;
+  });
 
   // Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({ name: "keyDown" });
@@ -248,7 +253,12 @@ function onKeydown(event) {
       handleEnterForFindMode();
   }
   else if (!insertMode && !findMode && keyChar)
+  {
+    if (currentCompletionKeys.indexOf(keyChar) != -1)
+      event.preventDefault();
+
     keyPort.postMessage(keyChar);
+  }
 }
 
 function onFocusCapturePhase(event) {
