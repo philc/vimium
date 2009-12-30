@@ -44,9 +44,7 @@ function initializePreDomReady() {
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
   getZoomLevelPort.postMessage({ domain: window.location.host });
 
-  chrome.extension.sendRequest({handler: "getCompletionKeys"}, function (response) {
-    currentCompletionKeys = response.completionKeys;
-  });
+  refreshCompletionKeys();
 
   // Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({ name: "keyDown" });
@@ -64,6 +62,8 @@ function initializePreDomReady() {
         if (this[args.command]) {
           for (var i = 0; i < args.count; i++) { this[args.command].call(); }
         }
+
+        refreshCompletionKeys(args.completionKeys);
       });
     }
     else if (port.name == "getScrollPosition") {
@@ -100,6 +100,10 @@ function initializePreDomReady() {
       });
     } else if (port.name == "returnSetting") {
       port.onMessage.addListener(setSetting);
+    } else if (port.name == "refreshCompletionKeys") {
+      port.onMessage.addListener(function (args) {
+        refreshCompletionKeys(args.completionKeys);
+      });
     }
   });
 }
@@ -259,6 +263,15 @@ function onKeydown(event) {
 
     keyPort.postMessage(keyChar);
   }
+}
+
+function refreshCompletionKeys(completionKeys) {
+  if (completionKeys)
+    currentCompletionKeys = completionKeys;
+  else
+    chrome.extension.sendRequest({handler: "getCompletionKeys"}, function (response) {
+      currentCompletionKeys = response.completionKeys;
+    });
 }
 
 function onFocusCapturePhase(event) {

@@ -279,8 +279,12 @@
     }
   }
 
-  function generateCompletionKeys() {
-    var splitHash = splitKeyQueue(keyQueue);
+  /*
+   * Generates a list of keys that can complete a valid command given the current key queue or the one passed
+   * in.
+   */
+  function generateCompletionKeys(keysToCheck) {
+    var splitHash = splitKeyQueue(keysToCheck || keyQueue);
     command = splitHash.command;
     count = splitHash.count;
 
@@ -308,13 +312,14 @@
     return {count: count, command: command};
   }
 
-  function handleKeyDown(key) {
+  function handleKeyDown(key, port) {
     console.log("checking keyQueue: [", keyQueue + key, "]");
-    keyQueue = checkKeyQueue(keyQueue + key);
+    keyQueue = checkKeyQueue(keyQueue + key, port.tab.id);
     console.log("new KeyQueue: " + keyQueue);
   }
 
-  function checkKeyQueue(keysToCheck) {
+  function checkKeyQueue(keysToCheck, tabId) {
+    var refreshedCompletionKeys = false;
     var splitHash = splitKeyQueue(keysToCheck);
     command = splitHash.command;
     count = splitHash.count;
@@ -329,22 +334,34 @@
       if (typeof(registryEntry) == "string") {
         chrome.tabs.getSelected(null, function(tab) {
           var port = chrome.tabs.connect(tab.id, { name: "executePageCommand" });
-          port.postMessage({ command: registryEntry, count: count });
+          port.postMessage({ command: registryEntry, count: count,
+                             completionKeys: generateCompletionKeys("") });
         });
+        refreshedCompletionKeys = true;
       } else {
         repeatFunction(registryEntry, count, 0);
       }
 
-      return "";
+      newKeyQueue = "";
     } else if (command.length > 1) {
       // The second key might be a valid command by its self.
       if (keyToCommandRegistry[command[1]])
-        return checkKeyQueue(command[1]);
+        newKeyQueue = checkKeyQueue(command[1]);
       else
-        return (validFirstKeys[command[1]] ? command[1] : "");
+        newKeyQueue = (validFirstKeys[command[1]] ? command[1] : "");
     } else {
-      return (validFirstKeys[command] ? count.toString() + command : "");
+      newKeyQueue = (validFirstKeys[command] ? count.toString() + command : "");
     }
+
+    // If we haven't sent the completion keys piggybacked on executePageCommand,
+    // send them by themselves.
+    if (!refreshedCompletionKeys)
+    {
+      var port = chrome.tabs.connect(tabId, { name: "refreshCompletionKeys" });
+      port.postMessage({ completionKeys: generateCompletionKeys(newKeyQueue) });
+    }
+
+    return newKeyQueue;
   }
 
   function init() {
