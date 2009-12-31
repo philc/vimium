@@ -422,23 +422,28 @@ HUD = {
       // to tweak these styles to match Chrome's. One limitation of our HUD display is that it doesn't sit
       // on top of horizontal scrollbars like Chrome's HUD does.
       var element = document.createElement("div");
-      element.style.position = "fixed";
-      element.style.bottom = "0px";
-      // Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
-      element.style.right = "150px";
-      element.style.height = "13px";
-      element.style.maxWidth = "400px";
-      element.style.minWidth = "150px";
-      element.style.backgroundColor = "#ebebeb";
-      element.style.fontSize = "11px";
-      element.style.padding = "3px 3px 2px 3px";
-      element.style.border = "1px solid #b3b3b3";
-      element.style.borderRadius = "4px 4px 0 0";
-      element.style.fontFamily = "Lucida Grande";
-      element.style.zIndex = 99999999999;
-      element.style.textShadow = "0px 1px 2px #FFF";
-      element.style.lineHeight = "1.0";
-      element.style.opacity = 0;
+      with (element.style) {
+        position = "fixed";
+        bottom = "0px";
+        color = "black";
+        // Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
+        right = "150px";
+        height = "13px";
+        maxWidth = "400px";
+        minWidth = "150px";
+        textAlign = "left";
+        backgroundColor = "#ebebeb";
+        fontWieght = "normal";
+        fontSize = "11px";
+        padding = "3px 3px 2px 3px";
+        border = "1px solid #b3b3b3";
+        borderRadius = "4px 4px 0 0";
+        fontFamily = "Lucida Grande";
+        zIndex = 99999999999;
+        textShadow = "0px 1px 2px #FFF";
+        lineHeight = "1.0";
+        opacity = 0;
+      }
 
       document.body.appendChild(element);
       HUD._displayElement = element
