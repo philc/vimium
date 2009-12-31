@@ -393,6 +393,8 @@ function exitFindMode() {
  * Note: you cannot interact with the HUD until document.body is available.
  */
 HUD = {
+  _tweenId: -1,
+
   showForDuration: function(text, duration) {
     HUD.show(text);
     HUD._showForDurationTimerId = setTimeout(function() { HUD.hide(); }, duration);
@@ -401,10 +403,9 @@ HUD = {
   show: function(text) {
     clearTimeout(HUD._showForDurationTimerId);
     HUD.displayElement().innerHTML = text;
-    if (HUD.displayElement().style.opacity == 0) {
-      Tween.fade(HUD.displayElement(), 1.0, 150);
-      HUD.displayElement().style.display = "";
-    }
+    clearInterval(HUD._tweenId);
+    HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150);
+    HUD.displayElement().style.display = "";
   },
 
   updatePageZoomLevel: function(pageZoomLevel) {
@@ -447,7 +448,9 @@ HUD = {
   },
 
   hide: function() {
-    Tween.fade(HUD.displayElement(), 0, 150, function() { HUD.displayElement().display == "none"; });
+    clearInterval(HUD._tweenId);
+    HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
+      function() { HUD.displayElement().display == "none"; });
   },
 
   isReady: function() { return document.body != null; }
