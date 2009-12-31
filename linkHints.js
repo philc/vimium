@@ -161,8 +161,9 @@ function updateLinkHints() {
     deactivateLinkHintsMode();
   else if (linksMatched.length == 1) {
     var matchedLink = linksMatched[0];
-    if (isInputOrText(matchedLink)) {
+    if (isSelectable(matchedLink)) {
       matchedLink.focus();
+      // When focusing a textbox, put the selection caret at the end of the textbox's contents.
       matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
@@ -175,6 +176,15 @@ function updateLinkHints() {
     }
     deactivateLinkHintsMode();
   }
+}
+
+/*
+ * Selectable means the element has a text caret; this is not the same as "focusable".
+ */
+function isSelectable(element) {
+  var selectableTypes = ["search", "text", "password"];
+  return (element.tagName == "INPUT" && selectableTypes.indexOf(element.type) >= 0) ||
+      element.tagName == "TEXTAREA";
 }
 
 /*
