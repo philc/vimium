@@ -289,9 +289,15 @@ function onBlurCapturePhase(event) {
  */
 function isFocusable(element) { return isInputOrText(element) || element.tagName == "EMBED"; }
 
+/*
+ * Input or text elements are considered focusable and able to receieve their own keyboard events,
+ * and will enter enter mode if focused.
+ * Note: we used to discriminate for text-only inputs, but this is not accurate since all input fields
+ * can be controlled via the keyboard, particuarlly SELECT combo boxes.
+ */
 function isInputOrText(target) {
-  return ((target.tagName == "INPUT" && (target.type == "text" || target.type == "password")) ||
-          target.tagName == "TEXTAREA");
+  var focusableInputs = ["input", "textarea", "select", "button"];
+  return focusableInputs.indexOf(target.tagName.toLowerCase()) >= 0;
 }
 
 function enterInsertMode() {
