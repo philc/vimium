@@ -115,23 +115,31 @@ function initializeWhenEnabled() {
   document.addEventListener("keydown", onKeydown);
   document.addEventListener("focus", onFocusCapturePhase, true);
   document.addEventListener("blur", onBlurCapturePhase, true);
+  enterInsertModeIfElementIsFocused();
 }
 
 /*
  * Initialization tasks that must wait for the document to be ready.
  */
 function initializeOnDomReady() {
-  if (isEnabledForUrl) {
-    // Enter insert mode automatically if there's already a text box focused.
-    var focusNode = window.getSelection().focusNode;
-    var focusOffset = window.getSelection().focusOffset;
-    if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
-        isInputOrText(focusNode.children[focusOffset]))
-      enterInsertMode();
-  }
+  if (isEnabledForUrl)
+    enterInsertModeIfElementIsFocused();
   // Tell the background page we're in the dom ready state.
   chrome.extension.connect({ name: "domReady" });
 };
+
+/*
+ * Checks the currently focused element of the document and will enter insert mode if that element is focusable.
+ */
+function enterInsertModeIfElementIsFocused() {
+  // Enter insert mode automatically if there's already a text box focused.
+  // TODO(philc): Consider using document.activeElement here instead.
+  var focusNode = window.getSelection().focusNode;
+  var focusOffset = window.getSelection().focusOffset;
+  if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
+      isInputOrText(focusNode.children[focusOffset]))
+    enterInsertMode();
+}
 
 /*
  * Asks the background page to persist the zoom level for the given domain to localStorage.
