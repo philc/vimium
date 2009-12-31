@@ -11,7 +11,7 @@ Installation Instructions:
 
 The settings page can be found by clicking the Options button next to Vimium on chrome://extensions.
 
-=================
+
 Keyboard Bindings
 =================
 
@@ -49,3 +49,7 @@ Manipulating tabs:
   u       restore closed tab (i.e. unwind the 'd' command)
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession.
+
+License
+=======
+Copyright (c) 2010 Phil Crosby, Ilya Sukhar. See MIT-LICENSE.txt for details.
