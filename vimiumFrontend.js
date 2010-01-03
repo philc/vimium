@@ -132,7 +132,7 @@ function initializePreDomReady() {
  * This is called once the background page has told us that Vimium should be enabled for the current URL.
  */
 function initializeWhenEnabled() {
-  document.addEventListener("keydown", onKeydown);
+  document.addEventListener("keydown", onKeydown, true);
   document.addEventListener("focus", onFocusCapturePhase, true);
   document.addEventListener("blur", onBlurCapturePhase, true);
   enterInsertModeIfElementIsFocused();
@@ -291,8 +291,10 @@ function onKeydown(event) {
   }
   else if (!insertMode && !findMode && keyChar)
   {
-    if (currentCompletionKeys.indexOf(keyChar) != -1)
+    if (currentCompletionKeys.indexOf(keyChar) != -1) {
       event.preventDefault();
+      event.stopPropagation();
+    }
 
     keyPort.postMessage(keyChar);
   }
