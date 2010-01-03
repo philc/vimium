@@ -4,7 +4,7 @@
   var tabQueue = {}; // windowId -> Array
   var keyQueue = ""; // Queue of keys typed
   var validFirstKeys = {};
-  var oneKeyCommands = [];
+  var singleKeyCommands = [];
 
   var defaultSettings = { scrollStepSize: 60 };
 
@@ -269,11 +269,11 @@
     }
   }
 
-  function populateOneKeyCommands() {
+  function populateSingleKeyCommands() {
     for (var key in keyToCommandRegistry)
     {
       if (getActualKeyStrokeLength(key) == 1)
-        oneKeyCommands.push(key);
+        singleKeyCommands.push(key);
     }
   }
 
@@ -286,7 +286,7 @@
     command = splitHash.command;
     count = splitHash.count;
 
-    var completionKeys = oneKeyCommands.slice(0);
+    var completionKeys = singleKeyCommands.slice(0);
 
     if (getActualKeyStrokeLength(command) == 1)
     {
@@ -301,8 +301,7 @@
     return completionKeys;
   }
 
-  function splitKeyQueue(queue)
-  {
+  function splitKeyQueue(queue) {
     var match = /([0-9]*)(.*)/.exec(queue);
     var count = parseInt(match[1]);
     var command = match[2];
@@ -363,7 +362,7 @@
 
   function init() {
     populateValidFirstKeys();
-    populateOneKeyCommands();
+    populateSingleKeyCommands();
   }
 
   init();
