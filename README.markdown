@@ -36,6 +36,7 @@ Navigating the current page:
     n       cycle forward to the next find match
     N       cycle backward to the previous find match
     i       enter insert mode -- all commands will be ignored until you hit esc to exit
+    y       copy the current url to the clipboard
 
 Navigating your history:
     ba, H         go back in history

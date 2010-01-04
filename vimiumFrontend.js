@@ -213,6 +213,14 @@ function toggleViewSource() {
   getCurrentUrlPort.postMessage({});
 }
 
+function copyCurrentUrl() {
+  getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); });
+
+  // TODO(ilya): Convert to sendRequest.
+  var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
+  getCurrentUrlPort.postMessage({});
+}
+
 function toggleViewSourceCallback(url) {
   if (url.substr(0, 12) == "view-source:")
   {
