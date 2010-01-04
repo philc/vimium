@@ -54,6 +54,10 @@ Vimium supports command repetition so, for example, hitting '5t' will open 5 tab
 Release Notes
 -------------
 
+1.11 (Current, unreleased)
+-  Commands 'gt' & 'gT' to move to the next & previous tab.
+-  Command 'y' to yank (copy) the current tab's url to the clipboard.
+
 1.1 (01/03/2010)
 
 -  A nicer looking settings page.
