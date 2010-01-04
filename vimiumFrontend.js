@@ -247,7 +247,7 @@ function onKeydown(event) {
     var keyIdentifier = event.keyIdentifier;
     // On Windows, the keyIdentifiers for non-letter keys are incorrect. See
     // https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
-    if (platform == "Windows")
+    if (platform == "Windows" || platform == "Linux")
       keyIdentifier = keyIdentifierCorrectionMap[keyIdentifier] || keyIdentifier;
     unicodeKeyInHex = "0x" + keyIdentifier.substring(2);
     keyChar = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
