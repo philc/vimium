@@ -314,9 +314,15 @@
   }
 
   function handleKeyDown(key, port) {
-    console.log("checking keyQueue: [", keyQueue + key, "]");
-    keyQueue = checkKeyQueue(keyQueue + key, port.tab.id);
-    console.log("new KeyQueue: " + keyQueue);
+    if (key == "<ESC>") {
+      console.log("clearing keyQueue");
+      keyQueue = ""
+    }
+    else {
+      console.log("checking keyQueue: [", keyQueue + key, "]");
+      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id);
+      console.log("new KeyQueue: " + keyQueue);
+    }
   }
 
   function checkKeyQueue(keysToCheck, tabId) {

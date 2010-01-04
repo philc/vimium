@@ -298,14 +298,18 @@ function onKeydown(event) {
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode();
   }
-  else if (!insertMode && !findMode && keyChar)
-  {
-    if (currentCompletionKeys.indexOf(keyChar) != -1) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+  else if (!insertMode && !findMode) {
+    if (keyChar) {
+      if (currentCompletionKeys.indexOf(keyChar) != -1) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
 
-    keyPort.postMessage(keyChar);
+      keyPort.postMessage(keyChar);
+    }
+    else if (event.keyCode == keyCodes.ESC) {
+      keyPort.postMessage("<ESC>");
+    }
   }
 }
 
