@@ -42,11 +42,11 @@ Navigating your history:
     fw, fo, L     go forward in history
 
 Manipulating tabs:
-    J       next tab
-    K       previous tab
-    t       create tab
-    d       close current tab
-    u       restore closed tab (i.e. unwind the 'd' command)
+    J, gt      next tab
+    K, gT      previous tab
+    t          create tab
+    d          close current tab
+    u          restore closed tab (i.e. unwind the 'd' command)
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession.
 
