@@ -13,6 +13,7 @@ var keyCodes = { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, space: 32 };
 var insertMode = false;
 var findMode = false;
 var findModeQuery = "";
+var findModeQueryHasResults = false;
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
@@ -347,20 +348,22 @@ function exitInsertMode() {
 
 function handleKeyCharForFindMode(keyChar) {
   findModeQuery = findModeQuery + keyChar;
-  showFindModeHUDForQuery();
   performFindInPlace();
+  showFindModeHUDForQuery();
 }
 
 function handleDeleteForFindMode() {
   if (findModeQuery.length == 0)
+  {
     exitFindMode();
+    performFindInPlace();
+  }
   else
   {
     findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
+    performFindInPlace();
     showFindModeHUDForQuery();
   }
-
-  performFindInPlace();
 }
 
 function handleEnterForFindMode() {
@@ -384,15 +387,18 @@ function performFindInPlace() {
 }
 
 function performFind() {
-  window.find(findModeQuery, false, false, true, false, true, false);
+  findModeQueryHasResults = window.find(findModeQuery, false, false, true, false, true, false);
 }
 
 function performBackwardsFind() {
-  window.find(findModeQuery, false, true, true, false, true, false);
+  findModeQueryHasResults = window.find(findModeQuery, false, true, true, false, true, false);
 }
 
 function showFindModeHUDForQuery() {
-  HUD.show("/" + insertSpaces(findModeQuery));
+  if (findModeQueryHasResults || findModeQuery.length == 0)
+    HUD.show("/" + insertSpaces(findModeQuery));
+  else
+    HUD.show("/" + insertSpaces(findModeQuery + " (No Matches)"));
 }
 
 /*
