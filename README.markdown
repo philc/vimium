@@ -56,7 +56,7 @@ Release Notes
 1.1 (01/03/2010)
 
 -  A nicer looking settings page.
--  An exclusion list that allows you to define URL patterns for which Vimium will be disabled (e.g. http*://mail.google.com/*).
+-  An exclusion list that allows you to define URL patterns for which Vimium will be disabled (e.g.  http\*://mail.google.com/\*).
 -  Vimium-interpreted keystrokes are no longer sent to the page.
 -  Better Windows support.
 -  Various miscellaneous bug fixes.
