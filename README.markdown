@@ -58,6 +58,7 @@ Release Notes
 
 -  Commands 'gt' & 'gT' to move to the next & previous tab.
 -  Command 'y' to yank (copy) the current tab's url to the clipboard.
+-  Better Linux support.
 
 1.1 (01/03/2010)
 
