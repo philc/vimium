@@ -4,7 +4,12 @@ Vimium - The Hacker's Browser
 Vimium is a Chrome extension that provides keyboard based navigation and control in the spirit of the Vim
 editor.
 
-Installation instructions:
+__Installation instructions:__
+
+You can install the stable version of Vimium from the
+[Chrome Extensions Gallery](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb).
+
+Alternatively, you can install it from source:
 
 1. Navigate to chrome://extensions
 2. Click on "Load Extension..."
