@@ -232,10 +232,12 @@ function numberToHintString(number, numHintDigits) {
 
 function simulateClick(link) {
   var event = document.createEvent("MouseEvents");
-  // When "clicking" on a link, dispatch the event with the meta key on Mac to open it in a new tab.
-  // TODO(philc): We should dispatch this event with CTRL down on Windows and Linux.
-  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false,
-      shouldOpenLinkHintInNewTab, 0, null);
+  // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
+  // to open it in a new tab if necessary.
+  var metaKey = (platform == "Mac" && shouldOpenLinkHintInNewTab);
+  var ctrlKey = (platform != "Mac" && shouldOpenLinkHintInNewTab);
+  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, ctrlKey, false, false, metaKey, 0, null);
+
   // Debugging note: Firefox will not execute the link's default action if we dispatch this click event,
   // but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
   link.dispatchEvent(event);
