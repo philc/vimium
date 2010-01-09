@@ -1,7 +1,7 @@
 {
   "name": "Vimium",
-  "version": "1.1",
-  "description": "The Hacker's Browser.",
+  "version": "1.11",
+  "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
   "background_page": "background_page.html",
   "options_page": "settings.html",
   "permissions": [

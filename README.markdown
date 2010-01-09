@@ -54,16 +54,19 @@ Manipulating tabs:
     d          close current tab
     u          restore closed tab (i.e. unwind the 'd' command)
 
-Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession.
+Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC
+will clear any partial commands in the queue.
 
 Release Notes
 -------------
 
-1.11 (Current, unreleased)
+1.11 (01/08/2010)
 
 -  Commands 'gt' & 'gT' to move to the next & previous tab.
 -  Command 'yy' to yank (copy) the current tab's url to the clipboard.
 -  Better Linux support.
+-  Fix for Shift+F link hints.
+-  ESC now clears the keyQueue. So, for example, hitting 'g', 'ESC', 'g' will no longer scroll the page.
 
 1.1 (01/03/2010)
 
