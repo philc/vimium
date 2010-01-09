@@ -60,7 +60,7 @@ will clear any partial commands in the queue.
 Release Notes
 -------------
 
-1.11 (01/08/2010)
+1.11, 1.12 (01/08/2010)
 
 -  Commands 'gt' & 'gT' to move to the next & previous tab.
 -  Command 'yy' to yank (copy) the current tab's url to the clipboard.
