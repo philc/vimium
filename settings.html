@@ -96,5 +96,47 @@
 
     <button id="saveSettings" onclick="saveOptions()">Save Settings</button>
     <span id="status"></status>
+
+    <h1>Command Reference</h1>
+    <pre>
+&lt;c-x&gt; is to be interpreted as ctrl + x together.
+
+Navigating the current page:
+    h       scroll left
+    j       scroll down
+    k       scroll up
+    l       scroll right
+    gg      scroll to top of the page
+    G       scroll to bottom of the page
+    &lt;c-d&gt;   scroll down a page
+    &lt;c-u&gt;   scroll up a page
+    &lt;c-f&gt;   scroll down a full page
+    &lt;c-b&gt;   scroll up a full page
+    f       activate link hints mode to open in current page
+    F       activate link hints mode to open in new tab
+    r       reload
+    gf      view source
+    zi      zoom in
+    zo      zoom out
+    /       enter find mode -- type your search query and hit enter to search or esc to cancel
+    n       cycle forward to the next find match
+    N       cycle backward to the previous find match
+    i       enter insert mode -- all commands will be ignored until you hit esc to exit
+    y       copy the current url to the clipboard
+
+Navigating your history:
+    ba, H         go back in history
+    fw, fo, L     go forward in history
+
+Manipulating tabs:
+    J, gt      next tab
+    K, gT      previous tab
+    t          create tab
+    d          close current tab
+    u          restore closed tab (i.e. unwind the 'd' command)
+
+Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC
+will clear any partial commands in the queue.
+    </pre>
   </body>
 </html>
