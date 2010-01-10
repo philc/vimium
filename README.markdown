@@ -59,8 +59,19 @@ Manipulating tabs:
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC
 will clear any partial commands in the queue.
 
+Contributing
+------------
+
+Send us a pull request on Github with some explanation. If the patch adds new behavior or functionality,
+please let us know whether it mirrors a similar extension for another browser or Vim itself. Feel free to
+include a change to the CREDITS file with your patch.
+
 Release Notes
 -------------
+
+1.13 (Unreleased, current)
+
+-  Commands <c-f> and <c-b> to scroll a full page up or down.
 
 1.11, 1.12 (01/08/2010)
 
