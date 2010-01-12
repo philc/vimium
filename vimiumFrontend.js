@@ -500,6 +500,7 @@ HUD = {
         opacity = 0;
       }
 
+      element.className = "vimiumHUD";
       document.body.appendChild(element);
       HUD._displayElement = element
       HUD.updatePageZoomLevel(currentZoomLevel);
