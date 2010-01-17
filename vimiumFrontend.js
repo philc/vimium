@@ -231,6 +231,28 @@ function toggleViewSourceCallback(url) {
   else { window.location.href = "view-source:" + url; }
 }
 
+function getKeyChar(event) {
+    var keyIdentifier = event.keyIdentifier;
+    // On Windows, the keyIdentifiers for non-letter keys are incorrect. See
+    // https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
+    if (platform == "Windows" || platform == "Linux")
+      keyIdentifier = keyIdentifierCorrectionMap[keyIdentifier] || keyIdentifier;
+    unicodeKeyInHex = "0x" + keyIdentifier.substring(2);
+    return String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
+}
+
+function isCtrl(event) {
+  if (platform == "Mac")
+    return event.metaKey;
+  else
+    return event.ctrlKey;
+}
+
+function isEscape(event) {
+  return event.keyCode == keyCodes.ESC || 
+    (isCtrl(event) && getKeyChar(event) == '[');
+}
+
 /**
  * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
  * insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -246,17 +268,10 @@ function onKeydown(event) {
 
   // Ignore modifier keys by themselves.
   if (event.keyCode > 31) {
-    var keyIdentifier = event.keyIdentifier;
-    // On Windows, the keyIdentifiers for non-letter keys are incorrect. See
-    // https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
-    if (platform == "Windows" || platform == "Linux")
-      keyIdentifier = keyIdentifierCorrectionMap[keyIdentifier] || keyIdentifier;
-    unicodeKeyInHex = "0x" + keyIdentifier.substring(2);
-    keyChar = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
+    keyChar = getKeyChar(event);
 
     // Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && !event.shiftKey && ((platform == "Mac" && event.metaKey) ||
-                                              (platform != "Mac" && event.ctrlKey)))
+    if (keyChar == "f" && !event.shiftKey && isCtrl(event))
     {
       enterInsertMode();
       return;
@@ -270,7 +285,7 @@ function onKeydown(event) {
       keyChar = null;
   }
 
-  if (insertMode && event.keyCode == keyCodes.ESC)
+  if (insertMode && isEscape(event))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (event.srcElement.tagName != "EMBED") {
@@ -281,7 +296,7 @@ function onKeydown(event) {
   }
   else if (findMode)
   {
-    if (event.keyCode == keyCodes.ESC)
+    if (isEscape(event))
       exitFindMode();
     else if (keyChar)
     {
@@ -309,7 +324,7 @@ function onKeydown(event) {
 
       keyPort.postMessage(keyChar);
     }
-    else if (event.keyCode == keyCodes.ESC) {
+    else if (isEscape(event)) {
       keyPort.postMessage("<ESC>");
     }
   }
