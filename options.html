@@ -7,6 +7,10 @@
         width:600px;
         margin:10px auto;
       }
+      #optionsTableWrapper {
+        width:450px;
+        border:1px solid red;
+      }
       .example {
         font-size:80%;
         color:#555;
@@ -17,6 +21,7 @@
       }
       td {
         padding:5px 0;
+        vertical-align:top;
       }
       textarea#excludedUrls {
         width:450px;
@@ -27,7 +32,7 @@
         font-size:80%;
       }
       /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-      td:nth-child(1), td:nth-child(2) {
+      td:nth-child(1) {
         width:1px;
         white-space:nowrap;
       }
@@ -37,6 +42,15 @@
         text-align:right;
         margin-top:18px;
       }
+      .help {
+        position:absolute;
+        right:-280px;
+        width:280px;
+      }
+      tr.advancedOption {
+        display:none;
+      }
+
     </style>
 
   <script type="text/javascript">
@@ -47,6 +61,7 @@
     var elements = ["scrollStepSize", "defaultZoomLevel", "excludedUrls"];
     for (var i = 0; i < elements.length; i++)
       $(elements[i]).addEventListener("change", enableSaveButton, false);
+    $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
   }
 
   function enableSaveButton() { $("saveOptions").removeAttribute("disabled"); }
@@ -61,7 +76,7 @@
 
   // Restores select box state to saved value from localStorage.
   function populateOptions() {
-    // TODO(ilya): Create a single option list with defaults somewhere to share across various scripts. 
+    // TODO(ilya): Create a single option list with defaults somewhere to share across various scripts.
     var scrollStepSize = localStorage["scrollStepSize"] || 60;
     var defaultZoomLevel = localStorage["defaultZoomLevel"] || 100;
     var defaultExcludedUrls = localStorage["excludedUrls"] || "";
@@ -78,28 +93,38 @@
     $("saveOptions").disabled = true;
   }
 
+  function openAdvancedOptions(event) {
+    var elements = document.getElementsByClassName("advancedOption");
+    for (var i = 0; i < elements.length; i++)
+      elements[i].style.display = "table-row";
+    event.preventDefault();
+  }
+
   </script>
 
   </head>
 
   <body onload="initializeOptions()">
     <h1>Vimium - Options</h1>
-    <table>
+    <table style="position:relative">
       <tr>
         <td class="caption">Scroll step size</td>
-        <td><input id="scrollStepSize" type="text" style="width:50px" />px</td>
-        <td><span class="example">(default: 60)</td>
+        <td>
+          <input id="scrollStepSize" type="text" style="width:50px" />px
+          <span class="example">(default: 60)
+        </td>
       </tr>
       <tr>
         <td><span class="caption">Default zoom level</span></td>
-        <td><input id="defaultZoomLevel" type="text" value="100" style="width:50px" />%</td>
-        <td><span class="example">(default: 100)</span></td>
+        <td>
+          <input id="defaultZoomLevel" type="text" value="100" style="width:50px" />%
+          <span class="example">(default: 100)</span>
+        </td>
       </tr>
       <tr>
         <td colspan="3">
-          <div style="position:relative">
             Excluded URLs<br/>
-            <div style="position:absolute; right:-240px; width:240px">
+            <div class="help">
               <div class="example">
                 e.g. http*://mail.google.com/*<br/>
                 This will disable Vimium on Gmail.<br/><br/>
@@ -107,7 +132,22 @@
               </div>
             </div>
             <textarea id="excludedUrls"></textarea>
-          </div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3">
+          <a href="#" id="advancedOptions">Advanced options &raquo;</a>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Characters used<br/> for link hints</td>
+        <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The characters placed next to each link after typing "F" to enter link hinting mode.
+              </div>
+            </div>
+            <input id="characterLinkHints" type="text" style="width:150px" />
         </td>
       </tr>
     </table>
