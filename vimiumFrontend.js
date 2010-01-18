@@ -158,7 +158,7 @@ function enterInsertModeIfElementIsFocused() {
   var focusNode = window.getSelection().focusNode;
   var focusOffset = window.getSelection().focusOffset;
   if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
-      isInputOrText(focusNode.children[focusOffset]))
+      isEditable(focusNode.children[focusOffset]))
     enterInsertMode();
 }
 
@@ -290,7 +290,7 @@ function onKeydown(event) {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (event.srcElement.tagName != "EMBED") {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
-      if (isInputOrText(event.srcElement)) { event.srcElement.blur(); }
+      if (isEditable(event.srcElement)) { event.srcElement.blur(); }
       exitInsertMode();
     }
   }
@@ -352,15 +352,18 @@ function onBlurCapturePhase(event) {
 /*
  * Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
  */
-function isFocusable(element) { return isInputOrText(element) || element.tagName == "EMBED"; }
+function isFocusable(element) { return isEditable(element) || element.tagName == "EMBED"; }
 
 /*
  * Input or text elements are considered focusable and able to receieve their own keyboard events,
- * and will enter enter mode if focused.
+ * and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
+ * any element which makes it a rich text editor, like the notes on jjot.com.
  * Note: we used to discriminate for text-only inputs, but this is not accurate since all input fields
  * can be controlled via the keyboard, particuarlly SELECT combo boxes.
  */
-function isInputOrText(target) {
+function isEditable(target) {
+  if (target.getAttribute("contentEditable") == "true")
+    return true;
   var focusableInputs = ["input", "textarea", "select", "button"];
   return focusableInputs.indexOf(target.tagName.toLowerCase()) >= 0;
 }
