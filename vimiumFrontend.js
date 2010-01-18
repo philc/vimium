@@ -154,11 +154,7 @@ function initializeOnDomReady() {
  */
 function enterInsertModeIfElementIsFocused() {
   // Enter insert mode automatically if there's already a text box focused.
-  // TODO(philc): Consider using document.activeElement here instead.
-  var focusNode = window.getSelection().focusNode;
-  var focusOffset = window.getSelection().focusOffset;
-  if (focusNode && focusOffset != null && focusNode.children.length > focusOffset &&
-      isEditable(focusNode.children[focusOffset]))
+  if (document.activeElement && isEditable(document.activeElement))
     enterInsertMode();
 }
 
