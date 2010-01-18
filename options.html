@@ -56,6 +56,8 @@
   <script type="text/javascript">
   $ = function(id) { return document.getElementById(id); };
 
+  var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
+
   function initializeOptions() {
     populateOptions();
     var elements = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters"];
@@ -78,8 +80,8 @@
   // Restores select box state to saved value from localStorage.
   function populateOptions() {
     // TODO(ilya): Create a single option list with defaults somewhere to share across various scripts.
-    var scrollStepSize = localStorage["scrollStepSize"] || 60;
-    var defaultZoomLevel = localStorage["defaultZoomLevel"] || 100;
+    var scrollStepSize = localStorage["scrollStepSize"] || defaultSettings.scrollStepSize;
+    var defaultZoomLevel = localStorage["defaultZoomLevel"] || defaultSettings.defaultZoomLevel;
     var defaultExcludedUrls = localStorage["excludedUrls"] || "";
 
     $("scrollStepSize").value = scrollStepSize;
@@ -88,11 +90,11 @@
   }
 
   function restoreToDefaults() {
-    scrollStepSize.value = "60";
-    defaultZoomLevel.value = "100";
+    scrollStepSize.value = defaultSettings.scrollStepSize;
+    defaultZoomLevel.value = defaultSettings.defaultZoomLevel;
     excludedUrls.value = "";
     linkHintCharacters.value = "sadfjklewcmp";
-    $("saveOptions").disabled = true;
+    enableSaveButton();
   }
 
   function openAdvancedOptions(event) {
@@ -113,14 +115,12 @@
         <td class="caption">Scroll step size</td>
         <td>
           <input id="scrollStepSize" type="text" style="width:50px" />px
-          <span class="example">(default: 60)
         </td>
       </tr>
       <tr>
         <td><span class="caption">Default zoom level</span></td>
         <td>
           <input id="defaultZoomLevel" type="text" value="100" style="width:50px" />%
-          <span class="example">(default: 100)</span>
         </td>
       </tr>
       <tr>

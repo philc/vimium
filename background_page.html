@@ -98,7 +98,8 @@
     var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnZoomLevel" });
     var localStorageKey = "zoom" + args.domain;
     var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
-    var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] || 100);
+    var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] ||
+        settings.defaultZoomLevel);
     returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
