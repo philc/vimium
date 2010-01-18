@@ -58,7 +58,7 @@
 
   function initializeOptions() {
     populateOptions();
-    var elements = ["scrollStepSize", "defaultZoomLevel", "excludedUrls"];
+    var elements = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters"];
     for (var i = 0; i < elements.length; i++)
       $(elements[i]).addEventListener("change", enableSaveButton, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
@@ -71,6 +71,7 @@
     localStorage["scrollStepSize"] = $("scrollStepSize").value
     localStorage["defaultZoomLevel"] = $("defaultZoomLevel").value
     localStorage["excludedUrls"] = $("excludedUrls").value;
+    localStorage["linkHintCharacters"] = $("linkHintCharacters").value;
     $("saveOptions").disabled = true;
   }
 
@@ -90,6 +91,7 @@
     scrollStepSize.value = "60";
     defaultZoomLevel.value = "100";
     excludedUrls.value = "";
+    linkHintCharacters.value = "sadfjklewcmp";
     $("saveOptions").disabled = true;
   }
 
@@ -147,7 +149,7 @@
                 The characters placed next to each link after typing "F" to enter link hinting mode.
               </div>
             </div>
-            <input id="characterLinkHints" type="text" style="width:150px" />
+            <input id="linkHintCharacters" type="text" style="width:150px" />
         </td>
       </tr>
     </table>
