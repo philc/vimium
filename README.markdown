@@ -76,6 +76,7 @@ Release Notes
 -  Added command listing to the settings page for easy reference.
 -  J & K have reversed for tab switching. J goes left and K goes right.
 -  <c-[> is now equivalent to ESC.
+-  <c-e> & <c-y> are now mapped to scroll down and up respectively.
 
 1.11, 1.12 (01/08/2010)
 
