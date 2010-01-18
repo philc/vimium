@@ -72,6 +72,7 @@ Release Notes
 1.13 (Unreleased, current)
 
 -  Commands <c-f> and <c-b> to scroll a full page up or down.
+-  Bugfixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
 
 1.11, 1.12 (01/08/2010)
 
