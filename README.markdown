@@ -71,12 +71,13 @@ Release Notes
 
 1.13 (Unreleased, current)
 
--  Commands <c-f> and <c-b> to scroll a full page up or down.
+-  <c-f> and <c-b> are now mapped to scroll a full page up or down respectively.
 -  Bugfixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
--  Added command listing to the settings page for easy reference.
--  J & K have reversed for tab switching. J goes left and K goes right.
--  <c-[> is now equivalent to ESC.
+-  Added command listing to the Options page for easy reference.
+-  J & K have reversed for tab switching: J goes left and K goes right.
+-  <c-[> is now equivalent to ESC, to match the behavior of VIM.
 -  <c-e> & <c-y> are now mapped to scroll down and up respectively.
+-  The characters used for link hints are now configurable under the Advanced Options.
 
 1.11, 1.12 (01/08/2010)
 
