@@ -186,7 +186,7 @@ function zoomIn() {
 
 function zoomOut() {
   setPageZoomLevel(currentZoomLevel -= 20, true);
-  saveZoomLevel(window.location.host, currentZoomLevel, showUINotification);
+  saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
 function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
