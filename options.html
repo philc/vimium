@@ -62,8 +62,13 @@
   function initializeOptions() {
     populateOptions();
     for (var i = 0; i < editableFields.length; i++)
-      $(editableFields[i]).addEventListener("change", enableSaveButton, false);
+      $(editableFields[i]).addEventListener("keydown", onOptionKeydown, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
+  }
+
+  function onOptionKeydown(event) {
+    if (event.keyCode > 31) // Ignore modifiers and TAB.
+      enableSaveButton();
   }
 
   function enableSaveButton() { $("saveOptions").removeAttribute("disabled"); }
