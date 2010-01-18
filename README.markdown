@@ -56,8 +56,8 @@ Manipulating tabs:
     d          close current tab
     u          restore closed tab (i.e. unwind the 'd' command)
 
-Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC
-will clear any partial commands in the queue.
+Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
+<c-[>) will clear any partial commands in the queue.
 
 Contributing
 ------------
@@ -73,6 +73,9 @@ Release Notes
 
 -  Commands <c-f> and <c-b> to scroll a full page up or down.
 -  Bugfixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
+-  Added command listing to the settings page for easy reference.
+-  J & K have reversed for tab switching. J goes left and K goes right.
+-  <c-[> is now equivalent to ESC.
 
 1.11, 1.12 (01/08/2010)
 
