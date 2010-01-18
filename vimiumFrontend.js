@@ -157,7 +157,7 @@ function enterInsertModeIfElementIsFocused() {
   // TODO(philc): Consider using document.activeElement here instead.
   var focusNode = window.getSelection().focusNode;
   var focusOffset = window.getSelection().focusOffset;
-  if (focusNode && focusOffset && focusNode.children.length > focusOffset &&
+  if (focusNode && focusOffset != null && focusNode.children.length > focusOffset &&
       isEditable(focusNode.children[focusOffset]))
     enterInsertMode();
 }
