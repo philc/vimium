@@ -237,7 +237,7 @@ function getKeyChar(event) {
     return String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase();
 }
 
-function isCtrl(event) {
+function isPrimaryModifierKey(event) {
   if (platform == "Mac")
     return event.metaKey;
   else
@@ -245,8 +245,8 @@ function isCtrl(event) {
 }
 
 function isEscape(event) {
-  return event.keyCode == keyCodes.ESC || 
-    (isCtrl(event) && getKeyChar(event) == '[');
+  return event.keyCode == keyCodes.ESC ||
+    (event.ctrlKey && getKeyChar(event) == '['); // c-[ is mapped to ESC in Vim by default.
 }
 
 /**
@@ -267,7 +267,7 @@ function onKeydown(event) {
     keyChar = getKeyChar(event);
 
     // Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && !event.shiftKey && isCtrl(event))
+    if (keyChar == "f" && !event.shiftKey && isPrimaryModifierKey(event))
     {
       enterInsertMode();
       return;
