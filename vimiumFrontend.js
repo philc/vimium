@@ -288,7 +288,7 @@ function onKeydown(event) {
   if (insertMode && isEscape(event))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if (event.srcElement.tagName != "EMBED") {
+    if (!isEmbed(event.srcElement)) {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
       if (isEditable(event.srcElement)) { event.srcElement.blur(); }
       exitInsertMode();
@@ -352,7 +352,13 @@ function onBlurCapturePhase(event) {
 /*
  * Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
  */
-function isFocusable(element) { return isEditable(element) || element.tagName == "EMBED"; }
+function isFocusable(element) { return isEditable(element) || isEmbed(element); }
+
+/*
+ * Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
+ * unfocused.
+ */
+function isEmbed(element) { return ["EMBED", "OBJECT"].indexOf(element.tagName) > 0; }
 
 /*
  * Input or text elements are considered focusable and able to receieve their own keyboard events,
