@@ -62,6 +62,12 @@
     document.getElementById("defaultZoomLevel").value = defaultZoomLevel;
     document.getElementById("excludedUrls").value = defaultExcludedUrls;
   }
+
+  function restoreToDefaults() {
+    scrollStepSize.value = "60";
+    defaultZoomLevel.value = "100";
+    excludedUrls.value = "";
+  }
   </script>
 
   <body onload="populateOptions()">
@@ -69,12 +75,12 @@
     <table>
       <tr>
         <td class="caption">Scroll Step Size</td>
-        <td><input id="scrollStepSize" type="text" style="width:50px">px</td>
+        <td><input id="scrollStepSize" type="text" style="width:50px" />px</td>
         <td><span class="example">(default: 60)</td>
       </tr>
       <tr>
         <td><span class="caption">Default zoom level</span></td>
-        <td><input id="defaultZoomLevel" type="text" value="100" style="width:50px">%</td>
+        <td><input id="defaultZoomLevel" type="text" value="100" style="width:50px" />%</td>
         <td><span class="example">(default: 100)</span></td>
       </tr>
       <tr>
@@ -94,6 +100,7 @@
       </tr>
     </table>
 
+    <button id="restoreSettings" onclick="restoreToDefaults()">Restore to Defaults</button>
     <button id="saveSettings" onclick="saveOptions()">Save Settings</button>
     <span id="status"></status>
 
