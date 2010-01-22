@@ -80,7 +80,9 @@
     for (var i = 0; i < editableFields.length; i++) {
       var fieldName = editableFields[i];
       var fieldValue = $(fieldName).value.trim();
-      if (fieldValue == defaultSettings[fieldName].toString())
+      var defaultFieldValue = (defaultSettings[fieldName] != null) ?
+        defaultSettings[fieldName].toString() : "";
+      if (fieldValue == defaultFieldValue)
         delete localStorage[fieldName];
       else
         localStorage[fieldName] = fieldValue;
