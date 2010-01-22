@@ -69,7 +69,7 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
-1.13 (Unreleased, current)
+1.13 (01/21/2010)
 
 -  <c-f> and <c-b> are now mapped to scroll a full page up or down respectively.
 -  Bugfixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
