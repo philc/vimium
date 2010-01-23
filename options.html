@@ -36,10 +36,12 @@
         white-space:nowrap;
       }
       #buttonsPanel {
-        /* This should match the width of #excludedUrls */
-        width:450px;
+        /* This should match the width of #excludedUrls + 5px of padding to move the buttons to the right. */
+        width:455px;
         text-align:right;
         margin-top:18px;
+
+        margin-right:-10px;
       }
       .help {
         position:absolute;
@@ -62,12 +64,12 @@
   function initializeOptions() {
     populateOptions();
     for (var i = 0; i < editableFields.length; i++)
-      $(editableFields[i]).addEventListener("keydown", onOptionKeydown, false);
+      $(editableFields[i]).addEventListener("keyup", onOptionKeydown, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
   }
 
   function onOptionKeydown(event) {
-    if (event.keyCode > 31) // Ignore modifiers and TAB.
+    if (event.target.getAttribute("savedValue") != event.target.value)
       enableSaveButton();
   }
 
@@ -86,14 +88,18 @@
         delete localStorage[fieldName];
       else
         localStorage[fieldName] = fieldValue;
+      $(fieldName).value = fieldValue;
+      $(fieldName).setAttribute("savedValue", fieldValue);
     }
     $("saveOptions").disabled = true;
   }
 
   // Restores select box state to saved value from localStorage.
   function populateOptions() {
-    for (var i = 0; i < editableFields.length; i++)
+    for (var i = 0; i < editableFields.length; i++) {
       $(editableFields[i]).value = localStorage[editableFields[i]] || defaultSettings[editableFields[i]] || "";
+      $(editableFields[i]).setAttribute("savedValue", $(editableFields[i]).value);
+    }
   }
 
   function restoreToDefaults() {
