@@ -69,6 +69,10 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
+1.15 (unreleased)
+
+-  Make the CSS used by the link hints configurable. It's under Advanced Options.
+
 1.14 (01/21/2010)
 
 -  Fixed a bug introduced in 1.13 that prevented excluded URLs from being saved.
@@ -81,7 +85,7 @@ Release Notes
 -  J & K have reversed for tab switching: J goes left and K goes right.
 -  <c-[> is now equivalent to ESC, to match the behavior of VIM.
 -  <c-e> & <c-y> are now mapped to scroll down and up respectively.
--  The characters used for link hints are now configurable under the Advanced Options.
+-  The characters used for link hints are now configurable under Advanced Options.
 
 1.11, 1.12 (01/08/2010)
 
