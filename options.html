@@ -26,6 +26,10 @@
         width:450px;
         min-height:100px;
       }
+      textarea#userDefinedLinkHintCss {
+        width:302px;
+        min-height:100px;
+      }
       #status {
         margin-left:10px;
         font-size:80%;
@@ -40,7 +44,6 @@
         width:455px;
         text-align:right;
         margin-top:18px;
-
         margin-right:-10px;
       }
       .help {
@@ -59,7 +62,8 @@
 
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
-  var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters"];
+  var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
+    "userDefinedLinkHintCss"];
 
   function initializeOptions() {
     populateOptions();
@@ -161,6 +165,19 @@
               </div>
             </div>
             <input id="linkHintCharacters" type="text" style="width:150px" />
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">CSS for link hints</td>
+        <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The CSS used to style the characters next to each link hint.<br/><br/>
+                Note: these styles are used in addition to and take precedence over Vimium's
+                default styles.
+              </div>
+            </div>
+            <textarea id="userDefinedLinkHintCss" type="text"></textarea>
         </td>
       </tr>
     </table>
