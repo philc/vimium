@@ -22,6 +22,7 @@ var isEnabledForUrl = true;
 // The user's operating system.
 var platform;
 var currentCompletionKeys;
+var linkHintCss;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
@@ -64,6 +65,10 @@ function initializePreDomReady() {
 
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
   getZoomLevelPort.postMessage({ domain: window.location.host });
+
+  chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
+    linkHintCss = response.linkHintCss;
+  });
 
   refreshCompletionKeys();
 

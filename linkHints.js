@@ -4,24 +4,8 @@
  * a link.
  *
  * The characters we use to show link hints are a user-configurable option. By default they're the home row.
+ * The CSS which is used on the link hints is also a configurable option.
  */
-var linkHintsCss =
-  '.vimiumHintMarker {' +
-    'background-color:yellow;' +
-    'color:black;' +
-    'font-weight:bold;' +
-    'font-size:12px;' +
-    'padding:0 1px;' +
-    'line-height:100%;' +
-    'width:auto;' +
-    'display:block;' +
-    'border:1px solid #E3BE23;' +
-    'z-index:99999999;' +
-    'font-family:"Helvetica Neue", "Helvetica", "Arial", "Sans";' +
-  '}' +
-  '.vimiumHintMarker > span.matchingCharacter {' +
-    'color:#C79F0B;' +
-  '}';
 
 var hintMarkers = [];
 // The characters that were typed in while in "link hints" mode.
@@ -40,7 +24,8 @@ function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
 
 function activateLinkHintsMode(openInNewTab) {
   if (!linkHintsCssAdded)
-    addCssToPage(linkHintsCss);
+    addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
+  linkHintCssAdded = true;
   linkHintsModeActivated = true;
   shouldOpenLinkHintInNewTab = openInNewTab
   buildLinkHints();
@@ -260,7 +245,7 @@ function deactivateLinkHintsMode() {
 function addMarkerFor(link, linkHintNumber, linkHintDigits) {
   var hintString = numberToHintString(linkHintNumber, linkHintDigits);
   var marker = document.createElement("div");
-  marker.className = "vimiumHintMarker";
+  marker.className = "internalVimiumHintMarker vimiumHintMarker";
   var innerHTML = [];
   // Make each hint character a span, so that we can highlight the typed characters as you type them.
   for (var i = 0; i < hintString.length; i++)

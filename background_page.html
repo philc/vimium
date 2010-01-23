@@ -9,8 +9,32 @@
   var defaultSettings = {
     scrollStepSize: 60,
     defaultZoomLevel: 100,
-    linkHintCharacters: "sadfjklewcmp"
+    linkHintCharacters: "sadfjklewcmp",
+    userDefinedLinkHintCss:
+      ".vimiumHintMarker {\n\n}\n" +
+      ".vimiumHintMarker > .matchingCharacter {\n\n}"
   };
+
+  // This is the base internal link hints CSS. It's combined with the userDefinedLinkHintCss before
+  // being sent to the frontend.
+  var linkHintCss =
+    '.internalVimiumHintMarker {' +
+      'background-color:yellow;' +
+      'color:black;' +
+      'font-weight:bold;' +
+      'font-size:12px;' +
+      'padding:0 1px;' +
+      'line-height:100%;' +
+      'width:auto;' +
+      'display:block;' +
+      'border:1px solid #E3BE23;' +
+      'z-index:99999999;' +
+      'font-family:"Helvetica Neue", "Helvetica", "Arial", "Sans";' +
+    '}' +
+    '.internalVimiumHintMarker > .matchingCharacter {' +
+      'color:#C79F0B;' +
+    '}';
+
 
   // Port handler mapping
   var portHandlers = {
@@ -24,7 +48,8 @@
   };
 
   var sendRequestHandlers = {
-    getCompletionKeys:    getCompletionKeys
+    getCompletionKeys: getCompletionKeys,
+    getLinkHintCss: getLinkHintCss
   };
 
   // Event handlers
@@ -108,6 +133,13 @@
    */
   function getCompletionKeys(request) {
     return {completionKeys: generateCompletionKeys()};
+  }
+
+  /*
+   * Returns the core CSS used for link hints, along with any user-provided overrides.
+   */
+  function getLinkHintCss(request) {
+    return { linkHintCss: linkHintCss + (localStorage['userDefinedLinkHintCss'] || "") };
   }
 
   /*
