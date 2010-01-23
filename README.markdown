@@ -33,7 +33,7 @@ Navigating the current page:
     <c-u>, <c-y>   scroll up a page
     <c-f>   scroll down a full page
     <c-b>   scroll up a full page
-    f       activate link hints mode to open in current page
+    f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
     r       reload
     gf      view source
