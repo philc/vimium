@@ -69,6 +69,10 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
+1.14 (01/21/2010)
+
+-  Fixed a bug introduced in 1.13 that prevented excluded URLs from being saved.
+
 1.13 (01/21/2010)
 
 -  <c-f> and <c-b> are now mapped to scroll a full page up or down respectively.
