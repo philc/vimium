@@ -150,6 +150,7 @@ function initializeWhenEnabled() {
 function initializeOnDomReady() {
   if (isEnabledForUrl)
     enterInsertModeIfElementIsFocused();
+
   // Tell the background page we're in the dom ready state.
   chrome.extension.connect({ name: "domReady" });
 };
@@ -496,12 +497,13 @@ HUD = {
       "border: 1px solid #b3b3b3;" +
       "border-radius: 4px 4px 0 0;" +
       "font-family: Lucida Grande, Arial, Sans;" +
-      "z-index: 99999999999;" +
+      // One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button.
+      "z-index: 99999998;" +
       "text-shadow: 0px 1px 2px #FFF;" +
       "line-height: 1.0;" +
       "opacity: 0;" +
     "}" +
-    ".vimiumHUD a, .vimiumHUD a:hover { color: blue; }" +
+    ".vimiumHUD a, .vimiumHUD a:hover { background-color: transparent; color: blue; }" +
     ".vimiumHUD .close-button {" +
       "font-family:courier new;" +
       "font-weight:bold;" +
@@ -534,13 +536,18 @@ HUD = {
   showUpgradeNotification: function(version) {
     HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to " +
       "<a href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>" +
-      version + "</a><a class='close-button' href='#'>x</a>";
+      version + ".</a><a class='close-button' href='#'>x</a>";
     var closeLink = HUD.upgradeNotificationElement().getElementsByClassName("close-button")[0];
-    closeLink.addEventListener("click", HUD.hideUpgradeNotification, false);
+    closeLink.addEventListener("click", HUD.onCloseNotificationClick, false);
     Tween.fade(HUD.upgradeNotificationElement(), 1.0, 150);
   },
 
-  hideUpgradeNotification: function() {
+  onCloseNotificationClick: function(event) {
+    event.preventDefault();
+    HUD.hideUpgradeNotification();
+  },
+
+  hideUpgradeNotification: function(clickEvent) {
     Tween.fade(HUD.upgradeNotificationElement(), 0, 150,
       function() { HUD.upgradeNotificationElement().style.display = "none"; });
   },
