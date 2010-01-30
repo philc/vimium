@@ -22,18 +22,40 @@
     }
 
     #hud {
-      position:absolute;
+      position:fixed;
+      bottom:0px;
+      color:black;
+/*      right:150px;*/
+      right:315px;
       height:13px;
-      right:150px;
-      bottom:0;
+      max-width:400px;
+      min-width:150px;
+      text-align:left;
       background-color:#ebebeb;
-      font-family: "Lucida Grande";
+      font-weight:normal;
       font-size:11px;
-      padding:3px 2px 0 2px;
       padding:3px 3px 2px 3px;
-      text-shadow: 0px 1px 2px #FFF;
       border:1px solid #b3b3b3;
+      font-family:"Lucida Grande", Arial, Sans;
+      z-index:99999999999;
+      text-shadow:0px 1px 2px #FFF;
+      line-height:1.0;
+
       border-radius:4px 4px 0 0;
+    }
+    #hud a, #hud a:hover { color: blue; }
+    #hud .close-button {
+      font-family:"courier new";
+      font-weight:bold;
+      color:#9C9A9A;
+      text-decoration:none;
+      padding-left:10px;
+      font-size:14px;
+    }
+    #hud .close-button:hover {
+      color:#333333;
+      cursor:default;
+      -webkit-user-select:none;
     }
       
   </style>
@@ -46,9 +68,12 @@
 </head>
 <body>
   <h2>Loading and popup HUD</h2>
-  <a id="biglink" href="http://ninjawords.com/one,two,three,four,five,six,seven,eight,nine">Big link</a>
+  <a id="biglink" href="http://ninjawords.com/thisShouldEventuallyGetTruncatedBecauseItsAReallyLongLink,very,long,indeed">Big link</a>
 
   <input type="text" name="some_name" value="" id="some_name"/>
   <!-- <div id="hud">Pop-ups Blocked</div> -->
+  <div id="hud">Vimium has been updated to 1.14.
+  <a href="#">See the changes</a>.
+  <span class="close-button" href="#">x</div>
 </body>
 </html>
