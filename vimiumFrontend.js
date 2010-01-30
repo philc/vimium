@@ -82,6 +82,14 @@ function initializePreDomReady() {
   else
     platform = "Windows";
 
+  chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+    if (request.name == "hideUpgradeNotification")
+      HUD.hideUpgradeNotification();
+    else if (request.name == "showUpgradeNotification" && isEnabledForUrl)
+      HUD.showUpgradeNotification(request.version);
+    sendResponse({}); // Free up the resources used by this open connection.
+  });
+
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
@@ -536,15 +544,19 @@ HUD = {
   showUpgradeNotification: function(version) {
     HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to " +
       "<a href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>" +
-      version + ".</a><a class='close-button' href='#'>x</a>";
-    var closeLink = HUD.upgradeNotificationElement().getElementsByClassName("close-button")[0];
-    closeLink.addEventListener("click", HUD.onCloseNotificationClick, false);
+      version + "</a>.<a class='close-button' href='#'>x</a>";
+    var links = HUD.upgradeNotificationElement().getElementsByTagName("a");
+    links[0].addEventListener("click", HUD.onUpdateLinkClicked, false);
+    links[1].addEventListener("click", function(event) {
+      event.preventDefault();
+      HUD.onUpdateLinkClicked();
+    });
     Tween.fade(HUD.upgradeNotificationElement(), 1.0, 150);
   },
 
-  onCloseNotificationClick: function(event) {
-    event.preventDefault();
+  onUpdateLinkClicked: function(event) {
     HUD.hideUpgradeNotification();
+    chrome.extension.sendRequest({ handler: "upgradeNotificationClosed" });
   },
 
   hideUpgradeNotification: function(clickEvent) {
