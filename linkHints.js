@@ -268,18 +268,3 @@ function addMarkerFor(link, linkHintNumber, linkHintDigits) {
   document.body.appendChild(marker);
   return marker;
 }
-
-/*
- * Adds the given CSS to the page. TODO: This may belong in the core vimium frontend.
- */
-function addCssToPage(css) {
-  var head = document.getElementsByTagName("head")[0];
-  if (!head) {
-    console.log("Warning: unable to add CSS to the page.");
-    return;
-  }
-  var style = document.createElement("style");
-  style.type = "text/css";
-  style.appendChild(document.createTextNode(css));
-  head.appendChild(style);
-}
