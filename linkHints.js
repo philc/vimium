@@ -18,7 +18,7 @@ var linkHintsCssAdded = false;
 
 // An XPath describing what a clickable element is. We could also look for images with an onclick
 // attribute, but let's wait to see if that really is necessary.
-var clickableElementsXPath = "//a | //textarea | //button | //select | //input[not(@type='hidden')]";
+var clickableElementsXPath = "//a | //textarea | //button | //select | //input[not(@type='hidden')] | //*[@onclick]";
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
 function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
