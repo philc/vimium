@@ -66,7 +66,8 @@ function getVisibleClickableElements() {
 
     // Note that getBoundingClientRect() is relative to the viewport
     var boundingRect = element.getBoundingClientRect();
-    if (boundingRect.bottom < 0 || boundingRect.top > window.innerHeight)
+    // Exclude links which have just a few pixels on screen, because the link hints won't show for them anyway.
+    if (boundingRect.bottom <= 4 || boundingRect.top >= window.innerHeight - 4)
       continue;
 
     if (boundingRect.width < 3 || boundingRect.height < 3)
