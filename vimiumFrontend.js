@@ -207,8 +207,8 @@ function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(0, 0); }
 function scrollUp() { window.scrollBy(0, -1 * settings["scrollStepSize"]); }
 function scrollDown() { window.scrollBy(0, settings["scrollStepSize"]); }
-function scrollPageUp() { window.scrollBy(0, -6 * settings["scrollStepSize"]); }
-function scrollPageDown() { window.scrollBy(0, 6 * settings["scrollStepSize"]); }
+function scrollPageUp() { window.scrollBy(0, -1 * window.innerHeight / 2); }
+function scrollPageDown() { window.scrollBy(0, window.innerHeight / 2); }
 function scrollFullPageUp() { window.scrollBy(0, -window.innerHeight); }
 function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
