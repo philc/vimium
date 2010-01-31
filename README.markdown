@@ -72,6 +72,9 @@ Release Notes
 1.15 (unreleased)
 
 -  Make the CSS used by the link hints configurable. It's under Advanced Options.
+-  Add a notification linking to the changelog when Vimium is updated in the background.
+-  Link-hinting performance improvements and bugfixes.
+-  Ctrl+D and Ctrl+U now scroll by 1/2 page instead of a fixed amount, to mirror Vim's behavior.
 
 1.14 (01/21/2010)
 
