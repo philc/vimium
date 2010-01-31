@@ -8,6 +8,7 @@
  */
 
 var hintMarkers = [];
+var hintMarkerContainingDiv = null;
 // The characters that were typed in while in "link hints" mode.
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
@@ -43,9 +44,17 @@ function buildLinkHints() {
   var digitsNeeded = Math.ceil(logXOfBase(visibleElements.length, settings.linkHintCharacters.length));
   var linkHintNumber = 0;
   for (var i = 0; i < visibleElements.length; i++) {
-    hintMarkers.push(addMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
+    hintMarkers.push(createMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
     linkHintNumber++;
   }
+  // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
+  // because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
+  // that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
+  // Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
+  hintMarkerContainingDiv = document.createElement("div");
+  for (var i = 0; i < hintMarkers.length; i++)
+    hintMarkerContainingDiv.appendChild(hintMarkers[i]);
+  document.body.appendChild(hintMarkerContainingDiv);
 }
 
 function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
@@ -237,8 +246,9 @@ function simulateClick(link) {
 }
 
 function deactivateLinkHintsMode() {
-  for (var i = 0; i < hintMarkers.length; i++)
-    hintMarkers[i].parentNode.removeChild(hintMarkers[i]);
+  if (hintMarkerContainingDiv)
+    hintMarkerContainingDiv.parentNode.removeChild(hintMarkerContainingDiv);
+  hintMarkerContainingDiv = null;
   hintMarkers = [];
   hintKeystrokeQueue = [];
   document.removeEventListener("keydown", onKeyDownInLinkHintsMode, true);
@@ -246,10 +256,9 @@ function deactivateLinkHintsMode() {
 }
 
 /*
- * Adds a link marker for the given link by adding a new element to <body> and positioning it on top of
- * the link.
+ * Creates a link marker for the given link.
  */
-function addMarkerFor(link, linkHintNumber, linkHintDigits) {
+function createMarkerFor(link, linkHintNumber, linkHintDigits) {
   var hintString = numberToHintString(linkHintNumber, linkHintDigits);
   var marker = document.createElement("div");
   marker.className = "internalVimiumHintMarker vimiumHintMarker";
@@ -259,8 +268,8 @@ function addMarkerFor(link, linkHintNumber, linkHintDigits) {
     innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
   marker.innerHTML = innerHTML.join("");
   marker.setAttribute("hintString", hintString);
-  marker.style.position = "absolute";
 
+  // Note: this call will be expensive if we modify the DOM in between calls.
   var boundingRect = link.getBoundingClientRect();
   // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
   // the document node.
@@ -269,9 +278,5 @@ function addMarkerFor(link, linkHintNumber, linkHintDigits) {
   marker.style.top = boundingRect.top  + window.scrollY / zoomFactor + "px";
 
   marker.clickableItem = link;
-  // Note(philc): Append these markers to document.body instead of as child nodes to the link itself,
-  // because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
-  // that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
-  document.body.appendChild(marker);
   return marker;
 }
