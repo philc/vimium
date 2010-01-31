@@ -69,12 +69,17 @@ function getVisibleClickableElements() {
     if (boundingRect.bottom < 0 || boundingRect.top > window.innerHeight)
       continue;
 
+    if (boundingRect.width < 3 || boundingRect.height < 3)
+      continue;
+
     // Using getElementFromPoint will omit elements which have visibility=hidden or display=none, and
     // elements inside of containers that are also hidden. We're checking for whether the element occupies
     // the upper left corner and if that fails, we also check whether the element occupies the center of the
     // box. We use the center of the box because it's more accurate when inline links have vertical padding,
     // like in the links ("Source", "Commits") at the top of github.com.
     // This will not exclude links with "opacity=0", like the links on Google's homepage (see bug #16).
+    // Note(philc): this is the most expensive part our link hinting process, so we should try hard to filter
+    // out elements by whatever means possible prior to getting to this check.
     if (!elementOccupiesPoint(element, boundingRect.left, boundingRect.top)) {
       var elementOccupiesCenter = elementOccupiesPoint(element, boundingRect.left + boundingRect.width / 2,
           boundingRect.top + boundingRect.height / 2);
