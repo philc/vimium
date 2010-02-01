@@ -69,7 +69,7 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
-1.15 (unreleased)
+1.15 (01/31/2010)
 
 -  Make the CSS used by the link hints configurable. It's under Advanced Options.
 -  Add a notification linking to the changelog when Vimium is updated in the background.
