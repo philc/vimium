@@ -1,5 +1,6 @@
 <html>
 <head>
+<script type="text/javascript" src="commands.js"/>
 <script type="text/javascript" charset="utf-8">
   // Currently we need to remember to change this each time we push. Chromium #15242 will enable us
   // to retrieve this programmatically.
@@ -274,51 +275,6 @@
   }
   // End action functions
 
-  var keyToCommandRegistry = {};
-  keyToCommandRegistry['j']  = 'scrollDown';
-  keyToCommandRegistry['k']  = 'scrollUp';
-  keyToCommandRegistry['h']  = 'scrollLeft';
-  keyToCommandRegistry['l']  = 'scrollRight';
-  keyToCommandRegistry['gg'] = 'scrollToTop';
-  keyToCommandRegistry['G']  = 'scrollToBottom';
-  keyToCommandRegistry['<c-e>']  = 'scrollDown';
-  keyToCommandRegistry['<c-y>']  = 'scrollUp';
-  keyToCommandRegistry['<c-d>'] = "scrollPageDown";
-  keyToCommandRegistry['<c-u>'] = "scrollPageUp";
-  keyToCommandRegistry['<c-f>'] = "scrollFullPageDown";
-  keyToCommandRegistry['<c-b>'] = "scrollFullPageUp";
-  keyToCommandRegistry['r']  = 'reload';
-  keyToCommandRegistry['gf'] = 'toggleViewSource';
-
-  keyToCommandRegistry['i']  = 'enterInsertMode';
-
-  keyToCommandRegistry['ba'] = 'goBack';
-  keyToCommandRegistry['H']  = 'goBack';
-  keyToCommandRegistry['fw'] = 'goForward';
-  keyToCommandRegistry['fo'] = 'goForward';
-  keyToCommandRegistry['L']  = 'goForward';
-
-  keyToCommandRegistry['zi'] = 'zoomIn';
-  keyToCommandRegistry['zo'] = 'zoomOut';
-
-  keyToCommandRegistry['f']  = 'activateLinkHintsMode';
-  keyToCommandRegistry['F']  = 'activateLinkHintsModeToOpenInNewTab';
-
-  keyToCommandRegistry['/']  = 'enterFindMode';
-  keyToCommandRegistry['n']  = 'performFind';
-  keyToCommandRegistry['N']  = 'performBackwardsFind';
-
-  keyToCommandRegistry['yy']  = 'copyCurrentUrl';
-
-  keyToCommandRegistry['K']  = nextTab;
-  keyToCommandRegistry['J']  = previousTab;
-  keyToCommandRegistry['gt'] = nextTab;
-  keyToCommandRegistry['gT'] = previousTab;
-
-  keyToCommandRegistry['t']  = createTab;
-  keyToCommandRegistry['d']  = removeTab;
-  keyToCommandRegistry['u']  = restoreTab;
-
   function getActualKeyStrokeLength(key) {
     if (key.slice(0, 3) == "<c-" && key[key.length - 1] == ">")
       return 1;
@@ -397,16 +353,16 @@
 
     if (keyToCommandRegistry[command]) {
       registryEntry = keyToCommandRegistry[command];
-      console.log("command found for [", keysToCheck, "],", registryEntry);
+      console.log("command found for [", keysToCheck, "],", registryEntry.command);
 
-      if (typeof(registryEntry) == "string") {
+      if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
-        port.postMessage({ command: registryEntry, count: count,
+        port.postMessage({ command: registryEntry.command, count: count,
                             completionKeys: generateCompletionKeys("") });
 
         refreshedCompletionKeys = true;
       } else {
-        repeatFunction(registryEntry, count, 0);
+        repeatFunction(this[registryEntry.command], count, 0);
       }
 
       newKeyQueue = "";
