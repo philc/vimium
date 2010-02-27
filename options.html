@@ -30,6 +30,10 @@
         width:302px;
         min-height:100px;
       }
+      textarea#keyMappings {
+        width:302px;
+        min-height:100px;
+      }
       #status {
         margin-left:10px;
         font-size:80%;
@@ -63,7 +67,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-    "userDefinedLinkHintCss"];
+    "userDefinedLinkHintCss", "keyMappings"];
 
   function initializeOptions() {
     populateOptions();
@@ -170,14 +174,28 @@
       <tr class="advancedOption">
         <td class="caption">CSS for link hints</td>
         <td verticalAlign="top">
-            <div class="help">
-              <div class="example">
-                The CSS used to style the characters next to each link hint.<br/><br/>
-                Note: these styles are used in addition to and take precedence over Vimium's
-                default styles.
-              </div>
+          <div class="help">
+            <div class="example">
+              The CSS used to style the characters next to each link hint.<br/><br/>
+              Note: these styles are used in addition to and take precedence over Vimium's
+              default styles.
             </div>
-            <textarea id="userDefinedLinkHintCss" type="text"></textarea>
+          </div>
+          <textarea id="userDefinedLinkHintCss" type="text"></textarea>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Key mappings</td>
+        <td verticalAlign="top">
+          <div class="help">
+            <div class="example">
+              <!-- TODO(ilya/philc): Expand this and style it better. -->
+              Enter commands to remap your keys. Available commands:<br/>
+              map j scrollDown<br/>
+              unmap j</br>
+            </div>
+          </div>
+          <textarea id="keyMappings" type="text"></textarea>
         </td>
       </tr>
     </table>
