@@ -51,35 +51,43 @@ function parseCustomKeyMappings(customKeyMappings) {
   }
 }
 
-// TODO(ilya): Fill in these descriptions.
-addCommand('scrollDown', '');
-addCommand('scrollUp', '');
-addCommand('scrollLeft', '');
-addCommand('scrollRight', '');
-addCommand('scrollToTop', '');
-addCommand('scrollToBottom', '');
-addCommand('scrollPageDown', '');
-addCommand('scrollPageUp', '');
-addCommand('scrollFullPageDown', '');
-addCommand('scrollFullPageUp', '');
-addCommand('reload', '');
-addCommand('toggleViewSource', '');
-addCommand('enterInsertMode', '');
-addCommand('goBack', '');
-addCommand('goForward', '');
-addCommand('zoomIn', '');
-addCommand('zoomOut', '');
-addCommand('activateLinkHintsMode', '');
-addCommand('activateLinkHintsModeToOpenInNewTab', '');
-addCommand('enterFindMode', '');
-addCommand('performFind', '');
-addCommand('performBackwardsFind', '');
-addCommand('copyCurrentUrl', '');
-addCommand('nextTab', '', true);
-addCommand('previousTab', '', true);
-addCommand('createTab', '', true);
-addCommand('removeTab', '', true);
-addCommand('restoreTab', '', true);
+// Navigating the current page:
+addCommand('scrollDown',          'Scroll down.');
+addCommand('scrollUp',            'Scroll up.');
+addCommand('scrollLeft',          'Scroll left.');
+addCommand('scrollRight',         'Scroll right.');
+addCommand('scrollToTop',         'Scroll to the top of the page.');
+addCommand('scrollToBottom',      'Scroll to the bottom of the page.');
+addCommand('scrollPageDown',      'Scroll a page up.');
+addCommand('scrollPageUp',        'Scroll a page down.');
+addCommand('scrollFullPageDown',  'Scroll a full page down.');
+addCommand('scrollFullPageUp',    'Scroll a full page up.');
+
+addCommand('reload',              'Reload the page.');
+addCommand('toggleViewSource',    'View page source.');
+addCommand('zoomIn',              'Zoom in.');
+addCommand('zoomOut',             'Zoom out.');
+addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard.');
+
+addCommand('enterInsertMode',     'Enter insert mode.');
+
+addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab.');
+addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab.');
+
+addCommand('enterFindMode',        'Enter find mode.');
+addCommand('performFind',          'Cycle forward to the next find match.');
+addCommand('performBackwardsFind', 'Cycle backward to the previous find match.');
+
+// Navigating your history:
+addCommand('goBack',              'Go back in history.');
+addCommand('goForward',           'Go forward in history.');
+
+// Manipulating tabs:
+addCommand('nextTab',             'Go one tab right.',  true);
+addCommand('previousTab',         'Go one tab left.',   true);
+addCommand('createTab',           'Create new tab.',    true);
+addCommand('removeTab',           'Close current tab.', true);
+addCommand('restoreTab',          "Restore closed tab. (i.e. unwind the 'd' command).", true);
 
 mapKeyToCommand('j', 'scrollDown');
 mapKeyToCommand('k', 'scrollUp');
