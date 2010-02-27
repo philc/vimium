@@ -27,16 +27,17 @@ function parseCustomKeyMappings(customKeyMappings) {
   lines = customKeyMappings.split("\n");
 
   for (var i = 0; i < lines.length; i++) {
-    line = lines[i].split(" "); // TODO(ilya): Support all whitespace.
-    if (line.length < 2) { continue }
+    if (lines[i][0] == "\"" || lines[i][0] == "#") { continue }
+    split_line = lines[i].split(" "); // TODO(ilya): Support all whitespace.
+    if (split_line.length < 2) { continue }
 
-    var lineCommand = line[0];
-    var key         = line[1];
+    var lineCommand = split_line[0];
+    var key         = split_line[1];
 
     if (lineCommand == "map") {
-      if (line.length != 3) { continue }
+      if (split_line.length != 3) { continue }
 
-      var vimiumCommand = line[2];
+      var vimiumCommand = split_line[2];
 
       if (!availableCommands[vimiumCommand]) { continue }
 
