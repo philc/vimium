@@ -292,7 +292,9 @@ function onKeydown(event) {
     if (event.ctrlKey)
       keyChar = "<c-" + keyChar + ">";
     if (event.metaKey)
-      keyChar = null;
+      keyChar = "<m-" + keyChar + ">";
+    if (event.altKey)
+      keyChar = "<a-" + keyChar + ">";
   }
 
   if (insertMode && isEscape(event))
