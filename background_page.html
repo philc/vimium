@@ -425,6 +425,7 @@
   }
 
   function init() {
+    parseCustomKeyMappings(localStorage["keyMappings"]);
     populateValidFirstKeys();
     populateSingleKeyCommands();
     if (shouldShowUpgradeMessage())

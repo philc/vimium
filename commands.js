@@ -11,8 +11,7 @@ function addCommand(command, description, isBackgroundCommand) {
   availableCommands[command] = { description: description, isBackgroundCommand: isBackgroundCommand };
 }
 
-function mapKeyToCommand(key, command)
-{
+function mapKeyToCommand(key, command) {
   if (!availableCommands[command])
   {
     console.log(command, "doesn't exist!");
@@ -22,6 +21,36 @@ function mapKeyToCommand(key, command)
   keyToCommandRegistry[key] = { command: command, isBackgroundCommand: availableCommands[command].isBackgroundCommand };
 }
 
+function unmapKey(key) { delete keyToCommandRegistry[key]; }
+
+function parseCustomKeyMappings(customKeyMappings) {
+  lines = customKeyMappings.split("\n");
+
+  for (var i = 0; i < lines.length; i++) {
+    line = lines[i].split(" "); // TODO(ilya): Support all whitespace.
+    if (line.length < 2) { continue }
+
+    var lineCommand = line[0];
+    var key         = line[1];
+
+    if (lineCommand == "map") {
+      if (line.length != 3) { continue }
+
+      var vimiumCommand = line[2];
+
+      if (!availableCommands[vimiumCommand]) { continue }
+
+      console.log("Mapping", key, "to", vimiumCommand);
+      mapKeyToCommand(key, vimiumCommand);
+    }
+    else if (lineCommand == "unmap") {
+      console.log("Unmapping", key);
+      unmapKey(key);
+    }
+  }
+}
+
+// TODO(ilya): Fill in these descriptions.
 addCommand('scrollDown', '');
 addCommand('scrollUp', '');
 addCommand('scrollLeft', '');
@@ -36,9 +65,6 @@ addCommand('reload', '');
 addCommand('toggleViewSource', '');
 addCommand('enterInsertMode', '');
 addCommand('goBack', '');
-addCommand('goBack', '');
-addCommand('goForward', '');
-addCommand('goForward', '');
 addCommand('goForward', '');
 addCommand('zoomIn', '');
 addCommand('zoomOut', '');
