@@ -69,6 +69,11 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
+1.16 (Unreleased)
+
+- Add support for configurable key mappings under Advanced Options.
+- Various bug fixes related to key stroke handling.
+
 1.15 (01/31/2010)
 
 -  Make the CSS used by the link hints configurable. It's under Advanced Options.
