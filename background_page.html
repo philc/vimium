@@ -11,6 +11,8 @@
   var validFirstKeys = {};
   var singleKeyCommands = [];
 
+  var specialKeyStrokeRegex = /^<(a|m|c)-.>/;
+
   var defaultSettings = {
     scrollStepSize: 60,
     defaultZoomLevel: 100,
@@ -275,9 +277,16 @@
   }
   // End action functions
 
+  function splitKeyIntoFirstAndSecond(key) {
+    if (key.search(specialKeyStrokeRegex) == 0)
+      return { first: key.slice(0, 5), second: key.slice(5) };
+    else
+      return { first: key[0], second: key.slice(1) };
+  }
+
   function getActualKeyStrokeLength(key) {
-    if (key.slice(0, 3) == "<c-" && key[key.length - 1] == ">")
-      return 1;
+    if (key.search(specialKeyStrokeRegex) == 0)
+      return 1 + getActualKeyStrokeLength(key.slice(5));
     else
       return key.length;
   }
@@ -285,8 +294,10 @@
   function populateValidFirstKeys() {
     for (var key in keyToCommandRegistry)
     {
-      if (key.length == 2)
-        validFirstKeys[key[0]] = true;
+      if (getActualKeyStrokeLength(key) == 2)
+      {
+        validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true;
+      }
     }
   }
 
@@ -313,9 +324,9 @@
     {
       for (var key in keyToCommandRegistry)
       {
-        // NOTE(ilya): This won't work if we allow keys like <c-x><c-y>.
-        if (key[0] == command)
-          completionKeys.push(key.substring(1));
+        var splitKey = splitKeyIntoFirstAndSecond(key);
+        if (splitKey.first == command)
+         completionKeys.push(splitKey.second);
       }
     }
 
@@ -366,12 +377,14 @@
       }
 
       newKeyQueue = "";
-    } else if (command.length > 1) {
+    } else if (getActualKeyStrokeLength(command) > 1) {
+      var splitKey = splitKeyIntoFirstAndSecond(command);
+
       // The second key might be a valid command by its self.
-      if (keyToCommandRegistry[command[1]])
-        newKeyQueue = checkKeyQueue(command[1]);
+      if (keyToCommandRegistry[splitKey.second])
+        newKeyQueue = checkKeyQueue(splitKey.second);
       else
-        newKeyQueue = (validFirstKeys[command[1]] ? command[1] : "");
+        newKeyQueue = (validFirstKeys[splitKey.second] ? splitKey.second : "");
     } else {
       newKeyQueue = (validFirstKeys[command] ? count.toString() + command : "");
     }

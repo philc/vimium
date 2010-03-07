@@ -287,14 +287,17 @@ function onKeydown(event) {
       return;
     }
 
-    if (event.shiftKey)
-      keyChar = keyChar.toUpperCase();
-    if (event.ctrlKey)
-      keyChar = "<c-" + keyChar + ">";
-    if (event.metaKey)
-      keyChar = "<m-" + keyChar + ">";
-    if (event.altKey)
-      keyChar = "<a-" + keyChar + ">";
+    if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
+    {
+      if (event.shiftKey)
+        keyChar = keyChar.toUpperCase();
+      else if (event.ctrlKey)
+        keyChar = "<c-" + keyChar + ">";
+      else if (event.metaKey)
+        keyChar = "<m-" + keyChar + ">";
+      else if (event.altKey)
+        keyChar = "<a-" + keyChar + ">";
+    }
   }
 
   if (insertMode && isEscape(event))
