@@ -14,6 +14,7 @@ var insertMode = false;
 var findMode = false;
 var findModeQuery = "";
 var findModeQueryHasResults = false;
+var isShowingHelpDialog = false;
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
@@ -85,6 +86,8 @@ function initializePreDomReady() {
       HUD.hideUpgradeNotification();
     else if (request.name == "showUpgradeNotification" && isEnabledForUrl)
       HUD.showUpgradeNotification(request.version);
+    else if (request.name == "showHelpDialog")
+      showHelpDialog(request.dialogHtml);
     sendResponse({}); // Free up the resources used by this open connection.
   });
 
@@ -331,6 +334,10 @@ function onKeydown(event) {
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode();
   }
+  else if (isShowingHelpDialog && isEscape(event))
+  {
+    hideHelpDialog();
+  }
   else if (!insertMode && !findMode) {
     if (keyChar) {
       if (currentCompletionKeys.indexOf(keyChar) != -1) {
@@ -481,6 +488,24 @@ function enterFindMode() {
 function exitFindMode() {
   findMode = false;
   HUD.hide();
+}
+
+function showHelpDialog(html) {
+  if (isShowingHelpDialog)
+    return false;
+  isShowingHelpDialog = true;
+  var container = document.createElement("div");
+  container.id = "vimiumHelpDialogContainer";
+  container.innerHTML = html;
+  container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
+  document.body.appendChild(container);
+}
+
+function hideHelpDialog() {
+  isShowingHelpDialog = false;
+  var helpDialog = document.getElementById("vimiumHelpDialogContainer");
+  if (helpDialog)
+    helpDialog.parentNode.removeChild(helpDialog);
 }
 
 /*

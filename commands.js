@@ -52,6 +52,7 @@ function parseCustomKeyMappings(customKeyMappings) {
 }
 
 // Navigating the current page:
+addCommand('showHelp',            'Show help.',  true);
 addCommand('scrollDown',          'Scroll down.');
 addCommand('scrollUp',            'Scroll up.');
 addCommand('scrollLeft',          'Scroll left.');
@@ -87,8 +88,25 @@ addCommand('nextTab',             'Go one tab right.',  true);
 addCommand('previousTab',         'Go one tab left.',   true);
 addCommand('createTab',           'Create new tab.',    true);
 addCommand('removeTab',           'Close current tab.', true);
-addCommand('restoreTab',          "Restore closed tab. (i.e. unwind the 'd' command).", true);
+addCommand('restoreTab',          "Restore closed tab.", true);
 
+
+// An ordered listing of all available commands, grouped by type. This is the order they will
+// be shown in the help page.
+var commandGroups = {
+  pageNavigation:
+    ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
+     "scrollToTop", "scrollToBottom", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
+     "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl",
+     "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
+     "enterFindMode", "performFind", "performBackwardsFind"],
+  historyNavigation:
+    ["goBack", "goForward"],
+  tabManipulation:
+    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"]
+};
+
+mapKeyToCommand('?', 'showHelp');
 mapKeyToCommand('j', 'scrollDown');
 mapKeyToCommand('k', 'scrollUp');
 mapKeyToCommand('h', 'scrollLeft');

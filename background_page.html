@@ -142,6 +142,54 @@
     returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
+  function showHelp() {
+    chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml() });
+    });
+  }
+
+  /*
+   * Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
+   */
+  function helpDialogHtml() {
+    var commandsToKey = {};
+    for (var key in keyToCommandRegistry) {
+      var command = keyToCommandRegistry[key].command;
+      commandsToKey[command] = (commandsToKey[command] || []).concat(key);
+    }
+    var dialogHtml = fetchFileContents("helpDialog.html");
+    for (var group in commandGroups)
+      dialogHtml = dialogHtml.replace("{{" + group + "}}",
+        helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands));
+    return dialogHtml;
+  }
+
+  /*
+   * Generates HTML for a given set of commands. commandGroups are defined in commands.js
+   */
+  function helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands) {
+    var html = [];
+    for (var i = 0; i < commandGroups[group].length; i++) {
+      var command = commandGroups[group][i];
+      if (commandsToKey[command])
+        html.push("<tr><td>", escapeHtml(commandsToKey[command].join(", ")),
+          "</td><td>:</td><td>",availableCommands[command].description, "</td></tr>");
+    }
+    return html.join("\n");
+  }
+
+  function escapeHtml(string) { return string.replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  /*
+   * Fetches the contents of a file bundled with this extension.
+   */
+  function fetchFileContents(extensionFileName) {
+    var req = new XMLHttpRequest();
+    req.open("GET", chrome.extension.getURL(extensionFileName), false); // false => synchronous
+    req.send();
+    return req.responseText;
+  }
+
   /**
    * Returns the keys that can complete a valid command given the current key queue.
    */
@@ -446,7 +494,6 @@
     if (shouldShowUpgradeMessage())
       sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion });
   }
-
   init();
 </script>
 </head>

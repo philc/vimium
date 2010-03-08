@@ -1,0 +1,105 @@
+<!--
+  This is show when typing "?". This HTML is loaded by the background page and then populated with the
+  latest keybindings information before displaying.
+-->
+<div id="vimiumHelpDialog">
+  <style>
+    #vimiumHelpDialog {
+      text-align:left;
+      border:3px solid red;
+      opacity:0.92;
+      background-color:#eee;
+      position:fixed;
+      width:600px;
+      font-size:12px;
+      color:black;
+      font-family:helvetica, arial, sans;
+      border: 2px solid #b3b3b3;
+      border-radius:6px;
+      padding:8px 12px;
+      width:640px;
+      left:50%;
+      /* This needs to be 1/2 width to horizontally center the help dialog */
+      margin-left:-320px;
+      top:50px;
+      -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
+    }
+    #vimiumHelpDialog a { color:blue; }
+    #vimiumTitle { font-size:20px; }
+    .vimiumColumn {
+      width:50%;
+      float:left;
+    }
+    .vimiumColumn table { width:100%; }
+    .vimiumColumn td { vertical-align:top; }
+    .vimiumColumn tr > td:first-of-type {
+      text-align:right;
+      font-weight:bold;
+      color:#2f508e;
+      padding-right:4px;
+      white-space:nowrap;
+    }
+    .vimiumDivider {
+      height:1px;
+      width:92%;
+      margin:10px auto;
+      background-color:#9a9a9a;
+    }
+    .vimiumHelpSectionTitle {
+      font-weight:bold;
+      padding-top:5px;
+    }
+    #vimiumHelpDialog .closeButton {
+      position:absolute;
+      right:10px;
+      top:5px;
+      font-family:"courier new";
+      font-weight:bold;
+      color:#555;
+      text-decoration:none;
+      padding-left:10px;
+      font-size:16px;
+    }
+    #vimiumHelpDialog .closeButton:hover {
+      color:black;
+      cursor:default;
+      -webkit-user-select:none;
+    }
+    #vimiumHelpDialogFooter { font-size:9px; }
+  </style>
+
+  <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
+       page with the up-to-date key bindings when the dialog is shown. -->
+  <a class="closeButton" href="#">x</a>
+  <div id="vimiumTitle">Vim<span style="color:#2f508e">ium</span> Help</div>
+  <div class="vimiumColumn">
+    <table>
+      <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating the page</td></tr>
+      {{pageNavigation}}
+    </table>
+  </div>
+  <div class="vimiumColumn">
+    <table>
+      <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating history</td></tr>
+      {{historyNavigation}}
+      <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Manipulating tabs</td></tr>
+      {{tabManipulation}}
+    </table>
+  </div>
+
+  <br clear="both"/>
+  <div class="vimiumDivider"></div>
+  
+  <div id="vimiumHelpDialogFooter">
+    <div class="vimiumColumn">
+      Enjoying Vimium?
+        <a href="https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb">Leave us feedback</a>.<br/>
+      Found a bug? <a href="http://github.com/philc/vimium/issues">Report it here</a>.
+    </div>
+    <div class="vimiumColumn" style="text-align:right">
+      <!-- TODO(philc): Replace with real version -->
+      <span>Version 1.1</span><br/>
+      <a href="#">Homepage</a>
+    </div>
+  </div>
+</div>
