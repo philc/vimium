@@ -440,8 +440,8 @@ function exitFindMode() {
 }
 
 function showHelpDialog(html) {
-  if (isShowingHelpDialog)
-    return false;
+  if (isShowingHelpDialog || !document.body)
+    return;
   isShowingHelpDialog = true;
   var container = document.createElement("div");
   container.id = "vimiumHelpDialogContainer";
