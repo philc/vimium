@@ -161,6 +161,7 @@
     for (var group in commandGroups)
       dialogHtml = dialogHtml.replace("{{" + group + "}}",
         helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands));
+    dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
     return dialogHtml;
   }
 
