@@ -449,6 +449,7 @@ function showHelpDialog(html) {
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
   document.body.appendChild(container);
   var dialog = document.getElementById("vimiumHelpDialog");
+  dialog.style.zIndex = "99999998";
   var zoomFactor = currentZoomLevel / 100.0;
   dialog.style.top =
       Math.max((window.innerHeight - dialog.clientHeight * zoomFactor) / 2.0, 20) / zoomFactor + "px";

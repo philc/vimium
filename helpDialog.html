@@ -4,6 +4,7 @@
 -->
 <div id="vimiumHelpDialog">
   <style>
+    #vimiumHelpDialog * { font-size:12px; line-height:130%; color:black; }
     #vimiumHelpDialog {
       text-align:left;
       border:3px solid red;
@@ -11,10 +12,8 @@
       background-color:#eee;
       position:fixed;
       width:600px;
-      font-size:12px;
-      color:black;
       font-family:helvetica, arial, sans;
-      border: 2px solid #b3b3b3;
+      border:2px solid #b3b3b3;
       border-radius:6px;
       padding:8px 12px;
       width:640px;
@@ -25,28 +24,31 @@
       -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
     }
     #vimiumHelpDialog a { color:blue; }
-    #vimiumTitle { font-size:20px; }
+    #vimiumTitle, #vimiumTitle * { font-size:20px; }
     .vimiumColumn {
       width:50%;
       float:left;
     }
+    .vimiumColumn table, .vimiumColumn td, .vimiumColumn tr { padding:0; margin:0; }
     .vimiumColumn table { width:100%; }
-    .vimiumColumn td { vertical-align:top; }
-    .vimiumColumn tr > td:first-of-type {
+    .vimiumColumn td { vertical-align:top; padding:1px; }
+    #vimiumHelpDialog .vimiumColumn tr > td:first-of-type {
       text-align:right;
       font-weight:bold;
       color:#2f508e;
       white-space:nowrap;
     }
-    .vimiumDivider {
+    /* Make the description column as wide as it can be. */
+    #vimiumHelpDialog .vimiumColumn tr > td:nth-of-type(3) { width:100%; }
+    #vimiumHelpDialog .vimiumDivider {
       height:1px;
       width:92%;
       margin:10px auto;
       background-color:#9a9a9a;
     }
-    .vimiumHelpSectionTitle {
+    #vimiumHelpDialog .vimiumHelpSectionTitle {
       font-weight:bold;
-      padding-top:5px;
+      padding-top:3px;
     }
     #vimiumHelpDialog .closeButton {
       position:absolute;
@@ -64,7 +66,7 @@
       cursor:default;
       -webkit-user-select:none;
     }
-    #vimiumHelpDialogFooter { font-size:10px; }
+    #vimiumHelpDialogFooter * { font-size:10px; }
   </style>
 
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
@@ -88,7 +90,7 @@
 
   <br clear="both"/>
   <div class="vimiumDivider"></div>
-  
+
   <div id="vimiumHelpDialogFooter">
     <div class="vimiumColumn">
       Enjoying Vimium?
