@@ -1,6 +1,8 @@
 <html>
   <head>
     <title>Vimium Options</title>
+    <script src="lib/keyboardUtils.js"></script>
+
     <style type="text/css" media="screen">
       body {
         font-family:"helvetica neue", "helvetica", "arial", "sans";
@@ -63,6 +65,7 @@
 
   <script type="text/javascript">
   $ = function(id) { return document.getElementById(id); };
+  isShowingHelpDialog = false;
 
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
@@ -77,11 +80,12 @@
   function initializeOptions() {
     populateOptions();
     for (var i = 0; i < editableFields.length; i++)
-      $(editableFields[i]).addEventListener("keyup", onOptionKeydown, false);
+      $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
+    document.addEventListener("keydown", onKeydown, true);
   }
 
-  function onOptionKeydown(event) {
+  function onOptionKeyup(event) {
     if (event.target.getAttribute("savedValue") != event.target.value)
       enableSaveButton();
   }
@@ -130,6 +134,35 @@
     event.preventDefault();
   }
 
+  function showHelpDialog() {
+    if (isShowingHelpDialog)
+      return false;
+    html = chrome.extension.getBackgroundPage().helpDialogHtml();
+    isShowingHelpDialog = true;
+    var container = document.createElement("div");
+    container.id = "vimiumHelpDialogContainer";
+    container.innerHTML = html;
+    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
+    document.body.appendChild(container);
+    var dialog = document.getElementById("vimiumHelpDialog");
+    dialog.style.top = Math.max((window.innerHeight - dialog.clientHeight) / 2.0, 20) + "px";
+  }
+
+  function hideHelpDialog() {
+    isShowingHelpDialog = false;
+    var helpDialog = document.getElementById("vimiumHelpDialogContainer");
+    if (helpDialog)
+      helpDialog.parentNode.removeChild(helpDialog);
+  }
+
+  function onKeydown(event) {
+    var keyChar = getKeyChar(event);
+    var isFormField = ["INPUT", "TEXTAREA"].indexOf(event.target.tagName) >= 0;
+    if (isShowingHelpDialog && isEscape(event))
+      hideHelpDialog();
+    else if (!isShowingHelpDialog && getKeyChar(event) == "?" && !isFormField)
+      showHelpDialog();
+  }
   </script>
 
   </head>
@@ -216,46 +249,8 @@
       <button id="saveOptions" disabled="true" onclick="saveOptions()">Save Options</button>
     </div>
 
-    <h1>Command Reference</h1>
-    <pre>
-&lt;c-x&gt; is to be interpreted as ctrl + x together.
+    <br/>
 
-Navigating the current page:
-    h       scroll left
-    j       scroll down
-    k       scroll up
-    l       scroll right
-    gg      scroll to top of the page
-    G       scroll to bottom of the page
-    &lt;c-d&gt;, &lt;c-e&gt;   scroll down a page
-    &lt;c-u&gt;, &lt;c-y&gt;   scroll up a page
-    &lt;c-f&gt;   scroll down a full page
-    &lt;c-b&gt;   scroll up a full page
-    f       activate link hints mode to open in current tab
-    F       activate link hints mode to open in new tab
-    r       reload
-    gf      view source
-    zi      zoom in
-    zo      zoom out
-    /       enter find mode -- type your search query and hit enter to search or esc to cancel
-    n       cycle forward to the next find match
-    N       cycle backward to the previous find match
-    i       enter insert mode -- all commands will be ignored until you hit esc to exit
-    y       copy the current url to the clipboard
-
-Navigating your history:
-    ba, H         go back in history
-    fw, fo, L     go forward in history
-
-Manipulating tabs:
-    J, gT      go one tab left
-    K, gt      go one tab right
-    t          create tab
-    d          close current tab
-    u          restore closed tab (i.e. unwind the 'd' command)
-
-Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid
-succession. ESC will clear any partial commands in the queue.
-    </pre>
+    To view all available shortcuts, type <span style="font-weight:bold">?</span> to show the Vimium help dialog.
   </body>
 </html>
