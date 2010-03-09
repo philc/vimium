@@ -124,10 +124,7 @@ mapKeyToCommand('gf', 'toggleViewSource');
 
 mapKeyToCommand('i', 'enterInsertMode');
 
-mapKeyToCommand('ba', 'goBack');
 mapKeyToCommand('H', 'goBack');
-mapKeyToCommand('fw', 'goForward');
-mapKeyToCommand('fo', 'goForward');
 mapKeyToCommand('L', 'goForward');
 
 mapKeyToCommand('zi', 'zoomIn');

@@ -46,8 +46,8 @@ Navigating the current page:
     y       copy the current url to the clipboard
 
 Navigating your history:
-    ba, H         go back in history
-    fw, fo, L     go forward in history
+    H       go back in history
+    L       go forward in history
 
 Manipulating tabs:
     J, gT      go one tab left
