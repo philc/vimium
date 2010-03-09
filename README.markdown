@@ -72,7 +72,8 @@ Release Notes
 1.16 (Unreleased)
 
 - Add support for configurable key mappings under Advanced Options.
-- Various bug fixes related to key stroke handling.
+- A help dialog which shows all currently bound keyboard shortcuts. Type "?" to see it.
+- Bug fixes related to key stroke handling.
 
 1.15 (01/31/2010)
 
