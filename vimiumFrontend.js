@@ -498,8 +498,12 @@ HUD = {
       "line-height: 1.0;" +
       "opacity: 0;" +
     "}" +
-    ".vimiumHUD a, .vimiumHUD a:hover { background-color: transparent; color: blue; }" +
-    ".vimiumHUD .close-button {" +
+    ".vimiumHUD a, .vimiumHUD a:hover {" +
+      "background-color: transparent;" +
+      "color: blue;" +
+      "text-decoration: underline;" +
+    "}" +
+    ".vimiumHUD a.close-button {" +
       "float:right;" +
       "font-family:courier new;" +
       "font-weight:bold;" +
@@ -509,7 +513,7 @@ HUD = {
       "margin-top:-1px;" +
       "font-size:14px;" +
     "}" +
-    ".vimiumHUD .close-button:hover {" +
+    ".vimiumHUD a.close-button:hover {" +
       "color:#333333;" +
       "cursor:default;" +
       "-webkit-user-select:none;" +
