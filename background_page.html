@@ -11,7 +11,7 @@
   var validFirstKeys = {};
   var singleKeyCommands = [];
 
-  var specialKeyStrokeRegex = /^<(a|m|c)-.>/;
+  var hasModifierRegex = /^<[amc]-.>/;
 
   var defaultSettings = {
     scrollStepSize: 60,
@@ -338,14 +338,14 @@
   // End action functions
 
   function splitKeyIntoFirstAndSecond(key) {
-    if (key.search(specialKeyStrokeRegex) == 0)
+    if (key.search(hasModifierRegex) == 0)
       return { first: key.slice(0, 5), second: key.slice(5) };
     else
       return { first: key[0], second: key.slice(1) };
   }
 
   function getActualKeyStrokeLength(key) {
-    if (key.search(specialKeyStrokeRegex) == 0)
+    if (key.search(hasModifierRegex) == 0)
       return 1 + getActualKeyStrokeLength(key.slice(5));
     else
       return key.length;
@@ -355,9 +355,7 @@
     for (var key in keyToCommandRegistry)
     {
       if (getActualKeyStrokeLength(key) == 2)
-      {
         validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true;
-      }
     }
   }
 
