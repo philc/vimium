@@ -20,7 +20,8 @@ The Settings page can be found by clicking the Options button next to Vimium on 
 Keyboard Bindings
 -----------------
 
-<c-x> is to be interpreted as ctrl + x together.
+Modifier keys are specified as follows: <c-x>, <m-x>, <a-x> for ctrl+x, meta+x, and alt+x
+respectively.
 
 Navigating the current page:
     h       scroll left
