@@ -59,6 +59,8 @@ Manipulating tabs:
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
 <c-[>) will clear any partial commands in the queue.
 
+Keys can be unmapped and remapped to different commands under Advanced Options.
+
 Contributing
 ------------
 
@@ -69,7 +71,7 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
-1.16 (Unreleased)
+1.16 (02/09/2010)
 
 - Add support for configurable key mappings under Advanced Options.
 - A help dialog which shows all currently bound keyboard shortcuts. Type "?" to see it.
