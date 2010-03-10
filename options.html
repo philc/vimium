@@ -6,11 +6,11 @@
     <style type="text/css" media="screen">
       body {
         font-family:"helvetica neue", "helvetica", "arial", "sans";
-        width:600px;
+        width:640px;
         margin:10px auto;
       }
       #optionsTableWrapper {
-        width:450px;
+        width:490px;
         border:1px solid red;
       }
       .example {
@@ -25,15 +25,15 @@
         padding:5px 0;
       }
       textarea#excludedUrls {
-        width:450px;
+        width:490px;
         min-height:100px;
       }
       textarea#userDefinedLinkHintCss {
-        width:302px;
+        width:342px;
         min-height:100px;
       }
       textarea#keyMappings {
-        width:302px;
+        width:342px;
         min-height:100px;
       }
       #status {
@@ -47,10 +47,14 @@
       }
       #buttonsPanel {
         /* This should match the width of #excludedUrls + 5px of padding to move the buttons to the right. */
-        width:455px;
+        width:495px;
         text-align:right;
         margin-top:18px;
         margin-right:-10px;
+      }
+      #showHelpDialogMessage {
+        width:495px;
+        font-size:15px;
       }
       .help {
         position:absolute;
@@ -261,6 +265,8 @@
 
     <br/>
 
-    To view all available shortcuts, type <span style="font-weight:bold">?</span> to show the Vimium help dialog.
+    <div id="showHelpDialogMessage">
+      To view all available shortcuts, type <span style="font-weight:bold">?</span> to show the Vimium help dialog.
+    </div>
   </body>
 </html>
