@@ -496,6 +496,8 @@
   }
 
   function init() {
+    clearKeyMappingsAndSetDefaults();
+
     if (localStorage["keyMappings"])
       parseCustomKeyMappings(localStorage["keyMappings"]);
 

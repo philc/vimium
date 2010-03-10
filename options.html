@@ -75,7 +75,10 @@
 
   var postSaveHooks = {
     "keyMappings": function (value) {
-      chrome.extension.getBackgroundPage().parseCustomKeyMappings(value); }
+      backgroundPage = chrome.extension.getBackgroundPage();
+      backgroundPage.clearKeyMappingsAndSetDefaults();
+      backgroundPage.parseCustomKeyMappings(value);
+    }
   };
 
   function initializeOptions() {

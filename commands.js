@@ -51,6 +51,52 @@ function parseCustomKeyMappings(customKeyMappings) {
   }
 }
 
+function clearKeyMappingsAndSetDefaults() {
+  keyToCommandRegistry = {};
+
+  mapKeyToCommand('?', 'showHelp');
+  mapKeyToCommand('j', 'scrollDown');
+  mapKeyToCommand('k', 'scrollUp');
+  mapKeyToCommand('h', 'scrollLeft');
+  mapKeyToCommand('l', 'scrollRight');
+  mapKeyToCommand('gg', 'scrollToTop');
+  mapKeyToCommand('G', 'scrollToBottom');
+  mapKeyToCommand('<c-e>', 'scrollDown');
+  mapKeyToCommand('<c-y>', 'scrollUp');
+  mapKeyToCommand('<c-d>', 'scrollPageDown');
+  mapKeyToCommand('<c-u>', 'scrollPageUp');
+  mapKeyToCommand('<c-f>', 'scrollFullPageDown');
+  mapKeyToCommand('<c-b>', 'scrollFullPageUp');
+  mapKeyToCommand('r', 'reload');
+  mapKeyToCommand('gf', 'toggleViewSource');
+
+  mapKeyToCommand('i', 'enterInsertMode');
+
+  mapKeyToCommand('H', 'goBack');
+  mapKeyToCommand('L', 'goForward');
+
+  mapKeyToCommand('zi', 'zoomIn');
+  mapKeyToCommand('zo', 'zoomOut');
+
+  mapKeyToCommand('f', 'activateLinkHintsMode');
+  mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
+
+  mapKeyToCommand('/', 'enterFindMode');
+  mapKeyToCommand('n', 'performFind');
+  mapKeyToCommand('N', 'performBackwardsFind');
+
+  mapKeyToCommand('yy', 'copyCurrentUrl');
+
+  mapKeyToCommand('K', 'nextTab');
+  mapKeyToCommand('J', 'previousTab');
+  mapKeyToCommand('gt', 'nextTab');
+  mapKeyToCommand('gT', 'previousTab');
+
+  mapKeyToCommand('t', 'createTab');
+  mapKeyToCommand('d', 'removeTab');
+  mapKeyToCommand('u', 'restoreTab');
+}
+
 // Navigating the current page:
 addCommand('showHelp',            'Show help',  true);
 addCommand('scrollDown',          'Scroll down');
@@ -105,45 +151,3 @@ var commandGroups = {
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"]
 };
-
-mapKeyToCommand('?', 'showHelp');
-mapKeyToCommand('j', 'scrollDown');
-mapKeyToCommand('k', 'scrollUp');
-mapKeyToCommand('h', 'scrollLeft');
-mapKeyToCommand('l', 'scrollRight');
-mapKeyToCommand('gg', 'scrollToTop');
-mapKeyToCommand('G', 'scrollToBottom');
-mapKeyToCommand('<c-e>', 'scrollDown');
-mapKeyToCommand('<c-y>', 'scrollUp');
-mapKeyToCommand('<c-d>', 'scrollPageDown');
-mapKeyToCommand('<c-u>', 'scrollPageUp');
-mapKeyToCommand('<c-f>', 'scrollFullPageDown');
-mapKeyToCommand('<c-b>', 'scrollFullPageUp');
-mapKeyToCommand('r', 'reload');
-mapKeyToCommand('gf', 'toggleViewSource');
-
-mapKeyToCommand('i', 'enterInsertMode');
-
-mapKeyToCommand('H', 'goBack');
-mapKeyToCommand('L', 'goForward');
-
-mapKeyToCommand('zi', 'zoomIn');
-mapKeyToCommand('zo', 'zoomOut');
-
-mapKeyToCommand('f', 'activateLinkHintsMode');
-mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
-
-mapKeyToCommand('/', 'enterFindMode');
-mapKeyToCommand('n', 'performFind');
-mapKeyToCommand('N', 'performBackwardsFind');
-
-mapKeyToCommand('yy', 'copyCurrentUrl');
-
-mapKeyToCommand('K', 'nextTab');
-mapKeyToCommand('J', 'previousTab');
-mapKeyToCommand('gt', 'nextTab');
-mapKeyToCommand('gT', 'previousTab');
-
-mapKeyToCommand('t', 'createTab');
-mapKeyToCommand('d', 'removeTab');
-mapKeyToCommand('u', 'restoreTab');
