@@ -65,8 +65,7 @@
 
   <script type="text/javascript">
   $ = function(id) { return document.getElementById(id); };
-  isShowingHelpDialog = false;
-  isShowingCommandListing = false;
+  currentlyShowingDialog = null;
 
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
@@ -86,7 +85,10 @@
     for (var i = 0; i < editableFields.length; i++)
       $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
-    $("showCommands").addEventListener("click", showCommandListing, false);
+    $("showCommands").addEventListener("click", function () {
+      showDialog("vimiumCommandListingContainer",
+        chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"));
+    }, false);
     document.addEventListener("keydown", onKeydown, true);
   }
 
@@ -139,55 +141,35 @@
     event.preventDefault();
   }
 
-  function showHelpDialog() {
-    if (isShowingHelpDialog || isShowingCommandListing)
+  function showDialog(dialogId, dialogHtml) {
+    if (currentlyShowingDialog)
       return false;
-    html = chrome.extension.getBackgroundPage().helpDialogHtml();
-    isShowingHelpDialog = true;
+
+    currentlyShowingDialog = dialogId;
     var container = document.createElement("div");
-    container.id = "vimiumHelpDialogContainer";
-    container.innerHTML = html;
-    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
+    container.id = currentlyShowingDialog;
+    container.innerHTML = dialogHtml;
+    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideDialog, false);
     document.body.appendChild(container);
     var dialog = document.getElementById("vimiumHelpDialog");
     dialog.style.top = Math.max((window.innerHeight - dialog.clientHeight) / 2.0, 20) + "px";
   }
 
-  function hideHelpDialog() {
-    isShowingHelpDialog = false;
-    var helpDialog = document.getElementById("vimiumHelpDialogContainer");
-    if (helpDialog)
-      helpDialog.parentNode.removeChild(helpDialog);
-  }
+  function hideDialog() {
+    var dialog = document.getElementById(currentlyShowingDialog);
+    if (dialog)
+      dialog.parentNode.removeChild(dialog);
 
-  function showCommandListing() {
-    if (isShowingCommandListing || isShowingHelpDialog)
-      return false;
-    html = chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing");
-    isShowingCommandListing = true;
-    var container = document.createElement("div");
-    container.id = "vimiumCommandListingContainer";
-    container.innerHTML = html;
-    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideCommandListing, false);
-    document.body.appendChild(container);
-    var dialog = document.getElementById("vimiumHelpDialog");
-    dialog.style.top = Math.max((window.innerHeight - dialog.clientHeight) / 2.0, 20) + "px";
-  }
-
-  function hideCommandListing() {
-    isShowingCommandListing = false;
-    var commandListing = document.getElementById("vimiumCommandListingContainer");
-    if (commandListing)
-      commandListing.parentNode.removeChild(commandListing);
+    currentlyShowingDialog = null;
   }
 
   function onKeydown(event) {
     var keyChar = getKeyChar(event);
     var isFormField = ["INPUT", "TEXTAREA"].indexOf(event.target.tagName) >= 0;
-    if (isShowingHelpDialog && isEscape(event))
-      hideHelpDialog();
-    else if (!isShowingHelpDialog && getKeyChar(event) == "?" && !isFormField)
-      showHelpDialog();
+    if (currentlyShowingDialog && isEscape(event))
+      hideDialog();
+    else if (!currentlyShowingDialog && getKeyChar(event) == "?" && !isFormField)
+      showDialog("vimiumCommandListingContainer", chrome.extension.getBackgroundPage().helpDialogHtml());
   }
   </script>
 
