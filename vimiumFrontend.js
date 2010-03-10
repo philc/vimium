@@ -500,11 +500,13 @@ HUD = {
     "}" +
     ".vimiumHUD a, .vimiumHUD a:hover { background-color: transparent; color: blue; }" +
     ".vimiumHUD .close-button {" +
+      "float:right;" +
       "font-family:courier new;" +
       "font-weight:bold;" +
       "color:#9C9A9A;" +
       "text-decoration:none;" +
       "padding-left:10px;" +
+      "margin-top:-1px;" +
       "font-size:14px;" +
     "}" +
     ".vimiumHUD .close-button:hover {" +
