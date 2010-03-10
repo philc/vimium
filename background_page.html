@@ -367,6 +367,16 @@
     }
   }
 
+  function refreshCompletionKeysAfterMappingSave() {
+    validFirstKeys = {};
+    singleKeyCommands = [];
+
+    populateValidFirstKeys();
+    populateSingleKeyCommands();
+
+    sendRequestToAllTabs({ name: "refreshCompletionKeys", completionKeys: generateCompletionKeys() });
+  }
+
   /*
    * Generates a list of keys that can complete a valid command given the current key queue or the one passed
    * in.
