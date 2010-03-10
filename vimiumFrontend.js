@@ -477,6 +477,11 @@ HUD = {
   // test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
   // it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
   _hudCss:
+    ".vimiumHUD, .vimiumHUD * {" +
+      "line-height: 100%;" +
+      "font-size: 11px;" +
+      "font-weight: normal;" +
+    "}" +
     ".vimiumHUD {" +
       "position: fixed;" +
       "bottom: 0px;" +
@@ -486,8 +491,6 @@ HUD = {
       "min-width: 150px;" +
       "text-align: left;" +
       "background-color: #ebebeb;" +
-      "font-weight: normal;" +
-      "font-size: 11px;" +
       "padding: 3px 3px 2px 3px;" +
       "border: 1px solid #b3b3b3;" +
       "border-radius: 4px 4px 0 0;" +
@@ -499,7 +502,7 @@ HUD = {
       "opacity: 0;" +
     "}" +
     ".vimiumHUD a, .vimiumHUD a:hover {" +
-      "background-color: transparent;" +
+      "background: transparent;" +
       "color: blue;" +
       "text-decoration: underline;" +
     "}" +
