@@ -50,6 +50,9 @@
       font-weight:bold;
       padding-top:3px;
     }
+    #vimiumHelpDialog .commandName {
+      font-family:"courier new";
+    }
     #vimiumHelpDialog .closeButton {
       position:absolute;
       right:10px;
@@ -72,7 +75,7 @@
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
        page with the up-to-date key bindings when the dialog is shown. -->
   <a class="closeButton" href="#">x</a>
-  <div id="vimiumTitle">Vim<span style="color:#2f508e">ium</span> Help</div>
+  <div id="vimiumTitle"><span style="color:#2f508e">Vim</span>ium {{title}}</div>
   <div class="vimiumColumn">
     <table>
       <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating the page</td></tr>
