@@ -71,7 +71,7 @@ include a change to the CREDITS file with your patch.
 Release Notes
 -------------
 
-1.16 (02/09/2010)
+1.16 (03/09/2010)
 
 - Add support for configurable key mappings under Advanced Options.
 - A help dialog which shows all currently bound keyboard shortcuts. Type "?" to see it.
