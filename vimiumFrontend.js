@@ -26,6 +26,8 @@ var linkHintCss;
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
 
+var hasModifiersRegex = /^<([amc]-)+.>/;
+
 function getSetting(key) {
   if (!settingPort)
     settingPort = chrome.extension.connect({ name: "getSetting" });
@@ -246,12 +248,12 @@ function onKeydown(event) {
     {
       if (event.shiftKey)
         keyChar = keyChar.toUpperCase();
-      else if (event.ctrlKey)
-        keyChar = "<c-" + keyChar + ">";
-      else if (event.metaKey)
-        keyChar = "<m-" + keyChar + ">";
-      else if (event.altKey)
-        keyChar = "<a-" + keyChar + ">";
+      if (event.ctrlKey)
+        keyChar = prependModifier("c", keyChar);
+      if (event.metaKey)
+        keyChar = prependModifier("m", keyChar);
+      if (event.altKey)
+        keyChar = prependModifier("a", keyChar);
     }
   }
 
@@ -302,6 +304,13 @@ function onKeydown(event) {
       keyPort.postMessage("<ESC>");
     }
   }
+}
+
+function prependModifier(modifier, keyChar) {
+  if (keyChar.search(hasModifiersRegex) == 0)
+    return "<" + modifier + "-" + keyChar.slice(1, keyChar.length - 1) + ">";
+  else
+    return "<" + modifier + "-" + keyChar + ">";
 }
 
 function refreshCompletionKeys(completionKeys) {
