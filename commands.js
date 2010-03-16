@@ -105,8 +105,8 @@ addCommand('scrollLeft',          'Scroll left');
 addCommand('scrollRight',         'Scroll right');
 addCommand('scrollToTop',         'Scroll to the top of the page');
 addCommand('scrollToBottom',      'Scroll to the bottom of the page');
-addCommand('scrollPageDown',      'Scroll a page up');
-addCommand('scrollPageUp',        'Scroll a page down');
+addCommand('scrollPageDown',      'Scroll a page down');
+addCommand('scrollPageUp',        'Scroll a page up');
 addCommand('scrollFullPageDown',  'Scroll a full page down');
 addCommand('scrollFullPageUp',    'Scroll a full page up');
 
