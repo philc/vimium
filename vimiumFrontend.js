@@ -259,6 +259,9 @@ function onKeydown(event) {
 
       for (var i in modifiers)
         keyChar = modifiers[i] + "-" + keyChar;
+
+      if (modifiers.length > 0)
+        keyChar = "<" + keyChar + ">";
     }
   }
 
