@@ -246,14 +246,19 @@ function onKeydown(event) {
 
     if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
     {
+      var modifiers = [];
+
       if (event.shiftKey)
         keyChar = keyChar.toUpperCase();
-      if (event.ctrlKey)
-        keyChar = prependModifier("c", keyChar);
       if (event.metaKey)
-        keyChar = prependModifier("m", keyChar);
+        modifiers.push("m");
+      if (event.ctrlKey)
+        modifiers.push("c");
       if (event.altKey)
-        keyChar = prependModifier("a", keyChar);
+        modifiers.push("a");
+
+      for (var i in modifiers)
+        keyChar = modifiers[i] + "-" + keyChar;
     }
   }
 
@@ -304,13 +309,6 @@ function onKeydown(event) {
       keyPort.postMessage("<ESC>");
     }
   }
-}
-
-function prependModifier(modifier, keyChar) {
-  if (keyChar.search(hasModifiersRegex) == 0)
-    return "<" + modifier + "-" + keyChar.slice(1, keyChar.length - 1) + ">";
-  else
-    return "<" + modifier + "-" + keyChar + ">";
 }
 
 function refreshCompletionKeys(completionKeys) {
