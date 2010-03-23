@@ -52,6 +52,7 @@ function buildLinkHints() {
   // that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
   // Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
   hintMarkerContainingDiv = document.createElement("div");
+  hintMarkerContainingDiv.className = "internalVimiumHintMarker";
   for (var i = 0; i < hintMarkers.length; i++)
     hintMarkerContainingDiv.appendChild(hintMarkers[i]);
   document.body.appendChild(hintMarkerContainingDiv);
