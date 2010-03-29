@@ -273,13 +273,13 @@
     chrome.tabs.create({}, function(tab) { callback(); });
   }
 
-  function nextTab() { selectTab("next"); }
-  function previousTab() { selectTab("previous"); }
+  function nextTab(callback) { selectTab(callback, "next"); }
+  function previousTab(callback) { selectTab(callback, "previous"); }
 
   /*
    * Selects a tab before or after the currently selected tab. Direction is either "next" or "previous".
    */
-  function selectTab(direction) {
+  function selectTab(callback, direction) {
     chrome.tabs.getAllInWindow(null, function(tabs) {
       if (tabs.length <= 1)
         return;
@@ -287,6 +287,7 @@
         if (tabs[i].selected) {
           var delta = (direction == "next") ? 1 : -1;
           var toSelect = tabs[(i + delta + tabs.length) % tabs.length];
+          selectionChangedHandlers.push(callback);
           chrome.tabs.update(toSelect.id, { selected: true });
           break;
         }
