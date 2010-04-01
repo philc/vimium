@@ -320,13 +320,11 @@
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
     var openTabInfo = openTabs[tabId];
-    var tabQueueEntry = { url: openTabInfo.url, positionIndex: openTabInfo.positionIndex,
-                          scrollX: openTabInfo.scrollX, scrollY: openTabInfo.scrollY };
 
     if (tabQueue[openTabInfo.windowId])
-      tabQueue[openTabInfo.windowId].push(tabQueueEntry);
+      tabQueue[openTabInfo.windowId].push(openTabInfo);
     else
-      tabQueue[openTabInfo.windowId] = [tabQueueEntry];
+      tabQueue[openTabInfo.windowId] = [openTabInfo];
 
     delete openTabs[tabId];
   });
