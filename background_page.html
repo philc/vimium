@@ -321,6 +321,9 @@
   chrome.tabs.onRemoved.addListener(function(tabId) {
     var openTabInfo = openTabs[tabId];
 
+    // If we restore the new tab page, it'll ignore Vimium keystrokes when it reappears.
+    if (openTabInfo.url == "chrome://newtab/") { return; }
+
     if (tabQueue[openTabInfo.windowId])
       tabQueue[openTabInfo.windowId].push(openTabInfo);
     else
