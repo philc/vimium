@@ -7,7 +7,7 @@
   var currentVersion = "1.16";
 
   var tabQueue = {}; // windowId -> Array
-  var tabTracker = {}; // tabId -> URL
+  var openTabs = {}; // tabId -> object with various tab properties
   var keyQueue = ""; // Queue of keys typed
   var validFirstKeys = {};
   var singleKeyCommands = [];
@@ -298,12 +298,8 @@
 
   function removeTab(callback) {
     getCurrentTabWithScrollPosition(function(tab, scrollX, scrollY) {
-      if (!tabTracker[tab.id]) {
-        console.log('removeTab error: tab not found in tabTracker');
-        return;
-      }
-      tabTracker[tab.id][scrollX] = scrollX;
-      tabTracker[tab.id][scrollY] = scrollY;
+      openTabs[tab.id].scrollX = scrollX;
+      openTabs[tab.id].scrollY = scrollY;
 
       chrome.tabs.remove(tab.id);
       // We can't just call the callback here because we actually need to wait
@@ -312,46 +308,27 @@
     });
   }
 
-  /*
-   * Since it is impossible to find out anything but the tabId
-   * from the onRemoved event, we have to keep track of the
-   * tab properties ourselves.
-   */
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-     if (changeInfo.status !== "loading") return; // only do this once per URL change
-     tabTracker[tabId] = { url: tab.url,
-                           index: tab.index,
-                           windowId: tab.windowId,
-                           scrollX: 0,
-                           scrollY: 0 };
+    if (changeInfo.status != "loading") { return; } // only do this once per URL change
+    openTabs[tabId] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId };
   });
 
   chrome.tabs.onAttached.addListener(function(tabId, attachedInfo) {
-      if (!tabTracker[tab.id]) {
-        console.log('onAttached error: tab not found in tabTracker');
-        return;
-      }
-      tabTracker[tabId][windowId] = attachedInfo.newWindowId;
-      tabTracker[tabId][index] = attachedInfo.newPosition;
+    openTabs[tabId].windowId = attachedInfo.newWindowId;
+    openTabs[tabId].positionIndex = attachedInfo.newPosition;
   });
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
-    if (!tabTracker[tabId]) {
-      console.log('onRemoved error: tab not found in tabTracker');
-      return;
-    }
-    var tab = tabTracker[tabId]; // Note: not a real tab object, only key properties are recorded
-    var tabQueueEntry = { tabUrl: tab.url,
-                          tabIndex: tab.index,
-                          scrollX: tab.scrollX,
-                          scrollY: tab.scrollY };
+    var openTabInfo = openTabs[tabId];
+    var tabQueueEntry = { url: openTabInfo.url, positionIndex: openTabInfo.positionIndex,
+                          scrollX: openTabInfo.scrollX, scrollY: openTabInfo.scrollY };
 
-    if (tabQueue[tab.windowId])
-      tabQueue[tab.windowId].push(tabQueueEntry);
+    if (tabQueue[openTabInfo.windowId])
+      tabQueue[openTabInfo.windowId].push(tabQueueEntry);
     else
-      tabQueue[tab.windowId] = [tabQueueEntry];
+      tabQueue[openTabInfo.windowId] = [tabQueueEntry];
 
-    delete tabTracker[tabId];
+    delete openTabs[tabId];
   });
 
   function restoreTab(callback) {
@@ -368,7 +345,7 @@
         // We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
         // tab is created because the content script is not available during the "loading" state. We need to
         // wait until that's over before we can call setScrollPosition.
-        chrome.tabs.create({ url: tabQueueEntry.tabUrl, index: tabQueueEntry.tabIndex }, function(tab) {
+        chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, function(tab) {
           tabLoadedHandlers[tab.id] = function() {
             var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
             scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
