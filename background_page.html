@@ -307,10 +307,21 @@
       selectionChangedHandlers.push(callback);
     });
   }
+  
+  function updateOpenTabs(tab) {
+    openTabs[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId };
+  }
+  
+  // this ensures that Restore Tab works immediately upon extension install
+  chrome.windows.getAll({ populate: true }, function(windows) {
+    for (var i in windows) for (var j in windows[i].tabs) {
+      updateOpenTabs(windows[i].tabs[j]);
+    }
+  });
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (changeInfo.status != "loading") { return; } // only do this once per URL change
-    openTabs[tabId] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId };
+    updateOpenTabs(tab);
   });
 
   chrome.tabs.onAttached.addListener(function(tabId, attachedInfo) {
