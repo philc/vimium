@@ -9,7 +9,7 @@
   ],
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
+      "matches": ["http://*/*", "https://*/*", "file://*/*" ],
       "js": ["lib/keyboardUtils.js",
              "lib/clipboard.js",
              "linkHints.js",
