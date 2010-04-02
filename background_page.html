@@ -331,6 +331,10 @@
 
     delete openTabs[tabId];
   });
+  
+  chrome.windows.onRemoved.addListener(function(windowId) {
+    delete tabQueue[windowId];
+  });
 
   function restoreTab(callback) {
     // TODO(ilya): Should this be getLastFocused instead?
