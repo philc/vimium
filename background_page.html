@@ -331,7 +331,7 @@
 
     delete openTabs[tabId];
   });
-  
+
   chrome.windows.onRemoved.addListener(function(windowId) {
     delete tabQueue[windowId];
   });
