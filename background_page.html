@@ -341,7 +341,14 @@
     if (!openTabInfo) { return; } // This tab might've been opened before the extension was installed.
 
     // If we restore the new tab page, it'll ignore Vimium keystrokes when it reappears.
-    if (openTabInfo.url == "chrome://newtab/") { return; }
+    // Pretend it never existed and adjust tab indices accordingly.
+    if (openTabInfo.url == "chrome://newtab/") {
+      for (var i in tabQueue[openTabInfo.windowId]) {
+        if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex) {
+          tabQueue[openTabInfo.windowId][i].positionIndex--;
+        }
+      }
+    }
 
     if (tabQueue[openTabInfo.windowId])
       tabQueue[openTabInfo.windowId].push(openTabInfo);
