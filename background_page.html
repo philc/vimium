@@ -314,12 +314,20 @@
   });
 
   chrome.tabs.onAttached.addListener(function(tabId, attachedInfo) {
-    openTabs[tabId].windowId = attachedInfo.newWindowId;
-    openTabs[tabId].positionIndex = attachedInfo.newPosition;
+    // We should update all the tabs in the old window and the new window.
+    if (openTabs[tabId]) {
+      updatePositionsAndWindowsForAllTabsInWindow(openTabs[tabId].windowId);
+    }
+    updatePositionsAndWindowsForAllTabsInWindow(attachedInfo.newWindowId);
+  });
+
+  chrome.tabs.onMoved.addListener(function(tabId, moveInfo) {
+    updatePositionsAndWindowsForAllTabsInWindow(moveInfo.windowId);
   });
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
     var openTabInfo = openTabs[tabId];
+    if (!openTabInfo) { return; } // This tab might've been opened before the extension was installed.
 
     // If we restore the new tab page, it'll ignore Vimium keystrokes when it reappears.
     if (openTabInfo.url == "chrome://newtab/") { return; }
@@ -362,6 +370,19 @@
     });
   }
   // End action functions
+
+  function updatePositionsAndWindowsForAllTabsInWindow(windowId) {
+    chrome.tabs.getAllInWindow(windowId, function (tabs) {
+      for (var i = 0; i < tabs.length; i++) {
+        var tab = tabs[i];
+        var openTabInfo = openTabs[tab.id];
+        if (openTabInfo) {
+          openTabInfo.positionIndex = tab.index;
+          openTabInfo.windowId = tab.windowId;
+        }
+      }
+    });
+  }
 
   function splitKeyIntoFirstAndSecond(key) {
     if (key.search(hasModifierRegex) == 0)
