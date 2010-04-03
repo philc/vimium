@@ -319,16 +319,16 @@
   
   // ensure that openTabs is populated upon the install of the extension
   chrome.windows.getAll({ populate: true }, function(windows) {
-      for (var i in windows) for (var j in windows[i].tabs) {
-        var tab = windows[i].tabs[j];
-        updateOpenTabs(tab);
-        getScrollPosition(tab, function(tab, scrollX, scrollY) {
-          // not using the tab defined in the for loop because
-          // it might have changed by the time this callback is activated.
-          // also note that this logs errors for all pages that do not allow
-          // content scripts to be run.
-          updateScrollPosition(tab, scrollX, scrollY); 
-        });
+      for (var i in windows) {
+        for (var j in windows[i].tabs) {
+          var tab = windows[i].tabs[j];
+          updateOpenTabs(tab);
+          getScrollPosition(tab, function(tab, scrollX, scrollY) {
+            // not using the tab defined in the for loop because
+            // it might have changed by the time this callback is activated.
+            updateScrollPosition(tab, scrollX, scrollY); 
+          });
+        }
       }
   });
 
