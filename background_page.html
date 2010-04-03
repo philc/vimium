@@ -360,6 +360,8 @@
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
     var openTabInfo = openTabs[tabId];
+    updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId);
+
     // If we restore chrome:// pages, they'll ignore Vimium keystrokes when they reappear.
     // Pretend they never existed and adjust tab indices accordingly.
     // Could possibly expand this into a blacklist in the future
