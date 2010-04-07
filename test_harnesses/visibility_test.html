@@ -25,14 +25,27 @@
       }
     }
     /*
-     * Determines whether this element is on screen and visible.
-     * See this for some helpful discussion:
-     * http://stackoverflow.com/questions/704758/how-to-check-if-an-element-is-really-visible-with-javascript
+     * Determine whether elements are visible.
+     * Inspired by Vimperator.
      */
     function isVisible(element) {
-      var boundingRect = element.getBoundingClientRect();
-      var elementFromPoint = document.elementFromPoint(boundingRect.left, boundingRect.top);
-      return elementFromPoint == element;
+      // eliminate offscreen elements (case 4)
+      var rect = element.getBoundingClientRect();
+      if (!rect || rect.top > window.innerHeight || rect.bottom < 0 || rect.left > window.innerWidth || rect.right < 0)
+          return false;
+
+      // this catches cases 2, 3, & 5
+      var computedStyle = window.getComputedStyle(element, null);
+      if (computedStyle.getPropertyValue('visibility') != 'visible' || 
+          computedStyle.getPropertyValue('display') == 'none')
+          return false;
+
+      // this catches cases 3 & 6
+      var clientRect = element.getClientRects()[0];
+      if (!clientRect)
+        return false;
+
+      return true;
     }
   </script>
 </head>
