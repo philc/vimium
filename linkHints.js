@@ -84,47 +84,15 @@ function getVisibleClickableElements() {
     if (boundingRect.width < 3 || boundingRect.height < 3)
       continue;
 
-    // Using getElementFromPoint will omit elements which have visibility=hidden or display=none, and
-    // elements inside of containers that are also hidden. We're checking for whether the element occupies
-    // the upper left corner and if that fails, we also check whether the element occupies the center of the
-    // box. We use the center of the box because it's more accurate when inline links have vertical padding,
-    // like in the links ("Source", "Commits") at the top of github.com.
-    // This will not exclude links with "opacity=0", like the links on Google's homepage (see bug #16).
-    // Note(philc): this is the most expensive part our link hinting process, so we should try hard to filter
-    // out elements by whatever means possible prior to getting to this check.
-    if (!elementOccupiesPoint(element, boundingRect.left, boundingRect.top)) {
-      var elementOccupiesCenter = elementOccupiesPoint(element, boundingRect.left + boundingRect.width / 2,
-          boundingRect.top + boundingRect.height / 2);
-      if (!elementOccupiesCenter)
-        continue;
-    }
+    // eliminate invisible elements
+    var computedStyle = window.getComputedStyle(element, null);
+    if (computedStyle.getPropertyValue('visibility') != 'visible' ||
+        computedStyle.getPropertyValue('display') == 'none')
+      continue;
 
     visibleElements.push(element);
   }
   return visibleElements;
-}
-
-/*
- * Checks whether the clickable element or one of its descendents is at the given point. We must check
- * descendents because some clickable elements like "<a>" can have many nested children.
- */
-function elementOccupiesPoint(clickableElement, x, y) {
-  var elementAtPoint = getElementFromPoint(x, y);
-  // Recurse up to 5 parents.
-  for (var i = 0; i < 5 && elementAtPoint; i++) {
-    if (elementAtPoint == clickableElement)
-      return true;
-    elementAtPoint = elementAtPoint.parentNode;
-  }
-  return false;
-}
-/*
- * Returns the element at the given point and factors in the page's CSS zoom level, which Webkit neglects
- * to do. This should become unnecessary when webkit fixes their bug.
- */
-function getElementFromPoint(x, y) {
-  var zoomFactor = currentZoomLevel / 100.0;
-  return document.elementFromPoint(Math.ceil(x * zoomFactor), Math.ceil(y * zoomFactor));
 }
 
 function onKeyDownInLinkHintsMode(event) {
@@ -271,12 +239,12 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
   marker.setAttribute("hintString", hintString);
 
   // Note: this call will be expensive if we modify the DOM in between calls.
-  var boundingRect = link.getBoundingClientRect();
+  var clientRect = link.getClientRects()[0];
   // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
   // the document node.
   var zoomFactor = currentZoomLevel / 100.0;
-  marker.style.left = boundingRect.left + window.scrollX / zoomFactor + "px";
-  marker.style.top = boundingRect.top  + window.scrollY / zoomFactor + "px";
+  marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
+  marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
 
   marker.clickableItem = link;
   return marker;
