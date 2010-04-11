@@ -317,20 +317,6 @@
     openTabs[tab.id].scrollY = scrollY;
   }
   
-  // ensure that openTabs is populated upon the install of the extension
-  chrome.windows.getAll({ populate: true }, function(windows) {
-    for (var i in windows) {
-      for (var j in windows[i].tabs) {
-        var tab = windows[i].tabs[j];
-        updateOpenTabs(tab);
-        getScrollPosition(tab, function(tab, scrollX, scrollY) {
-          // not using the tab defined in the for loop because
-          // it might have changed by the time this callback is activated.
-          updateScrollPosition(tab, scrollX, scrollY);
-        });
-      }
-    }
-  });
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (changeInfo.status != "loading") { return; } // only do this once per URL change
@@ -600,6 +586,21 @@
     populateSingleKeyCommands();
     if (shouldShowUpgradeMessage())
       sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion });
+
+    // Ensure that openTabs is populated when Vimium is installed.
+    chrome.windows.getAll({ populate: true }, function(windows) {
+      for (var i in windows) {
+        for (var j in windows[i].tabs) {
+          var tab = windows[i].tabs[j];
+          updateOpenTabs(tab);
+          getScrollPosition(tab, function(tab, scrollX, scrollY) {
+            // Not using the tab defined in the for loop because
+            // it might have changed by the time this callback is activated.
+            updateScrollPosition(tab, scrollX, scrollY);
+          });
+        }
+      }
+    });
   }
   init();
 </script>
