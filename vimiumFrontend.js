@@ -676,3 +676,7 @@ if (!isIframe) {
   initializePreDomReady();
   window.addEventListener("DOMContentLoaded", initializeOnDomReady);
 }
+
+window.onbeforeunload = function() {
+  chrome.extension.sendRequest({ handler: 'updateScrollPosition', scrollX: window.scrollX, scrollY: window.scrollY });
+}

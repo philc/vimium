@@ -61,7 +61,8 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
-    upgradeNotificationClosed: upgradeNotificationClosed
+    upgradeNotificationClosed: upgradeNotificationClosed,
+    updateScrollPosition: handleUpdateScrollPosition
   };
 
   // Event handlers
@@ -95,7 +96,7 @@
   chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
     var senderTabId = sender.tab ? sender.tab.id : null;
     if (sendRequestHandlers[request.handler])
-      sendResponse(sendRequestHandlers[request.handler](request));
+      sendResponse(sendRequestHandlers[request.handler](request, sender));
   });
 
   function handleReturnScrollPosition(args) {
@@ -259,14 +260,12 @@
       func(function() { repeatFunction(func, totalCount, currentCount + 1); });
   }
 
-  // Returns the currently selected tab along with scroll coordinates. Pass in a callback of the form:
+  // Returns the scroll coordinates of the given tab. Pass in a callback of the form:
   //   function(tab, scrollX, scrollY) { .. }
-  function getCurrentTabWithScrollPosition(callback) {
-    chrome.tabs.getSelected(null, function(tab) {
-      getScrollPositionHandlers[tab.id] = callback;
-      var scrollPort = chrome.tabs.connect(tab.id, { name: "getScrollPosition" });
-      scrollPort.postMessage({currentTab: tab});
-    });
+  function getScrollPosition(tab, callback) {
+    getScrollPositionHandlers[tab.id] = callback;
+    var scrollPort = chrome.tabs.connect(tab.id, { name: "getScrollPosition" });
+    scrollPort.postMessage({currentTab: tab});
   }
 
   // Start action functions
@@ -297,26 +296,40 @@
   }
 
   function removeTab(callback) {
-    getCurrentTabWithScrollPosition(function(tab, scrollX, scrollY) {
-      openTabs[tab.id].scrollX = scrollX;
-      openTabs[tab.id].scrollY = scrollY;
-
+    chrome.tabs.getSelected(null, function(tab) {
       chrome.tabs.remove(tab.id);
       // We can't just call the callback here because we actually need to wait
       // for the selection to change to consider this action done.
       selectionChangedHandlers.push(callback);
     });
   }
-  
+
   function updateOpenTabs(tab) {
     openTabs[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId };
   }
+
+  function handleUpdateScrollPosition(request, sender) {
+    updateScrollPosition(sender.tab, request.scrollX, request.scrollY);
+  }
+
+  function updateScrollPosition(tab, scrollX, scrollY) {
+    openTabs[tab.id].scrollX = scrollX;
+    openTabs[tab.id].scrollY = scrollY;
+  }
   
-  // this ensures that Restore Tab works immediately upon extension install
+  // ensure that openTabs is populated upon the install of the extension
   chrome.windows.getAll({ populate: true }, function(windows) {
-    for (var i in windows) for (var j in windows[i].tabs) {
-      updateOpenTabs(windows[i].tabs[j]);
-    }
+      for (var i in windows) for (var j in windows[i].tabs) {
+        var tab = windows[i].tabs[j];
+        updateOpenTabs(tab);
+        getScrollPosition(tab, function(tab, scrollX, scrollY) {
+          // not using the tab defined in the for loop because
+          // it might have changed by the time this callback is activated.
+          // also note that this logs errors for all pages that do not allow
+          // content scripts to be run.
+          updateScrollPosition(tab, scrollX, scrollY); 
+        });
+      }
   });
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
@@ -338,16 +351,16 @@
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
     var openTabInfo = openTabs[tabId];
-    if (!openTabInfo) { return; } // This tab might've been opened before the extension was installed.
-
-    // If we restore the new tab page, it'll ignore Vimium keystrokes when it reappears.
-    // Pretend it never existed and adjust tab indices accordingly.
-    if (openTabInfo.url == "chrome://newtab/") {
+    // If we restore chrome:// pages, they'll ignore Vimium keystrokes when they reappear.
+    // Pretend they never existed and adjust tab indices accordingly.
+    // Could possibly expand this into a blacklist in the future
+    if (/^chrome[^:]*:\/\/.*/.test(openTabInfo.url)) {
       for (var i in tabQueue[openTabInfo.windowId]) {
         if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex) {
           tabQueue[openTabInfo.windowId][i].positionIndex--;
         }
       }
+      return;
     }
 
     if (tabQueue[openTabInfo.windowId])
