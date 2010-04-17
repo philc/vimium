@@ -63,7 +63,10 @@ function initializePreDomReady() {
     else if (request.name == "showUpgradeNotification" && isEnabledForUrl)
       HUD.showUpgradeNotification(request.version);
     else if (request.name == "showHelpDialog")
-      showHelpDialog(request.dialogHtml);
+      if (isShowingHelpDialog)
+        hideHelpDialog();
+      else
+        showHelpDialog(request.dialogHtml);
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request.completionKeys);
     sendResponse({}); // Free up the resources used by this open connection.
