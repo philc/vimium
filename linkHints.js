@@ -128,12 +128,12 @@ function getElementFromPoint(x, y) {
 }
 
 function onKeyDownInLinkHintsMode(event) {
-  var keyChar = String.fromCharCode(event.keyCode).toLowerCase();
+  var keyChar = getKeyChar(event);
   if (!keyChar)
     return;
 
   // TODO(philc): Ignore keys that have modifiers.
-  if (event.keyCode == keyCodes.ESC) {
+  if (isEscape(event)) {
     deactivateLinkHintsMode();
   } else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
     if (hintKeystrokeQueue.length == 0) {
