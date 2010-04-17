@@ -470,11 +470,12 @@ function showHelpDialog(html) {
       Math.max((window.innerHeight - dialog.clientHeight * zoomFactor) / 2.0, 20) / zoomFactor + "px";
 }
 
-function hideHelpDialog() {
+function hideHelpDialog(clickEvent) {
   isShowingHelpDialog = false;
   var helpDialog = document.getElementById("vimiumHelpDialogContainer");
   if (helpDialog)
     helpDialog.parentNode.removeChild(helpDialog);
+  clickEvent.preventDefault();
 }
 
 /*
