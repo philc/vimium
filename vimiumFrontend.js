@@ -200,6 +200,19 @@ function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }
 
+function goUp() {
+  var url = window.location.href;
+  if (url[url.length-1] == '/')
+    url = url.substring(0, url.length - 1);
+
+  var urlsplit = url.split('/');
+  // make sure we haven't hit the base domain yet
+  if (urlsplit.length > 3) {
+    delete urlsplit[urlsplit.length-1];
+    window.location.href = urlsplit.join('/');
+  }
+}
+
 function toggleViewSource() {
   getCurrentUrlHandlers.push(toggleViewSourceCallback);
 

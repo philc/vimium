@@ -95,6 +95,7 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('H', 'goBack');
   mapKeyToCommand('L', 'goForward');
+  mapKeyToCommand('gu', 'goUp');
 
   mapKeyToCommand('zi', 'zoomIn');
   mapKeyToCommand('zo', 'zoomOut');
@@ -149,6 +150,9 @@ addCommand('performBackwardsFind', 'Cycle backward to the previous find match');
 // Navigating your history:
 addCommand('goBack',              'Go back in history');
 addCommand('goForward',           'Go forward in history');
+
+// Navigating the URL hierarchy
+addCommand('goUp',                'Go up the URL hierarchy');
 
 // Manipulating tabs:
 addCommand('nextTab',             'Go one tab right',  true);
