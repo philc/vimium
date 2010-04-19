@@ -29,14 +29,12 @@ function parseCustomKeyMappings(customKeyMappings) {
   for (var i = 0; i < lines.length; i++) {
     if (lines[i][0] == "\"" || lines[i][0] == "#") { continue }
     split_line = lines[i].split(" "); // TODO(ilya): Support all whitespace.
-    if (split_line.length < 2) { continue }
 
     var lineCommand = split_line[0];
-    var key         = split_line[1];
 
     if (lineCommand == "map") {
-      if (split_line.length != 3) { continue }
-
+      if (split_line.length != 3) { continue; }
+      var key = split_line[1];
       var vimiumCommand = split_line[2];
 
       if (!availableCommands[vimiumCommand]) { continue }
@@ -45,8 +43,15 @@ function parseCustomKeyMappings(customKeyMappings) {
       mapKeyToCommand(key, vimiumCommand);
     }
     else if (lineCommand == "unmap") {
+      if (split_line.length != 2) { continue; }
+
+      var key = split_line[1];
+
       console.log("Unmapping", key);
       unmapKey(key);
+    }
+    else if (lineCommand == "unmapAll") {
+      keyToCommandRegistry = {};
     }
   }
 }
