@@ -75,6 +75,7 @@ Release Notes
 1.17 (Unreleased)
 
 -  'u' now restores tabs that were closed by the mouse or with native shortcuts. Tabs are also restored in their prior position.
+-  New 'unmapAll' command in the key mappings interface to remove all default mappings.
 -  Bug fixes.
 
 1.16 (03/09/2010)
