@@ -327,7 +327,6 @@
     // We should update all the tabs in the old window and the new window.
     if (openTabs[tabId]) {
       updatePositionsAndWindowsForAllTabsInWindow(openTabs[tabId].windowId);
-      updateTabQueueIndices(openTabs[tabId].windowId, openTabs[tabId].positionIndex);
     }
     updatePositionsAndWindowsForAllTabsInWindow(attachedInfo.newWindowId);
   });
@@ -335,14 +334,6 @@
   chrome.tabs.onMoved.addListener(function(tabId, moveInfo) {
     updatePositionsAndWindowsForAllTabsInWindow(moveInfo.windowId);
   });
-
-  function updateTabQueueIndices(windowId, positionIndex) {
-    for (var i in tabQueue[windowId]) {
-      if (tabQueue[windowId][i].positionIndex > positionIndex) {
-        tabQueue[windowId][i].positionIndex--;
-      }
-    }
-  }
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
     var openTabInfo = openTabs[tabId];
@@ -352,7 +343,10 @@
     // Pretend they never existed and adjust tab indices accordingly.
     // Could possibly expand this into a blacklist in the future
     if (/^chrome[^:]*:\/\/.*/.test(openTabInfo.url)) {
-      updateTabQueueIndices(openTabInfo.windowId, openTabInfo.positionIndex);
+      for (var i in tabQueue[openTabInfo.windowId]) {
+        if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
+          tabQueue[openTabInfo.windowId][i].positionIndex--;
+      }
       return;
     }
 
