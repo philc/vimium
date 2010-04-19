@@ -2,9 +2,12 @@
 <head>
 <script type="text/javascript" src="commands.js"/>
 <script type="text/javascript" charset="utf-8">
-  // Currently we need to remember to change this each time we push. Chromium #15242 will enable us
-  // to retrieve this programmatically.
-  var currentVersion = "1.16";
+  // Chromium #15242 will make this XHR request unnecessary.
+  var manifestRequest = new XMLHttpRequest();
+  manifestRequest.open("GET", chrome.extension.getURL("manifest.json"), false);
+  manifestRequest.send(null);
+
+  var currentVersion = JSON.parse(manifestRequest.responseText).version;
 
   var tabQueue = {}; // windowId -> Array
   var openTabs = {}; // tabId -> object with various tab properties
@@ -316,7 +319,7 @@
     openTabs[tab.id].scrollX = scrollX;
     openTabs[tab.id].scrollY = scrollY;
   }
-  
+
 
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (changeInfo.status != "loading") { return; } // only do this once per URL change
