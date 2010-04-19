@@ -76,7 +76,7 @@ Release Notes
 
 -  'u' now restores tabs that were closed by the mouse or with native shortcuts. Tabs are also restored in their prior position.
 -  New 'unmapAll' command in the key mappings interface to remove all default mappings.
--  Faster, more precise method for generating link hints.
+-  Link hints are now faster and more reliable.
 -  Bug fixes.
 
 1.16 (03/09/2010)
