@@ -16,15 +16,17 @@ var shouldOpenLinkHintInNewTab = false;
 // Whether we have added to the page the CSS needed to display link hints.
 var linkHintsCssAdded = false;
 
-// Generate an XPath describing what a clickable element is.
+/* 
+ * Generate an XPath describing what a clickable element is.
+ * The final expression will be something like "//button | //xhtml:button | ..."
+ */
 var clickableElementsXPath = (function() {
   var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]"];
-  var XPath = "";
-  for (var i in clickableElements) {
-    XPath += "//" + clickableElements[i]  + " | " + "//xhtml:" + clickableElements[i] + " | ";
-  }
-  XPath += "//*[@onclick]";
-  return XPath;
+  var xpath = [];
+  for (var i in clickableElements)
+    xpath.push("//" + clickableElements[i], "//xhtml:" + clickableElements[i]);
+  xpath.push("//*[@onclick]");
+  return xpath.join(" | ")
 })();
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
