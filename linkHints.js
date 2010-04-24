@@ -17,12 +17,15 @@ var shouldOpenLinkHintInNewTab = false;
 var linkHintsCssAdded = false;
 
 // Generate an XPath describing what a clickable element is.
-var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]"];
-var clickableElementsXPath = "";
-for (var i in clickableElements) {
-  clickableElementsXPath += "//" + clickableElements[i]  + " | " + "//xhtml:" + clickableElements[i] + " | ";
-}
-clickableElementsXPath += "//*[@onclick]";
+var clickableElementsXPath = (function() {
+  var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]"];
+  var XPath = "";
+  for (var i in clickableElements) {
+    XPath += "//" + clickableElements[i]  + " | " + "//xhtml:" + clickableElements[i] + " | ";
+  }
+  XPath += "//*[@onclick]";
+  return XPath;
+})();
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
 function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
