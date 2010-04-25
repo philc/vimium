@@ -94,7 +94,7 @@ function getVisibleClickableElements() {
 
     // If the link has zero dimensions, it may be wrapping visible
     // but floated elements. Check for this.
-    if (boundingRect.width == 0 && boundingRect.height == 0) {
+    if (boundingRect.width == 0 || boundingRect.height == 0) {
       for (var j = 0; j < element.childNodes.length; j++) {
 
         // check that the node is an element node
