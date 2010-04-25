@@ -96,11 +96,17 @@ function getVisibleClickableElements() {
     // but floated elements. Check for this.
     if (boundingRect.width == 0 && boundingRect.height == 0) {
       for (var j = 0; j < element.childNodes.length; j++) {
+
+        // check that the node is an element node
+        if (element.childNodes[j].nodeType != 1) // nodeType 1: ELEMENT_NODE
+          continue;
+
         if (window.getComputedStyle(element.childNodes[j], null).getPropertyValue('float') != 'none'
             && isVisible(element.childNodes[j])) {
           visibleElements.push(element.childNodes[j]);
           break;
         }
+
       }
     }
   }
