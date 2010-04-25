@@ -80,36 +80,62 @@ function getVisibleClickableElements() {
       return namespace == "xhtml" ? "http://www.w3.org/1999/xhtml" : null;
     },
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+
   var visibleElements = [];
 
-  // Prune all invisible clickable elements.
+  // Find all visible clickable elements.
   for (var i = 0; i < resultSet.snapshotLength; i++) {
     var element = resultSet.snapshotItem(i);
-
-    // Note that getBoundingClientRect() is relative to the viewport
     var boundingRect = element.getBoundingClientRect();
-    // Exclude links which have just a few pixels on screen, because the link hints won't show for them anyway.
-    var zoomFactor = currentZoomLevel / 100.0;
-    if (boundingRect.bottom <= 4 || boundingRect.top * zoomFactor >= window.innerHeight - 4 ||
-        boundingRect.left <= 0 || boundingRect.left * zoomFactor >= window.innerWidth - 4)
-      continue;
 
-    if (boundingRect.width < 3 || boundingRect.height < 3)
-      continue;
+    if (isVisible(element, boundingRect))
+      visibleElements.push(element);
 
-    // eliminate invisible elements (see test_harnesses/visibility_test.html)
-    var computedStyle = window.getComputedStyle(element, null);
-    if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-        computedStyle.getPropertyValue('display') == 'none')
-      continue;
-
-    var clientRect = element.getClientRects()[0];
-    if (!clientRect)
-        continue;
-
-    visibleElements.push(element);
+    // If the link has zero dimensions, it may be wrapping visible
+    // but floated elements. Check for this.
+    if (boundingRect.width == 0 && boundingRect.height == 0) {
+      for (var j = 0; j < element.childNodes.length; j++) {
+        if (window.getComputedStyle(element.childNodes[j], null).getPropertyValue('float') != 'none'
+            && isVisible(element.childNodes[j])) {
+          visibleElements.push(element.childNodes[j]);
+          break;
+        }
+      }
+    }
   }
   return visibleElements;
+}
+
+/*
+ * Returns true if element is visible.
+ * boundingRect is an optional argument.
+ */
+function isVisible(element, boundingRect) {
+  // Note that getBoundingClientRect() is relative to the viewport
+  if (boundingRect === undefined)
+    boundingRect = element.getBoundingClientRect();
+
+  // Exclude links which have just a few pixels on screen, because the link hints won't show for them anyway.
+  var zoomFactor = currentZoomLevel / 100.0;
+  if (boundingRect.bottom <= 4 || boundingRect.top * zoomFactor >= window.innerHeight - 4 ||
+      boundingRect.left <= 0 || boundingRect.left * zoomFactor >= window.innerWidth - 4)
+    return false;
+
+  if (boundingRect.width < 3 || boundingRect.height < 3)
+    return false;
+
+  // eliminate invisible elements (see test_harnesses/visibility_test.html)
+  var computedStyle = window.getComputedStyle(element, null);
+  if (computedStyle.getPropertyValue('visibility') != 'visible' ||
+      computedStyle.getPropertyValue('display') == 'none')
+    return false;
+
+  var clientRect = element.getClientRects()[0];
+  if (!clientRect)
+    return false;
+
+  return true;
 }
 
 function onKeyDownInLinkHintsMode(event) {
