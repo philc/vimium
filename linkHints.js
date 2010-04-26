@@ -16,9 +16,18 @@ var shouldOpenLinkHintInNewTab = false;
 // Whether we have added to the page the CSS needed to display link hints.
 var linkHintsCssAdded = false;
 
-// An XPath describing what a clickable element is. We could also look for images with an onclick
-// attribute, but let's wait to see if that really is necessary.
-var clickableElementsXPath = "//a | //textarea | //button | //select | //input[not(@type='hidden')] | //*[@onclick]";
+/* 
+ * Generate an XPath describing what a clickable element is.
+ * The final expression will be something like "//button | //xhtml:button | ..."
+ */
+var clickableElementsXPath = (function() {
+  var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]"];
+  var xpath = [];
+  for (var i in clickableElements)
+    xpath.push("//" + clickableElements[i], "//xhtml:" + clickableElements[i]);
+  xpath.push("//*[@onclick]");
+  return xpath.join(" | ")
+})();
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
 function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
@@ -66,7 +75,10 @@ function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
  * of digits needed to enumerate all of the links on screen.
  */
 function getVisibleClickableElements() {
-  var resultSet = document.evaluate(clickableElementsXPath, document.body, null,
+  var resultSet = document.evaluate(clickableElementsXPath, document.body,
+    function (namespace) {
+      return namespace == "xhtml" ? "http://www.w3.org/1999/xhtml" : null;
+    },
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
   var visibleElements = [];
 
