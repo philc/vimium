@@ -154,5 +154,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"]
+    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
+  misc:
+    ["showHelp"]
 };
