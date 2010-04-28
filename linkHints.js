@@ -13,6 +13,8 @@ var hintMarkerContainingDiv = null;
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
 var shouldOpenLinkHintInNewTab = false;
+// Whether link hint's "open in current/new tab" setting is currently toggled 
+var openLinkModeToggle = false;
 // Whether we have added to the page the CSS needed to display link hints.
 var linkHintsCssAdded = false;
 
@@ -37,9 +39,18 @@ function activateLinkHintsMode(openInNewTab) {
     addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
   linkHintCssAdded = true;
   linkHintsModeActivated = true;
-  shouldOpenLinkHintInNewTab = openInNewTab
+  setOpenLinkMode(openInNewTab);
   buildLinkHints();
   document.addEventListener("keydown", onKeyDownInLinkHintsMode, true);
+  document.addEventListener("keyup", onKeyUpInLinkHintsMode, true);
+}
+
+function setOpenLinkMode(openInNewTab) {
+  shouldOpenLinkHintInNewTab = openInNewTab;
+  if (shouldOpenLinkHintInNewTab)
+    HUD.show("Open link in new tab");
+  else
+    HUD.show("Open link in current tab");
 }
 
 /*
@@ -113,6 +124,12 @@ function getVisibleClickableElements() {
 }
 
 function onKeyDownInLinkHintsMode(event) {
+  if (event.keyCode == keyCodes.shiftKey && !openLinkModeToggle) {
+    // Toggle whether to open link in a new or current tab.
+    setOpenLinkMode(!shouldOpenLinkHintInNewTab);
+    openLinkModeToggle = true; 
+  }
+
   var keyChar = getKeyChar(event);
   if (!keyChar)
     return;
@@ -134,6 +151,16 @@ function onKeyDownInLinkHintsMode(event) {
     return;
   }
 
+  event.stopPropagation();
+  event.preventDefault();
+}
+
+function onKeyUpInLinkHintsMode(event) {
+  if (event.keyCode == keyCodes.shiftKey && openLinkModeToggle) {
+    // Revert toggle on whether to open link in new or current tab. 
+    setOpenLinkMode(!shouldOpenLinkHintInNewTab);
+    openLinkModeToggle = false; 
+  }
   event.stopPropagation();
   event.preventDefault();
 }
@@ -238,7 +265,9 @@ function deactivateLinkHintsMode() {
   hintMarkers = [];
   hintKeystrokeQueue = [];
   document.removeEventListener("keydown", onKeyDownInLinkHintsMode, true);
+  document.removeEventListener("keyup", onKeyUpInLinkHintsMode, true);
   linkHintsModeActivated = false;
+  HUD.hide();
 }
 
 /*
