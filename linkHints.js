@@ -87,24 +87,26 @@ function getVisibleClickableElements() {
   // Find all visible clickable elements.
   for (var i = 0; i < resultSet.snapshotLength; i++) {
     var element = resultSet.snapshotItem(i);
-    var boundingRect = element.getBoundingClientRect();
+    var clientRect = element.getClientRects()[0];
 
-    if (isVisible(element, boundingRect))
-      visibleElements.push(element);
+    if (isVisible(element, clientRect))
+      visibleElements.push({element: element, rect: clientRect});
 
     // If the link has zero dimensions, it may be wrapping visible
     // but floated elements. Check for this.
-    if (boundingRect.width == 0 || boundingRect.height == 0) {
+    if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
       for (var j = 0; j < element.childNodes.length; j++) {
 
         // check that the node is an element node
         if (element.childNodes[j].nodeType != 1) // nodeType 1: ELEMENT_NODE
           continue;
 
-        if (window.getComputedStyle(element.childNodes[j], null).getPropertyValue('float') != 'none'
-            && isVisible(element.childNodes[j])) {
-          visibleElements.push(element.childNodes[j]);
-          break;
+        if (window.getComputedStyle(element.childNodes[j], null).getPropertyValue('float') != 'none') {
+          var childClientRect = element.childNodes[j].getClientRects()[0];
+          if (isVisible(element.childNodes[j], childClientRect)) {
+            visibleElements.push({element: element.childNodes[j], rect: childClientRect});
+            break;
+          }
         }
 
       }
@@ -115,30 +117,21 @@ function getVisibleClickableElements() {
 
 /*
  * Returns true if element is visible.
- * boundingRect is an optional argument.
  */
-function isVisible(element, boundingRect) {
-  // Note that getBoundingClientRect() is relative to the viewport
-  if (boundingRect === undefined)
-    boundingRect = element.getBoundingClientRect();
-
+function isVisible(element, clientRect) {
   // Exclude links which have just a few pixels on screen, because the link hints won't show for them anyway.
   var zoomFactor = currentZoomLevel / 100.0;
-  if (boundingRect.top < 0 || boundingRect.top * zoomFactor >= window.innerHeight - 4 ||
-      boundingRect.left < 0 || boundingRect.left * zoomFactor >= window.innerWidth - 4)
+  if (!clientRect || clientRect.top < 0 || clientRect.top * zoomFactor >= window.innerHeight - 4 ||
+      clientRect.left < 0 || clientRect.left * zoomFactor >= window.innerWidth - 4)
     return false;
 
-  if (boundingRect.width < 3 || boundingRect.height < 3)
+  if (clientRect.width < 3 || clientRect.height < 3)
     return false;
 
   // eliminate invisible elements (see test_harnesses/visibility_test.html)
   var computedStyle = window.getComputedStyle(element, null);
   if (computedStyle.getPropertyValue('visibility') != 'visible' ||
       computedStyle.getPropertyValue('display') == 'none')
-    return false;
-
-  var clientRect = element.getClientRects()[0];
-  if (!clientRect)
     return false;
 
   return true;
@@ -288,13 +281,13 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
   marker.setAttribute("hintString", hintString);
 
   // Note: this call will be expensive if we modify the DOM in between calls.
-  var clientRect = link.getClientRects()[0];
+  var clientRect = link.rect;
   // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
   // the document node.
   var zoomFactor = currentZoomLevel / 100.0;
   marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
   marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
 
-  marker.clickableItem = link;
+  marker.clickableItem = link.element;
   return marker;
 }
