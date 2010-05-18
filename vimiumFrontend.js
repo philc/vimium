@@ -462,6 +462,9 @@ function showHelpDialog(html) {
   container.id = "vimiumHelpDialogContainer";
   container.innerHTML = html;
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
+  container.getElementsByClassName("optionsPage")[0].addEventListener("click",
+      function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
+
   document.body.appendChild(container);
   var dialog = document.getElementById("vimiumHelpDialog");
   dialog.style.zIndex = "99999998";
@@ -682,5 +685,6 @@ if (!isIframe) {
 }
 
 window.onbeforeunload = function() {
-  chrome.extension.sendRequest({ handler: 'updateScrollPosition', scrollX: window.scrollX, scrollY: window.scrollY });
+  chrome.extension.sendRequest({ handler: "updateScrollPosition",
+      scrollX: window.scrollX, scrollY: window.scrollY });
 }

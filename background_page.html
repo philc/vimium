@@ -2,7 +2,7 @@
 <head>
 <script type="text/javascript" src="commands.js"/>
 <script type="text/javascript" charset="utf-8">
-  // Chromium #15242 will make this XHR request unnecessary.
+  // Chromium #15242 will make this XHR request to access the manifest unnecessary.
   var manifestRequest = new XMLHttpRequest();
   manifestRequest.open("GET", chrome.extension.getURL("manifest.json"), false);
   manifestRequest.send(null);
@@ -64,6 +64,7 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
+    openOptionsPageInNewTab: openOptionsPageInNewTab,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
   };
@@ -571,6 +572,12 @@
     if (!localStorage.previousVersion)
       localStorage.previousVersion = currentVersion;
     return compareVersions(currentVersion, localStorage.previousVersion) == 1;
+  }
+
+  function openOptionsPageInNewTab() {
+    chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.create({ url: chrome.extension.getURL("options.html"), index: tab.index + 1 });
+    });
   }
 
   function init() {

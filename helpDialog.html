@@ -64,6 +64,11 @@
       padding-left:10px;
       font-size:16px;
     }
+    #vimiumHelpDialog a.optionsPage {
+      position: absolute;
+      right: 60px;
+      top: 8px;
+    }
     #vimiumHelpDialog .closeButton:hover {
       color:black;
       cursor:default;
@@ -74,6 +79,7 @@
 
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
        page with the up-to-date key bindings when the dialog is shown. -->
+  <a class="optionsPage" href="#">Options</a>
   <a class="closeButton" href="#">x</a>
   <div id="vimiumTitle"><span style="color:#2f508e">Vim</span>ium {{title}}</div>
   <div class="vimiumColumn">
