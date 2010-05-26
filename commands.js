@@ -28,7 +28,7 @@ function parseCustomKeyMappings(customKeyMappings) {
 
   for (var i = 0; i < lines.length; i++) {
     if (lines[i][0] == "\"" || lines[i][0] == "#") { continue }
-    split_line = lines[i].split(" "); // TODO(ilya): Support all whitespace.
+    split_line = lines[i].split(/\s+/);
 
     var lineCommand = split_line[0];
 
