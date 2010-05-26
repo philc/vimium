@@ -73,10 +73,13 @@ duplicate your effort.
 
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with your patch.
 
-[list_url]: http://groups.google.com.sg/group/vimium-dev?hl=en
+[list_url]: http://groups.google.com/group/vimium-dev?hl=en
 
 Release Notes
 -------------
+
+1.18
+-  Bug fixes.
 
 1.17 (04/18/2010)
 
