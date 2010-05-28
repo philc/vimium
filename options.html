@@ -2,7 +2,9 @@
   <head>
     <title>Vimium Options</title>
     <script src="lib/keyboardUtils.js"></script>
-
+    <script src="linkHints.js"></script>
+    <script src="lib/clipboard.js"></script>
+    <script src="vimiumFrontend.js"></script>
     <style type="text/css" media="screen">
       body {
         font-family:"helvetica neue", "helvetica", "arial", "sans";
@@ -98,7 +100,6 @@
       showDialog("vimiumCommandListingContainer",
         chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"));
     }, false);
-    document.addEventListener("keydown", onKeydown, true);
   }
 
   function onOptionKeyup(event) {
@@ -172,14 +173,6 @@
     currentlyShowingDialog = null;
   }
 
-  function onKeydown(event) {
-    var keyChar = getKeyChar(event);
-    var isFormField = ["INPUT", "TEXTAREA"].indexOf(event.target.tagName) >= 0;
-    if (currentlyShowingDialog && isEscape(event))
-      hideDialog();
-    else if (!currentlyShowingDialog && getKeyChar(event) == "?" && !isFormField)
-      showDialog("vimiumCommandListingContainer", chrome.extension.getBackgroundPage().helpDialogHtml());
-  }
   </script>
 
   </head>
