@@ -15,7 +15,9 @@
   var validFirstKeys = {};
   var singleKeyCommands = [];
 
-  var namedKeyRegex = /^(<[amc-].|(?:[amc]-)?[a-z]{2,5}>)(.*)$/;
+  // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
+  // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
+  var namedKeyRegex = /^(<[amc-].|(?:[amc]-)?[a-z0-9]{2,5}>)(.*)$/;
 
   var defaultSettings = {
     scrollStepSize: 60,

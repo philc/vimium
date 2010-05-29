@@ -23,9 +23,20 @@ function mapKeyToCommand(key, command) {
 
 function unmapKey(key) { delete keyToCommandRegistry[key]; }
 
+/* Lower-case the appropriate portions of named keys.
+ *
+ * A key name is one of three forms exemplified by <c-a> <left> or <c-f12>
+ * (prefixed normal key, named key, or prefixed named key). Internally, for
+ * simplicity, we would like prefixes and key names to be lowercase, though
+ * humans may prefer other forms <Left> or <C-a>.
+ * On the other hand, <c-a> and <c-A> are different named keys - for one of
+ * them you have to press "shift" as well.
+ */
 function normalizeKey(key) {
-    return key.replace(/<[amc]-/i, function(m){return m.toLowerCase();})
-              .replace(/<([acm]-)?([a-zA-Z0-9]+)>/, function(m, p, k){return "<" + (p ? p : "") + k.toLowerCase() + ">";});
+    return key.replace(/<[acm]-/ig, function(match){ return match.toLowerCase(); })
+              .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, function(match, optionalPrefix, keyName){
+                  return "<" + ( optionalPrefix ? optionalPrefix : "") + keyName.toLowerCase() + ">";
+              });
 }
 
 function parseCustomKeyMappings(customKeyMappings) {
