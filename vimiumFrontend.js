@@ -263,7 +263,7 @@ function onKeydown(event) {
       for (var i in modifiers)
         keyChar = modifiers[i] + "-" + keyChar;
 
-      if (modifiers.length > 0)
+      if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">";
     }
   }

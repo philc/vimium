@@ -15,7 +15,7 @@
   var validFirstKeys = {};
   var singleKeyCommands = [];
 
-  var hasModifierRegex = /^<[amc]-.>/;
+  var namedKeyRegex = /^(<[amc-].|(?:[amc]-)?[a-z]{2,5}>)(.*)$/;
 
   var defaultSettings = {
     scrollStepSize: 60,
@@ -407,15 +407,15 @@
   }
 
   function splitKeyIntoFirstAndSecond(key) {
-    if (key.search(hasModifierRegex) == 0)
-      return { first: key.slice(0, 5), second: key.slice(5) };
+    if (key.search(namedKeyRegex) == 0)
+        return { first: RegExp.$1, second: RegExp.$2 };
     else
       return { first: key[0], second: key.slice(1) };
   }
 
   function getActualKeyStrokeLength(key) {
-    if (key.search(hasModifierRegex) == 0)
-      return 1 + getActualKeyStrokeLength(key.slice(5));
+    if (key.search(namedKeyRegex) == 0)
+      return 1 + getActualKeyStrokeLength(RegExp.$2);
     else
       return key.length;
   }

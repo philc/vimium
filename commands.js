@@ -23,6 +23,11 @@ function mapKeyToCommand(key, command) {
 
 function unmapKey(key) { delete keyToCommandRegistry[key]; }
 
+function normalizeKey(key) {
+    return key.replace(/<[amc]-/i, function(m){return m.toLowerCase();})
+              .replace(/<([acm]-)?([a-zA-Z0-9]+)>/, function(m, p, k){return "<" + (p ? p : "") + k.toLowerCase() + ">";});
+}
+
 function parseCustomKeyMappings(customKeyMappings) {
   lines = customKeyMappings.split("\n");
 
@@ -34,7 +39,7 @@ function parseCustomKeyMappings(customKeyMappings) {
 
     if (lineCommand == "map") {
       if (split_line.length != 3) { continue; }
-      var key = split_line[1];
+      var key = normalizeKey(split_line[1]);
       var vimiumCommand = split_line[2];
 
       if (!availableCommands[vimiumCommand]) { continue }
@@ -45,7 +50,7 @@ function parseCustomKeyMappings(customKeyMappings) {
     else if (lineCommand == "unmap") {
       if (split_line.length != 2) { continue; }
 
-      var key = split_line[1];
+      var key = normalizeKey(split_line[1]);
 
       console.log("Unmapping", key);
       unmapKey(key);
