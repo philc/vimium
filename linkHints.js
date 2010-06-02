@@ -95,20 +95,14 @@ function getVisibleClickableElements() {
     // If the link has zero dimensions, it may be wrapping visible
     // but floated elements. Check for this.
     if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
-      for (var j = 0; j < element.childNodes.length; j++) {
-
-        // check that the node is an element node
-        if (element.childNodes[j].nodeType != 1) // nodeType 1: ELEMENT_NODE
-          continue;
-
-        if (window.getComputedStyle(element.childNodes[j], null).getPropertyValue('float') != 'none') {
-          var childClientRect = element.childNodes[j].getClientRects()[0];
-          if (isVisible(element.childNodes[j], childClientRect)) {
-            visibleElements.push({element: element.childNodes[j], rect: childClientRect});
+      for (var j = 0; j < element.children.length; j++) {
+        if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') != 'none') {
+          var childClientRect = element.children[j].getClientRects()[0];
+          if (isVisible(element.children[j], childClientRect)) {
+            visibleElements.push({element: element.children[j], rect: childClientRect});
             break;
           }
         }
-
       }
     }
   }
