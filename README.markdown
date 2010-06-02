@@ -80,6 +80,8 @@ Release Notes
 
 1.18
 
+-  Run on pages with file:/// and ftp:///
+-  The Options page is now linked from the Help dialog.
 -  Bug fixes.
 
 1.17 (04/18/2010)
