@@ -96,6 +96,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('H', 'goBack');
   mapKeyToCommand('L', 'goForward');
   mapKeyToCommand('gu', 'goUp');
+  mapKeyToCommand('<c-a>', 'incrementUrl');
+  mapKeyToCommand('<c-x>', 'decrementUrl');
 
   mapKeyToCommand('zi', 'zoomIn');
   mapKeyToCommand('zo', 'zoomOut');
@@ -153,6 +155,8 @@ addCommand('goForward',           'Go forward in history');
 
 // Navigating the URL hierarchy
 addCommand('goUp',                'Go up the URL hierarchy');
+addCommand('incrementUrl',        'Increment the last number in the current URL');
+addCommand('decrementUrl',        'Decrement the last number in the current URL');
 
 // Manipulating tabs:
 addCommand('nextTab',             'Go one tab right',  true);

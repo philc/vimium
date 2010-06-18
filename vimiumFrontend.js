@@ -213,6 +213,19 @@ function goUp() {
   }
 }
 
+// TODO(tsigo): Should not modify the port number
+function incrDecrUrl(modifier) {
+  var l       = window.location.href
+  var matches = l.match(/(\d+)([^\d]*)$/);
+
+  if (matches.length == 3) {
+    var num = parseInt(matches[1]);
+    window.location.href = l.replace(/\d+([^\d]*)$/, (num+modifier) + '$1');
+  }
+}
+function incrementUrl() { incrDecrUrl(1);  }
+function decrementUrl() { incrDecrUrl(-1); }
+
 function toggleViewSource() {
   getCurrentUrlHandlers.push(toggleViewSourceCallback);
 
