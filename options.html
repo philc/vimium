@@ -160,6 +160,7 @@
     container.id = currentlyShowingDialog;
     container.innerHTML = dialogHtml;
     container.getElementsByClassName("closeButton")[0].addEventListener("click", hideDialog, false);
+    container.getElementsByClassName("optionsPage")[0].style.display = 'none';
     document.body.appendChild(container);
     var dialog = document.getElementById("vimiumHelpDialog");
     dialog.style.top = Math.max((window.innerHeight - dialog.clientHeight) / 2.0, 20) + "px";
