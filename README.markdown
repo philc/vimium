@@ -83,6 +83,7 @@ Release Notes
 -  Vimium now runs on pages with file:/// and ftp:///
 -  The Options page is now linked from the Help dialog.
 -  Arrow keys and function keys can now be mapped using &lt;left&gt;, &lt;right&gt;, &lt;up&gt;, &lt;down&gt;, &lt;f1&gt;, &lt;f2&gt;, etc. in the mappings interface.
+-  There is a new command `goUp` (mapped to `gu` by default) that will go up one level in the URL hierarchy. For example: from http://vimium.github.com/foo/bar to http://vimium.github.com/foo. At the moment, `goUp` does not support command repetition.
 -  Bug fixes and optimizations.
 
 1.17 (04/18/2010)
