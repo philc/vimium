@@ -82,7 +82,7 @@ Release Notes
 
 -  Vimium now runs on pages with file:/// and ftp:///
 -  The Options page is now linked from the Help dialog.
--  Arrow keys and function keys can now be mapped using <left>, <right>, <up>, <down>, <f1>, <f2>, etc. in the mappings interface.
+-  Arrow keys and function keys can now be mapped using &lt;left&rt;, &lt;right&rt;, &lt;up&rt;, &lt;down&rt;, &lt;f1&rt;, &lt;f2&rt;, etc. in the mappings interface.
 -  Bug fixes and optimizations.
 
 1.17 (04/18/2010)
