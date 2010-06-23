@@ -573,6 +573,7 @@
     // case for new installs.
     if (!localStorage.previousVersion)
       localStorage.previousVersion = currentVersion;
+    console.log("previousVersion: " + localStorage.previousVersion);
     return compareVersions(currentVersion, localStorage.previousVersion) == 1;
   }
 
