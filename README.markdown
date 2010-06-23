@@ -78,11 +78,12 @@ When you're done, send us a pull request on Github. Feel free to include a chang
 Release Notes
 -------------
 
-1.18
+1.18 (06/22/2010)
 
--  Run on pages with file:/// and ftp:///
+-  Vimium now runs on pages with file:/// and ftp:///
 -  The Options page is now linked from the Help dialog.
--  Bug fixes.
+-  Arrow keys and function keys can now be mapped using <left>, <right>, <up>, <down>, <f1>, <f2>, etc. in the mappings interface.
+-  Bug fixes and optimizations.
 
 1.17 (04/18/2010)
 
