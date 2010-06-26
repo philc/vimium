@@ -11,6 +11,7 @@ var hintMarkers = [];
 var hintMarkerContainingDiv = null;
 // The characters that were typed in while in "link hints" mode.
 var hintKeystrokeQueue = [];
+var linkTextKeystrokeQueue = [];
 var linkHintsModeActivated = false;
 var shouldOpenLinkHintInNewTab = false;
 var shouldOpenLinkHintWithQueue = false;
@@ -31,6 +32,10 @@ var clickableElementsXPath = (function() {
   xpath.push("//*[@onclick]");
   return xpath.join(" | ")
 })();
+
+function isNarrowMode() {
+  return true;
+}
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
 function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true, false); }
@@ -169,6 +174,7 @@ function onKeyDownInLinkHintsMode(event) {
     if (hintKeystrokeQueue.length == 0) {
       deactivateLinkHintsMode();
     } else {
+      linkTextKeystrokeQueue.pop();
       hintKeystrokeQueue.pop();
       updateLinkHints();
     }
@@ -176,7 +182,8 @@ function onKeyDownInLinkHintsMode(event) {
     hintKeystrokeQueue.push(keyChar);
     updateLinkHints();
   } else {
-    return;
+    linkTextKeystrokeQueue.push(keyChar);
+    updateLinkHints();
   }
 
   event.stopPropagation();
@@ -243,17 +250,30 @@ function isSelectable(element) {
  */
 function highlightLinkMatches(searchString) {
   var linksMatched = [];
+  var linkSearchString = linkTextKeystrokeQueue.join("");
+  var emptySearchString = searchString.length == 0;
+  var narrowMode = isNarrowMode();
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
-    if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
-      if (linkMarker.style.display == "none")
-        linkMarker.style.display = "";
+    var matchedLink = linkMarker.getAttribute("linkText").indexOf(linkSearchString) >= 0;
+    var matchedHintStart = !emptySearchString && 
+      linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
+    var shouldRemoveMatch = (!matchedLink && !matchedHintStart) ||
+      (matchedLink && !matchedHintStart && !emptySearchString)
+
+    if (matchedHintStart) {
       for (var j = 0; j < linkMarker.childNodes.length; j++)
         linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
-      linksMatched.push(linkMarker.clickableItem);
-    } else {
-      linkMarker.style.display = "none";
     }
+
+    if (shouldRemoveMatch) {
+      linkMarker.style.display = "none";
+    } else {
+      if (linkMarker.style.display == "none")
+        linkMarker.style.display = "";
+      linksMatched.push(linkMarker.clickableItem);
+    }
+
   }
   return linksMatched;
 }
@@ -299,6 +319,7 @@ function deactivateLinkHintsMode() {
   hintMarkerContainingDiv = null;
   hintMarkers = [];
   hintKeystrokeQueue = [];
+  linkTextKeystrokeQueue = [];
   document.removeEventListener("keydown", onKeyDownInLinkHintsMode, true);
   document.removeEventListener("keyup", onKeyUpInLinkHintsMode, true);
   linkHintsModeActivated = false;
@@ -315,6 +336,9 @@ function resetLinkHintsMode() {
  */
 function createMarkerFor(link, linkHintNumber, linkHintDigits) {
   var hintString = numberToHintString(linkHintNumber, linkHintDigits);
+  var linkText = link.element.innerHTML.toLowerCase();
+  if (linkText == undefined) 
+    linkText = "";
   var marker = document.createElement("div");
   marker.className = "internalVimiumHintMarker vimiumHintMarker";
   var innerHTML = [];
@@ -323,6 +347,7 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
     innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
   marker.innerHTML = innerHTML.join("");
   marker.setAttribute("hintString", hintString);
+  marker.setAttribute("linkText", linkText);
 
   // Note: this call will be expensive if we modify the DOM in between calls.
   var clientRect = link.rect;
