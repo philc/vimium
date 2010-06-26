@@ -251,15 +251,16 @@ function isSelectable(element) {
 function highlightLinkMatches(searchString) {
   var linksMatched = [];
   var linkSearchString = linkTextKeystrokeQueue.join("");
-  var emptySearchString = searchString.length == 0;
+  var hasSearchString = searchString.length != 0;
+  var hasLinkSearchString = linkSearchString.length != 0;
   var narrowMode = isNarrowMode();
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
     var matchedLink = linkMarker.getAttribute("linkText").indexOf(linkSearchString) >= 0;
-    var matchedHintStart = !emptySearchString && 
+    var matchedHintStart = hasSearchString && 
       linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
     var shouldRemoveMatch = (!matchedLink && !matchedHintStart) ||
-      (matchedLink && !matchedHintStart && !emptySearchString)
+      ((matchedLink != matchedHintStart) && hasSearchString && hasLinkSearchString)
 
     if (matchedHintStart) {
       for (var j = 0; j < linkMarker.childNodes.length; j++)
