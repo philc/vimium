@@ -251,16 +251,29 @@ function isSelectable(element) {
 function highlightLinkMatches(searchString) {
   var linksMatched = [];
   var linkSearchString = linkTextKeystrokeQueue.join("");
+  var narrowMode = isNarrowMode();
   var hasSearchString = searchString.length != 0;
   var hasLinkSearchString = linkSearchString.length != 0;
-  var narrowMode = isNarrowMode();
+
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
     var matchedLink = linkMarker.getAttribute("linkText").indexOf(linkSearchString) >= 0;
-    var matchedHintStart = hasSearchString && 
-      linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
-    var shouldRemoveMatch = (!matchedLink && !matchedHintStart) ||
-      ((matchedLink != matchedHintStart) && hasSearchString && hasLinkSearchString)
+    var matchedHintStart = linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
+
+    // if we're in narrow mode, make sure to designate a hint match only when 
+    // the search string is populated.
+    if (narrowMode)
+      matchedHintStart = matchedHintStart && hasSearchString;
+
+    var shouldRemoveMatch;
+    if (narrowMode) {
+      shouldRemoveMatch = 
+        (!matchedLink && !matchedHintStart) || 
+        (!matchedLink && hasLinkSearchString) ||
+        (!matchedHintStart && hasSearchString)
+    } else {
+      shouldRemoveMatch = !matchedHintStart;
+    }
 
     if (matchedHintStart) {
       for (var j = 0; j < linkMarker.childNodes.length; j++)
