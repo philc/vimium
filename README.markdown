@@ -82,6 +82,7 @@ Release Notes
 1.19 (06/29/2010)
 
 -  A critical bug fix for development channel Chromium.
+-  Vimium icons for the Chrome extensions panel and other places.
 
 1.18 (06/22/2010)
 
