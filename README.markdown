@@ -79,6 +79,10 @@ When you're done, send us a pull request on Github. Feel free to include a chang
 Release Notes
 -------------
 
+1.19 (06/29/2010)
+
+-  A critical bug fix for development channel Chromium.
+
 1.18 (06/22/2010)
 
 -  Vimium now runs on pages with file:/// and ftp:///
