@@ -185,8 +185,8 @@ function zoomOut() {
   saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
-function scrollToBottom() { window.scrollTo(0, document.body.scrollHeight); }
-function scrollToTop() { window.scrollTo(0, 0); }
+function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
+function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollUp() { window.scrollBy(0, -1 * settings["scrollStepSize"]); }
 function scrollDown() { window.scrollBy(0, settings["scrollStepSize"]); }
 function scrollPageUp() { window.scrollBy(0, -1 * window.innerHeight / 2); }
