@@ -80,8 +80,11 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('k', 'scrollUp');
   mapKeyToCommand('h', 'scrollLeft');
   mapKeyToCommand('l', 'scrollRight');
+
   mapKeyToCommand('gg', 'scrollToTop');
   mapKeyToCommand('G', 'scrollToBottom');
+  mapKeyToCommand('ga', 'scrollToLeft');
+  mapKeyToCommand('gd', 'scrollToRight');
   mapKeyToCommand('<c-e>', 'scrollDown');
   mapKeyToCommand('<c-y>', 'scrollUp');
   mapKeyToCommand('<c-d>', 'scrollPageDown');
@@ -127,6 +130,8 @@ addCommand('scrollLeft',          'Scroll left');
 addCommand('scrollRight',         'Scroll right');
 addCommand('scrollToTop',         'Scroll to the top of the page');
 addCommand('scrollToBottom',      'Scroll to the bottom of the page');
+addCommand('scrollToLeft',        'Scroll to the left of the page');
+addCommand('scrollToRight',       'Scroll to the right of the page');
 addCommand('scrollPageDown',      'Scroll a page down');
 addCommand('scrollPageUp',        'Scroll a page up');
 addCommand('scrollFullPageDown',  'Scroll a full page down');
@@ -167,7 +172,7 @@ addCommand('restoreTab',          "Restore closed tab", true);
 var commandGroups = {
   pageNavigation:
     ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
-     "scrollToTop", "scrollToBottom", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
+     "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
      "enterFindMode", "performFind", "performBackwardsFind"],
