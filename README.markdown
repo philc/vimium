@@ -82,6 +82,8 @@ Release Notes
 1.20 (Unreleased)
 
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
+-  Two new commands to scroll to the left and right edges of the page bound to zH and zL respectively.
+-  Bug fixes.
 
 1.19 (06/29/2010)
 
