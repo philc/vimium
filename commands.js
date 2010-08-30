@@ -83,8 +83,8 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('gg', 'scrollToTop');
   mapKeyToCommand('G', 'scrollToBottom');
-  mapKeyToCommand('ga', 'scrollToLeft');
-  mapKeyToCommand('gd', 'scrollToRight');
+  mapKeyToCommand('zH', 'scrollToLeft');
+  mapKeyToCommand('zL', 'scrollToRight');
   mapKeyToCommand('<c-e>', 'scrollDown');
   mapKeyToCommand('<c-y>', 'scrollUp');
   mapKeyToCommand('<c-d>', 'scrollPageDown');
