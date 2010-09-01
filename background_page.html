@@ -66,6 +66,8 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
+    getKeyMarks: getKeyMarks,
+    openUrlInNewTab: openUrlInNewTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
@@ -219,11 +221,28 @@
     return {completionKeys: generateCompletionKeys()};
   }
 
+  /**
+   * Opens the url in a new tab.
+   */
+  function openUrlInNewTab(request) {
+    chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.create({ url: request.url, index: tab.index + 1 });
+    });
+  }
+
+
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.
    */
   function getLinkHintCss(request) {
     return { linkHintCss: linkHintCss + (localStorage['userDefinedLinkHintCss'] || "") };
+  }
+
+  /*
+   * Returns the assigned bookmarks.
+   */
+  function getKeyMarks(request) {
+    return { keyMarks: localStorage['keyMarks'] || "" };
   }
 
   /*

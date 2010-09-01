@@ -42,6 +42,10 @@
         width:342px;
         min-height:100px;
       }
+      textarea#keyMarks {
+        width:342px;
+        min-height:100px;
+      }
       #status {
         margin-left:10px;
         font-size:80%;
@@ -80,7 +84,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-    "userDefinedLinkHintCss", "keyMappings"];
+    "userDefinedLinkHintCss", "keyMappings", "keyMarks"];
 
   var postSaveHooks = {
     "keyMappings": function (value) {
@@ -229,6 +233,23 @@
             </div>
           </div>
           <textarea id="keyMappings" type="text"></textarea>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Key marks</td>
+        <td id="mappingsHelp" verticalAlign="top">
+          <div class="help">
+            <div class="example">
+              Enter commands to map bookmarks to keys. Examples:<br/>
+              <div style="margin-left:10px;margin-top:5px">
+                c http://calendar.google.com<br/>
+                r javascript:(function(){...})();
+              </div>
+              Activate by typing "goX" where X is the assigned mark.<br/>
+              Using gnX will open the link in a new tab.
+            </div>
+          </div>
+          <textarea id="keyMarks" type="text"></textarea>
         </td>
       </tr>
       <tr class="advancedOption">

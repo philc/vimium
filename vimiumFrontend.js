@@ -22,6 +22,7 @@ var isEnabledForUrl = true;
 // The user's operating system.
 var currentCompletionKeys;
 var linkHintCss;
+var keyMarks;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
@@ -50,6 +51,10 @@ function initializePreDomReady() {
 
   chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
     linkHintCss = response.linkHintCss;
+  });
+
+  chrome.extension.sendRequest({handler: "getKeyMarks"}, function (response) {
+    keyMarks = response.keyMarks;
   });
 
   refreshCompletionKeys();
@@ -238,6 +243,53 @@ function toggleViewSourceCallback(url) {
   else { window.location.href = "view-source:" + url; }
 }
 
+var keyMarksModeActivated = false;
+var keyMarksOpenNewTab = false;
+
+function activateKeyMarksModeToOpenInNewTab() { activateKeyMarksMode(true); }
+
+function activateKeyMarksMode(openInNewTab) {
+  keyMarksOpenNewTab = openInNewTab;
+  document.addEventListener("keydown", onKeyDownForKeyMark, true);
+  keyMarksModeActivated = true;
+}
+
+function deactivateKeyMarksMode() {
+  document.removeEventListener("keydown", onKeyDownForKeyMark, true);
+  keyMarksModeActivated = false;
+}
+
+function onKeyDownForKeyMark(event) {
+  var keyChar = getKeyChar(event);
+  if (!keyChar)
+    return;
+  if (!isEscape(event)) {
+    keyMark(keyChar);
+  }
+  deactivateKeyMarksMode();
+  event.stopPropagation();
+  event.preventDefault();
+}
+
+function keyMark(keyChar) {
+  var marks = keyMarks.split(/\n/);
+  for(var i=0; i<marks.length; i++) {
+    var match = marks[i].match(/^([a-z])\s+(.+)$/);
+    if(match) {
+      var key = match[1];
+      var url = match[2];
+      if(key == keyChar) {
+        if(keyMarksOpenNewTab) {
+          chrome.extension.sendRequest({handler: "openUrlInNewTab", url:url});
+        } else {
+          window.location.href = url;
+        }
+        return
+      }
+    }
+  }
+}
+
 /**
  * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
  * insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -248,7 +300,7 @@ function toggleViewSourceCallback(url) {
 function onKeydown(event) {
   var keyChar = "";
 
-  if (linkHintsModeActivated)
+  if (linkHintsModeActivated || keyMarksModeActivated)
     return;
 
   // Ignore modifier keys by themselves.
