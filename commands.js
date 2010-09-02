@@ -120,6 +120,9 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('t', 'createTab');
   mapKeyToCommand('d', 'removeTab');
   mapKeyToCommand('u', 'restoreTab');
+
+  mapKeyToCommand('go', 'activateKeyMarksMode');
+  mapKeyToCommand('gn', 'activateKeyMarksModeToOpenInNewTab');
 }
 
 // Navigating the current page:
@@ -159,6 +162,10 @@ addCommand('goForward',           'Go forward in history');
 // Navigating the URL hierarchy
 addCommand('goUp',                'Go up the URL hierarchy');
 
+// Navigating bookmarks
+addCommand('activateKeyMarksMode','Open an assigned bookmark');
+addCommand('activateKeyMarksModeToOpenInNewTab','Open an assigned bookmark in a new tab');
+
 // Manipulating tabs:
 addCommand('nextTab',             'Go one tab right',  true);
 addCommand('previousTab',         'Go one tab left',   true);
@@ -175,7 +182,7 @@ var commandGroups = {
      "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
-     "enterFindMode", "performFind", "performBackwardsFind"],
+     "enterFindMode", "performFind", "performBackwardsFind", "activateKeyMarksMode", "activateKeyMarksModeToOpenInNewTab"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
