@@ -243,6 +243,13 @@ function toggleViewSourceCallback(url) {
   else { window.location.href = "view-source:" + url; }
 }
 
+var passThruMode = false;
+
+function passThru() {
+  passThruMode = true;
+  HUD.show("Pass-Thru Mode");
+}
+
 var keyMarksModeActivated = false;
 var keyMarksOpenNewTab = false;
 
@@ -300,7 +307,13 @@ function keyMark(keyChar) {
 function onKeydown(event) {
   var keyChar = "";
 
-  if (linkHintsModeActivated || keyMarksModeActivated)
+  if (passThruMode && isEscape(event)) {
+    passThruMode = false;
+    HUD.hide();
+    return;
+  }
+
+  if (linkHintsModeActivated || keyMarksModeActivated || passThruMode)
     return;
 
   // Ignore modifier keys by themselves.
