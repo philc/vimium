@@ -294,7 +294,7 @@ function keyMark(keyChar) {
         if(keyMarksOpenNewTab) {
           chrome.extension.sendRequest({handler: "openUrlInNewTab", url:url});
         } else {
-          window.location.href = url;
+          chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
         }
         return
       }
