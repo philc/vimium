@@ -120,6 +120,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('t', 'createTab');
   mapKeyToCommand('d', 'removeTab');
   mapKeyToCommand('u', 'restoreTab');
+
+  mapKeyToCommand('x', 'passThru');
 }
 
 // Navigating the current page:
@@ -166,6 +168,9 @@ addCommand('createTab',           'Create new tab',    true);
 addCommand('removeTab',           'Close current tab', true);
 addCommand('restoreTab',          "Restore closed tab", true);
 
+// Enable Pass-Thru Mode
+addCommand('passThru',            'Pass-Thru Mode - Disable Vimium until ESC is pressed.');
+
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
 // be shown in the help page.
@@ -175,7 +180,7 @@ var commandGroups = {
      "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
-     "enterFindMode", "performFind", "performBackwardsFind"],
+     "enterFindMode", "performFind", "performBackwardsFind", "passThru"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:

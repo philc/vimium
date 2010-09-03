@@ -238,6 +238,13 @@ function toggleViewSourceCallback(url) {
   else { window.location.href = "view-source:" + url; }
 }
 
+var passThruMode = false;
+
+function passThru() {
+  passThruMode = true;
+  HUD.show("Pass-Thru Mode");
+}
+
 /**
  * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
  * insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -248,7 +255,13 @@ function toggleViewSourceCallback(url) {
 function onKeydown(event) {
   var keyChar = "";
 
-  if (linkHintsModeActivated)
+  if (passThruMode && isEscape(event)) {
+    passThruMode = false;
+    HUD.hide();
+    return;
+  }
+
+  if (linkHintsModeActivated || passThruMode)
     return;
 
   // Ignore modifier keys by themselves.
