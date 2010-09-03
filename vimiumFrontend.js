@@ -75,7 +75,7 @@ function initializePreDomReady() {
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
-        if (this[args.command]) {
+        if (this[args.command] && frameId == args.frameId) {
           for (var i = 0; i < args.count; i++) { this[args.command].call(); }
         }
 
@@ -133,6 +133,11 @@ function initializeWhenEnabled() {
   document.addEventListener("blur", onBlurCapturePhase, true);
   enterInsertModeIfElementIsFocused();
 }
+
+/*
+ * Give this frame a unique id.
+ */
+frameId = Math.floor(Math.random()*999999999)
 
 /*
  * Initialization tasks that must wait for the document to be ready.
@@ -324,10 +329,10 @@ function onKeydown(event) {
         event.stopPropagation();
       }
 
-      keyPort.postMessage(keyChar);
+      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
     else if (isEscape(event)) {
-      keyPort.postMessage("<ESC>");
+      keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
     }
   }
 }
@@ -690,14 +695,8 @@ function addCssToPage(css) {
   head.appendChild(style);
 }
 
-// Prevent our content script from being run on iframes -- only allow it to run on the top level DOM "window".
-// TODO(philc): We don't want to process multiple keyhandlers etc. when embedded on a page containing IFrames.
-// This should be revisited, because sometimes we *do* want to listen inside of the currently focused iframe.
-var isIframe = (window.self != window.parent);
-if (!isIframe) {
-  initializePreDomReady();
-  window.addEventListener("DOMContentLoaded", initializeOnDomReady);
-}
+initializePreDomReady();
+window.addEventListener("DOMContentLoaded", initializeOnDomReady);
 
 window.onbeforeunload = function() {
   chrome.extension.sendRequest({ handler: "updateScrollPosition",
