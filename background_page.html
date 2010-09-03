@@ -499,19 +499,20 @@
     return {count: count, command: command};
   }
 
-  function handleKeyDown(key, port) {
+  function handleKeyDown(request, port) {
+    var key = request.keyChar;
     if (key == "<ESC>") {
       console.log("clearing keyQueue");
       keyQueue = ""
     }
     else {
       console.log("checking keyQueue: [", keyQueue + key, "]");
-      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id);
+      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id, request.frameId);
       console.log("new KeyQueue: " + keyQueue);
     }
   }
 
-  function checkKeyQueue(keysToCheck, tabId) {
+  function checkKeyQueue(keysToCheck, tabId, frameId) {
     var refreshedCompletionKeys = false;
     var splitHash = splitKeyQueue(keysToCheck);
     command = splitHash.command;
@@ -526,7 +527,7 @@
 
       if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
-        port.postMessage({ command: registryEntry.command, count: count,
+        port.postMessage({ command: registryEntry.command, count: count, frameId: frameId,
                             completionKeys: generateCompletionKeys("") });
 
         refreshedCompletionKeys = true;
