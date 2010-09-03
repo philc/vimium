@@ -264,7 +264,7 @@ function onKeyDownForKeyMark(event) {
   if (!keyChar)
     return;
   if (!isEscape(event)) {
-    keyMark(keyChar);
+    keyMark(event.shiftKey ? keyChar.toUpperCase() : keyChar);
   }
   deactivateKeyMarksMode();
   event.stopPropagation();
@@ -274,7 +274,7 @@ function onKeyDownForKeyMark(event) {
 function keyMark(keyChar) {
   var marks = keyMarks.split(/\n/);
   for(var i=0; i<marks.length; i++) {
-    var match = marks[i].match(/^([a-z])\s+(.+)$/);
+    var match = marks[i].match(/^([a-z])\s+(.+)$/i);
     if(match) {
       var key = match[1];
       var url = match[2];
