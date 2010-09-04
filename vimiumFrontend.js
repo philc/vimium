@@ -71,7 +71,7 @@ function initializePreDomReady() {
       if (isShowingHelpDialog)
         hideHelpDialog();
       else
-        showHelpDialog(request.dialogHtml);
+        showHelpDialog(request.dialogHtml, request.frameId);
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request.completionKeys);
     sendResponse({}); // Free up the resources used by this open connection.
@@ -243,9 +243,10 @@ function copyCurrentUrl() {
 function toggleViewSourceCallback(url) {
   if (url.substr(0, 12) == "view-source:")
   {
-    window.location.href = url.substr(12, url.length - 12);
+    url = url.substr(12, url.length - 12);
   }
-  else { window.location.href = "view-source:" + url; }
+  else { url = "view-source:" + url; }
+  chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
 }
 
 var passThruMode = false;
@@ -539,8 +540,8 @@ function exitFindMode() {
   HUD.hide();
 }
 
-function showHelpDialog(html) {
-  if (isShowingHelpDialog || !document.body)
+function showHelpDialog(html, fid) {
+  if (isShowingHelpDialog || !document.body || fid != frameId)
     return;
   isShowingHelpDialog = true;
   var container = document.createElement("div");
