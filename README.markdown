@@ -37,7 +37,7 @@ Navigating the current page:
     f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
     r       reload
-    gf      view source
+    gs      view source
     zi      zoom in
     zo      zoom out
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
@@ -46,6 +46,7 @@ Navigating the current page:
     i       enter insert mode -- all commands will be ignored until you hit esc to exit
     yy      copy the current url to the clipboard
     gu      go up one level in the URL hierarchy
+    gf      cycle forward to the next frame
 
 Navigating your history:
     H       go back in history
