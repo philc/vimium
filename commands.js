@@ -92,7 +92,7 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('<c-f>', 'scrollFullPageDown');
   mapKeyToCommand('<c-b>', 'scrollFullPageUp');
   mapKeyToCommand('r', 'reload');
-  mapKeyToCommand('gf', 'toggleViewSource');
+  mapKeyToCommand('gs', 'toggleViewSource');
 
   mapKeyToCommand('i', 'enterInsertMode');
 
@@ -125,6 +125,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('gn', 'activateKeyMarksModeToOpenInNewTab');
 
   mapKeyToCommand('x', 'passThru');
+
+  mapKeyToCommand('gf', 'nextFrame');
 }
 
 // Navigating the current page:
@@ -178,6 +180,7 @@ addCommand('restoreTab',          "Restore closed tab", true);
 // Enable Pass-Thru Mode
 addCommand('passThru',            'Pass-Thru Mode - Disable Vimium until ESC is pressed.');
 
+addCommand('nextFrame',           "Cycle forward to the next frame on the page", true);
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
 // be shown in the help page.
@@ -187,11 +190,11 @@ var commandGroups = {
      "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
-     "enterFindMode", "performFind", "performBackwardsFind", "activateKeyMarksMode", "activateKeyMarksModeToOpenInNewTab", "passThru"],
+     "enterFindMode", "performFind", "performBackwardsFind", "activateKeyMarksMode", "activateKeyMarksModeToOpenInNewTab", "passThru", "nextFrame"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
   misc:
     ["showHelp"]
-};
+    };
