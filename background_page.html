@@ -70,6 +70,8 @@
     openUrlInNewTab: openUrlInNewTab,
     openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
+    registerFrame: registerFrame,
+    focusFrame: focusFrame,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
   };
@@ -608,6 +610,35 @@
   function openOptionsPageInNewTab() {
     chrome.tabs.getSelected(null, function(tab) {
       chrome.tabs.create({ url: chrome.extension.getURL("options.html"), index: tab.index + 1 });
+    });
+  }
+
+  var framesForTab = {};
+
+  function registerFrame(request, sender) {
+    if(request.top)
+      framesForTab[sender.tab.id] = [];
+    framesForTab[sender.tab.id].push(request.frameId);
+  }
+
+  var focusedFrame = null;
+  function focusFrame(request, sender) {
+    focusedFrame = request.frameId;
+  }
+
+  function nextFrame(callback, frameId) {
+    chrome.tabs.getSelected(null, function(tab) {
+      //chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
+      var index;
+      var frames = framesForTab[tab.id];
+      for(index=0; index<frames.length; index++) {
+        if(frames[index] == focusedFrame) break;
+      }
+      if(index >= frames.length-1)
+        index = 0;
+      else
+        index++;
+      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[index] });
     });
   }
 
