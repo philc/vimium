@@ -303,6 +303,13 @@ function keyMark(keyChar) {
   }
 }
 
+var passThruMode = false;
+
+function passThru() {
+  passThruMode = true;
+  HUD.show("Pass-Thru Mode");
+}
+
 /**
  * Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
  * insert mode which is local state to the page. The key will be are either a single ascii letter or a
