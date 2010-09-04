@@ -46,8 +46,8 @@ Navigating the current page:
     i       enter insert mode -- all commands will be ignored until you hit esc to exit
     yy      copy the current url to the clipboard
     gu      go up one level in the URL hierarchy
-    x       enable pass-thru mode -- all commands will be ignored until you hit esc to exit
     gf      cycle forward to the next frame
+    x       enable pass-thru mode -- all commands will be ignored until you hit esc to exit
 
 Navigating your history:
     H       go back in history
