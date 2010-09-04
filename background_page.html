@@ -153,9 +153,9 @@
     returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
-  function showHelp() {
+  function showHelp(callback, frameId) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml() });
+      chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
     });
   }
 
@@ -271,9 +271,9 @@
     if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
   });
 
-  function repeatFunction(func, totalCount, currentCount) {
+  function repeatFunction(func, totalCount, currentCount, frameId) {
     if (currentCount < totalCount)
-      func(function() { repeatFunction(func, totalCount, currentCount + 1); });
+      func(function() { repeatFunction(func, totalCount, currentCount + 1, frameId); }, frameId);
   }
 
   // Returns the scroll coordinates of the given tab. Pass in a callback of the form:
@@ -523,7 +523,7 @@
 
         refreshedCompletionKeys = true;
       } else {
-        repeatFunction(this[registryEntry.command], count, 0);
+        repeatFunction(this[registryEntry.command], count, 0, frameId);
       }
 
       newKeyQueue = "";

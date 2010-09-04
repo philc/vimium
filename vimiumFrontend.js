@@ -66,7 +66,7 @@ function initializePreDomReady() {
       if (isShowingHelpDialog)
         hideHelpDialog();
       else
-        showHelpDialog(request.dialogHtml);
+        showHelpDialog(request.dialogHtml, request.frameId);
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request.completionKeys);
     sendResponse({}); // Free up the resources used by this open connection.
@@ -475,8 +475,8 @@ function exitFindMode() {
   HUD.hide();
 }
 
-function showHelpDialog(html) {
-  if (isShowingHelpDialog || !document.body)
+function showHelpDialog(html, fid) {
+  if (isShowingHelpDialog || !document.body || fid != frameId)
     return;
   isShowingHelpDialog = true;
   var container = document.createElement("div");
