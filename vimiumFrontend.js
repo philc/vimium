@@ -67,6 +67,9 @@ function initializePreDomReady() {
         hideHelpDialog();
       else
         showHelpDialog(request.dialogHtml, request.frameId);
+    else if (request.name == "focusFrame")
+      if(frameId == request.frameId)
+        focusThisFrame();
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request.completionKeys);
     sendResponse({}); // Free up the resources used by this open connection.
@@ -135,9 +138,32 @@ function initializeWhenEnabled() {
 }
 
 /*
- * Give this frame a unique id.
+ * Give this frame a unique id and register with the backend.
  */
 frameId = Math.floor(Math.random()*999999999)
+if(window.top == window.self)
+  chrome.extension.sendRequest({handler: "registerFrame", frameId: frameId, top: true});
+else
+  chrome.extension.sendRequest({handler: "registerFrame", frameId: frameId});
+
+/*
+ * The backend needs to know which frame has focus.
+ */
+window.addEventListener("focus", function(e){
+  chrome.extension.sendRequest({handler: "focusFrame", frameId: frameId});
+});
+
+/*
+ * Called from the backend in order to change frame focus.
+ */
+function focusThisFrame() {
+  window.focus();
+  if(document.body) {
+    var borderWas = document.body.style.border;
+    document.body.style.border = '1px solid red';
+    setTimeout(function(){document.body.style.border = borderWas}, 200);
+  }
+}
 
 /*
  * Initialization tasks that must wait for the document to be ready.
