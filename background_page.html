@@ -66,6 +66,7 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
+    openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
@@ -218,6 +219,15 @@
   function getCompletionKeys(request) {
     return {completionKeys: generateCompletionKeys()};
   }
+
+  /**
+    * Opens the url in the current tab.
+    */
+   function openUrlInCurrentTab(request) {
+     chrome.tabs.getSelected(null, function(tab) {
+       chrome.tabs.update(tab.id, {url: request.url});
+     });
+   }
 
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.

@@ -238,9 +238,10 @@ function copyCurrentUrl() {
 function toggleViewSourceCallback(url) {
   if (url.substr(0, 12) == "view-source:")
   {
-    window.location.href = url.substr(12, url.length - 12);
+    url = url.substr(12, url.length - 12);
   }
-  else { window.location.href = "view-source:" + url; }
+  else { url = "view-source:" + url; }
+  chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
 }
 
 /**
