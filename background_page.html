@@ -309,6 +309,17 @@
     chrome.tabs.create({}, function(tab) { callback(); });
   }
 
+  // close other tabs except the current one -- selected one
+  function closeOtherTabs(callback) {
+      chrome.tabs.getAllInWindow(null, function(tabs) {
+        for (var i =0; i < tabs.length; i++) {
+            if (!tabs[i].selected) {
+                chrome.tabs.remove(tabs[i].id, function () {});
+            }
+        }
+      });
+  }
+
   function nextTab(callback) { selectTab(callback, "next"); }
   function previousTab(callback) { selectTab(callback, "previous"); }
 
