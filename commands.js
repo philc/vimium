@@ -80,7 +80,6 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('k', 'scrollUp');
   mapKeyToCommand('h', 'scrollLeft');
   mapKeyToCommand('l', 'scrollRight');
-
   mapKeyToCommand('gg', 'scrollToTop');
   mapKeyToCommand('G', 'scrollToBottom');
   mapKeyToCommand('zH', 'scrollToLeft');
@@ -102,6 +101,8 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('zi', 'zoomIn');
   mapKeyToCommand('zo', 'zoomOut');
+
+  mapKeyToCommand('gi', 'focusFirstInput');
 
   mapKeyToCommand('f', 'activateLinkHintsMode');
   mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
@@ -145,6 +146,8 @@ addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
 
 addCommand('enterInsertMode',     'Enter insert mode');
 
+addCommand('focusFirstInput',     'Focus the first text box on the page.');
+
 addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
 addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
 
@@ -172,9 +175,11 @@ addCommand('restoreTab',          "Restore closed tab", true);
 var commandGroups = {
   pageNavigation:
     ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
-     "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
+     "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
+     "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
-     "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
+     "enterInsertMode", "focusFirstInput",
+     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
      "enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:
     ["goBack", "goForward"],

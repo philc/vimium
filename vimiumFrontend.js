@@ -198,6 +198,19 @@ function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
 function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
 
+function focusFirstInput() {
+  var xpath = '//input[@type="text" or @type="search"]';
+  var result = document.evaluate( xpath, document.documentElement, null,
+	XPathResult.FIRST_ORDERED_NODE_TYPE, null );
+
+  if ( result.singleNodeValue == null ) return;
+
+  var el = document.getElementById( result.singleNodeValue.id );
+  if ( el ) {
+    el.focus();
+  }
+}
+
 function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }
