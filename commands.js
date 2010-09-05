@@ -146,7 +146,7 @@ addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
 
 addCommand('enterInsertMode',     'Enter insert mode');
 
-addCommand('focusFirstInput',     'Focus the first text box on the page.');
+addCommand('focusFirstInput',     'Focus the first text box on the page');
 
 addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
 addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
