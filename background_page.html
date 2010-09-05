@@ -309,15 +309,43 @@
     chrome.tabs.create({}, function(tab) { callback(); });
   }
 
-  // close other tabs except the current one -- selected one
+  // closes other tabs except the current one -- selected one
   function closeOtherTabs(callback) {
       chrome.tabs.getAllInWindow(null, function(tabs) {
-        for (var i =0; i < tabs.length; i++) {
+        for (var i = 0; i < tabs.length; i++) {
             if (!tabs[i].selected) {
                 chrome.tabs.remove(tabs[i].id, function () {});
             }
         }
       });
+  }
+
+  // closes tabs on the right of the selected tab
+  function closeRightTabs(callback) {
+    chrome.tabs.getSelected(null, function(selectedTab) {
+        chrome.tabs.getAllInWindow(null, function (tabs) {
+            for (var i = 0; i < tabs.length; i++) {
+                console.log(tabs[i].index, selectedTab.index);
+                if (tabs[i].index > selectedTab.index) {
+                    chrome.tabs.remove(tabs[i].id, function () {});
+                }
+            }
+        });
+    });
+  }
+
+  // closes tabs on the left of the selected tab
+  function closeLeftTabs(callback) {
+    chrome.tabs.getSelected(null, function(selectedTab) {
+        chrome.tabs.getAllInWindow(null, function (tabs) {
+            for (var i = 0; i < tabs.length; i++) {
+                console.log(tabs[i].index, selectedTab.index);
+                if (tabs[i].index < selectedTab.index) {
+                    chrome.tabs.remove(tabs[i].id, function () {});
+                }
+            }
+        });
+    });
   }
 
   function nextTab(callback) { selectTab(callback, "next"); }

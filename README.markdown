@@ -60,6 +60,9 @@ Manipulating tabs:
     d          close current tab
     u          restore closed tab (i.e. unwind the 'd' command)
     to         close other tabs
+    tr         close tabs on the right
+    tl         close tabs on the left
+
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
 <c-[>) will clear any partial commands in the queue.

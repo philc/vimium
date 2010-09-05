@@ -121,6 +121,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('d', 'removeTab');
   mapKeyToCommand('u', 'restoreTab');
   mapKeyToCommand('to', 'closeOtherTabs');
+  mapKeyToCommand('tr', 'closeRightTabs');
+  mapKeyToCommand('tl', 'closeLeftTabs');
 
   mapKeyToCommand('go', 'activateKeyMarksMode');
   mapKeyToCommand('gn', 'activateKeyMarksModeToOpenInNewTab');
@@ -177,7 +179,9 @@ addCommand('previousTab',         'Go one tab left',   true);
 addCommand('createTab',           'Create new tab',    true);
 addCommand('removeTab',           'Close current tab', true);
 addCommand('restoreTab',          "Restore closed tab", true);
-addCommand('closeOtherTabs',    "Close Other Tabs", true);
+addCommand('closeOtherTabs',    "Close other tabs", true);
+addCommand('closeRightTabs',    "Close tabs on the right", true);
+addCommand('closeLeftTabs',    "Close tabs on the left", true);
 
 // Enable Pass-Thru Mode
 addCommand('passThru',            'Pass-Thru Mode - Disable Vimium until ESC is pressed.');
@@ -196,7 +200,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs"],
+    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", "closeRightTabs", "closeLeftTabs"],
   misc:
     ["showHelp"]
     };
