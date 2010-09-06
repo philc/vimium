@@ -309,12 +309,48 @@
     chrome.tabs.create({}, function(tab) { callback(); });
   }
 
+  // moves selected tab to the left
+  function moveTabLeft(callback) {
+      chrome.tabs.getSelected(null, function(selectedTab) {
+          chrome.tabs.getAllInWindow(null, function (tabs) {
+              if (tabs.length == 1) // only one tab
+                  return;
+
+              var newIndex;
+              if (selectedTab.index == 0)
+                  newIndex = tabs[tabs.length - 1].index + 1; // move to the end right
+              else
+                  newIndex = selectedTab.index - 1; // move to the left
+
+              chrome.tabs.move(selectedTab.id, { index: newIndex })
+          });
+      });
+  }
+
+  // moves selected tab to the right
+  function moveTabRight(callback) {
+    chrome.tabs.getSelected(null, function(selectedTab) {
+          chrome.tabs.getAllInWindow(null, function (tabs) {
+              if (tabs.length == 1) // only one tab
+                  return;
+
+              var newIndex;
+              if (selectedTab.index == tabs[tabs.length - 1].index) // is this the last tab?
+                  newIndex = 0;
+              else
+                  newIndex = selectedTab.index + 1; // move to the right
+
+              chrome.tabs.move(selectedTab.id, { index: newIndex })
+          });
+      });
+  }
+
   // closes other tabs except the current one -- selected one
   function closeOtherTabs(callback) {
       chrome.tabs.getAllInWindow(null, function(tabs) {
         for (var i = 0; i < tabs.length; i++) {
             if (!tabs[i].selected) {
-                chrome.tabs.remove(tabs[i].id, function () {});
+                chrome.tabs.remove(tabs[i].id);
             }
         }
       });
@@ -325,9 +361,8 @@
     chrome.tabs.getSelected(null, function(selectedTab) {
         chrome.tabs.getAllInWindow(null, function (tabs) {
             for (var i = 0; i < tabs.length; i++) {
-                console.log(tabs[i].index, selectedTab.index);
                 if (tabs[i].index > selectedTab.index) {
-                    chrome.tabs.remove(tabs[i].id, function () {});
+                    chrome.tabs.remove(tabs[i].id);
                 }
             }
         });
@@ -339,9 +374,8 @@
     chrome.tabs.getSelected(null, function(selectedTab) {
         chrome.tabs.getAllInWindow(null, function (tabs) {
             for (var i = 0; i < tabs.length; i++) {
-                console.log(tabs[i].index, selectedTab.index);
                 if (tabs[i].index < selectedTab.index) {
-                    chrome.tabs.remove(tabs[i].id, function () {});
+                    chrome.tabs.remove(tabs[i].id);
                 }
             }
         });
