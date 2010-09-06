@@ -234,6 +234,15 @@ function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
 function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
 
+function focusFirstInput() {
+  var xpath = '//input[@type="text" or @type="search"]';
+  var result = document.evaluate(xpath, document.documentElement, null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+  if (!result.singleNodeValue)
+    return;
+  result.singleNodeValue.focus();
+}
+
 function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }

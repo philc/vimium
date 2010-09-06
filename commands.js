@@ -80,7 +80,6 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('k', 'scrollUp');
   mapKeyToCommand('h', 'scrollLeft');
   mapKeyToCommand('l', 'scrollRight');
-
   mapKeyToCommand('gg', 'scrollToTop');
   mapKeyToCommand('G', 'scrollToBottom');
   mapKeyToCommand('zH', 'scrollToLeft');
@@ -92,7 +91,7 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('<c-f>', 'scrollFullPageDown');
   mapKeyToCommand('<c-b>', 'scrollFullPageUp');
   mapKeyToCommand('r', 'reload');
-  mapKeyToCommand('gs', 'toggleViewSource');
+  mapKeyToCommand('gf', 'toggleViewSource');
 
   mapKeyToCommand('i', 'enterInsertMode');
 
@@ -102,6 +101,8 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('zi', 'zoomIn');
   mapKeyToCommand('zo', 'zoomOut');
+
+  mapKeyToCommand('gi', 'focusFirstInput');
 
   mapKeyToCommand('f', 'activateLinkHintsMode');
   mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
@@ -154,6 +155,8 @@ addCommand('zoomOut',             'Zoom out');
 addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
 
 addCommand('enterInsertMode',     'Enter insert mode');
+
+addCommand('focusFirstInput',     'Focus the first text box on the page');
 
 addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
 addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
