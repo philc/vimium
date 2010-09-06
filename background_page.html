@@ -311,75 +311,83 @@
 
   // moves selected tab to the left
   function moveTabLeft(callback) {
-      chrome.tabs.getSelected(null, function(selectedTab) {
-          chrome.tabs.getAllInWindow(null, function (tabs) {
-              if (tabs.length == 1) // only one tab
-                  return;
-
-              var newIndex;
-              if (selectedTab.index == 0)
-                  newIndex = tabs[tabs.length - 1].index + 1; // move to the end right
-              else
-                  newIndex = selectedTab.index - 1; // move to the left
-
-              chrome.tabs.move(selectedTab.id, { index: newIndex })
-          });
-      });
+      moveTab(callback, "left");
   }
 
   // moves selected tab to the right
   function moveTabRight(callback) {
+    moveTab(callback, "right");
+  }
+
+  /**
+   * Moves the selected tab
+   * @param position : values are "left" or "right"
+   **/
+  function moveTab(callback, position) {
     chrome.tabs.getSelected(null, function(selectedTab) {
           chrome.tabs.getAllInWindow(null, function (tabs) {
               if (tabs.length == 1) // only one tab
                   return;
 
               var newIndex;
-              if (selectedTab.index == tabs[tabs.length - 1].index) // is this the last tab?
-                  newIndex = 0;
-              else
-                  newIndex = selectedTab.index + 1; // move to the right
+              if (position == "right") {
+                  if (selectedTab.index == tabs[tabs.length - 1].index) // is this the last tab?
+                      newIndex = 0;
+                  else
+                      newIndex = selectedTab.index + 1; // move to the right
+              } else {
+                  if (selectedTab.index == 0)
+                      newIndex = tabs[tabs.length - 1].index + 1; // move to the end right
+                  else
+                      newIndex = selectedTab.index - 1; // move to the left
+              }
 
               chrome.tabs.move(selectedTab.id, { index: newIndex })
           });
       });
   }
 
+  /**
+  * closes tabs based on direction
+  * @param direction : values are "all", "right", "left"
+  * i.e close tabs "all" tabs, close tabs on the "right/left"
+  */
+  function closeTabs(callback, direction) {
+    chrome.tabs.getSelected(null, function(selectedTab) {
+        chrome.tabs.getAllInWindow(null, function (tabs) {
+            var condition = null;
+            
+            for (var i = 0; i < tabs.length; i++) {
+                if (direction == "right") {
+                    condition = tabs[i].index > selectedTab.index;
+                } else if (direction == "left") {
+                    condition = tabs[i].index < selectedTab.index;
+                } else if (direction == "all") {
+                    condition = tabs[i].index != selectedTab.index;
+                }
+                
+                if (condition) {
+                    chrome.tabs.remove(tabs[i].id);
+                }
+            }
+        });
+    });
+  }
+
+
   // closes other tabs except the current one -- selected one
   function closeOtherTabs(callback) {
-      chrome.tabs.getAllInWindow(null, function(tabs) {
-        for (var i = 0; i < tabs.length; i++) {
-            if (!tabs[i].selected) {
-                chrome.tabs.remove(tabs[i].id);
-            }
-        }
-      });
+    closeTabs(callback, "all");
   }
 
   // closes tabs on the right of the selected tab
   function closeRightTabs(callback) {
-    chrome.tabs.getSelected(null, function(selectedTab) {
-        chrome.tabs.getAllInWindow(null, function (tabs) {
-            for (var i = 0; i < tabs.length; i++) {
-                if (tabs[i].index > selectedTab.index) {
-                    chrome.tabs.remove(tabs[i].id);
-                }
-            }
-        });
-    });
+    closeTabs(callback, "right");
   }
 
   // closes tabs on the left of the selected tab
   function closeLeftTabs(callback) {
-    chrome.tabs.getSelected(null, function(selectedTab) {
-        chrome.tabs.getAllInWindow(null, function (tabs) {
-            for (var i = 0; i < tabs.length; i++) {
-                if (tabs[i].index < selectedTab.index) {
-                    chrome.tabs.remove(tabs[i].id);
-                }
-            }
-        });
-    });
+    closeTabs(callback, "left");
   }
 
   function nextTab(callback) { selectTab(callback, "next"); }
