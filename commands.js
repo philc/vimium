@@ -124,8 +124,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('to', 'closeOtherTabs');
   mapKeyToCommand('tr', 'closeRightTabs');
   mapKeyToCommand('tl', 'closeLeftTabs');
-  mapKeyToCommand('td', 'moveTabRight');
-  mapKeyToCommand('ta', 'moveTabLeft');
+  mapKeyToCommand('te', 'moveTabRight');
+  mapKeyToCommand('tq', 'moveTabLeft');
 
   mapKeyToCommand('go', 'activateKeyMarksMode');
   mapKeyToCommand('gn', 'activateKeyMarksModeToOpenInNewTab');
