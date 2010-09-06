@@ -15,6 +15,10 @@
   var validFirstKeys = {};
   var singleKeyCommands = [];
 
+  // used to track which tab is selected
+  var lastSelectedTabId = null; 
+  var selectedTabId = null; 
+
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
   // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
   var namedKeyRegex = /^(<[amc-].|(?:[amc]-)?[a-z0-9]{2,5}>)(.*)$/;
@@ -289,6 +293,8 @@
 
   chrome.tabs.onSelectionChanged.addListener(function(tabId, selectionInfo) {
     if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
+    lastSelectedTabId = selectedTabId;
+    selectedTabId = tabId;
   });
 
   function repeatFunction(func, totalCount, currentCount, frameId) {
@@ -323,10 +329,16 @@
                     if (newSelectedTab.index != 0) {
                         chrome.tabs.remove(newSelectedTab.id);
                     }
+                    selectionChangedHandlers.push(callback);
                 });
             });
           });
       });
+  }
+
+  function goToLastSelectedTab(callback) {
+    chrome.tabs.update(lastSelectedTabId, { selected: true });
+    selectionChangedHandlers.push(callback);
   }
 
   // moves selected tab to the left
@@ -767,6 +779,10 @@
           });
         }
       }
+    });
+
+    chrome.tabs.getSelected(null, function (selectedTab) {
+      selectedTabId = selectedTab.id;
     });
   }
   init();

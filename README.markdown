@@ -64,7 +64,8 @@ Manipulating tabs:
     tl         close tabs on the left
     te        moves a tab to the right
     tq        moves a tab to the left
-
+    td        detaches a tab into a new window
+    tf         switches to last focused tab
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
 <c-[>) will clear any partial commands in the queue.
