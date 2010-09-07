@@ -56,15 +56,15 @@ Navigating your history:
 Manipulating tabs:
     J, gT      go one tab left
     K, gt      go one tab right
-    tt          create tab
+    tt         create tab
     d          close current tab
     u          restore closed tab (i.e. unwind the 'd' command)
     to         close other tabs
     tr         close tabs on the right
     tl         close tabs on the left
-    te        moves a tab to the right
-    tq        moves a tab to the left
-    td        detaches a tab into a new window
+    te         moves a tab to the right
+    tq         moves a tab to the left
+    td         detaches a tab into a new window
     tf         switches to last focused tab
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
