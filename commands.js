@@ -129,6 +129,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('td', 'detachTab');
   mapKeyToCommand('tf', 'goToLastSelectedTab');
 
+
+  mapKeyToCommand('O', 'goToOptionsPage');
   mapKeyToCommand('go', 'activateKeyMarksMode');
   mapKeyToCommand('gn', 'activateKeyMarksModeToOpenInNewTab');
 
@@ -198,6 +200,8 @@ addCommand('goToLastSelectedTab',    "Go to last focused tab", true);
 addCommand('passThru',            'Pass-Thru Mode - Disable Vimium until ESC is pressed.');
 
 addCommand('nextFrame',           "Cycle forward to the next frame on the page", true);
+addCommand('goToOptionsPage',  "Go to vimium options page", true);
+
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
 // be shown in the help page.
@@ -213,5 +217,5 @@ var commandGroups = {
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
   misc:
-    ["showHelp"]
+    ["goToOptionsPage", "showHelp"]
     };

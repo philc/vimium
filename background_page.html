@@ -453,6 +453,10 @@
     });
   }
 
+  function goToOptionsPage(callback) {
+      chrome.tabs.create({url: 'options.html'});
+  }
+
   function updateOpenTabs(tab) {
     openTabs[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId };
   }
