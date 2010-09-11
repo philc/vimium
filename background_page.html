@@ -307,7 +307,7 @@
   function getScrollPosition(tab, callback) {
     getScrollPositionHandlers[tab.id] = callback;
     var scrollPort = chrome.tabs.connect(tab.id, { name: "getScrollPosition" });
-    scrollPort.postMessage({currentTab: tab});
+    scrollfssage({currentTab: tab});
   }
 
   // Start action functions
@@ -655,8 +655,12 @@
 
       if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
-        port.postMessage({ command: registryEntry.command, count: count, frameId: frameId,
-                            completionKeys: generateCompletionKeys("") });
+        port.postMessage({ command: registryEntry.command,
+                                       count: count,
+                                       frameId: frameId,
+                                       passCountToFunction: registryEntry.passCountToFunction,
+                                       completionKeys: generateCompletionKeys("")
+                                   });
 
         refreshedCompletionKeys = true;
       } else {

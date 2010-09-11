@@ -84,7 +84,12 @@ function initializePreDomReady() {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
         if (this[args.command] && frameId == args.frameId) {
-          for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+            if (args.passCountToFunction) {
+                this[args.command].call(null, args.count);
+            }
+            else {
+              for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+            }
         }
 
         refreshCompletionKeys(args.completionKeys);
