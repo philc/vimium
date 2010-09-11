@@ -307,7 +307,7 @@
   function getScrollPosition(tab, callback) {
     getScrollPositionHandlers[tab.id] = callback;
     var scrollPort = chrome.tabs.connect(tab.id, { name: "getScrollPosition" });
-    scrollfssage({currentTab: tab});
+    scrollPort.postMessage({currentTab: tab});
   }
 
   // Start action functions
