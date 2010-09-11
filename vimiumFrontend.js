@@ -76,7 +76,11 @@ function initializePreDomReady() {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
         if (this[args.command]) {
-          for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+          if (args.passCountToFunction) {
+            this[args.command].call(null, args.count);
+          } else {
+            for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+          }
         }
 
         refreshCompletionKeys(args.completionKeys);
@@ -198,13 +202,25 @@ function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
 function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
 
-function focusFirstInput() {
+function focusInput(count) {
   var xpath = '//input[@type="text" or @type="search"]';
-  var result = document.evaluate(xpath, document.documentElement, null,
-      XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-  if (!result.singleNodeValue)
-    return;
-  result.singleNodeValue.focus();
+  var results = document.evaluate(xpath, document.documentElement, null,
+                                  XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+
+  var lastInputBox;
+  var i = 0;
+
+  while (i < count)
+  {
+    i += 1;
+
+    var currentInputBox = results.iterateNext();
+    if (!currentInputBox) { break; }
+
+    lastInputBox = currentInputBox;
+  }
+
+  if (lastInputBox) { lastInputBox.focus(); }
 }
 
 function reload() { window.location.reload(); }

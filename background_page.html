@@ -507,8 +507,11 @@
 
       if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
-        port.postMessage({ command: registryEntry.command, count: count,
-                            completionKeys: generateCompletionKeys("") });
+        port.postMessage({ command: registryEntry.command,
+                           count: count,
+                           passCountToFunction: registryEntry.passCountToFunction,
+                           completionKeys: generateCompletionKeys("")
+                         });
 
         refreshedCompletionKeys = true;
       } else {
