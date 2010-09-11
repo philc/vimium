@@ -92,7 +92,8 @@ Release Notes
 1.20 (Unreleased)
 
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
--  Two new commands to scroll to the left and right edges of the page bound to zH and zL respectively.
+-  Two new commands (`zH` and `zL`) to scroll to the left and right edges of the page.
+-  A new command (`gi`) to focus the first (or n-th) text input box on the page.
 -  Bug fixes.
 
 1.19 (06/29/2010)
