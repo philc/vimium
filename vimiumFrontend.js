@@ -210,8 +210,7 @@ function focusInput(count) {
   var lastInputBox;
   var i = 0;
 
-  while (i < count)
-  {
+  while (i < count) {
     i += 1;
 
     var currentInputBox = results.iterateNext();
