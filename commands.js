@@ -72,6 +72,17 @@ function parseCustomKeyMappings(customKeyMappings) {
       console.log("Unmapping", key);
       unmapKey(key);
     }
+    else if (lineCommand == "exclude") {
+      if (localStorage["excludedUrls"] === undefined)
+        localStorage["excludedUrls"] = "";
+      
+      var key = split_line[1];
+
+      if (localStorage["excludedUrls"].indexOf(key) < 0) {
+        console.log("exculding", key, localStorage["excludedUrls"]);
+        localStorage["excludedUrls"] += key + "\n";
+      }
+    }    
     else if (lineCommand == "unmapAll") {
       keyToCommandRegistry = {};
     }
@@ -97,6 +108,7 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('<c-f>', 'scrollFullPageDown');
   mapKeyToCommand('<c-b>', 'scrollFullPageUp');
   mapKeyToCommand('r', 'reload');
+
   mapKeyToCommand('gf', 'toggleViewSource');
 
   mapKeyToCommand('i', 'enterInsertMode');
@@ -175,6 +187,9 @@ addCommand('createTab',           'Create new tab',    true);
 addCommand('removeTab',           'Close current tab', true);
 addCommand('restoreTab',          "Restore closed tab", true);
 
+// Plugins commands
+addCommand("runInstapaper",       'Add to Instapaper');
+addCommand("runDelibar",          'Bookmark with Delibar');
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
 // be shown in the help page.
@@ -192,5 +207,7 @@ var commandGroups = {
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
   misc:
-    ["showHelp"]
+    ["showHelp"],
+  plugins:
+    ["runInstapaper", "runDelibar"]
 };

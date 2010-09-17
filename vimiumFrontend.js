@@ -517,7 +517,8 @@ function hideHelpDialog(clickEvent) {
   var helpDialog = document.getElementById("vimiumHelpDialogContainer");
   if (helpDialog)
     helpDialog.parentNode.removeChild(helpDialog);
-  clickEvent.preventDefault();
+  if (clickEvent)
+      clickEvent.preventDefault();
 }
 
 /*

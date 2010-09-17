@@ -1,5 +1,5 @@
 {
-  "name": "Vimium",
+  "name": "Vimium Extend",
   "version": "1.19",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
   "icons": {  "16": "icons/icon16.png",
@@ -8,7 +8,7 @@
   "background_page": "background_page.html",
   "options_page": "options.html",
   "permissions": [
-    "tabs"
+    "tabs", "http://github.com/*"
   ],
   "content_scripts": [
     {
@@ -16,7 +16,9 @@
       "js": ["lib/keyboardUtils.js",
              "lib/clipboard.js",
              "linkHints.js",
-             "vimiumFrontend.js"
+             "vimiumFrontend.js",
+             "plugins/delibar.js",
+             "plugins/instapaper.js"
             ],
       "run_at": "document_start"
     }

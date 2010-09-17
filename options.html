@@ -35,11 +35,11 @@
         min-height:100px;
       }
       textarea#userDefinedLinkHintCss {
-        width:342px;
+        width:490px;
         min-height:100px;
       }
       textarea#keyMappings {
-        width:342px;
+        width:490px;
         min-height:100px;
       }
       #status {
@@ -80,7 +80,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-    "userDefinedLinkHintCss", "keyMappings"];
+    "userDefinedLinkHintCss", "keyMappings", "vimiumRcFile"];
 
   var postSaveHooks = {
     "keyMappings": function (value) {
@@ -212,28 +212,39 @@
         </td>
       </tr>
       <tr class="advancedOption">
-        <td class="caption">Key mappings</td>
-        <td id="mappingsHelp" verticalAlign="top">
-          <div class="help">
-            <div class="example">
-              <!-- TODO(ilya/philc): Expand this and style it better. -->
-              Enter commands to remap your keys. Available commands:<br/>
-              <div style="margin-left:10px;margin-top:5px">
-                map j scrollDown<br/>
-                unmap j<br/>
-                unmapAll<br/>
-                " this is a comment<br/>
-                # this is also a comment<br/>
-              </div>
-              <a href="#" id="showCommands">Show available commands.</a>
+          <td class="caption" colspan="3">
+            Key mappings<br/>
+            <div class="help">
+                <div class="example">
+                    <!-- TODO(ilya/philc): Expand this and style it better. -->
+                    Enter commands to remap your keys. Available commands:<br/>
+                    <div style="margin-left:10px;margin-top:5px">
+                        map j scrollDown<br/>
+                        unmap j<br/>
+                        unmapAll<br/>
+                        " this is a comment<br/>
+                        # this is also a comment<br/>
+                    </div>
+                    <a href="#" id="showCommands">Show available commands.</a>
+                </div>
             </div>
-          </div>
           <textarea id="keyMappings" type="text"></textarea>
         </td>
       </tr>
       <tr class="advancedOption">
-        <td class="caption">Characters used<br/> for link hints</td>
-        <td verticalAlign="top">
+        <td class="caption" colspan="3">
+            The link to your .vimiumrc on github, if you have one<br />
+            <div class="help">
+              <div class="example">
+                link to the raw file, like this:<br/>
+                http://github.com/walm/dotfiles/vimiumrc
+              </div>
+            </div>
+            <input id="vimiumRcFile" type="text" style="width:490px" />
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Characters used for link hints
             <div class="help">
               <div class="example">
                 The characters placed next to each link after typing "F" to enter link hinting mode.
@@ -243,8 +254,7 @@
         </td>
       </tr>
       <tr class="advancedOption">
-        <td class="caption">CSS for link hints</td>
-        <td verticalAlign="top">
+        <td class="caption" colspan="3">CSS for link hints<br />
           <div class="help">
             <div class="example">
               The CSS used to style the characters next to each link hint.<br/><br/>

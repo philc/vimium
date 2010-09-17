@@ -588,6 +588,20 @@
   function init() {
     clearKeyMappingsAndSetDefaults();
 
+    // from llimllib fork @ http://github.com/llimllib/vimium
+    if (localStorage["vimiumRcFile"]) {
+        var xhr = new XMLHttpRequest();
+        console.log("requesting vimiumrc file: ", localStorage["vimiumRcFile"]);
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                //console.log("result: ", xhr.status, "|", xhr.responseText);
+                parseCustomKeyMappings(xhr.responseText);
+            }
+        }
+        xhr.open("GET", localStorage["vimiumRcFile"], true);
+        xhr.send();
+    }
+
     if (localStorage["keyMappings"])
       parseCustomKeyMappings(localStorage["keyMappings"]);
 
