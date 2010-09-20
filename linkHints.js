@@ -206,7 +206,9 @@ function updateLinkHints() {
         setTimeout(function() { simulateClick(matchedLink); }, 400);
       else
         simulateClick(matchedLink);
-      matchedLink.focus();
+      if (matchedLink.getAttribute("type") != 'checkbox') {
+            matchedLink.focus();
+      }
     }
     deactivateLinkHintsMode();
   }
