@@ -223,13 +223,6 @@ function updateLinkHints() {
         matchedLink.focus();
         deactivateLinkHintsMode();
       }
-      /*if (!shouldOpenLinkHintWithQueue) {
-        matchedLink.focus();
-        deactivateLinkHintsMode();
-      } else {
-        console.log("Reseting Hint Link Mode");
-        resetLinkHintsMode();
-      }*/
     }
   }
 }
