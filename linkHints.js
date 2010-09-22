@@ -151,9 +151,10 @@ function isVisible(element, clientRect) {
 }
 
 function onKeyDownInLinkHintsMode(event) {
+  console.log("Key Down");
   if (event.keyCode == keyCodes.shiftKey && !openLinkModeToggle) {
     // Toggle whether to open link in a new or current tab.
-    setOpenLinkMode(!shouldOpenLinkHintInNewTab);
+    setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
     openLinkModeToggle = true; 
   }
 
@@ -185,7 +186,7 @@ function onKeyDownInLinkHintsMode(event) {
 function onKeyUpInLinkHintsMode(event) {
   if (event.keyCode == keyCodes.shiftKey && openLinkModeToggle) {
     // Revert toggle on whether to open link in new or current tab. 
-    setOpenLinkMode(!shouldOpenLinkHintInNewTab);
+    setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
     openLinkModeToggle = false; 
   }
   event.stopPropagation();
@@ -210,17 +211,25 @@ function updateLinkHints() {
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
       // we want to give the user some feedback depicting which link they've selected by focusing it.
-      if (!shouldOpenLinkHintInNewTab)
-        setTimeout(function() { simulateClick(matchedLink); }, 400);
-      else
+      if (shouldOpenLinkHintWithQueue) {
         simulateClick(matchedLink);
-      if (!shouldOpenLinkHintWithQueue) {
+        resetLinkHintsMode();
+      } else if (shouldOpenLinkHintInNewTab) {
+        simulateClick(matchedLink);
+        matchedLink.focus();
+        deactivateLinkHintsMode();
+      } else {
+        setTimeout(function() { simulateClick(matchedLink); }, 400);
+        matchedLink.focus();
+        deactivateLinkHintsMode();
+      }
+      /*if (!shouldOpenLinkHintWithQueue) {
         matchedLink.focus();
         deactivateLinkHintsMode();
       } else {
         console.log("Reseting Hint Link Mode");
         resetLinkHintsMode();
-      }
+      }*/
     }
   }
 }
@@ -303,7 +312,8 @@ function deactivateLinkHintsMode() {
 }
 
 function resetLinkHintsMode() {
-  hintKeystrokeQueue = [];
+  deactivateLinkHintsMode();
+  activeteLinkHintsModeWithQueue();
 }
 
 /*
