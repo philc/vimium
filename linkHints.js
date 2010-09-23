@@ -34,7 +34,7 @@ var clickableElementsXPath = (function() {
 })();
 
 function isNarrowMode() {
-  return true;
+  return settings.narrowLinkHints == "true";
 }
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
