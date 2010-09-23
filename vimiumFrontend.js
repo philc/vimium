@@ -5,7 +5,7 @@
  * commands by connectiong to a port named "domReady".
  */
 var settings = {};
-var settingsToLoad = ["scrollStepSize", "linkHintCharacters"];
+var settingsToLoad = ["scrollStepSize", "linkHintCharacters", "narrowLinkHints"];
 
 var getCurrentUrlHandlers = []; // function(url)
 

@@ -80,7 +80,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-    "userDefinedLinkHintCss", "keyMappings"];
+    "userDefinedLinkHintCss", "keyMappings", "narrowLinkHints"];
 
   var postSaveHooks = {
     "keyMappings": function (value) {
@@ -95,6 +95,7 @@
     populateOptions();
     for (var i = 0; i < editableFields.length; i++)
       $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
+    $("narrowLinkHints").addEventListener("click", onOptionKeyup, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
     $("showCommands").addEventListener("click", function () {
       showDialog("vimiumCommandListingContainer",
@@ -103,7 +104,8 @@
   }
 
   function onOptionKeyup(event) {
-    if (event.target.getAttribute("savedValue") != event.target.value)
+    var isCheckbox = event.target.getAttribute("type") == "checkbox";
+    if (isCheckbox || event.target.getAttribute("savedValue") != event.target.value)
       enableSaveButton();
   }
 
@@ -115,15 +117,21 @@
     // the freedom to change the defaults in the future.
     for (var i = 0; i < editableFields.length; i++) {
       var fieldName = editableFields[i];
-      var fieldValue = $(fieldName).value.trim();
+      var field = $(fieldName);
+      var fieldValue = field.value.trim();
       var defaultFieldValue = (defaultSettings[fieldName] != null) ?
         defaultSettings[fieldName].toString() : "";
+
+      if (field.getAttribute("type") == "checkbox")
+        fieldValue = field.checked ? "true" : "false";
+
       if (fieldValue == defaultFieldValue)
         delete localStorage[fieldName];
       else
         localStorage[fieldName] = fieldValue;
-      $(fieldName).value = fieldValue;
-      $(fieldName).setAttribute("savedValue", fieldValue);
+
+      field.value = fieldValue;
+      field.setAttribute("savedValue", fieldValue);
 
       if (postSaveHooks[fieldName]) { postSaveHooks[fieldName](fieldValue); }
     }
@@ -133,8 +141,17 @@
   // Restores select box state to saved value from localStorage.
   function populateOptions() {
     for (var i = 0; i < editableFields.length; i++) {
-      $(editableFields[i]).value = localStorage[editableFields[i]] || defaultSettings[editableFields[i]] || "";
-      $(editableFields[i]).setAttribute("savedValue", $(editableFields[i]).value);
+      var val = localStorage[editableFields[i]] || defaultSettings[editableFields[i]] || "";
+      var field = $(editableFields[i]);
+
+      // if a true or false is stored, assume we're working with a checkbox
+      if (val == "true")
+        field.checked = true;
+      if (val == "false")
+        field.checked = false;
+
+      field.value = val;
+      field.setAttribute("savedValue", field.value);
     }
   }
 
@@ -253,6 +270,18 @@
             </div>
           </div>
           <textarea id="userDefinedLinkHintCss" type="text"></textarea>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Narrow link hints</td>
+        <td verticalAlign="top">
+          <div class="help">
+            <div class="example">
+              Typing in link hints mode will filter link hints by the link text.<br/><br/>
+              Note: You <em>must</em> use numeric link hint characters in this mode
+            </div>
+          </div>
+          <input id="narrowLinkHints" type="checkbox"/>
         </td>
       </tr>
     </table>
