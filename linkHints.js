@@ -257,7 +257,7 @@ function highlightLinkMatches(searchString) {
 
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
-    var matchedLink = linkMarker.getAttribute("linkText").indexOf(linkSearchString) >= 0;
+    var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
     var matchedHintStart = linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
 
     // if we're in narrow mode, make sure to designate a hint match only when 
