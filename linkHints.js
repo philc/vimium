@@ -48,7 +48,9 @@ function activateLinkHintsMode(openInNewTab, withQueue) {
   document.addEventListener("keyup", onKeyUpInLinkHintsMode, true);
 }
 
-function setOpenLinkMode(shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue) {
+function setOpenLinkMode(openInNewTab, withQueue) {
+  shouldOpenLinkHintInNewTab = openInNewTab;
+  shouldOpenLinkHintWithQueue = withQueue;
   if (shouldOpenLinkHintWithQueue) {
     HUD.show("Open multiple links in a new tab");
   } else {
@@ -153,7 +155,7 @@ function onKeyDownInLinkHintsMode(event) {
   if (event.keyCode == keyCodes.shiftKey && !openLinkModeToggle) {
     // Toggle whether to open link in a new or current tab.
     setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
-    openLinkModeToggle = true; 
+    openLinkModeToggle = true;
   }
 
   var keyChar = getKeyChar(event);
@@ -185,7 +187,7 @@ function onKeyUpInLinkHintsMode(event) {
   if (event.keyCode == keyCodes.shiftKey && openLinkModeToggle) {
     // Revert toggle on whether to open link in new or current tab. 
     setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
-    openLinkModeToggle = false; 
+    openLinkModeToggle = false;
   }
   event.stopPropagation();
   event.preventDefault();
