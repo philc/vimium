@@ -81,132 +81,135 @@ function parseCustomKeyMappings(customKeyMappings) {
 function clearKeyMappingsAndSetDefaults() {
   keyToCommandRegistry = {};
 
-  mapKeyToCommand('?', 'showHelp');
-  mapKeyToCommand('j', 'scrollDown');
-  mapKeyToCommand('k', 'scrollUp');
-  mapKeyToCommand('h', 'scrollLeft');
-  mapKeyToCommand('l', 'scrollRight');
-  mapKeyToCommand('gg', 'scrollToTop');
-  mapKeyToCommand('G', 'scrollToBottom');
-  mapKeyToCommand('zH', 'scrollToLeft');
-  mapKeyToCommand('zL', 'scrollToRight');
-  mapKeyToCommand('<c-e>', 'scrollDown');
-  mapKeyToCommand('<c-y>', 'scrollUp');
-  mapKeyToCommand('<c-d>', 'scrollPageDown');
-  mapKeyToCommand('<c-u>', 'scrollPageUp');
-  mapKeyToCommand('<c-f>', 'scrollFullPageDown');
-  mapKeyToCommand('<c-b>', 'scrollFullPageUp');
-  mapKeyToCommand('r', 'reload');
-  mapKeyToCommand('gf', 'toggleViewSource');
+  mapKeyToCommand('?',   'showHelp');
+  mapKeyToCommand('j',   'scrollDown');
+  mapKeyToCommand('k',   'scrollUp');
+  mapKeyToCommand('h',   'scrollLeft');
+  mapKeyToCommand('l',   'scrollRight');
+  mapKeyToCommand('gg',  'scrollToTop');
+  mapKeyToCommand('G',   'scrollToBottom');
+  mapKeyToCommand('zH',  'scrollToLeft');
+  mapKeyToCommand('zL',  'scrollToRight');
+  mapKeyToCommand('<c-e>','scrollDown');
+  mapKeyToCommand('<c-y>','scrollUp');
+  mapKeyToCommand('<c-d>','scrollPageDown');
+  mapKeyToCommand('<c-u>','scrollPageUp');
+  mapKeyToCommand('<c-f>','scrollFullPageDown');
+  mapKeyToCommand('<c-b>','scrollFullPageUp');
+  mapKeyToCommand('r',   'reload');
+  mapKeyToCommand('gf',  'toggleViewSource');
 
-  mapKeyToCommand('i', 'enterInsertMode');
+  mapKeyToCommand('i',   'enterInsertMode');
 
-  mapKeyToCommand('H', 'goBack');
-  mapKeyToCommand('L', 'goForward');
-  mapKeyToCommand('gu', 'goUp');
+  mapKeyToCommand('H',   'goBack');
+  mapKeyToCommand('L',   'goForward');
+  mapKeyToCommand('gu',  'goUp');
 
-  mapKeyToCommand('zi', 'zoomIn');
-  mapKeyToCommand('zo', 'zoomOut');
+  mapKeyToCommand('zi',  'zoomIn');
+  mapKeyToCommand('zo',  'zoomOut');
 
-  mapKeyToCommand('gi', 'focusInput');
+  mapKeyToCommand('gi',  'focusInput');
 
-  mapKeyToCommand('f', 'activateLinkHintsMode');
-  mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
+  mapKeyToCommand('f',   'activateLinkHintsMode');
+  mapKeyToCommand('F',   'activateLinkHintsModeToOpenInNewTab');
 
-  mapKeyToCommand('/', 'enterFindMode');
-  mapKeyToCommand('n', 'performFind');
-  mapKeyToCommand('N', 'performBackwardsFind');
+  mapKeyToCommand('/',   'enterFindMode');
+  mapKeyToCommand('n',   'performFind');
+  mapKeyToCommand('N',   'performBackwardsFind');
 
-  mapKeyToCommand('yy', 'copyCurrentUrl');
+  mapKeyToCommand('yy',  'copyCurrentUrl');
 
-  mapKeyToCommand('K', 'nextTab');
-  mapKeyToCommand('J', 'previousTab');
-  mapKeyToCommand('gt', 'nextTab');
-  mapKeyToCommand('gT', 'previousTab');
+  mapKeyToCommand('K',   'nextTab');
+  mapKeyToCommand('J',   'previousTab');
+  mapKeyToCommand('gt',  'nextTab');
+  mapKeyToCommand('gT',  'previousTab');
 
-  mapKeyToCommand('tt', 'createTab');
-  mapKeyToCommand('d', 'removeTab');
-  mapKeyToCommand('u', 'restoreTab');
-  mapKeyToCommand('to', 'closeOtherTabs');
-  mapKeyToCommand('tr', 'closeRightTabs');
-  mapKeyToCommand('tl', 'closeLeftTabs');
-  mapKeyToCommand('te', 'moveTabRight');
-  mapKeyToCommand('tq', 'moveTabLeft');
-  mapKeyToCommand('td', 'detachTab');
-  mapKeyToCommand('tf', 'goToLastSelectedTab');
+  mapKeyToCommand('tt',  'createTab');
+  mapKeyToCommand('d',   'removeTab');
+  mapKeyToCommand('u',   'restoreTab');
+  mapKeyToCommand('to',  'closeOtherTabs');
+  mapKeyToCommand('tr',  'closeRightTabs');
+  mapKeyToCommand('tl',  'closeLeftTabs');
+  mapKeyToCommand('te',  'moveTabRight');
+  mapKeyToCommand('tq',  'moveTabLeft');
+  mapKeyToCommand('td',  'detachTab');
+  mapKeyToCommand('tf',  'goToLastSelectedTab');
 
 
-  mapKeyToCommand('O', 'goToOptionsPage');
-  mapKeyToCommand('go', 'activateKeyMarksMode');
-  mapKeyToCommand('gn', 'activateKeyMarksModeToOpenInNewTab');
+  mapKeyToCommand('O',   'goToOptionsPage');
+  mapKeyToCommand('go',  'activateKeyMarksMode');
+  mapKeyToCommand('gn',  'activateKeyMarksModeToOpenInNewTab');
 
-  mapKeyToCommand('x', 'passThru');
+  mapKeyToCommand('x',   'passThru');
 
-  mapKeyToCommand('gf', 'nextFrame');
+  mapKeyToCommand('gf',  'nextFrame');
+
 }
 
 // Navigating the current page:
-addCommand('showHelp',            'Show help',  true);
-addCommand('scrollDown',          'Scroll down');
-addCommand('scrollUp',            'Scroll up');
-addCommand('scrollLeft',          'Scroll left');
-addCommand('scrollRight',         'Scroll right');
-addCommand('scrollToTop',         'Scroll to the top of the page');
-addCommand('scrollToBottom',      'Scroll to the bottom of the page');
-addCommand('scrollToLeft',        'Scroll to the left of the page');
-addCommand('scrollToRight',       'Scroll to the right of the page');
-addCommand('scrollPageDown',      'Scroll a page down');
-addCommand('scrollPageUp',        'Scroll a page up');
-addCommand('scrollFullPageDown',  'Scroll a full page down');
-addCommand('scrollFullPageUp',    'Scroll a full page up');
+addCommand('showHelp',                          'Show help',  true);
+addCommand('scrollDown',                        'Scroll down');
+addCommand('scrollUp',                          'Scroll up');
+addCommand('scrollLeft',                        'Scroll left');
+addCommand('scrollRight',                       'Scroll right');
+addCommand('scrollToTop',                       'Scroll to the top of the page');
+addCommand('scrollToBottom',                    'Scroll to the bottom of the page');
+addCommand('scrollToLeft',                      'Scroll to the left of the page');
+addCommand('scrollToRight',                     'Scroll to the right of the page');
+addCommand('scrollPageDown',                    'Scroll a page down');
+addCommand('scrollPageUp',                      'Scroll a page up');
+addCommand('scrollFullPageDown',                'Scroll a full page down');
+addCommand('scrollFullPageUp',                  'Scroll a full page up');
 
-addCommand('reload',              'Reload the page');
-addCommand('toggleViewSource',    'View page source');
-addCommand('zoomIn',              'Zoom in');
-addCommand('zoomOut',             'Zoom out');
-addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
+addCommand('reload',                            'Reload the page');
+addCommand('toggleViewSource',                  'View page source');
+addCommand('zoomIn',                            'Zoom in');
+addCommand('zoomOut',                           'Zoom out');
+addCommand('copyCurrentUrl',                    'Copy the current URL to the clipboard');
 
-addCommand('enterInsertMode',     'Enter insert mode');
+addCommand('enterInsertMode',                   'Enter insert mode');
 
-addCommand('focusInput',          'Focus the first (or n-th) text box on the page', false, true);
+addCommand('focusInput',                        'Focus the first (or n-th) text box on the page', false, true);
 
-addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
-addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
+addCommand('activateLinkHintsMode',             'Enter link hints mode to open links in current tab');
+addCommand('activateLinkHintsModeToOpenInNewTab','Enter link hints mode to open links in new tab');
 
-addCommand('enterFindMode',        'Enter find mode');
-addCommand('performFind',          'Cycle forward to the next find match');
-addCommand('performBackwardsFind', 'Cycle backward to the previous find match');
+addCommand('enterFindMode',                     'Enter find mode');
+addCommand('performFind',                       'Cycle forward to the next find match');
+addCommand('performBackwardsFind',              'Cycle backward to the previous find match');
 
 // Navigating your history:
-addCommand('goBack',              'Go back in history');
-addCommand('goForward',           'Go forward in history');
+addCommand('goBack',                            'Go back in history');
+addCommand('goForward',                         'Go forward in history');
 
 // Navigating the URL hierarchy
-addCommand('goUp',                'Go up the URL hierarchy');
+addCommand('goUp',                              'Go up the URL hierarchy');
 
 // Navigating bookmarks
-addCommand('activateKeyMarksMode','Open an assigned bookmark');
+addCommand('activateKeyMarksMode',              'Open an assigned bookmark');
 addCommand('activateKeyMarksModeToOpenInNewTab','Open an assigned bookmark in a new tab');
 
 // Manipulating tabs:
-addCommand('nextTab',             'Go one tab right',  true);
-addCommand('previousTab',         'Go one tab left',   true);
-addCommand('createTab',           'Create new tab',    true);
-addCommand('removeTab',           'Close current tab', true);
-addCommand('restoreTab',          "Restore closed tab", true);
-addCommand('closeOtherTabs',    "Close other tabs", true);
-addCommand('closeRightTabs',    "Close tabs on the right", true);
-addCommand('closeLeftTabs',    "Close tabs on the left", true);
-addCommand('moveTabRight',    "Close tabs on the left", true);
-addCommand('moveTabLeft',    "Close tabs on the left", true);
-addCommand('detachTab',    "Detach tab into a new window", true);
-addCommand('goToLastSelectedTab',    "Go to last focused tab", true);
+addCommand('nextTab',                           'Go one tab right',  true);
+addCommand('previousTab',                       'Go one tab left',   true);
+addCommand('createTab',                         'Create new tab',    true);
+addCommand('removeTab',                         'Close current tab', true);
+addCommand('restoreTab',                        'Restore closed tab', true);
+addCommand('closeOtherTabs',                    'Close other tabs', true);
+addCommand('closeRightTabs',                    'Close tabs on the right', true);
+addCommand('closeLeftTabs',                     'Close tabs on the left', true);
+addCommand('moveTabRight',                      'Moves tab to the right', true);
+addCommand('moveTabLeft',                       'Moves tab to the left', true);
+addCommand('detachTab',                         'Detach tab into a new window', true);
+addCommand('goToLastSelectedTab',               'Go to last focused tab', true);
+
 
 // Enable Pass-Thru Mode
-addCommand('passThru',            'Pass-Thru Mode - Disable Vimium until ESC is pressed.');
+addCommand('passThru',                          'Pass-Thru Mode - Disable Vimium until ESC is pressed.');
 
-addCommand('nextFrame',           "Cycle forward to the next frame on the page", true);
-addCommand('goToOptionsPage',  "Go to vimium options page", true);
+addCommand('nextFrame',                         'Cycle forward to the next frame on the page', true);
+addCommand('goToOptionsPage',                   'Go to vimium options page', true);
+
 
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
