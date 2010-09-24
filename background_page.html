@@ -14,6 +14,8 @@
   var keyQueue = ""; // Queue of keys typed
   var validFirstKeys = {};
   var singleKeyCommands = [];
+  var focusedFrame = null;
+  var framesForTab = {};
 
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
   // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
@@ -66,7 +68,10 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
+    openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
+    registerFrame: registerFrame,
+    frameFocused: handleFrameFocused,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
   };
@@ -90,6 +95,7 @@
       }
 
       // domReady is the appropriate time to show the "vimium has been upgraded" message.
+      // TODO: This might be broken on pages with frames.
       if (shouldShowUpgradeMessage())
         chrome.tabs.sendRequest(senderTabId, { name: "showUpgradeNotification", version: currentVersion });
     }
@@ -152,9 +158,9 @@
     returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
-  function showHelp() {
+  function showHelp(callback, frameId) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml() });
+      chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
     });
   }
 
@@ -219,6 +225,15 @@
     return {completionKeys: generateCompletionKeys()};
   }
 
+  /**
+    * Opens the url in the current tab.
+    */
+   function openUrlInCurrentTab(request) {
+     chrome.tabs.getSelected(null, function(tab) {
+       chrome.tabs.update(tab.id, {url: request.url});
+     });
+   }
+
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.
    */
@@ -261,9 +276,9 @@
     if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
   });
 
-  function repeatFunction(func, totalCount, currentCount) {
+  function repeatFunction(func, totalCount, currentCount, frameId) {
     if (currentCount < totalCount)
-      func(function() { repeatFunction(func, totalCount, currentCount + 1); });
+      func(function() { repeatFunction(func, totalCount, currentCount + 1, frameId); }, frameId);
   }
 
   // Returns the scroll coordinates of the given tab. Pass in a callback of the form:
@@ -362,6 +377,7 @@
       tabQueue[openTabInfo.windowId] = [openTabInfo];
 
     delete openTabs[tabId];
+    delete framesForTab[tabId];
   });
 
   chrome.windows.onRemoved.addListener(function(windowId) {
@@ -480,19 +496,20 @@
     return {count: count, command: command};
   }
 
-  function handleKeyDown(key, port) {
+  function handleKeyDown(request, port) {
+    var key = request.keyChar;
     if (key == "<ESC>") {
       console.log("clearing keyQueue");
       keyQueue = ""
     }
     else {
       console.log("checking keyQueue: [", keyQueue + key, "]");
-      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id);
+      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id, request.frameId);
       console.log("new KeyQueue: " + keyQueue);
     }
   }
 
-  function checkKeyQueue(keysToCheck, tabId) {
+  function checkKeyQueue(keysToCheck, tabId, frameId) {
     var refreshedCompletionKeys = false;
     var splitHash = splitKeyQueue(keysToCheck);
     command = splitHash.command;
@@ -508,6 +525,7 @@
       if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
         port.postMessage({ command: registryEntry.command,
+                           frameId: frameId,
                            count: count,
                            passCountToFunction: registryEntry.passCountToFunction,
                            completionKeys: generateCompletionKeys("")
@@ -515,7 +533,7 @@
 
         refreshedCompletionKeys = true;
       } else {
-        repeatFunction(this[registryEntry.command], count, 0);
+        repeatFunction(this[registryEntry.command], count, 0, frameId);
       }
 
       newKeyQueue = "";
@@ -582,6 +600,57 @@
   function openOptionsPageInNewTab() {
     chrome.tabs.getSelected(null, function(tab) {
       chrome.tabs.create({ url: chrome.extension.getURL("options.html"), index: tab.index + 1 });
+    });
+  }
+
+  function registerFrame(request, sender) {
+    if (request.top)
+      framesForTab[sender.tab.id] = { total: request.total, frames: [] };
+    else {
+      framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area });
+
+      // We've seen all the frames. Time to focus the largest one.
+      if (framesForTab[sender.tab.id].frames.length == framesForTab[sender.tab.id].total)
+        focusLargestFrame(sender.tab.id);
+    }
+  }
+
+  function focusLargestFrame(tabId) {
+    var mainFrameId = null;
+    var mainFrameArea = 0;
+
+    for (var i = 0; i < framesForTab[tabId].frames.length; i++) {
+      var currentFrame = framesForTab[tabId].frames[i];
+
+      if (currentFrame.area > mainFrameArea) {
+        mainFrameId = currentFrame.id;
+        mainFrameArea = currentFrame.area;
+      }
+    }
+
+    chrome.tabs.sendRequest(tabId, { name: "focusFrame", frameId: mainFrameId, highlight: false });
+  }
+
+  function handleFrameFocused(request, sender) {
+    focusedFrame = request.frameId;
+  }
+
+  function nextFrame(callback, frameId) {
+    chrome.tabs.getSelected(null, function(tab) {
+      var index;
+      var frames = framesForTab[tab.id].frames;
+
+      for (index=0; index < frames.length; index++) {
+        if (frames[index].id == focusedFrame)
+            break;
+      }
+
+      if (index >= frames.length-1)
+        index = 0;
+      else
+        index++;
+
+      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[index].id, highlight: true });
     });
   }
 
