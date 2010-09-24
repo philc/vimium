@@ -604,15 +604,20 @@
   }
 
   function registerFrame(request, sender) {
-    if (request.top)
-      framesForTab[sender.tab.id] = { total: request.total, frames: [] };
-    else {
-      framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area });
+    if (!framesForTab[sender.tab.id])
+      framesForTab[sender.tab.id] = { frames: [] };
 
-      // We've seen all the frames. Time to focus the largest one.
-      if (framesForTab[sender.tab.id].frames.length == framesForTab[sender.tab.id].total)
-        focusLargestFrame(sender.tab.id);
+    if (request.top) {
+      focusedFrame = request.frameId;
+      framesForTab[sender.tab.id].total = request.total;
     }
+
+    framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area });
+
+    // We've seen all the frames. Time to focus the largest one.
+    // NOTE: Disabled because it's buggy with iframes.
+    // if (framesForTab[sender.tab.id].frames.length >= framesForTab[sender.tab.id].total)
+    //  focusLargestFrame(sender.tab.id);
   }
 
   function focusLargestFrame(tabId) {
