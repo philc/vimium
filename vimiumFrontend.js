@@ -170,10 +170,7 @@ function focusThisFrame(shouldHighlight) {
  * Initialization tasks that must wait for the document to be ready.
  */
 function initializeOnDomReady() {
-  if (window.top == window.self)
-    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, top: true, total: frames.length });
-  else
-    registerFrameIfSizeAvailable();
+  registerFrameIfSizeAvailable(window.top == window.self);
 
   if (isEnabledForUrl)
     enterInsertModeIfElementIsFocused();
@@ -183,11 +180,11 @@ function initializeOnDomReady() {
 };
 
 // This is a little hacky but sometimes the size wasn't available on domReady?
-function registerFrameIfSizeAvailable () {
+function registerFrameIfSizeAvailable (top) {
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight });
+    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
   else
-    setTimeout(registerFrameIfSizeAvailable, 100);
+    setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
 }
 
 /*
