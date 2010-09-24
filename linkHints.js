@@ -35,7 +35,7 @@ var clickableElementsXPath = (function() {
 // We need this as a top-level function because our command system doesn't yet support arguments.
 function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true, false); }
 
-function activeteLinkHintsModeWithQueue() { activateLinkHintsMode(true, true); }
+function activateMultipleLinkHintsMode() { activateLinkHintsMode(true, true); }
 
 function activateLinkHintsMode(openInNewTab, withQueue) {
   if (!linkHintsCssAdded)
@@ -48,9 +48,7 @@ function activateLinkHintsMode(openInNewTab, withQueue) {
   document.addEventListener("keyup", onKeyUpInLinkHintsMode, true);
 }
 
-function setOpenLinkMode(openInNewTab, withQueue) {
-  shouldOpenLinkHintInNewTab = openInNewTab;
-  shouldOpenLinkHintWithQueue = withQueue
+function setOpenLinkMode(shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue) {
   if (shouldOpenLinkHintWithQueue) {
     HUD.show("Open multiple links in a new tab");
   } else {
@@ -306,7 +304,7 @@ function deactivateLinkHintsMode() {
 
 function resetLinkHintsMode() {
   deactivateLinkHintsMode();
-  activeteLinkHintsModeWithQueue();
+  activateMultipleLinkHintsMode();
 }
 
 /*

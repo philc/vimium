@@ -36,7 +36,7 @@ Navigating the current page:
     <c-b>   scroll up a full page
     f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
-    q       activate link hints mode to open multiple links in a new tab
+    <a-f>   activate link hints mode to open multiple links in a new tab
     r       reload
     gs      view source
     zi      zoom in
@@ -86,6 +86,7 @@ Release Notes
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
 -  Two new commands (`zH` and `zL`) to scroll to the left and right edges of the page.
 -  A new command (`gi`) to focus the first (or n-th) text input box on the page.
+-  A new command (`<a-f>`) to open up multiple links at a time in new tabs.
 -  Frame support.
 -  Bug fixes.
 
