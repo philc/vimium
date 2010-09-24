@@ -13,6 +13,7 @@ var hintMarkerContainingDiv = null;
 var hintKeystrokeQueue = [];
 var linkHintsModeActivated = false;
 var shouldOpenLinkHintInNewTab = false;
+var shouldOpenLinkHintWithQueue = false;
 // Whether link hint's "open in current/new tab" setting is currently toggled 
 var openLinkModeToggle = false;
 // Whether we have added to the page the CSS needed to display link hints.
@@ -32,25 +33,32 @@ var clickableElementsXPath = (function() {
 })();
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
-function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true); }
+function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true, false); }
 
-function activateLinkHintsMode(openInNewTab) {
+function activeteLinkHintsModeWithQueue() { activateLinkHintsMode(true, true); }
+
+function activateLinkHintsMode(openInNewTab, withQueue) {
   if (!linkHintsCssAdded)
     addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
   linkHintCssAdded = true;
   linkHintsModeActivated = true;
-  setOpenLinkMode(openInNewTab);
+  setOpenLinkMode(openInNewTab, withQueue);
   buildLinkHints();
   document.addEventListener("keydown", onKeyDownInLinkHintsMode, true);
   document.addEventListener("keyup", onKeyUpInLinkHintsMode, true);
 }
 
-function setOpenLinkMode(openInNewTab) {
+function setOpenLinkMode(openInNewTab, withQueue) {
   shouldOpenLinkHintInNewTab = openInNewTab;
-  if (shouldOpenLinkHintInNewTab)
-    HUD.show("Open link in new tab");
-  else
-    HUD.show("Open link in current tab");
+  shouldOpenLinkHintWithQueue = withQueue
+  if (shouldOpenLinkHintWithQueue) {
+    HUD.show("Open multiple links in a new tab");
+  } else {
+    if (shouldOpenLinkHintInNewTab)
+      HUD.show("Open link in new tab");
+    else
+      HUD.show("Open link in current tab");
+  }
 }
 
 /*
@@ -143,9 +151,10 @@ function isVisible(element, clientRect) {
 }
 
 function onKeyDownInLinkHintsMode(event) {
+  console.log("Key Down");
   if (event.keyCode == keyCodes.shiftKey && !openLinkModeToggle) {
     // Toggle whether to open link in a new or current tab.
-    setOpenLinkMode(!shouldOpenLinkHintInNewTab);
+    setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
     openLinkModeToggle = true; 
   }
 
@@ -177,7 +186,7 @@ function onKeyDownInLinkHintsMode(event) {
 function onKeyUpInLinkHintsMode(event) {
   if (event.keyCode == keyCodes.shiftKey && openLinkModeToggle) {
     // Revert toggle on whether to open link in new or current tab. 
-    setOpenLinkMode(!shouldOpenLinkHintInNewTab);
+    setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
     openLinkModeToggle = false; 
   }
   event.stopPropagation();
@@ -202,13 +211,19 @@ function updateLinkHints() {
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
       // we want to give the user some feedback depicting which link they've selected by focusing it.
-      if (!shouldOpenLinkHintInNewTab)
-        setTimeout(function() { simulateClick(matchedLink); }, 400);
-      else
+      if (shouldOpenLinkHintWithQueue) {
         simulateClick(matchedLink);
-      matchedLink.focus();
+        resetLinkHintsMode();
+      } else if (shouldOpenLinkHintInNewTab) {
+        simulateClick(matchedLink);
+        matchedLink.focus();
+        deactivateLinkHintsMode();
+      } else {
+        setTimeout(function() { simulateClick(matchedLink); }, 400);
+        matchedLink.focus();
+        deactivateLinkHintsMode();
+      }
     }
-    deactivateLinkHintsMode();
   }
 }
 
@@ -287,6 +302,11 @@ function deactivateLinkHintsMode() {
   document.removeEventListener("keyup", onKeyUpInLinkHintsMode, true);
   linkHintsModeActivated = false;
   HUD.hide();
+}
+
+function resetLinkHintsMode() {
+  deactivateLinkHintsMode();
+  activeteLinkHintsModeWithQueue();
 }
 
 /*

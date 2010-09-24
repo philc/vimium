@@ -112,6 +112,7 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('f', 'activateLinkHintsMode');
   mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
+  mapKeyToCommand('q', 'activeteLinkHintsModeWithQueue');
 
   mapKeyToCommand('/', 'enterFindMode');
   mapKeyToCommand('n', 'performFind');
@@ -158,6 +159,7 @@ addCommand('focusInput',          'Focus the first (or n-th) text box on the pag
 
 addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
 addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
+addCommand('activeteLinkHintsModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
 
 addCommand('enterFindMode',        'Enter find mode');
 addCommand('performFind',          'Cycle forward to the next find match');
@@ -189,7 +191,7 @@ var commandGroups = {
      "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
-     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
+     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activeteLinkHintsModeWithQueue",
      "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
   historyNavigation:
     ["goBack", "goForward"],
