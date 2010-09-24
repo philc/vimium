@@ -232,6 +232,15 @@
   }
 
   /**
+   * Opens the url in a new tab.
+   */
+  function openUrlInNewTab(request) {
+    chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.create({ url: request.url, index: tab.index + 1 });
+    });
+  }
+
+  /**
     * Opens the url in the current tab.
     */
    function openUrlInCurrentTab(request) {
