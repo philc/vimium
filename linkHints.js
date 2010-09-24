@@ -35,7 +35,7 @@ var clickableElementsXPath = (function() {
 // We need this as a top-level function because our command system doesn't yet support arguments.
 function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true, false); }
 
-function activateMultipleLinkHintsMode() { activateLinkHintsMode(true, true); }
+function activateLinkHintsModeWithQueue() { activateLinkHintsMode(true, true); }
 
 function activateLinkHintsMode(openInNewTab, withQueue) {
   if (!linkHintsCssAdded)
@@ -306,7 +306,7 @@ function deactivateLinkHintsMode() {
 
 function resetLinkHintsMode() {
   deactivateLinkHintsMode();
-  activateMultipleLinkHintsMode();
+  activateLinkHintsModeWithQueue();
 }
 
 /*
