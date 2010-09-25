@@ -14,6 +14,8 @@
   var keyQueue = ""; // Queue of keys typed
   var validFirstKeys = {};
   var singleKeyCommands = [];
+  var focusedFrame = null;
+  var framesForTab = {};
 
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
   // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
@@ -71,7 +73,7 @@
     openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     registerFrame: registerFrame,
-    focusFrame: focusFrame,
+    frameFocused: handleFrameFocused,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
   };
@@ -95,6 +97,7 @@
       }
 
       // domReady is the appropriate time to show the "vimium has been upgraded" message.
+      // TODO: This might be broken on pages with frames.
       if (shouldShowUpgradeMessage())
         chrome.tabs.sendRequest(senderTabId, { name: "showUpgradeNotification", version: currentVersion });
     }
@@ -392,6 +395,7 @@
       tabQueue[openTabInfo.windowId] = [openTabInfo];
 
     delete openTabs[tabId];
+    delete framesForTab[tabId];
   });
 
   chrome.windows.onRemoved.addListener(function(windowId) {
@@ -538,8 +542,12 @@
 
       if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
-        port.postMessage({ command: registryEntry.command, count: count, frameId: frameId,
-                            completionKeys: generateCompletionKeys("") });
+        port.postMessage({ command: registryEntry.command,
+                           frameId: frameId,
+                           count: count,
+                           passCountToFunction: registryEntry.passCountToFunction,
+                           completionKeys: generateCompletionKeys("")
+                         });
 
         refreshedCompletionKeys = true;
       } else {
@@ -613,32 +621,59 @@
     });
   }
 
-  var framesForTab = {};
-
   function registerFrame(request, sender) {
-    if(request.top)
-      framesForTab[sender.tab.id] = [];
-    framesForTab[sender.tab.id].push(request.frameId);
+    if (!framesForTab[sender.tab.id])
+      framesForTab[sender.tab.id] = { frames: [] };
+
+    if (request.top) {
+      focusedFrame = request.frameId;
+      framesForTab[sender.tab.id].total = request.total;
+    }
+
+    framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area });
+
+    // We've seen all the frames. Time to focus the largest one.
+    // NOTE: Disabled because it's buggy with iframes.
+    // if (framesForTab[sender.tab.id].frames.length >= framesForTab[sender.tab.id].total)
+    //  focusLargestFrame(sender.tab.id);
   }
 
-  var focusedFrame = null;
-  function focusFrame(request, sender) {
+  function focusLargestFrame(tabId) {
+    var mainFrameId = null;
+    var mainFrameArea = 0;
+
+    for (var i = 0; i < framesForTab[tabId].frames.length; i++) {
+      var currentFrame = framesForTab[tabId].frames[i];
+
+      if (currentFrame.area > mainFrameArea) {
+        mainFrameId = currentFrame.id;
+        mainFrameArea = currentFrame.area;
+      }
+    }
+
+    chrome.tabs.sendRequest(tabId, { name: "focusFrame", frameId: mainFrameId, highlight: false });
+  }
+
+  function handleFrameFocused(request, sender) {
     focusedFrame = request.frameId;
   }
 
   function nextFrame(callback, frameId) {
     chrome.tabs.getSelected(null, function(tab) {
-      //chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
       var index;
-      var frames = framesForTab[tab.id];
-      for(index=0; index<frames.length; index++) {
-        if(frames[index] == focusedFrame) break;
+      var frames = framesForTab[tab.id].frames;
+
+      for (index=0; index < frames.length; index++) {
+        if (frames[index].id == focusedFrame)
+            break;
       }
-      if(index >= frames.length-1)
+
+      if (index >= frames.length-1)
         index = 0;
       else
         index++;
-      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[index] });
+
+      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[index].id, highlight: true });
     });
   }
 

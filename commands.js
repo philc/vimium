@@ -1,14 +1,17 @@
 var availableCommands    = {};
 var keyToCommandRegistry = {};
 
-function addCommand(command, description, isBackgroundCommand) {
+function addCommand(command, description, isBackgroundCommand, passCountToFunction) {
   if (availableCommands[command])
   {
     console.log(command, "is already defined! Check commands.js for duplicates.");
     return;
   }
 
-  availableCommands[command] = { description: description, isBackgroundCommand: isBackgroundCommand };
+  availableCommands[command] = { description: description,
+                                 isBackgroundCommand: isBackgroundCommand,
+                                 passCountToFunction: passCountToFunction
+                               };
 }
 
 function mapKeyToCommand(key, command) {
@@ -18,7 +21,10 @@ function mapKeyToCommand(key, command) {
     return;
   }
 
-  keyToCommandRegistry[key] = { command: command, isBackgroundCommand: availableCommands[command].isBackgroundCommand };
+  keyToCommandRegistry[key] = { command: command,
+                                isBackgroundCommand: availableCommands[command].isBackgroundCommand,
+                                passCountToFunction: availableCommands[command].passCountToFunction
+                              };
 }
 
 function unmapKey(key) { delete keyToCommandRegistry[key]; }
@@ -80,7 +86,6 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('k', 'scrollUp');
   mapKeyToCommand('h', 'scrollLeft');
   mapKeyToCommand('l', 'scrollRight');
-
   mapKeyToCommand('gg', 'scrollToTop');
   mapKeyToCommand('G', 'scrollToBottom');
   mapKeyToCommand('zH', 'scrollToLeft');
@@ -103,8 +108,11 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('zi', 'zoomIn');
   mapKeyToCommand('zo', 'zoomOut');
 
-  mapKeyToCommand('f', 'activateLinkHintsMode');
-  mapKeyToCommand('F', 'activateLinkHintsModeToOpenInNewTab');
+  mapKeyToCommand('gi', 'focusInput');
+
+  mapKeyToCommand('f',     'activateLinkHintsMode');
+  mapKeyToCommand('F',     'activateLinkHintsModeToOpenInNewTab');
+  mapKeyToCommand('<a-f>', 'activateLinkHintsModeWithQueue');
 
   mapKeyToCommand('/', 'enterFindMode');
   mapKeyToCommand('n', 'performFind');
@@ -152,8 +160,11 @@ addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
 
 addCommand('enterInsertMode',     'Enter insert mode');
 
+addCommand('focusInput',          'Focus the first (or n-th) text box on the page', false, true);
+
 addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
 addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
+addCommand('activateLinkHintsModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
 
 addCommand('enterFindMode',        'Enter find mode');
 addCommand('performFind',          'Cycle forward to the next find match');
@@ -187,10 +198,12 @@ addCommand('nextFrame',           "Cycle forward to the next frame on the page",
 var commandGroups = {
   pageNavigation:
     ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
-     "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageDown",
+     "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
+     "scrollPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
-     "enterInsertMode", "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab",
-     "enterFindMode", "performFind", "performBackwardsFind", "activateKeyMarksMode", "activateKeyMarksModeToOpenInNewTab", "passThru", "nextFrame"],
+     "enterInsertMode", "focusInput",
+     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
+     "enterFindMode", "performFind", "performBackwardsFind", "nextFrame", "activateKeyMarksMode", "activateKeyMarksModeToOpenInNewTab", "passThru"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:

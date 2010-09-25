@@ -27,6 +27,11 @@ var keyMarks;
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
 
+/*
+ * Give this frame a unique id.
+ */
+frameId = Math.floor(Math.random()*999999999)
+
 var hasModifiersRegex = /^<([amc]-)+.>/;
 
 function getSetting(key) {
@@ -74,7 +79,7 @@ function initializePreDomReady() {
         showHelpDialog(request.dialogHtml, request.frameId);
     else if (request.name == "focusFrame")
       if(frameId == request.frameId)
-        focusThisFrame();
+        focusThisFrame(request.highlight);
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request.completionKeys);
     sendResponse({}); // Free up the resources used by this open connection.
@@ -84,7 +89,11 @@ function initializePreDomReady() {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
         if (this[args.command] && frameId == args.frameId) {
-          for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+          if (args.passCountToFunction) {
+            this[args.command].call(null, args.count);
+          } else {
+            for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+          }
         }
 
         refreshCompletionKeys(args.completionKeys);
@@ -142,30 +151,22 @@ function initializeWhenEnabled() {
   enterInsertModeIfElementIsFocused();
 }
 
-/*
- * Give this frame a unique id and register with the backend.
- */
-frameId = Math.floor(Math.random()*999999999)
-if(window.top == window.self)
-  chrome.extension.sendRequest({handler: "registerFrame", frameId: frameId, top: true});
-else
-  chrome.extension.sendRequest({handler: "registerFrame", frameId: frameId});
 
 /*
  * The backend needs to know which frame has focus.
  */
 window.addEventListener("focus", function(e){
-  chrome.extension.sendRequest({handler: "focusFrame", frameId: frameId});
+  chrome.extension.sendRequest({handler: "frameFocused", frameId: frameId});
 });
 
 /*
  * Called from the backend in order to change frame focus.
  */
-function focusThisFrame() {
+function focusThisFrame(shouldHighlight) {
   window.focus();
-  if(document.body) {
+  if (document.body && shouldHighlight) {
     var borderWas = document.body.style.border;
-    document.body.style.border = '1px solid red';
+    document.body.style.border = '5px solid yellow';
     setTimeout(function(){document.body.style.border = borderWas}, 200);
   }
 }
@@ -174,12 +175,22 @@ function focusThisFrame() {
  * Initialization tasks that must wait for the document to be ready.
  */
 function initializeOnDomReady() {
+  registerFrameIfSizeAvailable(window.top == window.self);
+
   if (isEnabledForUrl)
     enterInsertModeIfElementIsFocused();
 
   // Tell the background page we're in the dom ready state.
   chrome.extension.connect({ name: "domReady" });
 };
+
+// This is a little hacky but sometimes the size wasn't available on domReady?
+function registerFrameIfSizeAvailable (top) {
+  if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
+    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
+  else
+    setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
+}
 
 /*
  * Checks the currently focused element of the document and will enter insert mode if that element is focusable.
@@ -233,6 +244,26 @@ function scrollFullPageUp() { window.scrollBy(0, -window.innerHeight); }
 function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
 function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
+
+function focusInput(count) {
+  var xpath = '//input[@type="text" or @type="search"]';
+  var results = document.evaluate(xpath, document.documentElement, null,
+                                  XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+
+  var lastInputBox;
+  var i = 0;
+
+  while (i < count) {
+    i += 1;
+
+    var currentInputBox = results.iterateNext();
+    if (!currentInputBox) { break; }
+
+    lastInputBox = currentInputBox;
+  }
+
+  if (lastInputBox) { lastInputBox.focus(); }
+}
 
 function reload() { window.location.reload(); }
 function goBack() { history.back(); }
@@ -597,7 +628,8 @@ function hideHelpDialog(clickEvent) {
   var helpDialog = document.getElementById("vimiumHelpDialogContainer");
   if (helpDialog)
     helpDialog.parentNode.removeChild(helpDialog);
-  clickEvent.preventDefault();
+  if (clickEvent)
+    clickEvent.preventDefault();
 }
 
 /*
