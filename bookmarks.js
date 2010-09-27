@@ -84,16 +84,15 @@ function activateBookmarkFindMode() {
           var bookmarksFound = BookmarkMode.bookmarksFound;
           if(bookmarksFound && bookmarksFound.length>0) {
             var url = bookmarksFound[0].url
-            if(url.indexOf("javascript:")===0) {
-              eval(url.substr(11, url.length))
+            var isABookmarklet = function(url) {
+              return url.indexOf("javascript:")===0
+            }
+
+            if(!BookmarkMode.newTab || isABookmarklet(url)) {
+              window.location=url
             }
             else {
-              if(BookmarkMode.newTab) {
-                window.open(url)
-              }
-              else {
-                window.location=url
-              }
+              window.open(url)
             }
             
             BookmarkMode.disable();
