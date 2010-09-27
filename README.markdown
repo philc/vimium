@@ -37,6 +37,8 @@ Navigating the current page:
     f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
     <a-f>   activate link hints mode to open multiple links in a new tab
+    b       activate bookmark find mode to open in current tab
+    B       activate bookmark find mode to open in new tab
     r       reload
     gs      view source
     zi      zoom in
