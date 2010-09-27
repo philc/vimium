@@ -84,14 +84,19 @@ function activateBookmarkFindMode() {
           var bookmarksFound = BookmarkMode.bookmarksFound;
           if(bookmarksFound && bookmarksFound.length>0) {
             var url = bookmarksFound[0].url
-            if(BookmarkMode.newTab) {
-              BookmarkMode.disable();
-              window.open(url)
+            if(url.indexOf("javascript:")===0) {
+              eval(url.substr(11, url.length))
             }
             else {
-              BookmarkMode.disable();
-              window.location=url
+              if(BookmarkMode.newTab) {
+                window.open(url)
+              }
+              else {
+                window.location=url
+              }
             }
+            
+            BookmarkMode.disable();
           }
         }
 
@@ -115,6 +120,8 @@ function activateBookmarkFindMode() {
         } 
 
         BookmarkMode.finder.find(BookmarkMode.getQueryString())
+        event.stopPropagation();
+        event.preventDefault();
       },
       keyUp: function(event) {
         // shift key will toggle between new tab/same tab
