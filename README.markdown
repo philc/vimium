@@ -36,8 +36,9 @@ Navigating the current page:
     <c-b>   scroll up a full page
     f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
+    <a-f>   activate link hints mode to open multiple links in a new tab
     r       reload
-    gf      view source
+    gs      view source
     zi      zoom in
     zo      zoom out
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
@@ -46,6 +47,7 @@ Navigating the current page:
     i       enter insert mode -- all commands will be ignored until you hit esc to exit
     yy      copy the current url to the clipboard
     gu      go up one level in the URL hierarchy
+    gf      cycle forward to the next frame
 
 Navigating your history:
     H       go back in history
@@ -84,6 +86,8 @@ Release Notes
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
 -  Two new commands (`zH` and `zL`) to scroll to the left and right edges of the page.
 -  A new command (`gi`) to focus the first (or n-th) text input box on the page.
+-  A new command (`<a-f>`) to open up multiple links at a time in new tabs.
+-  Frame support.
 -  Bug fixes.
 
 1.19 (06/29/2010)

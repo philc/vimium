@@ -8,7 +8,10 @@
   "background_page": "background_page.html",
   "options_page": "options.html",
   "permissions": [
-    "tabs", "bookmarks"
+    "tabs",
+	"bookmarks",
+    "http://*/*",
+    "https://*/*"
   ],
   "content_scripts": [
     {
@@ -19,7 +22,8 @@
              "vimiumFrontend.js",
              "bookmarks.js"
             ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
     }
   ]
 }

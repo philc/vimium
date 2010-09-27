@@ -26,6 +26,11 @@ var linkHintCss;
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
 
+/*
+ * Give this frame a unique id.
+ */
+frameId = Math.floor(Math.random()*999999999)
+
 var hasModifiersRegex = /^<([amc]-)+.>/;
 
 function getSetting(key) {
@@ -66,7 +71,10 @@ function initializePreDomReady() {
       if (isShowingHelpDialog)
         hideHelpDialog();
       else
-        showHelpDialog(request.dialogHtml);
+        showHelpDialog(request.dialogHtml, request.frameId);
+    else if (request.name == "focusFrame")
+      if(frameId == request.frameId)
+        focusThisFrame(request.highlight);
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request.completionKeys);
     sendResponse({}); // Free up the resources used by this open connection.
@@ -75,7 +83,7 @@ function initializePreDomReady() {
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
-        if (this[args.command]) {
+        if (this[args.command] && frameId == args.frameId) {
           if (args.passCountToFunction) {
             this[args.command].call(null, args.count);
           } else {
@@ -138,16 +146,46 @@ function initializeWhenEnabled() {
   enterInsertModeIfElementIsFocused();
 }
 
+
+/*
+ * The backend needs to know which frame has focus.
+ */
+window.addEventListener("focus", function(e){
+  chrome.extension.sendRequest({handler: "frameFocused", frameId: frameId});
+});
+
+/*
+ * Called from the backend in order to change frame focus.
+ */
+function focusThisFrame(shouldHighlight) {
+  window.focus();
+  if (document.body && shouldHighlight) {
+    var borderWas = document.body.style.border;
+    document.body.style.border = '5px solid yellow';
+    setTimeout(function(){document.body.style.border = borderWas}, 200);
+  }
+}
+
 /*
  * Initialization tasks that must wait for the document to be ready.
  */
 function initializeOnDomReady() {
+  registerFrameIfSizeAvailable(window.top == window.self);
+
   if (isEnabledForUrl)
     enterInsertModeIfElementIsFocused();
 
   // Tell the background page we're in the dom ready state.
   chrome.extension.connect({ name: "domReady" });
 };
+
+// This is a little hacky but sometimes the size wasn't available on domReady?
+function registerFrameIfSizeAvailable (top) {
+  if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
+    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
+  else
+    setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
+}
 
 /*
  * Checks the currently focused element of the document and will enter insert mode if that element is focusable.
@@ -258,9 +296,10 @@ function copyCurrentUrl() {
 function toggleViewSourceCallback(url) {
   if (url.substr(0, 12) == "view-source:")
   {
-    window.location.href = url.substr(12, url.length - 12);
+    url = url.substr(12, url.length - 12);
   }
-  else { window.location.href = "view-source:" + url; }
+  else { url = "view-source:" + url; }
+  chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
 }
 
 /**
@@ -349,10 +388,10 @@ function onKeydown(event) {
         event.stopPropagation();
       }
 
-      keyPort.postMessage(keyChar);
+      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
     else if (isEscape(event)) {
-      keyPort.postMessage("<ESC>");
+      keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
     }
   }
 }
@@ -494,8 +533,8 @@ function exitFindMode() {
   HUD.hide();
 }
 
-function showHelpDialog(html) {
-  if (isShowingHelpDialog || !document.body)
+function showHelpDialog(html, fid) {
+  if (isShowingHelpDialog || !document.body || fid != frameId)
     return;
   isShowingHelpDialog = true;
   var container = document.createElement("div");
@@ -716,14 +755,8 @@ function addCssToPage(css) {
   head.appendChild(style);
 }
 
-// Prevent our content script from being run on iframes -- only allow it to run on the top level DOM "window".
-// TODO(philc): We don't want to process multiple keyhandlers etc. when embedded on a page containing IFrames.
-// This should be revisited, because sometimes we *do* want to listen inside of the currently focused iframe.
-var isIframe = (window.self != window.parent);
-if (!isIframe) {
-  initializePreDomReady();
-  window.addEventListener("DOMContentLoaded", initializeOnDomReady);
-}
+initializePreDomReady();
+window.addEventListener("DOMContentLoaded", initializeOnDomReady);
 
 window.onbeforeunload = function() {
   chrome.extension.sendRequest({ handler: "updateScrollPosition",
