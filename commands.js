@@ -127,6 +127,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('t', 'createTab');
   mapKeyToCommand('d', 'removeTab');
   mapKeyToCommand('u', 'restoreTab');
+  mapKeyToCommand('b', 'activateBookmarkFindMode');
+  mapKeyToCommand('B', 'activateBookmarkFindModeToOpenInNewTab')
 }
 
 // Navigating the current page:
@@ -156,6 +158,9 @@ addCommand('focusInput',          'Focus the first (or n-th) text box on the pag
 
 addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
 addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
+
+addCommand('activateBookmarkFindMode',            'Find bookmarks to open in current tab');
+addCommand('activateBookmarkFindModeToOpenInNewTab', 'Find bookmarks to open in new tab');
 
 addCommand('enterFindMode',        'Enter find mode');
 addCommand('performFind',          'Cycle forward to the next find match');
@@ -192,5 +197,5 @@ var commandGroups = {
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
   misc:
-    ["showHelp"]
+    ["showHelp", "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab"]
 };

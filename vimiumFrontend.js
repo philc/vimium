@@ -202,6 +202,7 @@ function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
 function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
 
+
 function focusInput(count) {
   var xpath = '//input[@type="text" or @type="search"]';
   var results = document.evaluate(xpath, document.documentElement, null,
@@ -272,7 +273,7 @@ function toggleViewSourceCallback(url) {
 function onKeydown(event) {
   var keyChar = "";
 
-  if (linkHintsModeActivated)
+  if (linkHintsModeActivated || BookmarkMode.isEnabled())
     return;
 
   // Ignore modifier keys by themselves.
