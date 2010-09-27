@@ -84,9 +84,14 @@ function activateBookmarkFindMode() {
           var bookmarksFound = BookmarkMode.bookmarksFound;
           if(bookmarksFound && bookmarksFound.length>0) {
             var url = bookmarksFound[0].url
-            if(BookmarkMode.newTab)
+            if(BookmarkMode.newTab) {
+              BookmarkMode.disable();
               window.open(url)
-            else window.location=url
+            }
+            else {
+              BookmarkMode.disable();
+              window.location=url
+            }
           }
         }
 
