@@ -199,11 +199,13 @@ var commandGroups = {
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
      "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
-     "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
+     "enterFindMode", "performFind", "performBackwardsFind", "nextFrame",
+     "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab"
+    ],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
   misc:
-    ["showHelp", "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab"]
+    ["showHelp"]
 };
