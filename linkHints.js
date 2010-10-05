@@ -151,7 +151,6 @@ function isVisible(element, clientRect) {
 }
 
 function onKeyDownInLinkHintsMode(event) {
-  console.log("Key Down");
   if (event.keyCode == keyCodes.shiftKey && !openLinkModeToggle) {
     // Toggle whether to open link in a new or current tab.
     setOpenLinkMode(!shouldOpenLinkHintInNewTab, shouldOpenLinkHintWithQueue);
@@ -174,6 +173,7 @@ function onKeyDownInLinkHintsMode(event) {
     }
   } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
     hintKeystrokeQueue.push(keyChar);
+      HUD.show(" [Keys]: " + hintKeystrokeQueue.join('').toUpperCase(), true);
     updateLinkHints();
   } else {
     return;
@@ -220,7 +220,7 @@ function updateLinkHints() {
         matchedLink.focus();
         deactivateLinkHintsMode();
       } else {
-        setTimeout(function() { simulateClick(matchedLink); }, 400);
+        setTimeout(function() {simulateClick(matchedLink);}, 400);
         matchedLink.focus();
         deactivateLinkHintsMode();
       }
