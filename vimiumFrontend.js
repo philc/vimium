@@ -36,23 +36,23 @@ var hasModifiersRegex = /^<([amc]-)+.>/;
 
 function getSetting(key) {
   if (!settingPort)
-    settingPort = chrome.extension.connect({ name: "getSetting" });
-  settingPort.postMessage({ key: key });
+    settingPort = chrome.extension.connect({name: "getSetting"});
+  settingPort.postMessage({key: key});
 }
 
-function setSetting(args) { settings[args.key] = args.value; }
+function setSetting(args) {settings[args.key] = args.value;}
 
 /*
  * Complete initialization work that sould be done prior to DOMReady, like setting the page's zoom level.
  */
 function initializePreDomReady() {
-  for (var i in settingsToLoad) { getSetting(settingsToLoad[i]); }
+  for (var i in settingsToLoad) {getSetting(settingsToLoad[i]);}
 
-  var isEnabledForUrlPort = chrome.extension.connect({ name: "isEnabledForUrl" });
-  isEnabledForUrlPort.postMessage({ url: window.location.toString() });
+  var isEnabledForUrlPort = chrome.extension.connect({name: "isEnabledForUrl"});
+  isEnabledForUrlPort.postMessage({url: window.location.toString()});
 
-  var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
-  getZoomLevelPort.postMessage({ domain: window.location.host });
+  var getZoomLevelPort = chrome.extension.connect({name: "getZoomLevel"});
+  getZoomLevelPort.postMessage({domain: window.location.host});
 
   chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
     linkHintCss = response.linkHintCss;
@@ -65,7 +65,7 @@ function initializePreDomReady() {
   refreshCompletionKeys();
 
   // Send the key to the key handler in the background page.
-  keyPort = chrome.extension.connect({ name: "keyDown" });
+  keyPort = chrome.extension.connect({name: "keyDown"});
 
   chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     if (request.name == "hideUpgradeNotification")
@@ -89,19 +89,24 @@ function initializePreDomReady() {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
         if (this[args.command] && frameId == args.frameId) {
+          if (!findMode)
+                HUD.hide(true);
           if (args.passCountToFunction) {
             this[args.command].call(null, args.count);
           } else {
-            for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+            for (var i = 0; i < args.count; i++) {this[args.command].call();}
           }
         }
 
         refreshCompletionKeys(args.completionKeys);
       });
     }
+    else if (port.name == "backgroundCommandExecuted") {
+        HUD.hide(true);
+    }
     else if (port.name == "getScrollPosition") {
       port.onMessage.addListener(function(args) {
-        var scrollPort = chrome.extension.connect({ name: "returnScrollPosition" });
+        var scrollPort = chrome.extension.connect({name: "returnScrollPosition"});
         scrollPort.postMessage({
           scrollX: window.scrollX,
           scrollY: window.scrollY,
@@ -110,11 +115,11 @@ function initializePreDomReady() {
       });
     } else if (port.name == "setScrollPosition") {
       port.onMessage.addListener(function(args) {
-        if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
+        if (args.scrollX > 0 || args.scrollY > 0) {window.scrollBy(args.scrollX, args.scrollY);}
       });
     } else if (port.name == "returnCurrentTabUrl") {
       port.onMessage.addListener(function(args) {
-        if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
+        if (getCurrentUrlHandlers.length > 0) {getCurrentUrlHandlers.pop()(args.url);}
       });
     } else if (port.name == "returnZoomLevel") {
       port.onMessage.addListener(function(args) {
@@ -181,15 +186,15 @@ function initializeOnDomReady() {
     enterInsertModeIfElementIsFocused();
 
   // Tell the background page we're in the dom ready state.
-  chrome.extension.connect({ name: "domReady" });
+  chrome.extension.connect({name: "domReady"});
 };
 
 // This is a little hacky but sometimes the size wasn't available on domReady?
 function registerFrameIfSizeAvailable (top) {
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
+    chrome.extension.sendRequest({handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1});
   else
-    setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
+    setTimeout(function () {registerFrameIfSizeAvailable(top);}, 100);
 }
 
 /*
@@ -206,8 +211,8 @@ function enterInsertModeIfElementIsFocused() {
  */
 function saveZoomLevel(domain, zoomLevel) {
   if (!saveZoomLevelPort)
-    saveZoomLevelPort = chrome.extension.connect({ name: "saveZoomLevel" });
-  saveZoomLevelPort.postMessage({ domain: domain, zoomLevel: zoomLevel });
+    saveZoomLevelPort = chrome.extension.connect({name: "saveZoomLevel"});
+  saveZoomLevelPort.postMessage({domain: domain, zoomLevel: zoomLevel});
 }
 
 /*
@@ -232,18 +237,18 @@ function zoomOut() {
   saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
-function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
-function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
-function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
-function scrollToRight() { window.scrollTo(document.body.scrollWidth, window.pageYOffset); }
-function scrollUp() { window.scrollBy(0, -1 * settings["scrollStepSize"]); }
-function scrollDown() { window.scrollBy(0, settings["scrollStepSize"]); }
-function scrollPageUp() { window.scrollBy(0, -1 * window.innerHeight / 2); }
-function scrollPageDown() { window.scrollBy(0, window.innerHeight / 2); }
-function scrollFullPageUp() { window.scrollBy(0, -window.innerHeight); }
-function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
-function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
-function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
+function scrollToBottom() {window.scrollTo(window.pageXOffset, document.body.scrollHeight);}
+function scrollToTop() {window.scrollTo(window.pageXOffset, 0);}
+function scrollToLeft() {window.scrollTo(0, window.pageYOffset);}
+function scrollToRight() {window.scrollTo(document.body.scrollWidth, window.pageYOffset);}
+function scrollUp() {window.scrollBy(0, -1 * settings["scrollStepSize"]);}
+function scrollDown() {window.scrollBy(0, settings["scrollStepSize"]);}
+function scrollPageUp() {window.scrollBy(0, -1 * window.innerHeight / 2);}
+function scrollPageDown() {window.scrollBy(0, window.innerHeight / 2);}
+function scrollFullPageUp() {window.scrollBy(0, -window.innerHeight);}
+function scrollFullPageDown() {window.scrollBy(0, window.innerHeight);}
+function scrollLeft() {window.scrollBy(-1 * settings["scrollStepSize"], 0);}
+function scrollRight() {window.scrollBy(settings["scrollStepSize"], 0);}
 
 function focusInput(count) {
   var xpath = '//input[@type="text" or @type="search"]';
@@ -257,17 +262,17 @@ function focusInput(count) {
     i += 1;
 
     var currentInputBox = results.iterateNext();
-    if (!currentInputBox) { break; }
+    if (!currentInputBox) {break;}
 
     lastInputBox = currentInputBox;
   }
 
-  if (lastInputBox) { lastInputBox.focus(); }
+  if (lastInputBox) {lastInputBox.focus();}
 }
 
-function reload() { window.location.reload(); }
-function goBack() { history.back(); }
-function goForward() { history.forward(); }
+function reload() {window.location.reload();}
+function goBack() {history.back();}
+function goForward() {history.forward();}
 
 function goUp() {
   var url = window.location.href;
@@ -285,15 +290,15 @@ function goUp() {
 function toggleViewSource() {
   getCurrentUrlHandlers.push(toggleViewSourceCallback);
 
-  var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
+  var getCurrentUrlPort = chrome.extension.connect({name: "getCurrentTabUrl"});
   getCurrentUrlPort.postMessage({});
 }
 
 function copyCurrentUrl() {
-  getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); });
+  getCurrentUrlHandlers.push(function (url) {Clipboard.copy(url);});
 
   // TODO(ilya): Convert to sendRequest.
-  var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
+  var getCurrentUrlPort = chrome.extension.connect({name: "getCurrentTabUrl"});
   getCurrentUrlPort.postMessage({});
 }
 
@@ -302,7 +307,7 @@ function toggleViewSourceCallback(url) {
   {
     url = url.substr(12, url.length - 12);
   }
-  else { url = "view-source:" + url; }
+  else {url = "view-source:" + url;}
   chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
 }
 
@@ -316,9 +321,10 @@ function passThru() {
 var keyMarksModeActivated = false;
 var keyMarksOpenNewTab = false;
 
-function activateKeyMarksModeToOpenInNewTab() { activateKeyMarksMode(true); }
+function activateKeyMarksModeToOpenInNewTab() {activateKeyMarksMode(true);}
 
 function activateKeyMarksMode(openInNewTab) {
+  HUD.show("KeyMarks Mode");
   keyMarksOpenNewTab = openInNewTab;
   document.addEventListener("keydown", onKeyDownForKeyMark, true);
   keyMarksModeActivated = true;
@@ -351,7 +357,7 @@ function keyMark(keyChar) {
       if(key == keyChar) {
         if(keyMarksOpenNewTab) {
           chrome.extension.sendRequest({handler: "openUrlInNewTab", url:url});
-        } else {
+        }else {
           chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
         }
         return
@@ -423,7 +429,7 @@ function onKeydown(event) {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
-      if (isEditable(event.srcElement)) { event.srcElement.blur(); }
+      if (isEditable(event.srcElement)) {event.srcElement.blur();}
       exitInsertMode();
     }
   }
@@ -458,13 +464,17 @@ function onKeydown(event) {
         event.preventDefault();
         event.stopPropagation();
       }
+      HUD.show(keyChar, true);
 
       keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
+      HUD.hide();
     }
+    
   }
+
 }
 
 function refreshCompletionKeys(completionKeys) {
@@ -489,13 +499,13 @@ function onBlurCapturePhase(event) {
 /*
  * Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
  */
-function isFocusable(element) { return isEditable(element) || isEmbed(element); }
+function isFocusable(element) {return isEditable(element) || isEmbed(element);}
 
 /*
  * Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
  * unfocused.
  */
-function isEmbed(element) { return ["EMBED", "OBJECT"].indexOf(element.tagName) > 0; }
+function isEmbed(element) {return ["EMBED", "OBJECT"].indexOf(element.tagName) > 0;}
 
 /*
  * Input or text elements are considered focusable and able to receieve their own keyboard events,
@@ -613,7 +623,7 @@ function showHelpDialog(html, fid) {
   container.innerHTML = html;
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
-      function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
+      function() {chrome.extension.sendRequest({handler: "openOptionsPageInNewTab"});}, false);
 
   document.body.appendChild(container);
   var dialog = document.getElementById("vimiumHelpDialog");
@@ -694,12 +704,15 @@ HUD = {
 
   showForDuration: function(text, duration) {
     HUD.show(text);
-    HUD._showForDurationTimerId = setTimeout(function() { HUD.hide(); }, duration);
+    HUD._showForDurationTimerId = setTimeout(function() {HUD.hide();}, duration);
   },
 
-  show: function(text) {
+  show: function(text, append) {
     clearTimeout(HUD._showForDurationTimerId);
-    HUD.displayElement().innerHTML = text;
+    if (append)
+        HUD.displayElement().innerHTML += text;
+    else
+        HUD.displayElement().innerHTML = text;
     clearInterval(HUD._tweenId);
     HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150);
     HUD.displayElement().style.display = "";
@@ -720,12 +733,12 @@ HUD = {
 
   onUpdateLinkClicked: function(event) {
     HUD.hideUpgradeNotification();
-    chrome.extension.sendRequest({ handler: "upgradeNotificationClosed" });
+    chrome.extension.sendRequest({handler: "upgradeNotificationClosed"});
   },
 
   hideUpgradeNotification: function(clickEvent) {
     Tween.fade(HUD.upgradeNotificationElement(), 0, 150,
-      function() { HUD.upgradeNotificationElement().style.display = "none"; });
+      function() {HUD.upgradeNotificationElement().style.display = "none";});
   },
 
   updatePageZoomLevel: function(pageZoomLevel) {
@@ -771,13 +784,15 @@ HUD = {
     return element;
   },
 
-  hide: function() {
+  hide: function(clear) {
+    if (clear)
+        HUD.displayElement().innerHTML = "";
     clearInterval(HUD._tweenId);
     HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
-      function() { HUD.displayElement().style.display = "none"; });
+      function() {HUD.displayElement().style.display = "none";});
   },
 
-  isReady: function() { return document.body != null; }
+  isReady: function() {return document.body != null;}
 };
 
 Tween = {
@@ -795,7 +810,7 @@ Tween = {
       if (value == state.to && onComplete)
         onComplete();
     };
-    state.timerId = setInterval(function() { Tween.performTweenStep(state); }, 50);
+    state.timerId = setInterval(function() {Tween.performTweenStep(state);}, 50);
     return state.timerId;
   },
 
@@ -830,6 +845,7 @@ initializePreDomReady();
 window.addEventListener("DOMContentLoaded", initializeOnDomReady);
 
 window.onbeforeunload = function() {
-  chrome.extension.sendRequest({ handler: "updateScrollPosition",
-      scrollX: window.scrollX, scrollY: window.scrollY });
+  chrome.extension.sendRequest({handler: "updateScrollPosition",
+      scrollX: window.scrollX, scrollY: window.scrollY});
 }
+

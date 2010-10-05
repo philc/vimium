@@ -173,7 +173,7 @@ function onKeyDownInLinkHintsMode(event) {
     }
   } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
     hintKeystrokeQueue.push(keyChar);
-      HUD.show(" [Keys]: " + hintKeystrokeQueue.join('').toUpperCase(), true);
+      HUD.show(" [Keys]: " + hintKeystrokeQueue.join('').toUpperCase());
     updateLinkHints();
   } else {
     return;

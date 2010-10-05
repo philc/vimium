@@ -669,6 +669,7 @@
         refreshedCompletionKeys = true;
       } else {
         repeatFunction(this[registryEntry.command], count, 0, frameId);
+        chrome.tabs.connect(tabId, { name: "backgroundCommandExecuted" });
       }
 
       newKeyQueue = "";
