@@ -377,7 +377,7 @@
                       newIndex = selectedTab.index - 1; // move to the left
               }
 
-              chrome.tabs.move(selectedTab.id, { index: newIndex })
+              chrome.tabs.move(selectedTab.id, { index: newIndex }, callback);
           });
       });
   }
@@ -440,7 +440,7 @@
           var delta = (direction == "next") ? 1 : -1;
           var toSelect = tabs[(i + delta + tabs.length) % tabs.length];
           selectionChangedHandlers.push(callback);
-          chrome.tabs.update(toSelect.id, { selected: true });
+          chrome.tabs.update(toSelect.id, { selected: true }, callback);
           break;
         }
       }
