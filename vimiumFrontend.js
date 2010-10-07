@@ -48,16 +48,20 @@ function setSetting(args) {settings[args.key] = args.value;}
 function initializePreDomReady() {
   for (var i in settingsToLoad) {getSetting(settingsToLoad[i]);}
 
+  // is vimium enabled for current page?
   var isEnabledForUrlPort = chrome.extension.connect({name: "isEnabledForUrl"});
   isEnabledForUrlPort.postMessage({url: window.location.toString()});
 
+  // zoom level from storage for current domain
   var getZoomLevelPort = chrome.extension.connect({name: "getZoomLevel"});
   getZoomLevelPort.postMessage({domain: window.location.host});
 
+  // css for link hints in options
   chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
     linkHintCss = response.linkHintCss;
   });
 
+  // keymarks in local storage
   chrome.extension.sendRequest({handler: "getKeyMarks"}, function (response) {
     keyMarks = response.keyMarks;
   });
@@ -707,6 +711,11 @@ HUD = {
     HUD._showForDurationTimerId = setTimeout(function() {HUD.hide();}, duration);
   },
 
+  /**
+   * displays text
+   * @param text (string)
+   * @param append (boolean) will append to existing text
+   */
   show: function(text, append) {
     clearTimeout(HUD._showForDurationTimerId);
     if (append)
@@ -741,6 +750,9 @@ HUD = {
       function() {HUD.upgradeNotificationElement().style.display = "none";});
   },
 
+  /**
+   * @param pageZoomLevel (integer)
+   */
   updatePageZoomLevel: function(pageZoomLevel) {
     // Since the chrome HUD does not scale with the page's zoom level, neither will this HUD.
     var inverseZoomLevel = (100.0 / pageZoomLevel) * 100;
@@ -784,6 +796,9 @@ HUD = {
     return element;
   },
 
+  /**
+   * @param clear (boolean): will also clear the text before hiding element
+   */
   hide: function(clear) {
     if (clear)
         HUD.displayElement().innerHTML = "";
@@ -835,6 +850,8 @@ function addCssToPage(css) {
     console.log("Warning: unable to add CSS to the page.");
     return;
   }
+
+  // create style element and push it in head
   var style = document.createElement("style");
   style.type = "text/css";
   style.appendChild(document.createTextNode(css));
