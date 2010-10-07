@@ -656,6 +656,7 @@
     newKeyQueue = keysToCheck;
     
     if (keyToCommandRegistry[command]) {
+      // if we have a match, run the command and clear the key queue
       registryEntry = keyToCommandRegistry[command];
       console.log("command found for [", keysToCheck, "],", registryEntry.command);
 
@@ -675,7 +676,19 @@
       }
 
       newKeyQueue = "";
-    } 
+    } else {
+        // check if we have at least a command starting by the queue
+        newKeyQueueIsValid = false;
+        for (commandHotKey in keyToCommandRegistry) {
+            if (commandHotKey.match("^"+newKeyQueue) == newKeyQueue) {
+                newKeyQueueIsValid = true;
+            }
+        }
+
+        if (!newKeyQueueIsValid)
+            newKeyQueue = "";
+    }
+
 /** else if (getActualKeyStrokeLength(command) > 1) {
       var splitKey = splitKeyIntoFirstAndSecond(command);
 
