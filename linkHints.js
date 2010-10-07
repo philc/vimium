@@ -243,7 +243,7 @@ function isSelectable(element) {
  */
 function highlightLinkMatches(searchString) {
   var linksMatched = [];
-  HUD.show("Keys: " + searchString);
+  HUD.show("Keys: " + searchString.toUpperCase());
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
     if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
