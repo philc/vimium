@@ -128,7 +128,7 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('tt',  'createTab');
   mapKeyToCommand('d',   'removeTab');
   mapKeyToCommand('u',   'restoreTab');
-  mapKeyToCommand('to',  'closeOtherTabs');
+  mapKeyToCommand('tcc',  'closeOtherTabs');
   mapKeyToCommand('tr',  'closeRightTabs');
   mapKeyToCommand('tl',  'closeLeftTabs');
   mapKeyToCommand('te',  'moveTabRight');

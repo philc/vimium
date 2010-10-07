@@ -653,6 +653,8 @@
     if (command.length == 0) { return keysToCheck; }
     if (isNaN(count)) { count = 1; }
 
+    newKeyQueue = keysToCheck;
+    
     if (keyToCommandRegistry[command]) {
       registryEntry = keyToCommandRegistry[command];
       console.log("command found for [", keysToCheck, "],", registryEntry.command);
@@ -666,14 +668,15 @@
                            completionKeys: generateCompletionKeys("")
                          });
 
-        refreshedCompletionKeys = true;
+//        refreshedCompletionKeys = true;
       } else {
         repeatFunction(this[registryEntry.command], count, 0, frameId);
         chrome.tabs.connect(tabId, { name: "backgroundCommandExecuted" });
       }
 
       newKeyQueue = "";
-    } else if (getActualKeyStrokeLength(command) > 1) {
+    } 
+/** else if (getActualKeyStrokeLength(command) > 1) {
       var splitKey = splitKeyIntoFirstAndSecond(command);
 
       // The second key might be a valid command by its self.
@@ -692,7 +695,7 @@
       var port = chrome.tabs.connect(tabId, { name: "refreshCompletionKeys" });
       port.postMessage({ completionKeys: generateCompletionKeys(newKeyQueue) });
     }
-
+*/
     return newKeyQueue;
   }
 
