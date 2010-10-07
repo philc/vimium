@@ -33,9 +33,9 @@ var clickableElementsXPath = (function() {
 })();
 
 // We need this as a top-level function because our command system doesn't yet support arguments.
-function activateLinkHintsModeToOpenInNewTab() { activateLinkHintsMode(true, false); }
+function activateLinkHintsModeToOpenInNewTab() {activateLinkHintsMode(true, false);}
 
-function activateLinkHintsModeWithQueue() { activateLinkHintsMode(true, true); }
+function activateLinkHintsModeWithQueue() {activateLinkHintsMode(true, true);}
 
 function activateLinkHintsMode(openInNewTab, withQueue) {
   if (!linkHintsCssAdded)
@@ -86,7 +86,7 @@ function buildLinkHints() {
   document.body.appendChild(hintMarkerContainingDiv);
 }
 
-function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
+function logXOfBase(x, base) {return Math.log(x) / Math.log(base);}
 
 /*
  * Returns all clickable elements that are not hidden and are in the current viewport.
@@ -243,13 +243,16 @@ function isSelectable(element) {
  */
 function highlightLinkMatches(searchString) {
   var linksMatched = [];
+  HUD.show("Keys: " + searchString);
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
     if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
       if (linkMarker.style.display == "none")
         linkMarker.style.display = "";
-      for (var j = 0; j < linkMarker.childNodes.length; j++)
-        linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
+      for (var j = 0; j < linkMarker.childNodes.length; j++) {
+            if (j < searchString.length)
+                linkMarker.childNodes[j].innerHTML = "";
+        }
       linksMatched.push(linkMarker.clickableItem);
     } else {
       linkMarker.style.display = "none";
