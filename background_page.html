@@ -680,7 +680,7 @@
         // check if we have at least a command starting by the queue
         newKeyQueueIsValid = false;
         for (commandHotKey in keyToCommandRegistry) {
-            if (commandHotKey.match("^"+newKeyQueue) == newKeyQueue) {
+            if (commandHotKey.match("^"+ command) == command) {
                 newKeyQueueIsValid = true;
             }
         }
