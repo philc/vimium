@@ -393,6 +393,13 @@ function onKeydown(event) {
     return;
   }
 
+  // experimental: Needed for google new instant search
+  if (isEscape(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+  }
+
+
   if (linkHintsModeActivated || keyMarksModeActivated || passThruMode)
     return;
 
@@ -464,10 +471,10 @@ function onKeydown(event) {
   }
   else if (!insertMode && !findMode) {
     if (keyChar) {
-//      if (currentCompletionKeys.indexOf(keyChar) != -1) {
-//        event.preventDefault();
-//        event.stopPropagation();
-//      }
+      if (currentCompletionKeys.indexOf(keyChar) != -1) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
       HUD.show(keyChar, true);
 
       keyPort.postMessage({keyChar:keyChar, frameId:frameId});
@@ -475,6 +482,8 @@ function onKeydown(event) {
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
       HUD.hide();
+      event.preventDefault();
+      event.stopPropagation();
     }
     
   }

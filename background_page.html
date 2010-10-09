@@ -228,7 +228,7 @@
    * Returns the keys that can complete a valid command given the current key queue.
    */
   function getCompletionKeys(request) {
-    return {completionKeys: generateCompletionKeys()};
+    return {completionKeys: generateCompletionKeys("")};
   }
 
   /**
@@ -604,20 +604,16 @@
    * in.
    */
   function generateCompletionKeys(keysToCheck) {
-    var splitHash = splitKeyQueue(keysToCheck || keyQueue);
+    var splitHash = splitKeyQueue(keysToCheck);
     command = splitHash.command;
     count = splitHash.count;
 
-    var completionKeys = singleKeyCommands.slice(0);
-
-    if (getActualKeyStrokeLength(command) == 1)
-    {
-      for (var key in keyToCommandRegistry)
-      {
-        var splitKey = splitKeyIntoFirstAndSecond(key);
-        if (splitKey.first == command)
-         completionKeys.push(splitKey.second);
-      }
+    var completionKeys = [];
+    for (var commandHotKey in keyToCommandRegistry) {
+        if (commandHotKey.length > command.length  && commandHotKey.match("^"+ command) == command) {
+            var key = commandHotKey.substring(command.length, command.length+1);
+            completionKeys.push(key);
+        }
     }
 
     return completionKeys;
@@ -669,7 +665,7 @@
                            completionKeys: generateCompletionKeys("")
                          });
 
-//        refreshedCompletionKeys = true;
+        refreshedCompletionKeys = true;
       } else {
         repeatFunction(this[registryEntry.command], count, 0, frameId);
         chrome.tabs.connect(tabId, { name: "backgroundCommandExecuted" });
@@ -689,18 +685,6 @@
             newKeyQueue = "";
     }
 
-/** else if (getActualKeyStrokeLength(command) > 1) {
-      var splitKey = splitKeyIntoFirstAndSecond(command);
-
-      // The second key might be a valid command by its self.
-      if (keyToCommandRegistry[splitKey.second])
-        newKeyQueue = checkKeyQueue(splitKey.second);
-      else
-        newKeyQueue = (validFirstKeys[splitKey.second] ? splitKey.second : "");
-    } else {
-      newKeyQueue = (validFirstKeys[command] ? count.toString() + command : "");
-    }
-
     // If we haven't sent the completion keys piggybacked on executePageCommand,
     // send them by themselves.
     if (!refreshedCompletionKeys)
@@ -708,7 +692,7 @@
       var port = chrome.tabs.connect(tabId, { name: "refreshCompletionKeys" });
       port.postMessage({ completionKeys: generateCompletionKeys(newKeyQueue) });
     }
-*/
+
     return newKeyQueue;
   }
 
