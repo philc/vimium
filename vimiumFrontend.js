@@ -394,7 +394,7 @@ function onKeydown(event) {
   }
 
   // experimental: Needed for google new instant search
-  if (isEscape(event)) {
+  if (isEscape(event) && document.activeElement.tagName == "INPUT") {
         event.preventDefault();
         event.stopPropagation();
   }
@@ -482,8 +482,6 @@ function onKeydown(event) {
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
       HUD.hide();
-      event.preventDefault();
-      event.stopPropagation();
     }
     
   }
