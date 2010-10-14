@@ -141,6 +141,7 @@ function initializePreDomReady() {
  */
 function initializeWhenEnabled() {
   document.addEventListener("keydown", onKeydown, true);
+  document.addEventListener("keypress", onKeypress, true);
   document.addEventListener("focus", onFocusCapturePhase, true);
   document.addEventListener("blur", onBlurCapturePhase, true);
   enterInsertModeIfElementIsFocused();
@@ -308,7 +309,7 @@ function toggleViewSourceCallback(url) {
  *
  * Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
  */
-function onKeydown(event) {
+function onKeypress(event) {
   var keyChar = "";
 
   if (linkHintsModeActivated)
@@ -316,36 +317,74 @@ function onKeydown(event) {
 
   // Ignore modifier keys by themselves.
   if (event.keyCode > 31) {
-    keyChar = getKeyChar(event);
+    keyChar = String.fromCharCode(event.charCode);
 
     // Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && !event.shiftKey && isPrimaryModifierKey(event))
+    if (keyChar == "f" && isPrimaryModifierKey(event))
     {
       enterInsertMode();
       return;
     }
+  }
 
-    if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
+  if (findMode)
+  {
+    if (keyChar)
     {
-      var modifiers = [];
+      handleKeyCharForFindMode(keyChar);
 
-      if (event.shiftKey)
-        keyChar = keyChar.toUpperCase();
-      if (event.metaKey)
-        modifiers.push("m");
-      if (event.ctrlKey)
-        modifiers.push("c");
-      if (event.altKey)
-        modifiers.push("a");
-
-      for (var i in modifiers)
-        keyChar = modifiers[i] + "-" + keyChar;
-
-      if (modifiers.length > 0 || keyChar.length > 1)
-        keyChar = "<" + keyChar + ">";
+      // Don't let the space scroll us if we're searching.
+      if (event.keyCode == keyCodes.space)
+        event.preventDefault();
     }
   }
 
+  else if (!insertMode && !findMode) {
+    if (keyChar) {
+      if (currentCompletionKeys.indexOf(keyChar) != -1) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
+    }
+  }
+}
+
+function onKeydown(event) {
+  var keyChar = "";
+
+  if (linkHintsModeActivated)
+    return;
+  
+  // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?
+  if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 || event.altKey && event.keyCode > 31)
+  {
+    if (event.keyCode > 31)
+    {
+      keyChar = getKeyChar(event);
+  
+      if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
+      {
+        var modifiers = [];
+      
+        if (event.shiftKey)
+          keyChar = keyChar.toUpperCase();
+        if (event.metaKey)
+          modifiers.push("m");
+        if (event.ctrlKey)
+          modifiers.push("c");
+        if (event.altKey)
+          modifiers.push("a");
+
+        for (var i in modifiers)
+          keyChar = modifiers[i] + "-" + keyChar;
+
+        if (modifiers.length > 0 || keyChar.length > 1)
+          keyChar = "<" + keyChar + ">";
+      }
+    }
+  }
+        
   if (insertMode && isEscape(event))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
@@ -359,14 +398,6 @@ function onKeydown(event) {
   {
     if (isEscape(event))
       exitFindMode();
-    else if (keyChar)
-    {
-      handleKeyCharForFindMode(keyChar);
-
-      // Don't let the space scroll us if we're searching.
-      if (event.keyCode == keyCodes.space)
-        event.preventDefault();
-    }
     // Don't let backspace take us back in history.
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
     {
@@ -382,12 +413,13 @@ function onKeydown(event) {
   }
   else if (!insertMode && !findMode) {
     if (keyChar) {
-      if (currentCompletionKeys.indexOf(keyChar) != -1) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+        if (currentCompletionKeys.indexOf(keyChar) != -1) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
-      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
+        keyPort.postMessage({keyChar:keyChar, frameId:frameId});
+
     }
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
