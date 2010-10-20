@@ -20,6 +20,7 @@
              "lib/clipboard.js",
              "linkHints.js",
              "vimiumFrontend.js",
+             "completionDialog.js",
              "bookmarks.js"
             ],
       "run_at": "document_start",

@@ -36,12 +36,14 @@ function activateBookmarkFindMode() {
       }
       
       this.renderHUD();
+      this.completionDialog.show();
       
       this.keyPressListener.enable();
     },
     disable: function() {
       this.enabled = false;
       this.keyPressListener.disable();
+      this.completionDialog.hide()
       HUD.hide();
     },
     getQueryString: function() {
@@ -61,42 +63,54 @@ function activateBookmarkFindMode() {
 
   // private method
   var initialize = function() {
+    var self = this;
     this.initialized = true;
     this.finder = new BookmarkFinder({
       onResultsFound: function(bookmarks) {
-        BookmarkMode.bookmarksFound = bookmarks;
-        for(var i=0;i<bookmarks.length;i++) { 
-          console.log(bookmarks[i].title)
+        self.bookmarksFound = bookmarks;
+        if(bookmarks.length>10) {
+          bookmarks=bookmarks.slice(0, 10)
         }
+        self.completionDialog.showCompletions(self.getQueryString(), bookmarks)
       }
     });
 
-    this.keyPressListener = new KeyPressListener({
-      keyDown: function(key) {
-        // shift key will toggle between new tab/same tab
-        if (event.keyCode == keyCodes.shiftKey) {
-          BookmarkMode.invertNewTabSetting();
-          shiftWasPressedWhileToggled = true
-          return
+    this.completionDialog = new CompletionDialog({
+      onSelect: function(selection) {
+        var url = selection.url
+        var isABookmarklet = function(url) {
+          return url.indexOf("javascript:")===0
         }
 
-        if(event.keyCode == keyCodes.enter) {
-          var bookmarksFound = BookmarkMode.bookmarksFound;
-          if(bookmarksFound && bookmarksFound.length>0) {
-            var url = bookmarksFound[0].url
-            var isABookmarklet = function(url) {
-              return url.indexOf("javascript:")===0
-            }
+        if(!self.newTab || isABookmarklet(url)) {
+          window.location=url
+        }
+        else {
+          window.open(url)
+        }
+        
+        self.disable();
+      },
+      renderOption: function(searchString, selection) {
 
-            if(!BookmarkMode.newTab || isABookmarklet(url)) {
-              window.location=url
-            }
-            else {
-              window.open(url)
-            }
-            
-            BookmarkMode.disable();
-          }
+        var displaytext = selection.title + " (" + selection.url + ")"
+
+        if(displaytext.length>70) {
+          displaytext = displaytext.substr(0, 70)+"..."
+        }
+
+        return displaytext.split(new RegExp(searchString, "i")).join("<strong>"+searchString+"</strong>")
+      },
+      initialSearchText: "Type a bookmark name or URL"
+    })
+
+    this.keyPressListener = new KeyPressListener({
+      keyDown: function(event) {
+        // shift key will toggle between new tab/same tab
+        if (event.keyCode == keyCodes.shiftKey) {
+          self.invertNewTabSetting();
+          shiftWasPressedWhileToggled = true
+          return
         }
 
         var keyChar = getKeyChar(event);
@@ -105,27 +119,28 @@ function activateBookmarkFindMode() {
 
         // TODO(philc): Ignore keys that have modifiers.
         if (isEscape(event)) {
-          BookmarkMode.disable();
+          self.disable();
         } 
         else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (BookmarkMode.query.length == 0) {
-            BookmarkMode.disable();
+          if (self.query.length == 0) {
+            self.disable();
           } else {
-            BookmarkMode.query.pop();
+            self.query.pop();
+            self.finder.find(self.getQueryString())
           }
         } 
-        else {
-          BookmarkMode.query.push(keyChar);
+        else if(keyChar!=="up" && keyChar!=="down" && keyChar!=="left" && keyChar!="right") {
+          self.query.push(keyChar);
+          self.finder.find(self.getQueryString())
         } 
 
-        BookmarkMode.finder.find(BookmarkMode.getQueryString())
         event.stopPropagation();
         event.preventDefault();
       },
       keyUp: function(event) {
         // shift key will toggle between new tab/same tab
         if (event.keyCode == keyCodes.shiftKey && shiftWasPressedWhileToggled) {
-          BookmarkMode.invertNewTabSetting();
+          self.invertNewTabSetting();
           shiftWasPressedWhileToggled = false
         }
         event.stopPropagation();
@@ -142,25 +157,7 @@ function activateBookmarkFindMode() {
   }
   BookmarkFinder.prototype = {
     find: function(query) {
-      console.log("You typed: " + query)
       this.port.postMessage({query:query})
-    }
-  }
-
-  var KeyPressListener = function(handlers) {
-    this.handlers = handlers; 
-  }
-
-  KeyPressListener.prototype = {
-    enable: function() {
-      var handlers = this.handlers;
-      (handlers.keyDown && document.addEventListener("keydown", handlers.keyDown, true));
-      (handlers.keyUp && document.addEventListener("keyup", handlers.keyUp, true));
-    },
-    disable: function() {
-      var handlers = this.handlers;
-      (handlers.keyDown && document.removeEventListener("keydown", handlers.keyDown, true));
-      (handlers.keyUp && document.removeEventListener("keyup", handlers.keyUp, true));
     }
   }
 
