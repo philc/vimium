@@ -320,32 +320,26 @@ function onKeypress(event) {
     keyChar = String.fromCharCode(event.charCode);
 
     // Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && isPrimaryModifierKey(event))
-    {
+    if (keyChar == "f" && isPrimaryModifierKey(event)) {
       enterInsertMode();
       return;
     }
-  }
 
-  if (findMode)
-  {
-    if (keyChar)
-    {
-      handleKeyCharForFindMode(keyChar);
-
-      // Don't let the space scroll us if we're searching.
-      if (event.keyCode == keyCodes.space)
-        event.preventDefault();
-    }
-  }
-
-  else if (!insertMode && !findMode) {
     if (keyChar) {
-      if (currentCompletionKeys.indexOf(keyChar) != -1) {
-        event.preventDefault();
-        event.stopPropagation();
+      if (findMode) {
+        handleKeyCharForFindMode(keyChar);
+
+        // Don't let the space scroll us if we're searching.
+        if (event.keyCode == keyCodes.space)
+          event.preventDefault();
+      } else if (!insertMode && !findMode) {
+        if (currentCompletionKeys.indexOf(keyChar) != -1) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        keyPort.postMessage({keyChar:keyChar, frameId:frameId});
       }
-      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
   }
 }
@@ -355,36 +349,32 @@ function onKeydown(event) {
 
   if (linkHintsModeActivated)
     return;
-  
+
   // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?
-  if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 || event.altKey && event.keyCode > 31)
-  {
-    if (event.keyCode > 31)
+  if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 || event.altKey && event.keyCode > 31) {
+    keyChar = getKeyChar(event);
+
+    if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
     {
-      keyChar = getKeyChar(event);
-  
-      if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
-      {
-        var modifiers = [];
-      
-        if (event.shiftKey)
+      var modifiers = [];
+
+      if (event.shiftKey)
           keyChar = keyChar.toUpperCase();
-        if (event.metaKey)
+      if (event.metaKey)
           modifiers.push("m");
-        if (event.ctrlKey)
+      if (event.ctrlKey)
           modifiers.push("c");
-        if (event.altKey)
+      if (event.altKey)
           modifiers.push("a");
 
-        for (var i in modifiers)
+      for (var i in modifiers)
           keyChar = modifiers[i] + "-" + keyChar;
 
-        if (modifiers.length > 0 || keyChar.length > 1)
+      if (modifiers.length > 0 || keyChar.length > 1)
           keyChar = "<" + keyChar + ">";
-      }
     }
   }
-        
+
   if (insertMode && isEscape(event))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
@@ -419,7 +409,6 @@ function onKeydown(event) {
         }
 
         keyPort.postMessage({keyChar:keyChar, frameId:frameId});
-
     }
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
