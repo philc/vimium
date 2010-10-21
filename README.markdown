@@ -88,6 +88,7 @@ Release Notes
 -  A new command (`gi`) to focus the first (or n-th) text input box on the page.
 -  A new command (`<a-f>`) to open up multiple links at a time in new tabs.
 -  Frame support.
+-  More robust support for non-US keyboard layouts.
 -  Bug fixes.
 
 1.19 (06/29/2010)
