@@ -1,6 +1,7 @@
 <html>
 <head>
 <script type="text/javascript" src="commands.js"></script>
+<script type="text/javascript" src="lib/clipboard.js"></script>
 <script type="text/javascript" charset="utf-8">
   // Chromium #15242 will make this XHR request to access the manifest unnecessary.
   var manifestRequest = new XMLHttpRequest();
@@ -73,7 +74,8 @@
     registerFrame: registerFrame,
     frameFocused: handleFrameFocused,
     upgradeNotificationClosed: upgradeNotificationClosed,
-    updateScrollPosition: handleUpdateScrollPosition
+    updateScrollPosition: handleUpdateScrollPosition,
+    copyToClipboard: copyToClipboard
   };
 
   // Event handlers
@@ -248,6 +250,13 @@
   function upgradeNotificationClosed(request) {
     localStorage.previousVersion = currentVersion;
     sendRequestToAllTabs({ name: "hideUpgradeNotification" });
+  }
+
+  /*
+   * Copies some data (request.data) to the clipboard.
+   */
+  function copyToClipboard(request) {
+    Clipboard.copy(request.data);
   }
 
   /*

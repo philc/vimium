@@ -286,7 +286,11 @@ function toggleViewSource() {
 }
 
 function copyCurrentUrl() {
-  getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); });
+  // TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background page
+  // to copy.
+  // http://code.google.com/p/chromium/issues/detail?id=55188
+  //getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); });
+  getCurrentUrlHandlers.push(function (url) { chrome.extension.sendRequest({ handler: "copyToClipboard", data: url }); });
 
   // TODO(ilya): Convert to sendRequest.
   var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
