@@ -22,10 +22,105 @@ var isEnabledForUrl = true;
 // The user's operating system.
 var currentCompletionKeys;
 var linkHintCss;
-var keyMarks;
 
 var KeyMarks = {
-    queue : ''
+    queue : '', // key queue
+    keyMarksModeActivated: false,
+    keyMarksOpenNewTab: false,
+    marks: null, // marks defined in options page
+
+    // event listener
+    onKeyDownForKeyMark: function(event) {
+        var keyChar = getKeyChar(event);
+        if (!keyChar)
+            return;
+
+        var isValid = false;
+        if (!isEscape(event)) {
+            keyChar = event.shiftKey ? keyChar.toUpperCase() : keyChar;
+            KeyMarks.queue += keyChar;
+
+            isValid = KeyMarks.keyMark();
+        }
+
+        HUD.show(KeyMarks.queue, true);
+
+        if (!isValid) {
+            KeyMarks.reset();
+        }
+
+        event.stopPropagation();
+        event.preventDefault();
+    },
+
+    _getMarksAsMap: function() {
+        var marks = KeyMarks.marks;
+        var map = {};
+
+        marks = marks.split(/\n/);
+
+        for(var i=0; i<marks.length; i++) {
+            if (!marks[i])
+                continue;
+
+            var splits = marks[i].split(' ');
+            var mark = splits[0].trim();
+            var url = splits[1].trim();
+
+            map[mark] = url;
+        }
+
+        return map;
+    },
+
+    // checks if a current queue matches a keymark and open url OR checks if queue is valid
+    // queue is valid if it matches the beginning of a keymark (like commands)
+    keyMark: function() {
+        var isValid = false;
+        var marks = this._getMarksAsMap();
+
+        // check for a exact match
+        for(var mark in marks) {
+            var url = marks[mark];
+
+            if (KeyMarks.queue == mark) {
+                KeyMarks.openUrl(url);
+                isValid = true;
+
+                KeyMarks.reset();
+                break;
+            }
+        }
+
+        // check if we have a beginning
+        for(var mark in marks) {
+            if (mark.match("^"+ KeyMarks.queue) == KeyMarks.queue) {
+                isValid = true;
+                break;
+            }
+        }
+
+        return isValid;
+    },
+
+    openUrl: function (url) {
+        if(KeyMarks.keyMarksOpenNewTab) {
+            chrome.extension.sendRequest({
+                handler: "openUrlInNewTab",
+                url:url
+            });
+        }else {
+            chrome.extension.sendRequest({
+                handler: "openUrlInCurrentTab",
+                url:url
+            });
+        }
+    },
+
+    reset: function() {
+        KeyMarks.queue = '';
+        deactivateKeyMarksMode();
+    }
 };
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
@@ -87,7 +182,7 @@ function initializePreDomReady() {
     chrome.extension.sendRequest({
         handler: "getKeyMarks"
     }, function (response) {
-        keyMarks = response.keyMarks;
+        KeyMarks.marks = response.keyMarks;
     });
 
     refreshCompletionKeys();
@@ -421,100 +516,25 @@ function passThru() {
     HUD.show("Pass-Thru Mode");
 }
 
-var keyMarksModeActivated = false;
-var keyMarksOpenNewTab = false;
-
+// keymarks action
 function activateKeyMarksModeToOpenInNewTab() {
     activateKeyMarksMode(true);
 }
 
 function activateKeyMarksMode(openInNewTab) {
     HUD.show("KeyMarks Mode  ");
-    keyMarksOpenNewTab = openInNewTab;
-    document.addEventListener("keydown", onKeyDownForKeyMark, true);
-    keyMarksModeActivated = true;
+    KeyMarks.keyMarksOpenNewTab = openInNewTab;
+    document.addEventListener("keydown", KeyMarks.onKeyDownForKeyMark, true);
+    KeyMarks.keyMarksModeActivated = true;
 }
 
 function deactivateKeyMarksMode() {
-    document.removeEventListener("keydown", onKeyDownForKeyMark, true);
-    keyMarksModeActivated = false;
+    document.removeEventListener("keydown", KeyMarks.onKeyDownForKeyMark, true);
+    KeyMarks.keyMarksModeActivated = false;
 }
 
-function onKeyDownForKeyMark(event) {
-    var keyChar = getKeyChar(event);
-    if (!keyChar)
-        return;
+// end keymarks actions
 
-    var isValid = false;
-    if (!isEscape(event)) {
-        keyChar = event.shiftKey ? keyChar.toUpperCase() : keyChar;
-        KeyMarks.queue += keyChar;
-
-        isValid = keyMark(keyChar);
-    }
-
-    HUD.show(KeyMarks.queue, true);
-
-    if (!isValid) {
-        deactivateKeyMarksMode();
-    } 
-
-    event.stopPropagation();
-    event.preventDefault();
-}
-
-function keyMark(keyChar) {
-    var isValid = false;
-    var marks = keyMarks.split(/\n/);
-
-    // check for a direct match
-    for(var i=0; i<marks.length; i++) {
-        if (!marks[i])
-            continue;
-        
-        var splits = marks[i].split(' ');
-        var mark = splits[0].trim();
-        var url = splits[1].trim();
-    
-        console.log(mark, url);
-
-
-        if (KeyMarks.queue == mark) {
-            keyMarkOpenUrl(url);
-            isValid = true;
-            KeyMarks.queue = '';
-            deactivateKeyMarksMode();
-            break;
-        }
-    }
-
-    // check if we have a beginning
-    for(var i=0; i<marks.length; i++) {
-        var splits = marks[i].split(' ');
-        var mark = splits[0].trim();
-        
-        if (mark.match("^"+ KeyMarks.queue) == KeyMarks.queue) {
-            isValid = true;
-            break;
-        }
-    }
-
-    return isValid;
-}
-
-function keyMarkOpenUrl(url) {
-    if(keyMarksOpenNewTab) {
-        chrome.extension.sendRequest({
-            handler: "openUrlInNewTab",
-            url:url
-        });
-    }else {
-        chrome.extension.sendRequest({
-            handler: "openUrlInCurrentTab",
-            url:url
-        });
-    }
-}
 var passThruMode = false;
 
 function passThru() {
@@ -545,7 +565,7 @@ function onKeydown(event) {
     }
 
 
-    if (linkHintsModeActivated || keyMarksModeActivated || passThruMode)
+    if (linkHintsModeActivated || KeyMarks.keyMarksModeActivated || passThruMode)
         return;
 
     // Ignore modifier keys by themselves.
