@@ -129,8 +129,9 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('d',   'removeTab');
   mapKeyToCommand('u',   'restoreTab');
   mapKeyToCommand('tcc',  'closeOtherTabs');
-  mapKeyToCommand('tr',  'closeRightTabs');
-  mapKeyToCommand('tl',  'closeLeftTabs');
+  mapKeyToCommand('tcw',  'closeOtherWindows');
+  mapKeyToCommand('tce',  'closeRightTabs');
+  mapKeyToCommand('tcq',  'closeLeftTabs');
   mapKeyToCommand('te',  'moveTabRight');
   mapKeyToCommand('tq',  'moveTabLeft');
   mapKeyToCommand('td',  'detachTab');
@@ -198,6 +199,7 @@ addCommand('createTab',                         'Create new tab',    true);
 addCommand('removeTab',                         'Close current tab', true);
 addCommand('restoreTab',                        'Restore closed tab', true);
 addCommand('closeOtherTabs',                    'Close other tabs', true);
+addCommand('closeOtherWindows',                    'Close other windows', true);
 addCommand('closeRightTabs',                    'Close tabs on the right', true);
 addCommand('closeLeftTabs',                     'Close tabs on the left', true);
 addCommand('moveTabRight',                      'Moves tab to the right', true);
@@ -227,7 +229,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
+    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", , "closeOtherWindows", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
   misc:
     ["goToOptionsPage", "showHelp"]
     };

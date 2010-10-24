@@ -409,6 +409,18 @@
     });
   }
 
+  // closes other windows except the current one 
+  function closeOtherWindows(callback) {
+    chrome.windows.getAll(null, function (windows) {
+        chrome.windows.getCurrent(function (currentWindow) {
+            for (var i = 0; i < windows.length; i++) {
+                if (windows[i].id != currentWindow.id) {
+                    chrome.windows.remove(windows[i].id);
+                }
+            }
+        });
+    });
+  }
 
   // closes other tabs except the current one -- selected one
   function closeOtherTabs(callback) {
