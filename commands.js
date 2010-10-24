@@ -126,6 +126,8 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('gT',  'previousTab');
 
   mapKeyToCommand('tt',  'createTab');
+  mapKeyToCommand('tm',  'markTab');
+  mapKeyToCommand('tp',  'putTab');
   mapKeyToCommand('d',   'removeTab');
   mapKeyToCommand('u',   'restoreTab');
   mapKeyToCommand('tcc',  'closeOtherTabs');
@@ -193,6 +195,8 @@ addCommand('activateKeyMarksMode',              'Open an assigned bookmark');
 addCommand('activateKeyMarksModeToOpenInNewTab','Open an assigned bookmark in a new tab');
 
 // Manipulating tabs:
+addCommand('markTab',                           'Marks the selected tab for yanking',  true);
+addCommand('putTab',                           'Moves the marked tab next to current tab',  true);
 addCommand('nextTab',                           'Go one tab right',  true);
 addCommand('previousTab',                       'Go one tab left',   true);
 addCommand('createTab',                         'Create new tab',    true);
@@ -229,7 +233,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", , "closeOtherWindows", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
+    ["markTab", "putTab", "nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", , "closeOtherWindows", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
   misc:
     ["goToOptionsPage", "showHelp"]
     };

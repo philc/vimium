@@ -17,6 +17,10 @@
   var lastSelectedTabId = null;
   var selectedTabId = null;
 
+  var Tabs = {
+     markedId: null
+  };
+
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
   // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
   var namedKeyRegex = /^(<[amc-].|(?:[amc]-)?[a-z0-9]{2,5}>)(.*)$/;
@@ -403,6 +407,26 @@
             }
         });
     });
+  }
+
+  // marks the selected tab. Ready to be yanked
+  function markTab()
+  {
+      chrome.tabs.getSelected(null, function (tab) {
+          Tabs.markedId = tab.id;
+      });
+  }
+
+  // moves the marked tab next to the selected one 
+  function putTab()
+  {
+      if (Tabs.markedId != null) {
+          chrome.tabs.getSelected(null, function(currentTab) {
+              var newIndex = currentTab.index + 1;
+              chrome.tabs.move(Tabs.markedId, { windowId : currentTab.windowId, index: newIndex });
+              Tabs.markedId = null;
+          });
+      }
   }
 
   // closes other windows except the current one
