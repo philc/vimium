@@ -386,6 +386,10 @@ function onKeydown(event) {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
       if (isEditable(event.srcElement)) { event.srcElement.blur(); }
       exitInsertMode();
+
+      // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search box.
+      // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
+      event.stopPropagation();
     }
   }
   else if (findMode)
@@ -418,6 +422,16 @@ function onKeydown(event) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
     }
   }
+
+  // Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
+  // The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
+  // back into the search box. As a side effect, this should also prevent overriding by other sites.
+  //
+  // Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
+  //
+  // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
+  if (keyChar == "" && !insertMode && currentCompletionKeys.indexOf(getKeyChar(event)) != -1)
+    event.stopPropagation();
 }
 
 function refreshCompletionKeys(completionKeys) {
