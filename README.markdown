@@ -81,7 +81,7 @@ When you're done, send us a pull request on Github. Feel free to include a chang
 Release Notes
 -------------
 
-1.20 (Unreleased)
+1.20 (10/24/2010)
 
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
 -  Two new commands (`zH` and `zL`) to scroll to the left and right edges of the page.
@@ -89,7 +89,7 @@ Release Notes
 -  A new command (`<a-f>`) to open up multiple links at a time in new tabs.
 -  Frame support.
 -  More robust support for non-US keyboard layouts.
--  Bug fixes.
+-  Numerous bug fixes.
 
 1.19 (06/29/2010)
 
