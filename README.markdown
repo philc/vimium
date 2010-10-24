@@ -34,6 +34,8 @@ Navigating the current page:
     <c-u>, <c-y>   scroll up a page
     <c-f>   scroll down a full page
     <c-b>   scroll up a full page
+    zH      scroll all the way left
+    zL      scroll all the way right
     f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
     <a-f>   activate link hints mode to open multiple links in a new tab
@@ -48,6 +50,7 @@ Navigating the current page:
     yy      copy the current url to the clipboard
     gu      go up one level in the URL hierarchy
     gf      cycle forward to the next frame
+    gi      focus the first (or n-th) text input box on the page
 
 Navigating your history:
     H       go back in history
