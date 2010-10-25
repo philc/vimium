@@ -1,8 +1,9 @@
 Vimium - The Hacker's Browser
 =============================
-
 Vimium is a Chrome extension that provides keyboard based navigation and control in the spirit of the Vim
 editor.
+
+Tested on Chrome 5.0. New bugs introduced in Chrome 6.0 are not supported in this fork
 
 __Installation instructions:__
 
@@ -61,13 +62,17 @@ Manipulating tabs:
     d          close current tab
     u          restore closed tab (i.e. unwind the 'd' command)
     to         close other tabs
-    tr         close tabs on the right
-    tl         close tabs on the left
+    tcw   close other windows
+    tce         close tabs on the right
+    tcq         close tabs on the left
     te         moves a tab to the right
     tq         moves a tab to the left
+    tm        marks a tab for a move
+    tp        puts a marked tab
     td         detaches a tab into a new window
     tf         switches to last focused tab
     O          Go to options page
+
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
 <c-[>) will clear any partial commands in the queue.
