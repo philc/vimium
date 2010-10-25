@@ -558,13 +558,6 @@ function onKeydown(event) {
         return;
     }
 
-    // experimental: Needed for google new instant search
-    if (isEscape(event) && document.activeElement.tagName == "INPUT") {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
-
     if (linkHintsModeActivated || KeyMarks.keyMarksModeActivated || passThruMode)
         return;
 
@@ -609,6 +602,9 @@ function onKeydown(event) {
                 event.srcElement.blur();
             }
             exitInsertMode();
+
+            // experimental: Needed for google new instant search
+            event.stopPropagation();
         }
     }
     else if (findMode)
@@ -656,7 +652,6 @@ function onKeydown(event) {
             });
             HUD.hide();
         }
-    
     }
 
 }
