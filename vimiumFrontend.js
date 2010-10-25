@@ -47,8 +47,7 @@ function setSetting(args) { settings[args.key] = args.value; }
 function initializePreDomReady() {
   for (var i in settingsToLoad) { getSetting(settingsToLoad[i]); }
 
-  var isEnabledForUrlPort = chrome.extension.connect({ name: "isEnabledForUrl" });
-  isEnabledForUrlPort.postMessage({ url: window.location.toString() });
+  checkIfEnabledForUrl();
 
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
   getZoomLevelPort.postMessage({ domain: window.location.host });
@@ -116,15 +115,6 @@ function initializePreDomReady() {
         currentZoomLevel = args.zoomLevel;
         if (isEnabledForUrl)
           setPageZoomLevel(currentZoomLevel);
-      });
-    } else if (port.name == "returnIsEnabledForUrl") {
-      port.onMessage.addListener(function(args) {
-        isEnabledForUrl = args.isEnabledForUrl;
-        if (isEnabledForUrl)
-          initializeWhenEnabled();
-        else if (HUD.isReady())
-          // Quickly hide any HUD we might already be showing, e.g. if we entered insertMode on page load.
-          HUD.hide();
       });
     } else if (port.name == "returnSetting") {
       port.onMessage.addListener(setSetting);
@@ -432,6 +422,19 @@ function onKeydown(event) {
   // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if (keyChar == "" && !insertMode && currentCompletionKeys.indexOf(getKeyChar(event)) != -1)
     event.stopPropagation();
+}
+
+function checkIfEnabledForUrl() {
+    var url = window.location.toString();
+
+    chrome.extension.sendRequest({ handler: "isEnabledForUrl", url: url }, function (response) {
+      isEnabledForUrl = response.isEnabledForUrl;
+      if (isEnabledForUrl)
+        initializeWhenEnabled();
+      else if (HUD.isReady())
+        // Quickly hide any HUD we might already be showing, e.g. if we entered insertMode on page load.
+        HUD.hide();
+    });
 }
 
 function refreshCompletionKeys(completionKeys) {
