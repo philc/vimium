@@ -84,6 +84,10 @@ When you're done, send us a pull request on Github. Feel free to include a chang
 Release Notes
 -------------
 
+1.21 (10/24/2010)
+
+-  Critical bugfix for an excluded URLs regression due to frame support.
+
 1.20 (10/24/2010)
 
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
