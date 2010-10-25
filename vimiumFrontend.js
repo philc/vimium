@@ -123,6 +123,24 @@ var KeyMarks = {
     }
 };
 
+
+// experimental hack
+var Google = {
+   isLastKeyEscape: false,
+   removeFocus: function() {
+
+       // don't let Escape take us back to the input. 
+       var inputs = document.body.getElementsByTagName('input');
+       for (var i in inputs) {
+           inputs[i].addEventListener('focus', function(event) {
+               if (Google.isLastKeyEscape) {
+                   event.srcElement.blur();
+               }
+           }, true);
+       }
+   }
+};
+
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
 var currentZoomLevel = 100;
 
@@ -550,6 +568,7 @@ function passThru() {
  * Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
  */
 function onKeydown(event) {
+    Google.isLastKeyEscape = false;
     var keyChar = "";
 
     if (passThruMode && isEscape(event)) {
@@ -651,9 +670,12 @@ function onKeydown(event) {
                 frameId:frameId
             });
             HUD.hide();
+
+            // experimental hack for google instant search toggling on ESC
+            Google.isLastKeyEscape = true;
+            Google.removeFocus();
         }
     }
-
 }
 
 function refreshCompletionKeys(completionKeys) {
