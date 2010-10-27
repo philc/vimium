@@ -91,7 +91,7 @@ var KeyMarks = {
             isValid = KeyMarks.keyMark();
         }
 
-        HUD.show(KeyMarks.queue, true);
+        HUD.show(KeyMarks.queue);
 
         if (!isValid || isEscape(event)) {
             KeyMarks.reset();
