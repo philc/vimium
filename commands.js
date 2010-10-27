@@ -197,8 +197,8 @@ addCommand('activateKeyMarksMode',              'Open an assigned bookmark');
 addCommand('activateKeyMarksModeToOpenInNewTab','Open an assigned bookmark in a new tab');
 
 // Manipulating tabs:
-addCommand('gotoKeyMarkedTab',                           '');
-addCommand('keyMarkTab',                           '');
+addCommand('gotoKeyMarkedTab',                           'Go to tab marked by single key (register)');
+addCommand('keyMarkTab',                           'Marks a tab by a single key (register)');
 addCommand('markTab',                           'Marks the selected tab for yanking',  true);
 addCommand('putTab',                           'Moves the marked tab next to current tab',  true);
 addCommand('nextTab',                           'Go one tab right',  true);
@@ -237,7 +237,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["markTab", "putTab", "nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", , "closeOtherWindows", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
+    ["gotoKeyMarkedTab", "keyMarkTab", "putTab", "nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "closeOtherTabs", , "closeOtherWindows", "closeRightTabs", "closeLeftTabs", "moveTabRight", "moveTabLeft", "detachTab", "goToLastSelectedTab"],
   misc:
     ["goToOptionsPage", "showHelp"]
     };

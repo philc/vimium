@@ -67,7 +67,9 @@ Manipulating tabs:
     tcq         close tabs on the left
     te         moves a tab to the right
     tq         moves a tab to the left
-    tm        marks a tab for a move
+    tM        marks a tab for a move
+    tm        Marks a tab by a single key (register)
+    `        Go to tab marked by single key (register)
     tp        puts a marked tab
     td         detaches a tab into a new window
     tf         switches to last focused tab
