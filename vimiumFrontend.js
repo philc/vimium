@@ -63,10 +63,22 @@ var SingleKeyMarker = {
     },
 
     gotoKeyMarkedTab: function(keyChar) {
-       chrome.extension.sendRequest({
-            handler: "gotoTabKeyMark",
-            keyMark: keyChar
-        });
+        if (keyChar == '`') {
+            keyPort.postMessage({
+                keyChar: 't',
+
+                frameId:frameId
+            });
+            keyPort.postMessage({
+                keyChar: 'f',
+                frameId:frameId
+            });
+        } else {
+           chrome.extension.sendRequest({
+                handler: "gotoTabKeyMark",
+                keyMark: keyChar
+            });
+        }
     }
 };
 

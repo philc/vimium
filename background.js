@@ -268,6 +268,7 @@
   function gotoTabKeyMark(request) {
      var key = 'tab-keymark-' + request.keyMark;
      if (localStorage[key] != undefined) {
+         // TODO: focus window too if tab is in another window
          chrome.tabs.update(parseInt(localStorage[key]), {selected: true});
      }
   }
