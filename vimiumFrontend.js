@@ -132,11 +132,14 @@ var Google = {
        // don't let Escape take us back to the input. 
        var inputs = document.body.getElementsByTagName('input');
        for (var i in inputs) {
-           inputs[i].addEventListener('focus', function(event) {
-               if (Google.isLastKeyEscape) {
-                   event.srcElement.blur();
-               }
-           }, true);
+           var input = inputs[i];
+           if (input && input.addEventListener != undefined) {
+               inputs[i].addEventListener('focus', function(event) {
+                   if (Google.isLastKeyEscape) {
+                       event.srcElement.blur();
+                   }
+               }, true);
+           }
        }
    }
 };
