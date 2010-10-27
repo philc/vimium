@@ -77,6 +77,8 @@
     openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     registerFrame: registerFrame,
+    saveTabKeyMark:        saveTabKeyMark,
+    gotoTabKeyMark: gotoTabKeyMark,
     frameFocused: handleFrameFocused,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition
@@ -254,6 +256,20 @@
    */
   function getLinkHintCss(request) {
     return { linkHintCss: linkHintCss + (localStorage['userDefinedLinkHintCss'] || "") };
+  }
+
+  function saveTabKeyMark(request) {
+      chrome.tabs.getSelected(null, function (tab) {
+          console.log('Saving ' + tab.id + ' as ' + request.keyMark);
+          localStorage['tab-keymark-' + request.keyMark] = tab.id;
+      });
+  }
+
+  function gotoTabKeyMark(request) {
+     var key = 'tab-keymark-' + request.keyMark;
+     if (localStorage[key] != undefined) {
+         chrome.tabs.update(parseInt(localStorage[key]), {selected: true});
+     }
   }
 
   /*

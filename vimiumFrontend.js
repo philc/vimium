@@ -23,6 +23,54 @@ var isEnabledForUrl = true;
 var currentCompletionKeys;
 var linkHintCss;
 
+// used for on the fly key marks on tabs stored in local storage
+var SingleKeyMarker = {
+    keyDownCallback: null,
+    
+    addListenerForRegister: function() {
+        document.addEventListener("keydown", SingleKeyMarker._onKeyDownListener, true);
+        KeyMarks.keyMarksModeActivated = true;
+    },
+    
+    removeListenerForRegister: function() {
+        document.removeEventListener("keydown", SingleKeyMarker._onKeyDownListener, true);
+        KeyMarks.keyMarksModeActivated = false;
+    },
+
+    // wait for one key (register) then calls defined keyDownCallback
+    _onKeyDownListener: function(event) {
+       var keyChar = getKeyChar(event);
+        if (!keyChar)
+            return;
+
+        if (!isEscape(event)) {
+           keyChar = event.shiftKey ? keyChar.toUpperCase() : keyChar;
+           SingleKeyMarker.keyDownCallback(keyChar);
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        SingleKeyMarker.removeListenerForRegister();
+        HUD.hide(true);
+        SingleKeyMarker.keyDownCallback = null;
+    },
+
+    saveTabKeyMark: function(keyChar) {
+       chrome.extension.sendRequest({
+            handler: "saveTabKeyMark",
+            keyMark: keyChar
+        });
+    },
+
+    gotoKeyMarkedTab: function(keyChar) {
+       chrome.extension.sendRequest({
+            handler: "gotoTabKeyMark",
+            keyMark: keyChar
+        });
+    }
+};
+
+// used for url key marks defined in options
 var KeyMarks = {
     queue : '', // key queue
     keyMarksModeActivated: false,
@@ -45,7 +93,7 @@ var KeyMarks = {
 
         HUD.show(KeyMarks.queue, true);
 
-        if (!isValid) {
+        if (!isValid || isEscape(event)) {
             KeyMarks.reset();
         }
 
@@ -120,6 +168,7 @@ var KeyMarks = {
     reset: function() {
         KeyMarks.queue = '';
         deactivateKeyMarksMode();
+        HUD.hide(true);
     }
 };
 
@@ -538,6 +587,18 @@ function passThru() {
 }
 
 // keymarks action
+function keyMarkTab() {
+    SingleKeyMarker.keyDownCallback = SingleKeyMarker.saveTabKeyMark;
+    HUD.show("Enter register");
+    SingleKeyMarker.addListenerForRegister();
+}
+
+function gotoKeyMarkedTab() {
+    SingleKeyMarker.keyDownCallback = SingleKeyMarker.gotoKeyMarkedTab;
+    HUD.show("Enter register");
+    SingleKeyMarker.addListenerForRegister();
+}
+
 function activateKeyMarksModeToOpenInNewTab() {
     activateKeyMarksMode(true);
 }
@@ -672,7 +733,7 @@ function onKeydown(event) {
                 keyChar:"<ESC>",
                 frameId:frameId
             });
-            HUD.hide();
+            HUD.hide(true);
 
             // experimental hack for google instant search toggling on ESC
             Google.isLastKeyEscape = true;

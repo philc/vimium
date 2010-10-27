@@ -126,7 +126,9 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('gT',  'previousTab');
 
   mapKeyToCommand('tt',  'createTab');
-  mapKeyToCommand('tm',  'markTab');
+  mapKeyToCommand('tM',  'markTab');
+  mapKeyToCommand('tm',  'keyMarkTab');
+  mapKeyToCommand('`',  'gotoKeyMarkedTab');
   mapKeyToCommand('tp',  'putTab');
   mapKeyToCommand('d',   'removeTab');
   mapKeyToCommand('u',   'restoreTab');
@@ -195,6 +197,8 @@ addCommand('activateKeyMarksMode',              'Open an assigned bookmark');
 addCommand('activateKeyMarksModeToOpenInNewTab','Open an assigned bookmark in a new tab');
 
 // Manipulating tabs:
+addCommand('gotoKeyMarkedTab',                           '');
+addCommand('keyMarkTab',                           '');
 addCommand('markTab',                           'Marks the selected tab for yanking',  true);
 addCommand('putTab',                           'Moves the marked tab next to current tab',  true);
 addCommand('nextTab',                           'Go one tab right',  true);
