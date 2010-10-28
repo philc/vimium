@@ -62,7 +62,6 @@
   var portHandlers = {
     keyDown:              handleKeyDown,
     returnScrollPosition: handleReturnScrollPosition,
-    isEnabledForUrl:      isEnabledForUrl,
     getCurrentTabUrl:     getCurrentTabUrl,
     getZoomLevel:         getZoomLevel,
     saveZoomLevel:        saveZoomLevel,
@@ -81,7 +80,9 @@
     gotoTabKeyMark: gotoTabKeyMark,
     frameFocused: handleFrameFocused,
     upgradeNotificationClosed: upgradeNotificationClosed,
-    updateScrollPosition: handleUpdateScrollPosition
+    updateScrollPosition: handleUpdateScrollPosition,
+    copyToClipboard: copyToClipboard,
+    isEnabledForUrl: isEnabledForUrl
   };
 
   // Event handlers
@@ -140,18 +141,17 @@
   /*
    * Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL.
    */
-  function isEnabledForUrl(args, port) {
-    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnIsEnabledForUrl" });
+  function isEnabledForUrl(request) {
     // excludedUrls are stored as a series of URL expressions separated by newlines.
     var excludedUrls = (localStorage["excludedUrls"] || "").split("\n");
     var isEnabled = true;
     for (var i = 0; i < excludedUrls.length; i++) {
       // The user can add "*" to the URL which means ".*"
       var regexp = new RegExp("^" + excludedUrls[i].replace(/\*/g, ".*") + "$");
-      if (args.url.match(regexp))
+      if (request.url.match(regexp))
         isEnabled = false;
     }
-    returnPort.postMessage({ isEnabledForUrl: isEnabled });
+    return { isEnabledForUrl: isEnabled };
   }
 
   /*
@@ -287,6 +287,13 @@
   function upgradeNotificationClosed(request) {
     localStorage.previousVersion = currentVersion;
     sendRequestToAllTabs({ name: "hideUpgradeNotification" });
+  }
+
+  /*
+   * Copies some data (request.data) to the clipboard.
+   */
+  function copyToClipboard(request) {
+    Clipboard.copy(request.data);
   }
 
   /*
