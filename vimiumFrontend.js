@@ -335,15 +335,6 @@ function initializePreDomReady() {
                 if (isEnabledForUrl)
                     setPageZoomLevel(currentZoomLevel);
             });
-        } else if (port.name == "returnIsEnabledForUrl") {
-            port.onMessage.addListener(function(args) {
-                isEnabledForUrl = args.isEnabledForUrl;
-                if (isEnabledForUrl)
-                    initializeWhenEnabled();
-                else if (HUD.isReady())
-                    // Quickly hide any HUD we might already be showing, e.g. if we entered insertMode on page load.
-                    HUD.hide();
-            });
         } else if (port.name == "returnSetting") {
             port.onMessage.addListener(setSetting);
         } else if (port.name == "refreshCompletionKeys") {
