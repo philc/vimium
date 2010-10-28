@@ -237,15 +237,8 @@ function initializePreDomReady() {
         getSetting(settingsToLoad[i]);
     }
 
-    // is vimium enabled for current page?
-    var isEnabledForUrlPort = chrome.extension.connect({
-        name: "isEnabledForUrl"
-    });
-    isEnabledForUrlPort.postMessage({
-        url: window.location.toString()
-    });
+    checkIfEnabledForUrl();
 
-    // zoom level from storage for current domain
     var getZoomLevelPort = chrome.extension.connect({
         name: "getZoomLevel"
     });
@@ -392,7 +385,7 @@ function focusThisFrame(shouldHighlight) {
         document.body.style.border = '5px solid yellow';
         setTimeout(function(){
             document.body.style.border = borderWas
-        }, 200);
+            }, 200);
     }
 }
 
@@ -566,15 +559,22 @@ function toggleViewSource() {
 }
 
 function copyCurrentUrl() {
-  // TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background page
-  // to copy.
-  // http://code.google.com/p/chromium/issues/detail?id=55188
-  //getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); });
-  getCurrentUrlHandlers.push(function (url) { chrome.extension.sendRequest({ handler: "copyToClipboard", data: url }); });
+    // TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background page
+    // to copy.
+    // http://code.google.com/p/chromium/issues/detail?id=55188
+    //getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); });
+    getCurrentUrlHandlers.push(function (url) {
+        chrome.extension.sendRequest({
+            handler: "copyToClipboard",
+            data: url
+        });
+    });
 
-  // TODO(ilya): Convert to sendRequest.
-  var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
-  getCurrentUrlPort.postMessage({});
+    // TODO(ilya): Convert to sendRequest.
+    var getCurrentUrlPort = chrome.extension.connect({
+        name: "getCurrentTabUrl"
+    });
+    getCurrentUrlPort.postMessage({});
 }
 
 function toggleViewSourceCallback(url) {
@@ -698,7 +698,8 @@ function onKeydown(event) {
             }
             exitInsertMode();
 
-            // experimental: Needed for google new instant search
+            // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search box.
+            // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
             event.stopPropagation();
         }
     }
@@ -758,6 +759,22 @@ function onKeydown(event) {
         event.preventDefault();
         event.stopPropagation();
     }
+}
+
+function checkIfEnabledForUrl() {
+    var url = window.location.toString();
+
+    chrome.extension.sendRequest({
+        handler: "isEnabledForUrl",
+        url: url
+    }, function (response) {
+        isEnabledForUrl = response.isEnabledForUrl;
+        if (isEnabledForUrl)
+            initializeWhenEnabled();
+        else if (HUD.isReady())
+            // Quickly hide any HUD we might already be showing, e.g. if we entered insertMode on page load.
+            HUD.hide();
+    });
 }
 
 function refreshCompletionKeys(completionKeys) {
