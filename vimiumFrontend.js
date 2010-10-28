@@ -754,7 +754,7 @@ function onKeydown(event) {
     }
 
     // dirty hack for google. It is capturing keys like enter, the first key in find mode etc. This should fixes it for all of them
-    if (window.location.href.indexOf('google') != -1 && !insertMode) {
+    if (window.location.href.indexOf('http://www.google.ca') != -1 && !insertMode) {
         event.preventDefault();
         event.stopPropagation();
     }
