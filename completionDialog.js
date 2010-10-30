@@ -145,6 +145,7 @@
     "padding:4px;"+
     "}"+
     ".completions div strong{"+
+    "color: black;" +
     "font-weight:bold;"+
     "}"+
     ".completions .noResults{"+
