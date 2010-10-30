@@ -208,6 +208,7 @@ function updateLinkHints() {
       matchedLink.focus();
       // When focusing a textbox, put the selection caret at the end of the textbox's contents.
       matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
+      deactivateLinkHintsMode();
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
       // we want to give the user some feedback depicting which link they've selected by focusing it.

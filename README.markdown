@@ -34,6 +34,8 @@ Navigating the current page:
     <c-u>, <c-y>   scroll up a page
     <c-f>   scroll down a full page
     <c-b>   scroll up a full page
+    zH      scroll all the way left
+    zL      scroll all the way right
     f       activate link hints mode to open in current tab
     F       activate link hints mode to open in new tab
     <a-f>   activate link hints mode to open multiple links in a new tab
@@ -50,6 +52,7 @@ Navigating the current page:
     yy      copy the current url to the clipboard
     gu      go up one level in the URL hierarchy
     gf      cycle forward to the next frame
+    gi      focus the first (or n-th) text input box on the page
 
 Navigating your history:
     H       go back in history
@@ -83,14 +86,19 @@ When you're done, send us a pull request on Github. Feel free to include a chang
 Release Notes
 -------------
 
-1.20 (Unreleased)
+1.21 (10/24/2010)
+
+-  Critical bugfix for an excluded URLs regression due to frame support.
+
+1.20 (10/24/2010)
 
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and opening in a new tab.
 -  Two new commands (`zH` and `zL`) to scroll to the left and right edges of the page.
 -  A new command (`gi`) to focus the first (or n-th) text input box on the page.
 -  A new command (`<a-f>`) to open up multiple links at a time in new tabs.
 -  Frame support.
--  Bug fixes.
+-  More robust support for non-US keyboard layouts.
+-  Numerous bug fixes.
 
 1.19 (06/29/2010)
 
