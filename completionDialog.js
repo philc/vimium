@@ -132,6 +132,7 @@
     "width:400px;"+
     "}"+
     ".completions .searchBar {"+
+    "height: 15px;"+
     "border-bottom: 1px solid #b3b3b3;"+
     "}"+
     ".completions .searchResults {"+
