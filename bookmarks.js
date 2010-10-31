@@ -29,7 +29,6 @@ function activateBookmarkFindMode() {
     },
     enable: function() {
       this.enabled = true;
-      this.query = [];
 
       if(!this.initialized) {
         initialize.call(this)
@@ -46,12 +45,6 @@ function activateBookmarkFindMode() {
       this.completionDialog.hide()
       HUD.hide();
     },
-    getQueryString: function() {
-      return this.query.join("")
-    },
-    find: function(query) {
-      this.finder.find(query)
-    },
     renderHUD: function() {
       if (this.newTab)
         HUD.show("Open bookmark in new tab");
@@ -64,18 +57,10 @@ function activateBookmarkFindMode() {
   // private method
   var initialize = function() {
     var self = this;
-    this.initialized = true;
-    this.finder = new BookmarkFinder({
-      onResultsFound: function(bookmarks) {
-        self.bookmarksFound = bookmarks;
-        if(bookmarks.length>10) {
-          bookmarks=bookmarks.slice(0, 10)
-        }
-        self.completionDialog.showCompletions(self.getQueryString(), bookmarks)
-      }
-    });
+    self.initialized = true;
 
-    this.completionDialog = new CompletionDialog({
+    self.completionDialog = new CompletionDialog({
+      source: findBookmarks,
       onSelect: function(selection) {
         var url = selection.url
         var isABookmarklet = function(url) {
@@ -121,18 +106,6 @@ function activateBookmarkFindMode() {
         if (isEscape(event)) {
           self.disable();
         } 
-        else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (self.query.length == 0) {
-            self.disable();
-          } else {
-            self.query.pop();
-            self.finder.find(self.getQueryString())
-          }
-        } 
-        else if(keyChar!=="up" && keyChar!=="down" && keyChar!=="left" && keyChar!="right") {
-          self.query.push(keyChar);
-          self.finder.find(self.getQueryString())
-        } 
 
         event.stopPropagation();
         event.preventDefault();
@@ -149,17 +122,14 @@ function activateBookmarkFindMode() {
     })
   }
 
-  var BookmarkFinder = function(config) {
-    this.port = chrome.extension.connect({ name: "getBookmarks" })
-    this.port.onMessage.addListener(function(msg) {
-      (config.onResultsFound && config.onResultsFound(msg.bookmarks))
+  var findBookmarks = function(searchString, callback) {
+    var port = chrome.extension.connect({ name: "getBookmarks" }) 
+    port.onMessage.addListener(function(msg) {
+      callback(msg.bookmarks)
+      port = null
     })
-  }
-  BookmarkFinder.prototype = {
-    find: function(query) {
-      this.port.postMessage({query:query})
-    }
-  }
+    port.postMessage({query:searchString})
+  };
 
   //export global
   window.BookmarkMode = BookmarkMode;

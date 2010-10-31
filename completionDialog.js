@@ -6,15 +6,88 @@
 
   CompletionDialog.prototype = {
     show: function() {
-      this.showCompletions()
+      if(!this.isShown) {
+        this.isShown=true;
+        this.query = [];
+        if(!this.initialized) {
+          initialize.call(this);
+          this.initialized=true;
+        }
+        this.keyPressListener.enable();
+        render.call(this)
+        clearInterval(this._tweenId);
+        this._tweenId = Tween.fade(this.container, 1.0, 150);
+      }
     },
-    showCompletions: function(searchString, completions) {
+    hide: function() {
+      if(this.isShown) {
+        this.keyPressListener.disable();
+        this.isShown=false;
+        this.currentSelection=0;
+        clearInterval(this._tweenId);
+        this._tweenId = Tween.fade(this.container, 0, 150);
+      }
+    },
+    getDisplayElement: function() {
+      if(!this.container) {
+        this.container = createDivInside(document.body)
+      }
+      return this.container
+    },
+    getQueryString: function() {
+      return this.query.join("")
+    }
+  }
+
+  var initialize = function() {
+    var self = this
+    addCssToPage(completionCSS)
+    
+    self.currentSelection=0;
+
+    self.keyPressListener = new KeyPressListener({
+      keyDown: function(event) {
+        var keyChar = getKeyChar(event);
+        if(keyChar==="up") {
+          if(self.currentSelection>0) {
+            self.currentSelection-=1;
+          }
+          render.call(self,self.getQueryString(), self.completions) 
+        }
+        else if(keyChar==="down") {
+          if(self.currentSelection<self.completions.length-1) {
+            self.currentSelection+=1;
+          }
+          render.call(self,self.getQueryString(), self.completions) 
+        }
+        else if(event.keyCode == keyCodes.enter) {
+          self.options.onSelect(self.completions[self.currentSelection])
+        }
+        else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+          if (self.query.length > 0) {
+            self.query.pop();
+            self.options.source(self.getQueryString(), function(completions) {
+              render.call(self, self.getQueryString(), completions)
+            })
+          }
+        } 
+        else if(keyChar!=="left" && keyChar!="right") {
+          self.query.push(keyChar);
+          self.options.source(self.getQueryString(), function(completions) {
+            render.call(self, self.getQueryString(), completions)
+          })
+        } 
+        
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    })
+  }
+
+  var render = function(searchString, completions) {
+    if(this.isShown) {
       this.searchString = searchString;
       this.completions = completions;
-      if(!this.initialized) {
-        initialize.call(this);
-        this.initialized=true;
-      }
       var container = this.getDisplayElement()
       clearChildren(container);
 
@@ -48,60 +121,8 @@
 
       container.style.top=(window.innerHeight/2-container.clientHeight/2) + "px";
       container.style.left=(window.innerWidth/2-container.clientWidth/2) + "px";
-      if(!this.isShown) {
-        this.keyPressListener.enable();
-        clearInterval(this._tweenId);
-        this._tweenId = Tween.fade(container, 1.0, 150);
-        this.isShown=true;
-      }
-    },
-    hide: function() {
-      if(this.isShown) {
-        this.keyPressListener.disable();
-        this.isShown=false;
-        this.currentSelection=0;
-        clearInterval(this._tweenId);
-        this._tweenId = Tween.fade(this.container, 0, 150);
-      }
-    },
-    getDisplayElement: function() {
-      if(!this.container) {
-        this.container = createDivInside(document.body)
-      }
-      return this.container
     }
-  }
-
-  var initialize = function() {
-    addCssToPage(completionCSS)
-    
-    this.currentSelection=0;
-    var self = this;
-    this.keyPressListener = new KeyPressListener({
-      keyDown: function(event) {
-        var keyChar = getKeyChar(event);
-        if(keyChar==="up") {
-          if(self.currentSelection>0) {
-            self.currentSelection-=1;
-          }
-          self.showCompletions(self.searchString, self.completions) 
-        }
-        else if(keyChar==="down") {
-          if(self.currentSelection<self.completions.length-1) {
-            self.currentSelection+=1;
-          }
-          self.showCompletions(self.searchString, self.completions) 
-        }
-        else if(event.keyCode == keyCodes.enter) {
-          self.options.onSelect(self.completions[self.currentSelection])
-        }
-        
-        event.stopPropagation();
-        event.preventDefault();
-      }
-    })
-  }
-
+  };
   var createDivInside = function(parent) {
     var element = document.createElement("div");
     parent.appendChild(element);
