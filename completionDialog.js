@@ -92,27 +92,27 @@
       clearChildren(container);
 
       if(searchString===undefined) {
-        this.container.className = "dialog";
+        this.container.className = "vimium-dialog";
         createDivInside(container).innerHTML=this.options.initialSearchText || "Begin typing"
       }
       else {
-        this.container.className = "dialog completions";
+        this.container.className = "vimium-dialog vimium-completions";
         var searchBar = createDivInside(container)
         searchBar.innerHTML=searchString
-        searchBar.className="searchBar"
+        searchBar.className="vimium-searchBar"
 
         searchResults = createDivInside(container)
-        searchResults.className="searchResults"
+        searchResults.className="vimium-searchResults"
         if(completions.length<=0) {
           var resultDiv = createDivInside(searchResults)
-          resultDiv.className="noResults"
+          resultDiv.className="vimium-noResults"
           resultDiv.innerHTML="No results found"
         }
         else {
           for(var i=0;i<completions.length;i++) {
             var resultDiv = createDivInside(searchResults)
             if(i===this.currentSelection) {
-              resultDiv.className="selected"
+              resultDiv.className="vimium-selected"
             }
             resultDiv.innerHTML=this.options.renderOption(searchString, completions[i])
           }
@@ -137,7 +137,7 @@
     }
   }
   
-  var completionCSS = ".dialog {"+
+  var completionCSS = ".vimium-dialog {"+
     "position:fixed;"+
     "background-color: #ebebeb;" +
     "z-index: 99999998;" +
@@ -149,27 +149,27 @@
     "border-radius: 4px;" +
     "font-family: Lucida Grande, Arial, Sans;" +
     "}"+
-    ".completions {"+
+    ".vimium-completions {"+
     "width:400px;"+
     "}"+
-    ".completions .searchBar {"+
+    ".vimium-completions .vimium-searchBar {"+
     "height: 15px;"+
     "border-bottom: 1px solid #b3b3b3;"+
     "}"+
-    ".completions .searchResults {"+
+    ".vimium-completions .vimium-searchResults {"+
     "}"+
-    ".completions .searchResults .selected{"+
+    ".vimium-completions .vimium-searchResults .vimium-selected{"+
     "background-color:#aaa;"+
     "border-radius: 4px;" +
     "}"+
-    ".completions div{"+
+    ".vimium-completions div{"+
     "padding:4px;"+
     "}"+
-    ".completions div strong{"+
+    ".vimium-completions div strong{"+
     "color: black;" +
     "font-weight:bold;"+
     "}"+
-    ".completions .noResults{"+
+    ".vimium-completions .vimium-Results{"+
     "color:#555;"+
     "}";
 
