@@ -62,9 +62,9 @@ Manipulating tabs:
     K, gt      go one tab right
     tt         create tab
     d          close current tab
-    u          restore closed tab (i.e. unwind the 'd' command)
+	u          restore closed tab (i.e. unwind the 'd' command)
     to         close other tabs
-    tcw        close other windows
+	tcw        close other windows
     tce        close tabs on the right
     tcq        close tabs on the left
     te         moves a tab to the right
@@ -73,8 +73,8 @@ Manipulating tabs:
     tm         Marks a tab by a single key (register)
     `          Go to tab marked by single key (register)
     tp         puts a marked tab
-    td         detaches a tab into a new window
-    tf,``         switches to last focused tab
+	td         detaches a tab into a new window
+	tf,``      switches to last focused tab
 
 Misc
     O          Go to options page
