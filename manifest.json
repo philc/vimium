@@ -12,9 +12,18 @@
     "http://*/*",
     "https://*/*"
   ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
+      "content_scripts": [{
+      "js": [
+             "lib/utils.js",
+             "lib/keyboardUtils.js",
+             "lib/clipboard.js",
+             "linkHints.js",
+             "vimiumFrontend.js"
+            ],
+      "run_at": "document_start",
+      "all_frames": true,
+        "matches": ["<all_urls>"]
+    }, {
       "js": [
              "lib/utils.js",
              "lib/keyboardUtils.js",
@@ -23,7 +32,7 @@
              "vimiumFrontend.js"
             ],
       "run_at": "document_end",
-      "all_frames": true
-    }
-  ]
+      "all_frames": true,
+        "matches": ["<all_urls>"]
+    }]
 }
