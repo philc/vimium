@@ -169,7 +169,7 @@
     "color: black;" +
     "font-weight:bold;"+
     "}"+
-    ".vimium-completions .vimium-Results{"+
+    ".vimium-completions .vimium-noResults{"+
     "color:#555;"+
     "}";
 
