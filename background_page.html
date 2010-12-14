@@ -552,7 +552,7 @@
 
       // The second key might be a valid command by its self.
       if (keyToCommandRegistry[splitKey.second])
-        newKeyQueue = checkKeyQueue(splitKey.second);
+        newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId);
       else
         newKeyQueue = (validFirstKeys[splitKey.second] ? splitKey.second : "");
     } else {
