@@ -24,11 +24,11 @@ var linkHintsCssAdded = false;
  * The final expression will be something like "//button | //xhtml:button | ..."
  */
 var clickableElementsXPath = (function() {
-  var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]"];
+  var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]",
+                           "*[@onclick or @tabindex or @role='link' or @role='button']"];
   var xpath = [];
   for (var i in clickableElements)
     xpath.push("//" + clickableElements[i], "//xhtml:" + clickableElements[i]);
-  xpath.push("//*[@onclick]");
   return xpath.join(" | ")
 })();
 
