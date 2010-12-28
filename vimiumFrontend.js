@@ -636,6 +636,7 @@ HUD = {
       "bottom: 0px;" +
       "color: black;" +
       "height: 13px;" +
+      "width: auto;" +
       "max-width: 400px;" +
       "min-width: 150px;" +
       "text-align: left;" +
