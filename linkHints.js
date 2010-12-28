@@ -326,20 +326,11 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
 
   // Note: this call will be expensive if we modify the DOM in between calls.
   var clientRect = link.rect;
-  var offsets = {};
-  if (/^(absolute|fixed|relative)$/.test(window.getComputedStyle(document.body).position)) {
-    var bodyRect = document.body.getClientRects()[0];
-    offsets.x = -bodyRect.left;
-    offsets.y = -bodyRect.top;
-  } else {
-    // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
-    // the document node.
-    var zoomFactor = currentZoomLevel / 100.0;
-    offsets.x = window.scrollX / zoomFactor;
-    offsets.y = window.scrollY / zoomFactor;
-  }
-  marker.style.left = clientRect.left + offsets.x + "px";
-  marker.style.top = clientRect.top  + offsets.y + "px";
+  // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
+  // the document node.
+  var zoomFactor = currentZoomLevel / 100.0;
+  marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
+  marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
 
   marker.clickableItem = link.element;
   return marker;
