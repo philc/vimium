@@ -170,7 +170,7 @@ addCommand('goBack',              'Go back in history');
 addCommand('goForward',           'Go forward in history');
 
 // Navigating the URL hierarchy
-addCommand('goUp',                'Go up the URL hierarchy');
+addCommand('goUp',                'Go up the URL hierarchy', false, true);
 
 // Manipulating tabs:
 addCommand('nextTab',             'Go one tab right',  true);

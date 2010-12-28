@@ -266,7 +266,7 @@ function reload() { window.location.reload(); }
 function goBack() { history.back(); }
 function goForward() { history.forward(); }
 
-function goUp() {
+function goUp(count) {
   var url = window.location.href;
   if (url[url.length-1] == '/')
     url = url.substring(0, url.length - 1);
@@ -274,7 +274,7 @@ function goUp() {
   var urlsplit = url.split('/');
   // make sure we haven't hit the base domain yet
   if (urlsplit.length > 3) {
-    delete urlsplit[urlsplit.length-1];
+    urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count));
     window.location.href = urlsplit.join('/');
   }
 }
