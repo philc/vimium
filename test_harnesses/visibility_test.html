@@ -7,65 +7,166 @@
 <head>
   <title>Visibility test</title>
   <style type="text/css" media="screen">
+    * {
+      font-family: sans;
+      font-size: 14px;
+    }
     span {
       display:block;
       width:30px;
       height:20px;
       background-color:blue;
     }
+    table {
+      border-collapse: separate;
+    }
+    tr, td {
+      border: 2px solid black;
+      margin: 0;
+      padding: 2px;
+    }
   </style>
 
   <script type="text/javascript" charset="utf-8">
+    window.addEventListener("load", displayTests, false);
     window.addEventListener("load", checkDivsForVisibility, false);
-    
-    function checkDivsForVisibility() {
-      var divs = document.getElementsByTagName("span");
-      for (var i = 0; i < divs.length; i++) {
-        console.log(divs[i].id, isVisible(divs[i]));
+
+    var visibilityTests = [
+      {
+        'description': 'BoundingClientRect is inside viewport',
+        'test': function(element) {
+           var rect = element.getBoundingClientRect();
+           if (!rect || rect.top > window.innerHeight || rect.bottom < 0 || rect.left > window.innerWidth || rect.right < 0)
+               return false;
+           return true;
+        },
+      },
+      {
+        'description': 'BoundingClientRect has nonzero dimensions',
+        'test': function(element) {
+           var rect = element.getBoundingClientRect();
+           if (!rect || rect.width == 0 || rect.height == 0)
+               return false;
+           return true;
+        },
+      },
+      {
+        'description': 'Is visible and displayed',
+        'test': function(element) {
+          var computedStyle = window.getComputedStyle(element, null);
+          if (computedStyle.getPropertyValue('visibility') != 'visible' || 
+              computedStyle.getPropertyValue('display') == 'none')
+              return false;
+           return true;
+        },
+      },
+      {
+        'description': 'Has ClientRect',
+        'test': function(element) {
+          var clientRect = element.getClientRects()[0];
+          if (!clientRect)
+            return false;
+           return true;
+        },
+      },
+      {
+        'description': 'ClientRect has nonzero dimensions',
+        'test': function(element) {
+          var clientRect = element.getClientRects()[0];
+          if (!clientRect || clientRect.width == 0 || clientRect.height == 0)
+            return false;
+           return true;
+        },
+      },
+    ];
+
+    function displayTests() {
+      for (var i = 0; i < visibilityTests.length; i++) {
+        document.getElementById("testDescriptions").innerHTML +=
+          "<b>Test " + (i+1) + ": </b>" + visibilityTests[i].description + "<br/>";
       }
     }
-    /*
-     * Determine whether elements are visible.
-     * Inspired by Vimperator.
-     */
-    function isVisible(element) {
-      // eliminate offscreen elements (case 4)
-      var rect = element.getBoundingClientRect();
-      if (!rect || rect.top > window.innerHeight || rect.bottom < 0 || rect.left > window.innerWidth || rect.right < 0)
-          return false;
 
-      // this catches cases 2, 3, & 5
-      var computedStyle = window.getComputedStyle(element, null);
-      if (computedStyle.getPropertyValue('visibility') != 'visible' || 
-          computedStyle.getPropertyValue('display') == 'none')
-          return false;
+    function makeBoolTd(bool) {
+      var td = document.createElement("td");
+      td.style.width = '15px';
+      td.style.background = bool ? '#0f0' : "#f00";
+      return td;
+    }
 
-      // this catches cases 3 & 6
-      var clientRect = element.getClientRects()[0];
-      if (!clientRect)
-        return false;
+    function makeTag(tag, text) {
+      var td = document.createElement(tag);
+      td.innerHTML = text;
+      return td;
+    }
+    
+    function checkDivsForVisibility() {
+      var table = document.getElementById("resultsDisplay");
+      var tr = document.getElementsByTagName("tr")[0];
+      for (var i = 0; i < visibilityTests.length; i++)
+        tr.appendChild(makeTag("th", i+1));
+      tr.appendChild(makeTag("th", "Expected Result"));
+      tr.appendChild(makeTag("th", "Comments"));
 
-      return true;
+      var divs = document.getElementsByClassName("testElement");
+      for (var i = 0; i < divs.length; i++) {
+        var tr = document.createElement("tr");
+        table.appendChild(tr);
+        table.appendChild(makeTag("td", i+1));
+        var netResult = true;
+        for (var j = 0; j < visibilityTests.length; j++) {
+          result = visibilityTests[j].test(divs[i]);
+          table.appendChild(makeBoolTd(result));
+          netResult = netResult && result;
+        }
+        var expectedResult = divs[i].getAttribute('data-expectedresult') == 1;
+        var td = makeTag("td", expectedResult);
+        td.style.background = netResult === expectedResult ? '#fff' : '#ccf';
+        table.appendChild(td);
+        table.appendChild(makeTag("td", divs[i].getAttribute('data-comment')));
+
+        // hide the test cases once we're done with them
+        divs[i].style.visibility = 'hidden';
+      }
     }
   </script>
 </head>
 
 <body>
-  <span id="div1true"></span>
-  
-  <span id="div2false" style="visibility:hidden"></span>
+  <div id='testDescriptions' style='margin: 6px 0 6px 0;'></div>
+  <table id='resultsDisplay'>
+    <tr>
+      <th>Node/Test</th>
+    </tr>
+  </table>
 
-  <span id="div3false" style="display:none"></span>
+  <div id='testContainer' style='position: absolute; top: 0; left:0'>
+    <span class='testElement' data-expectedresult=1 data-comment="default">test</span>
+    
+    <span class='testElement' data-expectedresult=0 style="visibility:hidden" data-comment="visibility: hidden">test</span>
 
-  <span id="div4false" style="position:absolute;top:2000px"></span>
+    <div style="visibility:hidden">
+      <span class='testElement' data-expectedresult=0 data-comment="nested in an element that has visibility: hidden">test</span>
+    </div>
 
-  <div style="visibility:hidden">
-    <span id="div5false"></span>
-  </div>
-  <div style="display:none">
-    <span id="div6false"></span>
-  </div>
-  <div style="opacity:0">
-    <span id="div7true" style="opacity:0"></span>
+    <span class='testElement' data-expectedresult=0 style="display:none" data-comment="display: none">test</span>
+
+    <div style="display:none">
+      <span class='testElement' data-expectedresult=0 data-comment="nested in an element that has display: none">test</span>
+    </div>
+
+    <span class='testElement' data-expectedresult=0 style="position:absolute;top:2000px" data-comment="outside viewport">test</span>
+
+    <div style="opacity:0">
+      <span class='testElement' data-expectedresult=1 data-comment="nested in an element that has opacity:0">test</span>
+    </div>
+    <div class='testElement' data-expectedresult=1 data-comment="Contains only a floated span. We must recurse into the div to find it.">
+      <span style="float: left">test</span>
+    </div>
+    <svg> 
+      <a class='testElement' data-expectedresult=1 xlink:href='http://www.example.com/' data-comment="This link is contained within an SVG.">
+        <text x='0' y='68'  >test</text>
+      </a> 
+    </svg>
   </div>
 </html>
