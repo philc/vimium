@@ -83,7 +83,7 @@ function buildLinkHints() {
   hintMarkerContainingDiv.className = "internalVimiumHintMarker";
   for (var i = 0; i < hintMarkers.length; i++)
     hintMarkerContainingDiv.appendChild(hintMarkers[i]);
-  document.body.appendChild(hintMarkerContainingDiv);
+  document.documentElement.appendChild(hintMarkerContainingDiv);
 }
 
 function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
