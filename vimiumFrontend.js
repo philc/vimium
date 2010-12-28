@@ -799,8 +799,8 @@ Tween = {
 function addCssToPage(css) {
   var head = document.getElementsByTagName("head")[0];
   if (!head) {
-    console.log("Warning: unable to add CSS to the page.");
-    return;
+    head = document.createElement("head");
+    document.documentElement.appendChild(head);
   }
   var style = document.createElement("style");
   style.type = "text/css";
