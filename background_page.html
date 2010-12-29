@@ -70,7 +70,7 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
-    toggleViewSourceNewTab: toggleViewSourceNewTab,
+    openUrlInNewTab: openUrlInNewTab,
     openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     registerFrame: registerFrame,
@@ -238,12 +238,12 @@
      });
    }
 
- /** toggleViewSourceNewTab, opens source in new tab and switches to it
+ /** openUrlInNewTab, opens source in new tab and switches to it
    *
    */
-  function toggleViewSourceNewTab(request) {
+  function openUrlInNewTab(request) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: true });
+      chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: request.selected });
     });
   }
   /*
