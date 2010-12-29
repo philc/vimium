@@ -170,20 +170,37 @@ function onKeyDownInLinkHintsMode(event) {
   // TODO(philc): Ignore keys that have modifiers.
   if (isEscape(event)) {
     deactivateLinkHintsMode();
-  } else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-    if (hintKeystrokeQueue.length == 0) {
-      deactivateLinkHintsMode();
-    } else {
-      linkTextKeystrokeQueue.pop();
-      hintKeystrokeQueue.pop();
-      updateLinkHints();
-    }
-  } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
-    hintKeystrokeQueue.push(keyChar);
-    updateLinkHints();
   } else {
-    linkTextKeystrokeQueue.push(keyChar);
-    updateLinkHints();
+    if (isNarrowMode()) {
+      if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+        if (linkTextKeystrokeQueue.length == 0 && hintKeystrokeQueue.length == 0) {
+          deactivateLinkHintsMode();
+        } else {
+          // backspace clears hint key queue first, then acts on link text key queue
+          if (hintKeystrokeQueue.pop() === undefined)
+            linkTextKeystrokeQueue.pop();
+          updateLinkHints();
+        }
+      } else if (/[0-9]/.test(keyChar)) {
+        hintKeystrokeQueue.push(keyChar);
+        updateLinkHints();
+      } else {
+        linkTextKeystrokeQueue.push(keyChar);
+        updateLinkHints();
+      }
+    } else {
+      if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+        if (hintKeystrokeQueue.length == 0) {
+          deactivateLinkHintsMode();
+        } else {
+          hintKeystrokeQueue.pop();
+          updateLinkHints();
+        }
+      } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
+        hintKeystrokeQueue.push(keyChar);
+        updateLinkHints();
+      }
+    }
   }
 
   event.stopPropagation();
@@ -349,7 +366,8 @@ function resetLinkHintsMode() {
  * Creates a link marker for the given link.
  */
 function createMarkerFor(link, linkHintNumber, linkHintDigits) {
-  var hintString = numberToHintString(linkHintNumber, linkHintDigits);
+  var hintString = isNarrowMode() ?
+    linkHintNumber.toString() : numberToHintString(linkHintNumber, linkHintDigits);
   var linkText = link.element.innerHTML.toLowerCase();
   if (linkText == undefined) 
     linkText = "";
