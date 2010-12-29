@@ -79,14 +79,25 @@ function initializePreDomReady() {
     sendResponse({}); // Free up the resources used by this open connection.
   });
 
+  // takes a dot-notation object string and returns the member it points to
+  function resolveCommandString(str) {
+    var components = str.split('.');
+    var component;
+    var func = this[components.shift()];
+    while ((component = components.shift()) && func)
+      func = func[component];
+    return func;
+  }
+
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
-        if (this[args.command] && frameId == args.frameId) {
+        func = resolveCommandString(args.command);
+        if (func && frameId == args.frameId) {
           if (args.passCountToFunction) {
-            this[args.command].call(null, args.count);
+            func.call(null, args.count);
           } else {
-            for (var i = 0; i < args.count; i++) { this[args.command].call(); }
+            for (var i = 0; i < args.count; i++) { func(); }
           }
         }
 
@@ -306,7 +317,7 @@ function toggleViewSourceCallback(url) {
 function onKeypress(event) {
   var keyChar = "";
 
-  if (linkHintsModeActivated)
+  if (linkHints.linkHintsModeActivated)
     return;
 
   // Ignore modifier keys by themselves.
@@ -341,7 +352,7 @@ function onKeypress(event) {
 function onKeydown(event) {
   var keyChar = "";
 
-  if (linkHintsModeActivated)
+  if (linkHints.linkHintsModeActivated)
     return;
 
   // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?

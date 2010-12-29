@@ -110,9 +110,9 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('gi', 'focusInput');
 
-  mapKeyToCommand('f',     'activateLinkHintsMode');
-  mapKeyToCommand('F',     'activateLinkHintsModeToOpenInNewTab');
-  mapKeyToCommand('<a-f>', 'activateLinkHintsModeWithQueue');
+  mapKeyToCommand('f',     'linkHints.activateLinkHintsMode');
+  mapKeyToCommand('F',     'linkHints.activateLinkHintsModeToOpenInNewTab');
+  mapKeyToCommand('<a-f>', 'linkHints.activateLinkHintsModeWithQueue');
 
   mapKeyToCommand('/', 'enterFindMode');
   mapKeyToCommand('n', 'performFind');
@@ -157,9 +157,9 @@ addCommand('enterInsertMode',     'Enter insert mode');
 
 addCommand('focusInput',          'Focus the first (or n-th) text box on the page', false, true);
 
-addCommand('activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
-addCommand('activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
-addCommand('activateLinkHintsModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
+addCommand('linkHints.activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
+addCommand('linkHints.activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
+addCommand('linkHints.activateLinkHintsModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
 
 addCommand('enterFindMode',        'Enter find mode');
 addCommand('performFind',          'Cycle forward to the next find match');
