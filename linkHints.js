@@ -277,11 +277,6 @@ function highlightLinkMatches(searchString) {
     var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
     var matchedHintStart = linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
 
-    // if we're in narrow mode, make sure to designate a hint match only when 
-    // the search string is populated.
-    if (narrowMode)
-      matchedHintStart = matchedHintStart && hasSearchString;
-
     var shouldRemoveMatch;
     if (narrowMode) {
       shouldRemoveMatch = 
