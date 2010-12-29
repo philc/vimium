@@ -271,6 +271,7 @@ function highlightLinkMatches(searchString) {
   var narrowMode = isNarrowMode();
   var hasSearchString = searchString.length != 0;
   var hasLinkSearchString = linkSearchString.length != 0;
+  var matchedCount = 0;
 
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
@@ -297,7 +298,11 @@ function highlightLinkMatches(searchString) {
     } else {
       if (linkMarker.style.display == "none")
         linkMarker.style.display = "";
+      var newHint = matchedCount.toString();
+      linkMarker.innerHTML = spanWrap(newHint);
+      linkMarker.setAttribute("hintString", newHint);
       linksMatched.push(linkMarker.clickableItem);
+      matchedCount++;
     }
 
   }
@@ -368,11 +373,7 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
     linkText = "";
   var marker = document.createElement("div");
   marker.className = "internalVimiumHintMarker vimiumHintMarker";
-  var innerHTML = [];
-  // Make each hint character a span, so that we can highlight the typed characters as you type them.
-  for (var i = 0; i < hintString.length; i++)
-    innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
-  marker.innerHTML = innerHTML.join("");
+  marker.innerHTML = spanWrap(hintString);
   marker.setAttribute("hintString", hintString);
   marker.setAttribute("linkText", linkText);
 
@@ -386,4 +387,12 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
 
   marker.clickableItem = link.element;
   return marker;
+}
+
+// Make each hint character a span, so that we can highlight the typed characters as you type them.
+function spanWrap(hintString) {
+  var innerHTML = [];
+  for (var i = 0; i < hintString.length; i++)
+    innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
+  return innerHTML.join("");
 }
