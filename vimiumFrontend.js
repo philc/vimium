@@ -174,6 +174,8 @@ function focusThisFrame(shouldHighlight) {
 function initializeOnDomReady() {
   registerFrameIfSizeAvailable(window.top == window.self);
 
+  initializeLinkHints();
+
   if (isEnabledForUrl)
     enterInsertModeIfElementIsFocused();
 

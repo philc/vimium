@@ -10,6 +10,7 @@
 var linkHints = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
+  digitsNeeded: 1,
   // The characters that were typed in while in "link hints" mode.
   hintKeystrokeQueue: [],
   linkTextKeystrokeQueue: [],
@@ -33,10 +34,6 @@ var linkHints = {
     xpath.push("//*[@onclick]");
     return xpath.join(" | ")
   })(),
-
-  isNarrowMode: function () {
-    return settings.narrowLinkHints == "true";
-  },
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
   activateLinkHintsModeToOpenInNewTab: function() { linkHints.activateLinkHintsMode(true, false); },
@@ -75,10 +72,11 @@ var linkHints = {
 
     // Initialize the number used to generate the character hints to be as many digits as we need to
     // highlight all the links on the page; we don't want some link hints to have more chars than others.
-    var digitsNeeded = Math.ceil(linkHints.logXOfBase(visibleElements.length, settings.linkHintCharacters.length));
     var linkHintNumber = 0;
+    linkHints.initHintStringGenerator(visibleElements);
     for (var i = 0; i < visibleElements.length; i++) {
-      linkHints.hintMarkers.push(linkHints.createMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
+      linkHints.hintMarkers.push(linkHints.createMarkerFor(
+            visibleElements[i], linkHintNumber, linkHints.hintStringGenerator));
       linkHintNumber++;
     }
     // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
@@ -93,6 +91,15 @@ var linkHints = {
   },
 
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
+
+  initHintStringGenerator: function(visibleElements) {
+    linkHints.digitsNeeded = Math.ceil(linkHints.logXOfBase(
+          visibleElements.length, settings.linkHintCharacters.length));
+  },
+
+  hintStringGenerator: function(linkHintNumber) {
+     return linkHints.numberToHintString(linkHintNumber, linkHints.digitsNeeded);
+  },
 
   /*
    * Returns all clickable elements that are not hidden and are in the current viewport.
@@ -156,6 +163,9 @@ var linkHints = {
     return true;
   },
 
+  /*
+   * Handles shift and esc keys. The other keys are passed to normalKeyDownHandler.
+   */
   onKeyDownInLinkHintsMode: function(event) {
     console.log("Key Down");
     if (event.keyCode == keyCodes.shiftKey && !linkHints.openLinkModeToggle) {
@@ -164,48 +174,33 @@ var linkHints = {
       linkHints.openLinkModeToggle = true;
     }
 
-    var keyChar = getKeyChar(event);
-    if (!keyChar)
-      return;
-
     // TODO(philc): Ignore keys that have modifiers.
     if (isEscape(event)) {
       linkHints.deactivateLinkHintsMode();
     } else {
-      if (linkHints.isNarrowMode()) {
-        if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (linkHints.linkTextKeystrokeQueue.length == 0 && linkHints.hintKeystrokeQueue.length == 0) {
-            linkHints.deactivateLinkHintsMode();
-          } else {
-            // backspace clears hint key queue first, then acts on link text key queue
-            if (linkHints.hintKeystrokeQueue.pop() === undefined)
-              linkHints.linkTextKeystrokeQueue.pop();
-            linkHints.updateLinkHints();
-          }
-        } else if (/[0-9]/.test(keyChar)) {
-          linkHints.hintKeystrokeQueue.push(keyChar);
-          linkHints.updateLinkHints();
-        } else {
-          linkHints.linkTextKeystrokeQueue.push(keyChar);
-          linkHints.updateLinkHints();
-        }
-      } else {
-        if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (linkHints.hintKeystrokeQueue.length == 0) {
-            linkHints.deactivateLinkHintsMode();
-          } else {
-            linkHints.hintKeystrokeQueue.pop();
-            linkHints.updateLinkHints();
-          }
-        } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
-          linkHints.hintKeystrokeQueue.push(keyChar);
-          linkHints.updateLinkHints();
-        }
-      }
+      linkHints.normalKeyDownHandler(event);
     }
 
     event.stopPropagation();
     event.preventDefault();
+  },
+
+  normalKeyDownHandler: function (event) {
+    var keyChar = getKeyChar(event);
+    if (!keyChar)
+      return;
+
+    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+      if (linkHints.hintKeystrokeQueue.length == 0) {
+        linkHints.deactivateLinkHintsMode();
+      } else {
+        linkHints.hintKeystrokeQueue.pop();
+        linkHints.updateLinkHints();
+      }
+    } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
+      linkHints.hintKeystrokeQueue.push(keyChar);
+      linkHints.updateLinkHints();
+    }
   },
 
   onKeyUpInLinkHintsMode: function(event) {
@@ -224,7 +219,7 @@ var linkHints = {
    */
   updateLinkHints: function() {
     var matchString = linkHints.hintKeystrokeQueue.join("");
-    var linksMatched = linkHints.highlightLinkMatches(matchString);
+    var linksMatched = linkHints.refreshLinkMatches(matchString);
     if (linksMatched.length == 0)
       linkHints.deactivateLinkHintsMode();
     else if (linksMatched.length == 1) {
@@ -266,48 +261,7 @@ var linkHints = {
    * Hides link hints which do not match the given search string. To allow the backspace key to work, this
    * will also show link hints which do match but were previously hidden.
    */
-  highlightLinkMatches: function(searchString) {
-    var linksMatched = [];
-    var linkSearchString = linkHints.linkTextKeystrokeQueue.join("");
-    var narrowMode = linkHints.isNarrowMode();
-    var hasSearchString = searchString.length != 0;
-    var hasLinkSearchString = linkSearchString.length != 0;
-    var matchedCount = 0;
-
-    for (var i = 0; i < linkHints.hintMarkers.length; i++) {
-      var linkMarker = linkHints.hintMarkers[i];
-      var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
-      var matchedHintStart = linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
-
-      var shouldRemoveMatch;
-      if (narrowMode) {
-        shouldRemoveMatch = 
-          (!matchedLink && !matchedHintStart) || 
-          (!matchedLink && hasLinkSearchString) ||
-          (!matchedHintStart && hasSearchString)
-      } else {
-        shouldRemoveMatch = !matchedHintStart;
-      }
-
-      if (matchedHintStart) {
-        for (var j = 0; j < linkMarker.childNodes.length; j++)
-          linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
-      }
-
-      if (shouldRemoveMatch) {
-        linkMarker.style.display = "none";
-      } else {
-        if (linkMarker.style.display == "none")
-          linkMarker.style.display = "";
-        var newHint = matchedCount.toString();
-        linkMarker.innerHTML = linkHints.spanWrap(newHint);
-        linkMarker.setAttribute("hintString", newHint);
-        linksMatched.push(linkMarker.clickableItem);
-        matchedCount++;
-      }
-
-    }
-    return linksMatched;
+  refreshLinkMatches: function(searchString) {
   },
 
   /*
@@ -366,9 +320,8 @@ var linkHints = {
   /*
    * Creates a link marker for the given link.
    */
-  createMarkerFor: function(link, linkHintNumber, linkHintDigits) {
-    var hintString = linkHints.isNarrowMode() ?
-      linkHintNumber.toString() : linkHints.numberToHintString(linkHintNumber, linkHintDigits);
+  createMarkerFor: function(link, linkHintNumber, stringGenerator) {
+    var hintString = stringGenerator(linkHintNumber);
     var linkText = link.element.innerHTML.toLowerCase();
     if (linkText == undefined) 
       linkText = "";
@@ -390,7 +343,9 @@ var linkHints = {
     return marker;
   },
 
-  // Make each hint character a span, so that we can highlight the typed characters as you type them.
+  /*
+   * Make each hint character a span, so that we can highlight the typed characters as you type them.
+   */
   spanWrap: function(hintString) {
     var innerHTML = [];
     for (var i = 0; i < hintString.length; i++)
@@ -398,3 +353,71 @@ var linkHints = {
     return innerHTML.join("");
   },
 };
+
+function initializeLinkHints() {
+  if (settings.narrowLinkHints == "true") {
+    linkHints['hintStringGenerator'] = function(linkHintNumber) {
+      return linkHintNumber.toString();
+    };
+    linkHints['initHintStringGenerator'] = function() {};
+    linkHints['normalKeyDownHandler'] = function(event) {
+      var keyChar = getKeyChar(event);
+      if (!keyChar)
+        return;
+
+      if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+        if (linkHints.linkTextKeystrokeQueue.length == 0 && linkHints.hintKeystrokeQueue.length == 0) {
+          linkHints.deactivateLinkHintsMode();
+        } else {
+          // backspace clears hint key queue first, then acts on link text key queue
+          if (linkHints.hintKeystrokeQueue.pop() === undefined)
+            linkHints.linkTextKeystrokeQueue.pop();
+          linkHints.updateLinkHints();
+        }
+      } else if (/[0-9]/.test(keyChar)) {
+        linkHints.hintKeystrokeQueue.push(keyChar);
+        linkHints.updateLinkHints();
+      } else {
+        linkHints.linkTextKeystrokeQueue.push(keyChar);
+        linkHints.updateLinkHints();
+      }
+    };
+    linkHints['refreshLinkMatches'] = function(searchString) {
+      var linksMatched = [];
+      var linkSearchString = linkHints.linkTextKeystrokeQueue.join("");
+      var hasSearchString = searchString.length != 0;
+      var hasLinkSearchString = linkSearchString.length != 0;
+      var matchedCount = 0;
+
+      for (var i = 0; i < linkHints.hintMarkers.length; i++) {
+        var linkMarker = linkHints.hintMarkers[i];
+        var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
+        var matchedHintStart = linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
+        var shouldRemoveMatch = 
+            (!matchedLink && !matchedHintStart) || 
+            (!matchedLink && hasLinkSearchString) ||
+            (!matchedHintStart && hasSearchString);
+
+        if (matchedHintStart) {
+          for (var j = 0; j < linkMarker.childNodes.length; j++)
+            linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
+        }
+
+        if (shouldRemoveMatch) {
+          linkMarker.style.display = "none";
+        } else {
+          if (linkMarker.style.display == "none")
+            linkMarker.style.display = "";
+          var newHint = matchedCount.toString();
+          linkMarker.innerHTML = linkHints.spanWrap(newHint);
+          linkMarker.setAttribute("hintString", newHint);
+          linksMatched.push(linkMarker.clickableItem);
+          matchedCount++;
+        }
+
+      }
+      return linksMatched;
+    };
+  } else {
+  }
+}
