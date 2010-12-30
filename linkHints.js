@@ -428,6 +428,9 @@ function initializeLinkHints() {
           matchString = linkHints.hintKeystrokeQueue.join("");
           linksMatched = linkHints.highlightLinkMatches(matchString);
         } else {
+          // since we might renumber the hints, the current hintKeyStrokeQueue
+          // should be rendered invalid (i.e. reset).
+          linkHints.hintKeystrokeQueue = [];
           linkHints.linkTextKeystrokeQueue.push(keyChar);
           matchString = linkHints.linkTextKeystrokeQueue.join("");
           linksMatched = linkHints.filterLinkHints(matchString);
