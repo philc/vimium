@@ -225,24 +225,20 @@ var linkHintsPrototype = {
   },
 
   /*
-   * Hides link hints which do not match the given search string. To allow the backspace key to work, this
-   * will also show link hints which do match but were previously hidden.
+   * Hides linkMarker if it does not match testString, and shows linkMarker
+   * if it does match but was previously hidden. To be used with Array.filter().
    */
-  highlightLinkMatches: function(searchString) {
-    var linksMatched = [];
-    for (var i = 0; i < linkHints.hintMarkers.length; i++) {
-      var linkMarker = linkHints.hintMarkers[i];
-      if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
-        if (linkMarker.style.display == "none")
-          linkMarker.style.display = "";
-        for (var j = 0; j < linkMarker.childNodes.length; j++)
-          linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
-        linksMatched.push(linkMarker.clickableItem);
-      } else {
-        linkMarker.style.display = "none";
-      }
+  toggleHighlights: function(testString, linkMarker) {
+    if (linkMarker.getAttribute("hintString").indexOf(testString) == 0) {
+      if (linkMarker.style.display == "none")
+        linkMarker.style.display = "";
+      for (var j = 0; j < linkMarker.childNodes.length; j++)
+        linkMarker.childNodes[j].className = (j >= testString.length) ? "" : "matchingCharacter";
+      return true;
+    } else {
+      linkMarker.style.display = "none";
+      return false;
     }
-    return linksMatched;
   },
 
   /*
@@ -332,6 +328,7 @@ var linkHintsPrototype = {
       innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
     return innerHTML.join("");
   },
+
 };
 
 var linkHints;
@@ -364,34 +361,17 @@ function initializeLinkHints() {
         } else {
           linkHints.hintKeystrokeQueue.pop();
           var matchString = linkHints.hintKeystrokeQueue.join("");
-          linkHints.highlightLinkMatches(matchString);
+          linkHints.hintMarkers.filter(function(linkMarker) { return linkHints.toggleHighlights(matchString, linkMarker); });
         }
       } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
         linkHints.hintKeystrokeQueue.push(keyChar);
         var matchString = linkHints.hintKeystrokeQueue.join("");
-        linksMatched = linkHints.highlightLinkMatches(matchString);
+        linksMatched = linkHints.hintMarkers.filter(function(linkMarker) { return linkHints.toggleHighlights(matchString, linkMarker); });
         if (linksMatched.length == 0)
           linkHints.deactivateLinkHintsMode();
         else if (linksMatched.length == 1)
-          linkHints.activateLink(linksMatched[0]);
+          linkHints.activateLink(linksMatched[0].clickableItem);
       }
-    };
-
-    linkHints['highlightLinkMatches'] = function(searchString) {
-      var linksMatched = [];
-      for (var i = 0; i < linkHints.hintMarkers.length; i++) {
-        var linkMarker = linkHints.hintMarkers[i];
-        if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
-          if (linkMarker.style.display == "none")
-            linkMarker.style.display = "";
-          for (var j = 0; j < linkMarker.childNodes.length; j++)
-            linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
-          linksMatched.push(linkMarker.clickableItem);
-        } else {
-          linkMarker.style.display = "none";
-        }
-      }
-      return linksMatched;
     };
 
   } else {
@@ -426,7 +406,11 @@ function initializeLinkHints() {
         if (/[0-9]/.test(keyChar)) {
           linkHints.hintKeystrokeQueue.push(keyChar);
           matchString = linkHints.hintKeystrokeQueue.join("");
-          linksMatched = linkHints.highlightLinkMatches(matchString);
+          linksMatched = linkHints.hintMarkers.filter(function(linkMarker) {
+              if (linkMarker.getAttribute('filtered') == 'true')
+                return false;
+              return linkHints.toggleHighlights(matchString, linkMarker);
+          });
         } else {
           // since we might renumber the hints, the current hintKeyStrokeQueue
           // should be rendered invalid (i.e. reset).
@@ -441,25 +425,6 @@ function initializeLinkHints() {
         else if (linksMatched.length == 1)
           linkHints.activateLink(linksMatched[0]);
       }
-    };
-
-    linkHints['highlightLinkMatches'] = function(searchString) {
-      var linksMatched = [];
-      for (var i = 0; i < linkHints.hintMarkers.length; i++) {
-        var linkMarker = linkHints.hintMarkers[i];
-        if (linkMarker.getAttribute("filtered") == "true")
-          continue;
-        if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
-          if (linkMarker.style.display == "none")
-            linkMarker.style.display = "";
-          for (var j = 0; j < linkMarker.childNodes.length; j++)
-            linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
-          linksMatched.push(linkMarker.clickableItem);
-        } else {
-          linkMarker.style.display = "none";
-        }
-      }
-      return linksMatched;
     };
 
     /*
