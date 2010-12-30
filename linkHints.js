@@ -7,13 +7,11 @@
  * The CSS which is used on the link hints is also a configurable option.
  */
 
-var linkHints = {
+var linkHintsPrototype = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
-  digitsNeeded: 1,
   // The characters that were typed in while in "link hints" mode.
   hintKeystrokeQueue: [],
-  linkTextKeystrokeQueue: [],
   linkHintsModeActivated: false,
   shouldOpenLinkHintInNewTab: false,
   shouldOpenLinkHintWithQueue: false,
@@ -90,16 +88,9 @@ var linkHints = {
     document.body.appendChild(linkHints.hintMarkerContainingDiv);
   },
 
-  logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
+  hintStringGenerator: function() {},
 
-  initHintStringGenerator: function(visibleElements) {
-    linkHints.digitsNeeded = Math.ceil(linkHints.logXOfBase(
-          visibleElements.length, settings.linkHintCharacters.length));
-  },
-
-  hintStringGenerator: function(linkHintNumber) {
-     return linkHints.numberToHintString(linkHintNumber, linkHints.digitsNeeded);
-  },
+  initHintStringGenerator: function(visibleElements) {},
 
   /*
    * Returns all clickable elements that are not hidden and are in the current viewport.
@@ -185,23 +176,7 @@ var linkHints = {
     event.preventDefault();
   },
 
-  normalKeyDownHandler: function (event) {
-    var keyChar = getKeyChar(event);
-    if (!keyChar)
-      return;
-
-    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-      if (linkHints.hintKeystrokeQueue.length == 0) {
-        linkHints.deactivateLinkHintsMode();
-      } else {
-        linkHints.hintKeystrokeQueue.pop();
-        linkHints.updateLinkHints();
-      }
-    } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
-      linkHints.hintKeystrokeQueue.push(keyChar);
-      linkHints.updateLinkHints();
-    }
-  },
+  normalKeyDownHandler: function(event) {},
 
   onKeyUpInLinkHintsMode: function(event) {
     if (event.keyCode == keyCodes.shiftKey && linkHints.openLinkModeToggle) {
@@ -214,36 +189,28 @@ var linkHints = {
   },
 
   /*
-   * Updates the visibility of link hints on screen based on the keystrokes typed thus far. If only one
-   * link hint remains, click on that link and exit link hints mode.
+   * When only one link hint remains, this function activates it in the appropriate way.
    */
-  updateLinkHints: function() {
-    var matchString = linkHints.hintKeystrokeQueue.join("");
-    var linksMatched = linkHints.refreshLinkMatches(matchString);
-    if (linksMatched.length == 0)
+  activateLink: function(matchedLink) {
+    if (linkHints.isSelectable(matchedLink)) {
+      matchedLink.focus();
+      // When focusing a textbox, put the selection caret at the end of the textbox's contents.
+      matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
       linkHints.deactivateLinkHintsMode();
-    else if (linksMatched.length == 1) {
-      var matchedLink = linksMatched[0];
-      if (linkHints.isSelectable(matchedLink)) {
+    } else {
+      // When we're opening the link in the current tab, don't navigate to the selected link immediately;
+      // we want to give the user some feedback depicting which link they've selected by focusing it.
+      if (linkHints.shouldOpenLinkHintWithQueue) {
+        linkHints.simulateClick(matchedLink);
+        linkHints.resetLinkHintsMode();
+      } else if (linkHints.shouldOpenLinkHintInNewTab) {
+        linkHints.simulateClick(matchedLink);
         matchedLink.focus();
-        // When focusing a textbox, put the selection caret at the end of the textbox's contents.
-        matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
         linkHints.deactivateLinkHintsMode();
       } else {
-        // When we're opening the link in the current tab, don't navigate to the selected link immediately;
-        // we want to give the user some feedback depicting which link they've selected by focusing it.
-        if (linkHints.shouldOpenLinkHintWithQueue) {
-          linkHints.simulateClick(matchedLink);
-          linkHints.resetLinkHintsMode();
-        } else if (linkHints.shouldOpenLinkHintInNewTab) {
-          linkHints.simulateClick(matchedLink);
-          matchedLink.focus();
-          linkHints.deactivateLinkHintsMode();
-        } else {
-          setTimeout(function() { linkHints.simulateClick(matchedLink); }, 400);
-          matchedLink.focus();
-          linkHints.deactivateLinkHintsMode();
-        }
+        setTimeout(function() { linkHints.simulateClick(matchedLink); }, 400);
+        matchedLink.focus();
+        linkHints.deactivateLinkHintsMode();
       }
     }
   },
@@ -261,7 +228,21 @@ var linkHints = {
    * Hides link hints which do not match the given search string. To allow the backspace key to work, this
    * will also show link hints which do match but were previously hidden.
    */
-  refreshLinkMatches: function(searchString) {
+  highlightLinkMatches: function(searchString) {
+    var linksMatched = [];
+    for (var i = 0; i < linkHints.hintMarkers.length; i++) {
+      var linkMarker = linkHints.hintMarkers[i];
+      if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
+        if (linkMarker.style.display == "none")
+          linkMarker.style.display = "";
+        for (var j = 0; j < linkMarker.childNodes.length; j++)
+          linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
+        linksMatched.push(linkMarker.clickableItem);
+      } else {
+        linkMarker.style.display = "none";
+      }
+    }
+    return linksMatched;
   },
 
   /*
@@ -305,7 +286,6 @@ var linkHints = {
     linkHints.hintMarkerContainingDiv = null;
     linkHints.hintMarkers = [];
     linkHints.hintKeystrokeQueue = [];
-    linkHints.linkTextKeystrokeQueue = [];
     document.removeEventListener("keydown", linkHints.onKeyDownInLinkHintsMode, true);
     document.removeEventListener("keyup", linkHints.onKeyUpInLinkHintsMode, true);
     linkHints.linkHintsModeActivated = false;
@@ -354,70 +334,164 @@ var linkHints = {
   },
 };
 
+var linkHints;
 function initializeLinkHints() {
-  if (settings.narrowLinkHints == "true") {
-    linkHints['hintStringGenerator'] = function(linkHintNumber) {
-      return linkHintNumber.toString();
+  if (settings.narrowLinkHints != "true") { // the default hinting system
+
+    linkHints = Object.create(linkHintsPrototype);
+
+    linkHints['digitsNeeded'] = 1;
+
+    linkHints['logXOfBase'] = function(x, base) { return Math.log(x) / Math.log(base); };
+
+    linkHints['initHintStringGenerator'] = function(visibleElements) {
+      linkHints.digitsNeeded = Math.ceil(linkHints.logXOfBase(
+            visibleElements.length, settings.linkHintCharacters.length));
     };
-    linkHints['initHintStringGenerator'] = function() {};
-    linkHints['normalKeyDownHandler'] = function(event) {
+
+    linkHints['hintStringGenerator'] = function(linkHintNumber) {
+      return linkHints.numberToHintString(linkHintNumber, linkHints.digitsNeeded);
+    };
+
+    linkHints['normalKeyDownHandler'] = function (event) {
       var keyChar = getKeyChar(event);
       if (!keyChar)
         return;
 
       if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+        if (linkHints.hintKeystrokeQueue.length == 0) {
+          linkHints.deactivateLinkHintsMode();
+        } else {
+          linkHints.hintKeystrokeQueue.pop();
+          var matchString = linkHints.hintKeystrokeQueue.join("");
+          linkHints.highlightLinkMatches(matchString);
+        }
+      } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
+        linkHints.hintKeystrokeQueue.push(keyChar);
+        var matchString = linkHints.hintKeystrokeQueue.join("");
+        linksMatched = linkHints.highlightLinkMatches(matchString);
+        if (linksMatched.length == 0)
+          linkHints.deactivateLinkHintsMode();
+        else if (linksMatched.length == 1)
+          linkHints.activateLink(linksMatched[0]);
+      }
+    };
+
+    linkHints['highlightLinkMatches'] = function(searchString) {
+      var linksMatched = [];
+      for (var i = 0; i < linkHints.hintMarkers.length; i++) {
+        var linkMarker = linkHints.hintMarkers[i];
+        if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
+          if (linkMarker.style.display == "none")
+            linkMarker.style.display = "";
+          for (var j = 0; j < linkMarker.childNodes.length; j++)
+            linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
+          linksMatched.push(linkMarker.clickableItem);
+        } else {
+          linkMarker.style.display = "none";
+        }
+      }
+      return linksMatched;
+    };
+
+  } else {
+
+    linkHints = Object.create(linkHintsPrototype);
+
+    linkHints['linkTextKeystrokeQueue'] = [];
+
+    linkHints['hintStringGenerator'] = function(linkHintNumber) {
+      return linkHintNumber.toString();
+    };
+
+    linkHints['normalKeyDownHandler'] = function(event) {
+      if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
         if (linkHints.linkTextKeystrokeQueue.length == 0 && linkHints.hintKeystrokeQueue.length == 0) {
           linkHints.deactivateLinkHintsMode();
         } else {
           // backspace clears hint key queue first, then acts on link text key queue
-          if (linkHints.hintKeystrokeQueue.pop() === undefined)
+          if (linkHints.hintKeystrokeQueue.pop())
+            linkHints.filterLinkHints();
+          else {
             linkHints.linkTextKeystrokeQueue.pop();
-          linkHints.updateLinkHints();
+            linkHints.filterLinkHints();
+          }
         }
-      } else if (/[0-9]/.test(keyChar)) {
-        linkHints.hintKeystrokeQueue.push(keyChar);
-        linkHints.updateLinkHints();
       } else {
-        linkHints.linkTextKeystrokeQueue.push(keyChar);
-        linkHints.updateLinkHints();
+        var keyChar = getKeyChar(event);
+        if (!keyChar)
+          return;
+
+        var linksMatched, matchString;
+        if (/[0-9]/.test(keyChar)) {
+          linkHints.hintKeystrokeQueue.push(keyChar);
+          matchString = linkHints.hintKeystrokeQueue.join("");
+          linksMatched = linkHints.highlightLinkMatches(matchString);
+        } else {
+          linkHints.linkTextKeystrokeQueue.push(keyChar);
+          matchString = linkHints.linkTextKeystrokeQueue.join("");
+          linksMatched = linkHints.filterLinkHints(matchString);
+        }
+
+        if (linksMatched.length == 0)
+          linkHints.deactivateLinkHintsMode();
+        else if (linksMatched.length == 1)
+          linkHints.activateLink(linksMatched[0]);
       }
     };
-    linkHints['refreshLinkMatches'] = function(searchString) {
+
+    linkHints['highlightLinkMatches'] = function(searchString) {
+      var linksMatched = [];
+      for (var i = 0; i < linkHints.hintMarkers.length; i++) {
+        var linkMarker = linkHints.hintMarkers[i];
+        if (linkMarker.getAttribute("filtered") == "true")
+          continue;
+        if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
+          if (linkMarker.style.display == "none")
+            linkMarker.style.display = "";
+          for (var j = 0; j < linkMarker.childNodes.length; j++)
+            linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
+          linksMatched.push(linkMarker.clickableItem);
+        } else {
+          linkMarker.style.display = "none";
+        }
+      }
+      return linksMatched;
+    };
+
+    /*
+     * Hides the links that do not match the linkText search string, and
+     * renumbers the remainder. Should only be called when there is a change in
+     * linkTextKeystrokeQueue, to avoid undesired renumbering.
+    */
+    linkHints['filterLinkHints'] = function(searchString) {
       var linksMatched = [];
       var linkSearchString = linkHints.linkTextKeystrokeQueue.join("");
-      var hasSearchString = searchString.length != 0;
-      var hasLinkSearchString = linkSearchString.length != 0;
-      var matchedCount = 0;
 
       for (var i = 0; i < linkHints.hintMarkers.length; i++) {
         var linkMarker = linkHints.hintMarkers[i];
         var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
-        var matchedHintStart = linkMarker.getAttribute("hintString").indexOf(searchString) == 0;
-        var shouldRemoveMatch = 
-            (!matchedLink && !matchedHintStart) || 
-            (!matchedLink && hasLinkSearchString) ||
-            (!matchedHintStart && hasSearchString);
 
-        if (matchedHintStart) {
-          for (var j = 0; j < linkMarker.childNodes.length; j++)
-            linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
-        }
-
-        if (shouldRemoveMatch) {
+        if (!matchedLink) {
           linkMarker.style.display = "none";
+          linkMarker.setAttribute("filtered", "true");
         } else {
           if (linkMarker.style.display == "none")
             linkMarker.style.display = "";
-          var newHint = matchedCount.toString();
-          linkMarker.innerHTML = linkHints.spanWrap(newHint);
-          linkMarker.setAttribute("hintString", newHint);
+          var newHintText = (linksMatched.length+1).toString();
+          linkMarker.innerHTML = linkHints.spanWrap(newHintText);
+          linkMarker.setAttribute("hintString", newHintText);
+          linkMarker.setAttribute("filtered", "false");
           linksMatched.push(linkMarker.clickableItem);
-          matchedCount++;
         }
-
       }
       return linksMatched;
     };
-  } else {
+
+    linkHints['deactivateLinkHintsMode'] = function() {
+      linkHints.linkTextKeystrokeQueue = [];
+      Object.getPrototypeOf(linkHints).deactivateLinkHintsMode();
+    };
+
   }
 }
