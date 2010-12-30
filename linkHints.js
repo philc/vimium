@@ -20,6 +20,11 @@ var linkHintsPrototype = {
   // Whether we have added to the page the CSS needed to display link hints.
   linkHintsCssAdded: false,
 
+  init: function() {
+    this.onKeyDownInLinkHintsMode = this.onKeyDownInLinkHintsMode.bind(this);
+    this.onKeyUpInLinkHintsMode = this.onKeyUpInLinkHintsMode.bind(this);
+  },
+
   /* 
    * Generate an XPath describing what a clickable element is.
    * The final expression will be something like "//button | //xhtml:button | ..."
@@ -34,28 +39,28 @@ var linkHintsPrototype = {
   })(),
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
-  activateLinkHintsModeToOpenInNewTab: function() { linkHints.activateLinkHintsMode(true, false); },
+  activateLinkHintsModeToOpenInNewTab: function() { this.activateLinkHintsMode(true, false); },
 
-  activateLinkHintsModeWithQueue: function() { linkHints.activateLinkHintsMode(true, true); },
+  activateLinkHintsModeWithQueue: function() { this.activateLinkHintsMode(true, true); },
 
   activateLinkHintsMode: function (openInNewTab, withQueue) {
-    if (!linkHints.linkHintsCssAdded)
+    if (!this.linkHintsCssAdded)
       addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
-    linkHints.linkHintCssAdded = true;
-    linkHints.linkHintsModeActivated = true;
-    linkHints.setOpenLinkMode(openInNewTab, withQueue);
-    linkHints.buildLinkHints();
-    document.addEventListener("keydown", linkHints.onKeyDownInLinkHintsMode, true);
-    document.addEventListener("keyup", linkHints.onKeyUpInLinkHintsMode, true);
+    this.linkHintCssAdded = true;
+    this.linkHintsModeActivated = true;
+    this.setOpenLinkMode(openInNewTab, withQueue);
+    this.buildLinkHints();
+    document.addEventListener("keydown", this.onKeyDownInLinkHintsMode, true);
+    document.addEventListener("keyup", this.onKeyUpInLinkHintsMode, true);
   },
 
   setOpenLinkMode: function(openInNewTab, withQueue) {
-    linkHints.shouldOpenLinkHintInNewTab = openInNewTab;
-    linkHints.shouldOpenLinkHintWithQueue = withQueue;
-    if (linkHints.shouldOpenLinkHintWithQueue) {
+    this.shouldOpenLinkHintInNewTab = openInNewTab;
+    this.shouldOpenLinkHintWithQueue = withQueue;
+    if (this.shouldOpenLinkHintWithQueue) {
       HUD.show("Open multiple links in a new tab");
     } else {
-      if (linkHints.shouldOpenLinkHintInNewTab)
+      if (this.shouldOpenLinkHintInNewTab)
         HUD.show("Open link in new tab");
       else
         HUD.show("Open link in current tab");
@@ -66,26 +71,26 @@ var linkHintsPrototype = {
    * Builds and displays link hints for every visible clickable item on the page.
    */
   buildLinkHints: function() {
-    var visibleElements = linkHints.getVisibleClickableElements();
+    var visibleElements = this.getVisibleClickableElements();
 
     // Initialize the number used to generate the character hints to be as many digits as we need to
     // highlight all the links on the page; we don't want some link hints to have more chars than others.
     var linkHintNumber = 0;
-    linkHints.initHintStringGenerator(visibleElements);
+    this.initHintStringGenerator(visibleElements);
     for (var i = 0; i < visibleElements.length; i++) {
-      linkHints.hintMarkers.push(linkHints.createMarkerFor(
-            visibleElements[i], linkHintNumber, linkHints.hintStringGenerator));
+      this.hintMarkers.push(this.createMarkerFor(
+            visibleElements[i], linkHintNumber, this.hintStringGenerator.bind(this)));
       linkHintNumber++;
     }
     // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
     // that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
     // Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
-    linkHints.hintMarkerContainingDiv = document.createElement("div");
-    linkHints.hintMarkerContainingDiv.className = "internalVimiumHintMarker";
-    for (var i = 0; i < linkHints.hintMarkers.length; i++)
-      linkHints.hintMarkerContainingDiv.appendChild(linkHints.hintMarkers[i]);
-    document.body.appendChild(linkHints.hintMarkerContainingDiv);
+    this.hintMarkerContainingDiv = document.createElement("div");
+    this.hintMarkerContainingDiv.className = "internalVimiumHintMarker";
+    for (var i = 0; i < this.hintMarkers.length; i++)
+      this.hintMarkerContainingDiv.appendChild(this.hintMarkers[i]);
+    document.body.appendChild(this.hintMarkerContainingDiv);
   },
 
   hintStringGenerator: function() {},
@@ -98,7 +103,7 @@ var linkHintsPrototype = {
    * of digits needed to enumerate all of the links on screen.
    */
   getVisibleClickableElements: function() {
-    var resultSet = document.evaluate(linkHints.clickableElementsXPath, document.body,
+    var resultSet = document.evaluate(this.clickableElementsXPath, document.body,
       function (namespace) {
         return namespace == "xhtml" ? "http://www.w3.org/1999/xhtml" : null;
       },
@@ -112,7 +117,7 @@ var linkHintsPrototype = {
       var element = resultSet.snapshotItem(i);
       var clientRect = element.getClientRects()[0];
 
-      if (linkHints.isVisible(element, clientRect))
+      if (this.isVisible(element, clientRect))
         visibleElements.push({element: element, rect: clientRect});
 
       // If the link has zero dimensions, it may be wrapping visible
@@ -121,7 +126,7 @@ var linkHintsPrototype = {
         for (var j = 0; j < element.children.length; j++) {
           if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') != 'none') {
             var childClientRect = element.children[j].getClientRects()[0];
-            if (linkHints.isVisible(element.children[j], childClientRect)) {
+            if (this.isVisible(element.children[j], childClientRect)) {
               visibleElements.push({element: element.children[j], rect: childClientRect});
               break;
             }
@@ -159,17 +164,17 @@ var linkHintsPrototype = {
    */
   onKeyDownInLinkHintsMode: function(event) {
     console.log("Key Down");
-    if (event.keyCode == keyCodes.shiftKey && !linkHints.openLinkModeToggle) {
+    if (event.keyCode == keyCodes.shiftKey && !this.openLinkModeToggle) {
       // Toggle whether to open link in a new or current tab.
-      linkHints.setOpenLinkMode(!linkHints.shouldOpenLinkHintInNewTab, linkHints.shouldOpenLinkHintWithQueue);
-      linkHints.openLinkModeToggle = true;
+      this.setOpenLinkMode(!this.shouldOpenLinkHintInNewTab, this.shouldOpenLinkHintWithQueue);
+      this.openLinkModeToggle = true;
     }
 
     // TODO(philc): Ignore keys that have modifiers.
     if (isEscape(event)) {
-      linkHints.deactivateLinkHintsMode();
+      this.deactivateLinkHintsMode();
     } else {
-      linkHints.normalKeyDownHandler(event);
+      this.normalKeyDownHandler(event);
     }
 
     event.stopPropagation();
@@ -179,10 +184,10 @@ var linkHintsPrototype = {
   normalKeyDownHandler: function(event) {},
 
   onKeyUpInLinkHintsMode: function(event) {
-    if (event.keyCode == keyCodes.shiftKey && linkHints.openLinkModeToggle) {
+    if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
       // Revert toggle on whether to open link in new or current tab. 
-      linkHints.setOpenLinkMode(!linkHints.shouldOpenLinkHintInNewTab, linkHints.shouldOpenLinkHintWithQueue);
-      linkHints.openLinkModeToggle = false;
+      this.setOpenLinkMode(!this.shouldOpenLinkHintInNewTab, this.shouldOpenLinkHintWithQueue);
+      this.openLinkModeToggle = false;
     }
     event.stopPropagation();
     event.preventDefault();
@@ -192,25 +197,25 @@ var linkHintsPrototype = {
    * When only one link hint remains, this function activates it in the appropriate way.
    */
   activateLink: function(matchedLink) {
-    if (linkHints.isSelectable(matchedLink)) {
+    if (this.isSelectable(matchedLink)) {
       matchedLink.focus();
       // When focusing a textbox, put the selection caret at the end of the textbox's contents.
       matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
-      linkHints.deactivateLinkHintsMode();
+      this.deactivateLinkHintsMode();
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
       // we want to give the user some feedback depicting which link they've selected by focusing it.
-      if (linkHints.shouldOpenLinkHintWithQueue) {
-        linkHints.simulateClick(matchedLink);
-        linkHints.resetLinkHintsMode();
-      } else if (linkHints.shouldOpenLinkHintInNewTab) {
-        linkHints.simulateClick(matchedLink);
+      if (this.shouldOpenLinkHintWithQueue) {
+        this.simulateClick(matchedLink);
+        this.resetLinkHintsMode();
+      } else if (this.shouldOpenLinkHintInNewTab) {
+        this.simulateClick(matchedLink);
         matchedLink.focus();
-        linkHints.deactivateLinkHintsMode();
+        this.deactivateLinkHintsMode();
       } else {
-        setTimeout(function() { linkHints.simulateClick(matchedLink); }, 400);
+        setTimeout(this.simulateClick.bind(this, matchedLink), 400);
         matchedLink.focus();
-        linkHints.deactivateLinkHintsMode();
+        this.deactivateLinkHintsMode();
       }
     }
   },
@@ -277,20 +282,20 @@ var linkHintsPrototype = {
   },
 
   deactivateLinkHintsMode: function() {
-    if (linkHints.hintMarkerContainingDiv)
-      linkHints.hintMarkerContainingDiv.parentNode.removeChild(linkHints.hintMarkerContainingDiv);
-    linkHints.hintMarkerContainingDiv = null;
-    linkHints.hintMarkers = [];
-    linkHints.hintKeystrokeQueue = [];
-    document.removeEventListener("keydown", linkHints.onKeyDownInLinkHintsMode, true);
-    document.removeEventListener("keyup", linkHints.onKeyUpInLinkHintsMode, true);
-    linkHints.linkHintsModeActivated = false;
+    if (this.hintMarkerContainingDiv)
+      this.hintMarkerContainingDiv.parentNode.removeChild(this.hintMarkerContainingDiv);
+    this.hintMarkerContainingDiv = null;
+    this.hintMarkers = [];
+    this.hintKeystrokeQueue = [];
+    document.removeEventListener("keydown", this.onKeyDownInLinkHintsMode, true);
+    document.removeEventListener("keyup", this.onKeyUpInLinkHintsMode, true);
+    this.linkHintsModeActivated = false;
     HUD.hide();
   },
 
   resetLinkHintsMode: function() {
-    linkHints.deactivateLinkHintsMode();
-    linkHints.activateLinkHintsModeWithQueue();
+    this.deactivateLinkHintsMode();
+    this.activateLinkHintsModeWithQueue();
   },
 
   /*
@@ -303,7 +308,7 @@ var linkHintsPrototype = {
       linkText = "";
     var marker = document.createElement("div");
     marker.className = "internalVimiumHintMarker vimiumHintMarker";
-    marker.innerHTML = linkHints.spanWrap(hintString);
+    marker.innerHTML = this.spanWrap(hintString);
     marker.setAttribute("hintString", hintString);
     marker.setAttribute("linkText", linkText);
 
@@ -333,21 +338,22 @@ var linkHintsPrototype = {
 
 var linkHints;
 function initializeLinkHints() {
-  if (settings.narrowLinkHints != "true") { // the default hinting system
+  linkHints = Object.create(linkHintsPrototype);
+  linkHints.init();
 
-    linkHints = Object.create(linkHintsPrototype);
+  if (settings.narrowLinkHints != "true") { // the default hinting system
 
     linkHints['digitsNeeded'] = 1;
 
     linkHints['logXOfBase'] = function(x, base) { return Math.log(x) / Math.log(base); };
 
     linkHints['initHintStringGenerator'] = function(visibleElements) {
-      linkHints.digitsNeeded = Math.ceil(linkHints.logXOfBase(
+      this.digitsNeeded = Math.ceil(this.logXOfBase(
             visibleElements.length, settings.linkHintCharacters.length));
     };
 
     linkHints['hintStringGenerator'] = function(linkHintNumber) {
-      return linkHints.numberToHintString(linkHintNumber, linkHints.digitsNeeded);
+      return this.numberToHintString(linkHintNumber, this.digitsNeeded);
     };
 
     linkHints['normalKeyDownHandler'] = function (event) {
@@ -356,27 +362,25 @@ function initializeLinkHints() {
         return;
 
       if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-        if (linkHints.hintKeystrokeQueue.length == 0) {
-          linkHints.deactivateLinkHintsMode();
+        if (this.hintKeystrokeQueue.length == 0) {
+          this.deactivateLinkHintsMode();
         } else {
-          linkHints.hintKeystrokeQueue.pop();
-          var matchString = linkHints.hintKeystrokeQueue.join("");
-          linkHints.hintMarkers.filter(function(linkMarker) { return linkHints.toggleHighlights(matchString, linkMarker); });
+          this.hintKeystrokeQueue.pop();
+          var matchString = this.hintKeystrokeQueue.join("");
+          this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
         }
       } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
-        linkHints.hintKeystrokeQueue.push(keyChar);
-        var matchString = linkHints.hintKeystrokeQueue.join("");
-        linksMatched = linkHints.hintMarkers.filter(function(linkMarker) { return linkHints.toggleHighlights(matchString, linkMarker); });
+        this.hintKeystrokeQueue.push(keyChar);
+        var matchString = this.hintKeystrokeQueue.join("");
+        linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
         if (linksMatched.length == 0)
-          linkHints.deactivateLinkHintsMode();
+          this.deactivateLinkHintsMode();
         else if (linksMatched.length == 1)
-          linkHints.activateLink(linksMatched[0].clickableItem);
+          this.activateLink(linksMatched[0].clickableItem);
       }
     };
 
   } else {
-
-    linkHints = Object.create(linkHintsPrototype);
 
     linkHints['linkTextKeystrokeQueue'] = [];
 
@@ -386,15 +390,15 @@ function initializeLinkHints() {
 
     linkHints['normalKeyDownHandler'] = function(event) {
       if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-        if (linkHints.linkTextKeystrokeQueue.length == 0 && linkHints.hintKeystrokeQueue.length == 0) {
-          linkHints.deactivateLinkHintsMode();
+        if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
+          this.deactivateLinkHintsMode();
         } else {
           // backspace clears hint key queue first, then acts on link text key queue
-          if (linkHints.hintKeystrokeQueue.pop())
-            linkHints.filterLinkHints();
+          if (this.hintKeystrokeQueue.pop())
+            this.filterLinkHints();
           else {
-            linkHints.linkTextKeystrokeQueue.pop();
-            linkHints.filterLinkHints();
+            this.linkTextKeystrokeQueue.pop();
+            this.filterLinkHints();
           }
         }
       } else {
@@ -404,26 +408,26 @@ function initializeLinkHints() {
 
         var linksMatched, matchString;
         if (/[0-9]/.test(keyChar)) {
-          linkHints.hintKeystrokeQueue.push(keyChar);
-          matchString = linkHints.hintKeystrokeQueue.join("");
-          linksMatched = linkHints.hintMarkers.filter(function(linkMarker) {
-              if (linkMarker.getAttribute('filtered') == 'true')
-                return false;
-              return linkHints.toggleHighlights(matchString, linkMarker);
-          });
+          this.hintKeystrokeQueue.push(keyChar);
+          matchString = this.hintKeystrokeQueue.join("");
+          linksMatched = this.hintMarkers.filter((function(linkMarker) {
+            if (linkMarker.getAttribute('filtered') == 'true')
+              return false;
+            return this.toggleHighlights(matchString, linkMarker);
+          }).bind(this));
         } else {
           // since we might renumber the hints, the current hintKeyStrokeQueue
           // should be rendered invalid (i.e. reset).
-          linkHints.hintKeystrokeQueue = [];
-          linkHints.linkTextKeystrokeQueue.push(keyChar);
-          matchString = linkHints.linkTextKeystrokeQueue.join("");
-          linksMatched = linkHints.filterLinkHints(matchString);
+          this.hintKeystrokeQueue = [];
+          this.linkTextKeystrokeQueue.push(keyChar);
+          matchString = this.linkTextKeystrokeQueue.join("");
+          linksMatched = this.filterLinkHints(matchString);
         }
 
         if (linksMatched.length == 0)
-          linkHints.deactivateLinkHintsMode();
+          this.deactivateLinkHintsMode();
         else if (linksMatched.length == 1)
-          linkHints.activateLink(linksMatched[0]);
+          this.activateLink(linksMatched[0].clickableItem);
       }
     };
 
@@ -434,10 +438,10 @@ function initializeLinkHints() {
     */
     linkHints['filterLinkHints'] = function(searchString) {
       var linksMatched = [];
-      var linkSearchString = linkHints.linkTextKeystrokeQueue.join("");
+      var linkSearchString = this.linkTextKeystrokeQueue.join("");
 
-      for (var i = 0; i < linkHints.hintMarkers.length; i++) {
-        var linkMarker = linkHints.hintMarkers[i];
+      for (var i = 0; i < this.hintMarkers.length; i++) {
+        var linkMarker = this.hintMarkers[i];
         var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
 
         if (!matchedLink) {
@@ -447,18 +451,18 @@ function initializeLinkHints() {
           if (linkMarker.style.display == "none")
             linkMarker.style.display = "";
           var newHintText = (linksMatched.length+1).toString();
-          linkMarker.innerHTML = linkHints.spanWrap(newHintText);
+          linkMarker.innerHTML = this.spanWrap(newHintText);
           linkMarker.setAttribute("hintString", newHintText);
           linkMarker.setAttribute("filtered", "false");
-          linksMatched.push(linkMarker.clickableItem);
+          linksMatched.push(linkMarker);
         }
       }
       return linksMatched;
     };
 
     linkHints['deactivateLinkHintsMode'] = function() {
-      linkHints.linkTextKeystrokeQueue = [];
-      Object.getPrototypeOf(linkHints).deactivateLinkHintsMode();
+      this.linkTextKeystrokeQueue = [];
+      Object.getPrototypeOf(this).deactivateLinkHintsMode.call(this);
     };
 
   }
