@@ -341,7 +341,7 @@ function initializeLinkHints() {
   linkHints = Object.create(linkHintsPrototype);
   linkHints.init();
 
-  if (settings.get('narrowLinkHints') != "true") { // the default hinting system
+  if (settings.get('filterLinkHints') != "true") { // the default hinting system
 
     linkHints['digitsNeeded'] = 1;
 

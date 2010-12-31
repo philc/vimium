@@ -80,7 +80,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-    "userDefinedLinkHintCss", "keyMappings", "narrowLinkHints"];
+    "userDefinedLinkHintCss", "keyMappings", "filterLinkHints"];
 
   var postSaveHooks = {
     "keyMappings": function (value) {
@@ -95,7 +95,7 @@
     populateOptions();
     for (var i = 0; i < editableFields.length; i++)
       $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
-    $("narrowLinkHints").addEventListener("click", onOptionKeyup, false);
+    $("filterLinkHints").addEventListener("click", onOptionKeyup, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
     $("showCommands").addEventListener("click", function () {
       showDialog("vimiumCommandListingContainer",
@@ -281,7 +281,7 @@
               Note: You <em>must</em> use numeric link hint characters in this mode
             </div>
           </div>
-          <input id="narrowLinkHints" type="checkbox"/>
+          <input id="filterLinkHints" type="checkbox"/>
         </td>
       </tr>
     </table>
