@@ -87,6 +87,7 @@ Release Notes
 1.22
 
 -  Some sites are now excluded by default.
+-  View source (`gs`) now opens in a new tab.
 -  Bugfixes.
 
 1.21 (10/24/2010)
