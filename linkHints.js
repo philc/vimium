@@ -1,12 +1,20 @@
 /*
- * This implements link hinting. Typing "F" will enter link-hinting mode, where all clickable items on
- * the page have a hint marker displayed containing a sequence of letters. Typing those letters will select
- * a link.
+ * This implements link hinting. Typing "F" will enter link-hinting mode, where
+ * all clickable items on the page have a hint marker displayed containing a
+ * sequence of letters. Typing those letters will select a link.
  *
- * The characters we use to show link hints are a user-configurable option. By default they're the home row.
- * The CSS which is used on the link hints is also a configurable option.
+ * In our 'default' mode, the characters we use to show link hints are a
+ * user-configurable option. By default they're the home row.  The CSS which is
+ * used on the link hints is also a configurable option.
+ *
+ * In 'filter' mode, our link hints are numbers, and the user can narrow down
+ * the range of possibilities by typing the text of the link itself.
  */
 
+/*
+ * A set of common operations shared by any link-hinting system. Some methods
+ * are stubbed.
+ */
 var linkHintsPrototype = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
@@ -21,6 +29,7 @@ var linkHintsPrototype = {
   cssAdded: false,
 
   init: function() {
+    // bind the event handlers to the appropriate instance of the prototype
     this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
     this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
   },
@@ -93,8 +102,15 @@ var linkHintsPrototype = {
     document.documentElement.appendChild(this.hintMarkerContainingDiv);
   },
 
-  hintStringGenerator: function() {},
+  /*
+   * Takes a number and returns the string label for the hint.
+   */ 
+  hintStringGenerator: function(linkHintNumber) {},
 
+  /*
+   * A hook for any necessary initialization for hintStringGenerator.  Takes an
+   * array of visible elements. Any return value is ignored.
+   */
   initHintStringGenerator: function(visibleElements) {},
 
   /*
@@ -181,6 +197,9 @@ var linkHintsPrototype = {
     event.preventDefault();
   },
 
+  /*
+   * Handle all keys other than shift and esc. Return value is ignored.
+   */
   normalKeyDownHandler: function(event) {},
 
   onKeyUpInMode: function(event) {
@@ -337,6 +356,9 @@ var linkHintsPrototype = {
 };
 
 var linkHints;
+/*
+ * Create the instance of linkHints, specialized based on the user settings.
+ */
 function initializeLinkHints() {
   linkHints = Object.create(linkHintsPrototype);
   linkHints.init();
@@ -432,9 +454,10 @@ function initializeLinkHints() {
     };
 
     /*
-     * Hides the links that do not match the linkText search string, and
-     * renumbers the remainder. Should only be called when there is a change in
-     * linkTextKeystrokeQueue, to avoid undesired renumbering.
+     * Hides the links that do not match the linkText search string and marks
+     * them with the 'filtered' DOM property. Renumbers the remainder.  Should
+     * only be called when there is a change in linkTextKeystrokeQueue, to
+     * avoid undesired renumbering.
     */
     linkHints['filterLinkHints'] = function(searchString) {
       var linksMatched = [];
@@ -462,6 +485,8 @@ function initializeLinkHints() {
 
     linkHints['deactivateMode'] = function() {
       this.linkTextKeystrokeQueue = [];
+      // call(this) is necessary to make deactivateMode reset
+      // the variables in linkHints instead of linkHintsPrototype
       Object.getPrototypeOf(this).deactivateMode.call(this);
     };
 

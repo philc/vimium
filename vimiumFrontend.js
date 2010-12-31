@@ -109,8 +109,10 @@ function initializePreDomReady() {
     sendResponse({}); // Free up the resources used by this open connection.
   });
 
-  // takes a dot-notation object string and call the function
-  // that it points to with the correct value for 'this'.
+  /*
+   * Takes a dot-notation object string and call the function
+   * that it points to with the correct value for 'this'.
+   */
   function invokeCommandString(str, argArray) {
     var components = str.split('.');
     var obj = this;
