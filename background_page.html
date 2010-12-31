@@ -20,7 +20,7 @@
 
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
   // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
-  var namedKeyRegex = /^(<[amc-].|(?:[amc]-)?[a-z0-9]{2,5}>)(.*)$/;
+  var namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/;
 
   var defaultSettings = {
     scrollStepSize: 60,
@@ -29,7 +29,9 @@
     narrowLinkHints: false,
     userDefinedLinkHintCss:
       ".vimiumHintMarker {\n\n}\n" +
-      ".vimiumHintMarker > .matchingCharacter {\n\n}"
+      ".vimiumHintMarker > .matchingCharacter {\n\n}",
+    excludedUrls: "http*://mail.google.com/*\n" +
+                  "http*://www.google.com/reader/*\n"
   };
 
   // This is the base internal link hints CSS. It's combined with the userDefinedLinkHintCss before
@@ -137,7 +139,7 @@
    */
   function isEnabledForUrl(request) {
     // excludedUrls are stored as a series of URL expressions separated by newlines.
-    var excludedUrls = (localStorage["excludedUrls"] || "").split("\n");
+    var excludedUrls = (localStorage["excludedUrls"] || defaultSettings.excludedUrls).split("\n");
     var isEnabled = true;
     for (var i = 0; i < excludedUrls.length; i++) {
       // The user can add "*" to the URL which means ".*"
@@ -551,7 +553,7 @@
 
       // The second key might be a valid command by its self.
       if (keyToCommandRegistry[splitKey.second])
-        newKeyQueue = checkKeyQueue(splitKey.second);
+        newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId);
       else
         newKeyQueue = (validFirstKeys[splitKey.second] ? splitKey.second : "");
     } else {
