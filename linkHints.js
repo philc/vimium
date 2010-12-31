@@ -265,28 +265,6 @@ var linkHintsPrototype = {
     }
   },
 
-  /*
-   * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
-   * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
-   */
-  numberToHintString: function(number, numHintDigits) {
-    var base = settings.get('linkHintCharacters').length;
-    var hintString = [];
-    var remainder = 0;
-    do {
-      remainder = number % base;
-      hintString.unshift(settings.get('linkHintCharacters')[remainder]);
-      number -= remainder;
-      number /= Math.floor(base);
-    } while (number > 0);
-
-    // Pad the hint string we're returning so that it matches numHintDigits.
-    var hintStringLength = hintString.length;
-    for (var i = 0; i < numHintDigits - hintStringLength; i++)
-      hintString.unshift(settings.get('linkHintCharacters')[0]);
-    return hintString.join("");
-  },
-
   simulateClick: function(link) {
     var event = document.createEvent("MouseEvents");
     // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
@@ -376,6 +354,28 @@ function initializeLinkHints() {
 
     linkHints['hintStringGenerator'] = function(linkHintNumber) {
       return this.numberToHintString(linkHintNumber, this.digitsNeeded);
+    };
+
+    /*
+     * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
+     * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
+     */
+    linkHints['numberToHintString'] = function(number, numHintDigits) {
+      var base = settings.get('linkHintCharacters').length;
+      var hintString = [];
+      var remainder = 0;
+      do {
+        remainder = number % base;
+        hintString.unshift(settings.get('linkHintCharacters')[remainder]);
+        number -= remainder;
+        number /= Math.floor(base);
+      } while (number > 0);
+
+      // Pad the hint string we're returning so that it matches numHintDigits.
+      var hintStringLength = hintString.length;
+      for (var i = 0; i < numHintDigits - hintStringLength; i++)
+        hintString.unshift(settings.get('linkHintCharacters')[0]);
+      return hintString.join("");
     };
 
     linkHints['normalKeyDownHandler'] = function (event) {
