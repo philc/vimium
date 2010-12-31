@@ -12,17 +12,17 @@ var linkHintsPrototype = {
   hintMarkerContainingDiv: null,
   // The characters that were typed in while in "link hints" mode.
   hintKeystrokeQueue: [],
-  linkHintsModeActivated: false,
-  shouldOpenLinkHintInNewTab: false,
-  shouldOpenLinkHintWithQueue: false,
+  modeActivated: false,
+  shouldOpenInNewTab: false,
+  shouldOpenWithQueue: false,
   // Whether link hint's "open in current/new tab" setting is currently toggled 
   openLinkModeToggle: false,
   // Whether we have added to the page the CSS needed to display link hints.
-  linkHintsCssAdded: false,
+  cssAdded: false,
 
   init: function() {
-    this.onKeyDownInLinkHintsMode = this.onKeyDownInLinkHintsMode.bind(this);
-    this.onKeyUpInLinkHintsMode = this.onKeyUpInLinkHintsMode.bind(this);
+    this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
+    this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
   },
 
   /* 
@@ -39,28 +39,28 @@ var linkHintsPrototype = {
   })(),
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
-  activateLinkHintsModeToOpenInNewTab: function() { this.activateLinkHintsMode(true, false); },
+  activateModeToOpenInNewTab: function() { this.activateMode(true, false); },
 
-  activateLinkHintsModeWithQueue: function() { this.activateLinkHintsMode(true, true); },
+  activateModeWithQueue: function() { this.activateMode(true, true); },
 
-  activateLinkHintsMode: function (openInNewTab, withQueue) {
-    if (!this.linkHintsCssAdded)
+  activateMode: function (openInNewTab, withQueue) {
+    if (!this.cssAdded)
       addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
     this.linkHintCssAdded = true;
-    this.linkHintsModeActivated = true;
+    this.modeActivated = true;
     this.setOpenLinkMode(openInNewTab, withQueue);
     this.buildLinkHints();
-    document.addEventListener("keydown", this.onKeyDownInLinkHintsMode, true);
-    document.addEventListener("keyup", this.onKeyUpInLinkHintsMode, true);
+    document.addEventListener("keydown", this.onKeyDownInMode, true);
+    document.addEventListener("keyup", this.onKeyUpInMode, true);
   },
 
   setOpenLinkMode: function(openInNewTab, withQueue) {
-    this.shouldOpenLinkHintInNewTab = openInNewTab;
-    this.shouldOpenLinkHintWithQueue = withQueue;
-    if (this.shouldOpenLinkHintWithQueue) {
+    this.shouldOpenInNewTab = openInNewTab;
+    this.shouldOpenWithQueue = withQueue;
+    if (this.shouldOpenWithQueue) {
       HUD.show("Open multiple links in a new tab");
     } else {
-      if (this.shouldOpenLinkHintInNewTab)
+      if (this.shouldOpenInNewTab)
         HUD.show("Open link in new tab");
       else
         HUD.show("Open link in current tab");
@@ -162,17 +162,17 @@ var linkHintsPrototype = {
   /*
    * Handles shift and esc keys. The other keys are passed to normalKeyDownHandler.
    */
-  onKeyDownInLinkHintsMode: function(event) {
+  onKeyDownInMode: function(event) {
     console.log("Key Down");
     if (event.keyCode == keyCodes.shiftKey && !this.openLinkModeToggle) {
       // Toggle whether to open link in a new or current tab.
-      this.setOpenLinkMode(!this.shouldOpenLinkHintInNewTab, this.shouldOpenLinkHintWithQueue);
+      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue);
       this.openLinkModeToggle = true;
     }
 
     // TODO(philc): Ignore keys that have modifiers.
     if (isEscape(event)) {
-      this.deactivateLinkHintsMode();
+      this.deactivateMode();
     } else {
       this.normalKeyDownHandler(event);
     }
@@ -183,10 +183,10 @@ var linkHintsPrototype = {
 
   normalKeyDownHandler: function(event) {},
 
-  onKeyUpInLinkHintsMode: function(event) {
+  onKeyUpInMode: function(event) {
     if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
       // Revert toggle on whether to open link in new or current tab. 
-      this.setOpenLinkMode(!this.shouldOpenLinkHintInNewTab, this.shouldOpenLinkHintWithQueue);
+      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue);
       this.openLinkModeToggle = false;
     }
     event.stopPropagation();
@@ -201,21 +201,21 @@ var linkHintsPrototype = {
       matchedLink.focus();
       // When focusing a textbox, put the selection caret at the end of the textbox's contents.
       matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
-      this.deactivateLinkHintsMode();
+      this.deactivateMode();
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
       // we want to give the user some feedback depicting which link they've selected by focusing it.
-      if (this.shouldOpenLinkHintWithQueue) {
+      if (this.shouldOpenWithQueue) {
         this.simulateClick(matchedLink);
-        this.resetLinkHintsMode();
-      } else if (this.shouldOpenLinkHintInNewTab) {
+        this.resetMode();
+      } else if (this.shouldOpenInNewTab) {
         this.simulateClick(matchedLink);
         matchedLink.focus();
-        this.deactivateLinkHintsMode();
+        this.deactivateMode();
       } else {
         setTimeout(this.simulateClick.bind(this, matchedLink), 400);
         matchedLink.focus();
-        this.deactivateLinkHintsMode();
+        this.deactivateMode();
       }
     }
   },
@@ -272,8 +272,8 @@ var linkHintsPrototype = {
     var event = document.createEvent("MouseEvents");
     // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
     // to open it in a new tab if necessary.
-    var metaKey = (platform == "Mac" && linkHints.shouldOpenLinkHintInNewTab);
-    var ctrlKey = (platform != "Mac" && linkHints.shouldOpenLinkHintInNewTab);
+    var metaKey = (platform == "Mac" && linkHints.shouldOpenInNewTab);
+    var ctrlKey = (platform != "Mac" && linkHints.shouldOpenInNewTab);
     event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, ctrlKey, false, false, metaKey, 0, null);
 
     // Debugging note: Firefox will not execute the link's default action if we dispatch this click event,
@@ -281,21 +281,21 @@ var linkHintsPrototype = {
     link.dispatchEvent(event);
   },
 
-  deactivateLinkHintsMode: function() {
+  deactivateMode: function() {
     if (this.hintMarkerContainingDiv)
       this.hintMarkerContainingDiv.parentNode.removeChild(this.hintMarkerContainingDiv);
     this.hintMarkerContainingDiv = null;
     this.hintMarkers = [];
     this.hintKeystrokeQueue = [];
-    document.removeEventListener("keydown", this.onKeyDownInLinkHintsMode, true);
-    document.removeEventListener("keyup", this.onKeyUpInLinkHintsMode, true);
-    this.linkHintsModeActivated = false;
+    document.removeEventListener("keydown", this.onKeyDownInMode, true);
+    document.removeEventListener("keyup", this.onKeyUpInMode, true);
+    this.modeActivated = false;
     HUD.hide();
   },
 
-  resetLinkHintsMode: function() {
-    this.deactivateLinkHintsMode();
-    this.activateLinkHintsModeWithQueue();
+  resetMode: function() {
+    this.deactivateMode();
+    this.activateModeWithQueue();
   },
 
   /*
@@ -363,7 +363,7 @@ function initializeLinkHints() {
 
       if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
         if (this.hintKeystrokeQueue.length == 0) {
-          this.deactivateLinkHintsMode();
+          this.deactivateMode();
         } else {
           this.hintKeystrokeQueue.pop();
           var matchString = this.hintKeystrokeQueue.join("");
@@ -374,7 +374,7 @@ function initializeLinkHints() {
         var matchString = this.hintKeystrokeQueue.join("");
         linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
         if (linksMatched.length == 0)
-          this.deactivateLinkHintsMode();
+          this.deactivateMode();
         else if (linksMatched.length == 1)
           this.activateLink(linksMatched[0].clickableItem);
       }
@@ -391,7 +391,7 @@ function initializeLinkHints() {
     linkHints['normalKeyDownHandler'] = function(event) {
       if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
         if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
-          this.deactivateLinkHintsMode();
+          this.deactivateMode();
         } else {
           // backspace clears hint key queue first, then acts on link text key queue
           if (this.hintKeystrokeQueue.pop())
@@ -425,7 +425,7 @@ function initializeLinkHints() {
         }
 
         if (linksMatched.length == 0)
-          this.deactivateLinkHintsMode();
+          this.deactivateMode();
         else if (linksMatched.length == 1)
           this.activateLink(linksMatched[0].clickableItem);
       }
@@ -460,9 +460,9 @@ function initializeLinkHints() {
       return linksMatched;
     };
 
-    linkHints['deactivateLinkHintsMode'] = function() {
+    linkHints['deactivateMode'] = function() {
       this.linkTextKeystrokeQueue = [];
-      Object.getPrototypeOf(this).deactivateLinkHintsMode.call(this);
+      Object.getPrototypeOf(this).deactivateMode.call(this);
     };
 
   }

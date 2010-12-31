@@ -110,9 +110,9 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('gi', 'focusInput');
 
-  mapKeyToCommand('f',     'linkHints.activateLinkHintsMode');
-  mapKeyToCommand('F',     'linkHints.activateLinkHintsModeToOpenInNewTab');
-  mapKeyToCommand('<a-f>', 'linkHints.activateLinkHintsModeWithQueue');
+  mapKeyToCommand('f',     'linkHints.activateMode');
+  mapKeyToCommand('F',     'linkHints.activateModeToOpenInNewTab');
+  mapKeyToCommand('<a-f>', 'linkHints.activateModeWithQueue');
 
   mapKeyToCommand('/', 'enterFindMode');
   mapKeyToCommand('n', 'performFind');
@@ -157,9 +157,9 @@ addCommand('enterInsertMode',     'Enter insert mode');
 
 addCommand('focusInput',          'Focus the first (or n-th) text box on the page', false, true);
 
-addCommand('linkHints.activateLinkHintsMode',               'Enter link hints mode to open links in current tab');
-addCommand('linkHints.activateLinkHintsModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
-addCommand('linkHints.activateLinkHintsModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
+addCommand('linkHints.activateMode',               'Enter link hints mode to open links in current tab');
+addCommand('linkHints.activateModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
+addCommand('linkHints.activateModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
 
 addCommand('enterFindMode',        'Enter find mode');
 addCommand('performFind',          'Cycle forward to the next find match');
@@ -191,7 +191,7 @@ var commandGroups = {
      "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
-     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
+     "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
      "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
   historyNavigation:
     ["goBack", "goForward"],

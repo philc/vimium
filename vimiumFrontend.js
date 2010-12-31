@@ -347,7 +347,7 @@ function toggleViewSourceCallback(url) {
 function onKeypress(event) {
   var keyChar = "";
 
-  if (linkHints.linkHintsModeActivated)
+  if (linkHints.modeActivated)
     return;
 
   // Ignore modifier keys by themselves.
@@ -382,7 +382,7 @@ function onKeypress(event) {
 function onKeydown(event) {
   var keyChar = "";
 
-  if (linkHints.linkHintsModeActivated)
+  if (linkHints.modeActivated)
     return;
 
   // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?
