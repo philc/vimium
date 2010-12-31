@@ -251,12 +251,12 @@ var linkHintsPrototype = {
    * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
    */
   numberToHintString: function(number, numHintDigits) {
-    var base = settings.linkHintCharacters.length;
+    var base = settings.get('linkHintCharacters').length;
     var hintString = [];
     var remainder = 0;
     do {
       remainder = number % base;
-      hintString.unshift(settings.linkHintCharacters[remainder]);
+      hintString.unshift(settings.get('linkHintCharacters')[remainder]);
       number -= remainder;
       number /= Math.floor(base);
     } while (number > 0);
@@ -264,7 +264,7 @@ var linkHintsPrototype = {
     // Pad the hint string we're returning so that it matches numHintDigits.
     var hintStringLength = hintString.length;
     for (var i = 0; i < numHintDigits - hintStringLength; i++)
-      hintString.unshift(settings.linkHintCharacters[0]);
+      hintString.unshift(settings.get('linkHintCharacters')[0]);
     return hintString.join("");
   },
 
@@ -341,7 +341,7 @@ function initializeLinkHints() {
   linkHints = Object.create(linkHintsPrototype);
   linkHints.init();
 
-  if (settings.narrowLinkHints != "true") { // the default hinting system
+  if (settings.get('narrowLinkHints') != "true") { // the default hinting system
 
     linkHints['digitsNeeded'] = 1;
 
@@ -349,7 +349,7 @@ function initializeLinkHints() {
 
     linkHints['initHintStringGenerator'] = function(visibleElements) {
       this.digitsNeeded = Math.ceil(this.logXOfBase(
-            visibleElements.length, settings.linkHintCharacters.length));
+            visibleElements.length, settings.get('linkHintCharacters').length));
     };
 
     linkHints['hintStringGenerator'] = function(linkHintNumber) {
@@ -369,7 +369,7 @@ function initializeLinkHints() {
           var matchString = this.hintKeystrokeQueue.join("");
           this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
         }
-      } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
+      } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
         this.hintKeystrokeQueue.push(keyChar);
         var matchString = this.hintKeystrokeQueue.join("");
         linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));

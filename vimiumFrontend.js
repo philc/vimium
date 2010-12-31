@@ -4,8 +4,6 @@
  * the page's zoom level. We tell the background page that we're in domReady and ready to accept normal
  * commands by connectiong to a port named "domReady".
  */
-var settings = {};
-var settingsToLoad = ["scrollStepSize", "linkHintCharacters", "narrowLinkHints"];
 
 var getCurrentUrlHandlers = []; // function(url)
 
@@ -37,6 +35,34 @@ var textInputXPath = '//input[' +
                      textInputTypes.map(function (type) { return '@type="' + type + '"'; }).join(" or ") +
                      ' or not(@type)]';
 
+var settings = {
+  values: {},
+  loadedValues: 0,
+  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "narrowLinkHints"],
+
+  get: function (key) { return this.values[key]; },
+
+  load: function() {
+    for (var i in this.valuesToLoad) { this.sendMessage(this.valuesToLoad[i]); }
+  },
+
+  sendMessage: function (key) {
+    if (!settingPort)
+      settingPort = chrome.extension.connect({ name: "getSetting" });
+    settingPort.postMessage({ key: key });
+  },
+
+  receiveMessage: function (args) {
+    // not using 'this' due to issues with binding on callback
+    settings.values[args.key] = args.value;
+    if (++settings.loadedValues == settings.valuesToLoad.length)
+      settings.initializeOnReady();
+  },
+
+  initializeOnReady: function () {
+  }
+};
+
 /*
  * Give this frame a unique id.
  */
@@ -44,19 +70,11 @@ frameId = Math.floor(Math.random()*999999999)
 
 var hasModifiersRegex = /^<([amc]-)+.>/;
 
-function getSetting(key) {
-  if (!settingPort)
-    settingPort = chrome.extension.connect({ name: "getSetting" });
-  settingPort.postMessage({ key: key });
-}
-
-function setSetting(args) { settings[args.key] = args.value; }
-
 /*
  * Complete initialization work that sould be done prior to DOMReady, like setting the page's zoom level.
  */
 function initializePreDomReady() {
-  for (var i in settingsToLoad) { getSetting(settingsToLoad[i]); }
+  settings.load();
 
   checkIfEnabledForUrl();
 
@@ -139,7 +157,7 @@ function initializePreDomReady() {
           setPageZoomLevel(currentZoomLevel);
       });
     } else if (port.name == "returnSetting") {
-      port.onMessage.addListener(setSetting);
+      port.onMessage.addListener(settings.receiveMessage);
     } else if (port.name == "refreshCompletionKeys") {
       port.onMessage.addListener(function (args) {
         refreshCompletionKeys(args.completionKeys);
@@ -246,14 +264,14 @@ function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.sc
 function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
 function scrollToRight() { window.scrollTo(document.body.scrollWidth, window.pageYOffset); }
-function scrollUp() { window.scrollBy(0, -1 * settings["scrollStepSize"]); }
-function scrollDown() { window.scrollBy(0, settings["scrollStepSize"]); }
+function scrollUp() { window.scrollBy(0, -1 * settings.get("scrollStepSize")); }
+function scrollDown() { window.scrollBy(0, settings.get("scrollStepSize")); }
 function scrollPageUp() { window.scrollBy(0, -1 * window.innerHeight / 2); }
 function scrollPageDown() { window.scrollBy(0, window.innerHeight / 2); }
 function scrollFullPageUp() { window.scrollBy(0, -window.innerHeight); }
 function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
-function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
-function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
+function scrollLeft() { window.scrollBy(-1 * settings.get("scrollStepSize"), 0); }
+function scrollRight() { window.scrollBy(settings.get("scrollStepSize"), 0); }
 
 function focusInput(count) {
   var results = document.evaluate(textInputXPath,
