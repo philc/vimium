@@ -385,7 +385,7 @@ function initializeLinkHints() {
     linkHints['linkTextKeystrokeQueue'] = [];
 
     linkHints['hintStringGenerator'] = function(linkHintNumber) {
-      return linkHintNumber.toString();
+      return (linkHintNumber + 1).toString();
     };
 
     linkHints['normalKeyDownHandler'] = function(event) {
