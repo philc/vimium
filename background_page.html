@@ -71,6 +71,7 @@
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
     getLinkHintCss: getLinkHintCss,
+    openUrlInNewTab: openUrlInNewTab,
     openUrlInCurrentTab: openUrlInCurrentTab,
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     registerFrame: registerFrame,
@@ -238,6 +239,15 @@
      });
    }
 
+  /**
+   * Opens request.url in new tab and switches to it if request.selected is true.
+   *
+   */
+  function openUrlInNewTab(request) {
+    chrome.tabs.getSelected(null, function(tab) {
+      chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: request.selected });
+    });
+  }
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.
    */

@@ -336,7 +336,7 @@ function toggleViewSourceCallback(url) {
     url = url.substr(12, url.length - 12);
   }
   else { url = "view-source:" + url; }
-  chrome.extension.sendRequest({handler: "openUrlInCurrentTab", url:url});
+  chrome.extension.sendRequest({handler: "openUrlInNewTab", url: url, selected: true});
 }
 
 /**
