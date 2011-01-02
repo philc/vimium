@@ -15,7 +15,7 @@
  * A set of common operations shared by any link-hinting system. Some methods
  * are stubbed.
  */
-var linkHintsPrototype = {
+var linkHintsBase = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
   // The characters that were typed in while in "link hints" mode.
@@ -28,8 +28,10 @@ var linkHintsPrototype = {
   // Whether we have added to the page the CSS needed to display link hints.
   cssAdded: false,
 
+  /*
+   * To be called after linkHints has been generated from linkHintsBase.
+   */
   init: function() {
-    // bind the event handlers to the appropriate instance of the prototype
     this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
     this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
   },
@@ -338,164 +340,169 @@ var linkHints;
  * Create the instance of linkHints, specialized based on the user settings.
  */
 function initializeLinkHints() {
-  linkHints = Object.create(linkHintsPrototype);
-  linkHints.init();
 
   if (settings.get('filterLinkHints') != "true") { // the default hinting system
 
-    linkHints['digitsNeeded'] = 1;
+    linkHints = utils.extendWithSuper(linkHintsBase, {
 
-    linkHints['logXOfBase'] = function(x, base) { return Math.log(x) / Math.log(base); };
+      digitsNeeded: 1,
 
-    linkHints['initHintStringGenerator'] = function(visibleElements) {
-      this.digitsNeeded = Math.ceil(this.logXOfBase(
-            visibleElements.length, settings.get('linkHintCharacters').length));
-    };
+      logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
-    linkHints['hintStringGenerator'] = function(linkHintNumber) {
-      return this.numberToHintString(linkHintNumber, this.digitsNeeded);
-    };
+      initHintStringGenerator: function(visibleElements) {
+        this.digitsNeeded = Math.ceil(this.logXOfBase(
+              visibleElements.length, settings.get('linkHintCharacters').length));
+      },
 
-    /*
-     * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
-     * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
-     */
-    linkHints['numberToHintString'] = function(number, numHintDigits) {
-      var base = settings.get('linkHintCharacters').length;
-      var hintString = [];
-      var remainder = 0;
-      do {
-        remainder = number % base;
-        hintString.unshift(settings.get('linkHintCharacters')[remainder]);
-        number -= remainder;
-        number /= Math.floor(base);
-      } while (number > 0);
+      hintStringGenerator: function(linkHintNumber) {
+        return this.numberToHintString(linkHintNumber, this.digitsNeeded);
+      },
 
-      // Pad the hint string we're returning so that it matches numHintDigits.
-      var hintStringLength = hintString.length;
-      for (var i = 0; i < numHintDigits - hintStringLength; i++)
-        hintString.unshift(settings.get('linkHintCharacters')[0]);
-      return hintString.join("");
-    };
+      /*
+       * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
+       * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
+       */
+      numberToHintString: function(number, numHintDigits) {
+        var base = settings.get('linkHintCharacters').length;
+        var hintString = [];
+        var remainder = 0;
+        do {
+          remainder = number % base;
+          hintString.unshift(settings.get('linkHintCharacters')[remainder]);
+          number -= remainder;
+          number /= Math.floor(base);
+        } while (number > 0);
 
-    linkHints['normalKeyDownHandler'] = function (event) {
-      var keyChar = getKeyChar(event);
-      if (!keyChar)
-        return;
+        // Pad the hint string we're returning so that it matches numHintDigits.
+        var hintStringLength = hintString.length;
+        for (var i = 0; i < numHintDigits - hintStringLength; i++)
+          hintString.unshift(settings.get('linkHintCharacters')[0]);
+        return hintString.join("");
+      },
 
-      if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-        if (this.hintKeystrokeQueue.length == 0) {
-          this.deactivateMode();
-        } else {
-          this.hintKeystrokeQueue.pop();
-          var matchString = this.hintKeystrokeQueue.join("");
-          this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
-        }
-      } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
-        this.hintKeystrokeQueue.push(keyChar);
-        var matchString = this.hintKeystrokeQueue.join("");
-        linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
-        if (linksMatched.length == 0)
-          this.deactivateMode();
-        else if (linksMatched.length == 1)
-          this.activateLink(linksMatched[0].clickableItem);
-      }
-    };
-
-  } else {
-
-    linkHints['linkTextKeystrokeQueue'] = [];
-
-    linkHints['hintStringGenerator'] = function(linkHintNumber) {
-      return (linkHintNumber + 1).toString();
-    };
-
-    linkHints['normalKeyDownHandler'] = function(event) {
-      if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-        if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
-          this.deactivateMode();
-        } else {
-          // backspace clears hint key queue first, then acts on link text key queue
-          if (this.hintKeystrokeQueue.pop())
-            this.filterLinkHints();
-          else {
-            this.linkTextKeystrokeQueue.pop();
-            this.filterLinkHints();
-          }
-        }
-      } else if (event.keyCode == keyCodes.enter) {
-          // activate the lowest-numbered link hint
-          for (var i = 0; i < this.hintMarkers.length; i++)
-            if (this.hintMarkers[i].getAttribute('filtered') != 'true') {
-              this.activateLink(this.hintMarkers[i].clickableItem);
-              break;
-            }
-      } else {
+      normalKeyDownHandler: function (event) {
         var keyChar = getKeyChar(event);
         if (!keyChar)
           return;
 
-        var linksMatched, matchString;
-        if (/[0-9]/.test(keyChar)) {
+        if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+          if (this.hintKeystrokeQueue.length == 0) {
+            this.deactivateMode();
+          } else {
+            this.hintKeystrokeQueue.pop();
+            var matchString = this.hintKeystrokeQueue.join("");
+            this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
+          }
+        } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
           this.hintKeystrokeQueue.push(keyChar);
-          matchString = this.hintKeystrokeQueue.join("");
-          linksMatched = this.hintMarkers.filter((function(linkMarker) {
-            if (linkMarker.getAttribute('filtered') == 'true')
-              return false;
-            return this.toggleHighlights(matchString, linkMarker);
-          }).bind(this));
-        } else {
-          // since we might renumber the hints, the current hintKeyStrokeQueue
-          // should be rendered invalid (i.e. reset).
-          this.hintKeystrokeQueue = [];
-          this.linkTextKeystrokeQueue.push(keyChar);
-          matchString = this.linkTextKeystrokeQueue.join("");
-          linksMatched = this.filterLinkHints(matchString);
-        }
-
-        if (linksMatched.length == 0)
-          this.deactivateMode();
-        else if (linksMatched.length == 1)
-          this.activateLink(linksMatched[0].clickableItem);
-      }
-    };
-
-    /*
-     * Hides the links that do not match the linkText search string and marks
-     * them with the 'filtered' DOM property. Renumbers the remainder.  Should
-     * only be called when there is a change in linkTextKeystrokeQueue, to
-     * avoid undesired renumbering.
-    */
-    linkHints['filterLinkHints'] = function(searchString) {
-      var linksMatched = [];
-      var linkSearchString = this.linkTextKeystrokeQueue.join("");
-
-      for (var i = 0; i < this.hintMarkers.length; i++) {
-        var linkMarker = this.hintMarkers[i];
-        var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
-
-        if (!matchedLink) {
-          linkMarker.style.display = "none";
-          linkMarker.setAttribute("filtered", "true");
-        } else {
-          if (linkMarker.style.display == "none")
-            linkMarker.style.display = "";
-          var newHintText = (linksMatched.length+1).toString();
-          linkMarker.innerHTML = this.spanWrap(newHintText);
-          linkMarker.setAttribute("hintString", newHintText);
-          linkMarker.setAttribute("filtered", "false");
-          linksMatched.push(linkMarker);
+          var matchString = this.hintKeystrokeQueue.join("");
+          linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
+          if (linksMatched.length == 0)
+            this.deactivateMode();
+          else if (linksMatched.length == 1)
+            this.activateLink(linksMatched[0].clickableItem);
         }
       }
-      return linksMatched;
-    };
+    });
 
-    linkHints['deactivateMode'] = function() {
-      this.linkTextKeystrokeQueue = [];
-      // call(this) is necessary to make deactivateMode reset
-      // the variables in linkHints instead of linkHintsPrototype
-      Object.getPrototypeOf(this).deactivateMode.call(this);
-    };
+  } else {
+
+    linkHints = utils.extendWithSuper(linkHintsBase, {
+
+      linkTextKeystrokeQueue: [],
+
+      hintStringGenerator: function(linkHintNumber) {
+        return (linkHintNumber + 1).toString();
+      },
+
+      normalKeyDownHandler: function(event) {
+        if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+          if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
+            this.deactivateMode();
+          } else {
+            // backspace clears hint key queue first, then acts on link text key queue
+            if (this.hintKeystrokeQueue.pop())
+              this.filterLinkHints();
+            else {
+              this.linkTextKeystrokeQueue.pop();
+              this.filterLinkHints();
+            }
+          }
+        } else if (event.keyCode == keyCodes.enter) {
+            // activate the lowest-numbered link hint
+            for (var i = 0; i < this.hintMarkers.length; i++)
+              if (this.hintMarkers[i].getAttribute('filtered') != 'true') {
+                this.activateLink(this.hintMarkers[i].clickableItem);
+                break;
+              }
+        } else {
+          var keyChar = getKeyChar(event);
+          if (!keyChar)
+            return;
+
+          var linksMatched, matchString;
+          if (/[0-9]/.test(keyChar)) {
+            this.hintKeystrokeQueue.push(keyChar);
+            matchString = this.hintKeystrokeQueue.join("");
+            linksMatched = this.hintMarkers.filter((function(linkMarker) {
+              if (linkMarker.getAttribute('filtered') == 'true')
+                return false;
+              return this.toggleHighlights(matchString, linkMarker);
+            }).bind(this));
+          } else {
+            // since we might renumber the hints, the current hintKeyStrokeQueue
+            // should be rendered invalid (i.e. reset).
+            this.hintKeystrokeQueue = [];
+            this.linkTextKeystrokeQueue.push(keyChar);
+            matchString = this.linkTextKeystrokeQueue.join("");
+            linksMatched = this.filterLinkHints(matchString);
+          }
+
+          if (linksMatched.length == 0)
+            this.deactivateMode();
+          else if (linksMatched.length == 1)
+            this.activateLink(linksMatched[0].clickableItem);
+        }
+      },
+
+      /*
+       * Hides the links that do not match the linkText search string and marks
+       * them with the 'filtered' DOM property. Renumbers the remainder.  Should
+       * only be called when there is a change in linkTextKeystrokeQueue, to
+       * avoid undesired renumbering.
+      */
+      filterLinkHints: function(searchString) {
+        var linksMatched = [];
+        var linkSearchString = this.linkTextKeystrokeQueue.join("");
+
+        for (var i = 0; i < this.hintMarkers.length; i++) {
+          var linkMarker = this.hintMarkers[i];
+          var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
+
+          if (!matchedLink) {
+            linkMarker.style.display = "none";
+            linkMarker.setAttribute("filtered", "true");
+          } else {
+            if (linkMarker.style.display == "none")
+              linkMarker.style.display = "";
+            var newHintText = (linksMatched.length+1).toString();
+            linkMarker.innerHTML = this.spanWrap(newHintText);
+            linkMarker.setAttribute("hintString", newHintText);
+            linkMarker.setAttribute("filtered", "false");
+            linksMatched.push(linkMarker);
+          }
+        }
+        return linksMatched;
+      },
+
+      deactivateMode: function() {
+        this.linkTextKeystrokeQueue = [];
+        this._super('deactivateMode')();
+      }
+
+    });
 
   }
+
+  linkHints.init();
 }
