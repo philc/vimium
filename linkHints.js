@@ -423,6 +423,13 @@ function initializeLinkHints() {
             this.filterLinkHints();
           }
         }
+      } else if (event.keyCode == keyCodes.enter) {
+          // activate the lowest-numbered link hint
+          for (var i = 0; i < this.hintMarkers.length; i++)
+            if (this.hintMarkers[i].getAttribute('filtered') != 'true') {
+              this.activateLink(this.hintMarkers[i].clickableItem);
+              break;
+            }
       } else {
         var keyChar = getKeyChar(event);
         if (!keyChar)
