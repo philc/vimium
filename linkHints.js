@@ -100,7 +100,13 @@ var linkHintsBase = {
     this.hintMarkerContainingDiv.className = "internalVimiumHintMarker";
     for (var i = 0; i < this.hintMarkers.length; i++)
       this.hintMarkerContainingDiv.appendChild(this.hintMarkers[i]);
-    document.documentElement.appendChild(this.hintMarkerContainingDiv);
+
+    // sometimes this is triggered before documentElement is created
+    // TODO(int3): fail more gracefully?
+    if (document.documentElement)
+      document.documentElement.appendChild(this.hintMarkerContainingDiv);
+    else
+      this.deactivateMode();
   },
 
   /*
