@@ -111,9 +111,9 @@ var linkHintsBase = {
 
   /*
    * Sets the data attributes of the marker. Does not need to handle styling
-   * and positioning. MUST set the hintString property.
+   * and positioning. MUST set the hintString and innerHTML properties.
    */ 
-  setMarkerAttributes: function(linkHintNumber) {},
+  setMarkerAttributes: function(marker, linkHintNumber) {},
 
   /*
    * A hook for any necessary initialization for setMarkerAttributes.  Takes an
@@ -310,8 +310,8 @@ var linkHintsBase = {
   createMarkerFor: function(link, linkHintNumber) {
     var marker = document.createElement("div");
     marker.className = "internalVimiumHintMarker vimiumHintMarker";
-    this.setMarkerAttributes(marker, link, linkHintNumber);
-    marker.innerHTML = this.spanWrap(marker.getAttribute("hintString"));
+    marker.clickableItem = link.element;
+    this.setMarkerAttributes(marker, linkHintNumber);
 
     // Note: this call will be expensive if we modify the DOM in between calls.
     var clientRect = link.rect;
@@ -321,7 +321,6 @@ var linkHintsBase = {
     marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
     marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
 
-    marker.clickableItem = link.element;
     return marker;
   },
 
@@ -356,8 +355,9 @@ function initializeLinkHints() {
               visibleElements.length, settings.get('linkHintCharacters').length));
       },
 
-      setMarkerAttributes: function(marker, link, linkHintNumber) {
+      setMarkerAttributes: function(marker, linkHintNumber) {
         var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
+        marker.innerHTML = this.spanWrap(hintString);
         marker.setAttribute("hintString", hintString);
         return marker;
       },
@@ -415,14 +415,57 @@ function initializeLinkHints() {
 
       linkTextKeystrokeQueue: [],
 
-      setMarkerAttributes: function(marker, link, linkHintNumber) {
+      labelMap: {},
+
+      /*
+       * Generate a map of input element => label
+       */
+      initSetMarkerAttributes: function() {
+        var labels = document.querySelectorAll("label");
+        for (var i = 0; i < labels.length; i++) {
+          var forElement = labels[i].getAttribute("for");
+          if (forElement) {
+            var labelText = labels[i].textContent.trim();
+            // remove trailing : commonly found in labels
+            if (labelText[labelText.length-1] == ":")
+              labelText = labelText.substr(0, labelText.length-1);
+            this.labelMap[forElement] = labelText;
+          }
+        }
+      },
+
+      setMarkerAttributes: function(marker, linkHintNumber) {
         var hintString = (linkHintNumber + 1).toString();
-        var linkText = link.element.innerHTML.toLowerCase();
-        if (linkText == undefined) 
-          linkText = "";
+        var linkText = "";
+        var showLinkText = false;
+        var element = marker.clickableItem;
+        // toLowerCase is necessary as html documents return 'IMG'
+        // and xhtml documents return 'img'
+        var nodeName = element.nodeName.toLowerCase();
+
+        if (nodeName == "input") {
+          if (this.labelMap[element.id]) {
+            linkText = this.labelMap[element.id];
+            showLinkText = true;
+          } else if (element.type != "password") {
+            linkText = element.value;
+          }
+          // check if there is an image embedded in the <a> tag
+        } else if (nodeName == "a" && !element.textContent.trim()
+            && element.firstElementChild
+            && element.firstElementChild.nodeName.toLowerCase() == "img") {
+          showLinkText = true;
+          linkText = element.firstElementChild.alt || element.firstElementChild.title;
+        }
+
+        if (!linkText) {
+          linkText = element.textContent || element.innerHTML;
+        }
+        linkText = linkText.trim().toLowerCase();
         marker.setAttribute("hintString", hintString);
+        marker.innerHTML = this.spanWrap(hintString
+            + (showLinkText ? ": " + linkText : ""));
         marker.setAttribute("linkText", linkText);
-        return marker;
       },
 
       normalKeyDownHandler: function(event) {
@@ -495,9 +538,8 @@ function initializeLinkHints() {
           } else {
             if (linkMarker.style.display == "none")
               linkMarker.style.display = "";
-            var newHintText = (linksMatched.length+1).toString();
-            linkMarker.innerHTML = this.spanWrap(newHintText);
-            linkMarker.setAttribute("hintString", newHintText);
+
+            this.setMarkerAttributes(linkMarker, linksMatched.length);
             linkMarker.setAttribute("filtered", "false");
             linksMatched.push(linkMarker);
           }
@@ -507,6 +549,7 @@ function initializeLinkHints() {
 
       deactivateMode: function() {
         this.linkTextKeystrokeQueue = [];
+        this.labelMap = {};
         this._super('deactivateMode')();
       }
 

@@ -142,7 +142,15 @@
             "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
             "<a id='2'>tress</a>" +
             "<a id='3'>trait</a>" +
-            "<a><img alt='alt text'/></a>";
+            "<a>track<img alt='alt text'/></a>" +
+            "<a><img alt='alt text'/></a>" +
+            "<a><img alt='alt text' title='some title'/></a>" +
+            "<a><img title='some title'/></a>" +
+            "<input type='text' value='some value'/>" +
+            "<input type='password' value='some value'/>" +
+            "<textarea>some text</textarea>" +
+            "<label for='test-input'/>a label</label><input type='text' id='test-input' value='some value'/>" +
+            "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>";
           document.getElementById("test-div").innerHTML = testContent;
           settings.values.filterLinkHints = "true";
           initializeLinkHints();
@@ -152,10 +160,10 @@
           document.getElementById("test-div").innerHTML = "";
           linkHints.deactivateMode();
           }),
-        should("label the hints correctly", function() {
-          for (var i = 0; i < 3; i++)
+        should("label the plain text hints", function() {
+          for (var i = 0; i < 4; i++)
             assert.equal((i + 1).toString(),
-              linkHints.hintMarkers[i].getAttribute("hintString"));
+              linkHints.hintMarkers[i].textContent.toLowerCase());
           }),
         should("narrow the hints", function() {
           linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
@@ -166,6 +174,29 @@
             linkHints.hintMarkers[1].getAttribute("hintString"));
           assert.equal("",
             linkHints.hintMarkers[1].style.display);
+          linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
+          assert.equal("2",
+            linkHints.hintMarkers[3].getAttribute("hintString"));
+          }),
+        should("label the images", function() {
+          assert.equal("5: alt text",
+            linkHints.hintMarkers[4].textContent.toLowerCase());
+          assert.equal("6: alt text",
+            linkHints.hintMarkers[5].textContent.toLowerCase());
+          assert.equal("7: some title",
+            linkHints.hintMarkers[6].textContent.toLowerCase());
+          }),
+        should("label the input elements", function() {
+          assert.equal("8",
+            linkHints.hintMarkers[7].textContent.toLowerCase());
+          assert.equal("9",
+            linkHints.hintMarkers[8].textContent.toLowerCase());
+          assert.equal("10",
+            linkHints.hintMarkers[9].textContent.toLowerCase());
+          assert.equal("11: a label",
+            linkHints.hintMarkers[10].textContent.toLowerCase());
+          assert.equal("12: a label",
+            linkHints.hintMarkers[11].textContent.toLowerCase());
           })
         );
 
