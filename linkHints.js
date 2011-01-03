@@ -87,10 +87,9 @@ var linkHintsBase = {
     // Initialize the number used to generate the character hints to be as many digits as we need to
     // highlight all the links on the page; we don't want some link hints to have more chars than others.
     var linkHintNumber = 0;
-    this.initHintStringGenerator(visibleElements);
+    this.initSetMarkerAttributes(visibleElements);
     for (var i = 0; i < visibleElements.length; i++) {
-      this.hintMarkers.push(this.createMarkerFor(
-            visibleElements[i], linkHintNumber, this.hintStringGenerator.bind(this)));
+      this.hintMarkers.push(this.createMarkerFor(visibleElements[i], linkHintNumber));
       linkHintNumber++;
     }
     // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
@@ -105,15 +104,17 @@ var linkHintsBase = {
   },
 
   /*
-   * Takes a number and returns the string label for the hint.
+   * Sets the data attributes of the marker. Does not need to handle styling
+   * and positioning. MUST set the hintString property.
    */ 
-  hintStringGenerator: function(linkHintNumber) {},
+  setMarkerAttributes: function(linkHintNumber) {},
 
   /*
-   * A hook for any necessary initialization for hintStringGenerator.  Takes an
+   * A hook for any necessary initialization for setMarkerAttributes.  Takes an
    * array of visible elements. Any return value is ignored.
    */
-  initHintStringGenerator: function(visibleElements) {},
+  initSetMarkerAttributes: function(visibleElements) {
+  },
 
   /*
    * Returns all clickable elements that are not hidden and are in the current viewport.
@@ -300,16 +301,11 @@ var linkHintsBase = {
   /*
    * Creates a link marker for the given link.
    */
-  createMarkerFor: function(link, linkHintNumber, stringGenerator) {
-    var hintString = stringGenerator(linkHintNumber);
-    var linkText = link.element.innerHTML.toLowerCase();
-    if (linkText == undefined) 
-      linkText = "";
+  createMarkerFor: function(link, linkHintNumber) {
     var marker = document.createElement("div");
     marker.className = "internalVimiumHintMarker vimiumHintMarker";
-    marker.innerHTML = this.spanWrap(hintString);
-    marker.setAttribute("hintString", hintString);
-    marker.setAttribute("linkText", linkText);
+    this.setMarkerAttributes(marker, link, linkHintNumber);
+    marker.innerHTML = this.spanWrap(marker.getAttribute("hintString"));
 
     // Note: this call will be expensive if we modify the DOM in between calls.
     var clientRect = link.rect;
@@ -349,13 +345,15 @@ function initializeLinkHints() {
 
       logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
-      initHintStringGenerator: function(visibleElements) {
+      initSetMarkerAttributes: function(visibleElements) {
         this.digitsNeeded = Math.ceil(this.logXOfBase(
               visibleElements.length, settings.get('linkHintCharacters').length));
       },
 
-      hintStringGenerator: function(linkHintNumber) {
-        return this.numberToHintString(linkHintNumber, this.digitsNeeded);
+      setMarkerAttributes: function(marker, link, linkHintNumber) {
+        var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
+        marker.setAttribute("hintString", hintString);
+        return marker;
       },
 
       /*
@@ -411,8 +409,14 @@ function initializeLinkHints() {
 
       linkTextKeystrokeQueue: [],
 
-      hintStringGenerator: function(linkHintNumber) {
-        return (linkHintNumber + 1).toString();
+      setMarkerAttributes: function(marker, link, linkHintNumber) {
+        var hintString = (linkHintNumber + 1).toString();
+        var linkText = link.element.innerHTML.toLowerCase();
+        if (linkText == undefined) 
+          linkText = "";
+        marker.setAttribute("hintString", hintString);
+        marker.setAttribute("linkText", linkText);
+        return marker;
       },
 
       normalKeyDownHandler: function(event) {
