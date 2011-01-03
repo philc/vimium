@@ -31,8 +31,15 @@
       function createGeneralHintTests(isFilteredMode) {
         context("Link hints",
           setup(function() {
+            var testContent =
+              "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
+              "<a id='2'>tress</a>";
+            document.getElementById("test-div").innerHTML = testContent;
             settings.values.filterLinkHints = isFilteredMode ? "true" : "false";
             initializeLinkHints();
+            }),
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
             }),
           should("create hints when activated, discard them when deactivated", function() {
             linkHints.activateMode();
@@ -69,6 +76,24 @@
 
       context("Alphabetical link hints",
         setup(function() {
+          var testContent =
+            "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
+            "<a id='2'>tress</a>" +
+            "<a id='3'>trait</a>" +
+            "<a id='4'>trait</a>" +
+            "<a id='5'>trait</a>" +
+            "<a id='6'>trait</a>" +
+            "<a id='7'>trait</a>" +
+            "<a id='8'>trait</a>" +
+            "<a id='9'>trait</a>" +
+            "<a id='10'>trait</a>" +
+            "<a id='11'>trait</a>" +
+            "<a id='12'>trait</a>" +
+            "<a id='13'>trait</a>" +
+            "<a id='14'>trait</a>" +
+            "<a id='15'>trait</a>" +
+            "<a id='16'>trait</a>";
+          document.getElementById("test-div").innerHTML = testContent;
           settings.values.filterLinkHints = "false";
           initializeLinkHints();
           linkHints.activateMode();
@@ -93,15 +118,21 @@
 
       context("Filtered link hints",
         setup(function() {
+          var testContent =
+            "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
+            "<a id='2'>tress</a>" +
+            "<a id='3'>trait</a>";
+          document.getElementById("test-div").innerHTML = testContent;
           settings.values.filterLinkHints = "true";
           initializeLinkHints();
           linkHints.activateMode();
           }),
         tearDown(function() {
+          document.getElementById("test-div").innerHTML = "";
           linkHints.deactivateMode();
           }),
         should("label the hints correctly", function() {
-          for (var i = 0; i < 16; i++)
+          for (var i = 0; i < 3; i++)
             assert.equal((i + 1).toString(),
               linkHints.hintMarkers[i].getAttribute("hintString"));
           }),
@@ -124,21 +155,6 @@
     </script>
   </head>
   <body>
-    <a id="1" style="position: absolute; top: 17px; left: 19px;">test</a>
-    <a id="2">tress</a>
-    <a id="3">trait</a>
-    <a id="4">trait</a>
-    <a id="5">trait</a>
-    <a id="6">trait</a>
-    <a id="7">trait</a>
-    <a id="8">trait</a>
-    <a id="9">trait</a>
-    <a id="10">trait</a>
-    <a id="11">trait</a>
-    <a id="12">trait</a>
-    <a id="13">trait</a>
-    <a id="14">trait</a>
-    <a id="15">trait</a>
-    <a id="16">trait</a>
+    <div id="test-div"></div>
   </body>
 </html>
