@@ -226,9 +226,7 @@ var linkHintsBase = {
    */
   activateLink: function(matchedLink) {
     if (this.isSelectable(matchedLink)) {
-      matchedLink.focus();
-      // When focusing a textbox, put the selection caret at the end of the textbox's contents.
-      matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
+      this.simulateSelect(matchedLink);
       this.deactivateMode();
     } else {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
@@ -255,6 +253,12 @@ var linkHintsBase = {
     var selectableTypes = ["search", "text", "password"];
     return (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
         element.nodeName.toLowerCase() == "textarea";
+  },
+  
+  simulateSelect: function(element) {
+    element.focus();
+    // When focusing a textbox, put the selection caret at the end of the textbox's contents.
+    element.setSelectionRange(element.value.length, element.value.length);
   },
 
   /*
@@ -417,6 +421,8 @@ function initializeLinkHints() {
 
       labelMap: {},
 
+      delayMode: false,
+
       /*
        * Generate a map of input element => label
        */
@@ -469,6 +475,8 @@ function initializeLinkHints() {
       },
 
       normalKeyDownHandler: function(event) {
+        if (this.delayMode)
+          return;
         if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
           if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
             this.deactivateMode();
@@ -513,8 +521,46 @@ function initializeLinkHints() {
 
           if (linksMatched.length == 0)
             this.deactivateMode();
-          else if (linksMatched.length == 1)
-            this.activateLink(linksMatched[0].clickableItem);
+          else if (linksMatched.length == 1) {
+            if (/[0-9]/.test(keyChar)) {
+              this.activateLink(linksMatched[0].clickableItem);
+            } else {
+              // In filter mode, people tend to type out words past the point
+              // needed for a unique match. Hence we should avoid passing
+              // control back to command mode immediately after a match is found.
+              this.activateLink(linksMatched[0].clickableItem, 200);
+            }
+          }
+        }
+      },
+
+      /*
+       * If called without arguments, it executes immediately.  Othewise, it
+       * executes after 'delay'.
+       */
+      activateLink: function(matchedLink, delay) {
+        var that = this;
+        if (delay) {
+          that.delayMode = true;
+          if (that.isSelectable(matchedLink)) {
+            that.simulateSelect(matchedLink);
+            that.deactivateMode(delay, function() { that.delayMode = false; });
+          } else {
+            if (that.shouldOpenWithQueue) {
+              that.simulateClick(matchedLink);
+              that.resetMode(delay);
+            } else if (that.shouldOpenInNewTab) {
+              that.simulateClick(matchedLink);
+              matchedLink.focus();
+              that.deactivateMode(delay, function() { that.delayMode = false; });
+            } else {
+              setTimeout(that.simulateClick.bind(that, matchedLink), 400);
+              matchedLink.focus();
+              that.deactivateMode(delay, function() { that.delayMode = false; });
+            }
+          }
+        } else {
+          that._super('activateLink')(matchedLink);
         }
       },
 
@@ -547,10 +593,36 @@ function initializeLinkHints() {
         return linksMatched;
       },
 
-      deactivateMode: function() {
-        this.linkTextKeystrokeQueue = [];
-        this.labelMap = {};
-        this._super('deactivateMode')();
+      /*
+       * If called without arguments, it executes immediately.  Othewise, it
+       * executes after 'delay' and invokes 'callback' when it is finished.
+       */
+      deactivateMode: function(delay, callback) {
+        var that = this;
+        function deactivate() {
+          that.linkTextKeystrokeQueue = [];
+          that.labelMap = {};
+          that._super('deactivateMode')();
+        }
+        if (!delay)
+          deactivate();
+        else
+          setTimeout(function() { deactivate(); if (callback) callback(); }, delay);
+      },
+
+      resetMode: function(delay, callback) {
+        var that = this;
+        if (!delay) {
+          that.deactivateMode();
+          that.activateModeWithQueue();
+        } else {
+          that.deactivateMode(delay, function() {
+              that.delayMode = false;
+              that.activateModeWithQueue();
+              if (callback)
+                callback();
+            });
+        }
       }
 
     });
