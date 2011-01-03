@@ -24,8 +24,6 @@
         return event;
       }
 
-      var testVariables = {};
-
       /*
        * Generate tests that are common to both default and filtered
        * link hinting modes.
@@ -54,13 +52,13 @@
                 assert.equal(17, linkHints.hintMarkers[0].getClientRects()[0].top);
                 }),
               should("position item 2", function() {
-                stub(testVariables, "originalLeft", linkHints.hintMarkers[1].getClientRects()[0].left);
-                stub(testVariables, "originalTop", linkHints.hintMarkers[1].getClientRects()[0].left);
+                var originalLeft = linkHints.hintMarkers[1].getClientRects()[0].left;
+                var originalTop = linkHints.hintMarkers[1].getClientRects()[0].left;
                 linkHints.deactivateMode();
                 document.body.style.position = "relative";
                 linkHints.activateMode();
-                assert.equal(testVariables.originalLeft, linkHints.hintMarkers[1].getClientRects()[0].left);
-                assert.equal(testVariables.originalTop, linkHints.hintMarkers[1].getClientRects()[0].top);
+                assert.equal(originalLeft, linkHints.hintMarkers[1].getClientRects()[0].left);
+                assert.equal(originalTop, linkHints.hintMarkers[1].getClientRects()[0].top);
                 document.body.style.position = "static";
                 })
             )
@@ -80,7 +78,6 @@
           }),
         should("label the hints correctly", function() {
           var hintStrings = ["ss", "sa", "sd"];
-          stub(testVariables, "hintStrings", "sad");
           for (var i = 0; i < 3; i++)
           assert.equal(hintStrings[i],
             linkHints.hintMarkers[i].getAttribute("hintString"));
