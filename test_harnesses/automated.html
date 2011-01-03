@@ -2,6 +2,30 @@
   "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
+    <style type="text/css">
+      body {
+        font-family:"helvetica neue", "helvetica", "arial", "sans";
+        width: 800px;
+        margin: 0px auto;
+      }
+      #output-div {
+        white-space: pre-wrap;
+        background-color: #eee;
+        font-family: monospace;
+        margin: 0 0 50px 0;
+        border-style: dashed;
+        border-width: 1px 1px 0 1px;
+        border-color: #999;
+      }
+      .errorPosition {
+        color: #f33;
+        font-weight: bold;
+      }
+      .output-section {
+        padding: 10px 15px 10px 15px;
+        border-bottom: dashed 1px #999;
+      }
+    </style>
     <script type="text/javascript" src="../lib/utils.js"></script>
     <script type="text/javascript" src="../lib/keyboardUtils.js"></script>
     <script type="text/javascript" src="../linkHints.js"></script>
@@ -47,28 +71,23 @@
             linkHints.deactivateMode();
             assert.isTrue(linkHints.hintMarkerContainingDiv == null);
             }),
-            context("Positioning",
-              setup(function() {
-                linkHints.activateMode();
-                }),
-              tearDown(function() {
-                linkHints.deactivateMode();
-                }),
-              should("position item 1", function() {
-                assert.equal(19, linkHints.hintMarkers[0].getClientRects()[0].left);
-                assert.equal(17, linkHints.hintMarkers[0].getClientRects()[0].top);
-                }),
-              should("position item 2", function() {
-                var originalLeft = linkHints.hintMarkers[1].getClientRects()[0].left;
-                var originalTop = linkHints.hintMarkers[1].getClientRects()[0].left;
-                linkHints.deactivateMode();
-                document.body.style.position = "relative";
-                linkHints.activateMode();
-                assert.equal(originalLeft, linkHints.hintMarkers[1].getClientRects()[0].left);
-                assert.equal(originalTop, linkHints.hintMarkers[1].getClientRects()[0].top);
-                document.body.style.position = "static";
-                })
-            )
+          should("position items correctly", function() {
+            stub(document.body, "style", "static");
+            linkHints.activateMode();
+            function testPositions() {
+              for (var i = 0; i < 2; i++) {
+                assert.equal(document.getElementById((i+1).toString()).getClientRects()[0].left,
+                    linkHints.hintMarkers[i].getClientRects()[0].left);
+                assert.equal(document.getElementById((i+1).toString()).getClientRects()[0].top,
+                    linkHints.hintMarkers[i].getClientRects()[0].top);
+              }
+            }
+            testPositions();
+            stub(document.body.style, "position", "relative");
+            linkHints.resetMode();
+            testPositions();
+            linkHints.deactivateMode();
+            })
           );
       }
       createGeneralHintTests(false);
@@ -100,6 +119,7 @@
           }),
         tearDown(function() {
           linkHints.deactivateMode();
+          document.getElementById("test-div").innerHTML = "";
           }),
         should("label the hints correctly", function() {
           var hintStrings = ["ss", "sa", "sd"];
@@ -121,7 +141,8 @@
           var testContent =
             "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
             "<a id='2'>tress</a>" +
-            "<a id='3'>trait</a>";
+            "<a id='3'>trait</a>" +
+            "<a><img alt='alt text'/></a>";
           document.getElementById("test-div").innerHTML = testContent;
           settings.values.filterLinkHints = "true";
           initializeLinkHints();
@@ -148,6 +169,13 @@
           })
         );
 
+      Tests.outputMethod = function(output) {
+        var newOutput = Array.prototype.join.call(arguments, "\n");
+        // highlight the source of the error
+        newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3");
+        document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>";
+        console.log.apply(console, arguments);
+      }
       // ensure the extension has time to load before commencing the tests
       document.addEventListener("DOMContentLoaded", function(){
           setTimeout(Tests.run, 200);
@@ -155,6 +183,12 @@
     </script>
   </head>
   <body>
+    <!-- should always be the first element on the page -->
     <div id="test-div"></div>
+
+    <h1>Vimium Tests</h1>
+
+    <div id="output-div"></div>
+
   </body>
 </html>
