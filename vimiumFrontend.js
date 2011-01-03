@@ -508,7 +508,7 @@ function isFocusable(element) { return isEditable(element) || isEmbed(element); 
  * Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
  * unfocused.
  */
-function isEmbed(element) { return ["EMBED", "OBJECT"].indexOf(element.tagName) > 0; }
+function isEmbed(element) { return ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > 0; }
 
 /*
  * Input or text elements are considered focusable and able to receieve their own keyboard events,
@@ -521,7 +521,7 @@ function isEditable(target) {
   if (target.getAttribute("contentEditable") == "true")
     return true;
   var focusableInputs = ["input", "textarea", "select", "button"];
-  return focusableInputs.indexOf(target.tagName.toLowerCase()) >= 0;
+  return focusableInputs.indexOf(target.nodeName.toLowerCase()) >= 0;
 }
 
 function enterInsertMode() {

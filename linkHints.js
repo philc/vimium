@@ -253,8 +253,8 @@ var linkHintsBase = {
    */
   isSelectable: function(element) {
     var selectableTypes = ["search", "text", "password"];
-    return (element.tagName == "INPUT" && selectableTypes.indexOf(element.type) >= 0) ||
-        element.tagName == "TEXTAREA";
+    return (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
+        element.nodeName.toLowerCase() == "textarea";
   },
 
   /*
