@@ -109,27 +109,14 @@ function initializePreDomReady() {
     sendResponse({}); // Free up the resources used by this open connection.
   });
 
-  /*
-   * Takes a dot-notation object string and call the function
-   * that it points to with the correct value for 'this'.
-   */
-  function invokeCommandString(str, argArray) {
-    var components = str.split('.');
-    var obj = this;
-    for (var i = 0; i < components.length - 1; i++)
-      obj = obj[components[i]];
-    var func = obj[components.pop()];
-    return func.apply(obj, argArray);
-  }
-
   chrome.extension.onConnect.addListener(function(port, name) {
     if (port.name == "executePageCommand") {
       port.onMessage.addListener(function(args) {
         if (frameId == args.frameId) {
           if (args.passCountToFunction) {
-            invokeCommandString(args.command, [args.count]);
+            utils.invokeCommandString(args.command, [args.count]);
           } else {
-            for (var i = 0; i < args.count; i++) { invokeCommandString(args.command); }
+            for (var i = 0; i < args.count; i++) { utils.invokeCommandString(args.command); }
           }
         }
 
