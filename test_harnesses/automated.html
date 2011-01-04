@@ -95,6 +95,8 @@
 
       context("Alphabetical link hints",
         setup(function() {
+          stub(settings.values, "filterLinkHints", "false");
+          initializeLinkHints();
           var testContent =
             "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
             "<a id='2'>tress</a>" +
@@ -113,8 +115,6 @@
             "<a id='15'>trait</a>" +
             "<a id='16'>trait</a>";
           document.getElementById("test-div").innerHTML = testContent;
-          settings.values.filterLinkHints = "false";
-          initializeLinkHints();
           linkHints.activateMode();
           }),
         tearDown(function() {
@@ -138,70 +138,100 @@
 
       context("Filtered link hints",
         setup(function() {
-          var testContent =
-            "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
-            "<a id='2'>tress</a>" +
-            "<a id='3'>trait</a>" +
-            "<a>track<img alt='alt text'/></a>" +
-            "<a><img alt='alt text'/></a>" +
-            "<a><img alt='alt text' title='some title'/></a>" +
-            "<a><img title='some title'/></a>" +
-            "<input type='text' value='some value'/>" +
-            "<input type='password' value='some value'/>" +
-            "<textarea>some text</textarea>" +
-            "<label for='test-input'/>a label</label><input type='text' id='test-input' value='some value'/>" +
-            "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>";
-          document.getElementById("test-div").innerHTML = testContent;
-          settings.values.filterLinkHints = "true";
+          stub(settings.values, "filterLinkHints", "true");
           initializeLinkHints();
-          linkHints.activateMode();
           }),
-        tearDown(function() {
-          document.getElementById("test-div").innerHTML = "";
-          linkHints.deactivateMode();
+        context("Text hints",
+          setup(function() {
+            var testContent =
+              "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
+              "<a id='2'>tress</a>" +
+              "<a id='3'>trait</a>" +
+              "<a>track<img alt='alt text'/></a>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.activateMode();
           }),
-        should("label the plain text hints", function() {
-          for (var i = 0; i < 4; i++)
-            assert.equal((i + 1).toString(),
-              linkHints.hintMarkers[i].textContent.toLowerCase());
-          }),
-        should("narrow the hints", function() {
-          linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
-          linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
-          assert.equal("none",
-            linkHints.hintMarkers[0].style.display);
-          assert.equal("1",
-            linkHints.hintMarkers[1].getAttribute("hintString"));
-          assert.equal("",
-            linkHints.hintMarkers[1].style.display);
-          linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-          assert.equal("2",
-            linkHints.hintMarkers[3].getAttribute("hintString"));
-          }),
-        should("label the images", function() {
-          assert.equal("5: alt text",
-            linkHints.hintMarkers[4].textContent.toLowerCase());
-          assert.equal("6: alt text",
-            linkHints.hintMarkers[5].textContent.toLowerCase());
-          assert.equal("7: some title",
-            linkHints.hintMarkers[6].textContent.toLowerCase());
-          }),
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+            linkHints.deactivateMode();
+            }),
+          should("label the hints", function() {
+            for (var i = 0; i < 4; i++)
+              assert.equal((i + 1).toString(),
+                linkHints.hintMarkers[i].textContent.toLowerCase());
+            }),
+          should("narrow the hints", function() {
+            linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
+            linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
+            assert.equal("none",
+              linkHints.hintMarkers[0].style.display);
+            assert.equal("1",
+              linkHints.hintMarkers[1].getAttribute("hintString"));
+            assert.equal("",
+              linkHints.hintMarkers[1].style.display);
+            linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
+            assert.equal("2",
+              linkHints.hintMarkers[3].getAttribute("hintString"));
+            })
+          ),
+        context("Image hints",
+          setup(function() {
+            var testContent =
+              "<a><img alt='alt text'/></a>" +
+              "<a><img alt='alt text' title='some title'/></a>" +
+              "<a><img title='some title'/></a>" +
+              "<a><img src='blah' width='320px' height='100px'/></a>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.activateMode();
+            }),
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+            linkHints.deactivateMode();
+            }),
+          should("label the images", function() {
+            assert.equal("1: alt text",
+              linkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2: alt text",
+              linkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3: some title",
+              linkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4",
+              linkHints.hintMarkers[3].textContent.toLowerCase());
+            })
+        ),
+        context("Input hints",
+          setup(function() {
+            var testContent =
+              "<input type='text' value='some value'/>" +
+              "<input type='password' value='some value'/>" +
+              "<textarea>some text</textarea>" +
+              "<label for='test-input'/>a label</label><input type='text' id='test-input' value='some value'/>" +
+              "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.activateMode();
+            }),
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+            linkHints.deactivateMode();
+            }),
         should("label the input elements", function() {
-          assert.equal("8",
-            linkHints.hintMarkers[7].textContent.toLowerCase());
-          assert.equal("9",
-            linkHints.hintMarkers[8].textContent.toLowerCase());
-          assert.equal("10",
-            linkHints.hintMarkers[9].textContent.toLowerCase());
-          assert.equal("11: a label",
-            linkHints.hintMarkers[10].textContent.toLowerCase());
-          assert.equal("12: a label",
-            linkHints.hintMarkers[11].textContent.toLowerCase());
+          assert.equal("1",
+            linkHints.hintMarkers[0].textContent.toLowerCase());
+          assert.equal("2",
+            linkHints.hintMarkers[1].textContent.toLowerCase());
+          assert.equal("3",
+            linkHints.hintMarkers[2].textContent.toLowerCase());
+          assert.equal("4: a label",
+            linkHints.hintMarkers[3].textContent.toLowerCase());
+          assert.equal("5: a label",
+            linkHints.hintMarkers[4].textContent.toLowerCase());
           })
-        );
+        )
+      );
 
       Tests.outputMethod = function(output) {
         var newOutput = Array.prototype.join.call(arguments, "\n");
+        newOutput = newOutput.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); // escape html
         // highlight the source of the error
         newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3");
         document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>";

@@ -460,11 +460,10 @@ function initializeLinkHints() {
         } else if (nodeName == "a" && !element.textContent.trim()
             && element.firstElementChild
             && element.firstElementChild.nodeName.toLowerCase() == "img") {
-          showLinkText = true;
           linkText = element.firstElementChild.alt || element.firstElementChild.title;
-        }
-
-        if (!linkText) {
+          if (linkText)
+            showLinkText = true;
+        } else {
           linkText = element.textContent || element.innerHTML;
         }
         linkText = linkText.trim().toLowerCase();
