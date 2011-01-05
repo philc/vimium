@@ -118,6 +118,9 @@ function clearKeyMappingsAndSetDefaults() {
   mapKeyToCommand('n', 'performFind');
   mapKeyToCommand('N', 'performBackwardsFind');
 
+  mapKeyToCommand('[[', 'goPrevious');
+  mapKeyToCommand(']]', 'goNext');
+
   mapKeyToCommand('yy', 'copyCurrentUrl');
 
   mapKeyToCommand('K', 'nextTab');
@@ -165,6 +168,9 @@ addCommand('enterFindMode',        'Enter find mode');
 addCommand('performFind',          'Cycle forward to the next find match');
 addCommand('performBackwardsFind', 'Cycle backward to the previous find match');
 
+addCommand('goPrevious',          'Follow the link labeled previous or <');
+addCommand('goNext',              'Follow the link labeled next or >');
+
 // Navigating your history:
 addCommand('goBack',              'Go back in history');
 addCommand('goForward',           'Go forward in history');
@@ -192,6 +198,7 @@ var commandGroups = {
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
      "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
+     "goPrevious", "goNext",
      "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
   historyNavigation:
     ["goBack", "goForward"],

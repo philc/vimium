@@ -550,6 +550,32 @@ function performBackwardsFind() {
   findModeQueryHasResults = window.find(findModeQuery, false, true, true, false, true, false);
 }
 
+function findAndFollowLink(linkStrings) {
+  linkStrings.forEach(function(findModeQuery) {
+    findModeQueryHasResults = window.find(findModeQuery, false, true, true, false, true, false);
+    if (findModeQueryHasResults) {
+      var node = window.getSelection().anchorNode;
+      while (node.nodeName != 'BODY') {
+        if (node.nodeName == 'A') {
+          window.location = node.href;
+          return;
+        }
+        node = node.parentNode;
+      }
+    }
+  });
+}
+
+function goPrevious() {
+  previousStrings = ["\bprev\b","\bprevious\b","\u00AB","<<","<"];
+  findAndFollowLink(previousStrings);
+}
+
+function goNext() {
+  nextStrings = ["\bnext\b","\u00BB",">>","\bmore\b",">"];
+  findAndFollowLink(nextStrings);
+}
+
 function showFindModeHUDForQuery() {
   if (findModeQueryHasResults || findModeQuery.length == 0)
     HUD.show("/" + insertSpaces(findModeQuery));

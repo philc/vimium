@@ -51,6 +51,8 @@ Navigating the current page:
     gu      go up one level in the URL hierarchy
     gf      cycle forward to the next frame
     gi      focus the first (or n-th) text input box on the page
+    ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
+    [[      Follow the link labeled 'previous' or '<' if it exists. Helpful for browsing paginated sites.
 
 Navigating your history:
     H       go back in history
