@@ -188,7 +188,6 @@ var linkHintsBase = {
    * Handles shift and esc keys. The other keys are passed to normalKeyDownHandler.
    */
   onKeyDownInMode: function(event) {
-    console.log("Key Down");
     if (event.keyCode == keyCodes.shiftKey && !this.openLinkModeToggle) {
       // Toggle whether to open link in a new or current tab.
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue);
