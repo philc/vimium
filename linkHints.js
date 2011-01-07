@@ -149,13 +149,13 @@ var linkHintsBase = {
       // but floated elements. Check for this.
       if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
         for (var j = 0; j < element.children.length; j++) {
-          if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') != 'none') {
-            var childClientRect = element.children[j].getClientRects()[0];
-            if (this.isVisible(element.children[j], childClientRect)) {
-              visibleElements.push({element: element.children[j], rect: childClientRect});
-              break;
-            }
-          }
+          if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') == 'none')
+            continue;
+          var childClientRect = element.children[j].getClientRects()[0];
+          if (!this.isVisible(element.children[j], childClientRect))
+            continue;
+          visibleElements.push({element: element.children[j], rect: childClientRect});
+          break;
         }
       }
     }
