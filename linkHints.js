@@ -467,8 +467,7 @@ function initializeLinkHints() {
         }
         linkText = linkText.trim().toLowerCase();
         marker.setAttribute("hintString", hintString);
-        marker.innerHTML = this.spanWrap(hintString
-            + (showLinkText ? ": " + linkText : ""));
+        marker.innerHTML = this.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
         marker.setAttribute("linkText", linkText);
       },
 
@@ -574,7 +573,8 @@ function initializeLinkHints() {
 
         for (var i = 0; i < this.hintMarkers.length; i++) {
           var linkMarker = this.hintMarkers[i];
-          var matchedLink = linkMarker.getAttribute("linkText").toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
+          var matchedLink = linkMarker.getAttribute("linkText").toLowerCase()
+                                      .indexOf(linkSearchString.toLowerCase()) >= 0;
 
           if (!matchedLink) {
             linkMarker.style.display = "none";
@@ -619,7 +619,7 @@ function initializeLinkHints() {
               that.activateModeWithQueue();
               if (callback)
                 callback();
-            });
+          });
         }
       }
 

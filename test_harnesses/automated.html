@@ -61,16 +61,16 @@
             document.getElementById("test-div").innerHTML = testContent;
             settings.values.filterLinkHints = isFilteredMode ? "true" : "false";
             initializeLinkHints();
-            }),
+          }),
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
-            }),
+          }),
           should("create hints when activated, discard them when deactivated", function() {
             linkHints.activateMode();
             assert.isFalse(linkHints.hintMarkerContainingDiv == null);
             linkHints.deactivateMode();
             assert.isTrue(linkHints.hintMarkerContainingDiv == null);
-            }),
+          }),
           should("position items correctly", function() {
             stub(document.body, "style", "static");
             linkHints.activateMode();
@@ -116,31 +116,31 @@
             "<a id='16'>trait</a>";
           document.getElementById("test-div").innerHTML = testContent;
           linkHints.activateMode();
-          }),
+        }),
         tearDown(function() {
           linkHints.deactivateMode();
           document.getElementById("test-div").innerHTML = "";
-          }),
+        }),
         should("label the hints correctly", function() {
           var hintStrings = ["ss", "sa", "sd"];
           for (var i = 0; i < 3; i++)
           assert.equal(hintStrings[i],
             linkHints.hintMarkers[i].getAttribute("hintString"));
-          }),
+        }),
         should("narrow the hints", function() {
           linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
           assert.equal("none",
             linkHints.hintMarkers[0].style.display);
           assert.equal("",
             linkHints.hintMarkers[15].style.display);
-          })
-        );
+        })
+      );
 
       context("Filtered link hints",
         setup(function() {
           stub(settings.values, "filterLinkHints", "true");
           initializeLinkHints();
-          }),
+        }),
         context("Text hints",
           setup(function() {
             var testContent =
@@ -154,12 +154,12 @@
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
             linkHints.deactivateMode();
-            }),
+          }),
           should("label the hints", function() {
             for (var i = 0; i < 4; i++)
               assert.equal((i + 1).toString(),
                 linkHints.hintMarkers[i].textContent.toLowerCase());
-            }),
+          }),
           should("narrow the hints", function() {
             linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
             linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
@@ -172,8 +172,8 @@
             linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
             assert.equal("2",
               linkHints.hintMarkers[3].getAttribute("hintString"));
-            })
-          ),
+          })
+        ),
         context("Image hints",
           setup(function() {
             var testContent =
@@ -183,21 +183,17 @@
               "<a><img src='blah' width='320px' height='100px'/></a>";
             document.getElementById("test-div").innerHTML = testContent;
             linkHints.activateMode();
-            }),
+          }),
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
             linkHints.deactivateMode();
-            }),
+          }),
           should("label the images", function() {
-            assert.equal("1: alt text",
-              linkHints.hintMarkers[0].textContent.toLowerCase());
-            assert.equal("2: alt text",
-              linkHints.hintMarkers[1].textContent.toLowerCase());
-            assert.equal("3: some title",
-              linkHints.hintMarkers[2].textContent.toLowerCase());
-            assert.equal("4",
-              linkHints.hintMarkers[3].textContent.toLowerCase());
-            })
+            assert.equal("1: alt text", linkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2: alt text", linkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3: some title", linkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4", linkHints.hintMarkers[3].textContent.toLowerCase());
+          })
         ),
         context("Input hints",
           setup(function() {
@@ -209,22 +205,17 @@
               "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>";
             document.getElementById("test-div").innerHTML = testContent;
             linkHints.activateMode();
-            }),
+          }),
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
             linkHints.deactivateMode();
-            }),
-        should("label the input elements", function() {
-          assert.equal("1",
-            linkHints.hintMarkers[0].textContent.toLowerCase());
-          assert.equal("2",
-            linkHints.hintMarkers[1].textContent.toLowerCase());
-          assert.equal("3",
-            linkHints.hintMarkers[2].textContent.toLowerCase());
-          assert.equal("4: a label",
-            linkHints.hintMarkers[3].textContent.toLowerCase());
-          assert.equal("5: a label",
-            linkHints.hintMarkers[4].textContent.toLowerCase());
+          }),
+          should("label the input elements", function() {
+            assert.equal("1", linkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2", linkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3", linkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4: a label", linkHints.hintMarkers[3].textContent.toLowerCase());
+            assert.equal("5: a label", linkHints.hintMarkers[4].textContent.toLowerCase());
           })
         )
       );
@@ -239,8 +230,8 @@
       }
       // ensure the extension has time to load before commencing the tests
       document.addEventListener("DOMContentLoaded", function(){
-          setTimeout(Tests.run, 200);
-        });
+        setTimeout(Tests.run, 200);
+      });
     </script>
   </head>
   <body>
