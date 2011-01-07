@@ -489,9 +489,9 @@ function initializeLinkHints() {
             }
           }
         } else if (event.keyCode == keyCodes.enter) {
-            // activate the lowest-numbered link hint
+            // activate the lowest-numbered link hint that is visible
             for (var i = 0; i < this.hintMarkers.length; i++)
-              if (this.hintMarkers[i].getAttribute('filtered') != 'true') {
+              if (this.hintMarkers[i].style.display  != 'none') {
                 this.activateLink(this.hintMarkers[i].clickableItem);
                 break;
               }
