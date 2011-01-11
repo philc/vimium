@@ -61,7 +61,8 @@ function initializePreDomReady() {
   checkIfEnabledForUrl();
 
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
-  getZoomLevelPort.postMessage({ domain: window.location.host });
+  if (window.self == window.parent)
+    getZoomLevelPort.postMessage({ domain: window.location.host });
 
   chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
     linkHintCss = response.linkHintCss;
