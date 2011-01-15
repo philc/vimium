@@ -57,8 +57,8 @@
 
           setup(function() {
             var testContent =
-              "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
-              "<a id='2'>tress</a>";
+              "<a>test</a>" +
+              "<a>tress</a>";
             document.getElementById("test-div").innerHTML = testContent;
             settings.values.filterLinkHints = isFilteredMode ? "true" : "false";
             initializeLinkHints();
@@ -144,9 +144,9 @@
 
           setup(function() {
             var testContent =
-              "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
-              "<a id='2'>tress</a>" +
-              "<a id='3'>trait</a>" +
+              "<a>test</a>" +
+              "<a>tress</a>" +
+              "<a>trait</a>" +
               "<a>track<img alt='alt text'/></a>";
             document.getElementById("test-div").innerHTML = testContent;
             linkHints.activateMode();
