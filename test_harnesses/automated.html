@@ -103,24 +103,12 @@
         setup(function() {
           stub(settings.values, "filterLinkHints", "false");
           initializeLinkHints();
-          var testContent =
-            "<a id='1' style='position: absolute; top: 17px; left: 19px;'>test</a>" +
-            "<a id='2'>tress</a>" +
-            "<a id='3'>trait</a>" +
-            "<a id='4'>trait</a>" +
-            "<a id='5'>trait</a>" +
-            "<a id='6'>trait</a>" +
-            "<a id='7'>trait</a>" +
-            "<a id='8'>trait</a>" +
-            "<a id='9'>trait</a>" +
-            "<a id='10'>trait</a>" +
-            "<a id='11'>trait</a>" +
-            "<a id='12'>trait</a>" +
-            "<a id='13'>trait</a>" +
-            "<a id='14'>trait</a>" +
-            "<a id='15'>trait</a>" +
-            "<a id='16'>trait</a>";
-          document.getElementById("test-div").innerHTML = testContent;
+          // we need at least 16 elements to have double-character link hints
+          for (var i = 0; i < 16; i++) {
+            var link = document.createElement("a");
+            link.textContent = "test";
+            document.getElementById("test-div").appendChild(link);
+          }
           linkHints.activateMode();
         }),
 
@@ -132,8 +120,7 @@
         should("label the hints correctly", function() {
           var hintStrings = ["ss", "sa", "sd"];
           for (var i = 0; i < 3; i++)
-          assert.equal(hintStrings[i],
-            linkHints.hintMarkers[i].getAttribute("hintString"));
+          assert.equal(hintStrings[i], linkHints.hintMarkers[i].getAttribute("hintString"));
         }),
 
         should("narrow the hints", function() {
