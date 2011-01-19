@@ -123,10 +123,8 @@
 
         should("narrow the hints", function() {
           linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-          assert.equal("none",
-            linkHints.hintMarkers[0].style.display);
-          assert.equal("",
-            linkHints.hintMarkers[15].style.display);
+          assert.equal("none", linkHints.hintMarkers[0].style.display);
+          assert.equal("", linkHints.hintMarkers[15].style.display);
         })
 
       );
@@ -157,22 +155,17 @@
 
           should("label the hints", function() {
             for (var i = 0; i < 4; i++)
-              assert.equal((i + 1).toString(),
-                linkHints.hintMarkers[i].textContent.toLowerCase());
+              assert.equal((i + 1).toString(), linkHints.hintMarkers[i].textContent.toLowerCase());
           }),
 
           should("narrow the hints", function() {
             linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
             linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
-            assert.equal("none",
-              linkHints.hintMarkers[0].style.display);
-            assert.equal("1",
-              linkHints.hintMarkers[1].getAttribute("hintString"));
-            assert.equal("",
-              linkHints.hintMarkers[1].style.display);
+            assert.equal("none", linkHints.hintMarkers[0].style.display);
+            assert.equal("1", linkHints.hintMarkers[1].getAttribute("hintString"));
+            assert.equal("", linkHints.hintMarkers[1].style.display);
             linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-            assert.equal("2",
-              linkHints.hintMarkers[3].getAttribute("hintString"));
+            assert.equal("2", linkHints.hintMarkers[3].getAttribute("hintString"));
           })
 
         ),
