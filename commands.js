@@ -107,6 +107,7 @@ function clearKeyMappingsAndSetDefaults() {
 
   mapKeyToCommand('zi', 'zoomIn');
   mapKeyToCommand('zo', 'zoomOut');
+  mapKeyToCommand('z0', 'zoomReset');
 
   mapKeyToCommand('gi', 'focusInput');
 
@@ -151,6 +152,7 @@ addCommand('reload',              'Reload the page');
 addCommand('toggleViewSource',    'View page source');
 addCommand('zoomIn',              'Zoom in');
 addCommand('zoomOut',             'Zoom out');
+addCommand('zoomReset',             'Reset zoom to default value');
 addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
 
 addCommand('enterInsertMode',     'Enter insert mode');
@@ -189,7 +191,7 @@ var commandGroups = {
     ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
      "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
      "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-     "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
+     "reload", "toggleViewSource", "zoomIn", "zoomOut", "zoomReset", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
      "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
      "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
