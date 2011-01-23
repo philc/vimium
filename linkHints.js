@@ -31,7 +31,6 @@ var linkHintsBase = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
   // The characters that were typed in while in "link hints" mode.
-  hintKeystrokeQueue: [],
   modeActivated: false,
   shouldOpenInNewTab: false,
   shouldOpenWithQueue: false,
@@ -215,7 +214,19 @@ var linkHintsBase = {
     if (isEscape(event)) {
       this.deactivateMode();
     } else {
-      this.normalKeyDownHandler(event);
+      var keyResult = this.normalKeyDownHandler(event, this.hintMarkers);
+      var linksMatched = keyResult.linksMatched;
+      var delay = keyResult.delay !== undefined ? keyResult.delay : 0;
+      if (linksMatched.length == 0) {
+        this.deactivateMode();
+      } else if (linksMatched.length == 1) {
+        this.activateLink(linksMatched[0].clickableItem, delay);
+      } else {
+        for (var i in this.hintMarkers)
+          this.hideMarker(this.hintMarkers[i]);
+        for (var i in linksMatched)
+          this.showMarker(linksMatched[i], this.hintKeystrokeQueue.length);
+      }
     }
 
     event.stopPropagation();
@@ -282,20 +293,16 @@ var linkHintsBase = {
   },
 
   /*
-   * Hides linkMarker if it does not match testString, and shows linkMarker
-   * if it does match but was previously hidden. To be used with Array.filter().
+   * Shows the marker, highlighting matchingCharCount characters.
    */
-  toggleHighlights: function(testString, linkMarker) {
-    if (linkMarker.getAttribute("hintString").indexOf(testString) == 0) {
-      if (linkMarker.style.display == "none")
-        linkMarker.style.display = "";
-      for (var j = 0; j < linkMarker.childNodes.length; j++)
-        linkMarker.childNodes[j].className = (j >= testString.length) ? "" : "matchingCharacter";
-      return true;
-    } else {
-      linkMarker.style.display = "none";
-      return false;
-    }
+  showMarker: function(linkMarker, matchingCharCount) {
+    linkMarker.style.display = "";
+    for (var j = 0; j < linkMarker.childNodes.length; j++)
+      linkMarker.childNodes[j].className = (j >= matchingCharCount) ? "" : "matchingCharacter";
+  },
+
+  hideMarker: function(linkMarker) {
+    linkMarker.style.display = "none";
   },
 
   simulateClick: function(link) {
@@ -356,19 +363,10 @@ var linkHintsBase = {
     return marker;
   },
 
-  /*
-   * Make each hint character a span, so that we can highlight the typed characters as you type them.
-   */
-  spanWrap: function(hintString) {
-    var innerHTML = [];
-    for (var i = 0; i < hintString.length; i++)
-      innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
-    return innerHTML.join("");
-  },
-
 };
 
 var alphabetHints = {
+  hintKeystrokeQueue: [],
   digitsNeeded: 1,
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
@@ -379,7 +377,7 @@ var alphabetHints = {
 
   setMarkerAttributes: function(marker, linkHintNumber) {
     var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
-    marker.innerHTML = this.spanWrap(hintString);
+    marker.innerHTML = spanWrap(hintString);
     marker.setAttribute("hintString", hintString);
     return marker;
   },
@@ -406,32 +404,34 @@ var alphabetHints = {
     return hintString.join("");
   },
 
-  normalKeyDownHandler: function (event) {
+  normalKeyDownHandler: function (event, hintMarkers) {
     var keyChar = getKeyChar(event);
     if (!keyChar)
-      return;
+      return hintMarkers;
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (this.hintKeystrokeQueue.length == 0) {
-        this.deactivateMode();
+        return [];
       } else {
         this.hintKeystrokeQueue.pop();
         var matchString = this.hintKeystrokeQueue.join("");
-        this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
+        var linksMatched = hintMarkers.filter(function(linkMarker) {
+          return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+        });
       }
     } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
       this.hintKeystrokeQueue.push(keyChar);
       var matchString = this.hintKeystrokeQueue.join("");
-      linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
-      if (linksMatched.length == 0)
-        this.deactivateMode();
-      else if (linksMatched.length == 1)
-        this.activateLink(linksMatched[0].clickableItem);
+      var linksMatched = hintMarkers.filter(function(linkMarker) {
+        return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+      });
     }
+    return { 'linksMatched': linksMatched };
   }
-}
+};
 
-filterHints = {
+var filterHints = {
+  hintKeystrokeQueue: [],
   linkTextKeystrokeQueue: [],
   labelMap: {},
 
@@ -480,44 +480,43 @@ filterHints = {
     }
     linkText = linkText.trim().toLowerCase();
     marker.setAttribute("hintString", hintString);
-    marker.innerHTML = this.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
+    marker.innerHTML = spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
     marker.setAttribute("linkText", linkText);
   },
 
-  normalKeyDownHandler: function(event) {
+  normalKeyDownHandler: function(event, hintMarkers) {
+    var linksMatched;
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
-        this.deactivateMode();
+        return [];
       } else {
         // backspace clears hint key queue first, then acts on link text key queue
         if (this.hintKeystrokeQueue.pop())
-          this.filterLinkHints();
+          linksMatched = this.filterLinkHints();
         else {
           this.linkTextKeystrokeQueue.pop();
-          this.filterLinkHints();
+          linksMatched = this.filterLinkHints();
         }
       }
+      return linksMatched;
     } else if (event.keyCode == keyCodes.enter) {
         // activate the lowest-numbered link hint that is visible
-        for (var i = 0; i < this.hintMarkers.length; i++)
-          if (this.hintMarkers[i].style.display  != 'none') {
-            this.activateLink(this.hintMarkers[i].clickableItem);
-            break;
-          }
+        for (var i = 0; i < hintMarkers.length; i++)
+          if (hintMarkers[i].style.display  != 'none')
+            return [ hintMarkers[i] ];
     } else {
       var keyChar = getKeyChar(event);
       if (!keyChar)
-        return;
+        return hintMarkers;
 
-      var linksMatched, matchString;
+      var matchString;
       if (/[0-9]/.test(keyChar)) {
         this.hintKeystrokeQueue.push(keyChar);
         matchString = this.hintKeystrokeQueue.join("");
-        linksMatched = this.hintMarkers.filter((function(linkMarker) {
-          if (linkMarker.getAttribute('filtered') == 'true')
-            return false;
-          return this.toggleHighlights(matchString, linkMarker);
-        }).bind(this));
+        linksMatched = hintMarkers.filter(function(linkMarker) {
+          return linkMarker.getAttribute('filtered') != 'true'
+            && linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+        });
       } else {
         // since we might renumber the hints, the current hintKeyStrokeQueue
         // should be rendered invalid (i.e. reset).
@@ -527,18 +526,13 @@ filterHints = {
         linksMatched = this.filterLinkHints(matchString);
       }
 
-      if (linksMatched.length == 0)
-        this.deactivateMode();
-      else if (linksMatched.length == 1) {
-        if (/[0-9]/.test(keyChar)) {
-          this.activateLink(linksMatched[0].clickableItem);
-        } else {
-          // In filter mode, people tend to type out words past the point
-          // needed for a unique match. Hence we should avoid passing
-          // control back to command mode immediately after a match is found.
-          this.activateLink(linksMatched[0].clickableItem, 200);
-        }
+      if (linksMatched.length == 1 && !/[0-9]/.test(keyChar)) {
+        // In filter mode, people tend to type out words past the point
+        // needed for a unique match. Hence we should avoid passing
+        // control back to command mode immediately after a match is found.
+        var delay = 200;
       }
+      return { 'linksMatched': linksMatched, 'delay': delay };
     }
   },
 
@@ -558,12 +552,8 @@ filterHints = {
                                   .indexOf(linkSearchString.toLowerCase()) >= 0;
 
       if (!matchedLink) {
-        linkMarker.style.display = "none";
         linkMarker.setAttribute("filtered", "true");
       } else {
-        if (linkMarker.style.display == "none")
-          linkMarker.style.display = "";
-
         this.setMarkerAttributes(linkMarker, linksMatched.length);
         linkMarker.setAttribute("filtered", "false");
         linksMatched.push(linkMarker);
@@ -578,4 +568,14 @@ filterHints = {
     this._super('deactivateMode')(delay, callback);
   }
 
+};
+
+/*
+ * Make each hint character a span, so that we can highlight the typed characters as you type them.
+ */
+function spanWrap(hintString) {
+  var innerHTML = [];
+  for (var i = 0; i < hintString.length; i++)
+    innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
+  return innerHTML.join("");
 }
