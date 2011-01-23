@@ -11,6 +11,18 @@
  * the range of possibilities by typing the text of the link itself.
  */
 
+var linkHints;
+/*
+ * Create the instance of linkHints, specialized based on the user settings.
+ */
+function initializeLinkHints() {
+  if (settings.get('filterLinkHints') != "true") // the default hinting system
+    linkHints = utils.extendWithSuper(linkHintsBase, alphabetHints);
+  else
+    linkHints = utils.extendWithSuper(linkHintsBase, filterHints);
+  linkHints.init();
+}
+
 /*
  * A set of common operations shared by any link-hinting system. Some methods
  * are stubbed.
@@ -339,293 +351,273 @@ var linkHintsBase = {
 
 };
 
-var linkHints;
-/*
- * Create the instance of linkHints, specialized based on the user settings.
- */
-function initializeLinkHints() {
+var alphabetHints = {
+  digitsNeeded: 1,
+  logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
-  if (settings.get('filterLinkHints') != "true") { // the default hinting system
+  initSetMarkerAttributes: function(visibleElements) {
+    this.digitsNeeded = Math.ceil(this.logXOfBase(
+          visibleElements.length, settings.get('linkHintCharacters').length));
+  },
 
-    linkHints = utils.extendWithSuper(linkHintsBase, {
+  setMarkerAttributes: function(marker, linkHintNumber) {
+    var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
+    marker.innerHTML = this.spanWrap(hintString);
+    marker.setAttribute("hintString", hintString);
+    return marker;
+  },
 
-      digitsNeeded: 1,
+  /*
+   * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
+   * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
+   */
+  numberToHintString: function(number, numHintDigits) {
+    var base = settings.get('linkHintCharacters').length;
+    var hintString = [];
+    var remainder = 0;
+    do {
+      remainder = number % base;
+      hintString.unshift(settings.get('linkHintCharacters')[remainder]);
+      number -= remainder;
+      number /= Math.floor(base);
+    } while (number > 0);
 
-      logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
+    // Pad the hint string we're returning so that it matches numHintDigits.
+    var hintStringLength = hintString.length;
+    for (var i = 0; i < numHintDigits - hintStringLength; i++)
+      hintString.unshift(settings.get('linkHintCharacters')[0]);
+    return hintString.join("");
+  },
 
-      initSetMarkerAttributes: function(visibleElements) {
-        this.digitsNeeded = Math.ceil(this.logXOfBase(
-              visibleElements.length, settings.get('linkHintCharacters').length));
-      },
+  normalKeyDownHandler: function (event) {
+    var keyChar = getKeyChar(event);
+    if (!keyChar)
+      return;
 
-      setMarkerAttributes: function(marker, linkHintNumber) {
-        var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
-        marker.innerHTML = this.spanWrap(hintString);
-        marker.setAttribute("hintString", hintString);
-        return marker;
-      },
+    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+      if (this.hintKeystrokeQueue.length == 0) {
+        this.deactivateMode();
+      } else {
+        this.hintKeystrokeQueue.pop();
+        var matchString = this.hintKeystrokeQueue.join("");
+        this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
+      }
+    } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
+      this.hintKeystrokeQueue.push(keyChar);
+      var matchString = this.hintKeystrokeQueue.join("");
+      linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
+      if (linksMatched.length == 0)
+        this.deactivateMode();
+      else if (linksMatched.length == 1)
+        this.activateLink(linksMatched[0].clickableItem);
+    }
+  }
+}
 
-      /*
-       * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
-       * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
-       */
-      numberToHintString: function(number, numHintDigits) {
-        var base = settings.get('linkHintCharacters').length;
-        var hintString = [];
-        var remainder = 0;
-        do {
-          remainder = number % base;
-          hintString.unshift(settings.get('linkHintCharacters')[remainder]);
-          number -= remainder;
-          number /= Math.floor(base);
-        } while (number > 0);
+filterHints = {
+  linkTextKeystrokeQueue: [],
+  labelMap: {},
+  delayMode: false,
 
-        // Pad the hint string we're returning so that it matches numHintDigits.
-        var hintStringLength = hintString.length;
-        for (var i = 0; i < numHintDigits - hintStringLength; i++)
-          hintString.unshift(settings.get('linkHintCharacters')[0]);
-        return hintString.join("");
-      },
+  /*
+   * Generate a map of input element => label
+   */
+  initSetMarkerAttributes: function() {
+    var labels = document.querySelectorAll("label");
+    for (var i = 0; i < labels.length; i++) {
+      var forElement = labels[i].getAttribute("for");
+      if (forElement) {
+        var labelText = labels[i].textContent.trim();
+        // remove trailing : commonly found in labels
+        if (labelText[labelText.length-1] == ":")
+          labelText = labelText.substr(0, labelText.length-1);
+        this.labelMap[forElement] = labelText;
+      }
+    }
+  },
 
-      normalKeyDownHandler: function (event) {
-        var keyChar = getKeyChar(event);
-        if (!keyChar)
-          return;
+  setMarkerAttributes: function(marker, linkHintNumber) {
+    var hintString = (linkHintNumber + 1).toString();
+    var linkText = "";
+    var showLinkText = false;
+    var element = marker.clickableItem;
+    // toLowerCase is necessary as html documents return 'IMG'
+    // and xhtml documents return 'img'
+    var nodeName = element.nodeName.toLowerCase();
 
-        if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (this.hintKeystrokeQueue.length == 0) {
-            this.deactivateMode();
-          } else {
-            this.hintKeystrokeQueue.pop();
-            var matchString = this.hintKeystrokeQueue.join("");
-            this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
-          }
-        } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
-          this.hintKeystrokeQueue.push(keyChar);
-          var matchString = this.hintKeystrokeQueue.join("");
-          linksMatched = this.hintMarkers.filter(this.toggleHighlights.bind(this, matchString));
-          if (linksMatched.length == 0)
-            this.deactivateMode();
-          else if (linksMatched.length == 1)
-            this.activateLink(linksMatched[0].clickableItem);
+    if (nodeName == "input") {
+      if (this.labelMap[element.id]) {
+        linkText = this.labelMap[element.id];
+        showLinkText = true;
+      } else if (element.type != "password") {
+        linkText = element.value;
+      }
+      // check if there is an image embedded in the <a> tag
+    } else if (nodeName == "a" && !element.textContent.trim()
+        && element.firstElementChild
+        && element.firstElementChild.nodeName.toLowerCase() == "img") {
+      linkText = element.firstElementChild.alt || element.firstElementChild.title;
+      if (linkText)
+        showLinkText = true;
+    } else {
+      linkText = element.textContent || element.innerHTML;
+    }
+    linkText = linkText.trim().toLowerCase();
+    marker.setAttribute("hintString", hintString);
+    marker.innerHTML = this.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
+    marker.setAttribute("linkText", linkText);
+  },
+
+  normalKeyDownHandler: function(event) {
+    if (this.delayMode)
+      return;
+    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+      if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
+        this.deactivateMode();
+      } else {
+        // backspace clears hint key queue first, then acts on link text key queue
+        if (this.hintKeystrokeQueue.pop())
+          this.filterLinkHints();
+        else {
+          this.linkTextKeystrokeQueue.pop();
+          this.filterLinkHints();
         }
       }
-    });
-
-  } else {
-
-    linkHints = utils.extendWithSuper(linkHintsBase, {
-
-      linkTextKeystrokeQueue: [],
-
-      labelMap: {},
-
-      delayMode: false,
-
-      /*
-       * Generate a map of input element => label
-       */
-      initSetMarkerAttributes: function() {
-        var labels = document.querySelectorAll("label");
-        for (var i = 0; i < labels.length; i++) {
-          var forElement = labels[i].getAttribute("for");
-          if (forElement) {
-            var labelText = labels[i].textContent.trim();
-            // remove trailing : commonly found in labels
-            if (labelText[labelText.length-1] == ":")
-              labelText = labelText.substr(0, labelText.length-1);
-            this.labelMap[forElement] = labelText;
+    } else if (event.keyCode == keyCodes.enter) {
+        // activate the lowest-numbered link hint that is visible
+        for (var i = 0; i < this.hintMarkers.length; i++)
+          if (this.hintMarkers[i].style.display  != 'none') {
+            this.activateLink(this.hintMarkers[i].clickableItem);
+            break;
           }
-        }
-      },
+    } else {
+      var keyChar = getKeyChar(event);
+      if (!keyChar)
+        return;
 
-      setMarkerAttributes: function(marker, linkHintNumber) {
-        var hintString = (linkHintNumber + 1).toString();
-        var linkText = "";
-        var showLinkText = false;
-        var element = marker.clickableItem;
-        // toLowerCase is necessary as html documents return 'IMG'
-        // and xhtml documents return 'img'
-        var nodeName = element.nodeName.toLowerCase();
+      var linksMatched, matchString;
+      if (/[0-9]/.test(keyChar)) {
+        this.hintKeystrokeQueue.push(keyChar);
+        matchString = this.hintKeystrokeQueue.join("");
+        linksMatched = this.hintMarkers.filter((function(linkMarker) {
+          if (linkMarker.getAttribute('filtered') == 'true')
+            return false;
+          return this.toggleHighlights(matchString, linkMarker);
+        }).bind(this));
+      } else {
+        // since we might renumber the hints, the current hintKeyStrokeQueue
+        // should be rendered invalid (i.e. reset).
+        this.hintKeystrokeQueue = [];
+        this.linkTextKeystrokeQueue.push(keyChar);
+        matchString = this.linkTextKeystrokeQueue.join("");
+        linksMatched = this.filterLinkHints(matchString);
+      }
 
-        if (nodeName == "input") {
-          if (this.labelMap[element.id]) {
-            linkText = this.labelMap[element.id];
-            showLinkText = true;
-          } else if (element.type != "password") {
-            linkText = element.value;
-          }
-          // check if there is an image embedded in the <a> tag
-        } else if (nodeName == "a" && !element.textContent.trim()
-            && element.firstElementChild
-            && element.firstElementChild.nodeName.toLowerCase() == "img") {
-          linkText = element.firstElementChild.alt || element.firstElementChild.title;
-          if (linkText)
-            showLinkText = true;
+      if (linksMatched.length == 0)
+        this.deactivateMode();
+      else if (linksMatched.length == 1) {
+        if (/[0-9]/.test(keyChar)) {
+          this.activateLink(linksMatched[0].clickableItem);
         } else {
-          linkText = element.textContent || element.innerHTML;
+          // In filter mode, people tend to type out words past the point
+          // needed for a unique match. Hence we should avoid passing
+          // control back to command mode immediately after a match is found.
+          this.activateLink(linksMatched[0].clickableItem, 200);
         }
-        linkText = linkText.trim().toLowerCase();
-        marker.setAttribute("hintString", hintString);
-        marker.innerHTML = this.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
-        marker.setAttribute("linkText", linkText);
-      },
+      }
+    }
+  },
 
-      normalKeyDownHandler: function(event) {
-        if (this.delayMode)
-          return;
-        if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
-            this.deactivateMode();
-          } else {
-            // backspace clears hint key queue first, then acts on link text key queue
-            if (this.hintKeystrokeQueue.pop())
-              this.filterLinkHints();
-            else {
-              this.linkTextKeystrokeQueue.pop();
-              this.filterLinkHints();
-            }
-          }
-        } else if (event.keyCode == keyCodes.enter) {
-            // activate the lowest-numbered link hint that is visible
-            for (var i = 0; i < this.hintMarkers.length; i++)
-              if (this.hintMarkers[i].style.display  != 'none') {
-                this.activateLink(this.hintMarkers[i].clickableItem);
-                break;
-              }
+  /*
+   * If called without arguments, it executes immediately.  Othewise, it
+   * executes after 'delay'.
+   */
+  activateLink: function(matchedLink, delay) {
+    var that = this;
+    if (delay) {
+      that.delayMode = true;
+      if (that.isSelectable(matchedLink)) {
+        that.simulateSelect(matchedLink);
+        that.deactivateMode(delay, function() { that.delayMode = false; });
+      } else {
+        if (that.shouldOpenWithQueue) {
+          that.simulateClick(matchedLink);
+          that.resetMode(delay);
+        } else if (that.shouldOpenInNewTab) {
+          that.simulateClick(matchedLink);
+          matchedLink.focus();
+          that.deactivateMode(delay, function() { that.delayMode = false; });
         } else {
-          var keyChar = getKeyChar(event);
-          if (!keyChar)
-            return;
-
-          var linksMatched, matchString;
-          if (/[0-9]/.test(keyChar)) {
-            this.hintKeystrokeQueue.push(keyChar);
-            matchString = this.hintKeystrokeQueue.join("");
-            linksMatched = this.hintMarkers.filter((function(linkMarker) {
-              if (linkMarker.getAttribute('filtered') == 'true')
-                return false;
-              return this.toggleHighlights(matchString, linkMarker);
-            }).bind(this));
-          } else {
-            // since we might renumber the hints, the current hintKeyStrokeQueue
-            // should be rendered invalid (i.e. reset).
-            this.hintKeystrokeQueue = [];
-            this.linkTextKeystrokeQueue.push(keyChar);
-            matchString = this.linkTextKeystrokeQueue.join("");
-            linksMatched = this.filterLinkHints(matchString);
-          }
-
-          if (linksMatched.length == 0)
-            this.deactivateMode();
-          else if (linksMatched.length == 1) {
-            if (/[0-9]/.test(keyChar)) {
-              this.activateLink(linksMatched[0].clickableItem);
-            } else {
-              // In filter mode, people tend to type out words past the point
-              // needed for a unique match. Hence we should avoid passing
-              // control back to command mode immediately after a match is found.
-              this.activateLink(linksMatched[0].clickableItem, 200);
-            }
-          }
+          setTimeout(that.simulateClick.bind(that, matchedLink), 400);
+          matchedLink.focus();
+          that.deactivateMode(delay, function() { that.delayMode = false; });
         }
-      },
+      }
+    } else {
+      that._super('activateLink')(matchedLink);
+    }
+  },
 
-      /*
-       * If called without arguments, it executes immediately.  Othewise, it
-       * executes after 'delay'.
-       */
-      activateLink: function(matchedLink, delay) {
-        var that = this;
-        if (delay) {
-          that.delayMode = true;
-          if (that.isSelectable(matchedLink)) {
-            that.simulateSelect(matchedLink);
-            that.deactivateMode(delay, function() { that.delayMode = false; });
-          } else {
-            if (that.shouldOpenWithQueue) {
-              that.simulateClick(matchedLink);
-              that.resetMode(delay);
-            } else if (that.shouldOpenInNewTab) {
-              that.simulateClick(matchedLink);
-              matchedLink.focus();
-              that.deactivateMode(delay, function() { that.delayMode = false; });
-            } else {
-              setTimeout(that.simulateClick.bind(that, matchedLink), 400);
-              matchedLink.focus();
-              that.deactivateMode(delay, function() { that.delayMode = false; });
-            }
-          }
-        } else {
-          that._super('activateLink')(matchedLink);
-        }
-      },
+  /*
+   * Hides the links that do not match the linkText search string and marks
+   * them with the 'filtered' DOM property. Renumbers the remainder.  Should
+   * only be called when there is a change in linkTextKeystrokeQueue, to
+   * avoid undesired renumbering.
+  */
+  filterLinkHints: function(searchString) {
+    var linksMatched = [];
+    var linkSearchString = this.linkTextKeystrokeQueue.join("");
 
-      /*
-       * Hides the links that do not match the linkText search string and marks
-       * them with the 'filtered' DOM property. Renumbers the remainder.  Should
-       * only be called when there is a change in linkTextKeystrokeQueue, to
-       * avoid undesired renumbering.
-      */
-      filterLinkHints: function(searchString) {
-        var linksMatched = [];
-        var linkSearchString = this.linkTextKeystrokeQueue.join("");
+    for (var i = 0; i < this.hintMarkers.length; i++) {
+      var linkMarker = this.hintMarkers[i];
+      var matchedLink = linkMarker.getAttribute("linkText").toLowerCase()
+                                  .indexOf(linkSearchString.toLowerCase()) >= 0;
 
-        for (var i = 0; i < this.hintMarkers.length; i++) {
-          var linkMarker = this.hintMarkers[i];
-          var matchedLink = linkMarker.getAttribute("linkText").toLowerCase()
-                                      .indexOf(linkSearchString.toLowerCase()) >= 0;
+      if (!matchedLink) {
+        linkMarker.style.display = "none";
+        linkMarker.setAttribute("filtered", "true");
+      } else {
+        if (linkMarker.style.display == "none")
+          linkMarker.style.display = "";
 
-          if (!matchedLink) {
-            linkMarker.style.display = "none";
-            linkMarker.setAttribute("filtered", "true");
-          } else {
-            if (linkMarker.style.display == "none")
-              linkMarker.style.display = "";
+        this.setMarkerAttributes(linkMarker, linksMatched.length);
+        linkMarker.setAttribute("filtered", "false");
+        linksMatched.push(linkMarker);
+      }
+    }
+    return linksMatched;
+  },
 
-            this.setMarkerAttributes(linkMarker, linksMatched.length);
-            linkMarker.setAttribute("filtered", "false");
-            linksMatched.push(linkMarker);
-          }
-        }
-        return linksMatched;
-      },
+  /*
+   * If called without arguments, it executes immediately.  Othewise, it
+   * executes after 'delay' and invokes 'callback' when it is finished.
+   */
+  deactivateMode: function(delay, callback) {
+    var that = this;
+    function deactivate() {
+      that.linkTextKeystrokeQueue = [];
+      that.labelMap = {};
+      that._super('deactivateMode')();
+    }
+    if (!delay)
+      deactivate();
+    else
+      setTimeout(function() { deactivate(); if (callback) callback(); }, delay);
+  },
 
-      /*
-       * If called without arguments, it executes immediately.  Othewise, it
-       * executes after 'delay' and invokes 'callback' when it is finished.
-       */
-      deactivateMode: function(delay, callback) {
-        var that = this;
-        function deactivate() {
-          that.linkTextKeystrokeQueue = [];
-          that.labelMap = {};
-          that._super('deactivateMode')();
-        }
-        if (!delay)
-          deactivate();
-        else
-          setTimeout(function() { deactivate(); if (callback) callback(); }, delay);
-      },
-
-      resetMode: function(delay, callback) {
-        var that = this;
-        if (!delay) {
-          that.deactivateMode();
+  resetMode: function(delay, callback) {
+    var that = this;
+    if (!delay) {
+      that.deactivateMode();
+      that.activateModeWithQueue();
+    } else {
+      that.deactivateMode(delay, function() {
+          that.delayMode = false;
           that.activateModeWithQueue();
-        } else {
-          that.deactivateMode(delay, function() {
-              that.delayMode = false;
-              that.activateModeWithQueue();
-              if (callback)
-                callback();
-          });
-        }
-      }
-
-    });
-
+          if (callback)
+            callback();
+      });
+    }
   }
 
-  linkHints.init();
 }
