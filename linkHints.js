@@ -39,6 +39,8 @@ var linkHintsBase = {
   openLinkModeToggle: false,
   // Whether we have added to the page the CSS needed to display link hints.
   cssAdded: false,
+  // While in delayMode, all keypresses have no effect.
+  delayMode: false,
 
   /*
    * To be called after linkHints has been generated from linkHintsBase.
@@ -200,6 +202,9 @@ var linkHintsBase = {
    * Handles shift and esc keys. The other keys are passed to normalKeyDownHandler.
    */
   onKeyDownInMode: function(event) {
+    if (this.delayMode)
+      return;
+
     if (event.keyCode == keyCodes.shiftKey && !this.openLinkModeToggle) {
       // Toggle whether to open link in a new or current tab.
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue);
@@ -235,24 +240,28 @@ var linkHintsBase = {
   /*
    * When only one link hint remains, this function activates it in the appropriate way.
    */
-  activateLink: function(matchedLink) {
+  activateLink: function(matchedLink, delay) {
+    var that = this;
+    this.delayMode = true;
     if (this.isSelectable(matchedLink)) {
       this.simulateSelect(matchedLink);
-      this.deactivateMode();
     } else {
-      // When we're opening the link in the current tab, don't navigate to the selected link immediately;
-      // we want to give the user some feedback depicting which link they've selected by focusing it.
       if (this.shouldOpenWithQueue) {
         this.simulateClick(matchedLink);
-        this.resetMode();
+        this.deactivateMode(delay, function() {
+          that.delayMode = false;
+          that.activateModeWithQueue();
+        });
       } else if (this.shouldOpenInNewTab) {
         this.simulateClick(matchedLink);
         matchedLink.focus();
-        this.deactivateMode();
+        this.deactivateMode(delay, function() { that.delayMode = false; });
       } else {
+        // When we're opening the link in the current tab, don't navigate to the selected link immediately;
+        // we want to give the user some feedback depicting which link they've selected by focusing it.
         setTimeout(this.simulateClick.bind(this, matchedLink), 400);
         matchedLink.focus();
-        this.deactivateMode();
+        this.deactivateMode(delay, function() { that.delayMode = false; });
       }
     }
   },
@@ -302,21 +311,29 @@ var linkHintsBase = {
     link.dispatchEvent(event);
   },
 
-  deactivateMode: function() {
-    if (this.hintMarkerContainingDiv)
-      this.hintMarkerContainingDiv.parentNode.removeChild(this.hintMarkerContainingDiv);
-    this.hintMarkerContainingDiv = null;
-    this.hintMarkers = [];
-    this.hintKeystrokeQueue = [];
-    document.removeEventListener("keydown", this.onKeyDownInMode, true);
-    document.removeEventListener("keyup", this.onKeyUpInMode, true);
-    this.modeActivated = false;
-    HUD.hide();
-  },
-
-  resetMode: function() {
-    this.deactivateMode();
-    this.activateModeWithQueue();
+  /*
+   * If called without arguments, it executes immediately.  Othewise, it
+   * executes after 'delay' and invokes 'callback' when it is finished.
+   */
+  deactivateMode: function(delay, callback) {
+    var that = this;
+    function deactivate() {
+      if (that.hintMarkerContainingDiv)
+        that.hintMarkerContainingDiv.parentNode.removeChild(that.hintMarkerContainingDiv);
+      that.hintMarkerContainingDiv = null;
+      that.hintMarkers = [];
+      that.hintKeystrokeQueue = [];
+      document.removeEventListener("keydown", that.onKeyDownInMode, true);
+      document.removeEventListener("keyup", that.onKeyUpInMode, true);
+      that.modeActivated = false;
+      HUD.hide();
+    }
+    // we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
+    // deactivateMode can be tested synchronously
+    if (!delay)
+      deactivate();
+    else
+      setTimeout(function() { deactivate(); if (callback) callback(); }, delay);
   },
 
   /*
@@ -417,7 +434,6 @@ var alphabetHints = {
 filterHints = {
   linkTextKeystrokeQueue: [],
   labelMap: {},
-  delayMode: false,
 
   /*
    * Generate a map of input element => label
@@ -469,8 +485,6 @@ filterHints = {
   },
 
   normalKeyDownHandler: function(event) {
-    if (this.delayMode)
-      return;
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
         this.deactivateMode();
@@ -529,36 +543,6 @@ filterHints = {
   },
 
   /*
-   * If called without arguments, it executes immediately.  Othewise, it
-   * executes after 'delay'.
-   */
-  activateLink: function(matchedLink, delay) {
-    var that = this;
-    if (delay) {
-      that.delayMode = true;
-      if (that.isSelectable(matchedLink)) {
-        that.simulateSelect(matchedLink);
-        that.deactivateMode(delay, function() { that.delayMode = false; });
-      } else {
-        if (that.shouldOpenWithQueue) {
-          that.simulateClick(matchedLink);
-          that.resetMode(delay);
-        } else if (that.shouldOpenInNewTab) {
-          that.simulateClick(matchedLink);
-          matchedLink.focus();
-          that.deactivateMode(delay, function() { that.delayMode = false; });
-        } else {
-          setTimeout(that.simulateClick.bind(that, matchedLink), 400);
-          matchedLink.focus();
-          that.deactivateMode(delay, function() { that.delayMode = false; });
-        }
-      }
-    } else {
-      that._super('activateLink')(matchedLink);
-    }
-  },
-
-  /*
    * Hides the links that do not match the linkText search string and marks
    * them with the 'filtered' DOM property. Renumbers the remainder.  Should
    * only be called when there is a change in linkTextKeystrokeQueue, to
@@ -588,36 +572,10 @@ filterHints = {
     return linksMatched;
   },
 
-  /*
-   * If called without arguments, it executes immediately.  Othewise, it
-   * executes after 'delay' and invokes 'callback' when it is finished.
-   */
   deactivateMode: function(delay, callback) {
-    var that = this;
-    function deactivate() {
-      that.linkTextKeystrokeQueue = [];
-      that.labelMap = {};
-      that._super('deactivateMode')();
-    }
-    if (!delay)
-      deactivate();
-    else
-      setTimeout(function() { deactivate(); if (callback) callback(); }, delay);
-  },
-
-  resetMode: function(delay, callback) {
-    var that = this;
-    if (!delay) {
-      that.deactivateMode();
-      that.activateModeWithQueue();
-    } else {
-      that.deactivateMode(delay, function() {
-          that.delayMode = false;
-          that.activateModeWithQueue();
-          if (callback)
-            callback();
-      });
-    }
+    this.linkTextKeystrokeQueue = [];
+    this.labelMap = {};
+    this._super('deactivateMode')(delay, callback);
   }
 
 }

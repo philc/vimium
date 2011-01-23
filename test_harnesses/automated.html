@@ -84,8 +84,10 @@
             linkHints.activateMode();
             assertStartPosition(document.getElementsByTagName("a")[0], linkHints.hintMarkers[0]);
             assertStartPosition(document.getElementsByTagName("a")[1], linkHints.hintMarkers[1]);
+            linkHints.deactivateMode();
+
             stub(document.body.style, "position", "relative");
-            linkHints.resetMode();
+            linkHints.activateMode();
             assertStartPosition(document.getElementsByTagName("a")[0], linkHints.hintMarkers[0]);
             assertStartPosition(document.getElementsByTagName("a")[1], linkHints.hintMarkers[1]);
             linkHints.deactivateMode();
