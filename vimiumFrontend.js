@@ -551,29 +551,42 @@ function performBackwardsFind() {
 }
 
 function findAndFollowLink(linkStrings) {
-  linkStrings.forEach(function(findModeQuery) {
-    findModeQueryHasResults = window.find(findModeQuery, false, true, true, false, true, false);
+  for (i = 0; i < linkStrings.length; i++) {
+    var findModeQueryHasResults = window.find(linkStrings[i], false, true, true, false, true, false);
     if (findModeQueryHasResults) {
       var node = window.getSelection().anchorNode;
       while (node.nodeName != 'BODY') {
         if (node.nodeName == 'A') {
           window.location = node.href;
-          return;
+          return true;
         }
         node = node.parentNode;
       }
     }
-  });
+  }
+}
+
+function findAndFollowRel(value) {
+  var relTags = ['link', 'a', 'area'];
+  for (i = 0; i < relTags.length; i++) {
+    var elements = document.getElementsByTagName(relTags[i]);
+    for (j = 0; j < elements.length; j++) {
+      if (elements[j].hasAttribute('rel') && elements[j].rel == value) {
+        window.location = elements[j].href;
+        return true;
+      }
+    }
+  }
 }
 
 function goPrevious() {
-  previousStrings = ["\bprev\b","\bprevious\b","\u00AB","<<","<"];
-  findAndFollowLink(previousStrings);
+  var previousStrings = ["\bprev\b","\bprevious\b","\u00AB","<<","<"];
+  findAndFollowRel('prev') || findAndFollowLink(previousStrings);
 }
 
 function goNext() {
-  nextStrings = ["\bnext\b","\u00BB",">>","\bmore\b",">"];
-  findAndFollowLink(nextStrings);
+  var nextStrings = ["\bnext\b","\u00BB",">>","\bmore\b",">"];
+  findAndFollowRel('next') || findAndFollowLink(nextStrings);
 }
 
 function showFindModeHUDForQuery() {
