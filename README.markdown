@@ -43,6 +43,7 @@ Navigating the current page:
     gs      view source
     zi      zoom in
     zo      zoom out
+    z0      reset zoom to default value
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
     n       cycle forward to the next find match
     N       cycle backward to the previous find match
@@ -91,6 +92,7 @@ Release Notes
 -  Some sites are now excluded by default.
 -  View source (`gs`) now opens in a new tab.
 -  Support for browsing paginated sites using `]]` and `[[` to go forward and backward respectively.
+-  `z0` will reset the zoom level for the current page.
 -  Bugfixes.
 
 1.21 (10/24/2010)
