@@ -229,6 +229,11 @@ function zoomOut() {
   saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
+function zoomReset() {
+  setPageZoomLevel(100, true);
+  saveZoomLevel(window.location.host, 100);
+}
+
 function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
