@@ -52,7 +52,7 @@ Navigating the current page:
     gf      cycle forward to the next frame
     gi      focus the first (or n-th) text input box on the page
     ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
-    [[      Follow the link labeled 'previous' or '<' if it exists. Helpful for browsing paginated sites.
+    [[      Follow the link labeled 'previous' or '<'. Helpful for browsing paginated sites.
 
 Navigating your history:
     H       go back in history
@@ -90,6 +90,7 @@ Release Notes
 
 -  Some sites are now excluded by default.
 -  View source (`gs`) now opens in a new tab.
+-  Support for browsing paginated sites using `]]` and `[[` to go forward and backward respectively.
 -  Bugfixes.
 
 1.21 (10/24/2010)
