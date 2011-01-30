@@ -81,59 +81,64 @@ function parseCustomKeyMappings(customKeyMappings) {
 function clearKeyMappingsAndSetDefaults() {
   keyToCommandRegistry = {};
 
-  mapKeyToCommand("?", "showHelp");
-  mapKeyToCommand("j", "scrollDown");
-  mapKeyToCommand("k", "scrollUp");
-  mapKeyToCommand("h", "scrollLeft");
-  mapKeyToCommand("l", "scrollRight");
-  mapKeyToCommand("gg", "scrollToTop");
-  mapKeyToCommand("G", "scrollToBottom");
-  mapKeyToCommand("zH", "scrollToLeft");
-  mapKeyToCommand("zL", "scrollToRight");
-  mapKeyToCommand("<c-e>", "scrollDown");
-  mapKeyToCommand("<c-y>", "scrollUp");
-  mapKeyToCommand("<c-d>", "scrollPageDown");
-  mapKeyToCommand("<c-u>", "scrollPageUp");
-  mapKeyToCommand("<c-f>", "scrollFullPageDown");
-  mapKeyToCommand("<c-b>", "scrollFullPageUp");
-  mapKeyToCommand("r", "reload");
-  mapKeyToCommand("gs", "toggleViewSource");
+  var defaultKeyMappings = {
+    "?": "showHelp",
+    "j": "scrollDown",
+    "k": "scrollUp",
+    "h": "scrollLeft",
+    "l": "scrollRight",
+    "gg": "scrollToTop",
+    "G": "scrollToBottom",
+    "zH": "scrollToLeft",
+    "zL": "scrollToRight",
+    "<c-e>": "scrollDown",
+    "<c-y>": "scrollUp",
+    "<c-d>": "scrollPageDown",
+    "<c-u>": "scrollPageUp",
+    "<c-f>": "scrollFullPageDown",
+    "<c-b>": "scrollFullPageUp",
+    "r": "reload",
+    "gs": "toggleViewSource",
 
-  mapKeyToCommand("i", "enterInsertMode");
+    "i": "enterInsertMode",
 
-  mapKeyToCommand("H", "goBack");
-  mapKeyToCommand("L", "goForward");
-  mapKeyToCommand("gu", "goUp");
+    "H": "goBack",
+    "L": "goForward",
+    "gu": "goUp",
 
-  mapKeyToCommand("zi", "zoomIn");
-  mapKeyToCommand("zo", "zoomOut");
-  mapKeyToCommand("z0", "zoomReset");
+    "zi": "zoomIn",
+    "zo": "zoomOut",
+    "z0": "zoomReset",
 
-  mapKeyToCommand("gi", "focusInput");
+    "gi": "focusInput",
 
-  mapKeyToCommand("f",     "activateLinkHintsMode");
-  mapKeyToCommand("F",     "activateLinkHintsModeToOpenInNewTab");
-  mapKeyToCommand("<a-f>", "activateLinkHintsModeWithQueue");
+    "f":     "activateLinkHintsMode",
+    "F":     "activateLinkHintsModeToOpenInNewTab",
+    "<a-f>": "activateLinkHintsModeWithQueue",
 
-  mapKeyToCommand("/", "enterFindMode");
-  mapKeyToCommand("n", "performFind");
-  mapKeyToCommand("N", "performBackwardsFind");
+    "/": "enterFindMode",
+    "n": "performFind",
+    "N": "performBackwardsFind",
 
-  mapKeyToCommand("[[", "goPrevious");
-  mapKeyToCommand("]]", "goNext");
+    "[[": "goPrevious",
+    "]]": "goNext",
 
-  mapKeyToCommand("yy", "copyCurrentUrl");
+    "yy": "copyCurrentUrl",
 
-  mapKeyToCommand("K", "nextTab");
-  mapKeyToCommand("J", "previousTab");
-  mapKeyToCommand("gt", "nextTab");
-  mapKeyToCommand("gT", "previousTab");
+    "K": "nextTab",
+    "J": "previousTab",
+    "gt": "nextTab",
+    "gT": "previousTab",
 
-  mapKeyToCommand("t", "createTab");
-  mapKeyToCommand("d", "removeTab");
-  mapKeyToCommand("u", "restoreTab");
+    "t": "createTab",
+    "d": "removeTab",
+    "u": "restoreTab",
 
-  mapKeyToCommand("gf", "nextFrame");
+    "gf": "nextFrame"
+  };
+
+  for (var key in defaultKeyMappings)
+    mapKeyToCommand(key, defaultKeyMappings[key]);
 }
 
 // Navigating the current page:
