@@ -21,7 +21,7 @@ Keyboard Bindings
 -----------------
 
 Modifier keys are specified as follows: <c-x>, <m-x>, <a-x> for ctrl+x, meta+x, and alt+x
-respectively.
+respectively. You can change any of these shortcuts under "Advanced Options".
 
 Navigating the current page:
     h       scroll left
@@ -34,26 +34,20 @@ Navigating the current page:
     <c-u>, <c-y>   scroll up a page
     <c-f>   scroll down a full page
     <c-b>   scroll up a full page
-    zH      scroll all the way left
-    zL      scroll all the way right
     f       open a link in the current tab
     F       open a link in a new tab
-    <a-f>   open multiple links in a new tab
     r       reload
     gs      view source
     zi      zoom in
     zo      zoom out
-    z0      reset zoom to default value
+    i       enter insert mode -- all commands will be ignored until you hit esc to exit
+    yy      copy the current url to the clipboard
+    gf      cycle forward to the next frame
+
+Using find:
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
     n       cycle forward to the next find match
     N       cycle backward to the previous find match
-    i       enter insert mode -- all commands will be ignored until you hit esc to exit
-    yy      copy the current url to the clipboard
-    gu      go up one level in the URL hierarchy
-    gf      cycle forward to the next frame
-    gi      focus the first (or n-th) text input box on the page
-    ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
-    [[      Follow the link labeled 'previous' or '<'. Helpful for browsing paginated sites.
 
 Navigating your history:
     H       go back in history
@@ -66,10 +60,20 @@ Manipulating tabs:
     d          close current tab
     u          restore closed tab (i.e. unwind the 'd' command)
 
+Additional advanced browsing commands:
+    ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
+    [[      Follow the link labeled 'previous' or '<'. Helpful for browsing paginated sites.
+    <a-f>   open multiple links in a new tab
+    gi      focus the first (or n-th) text input box on the page
+    gu      go up one level in the URL hierarchy
+    zH      scroll all the way left
+    zL      scroll all the way right
+    z0      reset zoom to default value
+
+
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
 <c-[>) will clear any partial commands in the queue.
 
-Keys can be unmapped and remapped to different commands under Advanced Options.
 
 Contributing
 ------------
@@ -96,6 +100,7 @@ Release Notes
 -  View source (`gs`) now opens in a new tab.
 -  Support for browsing paginated sites using `]]` and `[[` to go forward and backward respectively.
 -  `z0` will reset the zoom level for the current page.
+-  Many of the less-used commands are now marked as "advanced" and hidden in the help dialog by default, so that the core command set is more focused and approachable.
 -  Bugfixes.
 
 1.21 (10/24/2010)

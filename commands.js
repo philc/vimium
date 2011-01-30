@@ -157,9 +157,9 @@ var commandDescriptions = {
   scrollRight: ["Scroll right"],
   scrollToTop: ["Scroll to the top of the page"],
   scrollToBottom: ["Scroll to the bottom of the page"],
-  scrollToLeft: ["Scroll to the left of the page"],
+  scrollToLeft: ["Scroll all the way to the left"],
 
-  scrollToRight: ["Scroll to the right of the page"],
+  scrollToRight: ["Scroll all the way to the right"],
   scrollPageDown: ["Scroll a page down"],
   scrollPageUp: ["Scroll a page up"],
   scrollFullPageDown: ["Scroll a full page down"],
