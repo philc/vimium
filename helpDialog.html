@@ -55,9 +55,10 @@
       font-weight:bold;
       padding-top:3px;
     }
-    #vimiumHelpDialog .commandName {
-      font-family:"courier new";
-    }
+    #vimiumHelpDialog .commandName { font-family:"courier new"; }
+    /* Advanced commands are hidden by default until you show them. */
+    #vimiumHelpDialog .advanced { display: none; }
+    #vimiumHelpDialog .advanced td:nth-of-type(3) { color: #555; }
     #vimiumHelpDialog .closeButton {
       position:absolute;
       right:10px;
@@ -79,7 +80,13 @@
       cursor:default;
       -webkit-user-select:none;
     }
+    #vimiumHelpDialogFooter { position: relative; }
     #vimiumHelpDialogFooter * { font-size:10px; }
+    #vimiumHelpDialogFooter .toggleAdvancedCommands {
+      position: absolute;
+      right: 2px;
+      top: -34px;
+    }
   </style>
 
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
@@ -108,6 +115,8 @@
   <div class="vimiumDivider"></div>
 
   <div id="vimiumHelpDialogFooter">
+    <a href="#" class="toggleAdvancedCommands">Show advanced commands</a>
+
     <div class="vimiumColumn">
       Enjoying Vimium?
       <a href="https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb">Leave us
@@ -118,4 +127,29 @@
       <span>Version {{version}}</span><br/>
     </div>
   </div>
+
+  <script>
+    VimiumHelpDialog = {
+      init: function() {
+        this.dialogElement = document.getElementById("vimiumHelpDialog");
+        this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", 
+          VimiumHelpDialog.toggleAdvancedCommands, false);
+      },
+
+      /*
+       * Advanced commands are hidden by default so they don't overwhelm new and casual users.
+       */
+      toggleAdvancedCommands: function(event) {
+        event.preventDefault();
+        var advanced = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced");
+        var shouldShow = (advanced[0].style.display == "" || advanced[0].style.display == "none");
+        VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+            shouldShow ? "Hide advanced commands" : "Show advanced commands";
+        for (var i = 0; i < advanced.length; i++)
+          advanced[i].style.display = (shouldShow ? "table-row" : "none");
+      }
+    };
+
+    VimiumHelpDialog.init();
+  </script>
 </div>

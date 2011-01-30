@@ -149,7 +149,7 @@ function clearKeyMappingsAndSetDefaults() {
 
 // This is a mapping of: commandIdentifier => [description, options].
 var commandDescriptions = {
-  // Navigating the current page:
+  // Navigating the current page
   showHelp: ["Show help", { background: true }],
   scrollDown: ["Scroll down"],
   scrollUp: ["Scroll up"],
@@ -187,14 +187,14 @@ var commandDescriptions = {
   goPrevious: ["Follow the link labeled previous or <"],
   goNext: ["Follow the link labeled next or >"],
 
-  // Navigating your history:
+  // Navigating your history
   goBack: ["Go back in history"],
   goForward: ["Go forward in history"],
 
   // Navigating the URL hierarchy
   goUp: ["Go up the URL hierarchy", { passCountToFunction: true }],
 
-  // Manipulating tabs:
+  // Manipulating tabs
   nextTab: ["Go one tab right", { background: true }],
   previousTab: ["Go one tab left", { background: true }],
   createTab: ["Create new tab", { background: true }],
@@ -227,3 +227,11 @@ var commandGroups = {
   misc:
     ["showHelp"]
 };
+
+// Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
+// a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
+// from Vimium will uncover these gems.
+var advancedCommands = [
+    "scrollToLeft", "scrollToRight",
+    "zoomReset", "goUp", "focusInput", "activateLinkHintsModeWithQueue",
+    "goPrevious", "goNext"];

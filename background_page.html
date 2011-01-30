@@ -195,11 +195,12 @@
     var html = [];
     for (var i = 0; i < commandGroups[group].length; i++) {
       var command = commandGroups[group][i];
-      bindings = (commandsToKey[command] || [""]).join(", ")
-      if (showUnboundCommands || commandsToKey[command])
-      {
-        html.push("<tr><td>", escapeHtml(bindings),
-          "</td><td>:</td><td>", availableCommands[command].description);
+      bindings = (commandsToKey[command] || [""]).join(", ");
+      if (showUnboundCommands || commandsToKey[command]) {
+        html.push(
+          "<tr class='" + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
+          "<td>", escapeHtml(bindings), "</td>",
+          "<td>:</td><td>", availableCommands[command].description);
 
         if (showCommandNames)
           html.push("<span class='commandName'>(" + command + ")</span>");

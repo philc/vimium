@@ -635,12 +635,18 @@ function showHelpDialog(html, fid) {
   isShowingHelpDialog = true;
   var container = document.createElement("div");
   container.id = "vimiumHelpDialogContainer";
+
+  document.body.appendChild(container);
+
   container.innerHTML = html;
+  // This is necessary because innerHTML does not evaluate javascript embedded in <script> tags.
+  var scripts = Array.prototype.slice.call(container.getElementsByTagName("script"));
+  scripts.forEach(function(script) { eval(script.text); });
+
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
       function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
 
-  document.body.appendChild(container);
   var dialog = document.getElementById("vimiumHelpDialog");
   dialog.style.zIndex = "99999998";
   var zoomFactor = currentZoomLevel / 100.0;
