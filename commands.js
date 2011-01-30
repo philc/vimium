@@ -1,22 +1,28 @@
 var availableCommands    = {};
 var keyToCommandRegistry = {};
 
-function addCommand(command, description, isBackgroundCommand, passCountToFunction) {
-  if (availableCommands[command])
-  {
+/*
+ * Registers a command, making it available to be optionally bound to a key.
+ * options:
+ *   - background: whether this command needs to be run against the background page.
+ *   - passCountToFunction: true if this command should have any digits which were typed prior to the
+ *     command passed to it. This is used to implement e.g. "closing of 3 tabs".
+ */
+function addCommand(command, description, options) {
+  if (availableCommands[command]) {
     console.log(command, "is already defined! Check commands.js for duplicates.");
     return;
   }
 
+  options = options || {};
   availableCommands[command] = { description: description,
-                                 isBackgroundCommand: isBackgroundCommand,
-                                 passCountToFunction: passCountToFunction
+                                 isBackgroundCommand: options.background,
+                                 passCountToFunction: options.passCountToFunction
                                };
 }
 
 function mapKeyToCommand(key, command) {
-  if (!availableCommands[command])
-  {
+  if (!availableCommands[command]) {
     console.log(command, "doesn't exist!");
     return;
   }
@@ -141,58 +147,65 @@ function clearKeyMappingsAndSetDefaults() {
     mapKeyToCommand(key, defaultKeyMappings[key]);
 }
 
-// Navigating the current page:
-addCommand("showHelp",            "Show help",  true);
-addCommand("scrollDown",          "Scroll down");
-addCommand("scrollUp",            "Scroll up");
-addCommand("scrollLeft",          "Scroll left");
-addCommand("scrollRight",         "Scroll right");
-addCommand("scrollToTop",         "Scroll to the top of the page");
-addCommand("scrollToBottom",      "Scroll to the bottom of the page");
-addCommand("scrollToLeft",        "Scroll to the left of the page");
-addCommand("scrollToRight",       "Scroll to the right of the page");
-addCommand("scrollPageDown",      "Scroll a page down");
-addCommand("scrollPageUp",        "Scroll a page up");
-addCommand("scrollFullPageDown",  "Scroll a full page down");
-addCommand("scrollFullPageUp",    "Scroll a full page up");
+// This is a mapping of: commandIdentifier => [description, options].
+var commandDescriptions = {
+  // Navigating the current page:
+  showHelp: ["Show help", { background: true }],
+  scrollDown: ["Scroll down"],
+  scrollUp: ["Scroll up"],
+  scrollLeft: ["Scroll left"],
+  scrollRight: ["Scroll right"],
+  scrollToTop: ["Scroll to the top of the page"],
+  scrollToBottom: ["Scroll to the bottom of the page"],
+  scrollToLeft: ["Scroll to the left of the page"],
 
-addCommand("reload",              "Reload the page");
-addCommand("toggleViewSource",    "View page source");
-addCommand("zoomIn",              "Zoom in");
-addCommand("zoomOut",             "Zoom out");
-addCommand("zoomReset",             "Reset zoom to default value");
-addCommand("copyCurrentUrl",      "Copy the current URL to the clipboard");
+  scrollToRight: ["Scroll to the right of the page"],
+  scrollPageDown: ["Scroll a page down"],
+  scrollPageUp: ["Scroll a page up"],
+  scrollFullPageDown: ["Scroll a full page down"],
+  scrollFullPageUp: ["Scroll a full page up"],
 
-addCommand("enterInsertMode",     "Enter insert mode");
+  reload: ["Reload the page"],
+  toggleViewSource: ["View page source"],
+  zoomIn: ["Zoom in"],
+  zoomOut: ["Zoom out"],
+  zoomReset: ["Reset zoom to default value"],
+  copyCurrentUrl: ["Copy the current URL to the clipboard"],
 
-addCommand("focusInput",          "Focus the first (or n-th) text box on the page", false, true);
+  enterInsertMode: ["Enter insert mode"],
 
-addCommand("activateLinkHintsMode",               "Enter link hints mode to open links in current tab");
-addCommand("activateLinkHintsModeToOpenInNewTab", "Enter link hints mode to open links in new tab");
-addCommand("activateLinkHintsModeWithQueue",      "Enter link hints mode to open multiple links in a new tab");
+  focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }],
 
-addCommand("enterFindMode",        "Enter find mode");
-addCommand("performFind",          "Cycle forward to the next find match");
-addCommand("performBackwardsFind", "Cycle backward to the previous find match");
+  activateLinkHintsMode: ["Enter link hints mode to open links in current tab"],
+  activateLinkHintsModeToOpenInNewTab: ["Enter link hints mode to open links in new tab"],
+  activateLinkHintsModeWithQueue: ["Enter link hints mode to open multiple links in a new tab"],
 
-addCommand("goPrevious",          "Follow the link labeled previous or <");
-addCommand("goNext",              "Follow the link labeled next or >");
+  enterFindMode: ["Enter find mode"],
+  performFind: ["Cycle forward to the next find match"],
+  performBackwardsFind: ["Cycle backward to the previous find match"],
 
-// Navigating your history:
-addCommand("goBack",              "Go back in history");
-addCommand("goForward",           "Go forward in history");
+  goPrevious: ["Follow the link labeled previous or <"],
+  goNext: ["Follow the link labeled next or >"],
 
-// Navigating the URL hierarchy
-addCommand("goUp",                "Go up the URL hierarchy", false, true);
+  // Navigating your history:
+  goBack: ["Go back in history"],
+  goForward: ["Go forward in history"],
 
-// Manipulating tabs:
-addCommand("nextTab",             "Go one tab right",  true);
-addCommand("previousTab",         "Go one tab left",   true);
-addCommand("createTab",           "Create new tab",    true);
-addCommand("removeTab",           "Close current tab", true);
-addCommand("restoreTab",          "Restore closed tab", true);
+  // Navigating the URL hierarchy
+  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }],
 
-addCommand("nextFrame",           "Cycle forward to the next frame on the page", true);
+  // Manipulating tabs:
+  nextTab: ["Go one tab right", { background: true }],
+  previousTab: ["Go one tab left", { background: true }],
+  createTab: ["Create new tab", { background: true }],
+  removeTab: ["Close current tab", { background: true }],
+  restoreTab: ["Restore closed tab", { background: true }],
+
+  nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
+};
+
+for (var command in commandDescriptions)
+  addCommand(command, commandDescriptions[command][0], commandDescriptions[command][1]);
 
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
