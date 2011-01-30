@@ -176,9 +176,9 @@ var commandDescriptions = {
 
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }],
 
-  activateLinkHintsMode: ["Enter link hints mode to open links in current tab"],
-  activateLinkHintsModeToOpenInNewTab: ["Enter link hints mode to open links in new tab"],
-  activateLinkHintsModeWithQueue: ["Enter link hints mode to open multiple links in a new tab"],
+  activateLinkHintsMode: ["Open a link in the current tab"],
+  activateLinkHintsModeToOpenInNewTab: ["Open a link in a new tab"],
+  activateLinkHintsModeWithQueue: ["Open multiple links in a new tab"],
 
   enterFindMode: ["Enter find mode"],
   performFind: ["Cycle forward to the next find match"],
@@ -218,8 +218,8 @@ var commandGroups = {
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "zoomReset", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
      "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
-     "goPrevious", "goNext",
-     "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
+     "goPrevious", "goNext", "nextFrame"],
+  findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
