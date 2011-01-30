@@ -20,7 +20,7 @@ The Settings page can be found by clicking the Options button next to Vimium on 
 Keyboard Bindings
 -----------------
 
-Modifier keys are specified as follows: <c-x>, <m-x>, <a-x> for ctrl+x, meta+x, and alt+x
+Modifier keys are specified as <c-x>, <m-x>, <a-x> for ctrl+x, meta+x, and alt+x
 respectively. You can change any of these shortcuts under "Advanced Options".
 
 Navigating the current page:
