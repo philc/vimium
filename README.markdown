@@ -74,15 +74,18 @@ Keys can be unmapped and remapped to different commands under Advanced Options.
 Contributing
 ------------
 
-You'd like to fix a bug or implement a feature? Great! Check out the bugs on our issues tracker, or implement one of
-the suggestions there that have been tagged 'todo'. If you have a suggestion of your own, start a discussion on
-the issues tracker or on the [mailing list][list_url]. If it mirrors a similar feature in another browser or in Vim
-itself, let us know! Once you've picked something to work on, add a comment to the respective issue so others don't
-duplicate your effort.
+You'd like to fix a bug or implement a feature? Great! Check out the bugs on our issues tracker, or implement
+one of the suggestions there that have been tagged 'todo'. If you have a suggestion of your own, start a
+discussion on the issues tracker or on the [mailing list][list_url]. If it mirrors a similar feature in
+another browser or in Vim itself, let us know! Once you've picked something to work on, add a comment to the
+respective issue so others don't duplicate your effort.
 
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with your patch.
 
 [list_url]: http://groups.google.com/group/vimium-dev?hl=en
+
+Some brief coding style guidelines: 1) follow the style already present in the file, 2) ensure your lines
+don't exceed 110 characters.
 
 Release Notes
 -------------
