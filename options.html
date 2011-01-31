@@ -87,7 +87,7 @@
     "userDefinedLinkHintCss", "keyMappings", "filterLinkHints"];
 
   var postSaveHooks = {
-    "keyMappings": function (value) {
+    keyMappings: function (value) {
       backgroundPage = chrome.extension.getBackgroundPage();
       backgroundPage.clearKeyMappingsAndSetDefaults();
       backgroundPage.parseCustomKeyMappings(value);

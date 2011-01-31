@@ -196,11 +196,12 @@
     var html = [];
     for (var i = 0; i < commandGroups[group].length; i++) {
       var command = commandGroups[group][i];
-      bindings = (commandsToKey[command] || [""]).join(", ")
-      if (showUnboundCommands || commandsToKey[command])
-      {
-        html.push("<tr><td>", escapeHtml(bindings),
-          "</td><td>:</td><td>", availableCommands[command].description);
+      bindings = (commandsToKey[command] || [""]).join(", ");
+      if (showUnboundCommands || commandsToKey[command]) {
+        html.push(
+          "<tr class='" + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
+          "<td>", escapeHtml(bindings), "</td>",
+          "<td>:</td><td>", availableCommands[command].description);
 
         if (showCommandNames)
           html.push("<span class='commandName'>(" + command + ")</span>");
@@ -685,6 +686,21 @@
 
     if (localStorage["keyMappings"])
       parseCustomKeyMappings(localStorage["keyMappings"]);
+
+    // In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
+    // and restore tab. For existing users, we want to preserve existing behavior for them by adding some
+    // custom key mappings on their behalf.
+    if (localStorage.previousVersion == "1.21") {
+      var customKeyMappings = localStorage["keyMappings"] || "";
+      if ((keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
+        customKeyMappings += "\nmap d removeTab";
+      if ((keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
+        customKeyMappings += "\nmap u restoreTab";
+      if (customKeyMappings != "") {
+        localStorage["keyMappings"] = customKeyMappings;
+        parseCustomKeyMappings(customKeyMappings);
+      }
+    }
 
     populateValidFirstKeys();
     populateSingleKeyCommands();

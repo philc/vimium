@@ -1,22 +1,28 @@
 var availableCommands    = {};
 var keyToCommandRegistry = {};
 
-function addCommand(command, description, isBackgroundCommand, passCountToFunction) {
-  if (availableCommands[command])
-  {
+/*
+ * Registers a command, making it available to be optionally bound to a key.
+ * options:
+ *   - background: whether this command needs to be run against the background page.
+ *   - passCountToFunction: true if this command should have any digits which were typed prior to the
+ *     command passed to it. This is used to implement e.g. "closing of 3 tabs".
+ */
+function addCommand(command, description, options) {
+  if (availableCommands[command]) {
     console.log(command, "is already defined! Check commands.js for duplicates.");
     return;
   }
 
+  options = options || {};
   availableCommands[command] = { description: description,
-                                 isBackgroundCommand: isBackgroundCommand,
-                                 passCountToFunction: passCountToFunction
+                                 isBackgroundCommand: options.background,
+                                 passCountToFunction: options.passCountToFunction
                                };
 }
 
 function mapKeyToCommand(key, command) {
-  if (!availableCommands[command])
-  {
+  if (!availableCommands[command]) {
     console.log(command, "doesn't exist!");
     return;
   }
@@ -81,105 +87,131 @@ function parseCustomKeyMappings(customKeyMappings) {
 function clearKeyMappingsAndSetDefaults() {
   keyToCommandRegistry = {};
 
-  mapKeyToCommand('?', 'showHelp');
-  mapKeyToCommand('j', 'scrollDown');
-  mapKeyToCommand('k', 'scrollUp');
-  mapKeyToCommand('h', 'scrollLeft');
-  mapKeyToCommand('l', 'scrollRight');
-  mapKeyToCommand('gg', 'scrollToTop');
-  mapKeyToCommand('G', 'scrollToBottom');
-  mapKeyToCommand('zH', 'scrollToLeft');
-  mapKeyToCommand('zL', 'scrollToRight');
-  mapKeyToCommand('<c-e>', 'scrollDown');
-  mapKeyToCommand('<c-y>', 'scrollUp');
-  mapKeyToCommand('<c-d>', 'scrollPageDown');
-  mapKeyToCommand('<c-u>', 'scrollPageUp');
-  mapKeyToCommand('<c-f>', 'scrollFullPageDown');
-  mapKeyToCommand('<c-b>', 'scrollFullPageUp');
-  mapKeyToCommand('r', 'reload');
-  mapKeyToCommand('gs', 'toggleViewSource');
+  var defaultKeyMappings = {
+    "?": "showHelp",
+    "j": "scrollDown",
+    "k": "scrollUp",
+    "h": "scrollLeft",
+    "l": "scrollRight",
+    "gg": "scrollToTop",
+    "G": "scrollToBottom",
+    "zH": "scrollToLeft",
+    "zL": "scrollToRight",
+    "<c-e>": "scrollDown",
+    "<c-y>": "scrollUp",
 
-  mapKeyToCommand('i', 'enterInsertMode');
+    // scrollPageDown and scrollPageUp are mapped to two keys because they are very common actions so we
+    // want them to be mapped without a modifier key, but we also want to be faithful to Vim convention which
+    // has them on ctrl+D and ctrl+U.
+    "d": "scrollPageDown",
+    "u": "scrollPageUp",
+    "<c-d>": "scrollPageDown",
+    "<c-u>": "scrollPageUp",
+    "<c-f>": "scrollFullPageDown",
+    "<c-b>": "scrollFullPageUp",
+    "r": "reload",
+    "gs": "toggleViewSource",
 
-  mapKeyToCommand('H', 'goBack');
-  mapKeyToCommand('L', 'goForward');
-  mapKeyToCommand('gu', 'goUp');
+    "i": "enterInsertMode",
 
-  mapKeyToCommand('zi', 'zoomIn');
-  mapKeyToCommand('zo', 'zoomOut');
+    "H": "goBack",
+    "L": "goForward",
+    "gu": "goUp",
 
-  mapKeyToCommand('gi', 'focusInput');
+    "zi": "zoomIn",
+    "zo": "zoomOut",
+    "z0": "zoomReset",
 
-  mapKeyToCommand('f',     'linkHints.activateMode');
-  mapKeyToCommand('F',     'linkHints.activateModeToOpenInNewTab');
-  mapKeyToCommand('<a-f>', 'linkHints.activateModeWithQueue');
+    "gi": "focusInput",
 
-  mapKeyToCommand('/', 'enterFindMode');
-  mapKeyToCommand('n', 'performFind');
-  mapKeyToCommand('N', 'performBackwardsFind');
+    "f":     "activateLinkHintsMode",
+    "F":     "activateLinkHintsModeToOpenInNewTab",
+    "<a-f>": "activateLinkHintsModeWithQueue",
 
-  mapKeyToCommand('yy', 'copyCurrentUrl');
+    "/": "enterFindMode",
+    "n": "performFind",
+    "N": "performBackwardsFind",
 
-  mapKeyToCommand('K', 'nextTab');
-  mapKeyToCommand('J', 'previousTab');
-  mapKeyToCommand('gt', 'nextTab');
-  mapKeyToCommand('gT', 'previousTab');
+    "[[": "goPrevious",
+    "]]": "goNext",
 
-  mapKeyToCommand('t', 'createTab');
-  mapKeyToCommand('d', 'removeTab');
-  mapKeyToCommand('u', 'restoreTab');
+    "yy": "copyCurrentUrl",
 
-  mapKeyToCommand('gf', 'nextFrame');
+    "K": "nextTab",
+    "J": "previousTab",
+    "gt": "nextTab",
+    "gT": "previousTab",
+
+    "t": "createTab",
+    "x": "removeTab",
+    "X": "restoreTab",
+
+    "gf": "nextFrame"
+  };
+
+  for (var key in defaultKeyMappings)
+    mapKeyToCommand(key, defaultKeyMappings[key]);
 }
 
-// Navigating the current page:
-addCommand('showHelp',            'Show help',  true);
-addCommand('scrollDown',          'Scroll down');
-addCommand('scrollUp',            'Scroll up');
-addCommand('scrollLeft',          'Scroll left');
-addCommand('scrollRight',         'Scroll right');
-addCommand('scrollToTop',         'Scroll to the top of the page');
-addCommand('scrollToBottom',      'Scroll to the bottom of the page');
-addCommand('scrollToLeft',        'Scroll to the left of the page');
-addCommand('scrollToRight',       'Scroll to the right of the page');
-addCommand('scrollPageDown',      'Scroll a page down');
-addCommand('scrollPageUp',        'Scroll a page up');
-addCommand('scrollFullPageDown',  'Scroll a full page down');
-addCommand('scrollFullPageUp',    'Scroll a full page up');
+// This is a mapping of: commandIdentifier => [description, options].
+var commandDescriptions = {
+  // Navigating the current page
+  showHelp: ["Show help", { background: true }],
+  scrollDown: ["Scroll down"],
+  scrollUp: ["Scroll up"],
+  scrollLeft: ["Scroll left"],
+  scrollRight: ["Scroll right"],
+  scrollToTop: ["Scroll to the top of the page"],
+  scrollToBottom: ["Scroll to the bottom of the page"],
+  scrollToLeft: ["Scroll all the way to the left"],
 
-addCommand('reload',              'Reload the page');
-addCommand('toggleViewSource',    'View page source');
-addCommand('zoomIn',              'Zoom in');
-addCommand('zoomOut',             'Zoom out');
-addCommand('copyCurrentUrl',      'Copy the current URL to the clipboard');
+  scrollToRight: ["Scroll all the way to the right"],
+  scrollPageDown: ["Scroll a page down"],
+  scrollPageUp: ["Scroll a page up"],
+  scrollFullPageDown: ["Scroll a full page down"],
+  scrollFullPageUp: ["Scroll a full page up"],
 
-addCommand('enterInsertMode',     'Enter insert mode');
+  reload: ["Reload the page"],
+  toggleViewSource: ["View page source"],
+  zoomIn: ["Zoom in"],
+  zoomOut: ["Zoom out"],
+  zoomReset: ["Reset zoom to default value"],
+  copyCurrentUrl: ["Copy the current URL to the clipboard"],
 
-addCommand('focusInput',          'Focus the first (or n-th) text box on the page', false, true);
+  enterInsertMode: ["Enter insert mode"],
 
-addCommand('linkHints.activateMode',               'Enter link hints mode to open links in current tab');
-addCommand('linkHints.activateModeToOpenInNewTab', 'Enter link hints mode to open links in new tab');
-addCommand('linkHints.activateModeWithQueue',      'Enter link hints mode to open multiple links in a new tab');
+  focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }],
 
-addCommand('enterFindMode',        'Enter find mode');
-addCommand('performFind',          'Cycle forward to the next find match');
-addCommand('performBackwardsFind', 'Cycle backward to the previous find match');
+  activateLinkHintsMode: ["Open a link in the current tab"],
+  activateLinkHintsModeToOpenInNewTab: ["Open a link in a new tab"],
+  activateLinkHintsModeWithQueue: ["Open multiple links in a new tab"],
 
-// Navigating your history:
-addCommand('goBack',              'Go back in history');
-addCommand('goForward',           'Go forward in history');
+  enterFindMode: ["Enter find mode"],
+  performFind: ["Cycle forward to the next find match"],
+  performBackwardsFind: ["Cycle backward to the previous find match"],
 
-// Navigating the URL hierarchy
-addCommand('goUp',                'Go up the URL hierarchy', false, true);
+  goPrevious: ["Follow the link labeled previous or <"],
+  goNext: ["Follow the link labeled next or >"],
 
-// Manipulating tabs:
-addCommand('nextTab',             'Go one tab right',  true);
-addCommand('previousTab',         'Go one tab left',   true);
-addCommand('createTab',           'Create new tab',    true);
-addCommand('removeTab',           'Close current tab', true);
-addCommand('restoreTab',          "Restore closed tab", true);
+  // Navigating your history
+  goBack: ["Go back in history"],
+  goForward: ["Go forward in history"],
 
-addCommand('nextFrame',           "Cycle forward to the next frame on the page", true);
+  // Navigating the URL hierarchy
+  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }],
+
+  // Manipulating tabs
+  nextTab: ["Go one tab right", { background: true }],
+  previousTab: ["Go one tab left", { background: true }],
+  createTab: ["Create new tab", { background: true }],
+  removeTab: ["Close current tab", { background: true }],
+  restoreTab: ["Restore closed tab", { background: true }],
+
+  nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
+};
+
+for (var command in commandDescriptions)
+  addCommand(command, commandDescriptions[command][0], commandDescriptions[command][1]);
 
 
 // An ordered listing of all available commands, grouped by type. This is the order they will
@@ -189,10 +221,11 @@ var commandGroups = {
     ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
      "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
      "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-     "reload", "toggleViewSource", "zoomIn", "zoomOut", "copyCurrentUrl", "goUp",
+     "reload", "toggleViewSource", "zoomIn", "zoomOut", "zoomReset", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
-     "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
-     "enterFindMode", "performFind", "performBackwardsFind", "nextFrame"],
+     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
+     "goPrevious", "goNext", "nextFrame"],
+  findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
@@ -200,3 +233,11 @@ var commandGroups = {
   misc:
     ["showHelp"]
 };
+
+// Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
+// a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
+// from Vimium will uncover these gems.
+var advancedCommands = [
+    "scrollToLeft", "scrollToRight",
+    "zoomReset", "goUp", "focusInput", "activateLinkHintsModeWithQueue",
+    "goPrevious", "goNext"];
