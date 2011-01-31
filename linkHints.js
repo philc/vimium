@@ -300,7 +300,6 @@ var linkHints = {
         that.hintMarkerContainingDiv.parentNode.removeChild(that.hintMarkerContainingDiv);
       that.hintMarkerContainingDiv = null;
       that.hintMarkers = [];
-      that.hintKeystrokeQueue = [];
       document.removeEventListener("keydown", that.onKeyDownInMode, true);
       document.removeEventListener("keyup", that.onKeyUpInMode, true);
       that.modeActivated = false;
@@ -401,7 +400,12 @@ var alphabetHints = {
       });
     }
     return { 'linksMatched': linksMatched };
+  },
+
+  deactivate: function() {
+    this.hintKeystrokeQueue = [];
   }
+
 };
 
 var filterHints = {
@@ -534,6 +538,7 @@ var filterHints = {
   },
 
   deactivate: function(delay, callback) {
+    this.hintKeystrokeQueue = [];
     this.linkTextKeystrokeQueue = [];
     this.labelMap = {};
   }
