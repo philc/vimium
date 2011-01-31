@@ -124,9 +124,9 @@ function clearKeyMappingsAndSetDefaults() {
 
     "gi": "focusInput",
 
-    "f":     "activateLinkHintsMode",
-    "F":     "activateLinkHintsModeToOpenInNewTab",
-    "<a-f>": "activateLinkHintsModeWithQueue",
+    "f":     "linkHints.activateMode",
+    "F":     "linkHints.activateModeToOpenInNewTab",
+    "<a-f>": "linkHints.activateModeWithQueue",
 
     "/": "enterFindMode",
     "n": "performFind",
@@ -182,9 +182,9 @@ var commandDescriptions = {
 
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }],
 
-  activateLinkHintsMode: ["Open a link in the current tab"],
-  activateLinkHintsModeToOpenInNewTab: ["Open a link in a new tab"],
-  activateLinkHintsModeWithQueue: ["Open multiple links in a new tab"],
+  'linkHints.activateMode': ["Open a link in the current tab"],
+  'linkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"],
+  'linkHints.activateModeWithQueue': ["Open multiple links in a new tab"],
 
   enterFindMode: ["Enter find mode"],
   performFind: ["Cycle forward to the next find match"],
@@ -223,7 +223,7 @@ var commandGroups = {
      "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "zoomReset", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
-     "activateLinkHintsMode", "activateLinkHintsModeToOpenInNewTab", "activateLinkHintsModeWithQueue",
+     "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:
@@ -239,5 +239,5 @@ var commandGroups = {
 // from Vimium will uncover these gems.
 var advancedCommands = [
     "scrollToLeft", "scrollToRight",
-    "zoomReset", "goUp", "focusInput", "activateLinkHintsModeWithQueue",
+    "zoomReset", "goUp", "focusInput", "linkHints.activateModeWithQueue",
     "goPrevious", "goNext"];
