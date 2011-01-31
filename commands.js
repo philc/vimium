@@ -99,6 +99,12 @@ function clearKeyMappingsAndSetDefaults() {
     "zL": "scrollToRight",
     "<c-e>": "scrollDown",
     "<c-y>": "scrollUp",
+
+    // scrollPageDown and scrollPageUp are mapped to two keys because they are very common actions so we
+    // want them to be mapped without a modifier key, but we also want to be faithful to Vim convention which
+    // has them on ctrl+D and ctrl+U.
+    "d": "scrollPageDown",
+    "u": "scrollPageUp",
     "<c-d>": "scrollPageDown",
     "<c-u>": "scrollPageUp",
     "<c-f>": "scrollFullPageDown",
@@ -137,8 +143,8 @@ function clearKeyMappingsAndSetDefaults() {
     "gT": "previousTab",
 
     "t": "createTab",
-    "d": "removeTab",
-    "u": "restoreTab",
+    "x": "removeTab",
+    "X": "restoreTab",
 
     "gf": "nextFrame"
   };

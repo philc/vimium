@@ -686,6 +686,21 @@
     if (localStorage["keyMappings"])
       parseCustomKeyMappings(localStorage["keyMappings"]);
 
+    // In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
+    // and restore tab. For existing users, we want to preserve existing behavior for them by adding some
+    // custom key mappings on their behalf.
+    if (localStorage.previousVersion == "1.21") {
+      var customKeyMappings = localStorage["keyMappings"] || "";
+      if ((keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
+        customKeyMappings += "\nmap d removeTab";
+      if ((keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
+        customKeyMappings += "\nmap u restoreTab";
+      if (customKeyMappings != "") {
+        localStorage["keyMappings"] = customKeyMappings;
+        parseCustomKeyMappings(customKeyMappings);
+      }
+    }
+
     populateValidFirstKeys();
     populateSingleKeyCommands();
     if (shouldShowUpgradeMessage())
