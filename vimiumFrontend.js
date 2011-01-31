@@ -60,7 +60,7 @@ var settings = {
   },
 
   initializeOnReady: function () {
-    initializeLinkHints();
+    linkHints.init();
   }
 };
 

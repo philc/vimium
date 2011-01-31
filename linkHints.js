@@ -11,23 +11,7 @@
  * the range of possibilities by typing the text of the link itself.
  */
 
-var linkHints;
-/*
- * Create the instance of linkHints, specialized based on the user settings.
- */
-function initializeLinkHints() {
-  if (settings.get('filterLinkHints') != "true") // the default hinting system
-    linkHints = utils.extendWithSuper(linkHintsBase, alphabetHints);
-  else
-    linkHints = utils.extendWithSuper(linkHintsBase, filterHints);
-  linkHints.init();
-}
-
-/*
- * A set of common operations shared by any link-hinting system. Some methods
- * are stubbed.
- */
-var linkHintsBase = {
+var linkHints = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
   // The characters that were typed in while in "link hints" mode.
@@ -40,6 +24,9 @@ var linkHintsBase = {
   cssAdded: false,
   // While in delayMode, all keypresses have no effect.
   delayMode: false,
+  // Handle the link hinting marker generation and matching. Must be initialized after settings have been
+  // loaded.
+  markerMatcher: undefined,
 
   /*
    * To be called after linkHints has been generated from linkHintsBase.
@@ -47,6 +34,7 @@ var linkHintsBase = {
   init: function() {
     this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
     this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
+    this.markerMatcher = settings.get('filterLinkHints') == "true" ? filterHints : alphabetHints;
   },
 
   /* 
@@ -100,7 +88,7 @@ var linkHintsBase = {
     // Initialize the number used to generate the character hints to be as many digits as we need to
     // highlight all the links on the page; we don't want some link hints to have more chars than others.
     var linkHintNumber = 0;
-    this.initSetMarkerAttributes(visibleElements);
+    this.markerMatcher.initSetMarkerAttributes(visibleElements);
     for (var i = 0; i < visibleElements.length; i++) {
       this.hintMarkers.push(this.createMarkerFor(visibleElements[i], linkHintNumber));
       linkHintNumber++;
@@ -120,19 +108,6 @@ var linkHintsBase = {
       document.documentElement.appendChild(this.hintMarkerContainingDiv);
     else
       this.deactivateMode();
-  },
-
-  /*
-   * Sets the data attributes of the marker. Does not need to handle styling
-   * and positioning. MUST set the hintString and innerHTML properties.
-   */ 
-  setMarkerAttributes: function(marker, linkHintNumber) {},
-
-  /*
-   * A hook for any necessary initialization for setMarkerAttributes.  Takes an
-   * array of visible elements. Any return value is ignored.
-   */
-  initSetMarkerAttributes: function(visibleElements) {
   },
 
   /*
@@ -198,7 +173,7 @@ var linkHintsBase = {
   },
 
   /*
-   * Handles shift and esc keys. The other keys are passed to normalKeyDownHandler.
+   * Handles shift and esc keys. The other keys are passed to markerMatcher.normalKeyDownHandler.
    */
   onKeyDownInMode: function(event) {
     if (this.delayMode)
@@ -214,7 +189,7 @@ var linkHintsBase = {
     if (isEscape(event)) {
       this.deactivateMode();
     } else {
-      var keyResult = this.normalKeyDownHandler(event, this.hintMarkers);
+      var keyResult = this.markerMatcher.matchHintsByKey(event, this.hintMarkers);
       var linksMatched = keyResult.linksMatched;
       var delay = keyResult.delay !== undefined ? keyResult.delay : 0;
       if (linksMatched.length == 0) {
@@ -232,11 +207,6 @@ var linkHintsBase = {
     event.stopPropagation();
     event.preventDefault();
   },
-
-  /*
-   * Handle all keys other than shift and esc. Return value is ignored.
-   */
-  normalKeyDownHandler: function(event) {},
 
   onKeyUpInMode: function(event) {
     if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
@@ -325,6 +295,8 @@ var linkHintsBase = {
   deactivateMode: function(delay, callback) {
     var that = this;
     function deactivate() {
+      if (that.markerMatcher.deactivate)
+        that.markerMatcher.deactivate();
       if (that.hintMarkerContainingDiv)
         that.hintMarkerContainingDiv.parentNode.removeChild(that.hintMarkerContainingDiv);
       that.hintMarkerContainingDiv = null;
@@ -350,7 +322,7 @@ var linkHintsBase = {
     var marker = document.createElement("div");
     marker.className = "internalVimiumHintMarker vimiumHintMarker";
     marker.clickableItem = link.element;
-    this.setMarkerAttributes(marker, linkHintNumber);
+    this.markerMatcher.setMarkerAttributes(marker, linkHintNumber);
 
     // Note: this call will be expensive if we modify the DOM in between calls.
     var clientRect = link.rect;
@@ -404,7 +376,7 @@ var alphabetHints = {
     return hintString.join("");
   },
 
-  normalKeyDownHandler: function (event, hintMarkers) {
+  matchHintsByKey: function (event, hintMarkers) {
     var keyChar = getKeyChar(event);
     if (!keyChar)
       return hintMarkers;
@@ -484,7 +456,7 @@ var filterHints = {
     marker.setAttribute("linkText", linkText);
   },
 
-  normalKeyDownHandler: function(event, hintMarkers) {
+  matchHintsByKey: function(event, hintMarkers) {
     var linksMatched;
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
@@ -522,8 +494,7 @@ var filterHints = {
         // should be rendered invalid (i.e. reset).
         this.hintKeystrokeQueue = [];
         this.linkTextKeystrokeQueue.push(keyChar);
-        matchString = this.linkTextKeystrokeQueue.join("");
-        linksMatched = this.filterLinkHints(matchString);
+        linksMatched = this.filterLinkHints(hintMarkers);
       }
 
       if (linksMatched.length == 1 && !/[0-9]/.test(keyChar)) {
@@ -542,12 +513,12 @@ var filterHints = {
    * only be called when there is a change in linkTextKeystrokeQueue, to
    * avoid undesired renumbering.
   */
-  filterLinkHints: function(searchString) {
+  filterLinkHints: function(hintMarkers) {
     var linksMatched = [];
     var linkSearchString = this.linkTextKeystrokeQueue.join("");
 
-    for (var i = 0; i < this.hintMarkers.length; i++) {
-      var linkMarker = this.hintMarkers[i];
+    for (var i = 0; i < hintMarkers.length; i++) {
+      var linkMarker = hintMarkers[i];
       var matchedLink = linkMarker.getAttribute("linkText").toLowerCase()
                                   .indexOf(linkSearchString.toLowerCase()) >= 0;
 
@@ -562,10 +533,9 @@ var filterHints = {
     return linksMatched;
   },
 
-  deactivateMode: function(delay, callback) {
+  deactivate: function(delay, callback) {
     this.linkTextKeystrokeQueue = [];
     this.labelMap = {};
-    this._super('deactivateMode')(delay, callback);
   }
 
 };

@@ -60,8 +60,7 @@
               "<a>test</a>" +
               "<a>tress</a>";
             document.getElementById("test-div").innerHTML = testContent;
-            settings.values.filterLinkHints = isFilteredMode ? "true" : "false";
-            initializeLinkHints();
+            linkHints.markerMatcher = alphabetHints;
           }),
 
           tearDown(function() {
@@ -102,7 +101,7 @@
 
         setup(function() {
           stub(settings.values, "filterLinkHints", "false");
-          initializeLinkHints();
+          linkHints.markerMatcher = alphabetHints;
           // we need at least 16 elements to have double-character link hints
           for (var i = 0; i < 16; i++) {
             var link = document.createElement("a");
@@ -135,7 +134,7 @@
 
         setup(function() {
           stub(settings.values, "filterLinkHints", "true");
-          initializeLinkHints();
+          linkHints.markerMatcher = filterHints;
         }),
 
         context("Text hints",
