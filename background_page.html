@@ -65,7 +65,8 @@
     getCurrentTabUrl:     getCurrentTabUrl,
     getZoomLevel:         getZoomLevel,
     saveZoomLevel:        saveZoomLevel,
-    getSetting:           getSetting
+    getSetting:           getSetting,
+    getBookmarks:         getBookmarks
   };
 
   var sendRequestHandlers = {
@@ -280,6 +281,12 @@
 
     var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnSetting" });
     returnPort.postMessage({ key: args.key, value: value });
+  }
+
+  function getBookmarks(args, port) {
+    chrome.bookmarks.search(args.query, function(bookmarks) {
+        port.postMessage({bookmarks:bookmarks})
+    })
   }
 
   /*
