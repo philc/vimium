@@ -309,10 +309,12 @@ var linkHints = {
     }
     // we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
     // deactivateMode can be tested synchronously
-    if (!delay)
+    if (!delay) {
       deactivate();
-    else
+      if (callback) callback();
+    } else {
       setTimeout(function() { deactivate(); if (callback) callback(); }, delay);
+    }
   },
 
   /*
