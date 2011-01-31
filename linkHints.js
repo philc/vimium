@@ -15,7 +15,6 @@ var linkHints = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
   // The characters that were typed in while in "link hints" mode.
-  modeActivated: false,
   shouldOpenInNewTab: false,
   shouldOpenWithQueue: false,
   // Whether link hint's "open in current/new tab" setting is currently toggled 
@@ -59,11 +58,12 @@ var linkHints = {
     if (!this.cssAdded)
       addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
     this.linkHintCssAdded = true;
-    this.modeActivated = true;
     this.setOpenLinkMode(openInNewTab, withQueue);
     this.buildLinkHints();
-    document.addEventListener("keydown", this.onKeyDownInMode, true);
-    document.addEventListener("keyup", this.onKeyUpInMode, true);
+    handlerStack.push({ // modeKeyHandler is declared by vimiumFrontend.js
+      keydown: this.onKeyDownInMode,
+      keyup: this.onKeyUpInMode
+    });
   },
 
   setOpenLinkMode: function(openInNewTab, withQueue) {
@@ -295,9 +295,7 @@ var linkHints = {
         that.hintMarkerContainingDiv.parentNode.removeChild(that.hintMarkerContainingDiv);
       that.hintMarkerContainingDiv = null;
       that.hintMarkers = [];
-      document.removeEventListener("keydown", that.onKeyDownInMode, true);
-      document.removeEventListener("keyup", that.onKeyUpInMode, true);
-      that.modeActivated = false;
+      handlerStack.pop();
       HUD.hide();
     }
     // we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that

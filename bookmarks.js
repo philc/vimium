@@ -34,15 +34,18 @@ function activateBookmarkFindMode() {
         initialize.call(this)
       }
       
+      handlerStack.push({
+        keydown: this.onKeydown,
+        keyup: this.onKeyup
+      });
+      
       this.renderHUD();
       this.completionDialog.show();
-      
-      this.keyPressListener.enable();
     },
     disable: function() {
       this.enabled = false;
-      this.keyPressListener.disable();
-      this.completionDialog.hide()
+      this.completionDialog.hide();
+      handlerStack.pop();
       HUD.hide();
     },
     renderHUD: function() {
@@ -89,37 +92,36 @@ function activateBookmarkFindMode() {
       initialSearchText: "Type a bookmark name or URL"
     })
 
-    this.keyPressListener = new KeyPressListener({
-      keyDown: function(event) {
-        // shift key will toggle between new tab/same tab
-        if (event.keyCode == keyCodes.shiftKey) {
-          self.invertNewTabSetting();
-          shiftWasPressedWhileToggled = true
-          return
-        }
-
-        var keyChar = getKeyChar(event);
-        if (!keyChar)
-          return;
-
-        // TODO(philc): Ignore keys that have modifiers.
-        if (isEscape(event)) {
-          self.disable();
-        } 
-
-        event.stopPropagation();
-        event.preventDefault();
-      },
-      keyUp: function(event) {
-        // shift key will toggle between new tab/same tab
-        if (event.keyCode == keyCodes.shiftKey && shiftWasPressedWhileToggled) {
-          self.invertNewTabSetting();
-          shiftWasPressedWhileToggled = false
-        }
-        event.stopPropagation();
-        event.preventDefault();
+    self.onKeydown = function(event) {
+      // shift key will toggle between new tab/same tab
+      if (event.keyCode == keyCodes.shiftKey) {
+        self.invertNewTabSetting();
+        shiftWasPressedWhileToggled = true
+        return
       }
-    })
+
+      var keyChar = getKeyChar(event);
+      if (!keyChar)
+        return;
+
+      // TODO(philc): Ignore keys that have modifiers.
+      if (isEscape(event)) {
+        self.disable();
+      } 
+
+      event.stopPropagation();
+      event.preventDefault();
+    };
+    
+    self.onKeyup = function(event) {
+      // shift key will toggle between new tab/same tab
+      if (event.keyCode == keyCodes.shiftKey && shiftWasPressedWhileToggled) {
+        self.invertNewTabSetting();
+        shiftWasPressedWhileToggled = false
+      }
+      event.stopPropagation();
+      event.preventDefault();
+    };
   }
 
   var findBookmarks = function(searchString, callback) {
