@@ -12,6 +12,7 @@ var findMode = false;
 var findModeQuery = "";
 var findModeQueryHasResults = false;
 var isShowingHelpDialog = false;
+var handlerStack = [];
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
@@ -339,10 +340,10 @@ function toggleViewSourceCallback(url) {
  * Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
  */
 function onKeypress(event) {
-  var keyChar = "";
-
-  if (linkHints.modeActivated)
+  if (!bubbleEvent('keypress', event))
     return;
+
+  var keyChar = "";
 
   // Ignore modifier keys by themselves.
   if (event.keyCode > 31) {
@@ -373,11 +374,21 @@ function onKeypress(event) {
   }
 }
 
-function onKeydown(event) {
-  var keyChar = "";
+function bubbleEvent(type, event) {
+  for (var i = handlerStack.length-1; i >= 0; i--) {
+    // We need to check for existence of handler because the last function call may have caused the release of
+    // more than one handler.
+    if (handlerStack[i] && handlerStack[i][type] && !handlerStack[i][type](event))
+      return false;
+  }
+  return true;
+}
 
-  if (linkHints.modeActivated)
+function onKeydown(event) {
+  if (!bubbleEvent('keydown', event))
     return;
+
+  var keyChar = "";
 
   // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?
   if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 || event.altKey && event.keyCode > 31) {
@@ -457,6 +468,11 @@ function onKeydown(event) {
   // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if (keyChar == "" && !insertMode && currentCompletionKeys.indexOf(getKeyChar(event)) != -1)
     event.stopPropagation();
+}
+
+function onKeyup() {
+  if (!bubbleEvent('keyup', event))
+    return;
 }
 
 function checkIfEnabledForUrl() {

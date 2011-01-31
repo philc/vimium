@@ -13,7 +13,7 @@
           initialize.call(this);
           this.initialized=true;
         }
-        this.keyPressListener.enable();
+        handlerStack.push({ keydown: this.onKeydown });
         render.call(this)
         clearInterval(this._tweenId);
         this._tweenId = Tween.fade(this.container, 1.0, 150);
@@ -21,7 +21,7 @@
     },
     hide: function() {
       if(this.isShown) {
-        this.keyPressListener.disable();
+        handlerStack.pop();
         this.isShown=false;
         this.currentSelection=0;
         clearInterval(this._tweenId);
@@ -45,43 +45,42 @@
     
     self.currentSelection=0;
 
-    self.keyPressListener = new KeyPressListener({
-      keyDown: function(event) {
-        var keyChar = getKeyChar(event);
-        if(keyChar==="up") {
-          if(self.currentSelection>0) {
-            self.currentSelection-=1;
-          }
-          render.call(self,self.getQueryString(), self.completions) 
+    self.onKeydown = function(event) {
+      var keyChar = getKeyChar(event);
+      if(keyChar==="up") {
+        if(self.currentSelection>0) {
+          self.currentSelection-=1;
         }
-        else if(keyChar==="down") {
-          if(self.currentSelection<self.completions.length-1) {
-            self.currentSelection+=1;
-          }
-          render.call(self,self.getQueryString(), self.completions) 
+        render.call(self,self.getQueryString(), self.completions) 
+      }
+      else if(keyChar==="down") {
+        if(self.currentSelection<self.completions.length-1) {
+          self.currentSelection+=1;
         }
-        else if(event.keyCode == keyCodes.enter) {
-          self.options.onSelect(self.completions[self.currentSelection])
-        }
-        else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-          if (self.query.length > 0) {
-            self.query.pop();
-            self.options.source(self.getQueryString(), function(completions) {
-              render.call(self, self.getQueryString(), completions)
-            })
-          }
-        } 
-        else if(keyChar!=="left" && keyChar!="right") {
-          self.query.push(keyChar);
+        render.call(self,self.getQueryString(), self.completions) 
+      }
+      else if(event.keyCode == keyCodes.enter) {
+        self.options.onSelect(self.completions[self.currentSelection])
+      }
+      else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+        if (self.query.length > 0) {
+          self.query.pop();
           self.options.source(self.getQueryString(), function(completions) {
             render.call(self, self.getQueryString(), completions)
           })
-        } 
-        
-        event.stopPropagation();
-        event.preventDefault();
-      }
-    })
+        }
+      } 
+      else if(keyChar!=="left" && keyChar!="right") {
+        self.query.push(keyChar);
+        self.options.source(self.getQueryString(), function(completions) {
+          render.call(self, self.getQueryString(), completions)
+        })
+      } 
+      
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
   }
 
   var render = function(searchString, completions) {
