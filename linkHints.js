@@ -55,7 +55,7 @@ var linkHints = {
 
   activateModeWithQueue: function() { this.activateMode(true, true); },
 
-  activateMode: function (openInNewTab, withQueue) {
+  activateMode: function(openInNewTab, withQueue) {
     if (!this.cssAdded)
       addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
     this.linkHintCssAdded = true;
@@ -117,7 +117,7 @@ var linkHints = {
    */
   getVisibleClickableElements: function() {
     var resultSet = document.evaluate(this.clickableElementsXPath, document.body,
-      function (namespace) {
+      function(namespace) {
         return namespace == "xhtml" ? "http://www.w3.org/1999/xhtml" : null;
       },
       XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -376,7 +376,7 @@ var alphabetHints = {
     return hintString.join("");
   },
 
-  matchHintsByKey: function (event, hintMarkers) {
+  matchHintsByKey: function(event, hintMarkers) {
     var linksMatched = hintMarkers;
     var keyChar = getKeyChar(event);
     if (!keyChar)
