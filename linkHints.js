@@ -351,7 +351,7 @@ var alphabetHints = {
 
   setMarkerAttributes: function(marker, linkHintNumber) {
     var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
-    marker.innerHTML = spanWrap(hintString);
+    marker.innerHTML = hintUtils.spanWrap(hintString);
     marker.setAttribute("hintString", hintString);
     return marker;
   },
@@ -455,7 +455,7 @@ var filterHints = {
     }
     linkText = linkText.trim().toLowerCase();
     marker.setAttribute("hintString", hintString);
-    marker.innerHTML = spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
+    marker.innerHTML = hintUtils.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
     marker.setAttribute("linkText", linkText);
   },
 
@@ -541,12 +541,14 @@ var filterHints = {
 
 };
 
-/*
- * Make each hint character a span, so that we can highlight the typed characters as you type them.
- */
-function spanWrap(hintString) {
-  var innerHTML = [];
-  for (var i = 0; i < hintString.length; i++)
-    innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
-  return innerHTML.join("");
-}
+var hintUtils = {
+  /*
+   * Make each hint character a span, so that we can highlight the typed characters as you type them.
+   */
+  spanWrap: function(hintString) {
+    var innerHTML = [];
+    for (var i = 0; i < hintString.length; i++)
+      innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
+    return innerHTML.join("");
+  }
+};
