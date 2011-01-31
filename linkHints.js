@@ -173,7 +173,7 @@ var linkHints = {
   },
 
   /*
-   * Handles shift and esc keys. The other keys are passed to markerMatcher.normalKeyDownHandler.
+   * Handles shift and esc keys. The other keys are passed to markerMatcher.matchHintsByKey.
    */
   onKeyDownInMode: function(event) {
     if (this.delayMode)
@@ -200,7 +200,7 @@ var linkHints = {
         for (var i in this.hintMarkers)
           this.hideMarker(this.hintMarkers[i]);
         for (var i in linksMatched)
-          this.showMarker(linksMatched[i], this.hintKeystrokeQueue.length);
+          this.showMarker(linksMatched[i], this.markerMatcher.hintKeystrokeQueue.length);
       }
     }
 
@@ -377,24 +377,25 @@ var alphabetHints = {
   },
 
   matchHintsByKey: function (event, hintMarkers) {
+    var linksMatched = hintMarkers;
     var keyChar = getKeyChar(event);
     if (!keyChar)
-      return hintMarkers;
+      return { 'linksMatched': linksMatched };
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (this.hintKeystrokeQueue.length == 0) {
-        return [];
+        var linksMatched = [];
       } else {
         this.hintKeystrokeQueue.pop();
         var matchString = this.hintKeystrokeQueue.join("");
-        var linksMatched = hintMarkers.filter(function(linkMarker) {
+        var linksMatched = linksMatched.filter(function(linkMarker) {
           return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
         });
       }
     } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
       this.hintKeystrokeQueue.push(keyChar);
       var matchString = this.hintKeystrokeQueue.join("");
-      var linksMatched = hintMarkers.filter(function(linkMarker) {
+      var linksMatched = linksMatched.filter(function(linkMarker) {
         return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
       });
     }
@@ -457,35 +458,33 @@ var filterHints = {
   },
 
   matchHintsByKey: function(event, hintMarkers) {
-    var linksMatched;
+    var linksMatched = hintMarkers;
+    var delay = 0;
+    var keyChar = getKeyChar(event);
+
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
-        return [];
+        linksMatched = [];
       } else {
         // backspace clears hint key queue first, then acts on link text key queue
         if (this.hintKeystrokeQueue.pop())
-          linksMatched = this.filterLinkHints();
+          linksMatched = this.filterLinkHints(linksMatched);
         else {
           this.linkTextKeystrokeQueue.pop();
-          linksMatched = this.filterLinkHints();
+          linksMatched = this.filterLinkHints(linksMatched);
         }
       }
-      return linksMatched;
     } else if (event.keyCode == keyCodes.enter) {
         // activate the lowest-numbered link hint that is visible
-        for (var i = 0; i < hintMarkers.length; i++)
-          if (hintMarkers[i].style.display  != 'none')
-            return [ hintMarkers[i] ];
-    } else {
-      var keyChar = getKeyChar(event);
-      if (!keyChar)
-        return hintMarkers;
-
+        for (var i = 0; i < linksMatched.length; i++)
+          if (linksMatched[i].style.display  != 'none')
+            linksMatched = [ linksMatched[i] ];
+    } else if (keyChar) {
       var matchString;
       if (/[0-9]/.test(keyChar)) {
         this.hintKeystrokeQueue.push(keyChar);
         matchString = this.hintKeystrokeQueue.join("");
-        linksMatched = hintMarkers.filter(function(linkMarker) {
+        linksMatched = linksMatched.filter(function(linkMarker) {
           return linkMarker.getAttribute('filtered') != 'true'
             && linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
         });
@@ -494,7 +493,7 @@ var filterHints = {
         // should be rendered invalid (i.e. reset).
         this.hintKeystrokeQueue = [];
         this.linkTextKeystrokeQueue.push(keyChar);
-        linksMatched = this.filterLinkHints(hintMarkers);
+        linksMatched = this.filterLinkHints(linksMatched);
       }
 
       if (linksMatched.length == 1 && !/[0-9]/.test(keyChar)) {
@@ -503,8 +502,8 @@ var filterHints = {
         // control back to command mode immediately after a match is found.
         var delay = 200;
       }
-      return { 'linksMatched': linksMatched, 'delay': delay };
     }
+    return { 'linksMatched': linksMatched, 'delay': delay };
   },
 
   /*
