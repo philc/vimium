@@ -146,6 +146,9 @@ function clearKeyMappingsAndSetDefaults() {
     "x": "removeTab",
     "X": "restoreTab",
 
+    "b": "activateBookmarkFindMode",
+    "B": "activateBookmarkFindModeToOpenInNewTab",
+
     "gf": "nextFrame"
   };
 
@@ -206,6 +209,9 @@ var commandDescriptions = {
   createTab: ["Create new tab", { background: true }],
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
+
+  activateBookmarkFindMode: ["Open a bookmark in the current tab"],
+  activateBookmarkFindModeToOpenInNewTab: ["Open a bookmark in a new tab"],
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
 };
