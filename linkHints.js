@@ -25,7 +25,7 @@ var linkHints = {
   // While in delayMode, all keypresses have no effect.
   delayMode: false,
   // Handle the link hinting marker generation and matching. Must be initialized after settings have been
-  // loaded.
+  // loaded, so that we can retrieve the option setting.
   markerMatcher: undefined,
 
   /*
@@ -85,14 +85,10 @@ var linkHints = {
   buildLinkHints: function() {
     var visibleElements = this.getVisibleClickableElements();
 
-    // Initialize the number used to generate the character hints to be as many digits as we need to
-    // highlight all the links on the page; we don't want some link hints to have more chars than others.
-    var linkHintNumber = 0;
     this.markerMatcher.initSetMarkerAttributes(visibleElements);
-    for (var i = 0; i < visibleElements.length; i++) {
-      this.hintMarkers.push(this.createMarkerFor(visibleElements[i], linkHintNumber));
-      linkHintNumber++;
-    }
+    for (var i = 0; i < visibleElements.length; i++)
+      this.hintMarkers.push(this.createMarkerFor(visibleElements[i], i));
+
     // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
     // that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
@@ -127,6 +123,7 @@ var linkHints = {
     // Find all visible clickable elements.
     for (var i = 0; i < resultSet.snapshotLength; i++) {
       var element = resultSet.snapshotItem(i);
+      // Note: this call will be expensive if we modify the DOM in between calls.
       var clientRect = element.getClientRects()[0];
 
       if (this.isVisible(element, clientRect))
@@ -325,7 +322,6 @@ var linkHints = {
     marker.clickableItem = link.element;
     this.markerMatcher.setMarkerAttributes(marker, linkHintNumber);
 
-    // Note: this call will be expensive if we modify the DOM in between calls.
     var clientRect = link.rect;
     // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
     // the document node.
@@ -343,6 +339,10 @@ var alphabetHints = {
   digitsNeeded: 1,
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
+  /*
+   * Initialize the number used to generate the character hints to be as many digits as we need to highlight
+   * all the links on the page; we don't want some link hints to have more chars than others.
+   */
   initSetMarkerAttributes: function(visibleElements) {
     this.digitsNeeded = Math.ceil(this.logXOfBase(
           visibleElements.length, settings.get('linkHintCharacters').length));
@@ -469,17 +469,13 @@ var filterHints = {
     var keyChar = getKeyChar(event);
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-      if (this.linkTextKeystrokeQueue.length == 0 && this.hintKeystrokeQueue.length == 0) {
+      // backspace clears hint key queue first, then acts on link text key queue
+      if (this.hintKeystrokeQueue.pop())
+        linksMatched = this.filterLinkHints(linksMatched);
+      else if (this.linkTextKeystrokeQueue.pop())
+        linksMatched = this.filterLinkHints(linksMatched);
+      else // both queues are empty. exit hinting mode
         linksMatched = [];
-      } else {
-        // backspace clears hint key queue first, then acts on link text key queue
-        if (this.hintKeystrokeQueue.pop())
-          linksMatched = this.filterLinkHints(linksMatched);
-        else {
-          this.linkTextKeystrokeQueue.pop();
-          linksMatched = this.filterLinkHints(linksMatched);
-        }
-      }
     } else if (event.keyCode == keyCodes.enter) {
         // activate the lowest-numbered link hint that is visible
         for (var i = 0; i < linksMatched.length; i++)
