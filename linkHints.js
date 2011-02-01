@@ -84,10 +84,7 @@ var linkHints = {
    */
   buildLinkHints: function() {
     var visibleElements = this.getVisibleClickableElements();
-
-    this.markerMatcher.initSetMarkerAttributes(visibleElements);
-    for (var i = 0; i < visibleElements.length; i++)
-      this.hintMarkers.push(this.createMarkerFor(visibleElements[i], i));
+    this.hintMarkers = this.markerMatcher.getHintMarkers(visibleElements);
 
     // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
@@ -313,48 +310,29 @@ var linkHints = {
     }
   },
 
-  /*
-   * Creates a link marker for the given link.
-   */
-  createMarkerFor: function(link, linkHintNumber) {
-    var marker = document.createElement("div");
-    marker.className = "internalVimiumHintMarker vimiumHintMarker";
-    marker.clickableItem = link.element;
-    this.markerMatcher.setMarkerAttributes(marker, linkHintNumber);
-
-    var clientRect = link.rect;
-    // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
-    // the document node.
-    var zoomFactor = currentZoomLevel / 100.0;
-    marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
-    marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
-
-    return marker;
-  },
-
 };
 
 var alphabetHints = {
   hintKeystrokeQueue: [],
-  digitsNeeded: 1,
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
-  /*
-   * Initialize the number used to generate the character hints to be as many digits as we need to highlight
-   * all the links on the page; we don't want some link hints to have more chars than others.
-   */
-  initSetMarkerAttributes: function(visibleElements) {
-    this.digitsNeeded = Math.ceil(this.logXOfBase(
+  getHintMarkers: function(visibleElements) {
+    //Initialize the number used to generate the character hints to be as many digits as we need to highlight
+    //all the links on the page; we don't want some link hints to have more chars than others.
+    var digitsNeeded = Math.ceil(this.logXOfBase(
           visibleElements.length, settings.get('linkHintCharacters').length));
-  },
+    var hintMarkers = [];
 
-  setMarkerAttributes: function(marker, linkHintNumber) {
-    var hintString = this.numberToHintString(linkHintNumber, this.digitsNeeded);
-    marker.innerHTML = hintUtils.spanWrap(hintString);
-    marker.setAttribute("hintString", hintString);
-    return marker;
-  },
+    for (var i = 0; i < visibleElements.length; i++) {
+      var hintString = this.numberToHintString(i, digitsNeeded);
+      var marker = hintUtils.createMarkerFor(visibleElements[i]);
+      marker.innerHTML = hintUtils.spanWrap(hintString);
+      marker.setAttribute("hintString", hintString);
+      hintMarkers.push(marker);
+    }
 
+    return hintMarkers;
+  },
   /*
    * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
    * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
@@ -417,7 +395,7 @@ var filterHints = {
   /*
    * Generate a map of input element => label
    */
-  initSetMarkerAttributes: function() {
+  generateLabelMap: function() {
     var labels = document.querySelectorAll("label");
     for (var i = 0; i < labels.length; i++) {
       var forElement = labels[i].getAttribute("for");
@@ -461,6 +439,17 @@ var filterHints = {
     marker.setAttribute("hintString", hintString);
     marker.innerHTML = hintUtils.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
     marker.setAttribute("linkText", linkText);
+  },
+
+  getHintMarkers: function(visibleElements) {
+    this.generateLabelMap();
+    var hintMarkers = [];
+    for (var i = 0; i < visibleElements.length; i++) {
+      var marker = hintUtils.createMarkerFor(visibleElements[i]);
+      this.setMarkerAttributes(marker, i);
+      hintMarkers.push(marker);
+    }
+    return hintMarkers;
   },
 
   matchHintsByKey: function(event, hintMarkers) {
@@ -551,5 +540,23 @@ var hintUtils = {
     for (var i = 0; i < hintString.length; i++)
       innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
     return innerHTML.join("");
+  },
+
+  /*
+   * Creates a link marker for the given link.
+   */
+  createMarkerFor: function(link) {
+    var marker = document.createElement("div");
+    marker.className = "internalVimiumHintMarker vimiumHintMarker";
+    marker.clickableItem = link.element;
+
+    var clientRect = link.rect;
+    // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
+    // the document node.
+    var zoomFactor = currentZoomLevel / 100.0;
+    marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
+    marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
+
+    return marker;
   }
 };
