@@ -1,12 +1,11 @@
-
 function activateBookmarkFindModeToOpenInNewTab() { 
-  BookmarkMode.openInNewTab(true)
-  BookmarkMode.enable()
+  BookmarkMode.openInNewTab(true);
+  BookmarkMode.enable();
 }
 
 function activateBookmarkFindMode() {
-  BookmarkMode.openInNewTab(false)
-  BookmarkMode.enable()
+  BookmarkMode.openInNewTab(false);
+  BookmarkMode.enable();
 }
 
 (function() {
@@ -16,22 +15,22 @@ function activateBookmarkFindMode() {
 
   var BookmarkMode = {
     isEnabled: function() {
-      return this.enabled
+      return this.enabled;
     },
     openInNewTab: function(newTab) {
-      this.newTab = newTab
+      this.newTab = newTab;
     },
     invertNewTabSetting: function() {
       this.newTab = !this.newTab;
       if(this.isEnabled()) {
-        this.renderHUD()
+        this.renderHUD();
       }
     },
     enable: function() {
       this.enabled = true;
 
       if(!this.initialized) {
-        initialize.call(this)
+        initialize.call(this);
       }
       
       handlerStack.push({
@@ -65,16 +64,16 @@ function activateBookmarkFindMode() {
     self.completionDialog = new CompletionDialog({
       source: findBookmarks,
       onSelect: function(selection) {
-        var url = selection.url
+        var url = selection.url;
         var isABookmarklet = function(url) {
-          return url.indexOf("javascript:")===0
+          return url.indexOf("javascript:")===0;
         }
 
         if(!self.newTab || isABookmarklet(url)) {
-          window.location=url
+          window.location=url;
         }
         else {
-          window.open(url)
+          window.open(url);
         }
         
         self.disable();
@@ -84,7 +83,7 @@ function activateBookmarkFindMode() {
         var displaytext = selection.title + " (" + selection.url + ")"
 
         if(displaytext.length>70) {
-          displaytext = displaytext.substr(0, 70)+"..."
+          displaytext = displaytext.substr(0, 70)+"...";
         }
 
         return displaytext.split(new RegExp(searchString, "i")).join("<strong>"+searchString+"</strong>")
@@ -96,8 +95,8 @@ function activateBookmarkFindMode() {
       // shift key will toggle between new tab/same tab
       if (event.keyCode == keyCodes.shiftKey) {
         self.invertNewTabSetting();
-        shiftWasPressedWhileToggled = true
-        return
+        shiftWasPressedWhileToggled = true;
+        return;
       }
 
       var keyChar = getKeyChar(event);
@@ -117,7 +116,7 @@ function activateBookmarkFindMode() {
       // shift key will toggle between new tab/same tab
       if (event.keyCode == keyCodes.shiftKey && shiftWasPressedWhileToggled) {
         self.invertNewTabSetting();
-        shiftWasPressedWhileToggled = false
+        shiftWasPressedWhileToggled = false;
       }
       event.stopPropagation();
       event.preventDefault();
@@ -125,12 +124,12 @@ function activateBookmarkFindMode() {
   }
 
   var findBookmarks = function(searchString, callback) {
-    var port = chrome.extension.connect({ name: "getBookmarks" }) 
+    var port = chrome.extension.connect({ name: "getBookmarks" }) ;
     port.onMessage.addListener(function(msg) {
-      callback(msg.bookmarks)
-      port = null
+      callback(msg.bookmarks);
+      port = null;
     })
-    port.postMessage({query:searchString})
+    port.postMessage({query:searchString});
   };
 
   //export global
