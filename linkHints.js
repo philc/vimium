@@ -225,6 +225,7 @@ var linkHints = {
     this.delayMode = true;
     if (this.isSelectable(matchedLink)) {
       this.simulateSelect(matchedLink);
+      this.deactivateMode(delay, function() { that.delayMode = false; });
     } else {
       if (this.shouldOpenWithQueue) {
         this.simulateClick(matchedLink);
