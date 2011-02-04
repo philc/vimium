@@ -142,9 +142,14 @@ function clearKeyMappingsAndSetDefaults() {
     "gt": "nextTab",
     "gT": "previousTab",
 
-    "t": "createTab",
+    "t": "enterEditURLTabMode",
+    "T": "createTab",
     "x": "removeTab",
     "X": "restoreTab",
+
+	"o": "enterEditURLMode",
+	"gh": "goHomeCurTab",
+	"gH": "goHomeNewTab",
 
     "gf": "nextFrame"
   };
@@ -204,8 +209,14 @@ var commandDescriptions = {
   nextTab: ["Go one tab right", { background: true }],
   previousTab: ["Go one tab left", { background: true }],
   createTab: ["Create new tab", { background: true }],
+  enterEditURLTabMode: ["Enter a URL to open in a new tab"],
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
+
+  //Navigation
+  enterEditURLMode: ["Enter a URL to open in the current tab"],
+  goHomeCurTab: ["Go home (currently google.com) in current tab"],
+  goHomeNewTab: ["Go home (currently google.com) in a new tab"],
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
 };
@@ -229,9 +240,11 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
+    ["nextTab", "previousTab", "createTab", "enterEditURLTabMode", "removeTab", "restoreTab"],
   misc:
-    ["showHelp"]
+    ["showHelp"],
+  navigation:
+    ["enterEditURLMode", "goHomeCurTab", "goHomeNewTab"]
 };
 
 // Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present

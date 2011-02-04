@@ -69,6 +69,7 @@
 
   var sendRequestHandlers = {
     getCompletionKeys: getCompletionKeys,
+	openPageInNewTab: openPageInNewTab,
     getLinkHintCss: getLinkHintCss,
     openUrlInNewTab: openUrlInNewTab,
     openUrlInCurrentTab: openUrlInCurrentTab,
@@ -247,6 +248,20 @@
     chrome.tabs.getSelected(null, function(tab) {
       chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: request.selected });
     });
+  }
+  function openPageInNewTab(request) {
+    //chrome.tabs.create({'url' : request.url});
+    chrome.tabs.getSelected(null, function(tab){
+      chrome.tabs.create({'url': request.url, 'index': tab.index + 1})
+    });
+    return true;
+  }
+
+  function goHomeNewTab() {
+    chrome.tabs.getSelected(null, function(tab){
+      chrome.tabs.create({'url': "http://www.google.com", 'index': tab.index + 1})
+    });
+    //chrome.tabs.create({'url': "http://www.google.com"});
   }
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.

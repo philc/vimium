@@ -13,6 +13,9 @@ var insertMode = false;
 var findMode = false;
 var findModeQuery = "";
 var findModeQueryHasResults = false;
+var editURLMode = false;
+var editURLString = "";
+var editURLTabMode = false;
 var isShowingHelpDialog = false;
 var keyPort;
 var settingPort;
@@ -284,6 +287,10 @@ function goUp(count) {
   }
 }
 
+function goHomeCurTab() {
+	window.location = "http://www.google.com";
+}
+
 function toggleViewSource() {
   getCurrentUrlHandlers.push(toggleViewSourceCallback);
 
@@ -342,6 +349,10 @@ function onKeypress(event) {
         // Don't let the space scroll us if we're searching.
         if (event.keyCode == keyCodes.space)
           event.preventDefault();
+	  } else if (editURLMode) {
+	    handleKeyCharForEditURLMode(keyChar);
+		if(event.keyCode == keyCodes.space)
+			event.preventDefault();
       } else if (!insertMode && !findMode) {
         if (currentCompletionKeys.indexOf(keyChar) != -1) {
           event.preventDefault();
@@ -410,6 +421,28 @@ function onKeydown(event) {
     }
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode();
+  }
+  else if (editURLMode)
+  {
+  	if(isEscape(event))
+	{
+		exitEditURLMode();
+	}
+	else if (keyChar)
+	{
+		handleKeyCharForEditURLMode(keyChar);
+		if(event.keyCode == keyCodes.space)
+			event.preventDefault();
+	}
+	else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
+	{
+		handleDeleteForEditURLMode();
+		event.preventDefault();
+	}
+	else if (event.keyCode == keyCodes.enter)
+	{
+		handleEnterForEditURLMode();
+	}
   }
   else if (isShowingHelpDialog && isEscape(event))
   {
@@ -599,6 +632,65 @@ function showFindModeHUDForQuery() {
     HUD.show("/" + insertSpaces(findModeQuery));
   else
     HUD.show("/" + insertSpaces(findModeQuery + " (No Matches)"));
+}
+
+function handleKeyCharForEditURLMode(keyChar)
+{
+	editURLString = editURLString + keyChar;
+	showEditURLModeHUD();
+}
+
+function handleDeleteForEditURLMode()
+{
+	if(editURLString.length == 0)
+	{
+		exitEditURLMode();
+	}
+	else
+	{
+		editURLString = editURLString.substring(0, editURLString.length - 1);
+		showEditURLModeHUD();
+	}
+}
+
+function handleEnterForEditURLMode()
+{
+	if(editURLTabMode)
+	{
+		//chrome.tabs.create({'url' : editURLString});
+		chrome.extension.sendRequest({handler: "openPageInNewTab", url: editURLString});
+	}
+	else
+	{
+		window.location = editURLString;
+	}
+	exitEditURLMode();
+}
+
+function showEditURLModeHUD() {
+	HUD.show("Go to: " + editURLString);
+}
+
+function enterEditURLMode()
+{
+	editURLString = "http://";
+	editURLMode = true;
+	HUD.show("Go to: " + editURLString);
+}
+
+function exitEditURLMode()
+{
+	editURLMode = false;
+	editURLTabMode = false;
+	HUD.hide();
+}
+
+function enterEditURLTabMode()
+{
+	editURLString = "http://";
+	editURLMode = true;
+	editURLTabMode = true;
+	HUD.show("Go to: " + editURLString);
 }
 
 /*
