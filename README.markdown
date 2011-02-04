@@ -30,10 +30,8 @@ Navigating the current page:
     l       scroll right
     gg      scroll to top of the page
     G       scroll to bottom of the page
-    <c-d>, <c-e>   scroll down a page
-    <c-u>, <c-y>   scroll up a page
-    <c-f>   scroll down a full page
-    <c-b>   scroll up a full page
+    d, <c-d>, <c-e>   scroll down half a page
+    u, <c-u>, <c-y>   scroll up half a page
     f       open a link in the current tab
     F       open a link in a new tab
     r       reload
@@ -69,6 +67,8 @@ Additional advanced browsing commands:
     zH      scroll all the way left
     zL      scroll all the way right
     z0      reset zoom to default value
+    <c-f>   scroll down a full page
+    <c-b>   scroll up a full page
 
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
