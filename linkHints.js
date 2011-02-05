@@ -88,6 +88,18 @@ function buildLinkHints() {
 
 function logXOfBase(x, base) { return Math.log(x) / Math.log(base); }
 
+String.prototype.to_tags = function () {
+  var normalizedTags = this
+    .toLowerCase()
+    .replace(/[^a-z]+/gi, " ")
+    .replace(/^\s+|\s+$/g, "");
+
+  if (normalizedTags.length == 0)
+    return [];
+
+  return normalizedTags.split(/[^a-z]+/i);
+}
+
 /*
  * Returns all clickable elements that are not hidden and are in the current viewport.
  * We prune invisible elements partly for performance reasons, but moreso it's to decrease the number
