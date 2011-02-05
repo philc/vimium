@@ -67,13 +67,8 @@ function setOpenLinkMode(openInNewTab, withQueue) {
 function buildLinkHints() {
   var visibleElements = getVisibleClickableElements();
 
-  // Initialize the number used to generate the character hints to be as many digits as we need to
-  // highlight all the links on the page; we don't want some link hints to have more chars than others.
-  var digitsNeeded = Math.ceil(logXOfBase(visibleElements.length, settings.linkHintCharacters.length));
-  var linkHintNumber = 0;
   for (var i = 0; i < visibleElements.length; i++) {
-    hintMarkers.push(createMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
-    linkHintNumber++;
+    hintMarkers.push(createMarkerFor(visibleElements[i], i));
   }
   // Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
   // because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
@@ -184,11 +179,10 @@ function onKeyDownInLinkHintsMode(event) {
       hintKeystrokeQueue.pop();
       updateLinkHints();
     }
-  } else if (settings.linkHintCharacters.indexOf(keyChar) >= 0) {
+  } else {
+    // console.log('queuing', keyChar);
     hintKeystrokeQueue.push(keyChar);
     updateLinkHints();
-  } else {
-    return;
   }
 
   event.stopPropagation();
@@ -210,8 +204,9 @@ function onKeyUpInLinkHintsMode(event) {
  * link hint remains, click on that link and exit link hints mode.
  */
 function updateLinkHints() {
-  var matchString = hintKeystrokeQueue.join("");
-  var linksMatched = highlightLinkMatches(matchString);
+  var matchTokens = hintKeystrokeQueue.join("").split(" ");
+  var linksMatched = highlightLinkMatches(matchTokens);
+  // console.log( linksMatched );
   if (linksMatched.length == 0)
     deactivateLinkHintsMode();
   else if (linksMatched.length == 1) {
@@ -219,6 +214,7 @@ function updateLinkHints() {
     if (isSelectable(matchedLink)) {
       matchedLink.focus();
       // When focusing a textbox, put the selection caret at the end of the textbox's contents.
+      simulateClick(matchedLink);
       matchedLink.setSelectionRange(matchedLink.value.length, matchedLink.value.length);
       deactivateLinkHintsMode();
     } else {
@@ -253,43 +249,31 @@ function isSelectable(element) {
  * Hides link hints which do not match the given search string. To allow the backspace key to work, this
  * will also show link hints which do match but were previously hidden.
  */
-function highlightLinkMatches(searchString) {
+function highlightLinkMatches(searchTokens) {
   var linksMatched = [];
   for (var i = 0; i < hintMarkers.length; i++) {
     var linkMarker = hintMarkers[i];
-    if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
-      if (linkMarker.style.display == "none")
-        linkMarker.style.display = "";
-      for (var j = 0; j < linkMarker.childNodes.length; j++)
-        linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
+    var keywords = linkMarker.keywords;
+    var doesMatch = true;
+    for (var j = 0; j < searchTokens.length && doesMatch; j++) {
+      var searchToken = searchTokens[j];
+      var matches = keywords.filter( function (word) { return word.indexOf(searchToken) != -1 } );
+      // console.log( 'innerloop', i, j, doesMatch, searchToken, keywords, matches )
+      if (matches.length == 0) {
+        doesMatch = false;
+        continue;
+      }
+    }
+    // console.log(doesMatch, linkMarker);
+    if (doesMatch) {
       linksMatched.push(linkMarker.clickableItem);
+      linkMarker.style.display = "block";
     } else {
       linkMarker.style.display = "none";
     }
   }
+  // console.log('returning', linksMatched);
   return linksMatched;
-}
-
-/*
- * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
- * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
- */
-function numberToHintString(number, numHintDigits) {
-  var base = settings.linkHintCharacters.length;
-  var hintString = [];
-  var remainder = 0;
-  do {
-    remainder = number % base;
-    hintString.unshift(settings.linkHintCharacters[remainder]);
-    number -= remainder;
-    number /= Math.floor(base);
-  } while (number > 0);
-
-  // Pad the hint string we're returning so that it matches numHintDigits.
-  var hintStringLength = hintString.length;
-  for (var i = 0; i < numHintDigits - hintStringLength; i++)
-    hintString.unshift(settings.linkHintCharacters[0]);
-  return hintString.join("");
 }
 
 function simulateClick(link) {
@@ -325,16 +309,9 @@ function resetLinkHintsMode() {
 /*
  * Creates a link marker for the given link.
  */
-function createMarkerFor(link, linkHintNumber, linkHintDigits) {
-  var hintString = numberToHintString(linkHintNumber, linkHintDigits);
+function createMarkerFor(link, linkHintNumber) {
   var marker = document.createElement("div");
   marker.className = "internalVimiumHintMarker vimiumHintMarker";
-  var innerHTML = [];
-  // Make each hint character a span, so that we can highlight the typed characters as you type them.
-  for (var i = 0; i < hintString.length; i++)
-    innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
-  marker.innerHTML = innerHTML.join("");
-  marker.setAttribute("hintString", hintString);
 
   // Note: this call will be expensive if we modify the DOM in between calls.
   var clientRect = link.rect;
@@ -345,5 +322,20 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
   marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
 
   marker.clickableItem = link.element;
+
+  marker.keywords = [];
+  if ( marker.keywords.length == 0 && link.element.innerText )
+    marker.keywords = link.element.innerText.to_tags();
+  if ( marker.keywords.length == 0 && link.element.value )
+    marker.keywords = link.element.value.to_tags();
+  if ( marker.keywords.length == 0 && link.element.id )
+    marker.keywords = link.element.id.to_tags();
+  if ( marker.keywords.length == 0 && link.element.title )
+    marker.keywords = link.element.title.to_tags();
+  if ( marker.keywords.length == 0 && link.element.name )
+    marker.keywords = link.element.name.to_tags();
+
+  marker.innerHTML = "<span>" + linkHintNumber + "[" + marker.keywords.join(",") + "]</span>";
+
   return marker;
 }
