@@ -112,7 +112,6 @@ function getVisibleClickableElements() {
     },
     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-
   var visibleElements = [];
 
   // Find all visible clickable elements.
@@ -137,6 +136,7 @@ function getVisibleClickableElements() {
       }
     }
   }
+
   return visibleElements;
 }
 
