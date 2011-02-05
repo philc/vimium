@@ -238,14 +238,65 @@ function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.sc
 function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
 function scrollToRight() { window.scrollTo(document.body.scrollWidth, window.pageYOffset); }
-function scrollUp() { window.scrollBy(0, -1 * settings["scrollStepSize"]); }
-function scrollDown() { window.scrollBy(0, settings["scrollStepSize"]); }
+function scrollUp() { smoothScrollUp(); }
+function scrollDown() { smoothScrollDown(); }
 function scrollPageUp() { window.scrollBy(0, -1 * window.innerHeight / 2); }
 function scrollPageDown() { window.scrollBy(0, window.innerHeight / 2); }
 function scrollFullPageUp() { window.scrollBy(0, -window.innerHeight); }
 function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
-function scrollLeft() { window.scrollBy(-1 * settings["scrollStepSize"], 0); }
-function scrollRight() { window.scrollBy(settings["scrollStepSize"], 0); }
+function scrollLeft() { smoothScrollLeft(); }
+function scrollRight() { smoothScrollRight(); }
+
+var smoothScrollTimer;
+var scrollDirection;
+
+function smoothScrollUp(){
+  scrollDirection = 'vertical';
+  smoothScrollBy(-1 * settings["scrollStepSize"]);
+}
+
+function smoothScrollDown(){
+  scrollDirection = 'vertical';
+  smoothScrollBy(settings["scrollStepSize"], 'vertical');
+}
+
+function smoothScrollLeft(){
+  scrollDirection = 'horizontal';
+  smoothScrollBy(-1 * settings["scrollStepSize"]);
+}
+
+function smoothScrollRight(){
+  scrollDirection = 'horizontal';
+  smoothScrollBy(settings["scrollStepSize"]);
+}
+
+function smoothScrollBy(moment){
+  clearTimeout(smoothScrollTimer);
+  smoothScroll(moment);
+}
+
+function smoothScroll(moment){
+  if (moment > 0)
+    moment = Math.floor(moment / 2);
+  else
+    moment = Math.ceil(moment / 2);
+
+  scrollFunc(moment);
+
+  if (Math.abs(moment) < 1) {
+    setTimeout(function() { scrollFunc(moment) });
+    return;
+  }
+  smoothScrollTimer = setTimeout(function() {smoothScroll(moment)}, 20);
+}
+  
+function scrollFunc(moment) {
+  if (scrollDirection == 'vertical') {
+    window.scrollBy(0, moment);
+  } else if (scrollDirection == 'horizontal') {
+    window.scrollBy(moment, 0);
+  }
+}
 
 function focusInput(count) {
   var results = document.evaluate(textInputXPath,
