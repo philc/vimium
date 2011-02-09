@@ -221,18 +221,23 @@ function setPageZoomLevel(zoomLevel, showUINotification) {
 }
 
 function zoomIn() {
-  setPageZoomLevel(currentZoomLevel += 20, true);
-  saveZoomLevel(window.location.host, currentZoomLevel);
+  currentZoomLevel += 20;
+  setAndSaveZoom();
 }
 
 function zoomOut() {
-  setPageZoomLevel(currentZoomLevel -= 20, true);
-  saveZoomLevel(window.location.host, currentZoomLevel);
+  currentZoomLevel -= 20;
+  setAndSaveZoom();
 }
 
 function zoomReset() {
-  setPageZoomLevel(100, true);
-  saveZoomLevel(window.location.host, 100);
+  currentZoomLevel = 100;
+  setAndSaveZoom();
+}
+
+function setAndSaveZoom() {
+  setPageZoomLevel(currentZoomLevel, true);
+  saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
 function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
