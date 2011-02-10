@@ -132,10 +132,14 @@
 
   <script>
     VimiumHelpDialog = {
+      // This setting is pulled out of local storage. It's false by default.
+      advancedCommandsVisible: {{showAdvancedCommands}},
+
       init: function() {
         this.dialogElement = document.getElementById("vimiumHelpDialog");
         this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", 
           VimiumHelpDialog.toggleAdvancedCommands, false);
+        this.showAdvancedCommands(this.advancedCommandsVisible);
       },
 
       /*
@@ -143,13 +147,20 @@
        */
       toggleAdvancedCommands: function(event) {
         event.preventDefault();
-        var advanced = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced");
-        var shouldShow = (advanced[0].style.display == "" || advanced[0].style.display == "none");
+        VimiumHelpDialog.advancedCommandsVisible = !VimiumHelpDialog.advancedCommandsVisible;
+        chrome.extension.sendRequest({ handler: "saveHelpDialogSettings",
+            showAdvancedCommands: VimiumHelpDialog.advancedCommandsVisible });
+        VimiumHelpDialog.showAdvancedCommands(VimiumHelpDialog.advancedCommandsVisible);
+      },
+
+      showAdvancedCommands: function(visible) {
         VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
-            shouldShow ? "Hide advanced commands" : "Show advanced commands";
+            visible ? "Hide advanced commands" : "Show advanced commands";
+        var advanced = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced");
         for (var i = 0; i < advanced.length; i++)
-          advanced[i].style.display = (shouldShow ? "table-row" : "none");
-      }
+          advanced[i].style.display = (visible ? "table-row" : "none");
+      },
+
     };
 
     VimiumHelpDialog.init();

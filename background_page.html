@@ -79,7 +79,8 @@
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition,
     copyToClipboard: copyToClipboard,
-    isEnabledForUrl: isEnabledForUrl
+    isEnabledForUrl: isEnabledForUrl,
+    saveHelpDialogSettings: saveHelpDialogSettings
   };
 
   // Event handlers
@@ -151,6 +152,10 @@
     return { isEnabledForUrl: isEnabled };
   }
 
+  function saveHelpDialogSettings(request) {
+    localStorage["helpDialog_showAdvancedCommands"] = request.showAdvancedCommands;
+  }
+
   /*
    * Returns the previously saved zoom level for the current tab, or the default zoom level
    */
@@ -186,6 +191,8 @@
                                         showUnboundCommands, showCommandNames));
     dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
     dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help");
+    dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}",
+        localStorage["helpDialog_showAdvancedCommands"] == "true");
     return dialogHtml;
   }
 
