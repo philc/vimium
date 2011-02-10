@@ -27,6 +27,7 @@
       margin-left:-320px;
       top:50px;
       -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
+      z-index:99999998;
     }
     #vimiumHelpDialog a { color:blue; }
     #vimiumTitle, #vimiumTitle * { font-size:20px; }
@@ -140,6 +141,7 @@
         this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", 
           VimiumHelpDialog.toggleAdvancedCommands, false);
         this.showAdvancedCommands(this.advancedCommandsVisible);
+        this.centerDialog();
       },
 
       /*
@@ -151,6 +153,7 @@
         chrome.extension.sendRequest({ handler: "saveHelpDialogSettings",
             showAdvancedCommands: VimiumHelpDialog.advancedCommandsVisible });
         VimiumHelpDialog.showAdvancedCommands(VimiumHelpDialog.advancedCommandsVisible);
+        VimiumHelpDialog.centerDialog();
       },
 
       showAdvancedCommands: function(visible) {
@@ -161,6 +164,12 @@
           advanced[i].style.display = (visible ? "table-row" : "none");
       },
 
+      centerDialog: function() {
+        var zoomFactor = currentZoomLevel / 100.0;
+        this.dialogElement.style.top = Math.max(
+            (window.innerHeight - this.dialogElement.clientHeight * zoomFactor) / 2.0,
+            20) / zoomFactor + "px";
+        }
     };
 
     VimiumHelpDialog.init();

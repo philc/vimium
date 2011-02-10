@@ -653,12 +653,6 @@ function showHelpDialog(html, fid) {
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
       function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
-
-  var dialog = document.getElementById("vimiumHelpDialog");
-  dialog.style.zIndex = "99999998";
-  var zoomFactor = currentZoomLevel / 100.0;
-  dialog.style.top =
-      Math.max((window.innerHeight - dialog.clientHeight * zoomFactor) / 2.0, 20) / zoomFactor + "px";
 }
 
 function hideHelpDialog(clickEvent) {
