@@ -18,8 +18,9 @@
   var focusedFrame = null;
   var framesForTab = {};
 
-  // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (the left arrow) or <f12>
-  // This regular expression captures two groups, the first is a named key, the second is the remainder of the string.
+  // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
+  // This regular expression captures two groups: the first is a named key, the second is the remainder of
+  // the string.
   var namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/;
 
   var defaultSettings = {
@@ -164,7 +165,8 @@
 
   function showHelp(callback, frameId) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.sendRequest(tab.id, { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
+      chrome.tabs.sendRequest(tab.id,
+        { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
     });
   }
 

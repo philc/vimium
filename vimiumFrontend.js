@@ -153,8 +153,8 @@ function initializeWhenEnabled() {
 /*
  * The backend needs to know which frame has focus.
  */
-window.addEventListener("focus", function(e){
-  chrome.extension.sendRequest({handler: "frameFocused", frameId: frameId});
+window.addEventListener("focus", function(e) {
+  chrome.extension.sendRequest({ handler: "frameFocused", frameId: frameId });
 });
 
 /*
@@ -185,7 +185,8 @@ function initializeOnDomReady() {
 // This is a little hacky but sometimes the size wasn't available on domReady?
 function registerFrameIfSizeAvailable (top) {
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
+    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId,
+        area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
   else
     setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
 }
