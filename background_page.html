@@ -141,7 +141,7 @@
    */
   function isEnabledForUrl(request) {
     // excludedUrls are stored as a series of URL expressions separated by newlines.
-    var excludedUrls = (localStorage["excludedUrls"] || defaultSettings.excludedUrls).split("\n");
+    var excludedUrls = getSettingFromLocalStorage("excludedUrls").split("\n");
     var isEnabled = true;
     for (var i = 0; i < excludedUrls.length; i++) {
       // The user can add "*" to the URL which means ".*"
@@ -163,8 +163,7 @@
     var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnZoomLevel" });
     var localStorageKey = "zoom" + args.domain;
     var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
-    var zoomLevel = parseInt(zoomLevelForDomain || localStorage["defaultZoomLevel"] ||
-        defaultSettings.defaultZoomLevel);
+    var zoomLevel = parseInt(zoomLevelForDomain || getSettingFromLocalStorage("defaultZoomLevel"));
     returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
@@ -284,10 +283,20 @@
    * Used by the content scripts to get settings from the local storage.
    */
   function getSetting(args, port) {
-    var value = localStorage[args.key] ? localStorage[args.key] : defaultSettings[args.key];
-
+    var value = getSettingFromLocalStorage(args.key);
     var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnSetting" });
     returnPort.postMessage({ key: args.key, value: value });
+  }
+
+  /*
+   * Used by everyone to get settings from local storage.
+   */
+  function getSettingFromLocalStorage(setting) {
+    if (localStorage[setting] != "" && !localStorage[setting]) {
+      return defaultSettings[setting];
+    } else {
+      return localStorage[setting];
+    }
   }
 
   /*
