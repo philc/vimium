@@ -30,8 +30,8 @@ Navigating the current page:
     l       scroll right
     gg      scroll to top of the page
     G       scroll to bottom of the page
-    d, <c-d>, <c-e>   scroll down half a page
-    u, <c-u>, <c-y>   scroll up half a page
+    d, <c-d>  scroll down half a page
+    u, <c-u>  scroll up half a page
     f       open a link in the current tab
     F       open a link in a new tab
     r       reload
