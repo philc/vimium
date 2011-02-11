@@ -94,7 +94,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.22, 1.23 (02/10/2011)
+1.22, 1.23, 1.24 (02/10/2011)
 
 -  Some sites are now excluded by default.
 -  View source (`gs`) now opens in a new tab.
