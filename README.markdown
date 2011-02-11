@@ -55,8 +55,8 @@ Manipulating tabs:
     J, gT      go one tab left
     K, gt      go one tab right
     t          create tab
-    d          close current tab
-    u          restore closed tab (i.e. unwind the 'd' command)
+    x          close current tab
+    X          restore closed tab (i.e. unwind the 'd' command)
 
 Additional advanced browsing commands:
     ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
