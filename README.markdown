@@ -94,13 +94,14 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.22
+1.22 (02/10/2011)
 
 -  Some sites are now excluded by default.
 -  View source (`gs`) now opens in a new tab.
 -  Support for browsing paginated sites using `]]` and `[[` to go forward and backward respectively.
 -  `z0` will reset the zoom level for the current page.
 -  Many of the less-used commands are now marked as "advanced" and hidden in the help dialog by default, so that the core command set is more focused and approachable.
+-  Improvements to link hinting.
 -  Bugfixes.
 
 1.21 (10/24/2010)
