@@ -75,8 +75,6 @@
 
   <script type="text/javascript">
   $ = function(id) { return document.getElementById(id); };
-  currentlyShowingDialog = null;
-
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
@@ -99,8 +97,8 @@
       $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
     $("showCommands").addEventListener("click", function () {
-      showDialog("vimiumCommandListingContainer",
-        chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"));
+      showHelpDialog(
+        chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId);
     }, false);
   }
 
@@ -164,30 +162,6 @@
       elements[i].style.display = (elements[i].style.display == "table-row") ? "none" : "table-row";
     event.preventDefault();
   }
-
-  function showDialog(dialogId, dialogHtml) {
-    if (currentlyShowingDialog)
-      return false;
-
-    currentlyShowingDialog = dialogId;
-    var container = document.createElement("div");
-    container.id = currentlyShowingDialog;
-    container.innerHTML = dialogHtml;
-    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideDialog, false);
-    container.getElementsByClassName("optionsPage")[0].style.display = 'none';
-    document.body.appendChild(container);
-    var dialog = document.getElementById("vimiumHelpDialog");
-    dialog.style.top = Math.max((window.innerHeight - dialog.clientHeight) / 2.0, 20) + "px";
-  }
-
-  function hideDialog() {
-    var dialog = document.getElementById(currentlyShowingDialog);
-    if (dialog)
-      dialog.parentNode.removeChild(dialog);
-
-    currentlyShowingDialog = null;
-  }
-
   </script>
 
   </head>
