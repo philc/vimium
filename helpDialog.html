@@ -5,7 +5,7 @@
 <div id="vimiumHelpDialog">
   <style>
     #vimiumHelpDialog * {
-      font-size:12px;
+      font-size:11px;
       line-height:130%;
       color:black;
       background-color:transparent;
@@ -27,6 +27,7 @@
       margin-left:-320px;
       top:50px;
       -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
+      z-index:99999998;
     }
     #vimiumHelpDialog a { color:blue; }
     #vimiumTitle, #vimiumTitle * { font-size:20px; }
@@ -132,10 +133,15 @@
 
   <script>
     VimiumHelpDialog = {
+      // This setting is pulled out of local storage. It's false by default.
+      advancedCommandsVisible: {{showAdvancedCommands}},
+
       init: function() {
         this.dialogElement = document.getElementById("vimiumHelpDialog");
         this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", 
           VimiumHelpDialog.toggleAdvancedCommands, false);
+        this.showAdvancedCommands(this.advancedCommandsVisible);
+        this.centerDialog();
       },
 
       /*
@@ -143,13 +149,27 @@
        */
       toggleAdvancedCommands: function(event) {
         event.preventDefault();
-        var advanced = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced");
-        var shouldShow = (advanced[0].style.display == "" || advanced[0].style.display == "none");
+        VimiumHelpDialog.advancedCommandsVisible = !VimiumHelpDialog.advancedCommandsVisible;
+        chrome.extension.sendRequest({ handler: "saveHelpDialogSettings",
+            showAdvancedCommands: VimiumHelpDialog.advancedCommandsVisible });
+        VimiumHelpDialog.showAdvancedCommands(VimiumHelpDialog.advancedCommandsVisible);
+        VimiumHelpDialog.centerDialog();
+      },
+
+      showAdvancedCommands: function(visible) {
         VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
-            shouldShow ? "Hide advanced commands" : "Show advanced commands";
+            visible ? "Hide advanced commands" : "Show advanced commands";
+        var advanced = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced");
         for (var i = 0; i < advanced.length; i++)
-          advanced[i].style.display = (shouldShow ? "table-row" : "none");
-      }
+          advanced[i].style.display = (visible ? "table-row" : "none");
+      },
+
+      centerDialog: function() {
+        var zoomFactor = currentZoomLevel / 100.0;
+        this.dialogElement.style.top = Math.max(
+            (window.innerHeight - this.dialogElement.clientHeight * zoomFactor) / 2.0,
+            20) / zoomFactor + "px";
+        }
     };
 
     VimiumHelpDialog.init();
