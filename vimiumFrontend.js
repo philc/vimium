@@ -80,7 +80,8 @@ function initializePreDomReady() {
   checkIfEnabledForUrl();
 
   var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
-  getZoomLevelPort.postMessage({ domain: window.location.host });
+  if (window.self == window.parent)
+    getZoomLevelPort.postMessage({ domain: window.location.host });
 
   chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
     linkHintCss = response.linkHintCss;
@@ -171,8 +172,8 @@ function initializeWhenEnabled() {
 /*
  * The backend needs to know which frame has focus.
  */
-window.addEventListener("focus", function(e){
-  chrome.extension.sendRequest({handler: "frameFocused", frameId: frameId});
+window.addEventListener("focus", function(e) {
+  chrome.extension.sendRequest({ handler: "frameFocused", frameId: frameId });
 });
 
 /*
@@ -203,7 +204,8 @@ function initializeOnDomReady() {
 // This is a little hacky but sometimes the size wasn't available on domReady?
 function registerFrameIfSizeAvailable (top) {
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId, area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
+    chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId,
+        area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
   else
     setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
 }
@@ -239,18 +241,23 @@ function setPageZoomLevel(zoomLevel, showUINotification) {
 }
 
 function zoomIn() {
-  setPageZoomLevel(currentZoomLevel += 20, true);
-  saveZoomLevel(window.location.host, currentZoomLevel);
+  currentZoomLevel += 20;
+  setAndSaveZoom();
 }
 
 function zoomOut() {
-  setPageZoomLevel(currentZoomLevel -= 20, true);
-  saveZoomLevel(window.location.host, currentZoomLevel);
+  currentZoomLevel -= 20;
+  setAndSaveZoom();
 }
 
 function zoomReset() {
-  setPageZoomLevel(100, true);
-  saveZoomLevel(window.location.host, 100);
+  currentZoomLevel = 100;
+  setAndSaveZoom();
+}
+
+function setAndSaveZoom() {
+  setPageZoomLevel(currentZoomLevel, true);
+  saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
 function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
@@ -665,12 +672,6 @@ function showHelpDialog(html, fid) {
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
       function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
-
-  var dialog = document.getElementById("vimiumHelpDialog");
-  dialog.style.zIndex = "99999998";
-  var zoomFactor = currentZoomLevel / 100.0;
-  dialog.style.top =
-      Math.max((window.innerHeight - dialog.clientHeight * zoomFactor) / 2.0, 20) / zoomFactor + "px";
 }
 
 function hideHelpDialog(clickEvent) {

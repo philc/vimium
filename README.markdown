@@ -30,10 +30,8 @@ Navigating the current page:
     l       scroll right
     gg      scroll to top of the page
     G       scroll to bottom of the page
-    <c-d>, <c-e>   scroll down a page
-    <c-u>, <c-y>   scroll up a page
-    <c-f>   scroll down a full page
-    <c-b>   scroll up a full page
+    d, <c-d>  scroll down half a page
+    u, <c-u>  scroll up half a page
     f       open a link in the current tab
     F       open a link in a new tab
     r       reload
@@ -57,8 +55,8 @@ Manipulating tabs:
     J, gT      go one tab left
     K, gt      go one tab right
     t          create tab
-    d          close current tab
-    u          restore closed tab (i.e. unwind the 'd' command)
+    x          close current tab
+    X          restore closed tab (i.e. unwind the 'x' command)
 
 Additional advanced browsing commands:
     ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
@@ -69,6 +67,8 @@ Additional advanced browsing commands:
     zH      scroll all the way left
     zL      scroll all the way right
     z0      reset zoom to default value
+    <c-f>   scroll down a full page
+    <c-b>   scroll up a full page
 
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
@@ -94,13 +94,14 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.22
+1.22, 1.23, 1.24, 1.25 (02/10/2011)
 
 -  Some sites are now excluded by default.
 -  View source (`gs`) now opens in a new tab.
 -  Support for browsing paginated sites using `]]` and `[[` to go forward and backward respectively.
 -  `z0` will reset the zoom level for the current page.
 -  Many of the less-used commands are now marked as "advanced" and hidden in the help dialog by default, so that the core command set is more focused and approachable.
+-  Improvements to link hinting.
 -  Bugfixes.
 
 1.21 (10/24/2010)
