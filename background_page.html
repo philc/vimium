@@ -372,9 +372,8 @@
     tabs.forEach(function(tab) {
       titles.push('<li class="vimiumTabEntry" data-vimium-tabid="'
         + tab.id
-        + '"><img src="'
-        + tab.favIconUrl
-        + '"></img>'
+        + '">'
+        + ( tab.favIconUrl ? '<img src="' + tab.favIconUrl + '"></img>' : '' )
         + tab.title
         + '</li>');
     });
