@@ -80,7 +80,8 @@
     updateScrollPosition: handleUpdateScrollPosition,
     copyToClipboard: copyToClipboard,
     isEnabledForUrl: isEnabledForUrl,
-    saveHelpDialogSettings: saveHelpDialogSettings
+    saveHelpDialogSettings: saveHelpDialogSettings,
+    switchToTab: switchToTab
   };
 
   // Event handlers
@@ -362,6 +363,37 @@
       // for the selection to change to consider this action done.
       selectionChangedHandlers.push(callback);
     });
+  }
+
+  function tabFilterDialogHtml(tabs) {
+    var dialogHtml = fetchFileContents("tabFilterDialog.html");
+
+    titles = [];
+    tabs.forEach(function(tab) {
+      titles.push('<li class="vimiumTabEntry" data-vimium-tabid="'
+          + tab.id
+          + '"><img src="'
+          + tab.favIconUrl
+          + '"></img>'
+          + tab.title
+          + '</li>');
+    });
+
+    dialogHtml = dialogHtml.replace('{{tabs}}', titles.join(''));
+    return dialogHtml;
+  }
+
+  function filterTabs(callback, frameId) {
+    chrome.tabs.getAllInWindow(null, function(tabs) {
+      chrome.tabs.getSelected(null, function(selectedTab) {
+        chrome.tabs.sendRequest(selectedTab.id,
+          { name: "showTabFilterDialog", dialogHtml: tabFilterDialogHtml(tabs), frameId:frameId });
+      });
+    });
+  }
+
+  function switchToTab(request) {
+    chrome.tabs.update(request.tabId, { selected: true });
   }
 
   function updateOpenTabs(tab) {

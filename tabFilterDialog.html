@@ -1,0 +1,74 @@
+<div id="vimiumTabFilterDialog">
+  <style>
+    #vimiumTabFilterDialog * {
+      font-size:11px;
+      line-height:130%;
+      color:black;
+      background-color:transparent;
+    }
+    #vimiumTabFilterDialog {
+      text-align:left;
+      border:3px solid red;
+      opacity:0.92;
+      background-color:#eee;
+      position:fixed;
+      width:600px;
+      font-family:helvetica, arial, sans;
+      border:2px solid #b3b3b3;
+      border-radius:6px;
+      padding:8px 12px;
+      width:640px;
+      left:50%;
+      /* This needs to be 1/2 width to horizontally center the help dialog */
+      margin-left:-320px;
+      top:50px;
+      -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
+      z-index:99999998;
+    }
+    #vimiumTabFilterDialog a { color:blue; }
+    #vimiumTabFilterDialog .closeButton {
+      position:absolute;
+      right:10px;
+      top:5px;
+      font-family:"courier new";
+      font-weight:bold;
+      color:#555;
+      text-decoration:none;
+      padding-left:10px;
+      font-size:16px;
+    }
+    #vimiumTabFilterInput {
+      width: 100%;
+      font-size: 40px;
+      background: white;
+    }
+
+    #vimiumTabList {
+      margin: 10px 0 0 20px;
+      font-size: 16px;
+      list-style-type: none;
+    }
+
+    #vimiumTabList li {
+      border: solid 2px rgba(10, 10, 10, 0.7);
+      border-radius: 5px;
+      padding: 5px;
+    }
+
+    #vimiumTabList li:hover, #vimiumTabList li.firstChoice {
+      background: rgba(10, 10, 10, 0.4);
+    }
+
+    #vimiumTabList li img {
+      margin-right: 20px;
+      width: 16px;
+    }
+  </style>
+
+  <a class="closeButton" href="#">x</a>
+  <input name="vimiumTabFilterInput" id="vimiumTabFilterInput" placeholder="Filter tabs by typing here">
+  </input>
+  <ul id="vimiumTabList">
+      {{tabs}}
+  </ul>
+</div>

@@ -14,6 +14,7 @@ var findMode = false;
 var findModeQuery = "";
 var findModeQueryHasResults = false;
 var isShowingHelpDialog = false;
+var isShowingTabFilterDialog = false;
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
@@ -83,6 +84,11 @@ function initializePreDomReady() {
         hideHelpDialog();
       else
         showHelpDialog(request.dialogHtml, request.frameId);
+    else if (request.name == "showTabFilterDialog")
+      if (isShowingTabFilterDialog)
+        hideTabFilterDialog();
+      else
+        showTabFilterDialog(request.dialogHtml, request.frameId);
     else if (request.name == "focusFrame")
       if(frameId == request.frameId)
         focusThisFrame(request.highlight);
@@ -422,6 +428,10 @@ function onKeydown(event) {
   {
     hideHelpDialog();
   }
+  else if (isShowingTabFilterDialog && isEscape(event))
+  {
+    hideTabFilterDialog();
+  }
   else if (!insertMode && !findMode) {
     if (keyChar) {
         if (currentCompletionKeys.indexOf(keyChar) != -1) {
@@ -658,6 +668,72 @@ function showHelpDialog(html, fid) {
 function hideHelpDialog(clickEvent) {
   isShowingHelpDialog = false;
   var helpDialog = document.getElementById("vimiumHelpDialogContainer");
+  if (helpDialog)
+    helpDialog.parentNode.removeChild(helpDialog);
+  if (clickEvent)
+    clickEvent.preventDefault();
+}
+
+function selectTab(tab) {
+  var tabId = parseInt(tab.getAttribute('data-vimium-tabid'));
+  chrome.extension.sendRequest({ handler: "switchToTab", tabId: tabId });
+  hideTabFilterDialog();
+}
+
+// called as event listener
+function filterTabList(e) {
+  // TODO: handle Return pressed
+  var switchToFirst = e.keyCode == keyCodes.enter;
+
+  var pattern = document.getElementById("vimiumTabFilterInput").value;
+  var tabItems = document.getElementsByClassName("vimiumTabEntry");
+  for (var i = 0; i < tabItems.length; i++) {
+    var tab = tabItems[i];
+    if (tab.innerText.toLowerCase().indexOf(pattern.toLowerCase()) == -1) {
+      tab.style.display = 'none';
+    }
+    else {
+      tab.style.display = '';
+      if (switchToFirst) {
+        selectTab(tab);
+        return;
+      }
+    }
+  }
+  return false;
+}
+
+function showTabFilterDialog(html, fid) {
+  if (isShowingTabFilterDialog || !document.body || fid != frameId)
+    return;
+  isShowingTabFilterDialog = true;
+  var container = document.createElement("div");
+  container.id = "vimiumTabFilterDialogContainer";
+
+  document.body.appendChild(container);
+
+  container.innerHTML = html;
+  // This is necessary because innerHTML does not evaluate javascript embedded in <script> tags.
+  var scripts = Array.prototype.slice.call(container.getElementsByTagName("script"));
+  scripts.forEach(function(script) { eval(script.text); });
+
+  container.getElementsByClassName("closeButton")[0].addEventListener("click", hideTabFilterDialog, false);
+  document.getElementById("vimiumTabFilterInput").addEventListener("keyup", filterTabList);
+  var tabListEntries = container.getElementsByClassName("vimiumTabEntry");
+  for(var i = 0; i < tabListEntries.length; i++) {
+    var node = tabListEntries[i];
+
+    // IIFE to avoid reference issue with respect to node
+    (function(node) {
+    node.addEventListener("click", function() { selectTab(node) }, false);
+    })(node);
+  };
+  document.getElementById("vimiumTabFilterInput").focus();
+}
+
+function hideTabFilterDialog(clickEvent) {
+  isShowingTabFilterDialog = false;
+  var helpDialog = document.getElementById("vimiumTabFilterDialogContainer");
   if (helpDialog)
     helpDialog.parentNode.removeChild(helpDialog);
   if (clickEvent)
