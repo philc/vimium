@@ -15,6 +15,7 @@ var findModeQuery = "";
 var findModeQueryHasResults = false;
 var isShowingHelpDialog = false;
 var isShowingTabFilterDialog = false;
+var currentTabFilterTarget = null;
 var keyPort;
 var settingPort;
 var saveZoomLevelPort;
@@ -680,10 +681,73 @@ function selectTab(tab) {
   hideTabFilterDialog();
 }
 
+function setCurrentTabFilterTarget(elt) {
+  if (currentTabFilterTarget)
+    currentTabFilterTarget.className = currentTabFilterTarget.className.replace(/ ?currentTabFilterTarget ?/, '');
+
+  currentTabFilterTarget = elt;
+
+  if (currentTabFilterTarget && currentTabFilterTarget.className.indexOf('currentTabFilterTarget') == -1)
+    currentTabFilterTarget.className += ' currentTabFilterTarget ';
+}
+
+/*
+ * Given a direction, "previous" or "next"
+ * tries to find a sibling 'tab' (list item)
+ * that can be set as the current target.
+ *
+ * Criteria: It exists and is displayed.
+ * Returns: next/prev sibling or null 
+ */
+function findSiblingToActivate(direction) {
+  if (!currentTabFilterTarget)
+    return null;
+
+  if (direction == "next") {
+    var next = currentTabFilterTarget.nextElementSibling;
+    while (next) {
+      if (next.style.display != 'none')
+        break;
+      next = next.nextElementSibling;
+    }
+    return next;
+  }
+  else if (direction == "previous") {
+    var previous = currentTabFilterTarget.previousElementSibling;
+    while (previous) {
+      if (previous.style.display != 'none')
+        break;
+      previous = previous.previousElementSibling;
+    }
+    return previous;
+  }
+  return null;
+}
+
+function navigateTabList(e) {
+  if (e.keyCode == 9) {
+    var dir = "next";
+    if (e.shiftKey)
+      dir = "previous";
+
+    var n = findSiblingToActivate(dir);
+    if (n)
+      setCurrentTabFilterTarget(n);
+    if (e.preventDefault)
+      e.preventDefault();
+    return false;
+  }
+  return true;
+}
+
 // called as event listener
 function filterTabList(e) {
   // TODO: handle Return pressed
-  var switchToFirst = e.keyCode == keyCodes.enter;
+  var switchToSelectedTab = e.keyCode == keyCodes.enter;
+  if (switchToSelectedTab && currentTabFilterTarget) {
+    selectTab(currentTabFilterTarget);
+    return;
+  }
 
   var pattern = document.getElementById("vimiumTabFilterInput").value;
   var tabItems = document.getElementsByClassName("vimiumTabEntry");
@@ -694,10 +758,13 @@ function filterTabList(e) {
     }
     else {
       tab.style.display = '';
-      if (switchToFirst) {
-        selectTab(tab);
-        return;
-      }
+      // if the current target is still being shown
+      // then it matches the tab filter. so we don't
+      // modify the target. Otherwise we set it to
+      // this. This way the first match is always
+      // selected
+      if (currentTabFilterTarget.style.display == 'none')
+        setCurrentTabFilterTarget(tab);
     }
   }
   return false;
@@ -718,8 +785,13 @@ function showTabFilterDialog(html, fid) {
   scripts.forEach(function(script) { eval(script.text); });
 
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideTabFilterDialog, false);
-  document.getElementById("vimiumTabFilterInput").addEventListener("keyup", filterTabList);
+  document.getElementById("vimiumTabFilterInput").addEventListener("keyup", filterTabList, false);
+  // because tab events are passed only to keydown
+  document.getElementById("vimiumTabFilterInput").addEventListener("keydown", navigateTabList, false);
+
   var tabListEntries = container.getElementsByClassName("vimiumTabEntry");
+  // reset target every time dialog is shown
+  setCurrentTabFilterTarget(tabListEntries[0]);
   for(var i = 0; i < tabListEntries.length; i++) {
     var node = tabListEntries[i];
 
@@ -733,6 +805,7 @@ function showTabFilterDialog(html, fid) {
 
 function hideTabFilterDialog(clickEvent) {
   isShowingTabFilterDialog = false;
+  setCurrentTabFilterTarget(null);
   var helpDialog = document.getElementById("vimiumTabFilterDialogContainer");
   if (helpDialog)
     helpDialog.parentNode.removeChild(helpDialog);
