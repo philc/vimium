@@ -71,7 +71,8 @@ function buildLinkHints() {
   // highlight all the links on the page; we don't want some link hints to have more chars than others.
   var digitsNeeded = Math.ceil(logXOfBase(visibleElements.length, settings.linkHintCharacters.length));
   var linkHintNumber = 0;
-  for (var i = 0; i < visibleElements.length; i++) {
+  var visiEleLength = visibleElements.length;
+  for (var i = 0; i < visiEleLength; i++) {
     hintMarkers.push(createMarkerFor(visibleElements[i], linkHintNumber, digitsNeeded));
     linkHintNumber++;
   }
@@ -81,7 +82,8 @@ function buildLinkHints() {
   // Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
   hintMarkerContainingDiv = document.createElement("div");
   hintMarkerContainingDiv.className = "internalVimiumHintMarker";
-  for (var i = 0; i < hintMarkers.length; i++)
+  var hintMarkerLength = hintMarkers.length;
+  for (var i = 0; i < hintMarkerLength; i++)
     hintMarkerContainingDiv.appendChild(hintMarkers[i]);
   document.documentElement.appendChild(hintMarkerContainingDiv);
 }
@@ -104,7 +106,8 @@ function getVisibleClickableElements() {
   var visibleElements = [];
 
   // Find all visible clickable elements.
-  for (var i = 0; i < resultSet.snapshotLength; i++) {
+  var resultSetLength = resultSet.snapshotLength;
+  for (var i = 0; i < resultSetLength; i++) {
     var element = resultSet.snapshotItem(i);
     var clientRect = element.getClientRects()[0];
 
@@ -114,7 +117,8 @@ function getVisibleClickableElements() {
     // If the link has zero dimensions, it may be wrapping visible
     // but floated elements. Check for this.
     if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
-      for (var j = 0; j < element.children.length; j++) {
+      var eleChildLength = element.children.length;
+      for (var j = 0; j < eleChildLength; j++) {
         if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') != 'none') {
           var childClientRect = element.children[j].getClientRects()[0];
           if (isVisible(element.children[j], childClientRect)) {
@@ -243,12 +247,14 @@ function isSelectable(element) {
  */
 function highlightLinkMatches(searchString) {
   var linksMatched = [];
-  for (var i = 0; i < hintMarkers.length; i++) {
+  var hintMarkersLength = hintMarkers.length;
+  for (var i = 0; i < hintMarkersLength; i++) {
     var linkMarker = hintMarkers[i];
     if (linkMarker.getAttribute("hintString").indexOf(searchString) == 0) {
       if (linkMarker.style.display == "none")
         linkMarker.style.display = "";
-      for (var j = 0; j < linkMarker.childNodes.length; j++)
+      var linkChildLength = linkMarker.childNodes.length;
+      for (var j = 0; j < linkChildLength; j++)
         linkMarker.childNodes[j].className = (j >= searchString.length) ? "" : "matchingCharacter";
       linksMatched.push(linkMarker.clickableItem);
     } else {
@@ -275,7 +281,8 @@ function numberToHintString(number, numHintDigits) {
 
   // Pad the hint string we're returning so that it matches numHintDigits.
   var hintStringLength = hintString.length;
-  for (var i = 0; i < numHintDigits - hintStringLength; i++)
+  var numDigitsHintLength = numHintDigits - hintStringLength;
+  for (var i = 0; i < numDigitsHintLength; i++)
     hintString.unshift(settings.linkHintCharacters[0]);
   return hintString.join("");
 }
@@ -319,7 +326,8 @@ function createMarkerFor(link, linkHintNumber, linkHintDigits) {
   marker.className = "internalVimiumHintMarker vimiumHintMarker";
   var innerHTML = [];
   // Make each hint character a span, so that we can highlight the typed characters as you type them.
-  for (var i = 0; i < hintString.length; i++)
+  var hintStringLength = hintString.length;
+  for (var i = 0; i < hintStringLength; i++)
     innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
   marker.innerHTML = innerHTML.join("");
   marker.setAttribute("hintString", hintString);
