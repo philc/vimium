@@ -94,6 +94,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.26
+
+- `<c-d>`, `<c-f>` and related are no longer bound by default. You can rebind them on the options page.
+
 1.22, 1.23, 1.24, 1.25 (02/10/2011)
 
 -  Some sites are now excluded by default.
