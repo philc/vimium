@@ -30,8 +30,8 @@ Navigating the current page:
     l       scroll right
     gg      scroll to top of the page
     G       scroll to bottom of the page
-    d, <c-d>  scroll down half a page
-    u, <c-u>  scroll up half a page
+    d       scroll down half a page
+    u       scroll up half a page
     f       open a link in the current tab
     F       open a link in a new tab
     r       reload
@@ -67,8 +67,6 @@ Additional advanced browsing commands:
     zH      scroll all the way left
     zL      scroll all the way right
     z0      reset zoom to default value
-    <c-f>   scroll down a full page
-    <c-b>   scroll up a full page
 
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
@@ -94,9 +92,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.26
+1.26 (02/17/2011)
 
 - `<c-d>`, `<c-f>` and related are no longer bound by default. You can rebind them on the options page.
+- Faster link hinting.
 
 1.22, 1.23, 1.24, 1.25 (02/10/2011)
 
