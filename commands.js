@@ -147,7 +147,7 @@ function clearKeyMappingsAndSetDefaults() {
     "X": "restoreTab",
 
 	"b": "activateBookmarkFindMode",
-	"B", "activateBookmarkFindModeToOpenInNewTab",
+	"B": "activateBookmarkFindModeToOpenInNewTab",
 
     "gf": "nextFrame"
   };
@@ -230,14 +230,14 @@ var commandGroups = {
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "zoomReset", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
-     "goPrevious", "goNext", "nextFrame"],
+     "goPrevious", "goNext", "nextFrame", "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
   misc:
-    ["showHelp", "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab"]
+    ["showHelp"]
 };
 
 // Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
