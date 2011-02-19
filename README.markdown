@@ -34,6 +34,8 @@ Navigating the current page:
     u, <c-u>  scroll up half a page
     f       open a link in the current tab
     F       open a link in a new tab
+    b       activate bookmark find mode to open in current tab
+    B       activate bookmark find mode to open in new tab
     r       reload
     gs      view source
     zi      zoom in
