@@ -273,6 +273,7 @@ function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
 function scrollLeft() { window.scrollBy(-1 * settings.get("scrollStepSize"), 0); }
 function scrollRight() { window.scrollBy(settings.get("scrollStepSize"), 0); }
 
+
 function focusInput(count) {
   var results = document.evaluate(textInputXPath,
                                   document.documentElement, null,
@@ -348,7 +349,7 @@ function toggleViewSourceCallback(url) {
 function onKeypress(event) {
   var keyChar = "";
 
-  if (linkHints.modeActivated)
+  if (linkHints.modeActivated || BookmarkMode.isEnabled())
     return;
 
   // Ignore modifier keys by themselves.

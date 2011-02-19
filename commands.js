@@ -146,6 +146,9 @@ function clearKeyMappingsAndSetDefaults() {
     "x": "removeTab",
     "X": "restoreTab",
 
+	"b": "activateBookmarkFindMode",
+	"B", "activateBookmarkFindModeToOpenInNewTab",
+
     "gf": "nextFrame"
   };
 
@@ -185,6 +188,9 @@ var commandDescriptions = {
   'linkHints.activateMode': ["Open a link in the current tab"],
   'linkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"],
   'linkHints.activateModeWithQueue': ["Open multiple links in a new tab"],
+
+  activateBookmarkFindMode: ["Find bookmarks to open in current tab"],
+  activateBookmarkFindModeToOpenInNewTab: ["Find bookmarks to open in new tab"],
 
   enterFindMode: ["Enter find mode"],
   performFind: ["Cycle forward to the next find match"],
@@ -231,7 +237,7 @@ var commandGroups = {
   tabManipulation:
     ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
   misc:
-    ["showHelp"]
+    ["showHelp", "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab"]
 };
 
 // Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
