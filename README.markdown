@@ -131,6 +131,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.27
+
+- Bugfixes.
+
 1.26 (02/17/2011)
 
 - `<c-d>`, `<c-f>` and related are no longer bound by default. You can rebind them on the options page.
