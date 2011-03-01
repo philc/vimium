@@ -275,7 +275,7 @@ function numberToHintString(number, numHintDigits) {
   } while (number > 0);
 
   // Pad the hint string we're returning so that it matches numHintDigits.
-  for (var i = 0; i < numHintDigits - hintString.length; i++)
+  for (var i = 0, count = numHintDigits - hintString.length; i < count; i++)
     hintString.unshift(settings.linkHintCharacters[0]);
   return hintString.join("");
 }
