@@ -5,7 +5,7 @@
  * commands by connectiong to a port named "domReady".
  */
 var settings = {};
-var settingsToLoad = ["scrollStepSize", "linkHintCharacters"];
+var settingsToLoad = ["scrollStepSize", "linkHintCharacters", "previousPatterns", "nextPatterns"];
 
 var getCurrentUrlHandlers = []; // function(url)
 
@@ -592,12 +592,14 @@ function findAndFollowRel(value) {
 }
 
 function goPrevious() {
-  var previousStrings = ["\bprev\b","\bprevious\b","\u00AB","<<","<"];
+  var previousPatterns = settings["previousPatterns"] || "";
+  var previousStrings = previousPatterns.split(",");
   findAndFollowRel('prev') || findAndFollowLink(previousStrings);
 }
 
 function goNext() {
-  var nextStrings = ["\bnext\b","\u00BB",">>","\bmore\b",">"];
+  var nextPatterns = settings["nextPatterns"] || "";
+  var nextStrings = nextPatterns.split(",");
   findAndFollowRel('next') || findAndFollowLink(nextStrings);
 }
 

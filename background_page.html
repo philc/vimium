@@ -31,7 +31,9 @@
       ".vimiumHintMarker {\n\n}\n" +
       ".vimiumHintMarker > .matchingCharacter {\n\n}",
     excludedUrls: "http*://mail.google.com/*\n" +
-                  "http*://www.google.com/reader/*\n"
+                  "http*://www.google.com/reader/*\n",
+    previousPatterns: "\\bprev\\b,\\bprevious\\b,\\u00AB,<<,<",
+    nextPatterns: "\\bnext\\b,\\u00BB,>>,\\bmore\\b,>"
   };
 
   // This is the base internal link hints CSS. It's combined with the userDefinedLinkHintCss before

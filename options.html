@@ -78,7 +78,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-                        "userDefinedLinkHintCss", "keyMappings"];
+                        "userDefinedLinkHintCss", "keyMappings", "previousPatterns", "nextPatterns"];
 
   var canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"];
 
@@ -241,6 +241,28 @@
             </div>
           </div>
           <textarea id="userDefinedLinkHintCss" type="text"></textarea>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Previous Patterns</td>
+        <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The Patterns split by ','.
+              </div>
+            </div>
+            <input id="previousPatterns" type="text" style="width:320px" />
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Next Patterns</td>
+        <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The Patterns split by ','.
+              </div>
+            </div>
+            <input id="nextPatterns" type="text" style="width:320px" />
         </td>
       </tr>
     </table>
