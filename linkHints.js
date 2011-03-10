@@ -301,6 +301,7 @@ function deactivateLinkHintsMode() {
   hintKeystrokeQueue = [];
   document.removeEventListener("keydown", onKeyDownInLinkHintsMode, true);
   document.removeEventListener("keyup", onKeyUpInLinkHintsMode, true);
+  document.activeElement.blur();
   linkHintsModeActivated = false;
   HUD.hide();
 }
