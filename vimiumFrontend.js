@@ -21,6 +21,7 @@ var saveZoomLevelPort;
 var isEnabledForUrl = true;
 // The user's operating system.
 var currentCompletionKeys;
+var validFirstKeys;
 var linkHintCss;
 
 // TODO(philc): This should be pulled from the extension's storage when the page loads.
@@ -74,20 +75,21 @@ function initializePreDomReady() {
   keyPort = chrome.extension.connect({ name: "keyDown" });
 
   chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-    if (request.name == "hideUpgradeNotification")
+    if (request.name == "hideUpgradeNotification") {
       HUD.hideUpgradeNotification();
-    else if (request.name == "showUpgradeNotification" && isEnabledForUrl)
+    } else if (request.name == "showUpgradeNotification" && isEnabledForUrl) {
       HUD.showUpgradeNotification(request.version);
-    else if (request.name == "showHelpDialog")
+    } else if (request.name == "showHelpDialog") {
       if (isShowingHelpDialog)
         hideHelpDialog();
       else
         showHelpDialog(request.dialogHtml, request.frameId);
-    else if (request.name == "focusFrame")
-      if(frameId == request.frameId)
+    } else if (request.name == "focusFrame") {
+      if (frameId == request.frameId)
         focusThisFrame(request.highlight);
-    else if (request.name == "refreshCompletionKeys")
-      refreshCompletionKeys(request.completionKeys);
+    } else if (request.name == "refreshCompletionKeys") {
+      refreshCompletionKeys(request);
+    }
     sendResponse({}); // Free up the resources used by this open connection.
   });
 
@@ -102,7 +104,7 @@ function initializePreDomReady() {
           }
         }
 
-        refreshCompletionKeys(args.completionKeys);
+        refreshCompletionKeys(args);
       });
     }
     else if (port.name == "getScrollPosition") {
@@ -130,10 +132,6 @@ function initializePreDomReady() {
       });
     } else if (port.name == "returnSetting") {
       port.onMessage.addListener(setSetting);
-    } else if (port.name == "refreshCompletionKeys") {
-      port.onMessage.addListener(function (args) {
-        refreshCompletionKeys(args.completionKeys);
-      });
     }
   });
 }
@@ -460,13 +458,15 @@ function checkIfEnabledForUrl() {
     });
 }
 
-function refreshCompletionKeys(completionKeys) {
-  if (completionKeys)
-    currentCompletionKeys = completionKeys;
-  else
-    chrome.extension.sendRequest({handler: "getCompletionKeys"}, function (response) {
-      currentCompletionKeys = response.completionKeys;
-    });
+function refreshCompletionKeys(response) {
+  if (response) {
+    currentCompletionKeys = response.completionKeys;
+
+    if (response.validFirstKeys)
+      validFirstKeys = response.validFirstKeys;
+  } else {
+    chrome.extension.sendRequest({ handler: "getCompletionKeys" }, refreshCompletionKeys);
+  }
 }
 
 function onFocusCapturePhase(event) {

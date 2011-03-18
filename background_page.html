@@ -69,7 +69,7 @@
   };
 
   var sendRequestHandlers = {
-    getCompletionKeys: getCompletionKeys,
+    getCompletionKeys: getCompletionKeysRequest,
     getLinkHintCss: getLinkHintCss,
     openUrlInNewTab: openUrlInNewTab,
     openUrlInCurrentTab: openUrlInCurrentTab,
@@ -234,8 +234,11 @@
   /**
    * Returns the keys that can complete a valid command given the current key queue.
    */
-  function getCompletionKeys(request) {
-    return {completionKeys: generateCompletionKeys()};
+  function getCompletionKeysRequest(request) {
+    return { name: "refreshCompletionKeys",
+             completionKeys: generateCompletionKeys(),
+             validFirstKeys: validFirstKeys
+           };
   }
 
   /**
@@ -500,7 +503,7 @@
     populateValidFirstKeys();
     populateSingleKeyCommands();
 
-    sendRequestToAllTabs({ name: "refreshCompletionKeys", completionKeys: generateCompletionKeys() });
+    sendRequestToAllTabs(getCompletionKeysRequest());
   }
 
   /*
@@ -590,10 +593,8 @@
 
     // If we haven't sent the completion keys piggybacked on executePageCommand,
     // send them by themselves.
-    if (!refreshedCompletionKeys)
-    {
-      var port = chrome.tabs.connect(tabId, { name: "refreshCompletionKeys" });
-      port.postMessage({ completionKeys: generateCompletionKeys(newKeyQueue) });
+    if (!refreshedCompletionKeys) {
+      chrome.tabs.sendRequest(tabId, getCompletionKeysRequest(), null);
     }
 
     return newKeyQueue;
