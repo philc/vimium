@@ -369,6 +369,12 @@ var alphabetHints = {
     var hintStringLength = hintString.length;
     for (var i = 0; i < numHintDigits - hintStringLength; i++)
       hintString.unshift(settings.get('linkHintCharacters')[0]);
+
+    // Reversing the hint string has the advantage of making the link hints
+    // appear to spread out after the first key is hit. This is helpful on a
+    // page that has http links that are close to each other where link hints
+    // of 2 characters or more occlude each other.
+    hintString.reverse();
     return hintString.join("");
   },
 
