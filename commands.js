@@ -200,7 +200,7 @@ var commandDescriptions = {
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
+  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 };
 
 for (var command in commandDescriptions)
