@@ -182,12 +182,12 @@ function initializeOnDomReady() {
 };
 
 // This is a little hacky but sometimes the size wasn't available on domReady?
-function registerFrameIfSizeAvailable (top) {
+function registerFrameIfSizeAvailable (is_top) {
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
     chrome.extension.sendRequest({ handler: "registerFrame", frameId: frameId,
-        area: innerWidth * innerHeight, top: top, total: frames.length + 1 });
+        area: innerWidth * innerHeight, is_top: is_top, total: frames.length + 1 });
   else
-    setTimeout(function () { registerFrameIfSizeAvailable(top); }, 100);
+    setTimeout(function () { registerFrameIfSizeAvailable(is_top); }, 100);
 }
 
 /*
