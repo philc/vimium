@@ -690,15 +690,10 @@
     chrome.tabs.getSelected(null, function(tab) {
       var frames = framesForTab[tab.id].frames;
       var curr_index = getCurrFrameIndex(frames);
-      var new_index = curr_index;
 
       // TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
       // since it exists only to contain the other frames.
-      for (var i=0; i < count; i++) {
-        new_index++;
-        if (new_index >= frames.length)
-          new_index = 0;
-      }
+      var new_index = (curr_index + count) % frames.length;
 
       chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[new_index].id, highlight: true });
     });
