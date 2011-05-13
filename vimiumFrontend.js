@@ -396,7 +396,7 @@ function onKeydown(event) {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
-      if (isEditable(event.srcElement)) { event.srcElement.blur(); }
+      if (isEditable(event.srcElement) && !isGleebox(event.srcElement)) { event.srcElement.blur(); }
       exitInsertMode();
 
       // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search box.
@@ -510,6 +510,14 @@ function isEditable(target) {
     return true;
   var focusableInputs = ["input", "textarea", "select", "button"];
   return focusableInputs.indexOf(target.tagName.toLowerCase()) >= 0;
+}
+
+/*
+ * Identifies that the target element is the search field for the Gleebox Chrome extension, which 
+ * may need to be handled differently than a standard editable element in some cases
+ */
+function isGleebox(target) {
+	return (target.getAttribute("id") == "gleeSearchField") ? true : false;
 }
 
 function enterInsertMode() {
