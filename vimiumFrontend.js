@@ -391,12 +391,12 @@ function onKeydown(event) {
     }
   }
 
-  if (insertMode && isEscape(event))
+  if (insertMode && isEscape(event) && !isGleebox(event.srcElement))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
-      if (isEditable(event.srcElement) && !isGleebox(event.srcElement)) { event.srcElement.blur(); }
+      if (isEditable(event.srcElement)) { event.srcElement.blur(); }
       exitInsertMode();
 
       // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search box.
