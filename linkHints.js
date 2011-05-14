@@ -280,6 +280,11 @@ var linkHints = {
     // Debugging note: Firefox will not execute the link's default action if we dispatch this click event,
     // but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
     link.dispatchEvent(event);
+
+    // TODO(int3): do this for @role='link' and similar elements as well
+    var nodeName = link.nodeName.toLowerCase();
+    if (nodeName == 'a' || nodeName == 'button')
+      link.blur();
   },
 
   /*
