@@ -347,6 +347,7 @@ var alphabetHints = {
     } while (number > 0);
 
     // Pad the hint string we're returning so that it matches numHintDigits.
+    // Note: the loop body changes hintString.length, so the original length must be cached!
     var hintStringLength = hintString.length;
     for (var i = 0; i < numHintDigits - hintStringLength; i++)
       hintString.unshift(settings.get('linkHintCharacters')[0]);
