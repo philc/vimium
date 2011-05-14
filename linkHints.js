@@ -118,7 +118,7 @@ var linkHints = {
     var visibleElements = [];
 
     // Find all visible clickable elements.
-    for (var i = 0; i < resultSet.snapshotLength; i++) {
+    for (var i = 0, count = resultSet.snapshotLength; i < count; i++) {
       var element = resultSet.snapshotItem(i);
       // Note: this call will be expensive if we modify the DOM in between calls.
       var clientRect = element.getClientRects()[0];
@@ -129,7 +129,7 @@ var linkHints = {
       // If the link has zero dimensions, it may be wrapping visible
       // but floated elements. Check for this.
       if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
-        for (var j = 0; j < element.children.length; j++) {
+        for (var j = 0, childrenCount = element.children.length; j < childrenCount; j++) {
           if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') == 'none')
             continue;
           var childClientRect = element.children[j].getClientRects()[0];
@@ -261,7 +261,7 @@ var linkHints = {
    */
   showMarker: function(linkMarker, matchingCharCount) {
     linkMarker.style.display = "";
-    for (var j = 0; j < linkMarker.childNodes.length; j++)
+    for (var j = 0, count = linkMarker.childNodes.length; j < count; j++)
       linkMarker.childNodes[j].className = (j >= matchingCharCount) ? "" : "matchingCharacter";
   },
 
@@ -321,7 +321,7 @@ var alphabetHints = {
           visibleElements.length, settings.get('linkHintCharacters').length));
     var hintMarkers = [];
 
-    for (var i = 0; i < visibleElements.length; i++) {
+    for (var i = 0, count = visibleElements.length; i < count; i++) {
       var hintString = this.numberToHintString(i, digitsNeeded);
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
@@ -395,7 +395,7 @@ var filterHints = {
    */
   generateLabelMap: function() {
     var labels = document.querySelectorAll("label");
-    for (var i = 0; i < labels.length; i++) {
+    for (var i = 0, count = labels.length; i < count; i++) {
       var forElement = labels[i].getAttribute("for");
       if (forElement) {
         var labelText = labels[i].textContent.trim();
@@ -442,7 +442,7 @@ var filterHints = {
   getHintMarkers: function(visibleElements) {
     this.generateLabelMap();
     var hintMarkers = [];
-    for (var i = 0; i < visibleElements.length; i++) {
+    for (var i = 0, count = visibleElements.length; i < count; i++) {
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       this.setMarkerAttributes(marker, i);
       hintMarkers.push(marker);
@@ -465,7 +465,7 @@ var filterHints = {
         linksMatched = [];
     } else if (event.keyCode == keyCodes.enter) {
         // activate the lowest-numbered link hint that is visible
-        for (var i = 0; i < linksMatched.length; i++)
+        for (var i = 0, count = linksMatched.length; i < count; i++)
           if (linksMatched[i].style.display  != 'none')
             linksMatched = [ linksMatched[i] ];
     } else if (keyChar) {
