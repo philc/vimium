@@ -470,8 +470,10 @@ var filterHints = {
     } else if (event.keyCode == keyCodes.enter) {
         // activate the lowest-numbered link hint that is visible
         for (var i = 0, count = linksMatched.length; i < count; i++)
-          if (linksMatched[i].style.display  != 'none')
+          if (linksMatched[i].style.display  != 'none') {
             linksMatched = [ linksMatched[i] ];
+            break;
+          }
     } else if (keyChar) {
       var matchString;
       if (/[0-9]/.test(keyChar)) {
