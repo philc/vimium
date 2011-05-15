@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Vimium Options</title>
+    <script src="lib/utils.js"></script>
     <script src="lib/keyboardUtils.js"></script>
     <script src="linkHints.js"></script>
     <script src="lib/clipboard.js"></script>
@@ -70,7 +71,10 @@
       tr.advancedOption {
         display:none;
       }
-
+      input:read-only {
+        background-color: #eee;
+        color: #666;
+      }
     </style>
 
   <script type="text/javascript">
@@ -78,7 +82,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
   var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
-                        "userDefinedLinkHintCss", "keyMappings"];
+                        "userDefinedLinkHintCss", "keyMappings", "filterLinkHints"];
 
   var canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"];
 
@@ -93,8 +97,13 @@
 
   function initializeOptions() {
     populateOptions();
-    for (var i = 0; i < editableFields.length; i++)
+
+    for (var i = 0; i < editableFields.length; i++) {
       $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
+      $(editableFields[i]).addEventListener("change", enableSaveButton, false);
+      $(editableFields[i]).addEventListener("change", onDataLoaded, false);
+    }
+
     $("advancedOptions").addEventListener("click", openAdvancedOptions, false);
     $("showCommands").addEventListener("click", function () {
       showHelpDialog(
@@ -107,6 +116,10 @@
       enableSaveButton();
   }
 
+  function onDataLoaded() {
+    $("linkHintCharacters").readOnly = $("filterLinkHints").checked;
+  }
+
   function enableSaveButton() { $("saveOptions").removeAttribute("disabled"); }
 
   // Saves options to localStorage.
@@ -115,7 +128,16 @@
     // the freedom to change the defaults in the future.
     for (var i = 0; i < editableFields.length; i++) {
       var fieldName = editableFields[i];
-      var fieldValue = $(fieldName).value.trim();
+      var field = $(fieldName);
+
+      var fieldValue;
+      if (field.getAttribute("type") == "checkbox") {
+        fieldValue = field.checked ? "true" : "false";
+      } else {
+        fieldValue = field.value.trim();
+        field.value = fieldValue;
+      }
+
       var defaultFieldValue = (defaultSettings[fieldName] != null) ?
         defaultSettings[fieldName].toString() : "";
 
@@ -142,18 +164,31 @@
     for (var i = 0; i < editableFields.length; i++) {
       // If it's null or undefined, let's go to the default. We want to allow empty strings in certain cases.
       if (localStorage[editableFields[i]] != "" && !localStorage[editableFields[i]]) {
-        $(editableFields[i]).value = defaultSettings[editableFields[i]] || "";
+        var val = defaultSettings[editableFields[i]] || "";
       } else {
-        $(editableFields[i]).value = localStorage[editableFields[i]];
+	    var val = localStorage[editableFields[i]];
       }
-      $(editableFields[i]).setAttribute("savedValue", $(editableFields[i]).value);
+	  setFieldValue($(editableFields[i]), val);
     }
+    onDataLoaded();
   }
 
   function restoreToDefaults() {
-    for (var i = 0; i < editableFields.length; i++)
-      $(editableFields[i]).value = defaultSettings[editableFields[i]] || "";
+    for (var i = 0; i < editableFields.length; i++) {
+      var val = defaultSettings[editableFields[i]] || "";
+      setFieldValue($(editableFields[i]), val);
+    }
+    onDataLoaded();
     enableSaveButton();
+  }
+
+  function setFieldValue(field, value) {
+    if (field.getAttribute('type') == 'checkbox')
+      field.checked = value == "true";
+    else
+      field.value = value;
+
+    field.setAttribute("savedValue", value);
   }
 
   function openAdvancedOptions(event) {
@@ -241,6 +276,18 @@
             </div>
           </div>
           <textarea id="userDefinedLinkHintCss" type="text"></textarea>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Filter link hints</td>
+        <td verticalAlign="top">
+          <div class="help">
+            <div class="example">
+              Typing in link hints mode will filter link hints by the link text.<br/><br/>
+              Note: You <em>must</em> use numeric link hint characters in this mode
+            </div>
+          </div>
+          <input id="filterLinkHints" type="checkbox"/>
         </td>
       </tr>
     </table>

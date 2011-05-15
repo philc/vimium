@@ -9,16 +9,20 @@
   "options_page": "options.html",
   "permissions": [
     "tabs",
+    "bookmarks",
     "http://*/*",
     "https://*/*"
   ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["lib/keyboardUtils.js",
+      "js": ["lib/utils.js",
+             "lib/keyboardUtils.js",
              "lib/clipboard.js",
              "linkHints.js",
-             "vimiumFrontend.js"
+             "vimiumFrontend.js",
+             "completionDialog.js",
+             "bookmarks.js"
             ],
       "run_at": "document_start",
       "all_frames": true

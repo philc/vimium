@@ -27,6 +27,7 @@
     scrollStepSize: 60,
     defaultZoomLevel: 100,
     linkHintCharacters: "sadfjklewcmpgh",
+    filterLinkHints: false,
     userDefinedLinkHintCss:
       ".vimiumHintMarker {\n\n}\n" +
       ".vimiumHintMarker > .matchingCharacter {\n\n}",
@@ -65,7 +66,8 @@
     getCurrentTabUrl:     getCurrentTabUrl,
     getZoomLevel:         getZoomLevel,
     saveZoomLevel:        saveZoomLevel,
-    getSetting:           getSetting
+    getSetting:           getSetting,
+    getBookmarks:         getBookmarks
   };
 
   var sendRequestHandlers = {
@@ -289,6 +291,12 @@
     var value = getSettingFromLocalStorage(args.key);
     var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnSetting" });
     returnPort.postMessage({ key: args.key, value: value });
+  }
+
+  function getBookmarks(args, port) {
+    chrome.bookmarks.search(args.query, function(bookmarks) {
+        port.postMessage({bookmarks:bookmarks})
+    })
   }
 
   /*

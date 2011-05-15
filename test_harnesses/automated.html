@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <style type="text/css">
+      body {
+        font-family:"helvetica neue", "helvetica", "arial", "sans";
+        width: 800px;
+        margin: 0px auto;
+      }
+      #output-div {
+        white-space: pre-wrap;
+        background-color: #eee;
+        font-family: monospace;
+        margin: 0 0 50px 0;
+        border-style: dashed;
+        border-width: 1px 1px 0 1px;
+        border-color: #999;
+      }
+      .errorPosition {
+        color: #f33;
+        font-weight: bold;
+      }
+      .output-section {
+        padding: 10px 15px 10px 15px;
+        border-bottom: dashed 1px #999;
+      }
+    </style>
+    <script type="text/javascript" src="../lib/utils.js"></script>
+    <script type="text/javascript" src="../lib/keyboardUtils.js"></script>
+    <script type="text/javascript" src="../linkHints.js"></script>
+    <script type="text/javascript" src="../lib/clipboard.js"></script>
+    <script type="text/javascript" src="../vimiumFrontend.js"></script>
+    <script type="text/javascript" src="shoulda.js/shoulda.js"></script>
+    <script type="text/javascript">
+      /*
+       * Dispatching keyboard events via the DOM would require async tests,
+       * which tend to be more complicated. Here we create mock events and
+       * invoke the handlers directly.
+       */
+      function mockKeyboardEvent(keyChar) {
+        var event = {};
+        event.charCode = keyCodes[keyChar] !== undefined ? keyCodes[keyChar] : keyChar.charCodeAt(0);
+        event.keyIdentifier = "U+00" + event.charCode.toString(16);
+        event.keyCode = event.charCode;
+        event.stopPropagation = function(){};
+        event.preventDefault = function(){};
+        return event;
+      }
+
+      /*
+       * Generate tests that are common to both default and filtered
+       * link hinting modes.
+       */
+      function createGeneralHintTests(isFilteredMode) {
+        context("Link hints",
+
+          setup(function() {
+            var testContent =
+              "<a>test</a>" +
+              "<a>tress</a>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.markerMatcher = alphabetHints;
+          }),
+
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+          }),
+
+          should("create hints when activated, discard them when deactivated", function() {
+            linkHints.activateMode();
+            assert.isFalse(linkHints.hintMarkerContainingDiv == null);
+            linkHints.deactivateMode();
+            assert.isTrue(linkHints.hintMarkerContainingDiv == null);
+          }),
+
+          should("position items correctly", function() {
+            function assertStartPosition(element1, element2) {
+              assert.equal(element1.getClientRects()[0].left, element2.getClientRects()[0].left);
+              assert.equal(element1.getClientRects()[0].top, element2.getClientRects()[0].top);
+            }
+            stub(document.body, "style", "static");
+            linkHints.activateMode();
+            assertStartPosition(document.getElementsByTagName("a")[0], linkHints.hintMarkers[0]);
+            assertStartPosition(document.getElementsByTagName("a")[1], linkHints.hintMarkers[1]);
+            linkHints.deactivateMode();
+
+            stub(document.body.style, "position", "relative");
+            linkHints.activateMode();
+            assertStartPosition(document.getElementsByTagName("a")[0], linkHints.hintMarkers[0]);
+            assertStartPosition(document.getElementsByTagName("a")[1], linkHints.hintMarkers[1]);
+            linkHints.deactivateMode();
+          })
+
+        );
+      }
+      createGeneralHintTests(false);
+      createGeneralHintTests(true);
+
+      context("Alphabetical link hints",
+
+        setup(function() {
+          stub(settings.values, "filterLinkHints", "false");
+          linkHints.markerMatcher = alphabetHints;
+          // we need at least 16 elements to have double-character link hints
+          for (var i = 0; i < 16; i++) {
+            var link = document.createElement("a");
+            link.textContent = "test";
+            document.getElementById("test-div").appendChild(link);
+          }
+          linkHints.activateMode();
+        }),
+
+        tearDown(function() {
+          linkHints.deactivateMode();
+          document.getElementById("test-div").innerHTML = "";
+        }),
+
+        should("label the hints correctly", function() {
+          var hintStrings = ["ss", "sa", "sd"];
+          for (var i = 0; i < 3; i++)
+          assert.equal(hintStrings[i], linkHints.hintMarkers[i].getAttribute("hintString"));
+        }),
+
+        should("narrow the hints", function() {
+          linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
+          assert.equal("none", linkHints.hintMarkers[0].style.display);
+          assert.equal("", linkHints.hintMarkers[15].style.display);
+        })
+
+      );
+
+      context("Filtered link hints",
+
+        setup(function() {
+          stub(settings.values, "filterLinkHints", "true");
+          linkHints.markerMatcher = filterHints;
+        }),
+
+        context("Text hints",
+
+          setup(function() {
+            var testContent =
+              "<a>test</a>" +
+              "<a>tress</a>" +
+              "<a>trait</a>" +
+              "<a>track<img alt='alt text'/></a>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.activateMode();
+          }),
+
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+            linkHints.deactivateMode();
+          }),
+
+          should("label the hints", function() {
+            for (var i = 0; i < 4; i++)
+              assert.equal((i + 1).toString(), linkHints.hintMarkers[i].textContent.toLowerCase());
+          }),
+
+          should("narrow the hints", function() {
+            linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
+            linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
+            assert.equal("none", linkHints.hintMarkers[0].style.display);
+            assert.equal("1", linkHints.hintMarkers[1].getAttribute("hintString"));
+            assert.equal("", linkHints.hintMarkers[1].style.display);
+            linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
+            assert.equal("2", linkHints.hintMarkers[3].getAttribute("hintString"));
+          })
+
+        ),
+
+        context("Image hints",
+
+          setup(function() {
+            var testContent =
+              "<a><img alt='alt text'/></a>" +
+              "<a><img alt='alt text' title='some title'/></a>" +
+              "<a><img title='some title'/></a>" +
+              "<a><img src='blah' width='320px' height='100px'/></a>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.activateMode();
+          }),
+          
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+            linkHints.deactivateMode();
+          }),
+
+          should("label the images", function() {
+            assert.equal("1: alt text", linkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2: alt text", linkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3: some title", linkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4", linkHints.hintMarkers[3].textContent.toLowerCase());
+          })
+
+        ),
+
+        context("Input hints",
+
+          setup(function() {
+            var testContent =
+              "<input type='text' value='some value'/>" +
+              "<input type='password' value='some value'/>" +
+              "<textarea>some text</textarea>" +
+              "<label for='test-input'/>a label</label><input type='text' id='test-input' value='some value'/>" +
+              "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>";
+            document.getElementById("test-div").innerHTML = testContent;
+            linkHints.activateMode();
+          }),
+
+          tearDown(function() {
+            document.getElementById("test-div").innerHTML = "";
+            linkHints.deactivateMode();
+          }),
+
+          should("label the input elements", function() {
+            assert.equal("1", linkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2", linkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3", linkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4: a label", linkHints.hintMarkers[3].textContent.toLowerCase());
+            assert.equal("5: a label", linkHints.hintMarkers[4].textContent.toLowerCase());
+          })
+
+        )
+      );
+
+      Tests.outputMethod = function(output) {
+        var newOutput = Array.prototype.join.call(arguments, "\n");
+        newOutput = newOutput.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); // escape html
+        // highlight the source of the error
+        newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3");
+        document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>";
+        console.log.apply(console, arguments);
+      }
+      // ensure the extension has time to load before commencing the tests
+      document.addEventListener("DOMContentLoaded", function(){
+        setTimeout(Tests.run, 200);
+      });
+    </script>
+  </head>
+  <body>
+    <!-- should always be the first element on the page -->
+    <div id="test-div"></div>
+
+    <h1>Vimium Tests</h1>
+
+    <div id="output-div"></div>
+
+  </body>
+</html>
