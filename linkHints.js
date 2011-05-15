@@ -1,14 +1,12 @@
 /*
- * This implements link hinting. Typing "F" will enter link-hinting mode, where
- * all clickable items on the page have a hint marker displayed containing a
- * sequence of letters. Typing those letters will select a link.
+ * This implements link hinting. Typing "F" will enter link-hinting mode, where all clickable items on the
+ * page have a hint marker displayed containing a sequence of letters. Typing those letters will select a link.
  *
- * In our 'default' mode, the characters we use to show link hints are a
- * user-configurable option. By default they're the home row.  The CSS which is
- * used on the link hints is also a configurable option.
+ * In our 'default' mode, the characters we use to show link hints are a user-configurable option. By default
+ * they're the home row.  The CSS which is used on the link hints is also a configurable option.
  *
- * In 'filter' mode, our link hints are numbers, and the user can narrow down
- * the range of possibilities by typing the text of the link itself.
+ * In 'filter' mode, our link hints are numbers, and the user can narrow down the range of possibilities by
+ * typing the text of the link itself.
  */
 
 var linkHints = {
@@ -502,11 +500,10 @@ var filterHints = {
   },
 
   /*
-   * Hides the links that do not match the linkText search string and marks
-   * them with the 'filtered' DOM property. Renumbers the remainder.  Should
-   * only be called when there is a change in linkTextKeystrokeQueue, to
-   * avoid undesired renumbering.
-  */
+   * Hides the links that do not match the linkText search string and marks them with the 'filtered' DOM
+   * property. Renumbers the remainder.  Should only be called when there is a change in
+   * linkTextKeystrokeQueue, to avoid undesired renumbering.
+   */
   filterLinkHints: function(hintMarkers) {
     var linksMatched = [];
     var linkSearchString = this.linkTextKeystrokeQueue.join("");
