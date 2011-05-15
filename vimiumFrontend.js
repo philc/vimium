@@ -167,6 +167,7 @@ function initializePreDomReady() {
 function initializeWhenEnabled() {
   document.addEventListener("keydown", onKeydown, true);
   document.addEventListener("keypress", onKeypress, true);
+  document.addEventListener("keyup", onKeyup, true);
   document.addEventListener("focus", onFocusCapturePhase, true);
   document.addEventListener("blur", onBlurCapturePhase, true);
   enterInsertModeIfElementIsFocused();
