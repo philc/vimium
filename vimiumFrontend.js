@@ -615,8 +615,8 @@ function findAndFollowLink(linkStrings) {
     var findModeQueryHasResults = window.find(linkStrings[i], false, true, true, false, true, false);
     if (findModeQueryHasResults) {
       var node = window.getSelection().anchorNode;
-      while (node.nodeName != 'BODY') {
-        if (node.nodeName == 'A') {
+      while (node.nodeName.toLowerCase() != 'body') {
+        if (node.nodeName.toLowerCase() == 'a') {
           window.location = node.href;
           return true;
         }
