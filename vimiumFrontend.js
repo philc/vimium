@@ -7,7 +7,7 @@
 
 var getCurrentUrlHandlers = []; // function(url)
 
-var insertMode = false;
+var insertModeLock = null;
 var findMode = false;
 var findModeQuery = "";
 var findModeQueryHasResults = false;
@@ -221,7 +221,7 @@ function registerFrameIfSizeAvailable (is_top) {
 function enterInsertModeIfElementIsFocused() {
   // Enter insert mode automatically if there's already a text box focused.
   if (document.activeElement && isEditable(document.activeElement))
-    enterInsertMode();
+    enterInsertMode(document.activeElement);
 }
 
 /*
@@ -373,7 +373,7 @@ function onKeypress(event) {
         // Don't let the space scroll us if we're searching.
         if (event.keyCode == keyCodes.space)
           event.preventDefault();
-      } else if (!insertMode && !findMode) {
+      } else if (!isInsertMode() && !findMode) {
         if (currentCompletionKeys.indexOf(keyChar) != -1) {
           event.preventDefault();
           event.stopPropagation();
@@ -426,7 +426,7 @@ function onKeydown(event) {
     }
   }
 
-  if (insertMode && isEscape(event))
+  if (isInsertMode() && isEscape(event))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
@@ -456,7 +456,7 @@ function onKeydown(event) {
   {
     hideHelpDialog();
   }
-  else if (!insertMode && !findMode) {
+  else if (!isInsertMode() && !findMode) {
     if (keyChar) {
         if (currentCompletionKeys.indexOf(keyChar) != -1) {
             event.preventDefault();
@@ -477,7 +477,7 @@ function onKeydown(event) {
   // Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   //
   // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !insertMode
+  if (keyChar == "" && !isInsertMode()
                     && (currentCompletionKeys.indexOf(getKeyChar(event)) != -1 || validFirstKeys[getKeyChar(event)]))
     event.stopPropagation();
 }
@@ -495,7 +495,7 @@ function checkIfEnabledForUrl() {
       if (isEnabledForUrl)
         initializeWhenEnabled();
       else if (HUD.isReady())
-        // Quickly hide any HUD we might already be showing, e.g. if we entered insertMode on page load.
+        // Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
         HUD.hide();
     });
 }
@@ -519,12 +519,12 @@ function refreshCompletionKeys(response) {
 
 function onFocusCapturePhase(event) {
   if (isFocusable(event.target))
-    enterInsertMode();
+    enterInsertMode(event.target);
 }
 
 function onBlurCapturePhase(event) {
   if (isFocusable(event.target))
-    exitInsertMode();
+    exitInsertMode(event.target);
 }
 
 /*
@@ -555,14 +555,25 @@ function isEditable(target) {
   return focusableElements.indexOf(nodeName) >= 0;
 }
 
-function enterInsertMode() {
-  insertMode = true;
+// We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
+// causes element B to come into focus, we may get 'B focus' before 'A blur'. Thus we only leave insert mode
+// when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
+// If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
+// leave insert mode when the user presses <ESC>.
+function enterInsertMode(target) {
+  insertModeLock = target;
   HUD.show("Insert mode");
 }
 
-function exitInsertMode() {
-  insertMode = false;
-  HUD.hide();
+function exitInsertMode(target) {
+  if (target === undefined || insertModeLock === target) {
+    insertModeLock = null;
+    HUD.hide();
+  }
+}
+
+function isInsertMode() {
+  return insertModeLock !== null;
 }
 
 function handleKeyCharForFindMode(keyChar) {
