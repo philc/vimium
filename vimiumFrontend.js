@@ -640,12 +640,15 @@ function findAndFollowRel(value) {
 }
 
 function goPrevious() {
-  var previousStrings = ["\bprev\b","\bprevious\b","\u00AB","<<","<"];
+  // NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in most
+  // cases the single bracket link will be "prev/next page" and the double bracket link will be "first/last
+  // page", so check for single bracket first.
+  var previousStrings = ["\bprev\b", "\bprevious\b", "\bback\b", "<", "←", "«", "≪", "<<"];
   findAndFollowRel('prev') || findAndFollowLink(previousStrings);
 }
 
 function goNext() {
-  var nextStrings = ["\bnext\b","\u00BB",">>","\bmore\b",">"];
+  var nextStrings = ["\bnext\b", "\bmore\b", ">", "→", "»", "≫", ">>"];
   findAndFollowRel('next') || findAndFollowLink(nextStrings);
 }
 
