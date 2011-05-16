@@ -542,14 +542,17 @@ function isEmbed(element) { return ["embed", "object"].indexOf(element.nodeName.
  * Input or text elements are considered focusable and able to receieve their own keyboard events,
  * and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
  * any element which makes it a rich text editor, like the notes on jjot.com.
- * Note: we used to discriminate for text-only inputs, but this is not accurate since all input fields
- * can be controlled via the keyboard, particuarlly SELECT combo boxes.
  */
 function isEditable(target) {
-  if (target.getAttribute("contentEditable") == "true")
+  if (target.isContentEditable)
     return true;
-  var focusableInputs = ["input", "textarea", "select", "button"];
-  return focusableInputs.indexOf(target.nodeName.toLowerCase()) >= 0;
+  var nodeName = target.nodeName.toLowerCase();
+  // use a blacklist instead of a whitelist because new form controls are still being implemented for html5
+  var noFocus = ["radio", "checkbox"];
+  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
+    return true;
+  var focusableElements = ["textarea", "select"];
+  return focusableElements.indexOf(nodeName) >= 0;
 }
 
 function enterInsertMode() {
