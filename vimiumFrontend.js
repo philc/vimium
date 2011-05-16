@@ -426,7 +426,7 @@ function onKeydown(event) {
     }
   }
 
-  if (insertMode && isEscape(event))
+  if (insertMode && isEscape(event) && !isGleebox(event.srcElement))
   {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
@@ -553,6 +553,14 @@ function isEditable(target) {
     return true;
   var focusableElements = ["textarea", "select"];
   return focusableElements.indexOf(nodeName) >= 0;
+}
+
+/*
+ * Identifies that the target element is the search field for the Gleebox Chrome extension, which 
+ * may need to be handled differently than a standard editable element in some cases
+ */
+function isGleebox(target) {
+	return (target.getAttribute("id") == "gleeSearchField") ? true : false;
 }
 
 function enterInsertMode() {
