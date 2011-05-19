@@ -613,31 +613,54 @@ function performFindInPlace() {
   // backwards.
   window.scrollTo(cachedScrollX, cachedScrollY);
 
-  performFind();
+  executeFind();
+}
+
+function executeFind(backwards) {
+  findModeQueryHasResults = window.find(findModeQuery, false, backwards, true, false, true, false);
+}
+
+function focusFoundLink() {
+  if (findModeQueryHasResults) {
+    var link = getLinkFromSelection();
+    if (link) link.focus();
+  }
+}
+
+function findAndFocus(backwards) {
+  executeFind(backwards);
+  focusFoundLink();
 }
 
 function performFind() {
-  findModeQueryHasResults = window.find(findModeQuery, false, false, true, false, true, false);
+  findAndFocus();
 }
 
 function performBackwardsFind() {
-  findModeQueryHasResults = window.find(findModeQuery, false, true, true, false, true, false);
+  findAndFocus(true);
+}
+
+function getLinkFromSelection() {
+  var node = window.getSelection().anchorNode;
+  while (node.nodeName.toLowerCase() !== 'body') {
+    if (node.nodeName.toLowerCase() === 'a') return node;
+    node = node.parentNode;
+  }
+  return null;
 }
 
 function findAndFollowLink(linkStrings) {
   for (i = 0; i < linkStrings.length; i++) {
-    var findModeQueryHasResults = window.find(linkStrings[i], false, true, true, false, true, false);
-    if (findModeQueryHasResults) {
-      var node = window.getSelection().anchorNode;
-      while (node.nodeName.toLowerCase() != 'body') {
-        if (node.nodeName.toLowerCase() == 'a') {
-          window.location = node.href;
-          return true;
-        }
-        node = node.parentNode;
+    var hasResults = window.find(linkStrings[i], false, true, true, false, true, false);
+    if (hasResults) {
+      var link = getLinkFromSelection();
+      if (link) {
+        window.location = link.href;
+        return true;
       }
     }
   }
+  return false;
 }
 
 function findAndFollowRel(value) {
@@ -698,6 +721,7 @@ function enterFindMode() {
 
 function exitFindMode() {
   findMode = false;
+  focusFoundLink();
   HUD.hide();
 }
 
