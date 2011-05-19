@@ -214,13 +214,6 @@ function registerFrameIfSizeAvailable (is_top) {
   else
     setTimeout(function () { registerFrameIfSizeAvailable(is_top); }, 100);
 }
-/* 
- * Let the user know something has been yanked.
-*/
-function showYank() {
-	HUD.showForDuration("Yanked URL", 1000);
-}
-
 
 /*
  * Checks the currently focused element of the document and will enter insert mode if that element is focusable.
@@ -340,7 +333,7 @@ function copyCurrentUrl() {
   var getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" });
   getCurrentUrlPort.postMessage({});
 
-  showYank();
+	HUD.showForDuration("Yanked URL", 1000);
 }
 
 function toggleViewSourceCallback(url) {
