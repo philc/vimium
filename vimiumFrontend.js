@@ -708,8 +708,8 @@ function insertSpaces(query) {
   {
     if (query[i] == " " || (i + 1 < query.length && query[i + 1] == " "))
       newQuery = newQuery + query[i];
-    else
-      newQuery = newQuery + query[i] + "<span style=\"font-size: 0px;\"> </span>";
+    else //  &#8203; is a zero-width space
+      newQuery = newQuery + query[i] + "<span>&#8203;</span>";
   }
 
   return newQuery;
