@@ -26,6 +26,7 @@ Modifier keys are specified as &lt;c-x&gt; &lt;m-x&gt;, &lt;a-x&gt; for ctrl+x, 
 respectively. See the next section for instructions on modifying these bindings.
 
 Navigating the current page:
+
     ?       show the help dialog for a list of all available keys
     h       scroll left
     j       scroll down
@@ -46,15 +47,18 @@ Navigating the current page:
     gf      cycle forward to the next frame
 
 Using find:
+
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
     n       cycle forward to the next find match
     N       cycle backward to the previous find match
 
 Navigating your history:
+
     H       go back in history
     L       go forward in history
 
 Manipulating tabs:
+
     J, gT      go one tab left
     K, gt      go one tab right
     t          create tab
@@ -62,6 +66,7 @@ Manipulating tabs:
     X          restore closed tab (i.e. unwind the 'x' command)
 
 Additional advanced browsing commands:
+
     ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
     [[      Follow the link labeled 'previous' or '<'. Helpful for browsing paginated sites.
     <a-f>   open multiple links in a new tab
