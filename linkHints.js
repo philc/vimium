@@ -128,7 +128,9 @@ var linkHints = {
       // but floated elements. Check for this.
       if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
         for (var j = 0, childrenCount = element.children.length; j < childrenCount; j++) {
-          if (window.getComputedStyle(element.children[j], null).getPropertyValue('float') == 'none')
+          var computedStyle = window.getComputedStyle(element.children[j], null);
+          // Ignore child elements which are not floated and not absolutely positioned for parent elements with zero width/height
+          if (computedStyle.getPropertyValue('float') == 'none' && computedStyle.getPropertyValue('position') != 'absolute')
             continue;
           var childClientRect = element.children[j].getClientRects()[0];
           if (!this.isVisible(element.children[j], childClientRect))
