@@ -24,8 +24,8 @@
              "completionDialog.js",
              "bookmarks.js"
             ],
-      "run_at": "document_start",
-      "all_frames": true
+      "run_at": "document_end",
+      "all_frames": false
     }
   ]
 }
