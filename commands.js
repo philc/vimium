@@ -223,6 +223,7 @@ var commandGroups = {
      "reload", "toggleViewSource", "zoomIn", "zoomOut", "zoomReset", "copyCurrentUrl", "goUp",
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
+     "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:

@@ -136,6 +136,12 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.28 (06/29/2011)
+
+- Support for opening bookmarks (`b` and `B`).
+- Support for contenteditable text boxes.
+- Speed improvements and bugfixes.
+
 1.27 (03/24/2011)
 
 - Improvements and bugfixes.
