@@ -81,6 +81,7 @@
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition,
     copyToClipboard: copyToClipboard,
+    copyLinkUrl: copyLinkUrl,
     isEnabledForUrl: isEnabledForUrl,
     saveHelpDialogSettings: saveHelpDialogSettings
   };
@@ -261,6 +262,14 @@
       chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: request.selected });
     });
   }
+
+  /**
+   * Copies url of selected link to the clipboard (wget ftw)
+   */
+  function copyLinkUrl(request) {
+    Clipboard.copy(request.data);
+  }
+
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.
    */

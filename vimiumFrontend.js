@@ -336,6 +336,11 @@ function copyCurrentUrl() {
 	HUD.showForDuration("Yanked URL", 1000);
 }
 
+//function copyLinkUrl(url) {
+    //chrome.extension.sendRequest({ handler: "copyToClipboard", data: url });
+    //HUD.showForDuration("Yanked link URL", 1000);
+//}
+
 function toggleViewSourceCallback(url) {
   if (url.substr(0, 12) == "view-source:")
   {
