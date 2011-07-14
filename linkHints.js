@@ -234,7 +234,6 @@ var linkHints = {
           that.activateModeWithQueue();
         });
       } else if (this.shouldCopyLinkUrl) {
-        console.log(matchedLink);
         this.copyLinkUrl(matchedLink);
         this.deactivateMode(delay, function() { that.delayMode = false; });
       } else if (this.shouldOpenInNewTab) {
