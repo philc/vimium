@@ -8,13 +8,14 @@
  * In 'filter' mode, our link hints are numbers, and the user can narrow down the range of possibilities by
  * typing the text of the link itself.
  */
-
 var linkHints = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
   // The characters that were typed in while in "link hints" mode.
   shouldOpenInNewTab: false,
   shouldOpenWithQueue: false,
+  // flag for copying link instead of opening
+  shouldCopyLinkUrl: false,
   // Whether link hint's "open in current/new tab" setting is currently toggled 
   openLinkModeToggle: false,
   // Whether we have added to the page the CSS needed to display link hints.
@@ -48,15 +49,17 @@ var linkHints = {
   })(),
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
-  activateModeToOpenInNewTab: function() { this.activateMode(true, false); },
+  activateModeToOpenInNewTab: function() { this.activateMode(true, false, false); },
 
-  activateModeWithQueue: function() { this.activateMode(true, true); },
+  activateModeToCopyLinkUrl: function() { this.activateMode(false, false, true); },
 
-  activateMode: function(openInNewTab, withQueue) {
+  activateModeWithQueue: function() { this.activateMode(true, true, false); },
+
+  activateMode: function(openInNewTab, withQueue, copyLinkUrl) {
     if (!this.cssAdded)
       addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
     this.linkHintCssAdded = true;
-    this.setOpenLinkMode(openInNewTab, withQueue);
+    this.setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl);
     this.buildLinkHints();
     handlerStack.push({ // modeKeyHandler is declared by vimiumFrontend.js
       keydown: this.onKeyDownInMode,
@@ -64,10 +67,13 @@ var linkHints = {
     });
   },
 
-  setOpenLinkMode: function(openInNewTab, withQueue) {
+  setOpenLinkMode: function(openInNewTab, withQueue, copyLinkUrl) {
     this.shouldOpenInNewTab = openInNewTab;
     this.shouldOpenWithQueue = withQueue;
-    if (this.shouldOpenWithQueue) {
+    this.shouldCopyLinkUrl = copyLinkUrl;
+    if (this.shouldCopyLinkUrl) {
+      HUD.show("Copy link URL to Clipboard");
+    } else if (this.shouldOpenWithQueue) {
       HUD.show("Open multiple links in a new tab");
     } else {
       if (this.shouldOpenInNewTab)
@@ -174,7 +180,7 @@ var linkHints = {
 
     if (event.keyCode == keyCodes.shiftKey && !this.openLinkModeToggle) {
       // Toggle whether to open link in a new or current tab.
-      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue);
+      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
       this.openLinkModeToggle = true;
     }
 
@@ -204,7 +210,7 @@ var linkHints = {
   onKeyUpInMode: function(event) {
     if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
       // Revert toggle on whether to open link in new or current tab. 
-      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue);
+      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
       this.openLinkModeToggle = false;
     }
     event.stopPropagation();
@@ -227,6 +233,9 @@ var linkHints = {
           that.delayMode = false;
           that.activateModeWithQueue();
         });
+      } else if (this.shouldCopyLinkUrl) {
+        this.copyLinkUrl(matchedLink);
+        this.deactivateMode(delay, function() { that.delayMode = false; });
       } else if (this.shouldOpenInNewTab) {
         this.simulateClick(matchedLink);
         matchedLink.focus();
@@ -250,6 +259,10 @@ var linkHints = {
         element.nodeName.toLowerCase() == "textarea";
   },
   
+  copyLinkUrl: function(link) {
+    chrome.extension.sendRequest({handler: 'copyLinkUrl', data: link.href});
+  },
+
   simulateSelect: function(element) {
     element.focus();
     // When focusing a textbox, put the selection caret at the end of the textbox's contents.
