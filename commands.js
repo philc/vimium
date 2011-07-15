@@ -129,7 +129,7 @@ function clearKeyMappingsAndSetDefaults() {
     "]]": "goNext",
 
     "yy": "copyCurrentUrl",
-    "Y": "linkHints.activateModeToCopyLinkUrl",
+    "yf": "linkHints.activateModeToCopyLinkUrl",
 
     "K": "nextTab",
     "J": "previousTab",
