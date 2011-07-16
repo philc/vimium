@@ -619,7 +619,10 @@ function performFindInPlace() {
 }
 
 function executeFind(backwards) {
-  findModeQueryHasResults = window.find(findModeQuery, false, backwards, true, false, true, false);
+  var pattern = new RegExp(findModeQuery);
+  var html = document.all[0].innerHTML;
+  var result = html.match(pattern);
+  findModeQueryHasResults = window.find(result, false, backwards, true, false, true, false);
 }
 
 function focusFoundLink() {
