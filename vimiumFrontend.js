@@ -621,8 +621,8 @@ function performFindInPlace() {
 
 function executeFind(backwards) {
   var pattern = new RegExp(findModeQuery, "g");
-  var html = document.all[0].innerHTML;
-  var result = html.match(pattern);
+  var text = document.body.textContent;
+  var result = text.match(pattern);
   findModeQueryHasResults = window.find(result[findModeMatchIndex], false, backwards, true, false, true, false);
   if (findModeMatchIndex < result.length - 1)
     findModeMatchIndex += 1;
