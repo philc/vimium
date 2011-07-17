@@ -624,10 +624,11 @@ function executeFind(backwards) {
   var text = document.body.textContent;
   var result = text.match(pattern);
   findModeQueryHasResults = window.find(result[findModeMatchIndex], false, backwards, true, false, true, false);
-  if (findModeMatchIndex < result.length - 1)
-    findModeMatchIndex += 1;
-  else
-    findModeMatchIndex = 0;
+  if ( ! findMode )
+    if (findModeMatchIndex < result.length - 1)
+      findModeMatchIndex += 1;
+    else
+      findModeMatchIndex = 0;
 }
 
 function focusFoundLink() {
