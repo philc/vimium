@@ -763,6 +763,8 @@ HUD = {
   _tweenId: -1,
   _displayElement: null,
   _upgradeNotificationElement: null,
+  _mouseDownX: 0,
+  _position: 0,
 
   // This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   // test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
@@ -892,7 +894,29 @@ HUD = {
     var element = document.createElement("div");
     element.className = "vimiumHUD";
     document.body.appendChild(element);
+    element.addEventListener("mousedown",HUD.onMousedownHudElement,false);
     return element;
+  },
+
+  onMoveHudElement: function(event) {
+    HUD.displayElement().style.right = (HUD._position + (HUD._mouseDownX - event.x)) + "px";
+  },
+
+  onMouseupHudElement: function(event) {
+    var element = HUD.displayElement();
+    element.removeEventListener("mousemove", HUD.onMoveHudElement);
+    element.removeEventListener("mouseup", HUD.onMouseupHudElement);
+    element.removeEventListener("mouseout", HUD.onMouseupHudElement);
+  },
+
+  onMousedownHudElement: function(event) {
+    event.preventDefault();
+    var element = HUD.displayElement();
+    HUD._mouseDownX = event.x;
+    HUD._position = parseInt(element.style.right,10);
+    element.addEventListener("mousemove", HUD.onMoveHudElement,false); 
+    element.addEventListener("mouseup", HUD.onMouseupHudElement,false);
+    element.addEventListener("mouseout", HUD.onMouseupHudElement,false);
   },
 
   hide: function() {
