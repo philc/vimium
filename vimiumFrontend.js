@@ -600,8 +600,8 @@ function handleDeleteForFindMode() {
 }
 
 function handleEnterForFindMode() {
-  exitFindMode();
   performFindInPlace();
+  exitFindMode();
 }
 
 function performFindInPlace() {
@@ -623,12 +623,18 @@ function executeFind(backwards) {
   var pattern = new RegExp(findModeQuery, "g");
   var text = document.body.textContent;
   var result = text.match(pattern);
-  findModeQueryHasResults = window.find(result[findModeMatchIndex], false, backwards, true, false, true, false);
   if ( ! findMode )
-    if (findModeMatchIndex < result.length - 1)
-      findModeMatchIndex += 1;
+    if (backwards)
+      if (findModeMatchIndex > 0)
+        findModeMatchIndex -= 1;
+      else
+        findModeMatchIndex = result.length - 1;
     else
-      findModeMatchIndex = 0;
+      if (findModeMatchIndex < result.length - 1)
+        findModeMatchIndex += 1;
+      else
+        findModeMatchIndex = 0;
+  findModeQueryHasResults = window.find(result[findModeMatchIndex], false, backwards, true, false, true, false);
 }
 
 function focusFoundLink() {
