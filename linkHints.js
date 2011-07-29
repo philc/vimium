@@ -40,7 +40,7 @@ var linkHints = {
    * The final expression will be something like "//button | //xhtml:button | ..."
    */
   clickableElementsXPath: (function() {
-    var clickableElements = ["a", "textarea", "button", "select", "input[not(@type='hidden')]",
+    var clickableElements = ["a", "area[@href]", "textarea", "button", "select", "input[not(@type='hidden')]",
                              "*[@onclick or @tabindex or @role='link' or @role='button']"];
     var xpath = [];
     for (var i in clickableElements)
@@ -146,6 +146,24 @@ var linkHints = {
           visibleElements.push({element: element.children[j], rect: childClientRect});
           break;
         }
+      }
+
+      if (element.localName === "area") {
+        var map = element.parentElement;
+        var img = document.querySelector("img[usemap='#" + map.getAttribute("name") + "']");
+        var clientRect = img.getClientRects()[0];
+        var c = element.coords.split(/,/);
+        var coords = [parseInt(c[0], 10), parseInt(c[1], 10), parseInt(c[2], 10), parseInt(c[3], 10)];
+        var rect = {
+          top: clientRect.top + coords[1],
+          left: clientRect.left + coords[0],
+          right: clientRect.left + coords[2],
+          bottom: clientRect.top + coords[3],
+          width: coords[2] - coords[0],
+          height: coords[3] - coords[1]
+        };
+
+        visibleElements.push({element: element, rect: rect});
       }
     }
     return visibleElements;
