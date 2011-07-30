@@ -216,12 +216,11 @@ function registerFrameIfSizeAvailable (is_top) {
 }
 
 /*
- * Checks the currently focused element of the document and will enter insert mode if that element is focusable.
+ * Enters insert mode if the currently focused element in the DOM is focusable.
  */
 function enterInsertModeIfElementIsFocused() {
-  // Enter insert mode automatically if there's already a text box focused.
   if (document.activeElement && isEditable(document.activeElement))
-    enterInsertMode(document.activeElement);
+    enterInsertModeWithoutShowingIndicator(document.activeElement);
 }
 
 /*
@@ -364,7 +363,7 @@ function onKeypress(event) {
 
     // Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && isPrimaryModifierKey(event)) {
-      enterInsertMode();
+      enterInsertModeWithoutShowingIndicator();
       return;
     }
 
@@ -521,7 +520,7 @@ function refreshCompletionKeys(response) {
 
 function onFocusCapturePhase(event) {
   if (isFocusable(event.target))
-    enterInsertMode(event.target);
+    enterInsertModeWithoutShowingIndicator(event.target);
 }
 
 function onBlurCapturePhase(event) {
@@ -557,15 +556,23 @@ function isEditable(target) {
   return focusableElements.indexOf(nodeName) >= 0;
 }
 
-// We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
-// causes element B to come into focus, we may get 'B focus' before 'A blur'. Thus we only leave insert mode
-// when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
-// If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
-// leave insert mode when the user presses <ESC>.
+/*
+ * Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
+ * mode manually by pressing "i". In most cases we do not show any UI (enterInsertModeWithoutShowingIndicator)
+ */
 function enterInsertMode(target) {
-  insertModeLock = target;
+  enterInsertModeWithoutShowingIndicator(target);
   HUD.show("Insert mode");
 }
+
+/*
+ * We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
+ * causes element B to come into focus, we may get "B focus" before "A blur". Thus we only leave insert mode
+ * when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
+ * If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
+ * leave insert mode when the user presses <ESC>.
+ */
+function enterInsertModeWithoutShowingIndicator(target) { insertModeLock = target; }
 
 function exitInsertMode(target) {
   if (target === undefined || insertModeLock === target) {
@@ -574,9 +581,7 @@ function exitInsertMode(target) {
   }
 }
 
-function isInsertMode() {
-  return insertModeLock !== null;
-}
+function isInsertMode() { return insertModeLock !== null; }
 
 function handleKeyCharForFindMode(keyChar) {
   findModeQuery = findModeQuery + keyChar;
