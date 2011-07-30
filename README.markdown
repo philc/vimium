@@ -133,6 +133,13 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.29 (07/30/2011)
+
+- `yf` to copy a link hint url to the clipboard.
+- Scatter link hints to prevent clustering on dense sites.
+- Don't show insert mode notification unless you specifically hit `i`.
+- Remove zooming functionality now that Chrome does it all natively.
+
 1.28 (06/29/2011)
 
 - Support for opening bookmarks (`b` and `B`).
