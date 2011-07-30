@@ -162,14 +162,7 @@
         var advanced = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced");
         for (var i = 0; i < advanced.length; i++)
           advanced[i].style.display = (visible ? "table-row" : "none");
-      },
-
-      centerDialog: function() {
-        var zoomFactor = currentZoomLevel / 100.0;
-        this.dialogElement.style.top = Math.max(
-            (window.innerHeight - this.dialogElement.clientHeight * zoomFactor) / 2.0,
-            20) / zoomFactor + "px";
-        }
+      }
     };
 
     VimiumHelpDialog.init();

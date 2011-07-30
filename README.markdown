@@ -40,8 +40,6 @@ Navigating the current page:
     F       open a link in a new tab
     r       reload
     gs      view source
-    zi      zoom in
-    zo      zoom out
     i       enter insert mode -- all commands will be ignored until you hit esc to exit
     yy      copy the current url to the clipboard
     yf      copy a link url to the clipboard
@@ -75,8 +73,6 @@ Additional advanced browsing commands:
     gu      go up one level in the URL hierarchy
     zH      scroll all the way left
     zL      scroll all the way right
-    z0      reset zoom to default value
-
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
 &lt;c-[&gt;) will clear any partial commands in the queue and will also exit insert and find modes.
@@ -157,7 +153,6 @@ Release Notes
 -  Some sites are now excluded by default.
 -  View source (`gs`) now opens in a new tab.
 -  Support for browsing paginated sites using `]]` and `[[` to go forward and backward respectively.
--  `z0` will reset the zoom level for the current page.
 -  Many of the less-used commands are now marked as "advanced" and hidden in the help dialog by default, so
    that the core command set is more focused and approachable.
 -  Improvements to link hinting.

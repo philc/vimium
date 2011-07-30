@@ -25,7 +25,6 @@
 
   var defaultSettings = {
     scrollStepSize: 60,
-    defaultZoomLevel: 100,
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
     userDefinedLinkHintCss:
@@ -64,8 +63,6 @@
     keyDown:              handleKeyDown,
     returnScrollPosition: handleReturnScrollPosition,
     getCurrentTabUrl:     getCurrentTabUrl,
-    getZoomLevel:         getZoomLevel,
-    saveZoomLevel:        saveZoomLevel,
     getSetting:           getSetting,
     getBookmarks:         getBookmarks
   };
@@ -157,17 +154,6 @@
 
   function saveHelpDialogSettings(request) {
     localStorage["helpDialog_showAdvancedCommands"] = request.showAdvancedCommands;
-  }
-
-  /*
-   * Returns the previously saved zoom level for the current tab, or the default zoom level
-   */
-  function getZoomLevel(args, port) {
-    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnZoomLevel" });
-    var localStorageKey = "zoom" + args.domain;
-    var zoomLevelForDomain = (localStorage[localStorageKey] || "").split(",")[1];
-    var zoomLevel = parseInt(zoomLevelForDomain || getSettingFromLocalStorage("defaultZoomLevel"));
-    returnPort.postMessage({ zoomLevel: zoomLevel });
   }
 
   function showHelp(callback, frameId) {
@@ -317,16 +303,6 @@
     } else {
       return localStorage[setting];
     }
-  }
-
-  /*
-   * Persists the current zoom level for a given domain
-   */
-  function saveZoomLevel(args) {
-    var localStorageKey = "zoom" + args.domain;
-    // TODO(philc): We might want to consider expiring these entries after X months as NoSquint does.
-    // Note(philc): We might also want to jsonify this hash instead of polluting our local storage keyspace.
-    localStorage[localStorageKey] = [getCurrentTimeInSeconds(), args.zoomLevel].join(",");
   }
 
   function getCurrentTimeInSeconds() { Math.floor((new Date()).getTime() / 1000); }

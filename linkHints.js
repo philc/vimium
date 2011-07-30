@@ -153,10 +153,10 @@ var linkHints = {
    * Returns true if element is visible.
    */
   isVisible: function(element, clientRect) {
-    // Exclude links which have just a few pixels on screen, because the link hints won't show for them anyway.
-    var zoomFactor = currentZoomLevel / 100.0;
-    if (!clientRect || clientRect.top < 0 || clientRect.top * zoomFactor >= window.innerHeight - 4 ||
-        clientRect.left < 0 || clientRect.left * zoomFactor >= window.innerWidth - 4)
+    // Exclude links which have just a few pixels on screen, because the link hints won't show for them
+    // anyway.
+    if (!clientRect || clientRect.top < 0 || clientRect.top >= window.innerHeight - 4 ||
+        clientRect.left < 0 || clientRect.left  >= window.innerWidth - 4)
       return false;
 
     if (clientRect.width < 3 || clientRect.height < 3)
@@ -575,11 +575,8 @@ var hintUtils = {
     marker.clickableItem = link.element;
 
     var clientRect = link.rect;
-    // The coordinates given by the window do not have the zoom factor included since the zoom is set only on
-    // the document node.
-    var zoomFactor = currentZoomLevel / 100.0;
-    marker.style.left = clientRect.left + window.scrollX / zoomFactor + "px";
-    marker.style.top = clientRect.top  + window.scrollY / zoomFactor + "px";
+    marker.style.left = clientRect.left + window.scrollX + "px";
+    marker.style.top = clientRect.top  + window.scrollY  + "px";
 
     return marker;
   }

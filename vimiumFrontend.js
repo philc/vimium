@@ -1,8 +1,8 @@
 /*
  * This content script takes input from its webpage and executes commands locally on behalf of the background
- * page. It must be run prior to domReady so that we perform some operations very early, like setting
- * the page's zoom level. We tell the background page that we're in domReady and ready to accept normal
- * commands by connectiong to a port named "domReady".
+ * page. It must be run prior to domReady so that we perform some operations very early. We tell the
+ * background page that we're in domReady and ready to accept normal commands by connectiong to a port named
+ * "domReady".
  */
 
 var getCurrentUrlHandlers = []; // function(url)
@@ -15,16 +15,12 @@ var isShowingHelpDialog = false;
 var handlerStack = [];
 var keyPort;
 var settingPort;
-var saveZoomLevelPort;
 // Users can disable Vimium on URL patterns via the settings page.
 var isEnabledForUrl = true;
 // The user's operating system.
 var currentCompletionKeys;
 var validFirstKeys;
 var linkHintCss;
-
-// TODO(philc): This should be pulled from the extension's storage when the page loads.
-var currentZoomLevel = 100;
 
 // The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 // each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -75,16 +71,12 @@ var hasModifiersRegex = /^<([amc]-)+.>/;
 var googleRegex = /:\/\/[^/]*google[^/]+/;
 
 /*
- * Complete initialization work that sould be done prior to DOMReady, like setting the page's zoom level.
+ * Complete initialization work that sould be done prior to DOMReady.
  */
 function initializePreDomReady() {
   settings.load();
 
   checkIfEnabledForUrl();
-
-  var getZoomLevelPort = chrome.extension.connect({ name: "getZoomLevel" });
-  if (window.self == window.parent)
-    getZoomLevelPort.postMessage({ domain: window.location.host });
 
   chrome.extension.sendRequest({handler: "getLinkHintCss"}, function (response) {
     linkHintCss = response.linkHintCss;
@@ -144,12 +136,6 @@ function initializePreDomReady() {
     } else if (port.name == "returnCurrentTabUrl") {
       port.onMessage.addListener(function(args) {
         if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
-      });
-    } else if (port.name == "returnZoomLevel") {
-      port.onMessage.addListener(function(args) {
-        currentZoomLevel = args.zoomLevel;
-        if (isEnabledForUrl)
-          setPageZoomLevel(currentZoomLevel);
       });
     } else if (port.name == "returnSetting") {
       port.onMessage.addListener(settings.receiveMessage);
@@ -221,47 +207,6 @@ function registerFrameIfSizeAvailable (is_top) {
 function enterInsertModeIfElementIsFocused() {
   if (document.activeElement && isEditable(document.activeElement))
     enterInsertModeWithoutShowingIndicator(document.activeElement);
-}
-
-/*
- * Asks the background page to persist the zoom level for the given domain to localStorage.
- */
-function saveZoomLevel(domain, zoomLevel) {
-  if (!saveZoomLevelPort)
-    saveZoomLevelPort = chrome.extension.connect({ name: "saveZoomLevel" });
-  saveZoomLevelPort.postMessage({ domain: domain, zoomLevel: zoomLevel });
-}
-
-/*
- * Zoom in increments of 20%; this matches chrome's CMD+ and CMD- keystrokes.
- * Set the zoom style on documentElement because document.body does not exist pre-page load.
- */
-function setPageZoomLevel(zoomLevel, showUINotification) {
-  document.documentElement.style.zoom = zoomLevel + "%";
-  if (document.body)
-    HUD.updatePageZoomLevel(zoomLevel);
-  if (showUINotification)
-    HUD.showForDuration("Zoom: " + currentZoomLevel + "%", 1000);
-}
-
-function zoomIn() {
-  currentZoomLevel += 20;
-  setAndSaveZoom();
-}
-
-function zoomOut() {
-  currentZoomLevel -= 20;
-  setAndSaveZoom();
-}
-
-function zoomReset() {
-  currentZoomLevel = 100;
-  setAndSaveZoom();
-}
-
-function setAndSaveZoom() {
-  setPageZoomLevel(currentZoomLevel, true);
-  saveZoomLevel(window.location.host, currentZoomLevel);
 }
 
 function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
@@ -853,15 +798,6 @@ HUD = {
       function() { HUD.upgradeNotificationElement().style.display = "none"; });
   },
 
-  updatePageZoomLevel: function(pageZoomLevel) {
-    // Since the chrome HUD does not scale with the page's zoom level, neither will this HUD.
-    var inverseZoomLevel = (100.0 / pageZoomLevel) * 100;
-    if (HUD._displayElement)
-      HUD.displayElement().style.zoom = inverseZoomLevel + "%";
-    if (HUD._upgradeNotificationElement)
-      HUD.upgradeNotificationElement().style.zoom = inverseZoomLevel + "%";
-  },
-
   /*
    * Retrieves the HUD HTML element.
    */
@@ -870,7 +806,6 @@ HUD = {
       HUD._displayElement = HUD.createHudElement();
       // Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
       HUD._displayElement.style.right = "150px";
-      HUD.updatePageZoomLevel(currentZoomLevel);
     }
     return HUD._displayElement;
   },
@@ -880,7 +815,6 @@ HUD = {
       HUD._upgradeNotificationElement = HUD.createHudElement();
       // Position this just to the left of our normal HUD.
       HUD._upgradeNotificationElement.style.right = "315px";
-      HUD.updatePageZoomLevel(currentZoomLevel);
     }
     return HUD._upgradeNotificationElement;
   },

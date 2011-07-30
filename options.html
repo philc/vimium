@@ -81,7 +81,7 @@
   $ = function(id) { return document.getElementById(id); };
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
-  var editableFields = ["scrollStepSize", "defaultZoomLevel", "excludedUrls", "linkHintCharacters",
+  var editableFields = ["scrollStepSize", "excludedUrls", "linkHintCharacters",
                         "userDefinedLinkHintCss", "keyMappings", "filterLinkHints"];
 
   var canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"];
@@ -208,12 +208,6 @@
         <td class="caption">Scroll step size</td>
         <td>
           <input id="scrollStepSize" type="text" style="width:50px" />px
-        </td>
-      </tr>
-      <tr>
-        <td><span class="caption">Default zoom level</span></td>
-        <td>
-          <input id="defaultZoomLevel" type="text" value="100" style="width:50px" />%
         </td>
       </tr>
       <tr>
