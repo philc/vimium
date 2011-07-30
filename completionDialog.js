@@ -118,7 +118,7 @@
         }
       }
 
-      container.style.top=(window.innerHeight/2-container.clientHeight/2) + "px";
+      container.style.top=Math.max(0,(window.innerHeight/2-container.clientHeight/2)) + "px";
       container.style.left=(window.innerWidth/2-container.clientWidth/2) + "px";
     }
   };
