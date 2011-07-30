@@ -403,11 +403,11 @@ function onKeydown(event) {
   var keyChar = "";
 
   // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?
-  if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 || event.altKey && event.keyCode > 31) {
+  if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 ||
+      event.altKey && event.keyCode > 31) {
     keyChar = getKeyChar(event);
 
-    if (keyChar != "") // Again, ignore just modifiers. Maybe this should replace the keyCode > 31 condition.
-    {
+    if (keyChar != "") { // Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
       var modifiers = [];
 
       if (event.shiftKey)
@@ -427,44 +427,45 @@ function onKeydown(event) {
     }
   }
 
-  if (isInsertMode() && isEscape(event))
-  {
+  if (isInsertMode() && isEscape(event)) {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
-      // Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
-      if (isEditable(event.srcElement)) { event.srcElement.blur(); }
+      // Remove focus so the user can't just get himself back into insert mode by typing in the same input
+      // box.
+      if (isEditable(event.srcElement))
+        event.srcElement.blur();
       exitInsertMode();
 
-      // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search box.
+      // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search
+      // box.
       if (isGoogleSearch())
         event.stopPropagation();
     }
   }
-  else if (findMode)
-  {
-    if (isEscape(event))
+  else if (findMode) {
+    if (isEscape(event)) {
       exitFindMode();
     // Don't let backspace take us back in history.
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-    {
+    }
+    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       handleDeleteForFindMode();
       event.preventDefault();
     }
-    else if (event.keyCode == keyCodes.enter)
+    else if (event.keyCode == keyCodes.enter) {
       handleEnterForFindMode();
+    }
   }
-  else if (isShowingHelpDialog && isEscape(event))
-  {
+  else if (isShowingHelpDialog && isEscape(event)) {
     hideHelpDialog();
   }
   else if (!isInsertMode() && !findMode) {
     if (keyChar) {
-        if (currentCompletionKeys.indexOf(keyChar) != -1) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
+      if (currentCompletionKeys.indexOf(keyChar) != -1) {
+          event.preventDefault();
+          event.stopPropagation();
+      }
 
-        keyPort.postMessage({keyChar:keyChar, frameId:frameId});
+      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
@@ -478,8 +479,8 @@ function onKeydown(event) {
   // Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   //
   // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode()
-                    && (currentCompletionKeys.indexOf(getKeyChar(event)) != -1 || validFirstKeys[getKeyChar(event)]))
+  if (keyChar == "" && !isInsertMode() && (currentCompletionKeys.indexOf(getKeyChar(event)) != -1 ||
+      validFirstKeys[getKeyChar(event)]))
     event.stopPropagation();
 }
 
@@ -489,16 +490,16 @@ function onKeyup() {
 }
 
 function checkIfEnabledForUrl() {
-    var url = window.location.toString();
+  var url = window.location.toString();
 
-    chrome.extension.sendRequest({ handler: "isEnabledForUrl", url: url }, function (response) {
-      isEnabledForUrl = response.isEnabledForUrl;
-      if (isEnabledForUrl)
-        initializeWhenEnabled();
-      else if (HUD.isReady())
-        // Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
-        HUD.hide();
-    });
+  chrome.extension.sendRequest({ handler: "isEnabledForUrl", url: url }, function (response) {
+    isEnabledForUrl = response.isEnabledForUrl;
+    if (isEnabledForUrl)
+      initializeWhenEnabled();
+    else if (HUD.isReady())
+      // Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
+      HUD.hide();
+  });
 }
 
 // TODO(ilya): This just checks if "google" is in the domain name. Probably should be more targeted.
@@ -513,7 +514,8 @@ function refreshCompletionKeys(response) {
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys;
-  } else {
+  }
+  else {
     chrome.extension.sendRequest({ handler: "getCompletionKeys" }, refreshCompletionKeys);
   }
 }
@@ -590,13 +592,11 @@ function handleKeyCharForFindMode(keyChar) {
 }
 
 function handleDeleteForFindMode() {
-  if (findModeQuery.length == 0)
-  {
+  if (findModeQuery.length == 0) {
     exitFindMode();
     performFindInPlace();
   }
-  else
-  {
+  else {
     findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
     performFindInPlace();
     showFindModeHUDForQuery();
@@ -630,7 +630,8 @@ function executeFind(backwards) {
 function focusFoundLink() {
   if (findModeQueryHasResults) {
     var link = getLinkFromSelection();
-    if (link) link.focus();
+    if (link)
+      link.focus();
   }
 }
 
@@ -639,13 +640,9 @@ function findAndFocus(backwards) {
   focusFoundLink();
 }
 
-function performFind() {
-  findAndFocus();
-}
+function performFind() { findAndFocus(); }
 
-function performBackwardsFind() {
-  findAndFocus(true);
-}
+function performBackwardsFind() { findAndFocus(true); }
 
 function getLinkFromSelection() {
   var node = window.getSelection().anchorNode;
@@ -709,8 +706,7 @@ function showFindModeHUDForQuery() {
 function insertSpaces(query) {
   var newQuery = "";
 
-  for (var i = 0; i < query.length; i++)
-  {
+  for (var i = 0; i < query.length; i++) {
     if (query[i] == " " || (i + 1 < query.length && query[i + 1] == " "))
       newQuery = newQuery + query[i];
     else //  &#8203; is a zero-width space
