@@ -139,7 +139,9 @@ function clearKeyMappingsAndSetDefaults() {
     "b": "activateBookmarkFindMode",
     "B": "activateBookmarkFindModeToOpenInNewTab",
 
-    "gf": "nextFrame"
+    "gf": "nextFrame",
+
+    "s": "searchTab"
   };
 
   for (var key in defaultKeyMappings)
@@ -202,7 +204,9 @@ var commandDescriptions = {
   activateBookmarkFindMode: ["Open a bookmark in the current tab"],
   activateBookmarkFindModeToOpenInNewTab: ["Open a bookmark in a new tab"],
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
+  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }],
+
+  searchTab: ["Switch to a tab"]
 };
 
 for (var command in commandDescriptions)
@@ -225,7 +229,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
+    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab", "searchTab"],
   misc:
     ["showHelp"]
 };

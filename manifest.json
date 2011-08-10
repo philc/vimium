@@ -22,7 +22,8 @@
              "linkHints.js",
              "vimiumFrontend.js",
              "completionDialog.js",
-             "bookmarks.js"
+             "bookmarks.js",
+             "tabsearch.js"
             ],
       "run_at": "document_start",
       "all_frames": true
