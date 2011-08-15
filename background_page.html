@@ -80,7 +80,7 @@
     copyToClipboard: copyToClipboard,
     copyLinkUrl: copyLinkUrl,
     isEnabledForUrl: isEnabledForUrl,
-    saveHelpDialogSettings: saveHelpDialogSettings
+    saveHelpDialogSettings: saveHelpDialogSettings,
   };
 
   // Event handlers
@@ -151,6 +151,7 @@
     }
     return { isEnabledForUrl: isEnabled };
   }
+  
 
   function saveHelpDialogSettings(request) {
     localStorage["helpDialog_showAdvancedCommands"] = request.showAdvancedCommands;
@@ -301,6 +302,9 @@
     if (localStorage[setting] != "" && !localStorage[setting]) {
       return defaultSettings[setting];
     } else {
+      if (setting == 'perSiteMappings') {
+        return JSON.parse(localStorage[setting]);
+      }
       return localStorage[setting];
     }
   }
@@ -541,12 +545,12 @@
     }
     else {
       console.log("checking keyQueue: [", keyQueue + key, "]");
-      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id, request.frameId);
+      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id, request.frameId, request.url);
       console.log("new KeyQueue: " + keyQueue);
     }
   }
 
-  function checkKeyQueue(keysToCheck, tabId, frameId) {
+  function checkKeyQueue(keysToCheck, tabId, frameId, url) {
     var refreshedCompletionKeys = false;
     var splitHash = splitKeyQueue(keysToCheck);
     command = splitHash.command;
@@ -554,9 +558,20 @@
 
     if (command.length == 0) { return keysToCheck; }
     if (isNaN(count)) { count = 1; }
-
+    
     if (keyToCommandRegistry[command]) {
       registryEntry = keyToCommandRegistry[command];
+      
+      // check for site-specific overrides
+      if (keyToCommandRegistry[command].overrides) {
+        for (var i in keyToCommandRegistry[command].overrides) {
+          var regExp = new RegExp("^" + i.replace(/\*/g, ".*") + "$");
+          if (url.match(regExp)) {
+            registryEntry = keyToCommandRegistry[command].overrides[i];
+          }
+        }
+      }
+      
       console.log("command found for [", keysToCheck, "],", registryEntry.command);
 
       if (!registryEntry.isBackgroundCommand) {
@@ -722,7 +737,15 @@
         parseCustomKeyMappings(customKeyMappings);
       }
     }
-
+    
+    // Also parse website-specific key mappings
+    var localOverrides = getSettingFromLocalStorage('perSiteMappings');
+    if (localOverrides) {
+      for (var i in localOverrides) {
+        parseCustomKeyMappings(localOverrides[i], i);
+      }
+    }
+    
     populateValidFirstKeys();
     populateSingleKeyCommands();
     if (shouldShowUpgradeMessage())

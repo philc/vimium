@@ -83,7 +83,7 @@ function initializePreDomReady() {
   });
 
   refreshCompletionKeys();
-
+  
   // Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({ name: "keyDown" });
 
@@ -325,7 +325,7 @@ function onKeypress(event) {
           event.stopPropagation();
         }
 
-        keyPort.postMessage({keyChar:keyChar, frameId:frameId});
+        keyPort.postMessage({keyChar:keyChar, frameId:frameId, url:window.location.href});
       }
     }
   }
@@ -410,10 +410,10 @@ function onKeydown(event) {
           event.stopPropagation();
       }
 
-      keyPort.postMessage({keyChar:keyChar, frameId:frameId});
+      keyPort.postMessage({keyChar:keyChar, frameId:frameId, url:window.location.href});
     }
     else if (isEscape(event)) {
-      keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
+      keyPort.postMessage({keyChar:"<ESC>", frameId:frameId, url:window.location.href});
     }
   }
 
@@ -641,7 +641,7 @@ function goNext() {
 function showFindModeHUDForQuery() {
   if (findModeQueryHasResults || findModeQuery.length == 0)
     HUD.show("/" + insertSpaces(findModeQuery));
-  else
+  else 
     HUD.show("/" + insertSpaces(findModeQuery + " (No Matches)"));
 }
 
