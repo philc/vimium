@@ -226,7 +226,6 @@
    */
   function getCompletionKeysRequest(request) {
     if (typeof request == 'undefined') { request = { url: { href: null } }; }
-    console.log('URL:', request);
     return { name: "refreshCompletionKeys",
              completionKeys: generateCompletionKeys(null, request.url.href),
              validFirstKeys: validFirstKeys
