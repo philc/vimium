@@ -48,7 +48,7 @@ function mapKeyToCommand(key, command, urlPattern) {
 function unmapKey(key, urlPattern) {
     if (urlPattern) {
         if (typeof keyToCommandRegistry[key].overrides == 'undefined') { keyToCommandRegistry[key].overrides = {}; }
-        keyToCommandRegistry[key].overrides[urlPattern] = {};
+        keyToCommandRegistry[key].overrides[urlPattern] = null;
         return;
     }
     delete keyToCommandRegistry[key];

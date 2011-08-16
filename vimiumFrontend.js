@@ -103,7 +103,9 @@ function initializePreDomReady() {
     } else if (request.name == "refreshCompletionKeys") {
       refreshCompletionKeys(request);
     }
-    sendResponse({}); // Free up the resources used by this open connection.
+    try {
+        sendResponse({}); // Free up the resources used by this open connection.
+    } catch (ex) {}
   });
 
   chrome.extension.onConnect.addListener(function(port, name) {
@@ -116,7 +118,7 @@ function initializePreDomReady() {
             for (var i = 0; i < args.count; i++) { utils.invokeCommandString(args.command); }
           }
         }
-
+        
         refreshCompletionKeys(args);
       });
     }
@@ -301,21 +303,21 @@ function onKeypress(event) {
     return;
 
   var keyChar = "";
-
+  
   // Ignore modifier keys by themselves.
   if (event.keyCode > 31) {
     keyChar = String.fromCharCode(event.charCode);
-
+  
     // Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && isPrimaryModifierKey(event)) {
       enterInsertModeWithoutShowingIndicator();
       return;
     }
-
+  
     if (keyChar) {
       if (findMode) {
         handleKeyCharForFindMode(keyChar);
-
+  
         // Don't let the space scroll us if we're searching.
         if (event.keyCode == keyCodes.space)
           event.preventDefault();
@@ -461,7 +463,7 @@ function refreshCompletionKeys(response) {
       validFirstKeys = response.validFirstKeys;
   }
   else {
-    chrome.extension.sendRequest({ handler: "getCompletionKeys" }, refreshCompletionKeys);
+    chrome.extension.sendRequest({ handler: "getCompletionKeys", url: window.location }, refreshCompletionKeys);
   }
 }
 
@@ -641,7 +643,7 @@ function goNext() {
 function showFindModeHUDForQuery() {
   if (findModeQueryHasResults || findModeQuery.length == 0)
     HUD.show("/" + insertSpaces(findModeQuery));
-  else 
+  else
     HUD.show("/" + insertSpaces(findModeQuery + " (No Matches)"));
 }
 
