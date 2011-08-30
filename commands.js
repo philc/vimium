@@ -186,8 +186,8 @@ var commandDescriptions = {
   goNext: ["Follow the link labeled next or >"],
 
   // Navigating your history
-  goBack: ["Go back in history"],
-  goForward: ["Go forward in history"],
+  goBack: ["Go back in history", { passCountToFunction: true }],
+  goForward: ["Go forward in history", { passCountToFunction: true }],
 
   // Navigating the URL hierarchy
   goUp: ["Go up the URL hierarchy", { passCountToFunction: true }],
