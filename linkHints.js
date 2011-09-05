@@ -65,6 +65,8 @@ var linkHints = {
       keydown: this.onKeyDownInMode,
       keyup: this.onKeyUpInMode
     });
+        
+    this.openLinkModeToggle = false;
   },
 
   setOpenLinkMode: function(openInNewTab, withQueue, copyLinkUrl) {
