@@ -683,13 +683,14 @@ function showHelpDialog(html, fid) {
   document.body.appendChild(container);
 
   container.innerHTML = html;
+  container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
+  container.getElementsByClassName("optionsPage")[0].addEventListener("click",
+      function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
+
   // This is necessary because innerHTML does not evaluate javascript embedded in <script> tags.
   var scripts = Array.prototype.slice.call(container.getElementsByTagName("script"));
   scripts.forEach(function(script) { eval(script.text); });
 
-  container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false);
-  container.getElementsByClassName("optionsPage")[0].addEventListener("click",
-      function() { chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" }); }, false);
 }
 
 function hideHelpDialog(clickEvent) {
