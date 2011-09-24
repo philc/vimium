@@ -141,7 +141,6 @@
         this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", 
           VimiumHelpDialog.toggleAdvancedCommands, false);
         this.showAdvancedCommands(this.advancedCommandsVisible);
-        this.centerDialog();
       },
 
       /*
@@ -153,7 +152,6 @@
         chrome.extension.sendRequest({ handler: "saveHelpDialogSettings",
             showAdvancedCommands: VimiumHelpDialog.advancedCommandsVisible });
         VimiumHelpDialog.showAdvancedCommands(VimiumHelpDialog.advancedCommandsVisible);
-        VimiumHelpDialog.centerDialog();
       },
 
       showAdvancedCommands: function(visible) {
