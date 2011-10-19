@@ -243,8 +243,8 @@ function focusInput(count) {
 }
 
 function reload() { window.location.reload(); }
-function goBack() { history.back(); }
-function goForward() { history.forward(); }
+function goBack(count) { history.go(-count); }
+function goForward(count) { history.go(count); }
 
 function goUp(count) {
   var url = window.location.href;
