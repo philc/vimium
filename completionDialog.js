@@ -47,13 +47,15 @@
 
     self.onKeydown = function(event) {
       var keyChar = getKeyChar(event);
-      if(keyChar==="up") {
+      // change selection with up or Shift-Tab
+      if(keyChar==="up" || (event.keyCode == 9 && event.shiftKey)) {
         if(self.currentSelection>0) {
           self.currentSelection-=1;
         }
         render.call(self,self.getQueryString(), self.completions);
       }
-      else if(keyChar==="down") {
+      // change selection with down or Tab
+      else if(keyChar==="down" || (event.keyCode == 9 && !event.shiftKey)) {
         if(self.currentSelection<self.completions.length-1) {
           self.currentSelection+=1;
         }
