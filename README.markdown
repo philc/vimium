@@ -133,6 +133,13 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.30
+
+- Support for image maps.
+- Counts work with forward & backward navigation.
+- Tab & shift-tab to navigate bookmarks dialog.
+- Bug fixes.
+
 1.29 (07/30/2011)
 
 - `yf` to copy a link hint url to the clipboard.
