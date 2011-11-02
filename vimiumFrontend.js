@@ -796,6 +796,7 @@ HUD = {
       "text-align: left;" +
       "background-color: #ebebeb;" +
       "padding: 3px 3px 2px 3px;" +
+      "margin: 0; " +
       "border: 1px solid #b3b3b3;" +
       "border-radius: 4px 4px 0 0;" +
       "font-family: Lucida Grande, Arial, Sans;" +
