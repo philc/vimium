@@ -149,30 +149,36 @@
     "color: black;" +
     "padding:10px;"+
     "border-radius: 4px;" +
-    "font-family: Lucida Grande, Arial, Sans;" +
     "}"+
+    
     ".vimium-completions {"+
-    "width:400px;"+
+      "width:400px;"+
     "}"+
+    
     ".vimium-completions .vimium-searchBar {"+
-    "height: 15px;"+
-    "border-bottom: 1px solid #b3b3b3;"+
+      "height: 15px;"+
+      "border-bottom: 1px solid #b3b3b3;"+
     "}"+
+    
     ".vimium-completions .vimium-searchResults {"+
     "}"+
+
     ".vimium-completions .vimium-searchResults .vimium-selected{"+
-    "background-color:#aaa;"+
-    "border-radius: 4px;" +
+      "background-color:#aaa;"+
+      "border-radius: 4px;" +
     "}"+
+    
     ".vimium-completions div{"+
-    "padding:4px;"+
+      "padding:4px;"+
     "}"+
+
     ".vimium-completions div strong{"+
-    "color: black;" +
-    "font-weight:bold;"+
+      "color: black;" +
+      "font-weight:bold;"+
     "}"+
+    
     ".vimium-completions .vimium-noResults{"+
-    "color:#555;"+
+      "color:#555;"+
     "}";
 
   window.CompletionDialog = CompletionDialog;

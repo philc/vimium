@@ -784,12 +784,17 @@ HUD = {
       "line-height: 100%;" +
       "font-size: 11px;" +
       "font-weight: normal;" +
+      "letter-spacing: 0;" +
+      "text-decoration: none;" +
     "}" +
     ".vimiumHUD {" +
       "position: fixed;" +
+      "top: auto;" +
+      "left: auto;" +
       "bottom: 0px;" +
       "color: black;" +
       "height: 13px;" +
+      "min-height: 13px;" +
       "width: auto;" +
       "max-width: 400px;" +
       "min-width: 150px;" +
@@ -805,6 +810,10 @@ HUD = {
       "text-shadow: 0px 1px 2px #FFF;" +
       "line-height: 1.0;" +
       "opacity: 0;" +
+    "}" +
+    // Hide the span between search box letters
+    ".vimiumHUD span {" +
+      "display: none;" +
     "}" +
     ".vimiumHUD a, .vimiumHUD a:hover {" +
       "background: transparent;" +

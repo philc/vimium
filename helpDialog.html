@@ -4,11 +4,46 @@
 -->
 <div id="vimiumHelpDialog">
   <style>
+    /* Reset the elements on this page */
+    #vimiumHelpDialogContainer,
+    #vimiumHelpDialog,
+    #vimiumHelpDialog a,
+    #vimiumTitle,
+    #vimiumTitle span,
+    #vimiumHelpDialogFooter, 
+    .vimiumColumn,
+    .vimiumColumn span,
+    .vimiumDivider,
+    .optionsPage,
+    .closeButton {
+      opacity: 0.92;
+      letter-spacing: 0;
+      height: auto;
+      width: auto;
+      max-width: none;
+      max-height: none;
+      min-width: 0;
+      min-height: 0;
+      text-shadow: none;
+      padding: 0;
+      margin: 0;
+      position: static;
+      top: auto;
+      left: auto;
+      bottom: auto;
+      right: auto;
+      line-height: 100%;
+      font-size:11px;
+      font-weight: normal;
+      font-width: normal;
+      font-size-adjust: none;
+    }
     #vimiumHelpDialog * {
       font-size:11px;
       line-height:130%;
       color:black;
       background-color:transparent;
+      opacity: 1;
     }
     #vimiumHelpDialog {
       text-align:left;
@@ -16,12 +51,14 @@
       opacity:0.92;
       background-color:#eee;
       position:fixed;
-      width:600px;
       font-family:helvetica, arial, sans;
       border:2px solid #b3b3b3;
       border-radius:6px;
       padding:8px 12px;
       width:640px;
+      max-width:none;
+      height: auto;
+      max-height:none;
       left:50%;
       /* This needs to be 1/2 width to horizontally center the help dialog */
       margin-left:-320px;
@@ -31,7 +68,7 @@
       overflow-y: scroll;
     }
     #vimiumHelpDialog a { color:blue; }
-    #vimiumTitle, #vimiumTitle * { font-size:20px; }
+    #vimiumTitle, #vimiumTitle span,  #vimiumTitle * { font-size:20px; }
     .vimiumColumn {
       width:50%;
       float:left;
@@ -71,6 +108,9 @@
       text-decoration:none;
       padding-left:10px;
       font-size:16px;
+    }
+    #vimiumHelpDialog a {
+      text-decoration: underline;
     }
     #vimiumHelpDialog a.optionsPage {
       position: absolute;
