@@ -29,7 +29,8 @@
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
     userDefinedLinkHintCss:
-      ".vimiumHintMarker {\n\n}\n" +
+      ".vimiumHintMarker \n/* linkhint boxes */ {\nbackground-color:yellow;\nborder:1px solid #E3BE23;\n}\n\n" +
+      ".vimiumHintMarker span \n/* linkhints text */ {\ncolor: black;\nfont-weight: bold;\nfont-size: 12px;\n}\n\n" +
       ".vimiumHintMarker > .matchingCharacter {\n\n}",
     excludedUrls: "http*://mail.google.com/*\n" +
                   "http*://www.google.com/reader/*\n",
