@@ -16,6 +16,7 @@
         handlerStack.push({ keydown: this.onKeydown });
         render.call(this);
         clearInterval(this._tweenId);
+        this.container.style.display = "";
         this._tweenId = Tween.fade(this.container, 1.0, 150);
       }
     },
@@ -25,7 +26,11 @@
         this.isShown=false;
         this.currentSelection=0;
         clearInterval(this._tweenId);
-        this._tweenId = Tween.fade(this.container, 0, 150);
+        var completionContainer = this.container;
+        var cssHide = function() {
+          completionContainer.style.display = "none";
+        }
+        this._tweenId = Tween.fade(this.container, 0, 150, cssHide);
       }
     },
     getDisplayElement: function() {
