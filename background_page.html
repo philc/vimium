@@ -80,7 +80,7 @@
     copyToClipboard: copyToClipboard,
     copyLinkUrl: copyLinkUrl,
     isEnabledForUrl: isEnabledForUrl,
-    saveHelpDialogSettings: saveHelpDialogSettings
+    saveHelpDialogSettings: saveHelpDialogSettings,
   };
 
   // Event handlers
@@ -151,6 +151,7 @@
     }
     return { isEnabledForUrl: isEnabled };
   }
+  
 
   function saveHelpDialogSettings(request) {
     localStorage["helpDialog_showAdvancedCommands"] = request.showAdvancedCommands;
@@ -224,8 +225,9 @@
    * Returns the keys that can complete a valid command given the current key queue.
    */
   function getCompletionKeysRequest(request) {
+    if (typeof request == 'undefined') { request = { url: { href: null } }; }
     return { name: "refreshCompletionKeys",
-             completionKeys: generateCompletionKeys(),
+             completionKeys: generateCompletionKeys(null, request.url.href),
              validFirstKeys: validFirstKeys
            };
   }
@@ -301,6 +303,9 @@
     if (localStorage[setting] != "" && !localStorage[setting]) {
       return defaultSettings[setting];
     } else {
+      if (setting == 'perSiteMappings') {
+        return JSON.parse(localStorage[setting]);
+      }
       return localStorage[setting];
     }
   }
@@ -505,13 +510,13 @@
    * Generates a list of keys that can complete a valid command given the current key queue or the one passed
    * in.
    */
-  function generateCompletionKeys(keysToCheck) {
+  function generateCompletionKeys(keysToCheck, url) {
     var splitHash = splitKeyQueue(keysToCheck || keyQueue);
     command = splitHash.command;
     count = splitHash.count;
 
     var completionKeys = singleKeyCommands.slice(0);
-
+    
     if (getActualKeyStrokeLength(command) == 1)
     {
       for (var key in keyToCommandRegistry)
@@ -521,7 +526,21 @@
          completionKeys.push(splitKey.second);
       }
     }
-
+    
+    // check for local key overrides
+    url = url ? url : '';
+    for (var i in completionKeys) {
+      var key = completionKeys[i];
+      if (keyToCommandRegistry[key] && keyToCommandRegistry[key].overrides) {
+        for (var j in keyToCommandRegistry[key].overrides) {
+          var regExp = new RegExp("^" + j.replace(/\*/g, ".*") + "$");
+          if (url.match(regExp) && keyToCommandRegistry[key].overrides[j] == null) {
+            delete completionKeys[i];
+          }
+        }
+      }
+    }
+    
     return completionKeys;
   }
 
@@ -541,12 +560,12 @@
     }
     else {
       console.log("checking keyQueue: [", keyQueue + key, "]");
-      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id, request.frameId);
+      keyQueue = checkKeyQueue(keyQueue + key, port.tab.id, request.frameId, request.url);
       console.log("new KeyQueue: " + keyQueue);
     }
   }
 
-  function checkKeyQueue(keysToCheck, tabId, frameId) {
+  function checkKeyQueue(keysToCheck, tabId, frameId, url) {
     var refreshedCompletionKeys = false;
     var splitHash = splitKeyQueue(keysToCheck);
     command = splitHash.command;
@@ -554,9 +573,23 @@
 
     if (command.length == 0) { return keysToCheck; }
     if (isNaN(count)) { count = 1; }
-
-    if (keyToCommandRegistry[command]) {
-      registryEntry = keyToCommandRegistry[command];
+    
+    registryEntry = keyToCommandRegistry[command] ? keyToCommandRegistry[command] : null;
+    
+    // check for site-specific overrides
+    if (keyToCommandRegistry[command] && keyToCommandRegistry[command].overrides) {
+      for (var i in keyToCommandRegistry[command].overrides) {
+        var regExp = new RegExp("^" + i.replace(/\*/g, ".*") + "$");
+        if (url.match(regExp)) {
+          registryEntry = keyToCommandRegistry[command].overrides[i];
+        }
+        else if (keyToCommandRegistry[command].overrides[i] == null) {
+          //registryEntry = null;
+        }
+      }
+    }
+    
+    if (registryEntry && registryEntry.command) {
       console.log("command found for [", keysToCheck, "],", registryEntry.command);
 
       if (!registryEntry.isBackgroundCommand) {
@@ -564,8 +597,9 @@
         port.postMessage({ command: registryEntry.command,
                            frameId: frameId,
                            count: count,
+                           url: url,
                            passCountToFunction: registryEntry.passCountToFunction,
-                           completionKeys: generateCompletionKeys("")
+                           completionKeys: generateCompletionKeys("", url)
                          });
 
         refreshedCompletionKeys = true;
@@ -593,7 +627,7 @@
     // If we haven't sent the completion keys piggybacked on executePageCommand,
     // send them by themselves.
     if (!refreshedCompletionKeys) {
-      chrome.tabs.sendRequest(tabId, getCompletionKeysRequest(), null);
+      chrome.tabs.sendRequest(tabId, getCompletionKeysRequest({ 'url': { 'href': url } }), null);
     }
 
     return newKeyQueue;
@@ -722,7 +756,15 @@
         parseCustomKeyMappings(customKeyMappings);
       }
     }
-
+    
+    // Also parse website-specific key mappings
+    var localOverrides = getSettingFromLocalStorage('perSiteMappings');
+    if (localOverrides) {
+      for (var i in localOverrides) {
+        parseCustomKeyMappings(localOverrides[i], i);
+      }
+    }
+    
     populateValidFirstKeys();
     populateSingleKeyCommands();
     if (shouldShowUpgradeMessage())

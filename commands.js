@@ -21,19 +21,38 @@ function addCommand(command, description, options) {
                                };
 }
 
-function mapKeyToCommand(key, command) {
+function mapKeyToCommand(key, command, urlPattern) {
   if (!availableCommands[command]) {
     console.log(command, "doesn't exist!");
     return;
   }
-
-  keyToCommandRegistry[key] = { command: command,
-                                isBackgroundCommand: availableCommands[command].isBackgroundCommand,
-                                passCountToFunction: availableCommands[command].passCountToFunction
-                              };
+  
+  
+  var cmd = { command: command,
+              isBackgroundCommand: availableCommands[command].isBackgroundCommand,
+              passCountToFunction: availableCommands[command].passCountToFunction
+            };
+  
+  if (urlPattern) {
+    if (!keyToCommandRegistry[key]) { keyToCommandRegistry[key] = {}; }
+    if (!keyToCommandRegistry[key].overrides) { keyToCommandRegistry[key].overrides = {}; }
+    if (!keyToCommandRegistry[key].overrides[urlPattern]) { keyToCommandRegistry[key].overrides[urlPattern] = {}; }
+    
+    keyToCommandRegistry[key].overrides[urlPattern] = cmd;
+    return;
+  }
+  
+   keyToCommandRegistry[key] = cmd;
 }
 
-function unmapKey(key) { delete keyToCommandRegistry[key]; }
+function unmapKey(key, urlPattern) {
+    if (urlPattern) {
+        if (typeof keyToCommandRegistry[key].overrides == 'undefined') { keyToCommandRegistry[key].overrides = {}; }
+        keyToCommandRegistry[key].overrides[urlPattern] = null;
+        return;
+    }
+    delete keyToCommandRegistry[key];
+}
 
 /* Lower-case the appropriate portions of named keys.
  *
@@ -51,8 +70,12 @@ function normalizeKey(key) {
               });
 }
 
-function parseCustomKeyMappings(customKeyMappings) {
+// Parse custom key mappings. If you pass a URL pattern as second parameter, the key mappings
+// will be local overrides for this URL
+function parseCustomKeyMappings(customKeyMappings, urlPattern) {
   lines = customKeyMappings.split("\n");
+  
+  if (typeof url == 'undefined') url = null;
 
   for (var i = 0; i < lines.length; i++) {
     if (lines[i][0] == "\"" || lines[i][0] == "#") { continue }
@@ -66,20 +89,40 @@ function parseCustomKeyMappings(customKeyMappings) {
       var vimiumCommand = split_line[2];
 
       if (!availableCommands[vimiumCommand]) { continue }
-
-      console.log("Mapping", key, "to", vimiumCommand);
-      mapKeyToCommand(key, vimiumCommand);
+      
+      if (urlPattern) {
+        console.log("Mapping [", key, "] to [", vimiumCommand, "] as local override for", urlPattern);
+      }
+      else {
+        console.log("Mapping [", key, "] to [", vimiumCommand, "]");
+      }
+      mapKeyToCommand(key, vimiumCommand, urlPattern);
     }
     else if (lineCommand == "unmap") {
       if (split_line.length != 2) { continue; }
 
       var key = normalizeKey(split_line[1]);
 
-      console.log("Unmapping", key);
-      unmapKey(key);
+      if (urlPattern) {
+        console.log("Unmapping [", key, "] as local override for", urlPattern);
+      }
+      else {
+        console.log("Unmapping", key);
+      }
+      unmapKey(key, urlPattern);
     }
     else if (lineCommand == "unmapAll") {
-      keyToCommandRegistry = {};
+      if (urlPattern) {
+        for (var i in keyToCommandRegistry) {
+            if (!keyToCommandRegistry[i].overrides) { keyToCommandRegistry[i].overrides = {}; }
+            keyToCommandRegistry[i].overrides[urlPattern] = {};
+            console.log("Unmapping all as local override for", urlPattern);
+        }
+      }
+      else {
+        keyToCommandRegistry = {};
+        console.log("Unmapping all");
+      }
     }
   }
 }

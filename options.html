@@ -39,7 +39,7 @@
         width:342px;
         min-height:100px;
       }
-      textarea#keyMappings {
+      textarea#keyMappings, textarea.perSiteMappingRules {
         width:342px;
         min-height:100px;
       }
@@ -85,14 +85,21 @@
                         "userDefinedLinkHintCss", "keyMappings", "filterLinkHints"];
 
   var canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"];
+  
+  // counter for site-specific key mapping boxes
+  var mappingFieldsCounter = 0;
+  
+  function remapKeys(value, urlPattern) {
+    if (typeof urlPattern == 'undefined') { urlPattern = null; }
+    
+    backgroundPage = chrome.extension.getBackgroundPage();
+    if (!urlPattern) { backgroundPage.clearKeyMappingsAndSetDefaults(); }
+    backgroundPage.parseCustomKeyMappings(value, urlPattern);
+    backgroundPage.refreshCompletionKeysAfterMappingSave();
+  }
 
   var postSaveHooks = {
-    keyMappings: function (value) {
-      backgroundPage = chrome.extension.getBackgroundPage();
-      backgroundPage.clearKeyMappingsAndSetDefaults();
-      backgroundPage.parseCustomKeyMappings(value);
-      backgroundPage.refreshCompletionKeysAfterMappingSave();
-    }
+    keyMappings: remapKeys
   };
 
   function initializeOptions() {
@@ -124,12 +131,14 @@
 
   // Saves options to localStorage.
   function saveOptions() {
+    var perSiteMappings = {};
+    
     // If the value is unchanged from the default, delete the preference from localStorage; this gives us
     // the freedom to change the defaults in the future.
     for (var i = 0; i < editableFields.length; i++) {
-      var fieldName = editableFields[i];
-      var field = $(fieldName);
-
+      var fieldName       = editableFields[i];
+      var field           = $(fieldName);
+      
       var fieldValue;
       if (field.getAttribute("type") == "checkbox") {
         fieldValue = field.checked ? "true" : "false";
@@ -137,7 +146,24 @@
         fieldValue = field.value.trim();
         field.value = fieldValue;
       }
-
+      
+      // add website-specific mapping options
+      if (fieldName.match(/^perSiteMappingUrl_(\d)+$/)) {
+        if (!perSiteMappings[field.value]) {
+            perSiteMappings[field.value] = $('perSiteMappingRules_' + RegExp.$1).value;
+        } else {
+            perSiteMappings[field.value] += '\n' + $('perSiteMappingRules_' + RegExp.$1).value;
+        }
+        
+        // nothing more to do here for this kind of setting
+        continue;
+      } else if (fieldName.match(/^perSiteMappingRules_(\d)+$/)) {
+        if (postSaveHooks[fieldName]) {
+            postSaveHooks[fieldName](fieldValue, $('perSiteMappingUrl_' + RegExp.$1).value);
+        }
+        continue;
+      }
+      
       var defaultFieldValue = (defaultSettings[fieldName] != null) ?
         defaultSettings[fieldName].toString() : "";
 
@@ -156,12 +182,24 @@
 
       if (postSaveHooks[fieldName]) { postSaveHooks[fieldName](fieldValue); }
     }
+    localStorage['perSiteMappings'] = JSON.stringify(perSiteMappings);
     $("saveOptions").disabled = true;
   }
 
   // Restores select box state to saved value from localStorage.
   function populateOptions() {
+    if (localStorage['perSiteMappings'] && localStorage['perSiteMappings'] != '{}') {
+        var perSiteMappings = JSON.parse(localStorage['perSiteMappings']);
+        for (var i in perSiteMappings) {
+            addPerSiteMappingField(i, perSiteMappings[i]);
+        }
+    }
+    
     for (var i = 0; i < editableFields.length; i++) {
+       if (editableFields[i].match(/^perSiteMapping(?:Url|Rules)_\d+$/)) {
+         continue;
+       }
+       
       // If it's null or undefined, let's go to the default. We want to allow empty strings in certain cases.
       if (localStorage[editableFields[i]] != "" && !localStorage[editableFields[i]]) {
         var val = defaultSettings[editableFields[i]] || "";
@@ -176,6 +214,15 @@
   function restoreToDefaults() {
     for (var i = 0; i < editableFields.length; i++) {
       var val = defaultSettings[editableFields[i]] || "";
+      
+      if (editableFields[i].match(/^perSiteMapping(?:Url|Rules)_(\d)+$/)) {
+        var field = $('perSiteMappingUrl_' + RegExp.$1);
+        if (field) {
+            removePerSiteMappingField(field.parentNode.parentNode);
+        }
+        continue;
+      }
+      
       setFieldValue($(editableFields[i]), val);
     }
     onDataLoaded();
@@ -196,6 +243,70 @@
     for (var i = 0; i < elements.length; i++)
       elements[i].style.display = (elements[i].style.display == "table-row") ? "none" : "table-row";
     event.preventDefault();
+  }
+  
+  // Add a box for website-specific key mapping options
+  // Specify default URL and default rule set. These may be empty strings, but not undefined.
+  function addPerSiteMappingField(url, rules) {
+    ++mappingFieldsCounter;
+    
+    var fieldEl = $('perSiteMappings');
+    var wrapper = document.createElement('div');
+    
+    var div = document.createElement('div');
+    var input = document.createElement('input');
+    input.setAttribute('id', 'perSiteMappingUrl_' + mappingFieldsCounter);
+    input.setAttribute('type', 'text');
+    input.setAttribute('value', url);
+    input.style.width = '250px';
+    input.addEventListener('keyup', onOptionKeyup, false);
+    div.appendChild(input);
+    
+    var button = document.createElement('input');
+    button.setAttribute('type', 'button');
+    button.setAttribute('value', 'Remove');
+    button.onclick = function() { removePerSiteMappingField(this.parentNode.parentNode); };
+    div.appendChild(button);
+    
+    var txtarea = document.createElement('textarea');
+    txtarea.className = 'perSiteMappingRules';
+    txtarea.setAttribute('id', 'perSiteMappingRules_' + mappingFieldsCounter);
+    txtarea.appendChild(document.createTextNode(rules));
+    txtarea.addEventListener('keyup', onOptionKeyup, false);
+    
+    wrapper.appendChild(div);
+    wrapper.appendChild(txtarea);
+    fieldEl.appendChild(wrapper);
+    input.focus();
+    
+    // add fields to editableFields list
+    editableFields.push('perSiteMappingUrl_' + mappingFieldsCounter);
+    editableFields.push('perSiteMappingRules_' + mappingFieldsCounter);
+    
+    // add hooks
+    postSaveHooks['perSiteMappingRules_' + mappingFieldsCounter] = remapKeys;
+  }
+  
+  
+  // Remove existing site-specific mapping options box.
+  // This function expects a reference to the topmost element of the box as parameter.
+  function removePerSiteMappingField(field) {
+    field.parentNode.removeChild(field);
+    
+    var id = field.getElementsByTagName('input')[0].getAttribute('id').substr(18);
+    
+    // remove from editable fields without producing 'undefined' items (therefore no use of 'delete')
+    for (var i = 0; i < editableFields.length; ++i) {
+        if (editableFields[i] == 'perSiteMappingUrl_' + id || editableFields[i] == 'perSiteMappingRules_' + id) {
+            editableFields.splice(i, 1);
+            --i;
+        }
+    }
+    
+    // remove hooks
+    delete postSaveHooks['perSiteMappingRules_' + id];
+    
+    enableSaveButton();
   }
   </script>
 
@@ -229,7 +340,7 @@
         </td>
       </tr>
       <tr class="advancedOption">
-        <td class="caption">Key mappings</td>
+        <td class="caption">Global key mappings</td>
         <td id="mappingsHelp" verticalAlign="top">
           <div class="help">
             <div class="example">
@@ -246,6 +357,14 @@
             </div>
           </div>
           <textarea id="keyMappings" type="text"></textarea>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Site-specific key mappings</td>
+        <td verticalAlign="top">
+            <div class="help"><div class="example">Enter your website-specific key mappings here</div></div>
+            <div id="perSiteMappings"></div>
+            <input type="button" onclick="addPerSiteMappingField('http*://', ''); enableSaveButton();" value="Add site" />
         </td>
       </tr>
       <tr class="advancedOption">
