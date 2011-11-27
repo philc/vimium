@@ -47,7 +47,7 @@
   var initialize = function() {
     var self = this;
     addCssToPage(completionCSS);
-    
+
     self.currentSelection=0;
 
     self.onKeydown = function(event) {
@@ -76,14 +76,14 @@
             render.call(self, self.getQueryString(), completions);
           })
         }
-      } 
+      }
       else if(keyChar!=="left" && keyChar!="right") {
         self.query.push(keyChar);
         self.options.source(self.getQueryString(), function(completions) {
           render.call(self, self.getQueryString(), completions);
         })
-      } 
-      
+      }
+
       event.stopPropagation();
       event.preventDefault();
       return true;
@@ -134,15 +134,15 @@
     parent.appendChild(element);
     return element;
   }
-  
+
   var clearChildren = function(elem) {
     if (elem.hasChildNodes()) {
       while (elem.childNodes.length >= 1) {
-        elem.removeChild(elem.firstChild);       
-      } 
+        elem.removeChild(elem.firstChild);
+      }
     }
   }
-  
+
   var completionCSS = ".vimium-dialog {"+
     "position:fixed;"+
     "background-color: #ebebeb;" +

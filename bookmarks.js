@@ -1,4 +1,4 @@
-function activateBookmarkFindModeToOpenInNewTab() { 
+function activateBookmarkFindModeToOpenInNewTab() {
   BookmarkMode.openInNewTab(true);
   BookmarkMode.enable();
 }
@@ -32,12 +32,12 @@ function activateBookmarkFindMode() {
       if(!this.initialized) {
         initialize.call(this);
       }
-      
+
       handlerStack.push({
         keydown: this.onKeydown,
         keyup: this.onKeyup
       });
-      
+
       this.renderHUD();
       this.completionDialog.show();
     },
@@ -53,7 +53,7 @@ function activateBookmarkFindMode() {
       else
         HUD.show("Open bookmark in current tab");
     }
-    
+
   }
 
   // private method
@@ -75,7 +75,7 @@ function activateBookmarkFindMode() {
         else {
           window.open(url);
         }
-        
+
         self.disable();
       },
       renderOption: function(searchString, selection) {
@@ -106,12 +106,12 @@ function activateBookmarkFindMode() {
       // TODO(philc): Ignore keys that have modifiers.
       if (isEscape(event)) {
         self.disable();
-      } 
+      }
 
       event.stopPropagation();
       event.preventDefault();
     };
-    
+
     self.onKeyup = function(event) {
       // shift key will toggle between new tab/same tab
       if (event.keyCode == keyCodes.shiftKey && shiftWasPressedWhileToggled) {
