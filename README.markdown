@@ -138,6 +138,7 @@ Release Notes
 - Support for image maps.
 - Counts work with forward & backward navigation.
 - Tab & shift-tab to navigate bookmarks dialog.
+- An alternate link hints mode: type the title of a link to select it. You can enable it in Vimium's Advanced Preferences.
 - Bug fixes.
 
 1.29 (07/30/2011)
