@@ -18,12 +18,13 @@
         border:1px solid red;
       }
       .example {
-        font-size:80%;
+        font-size: 12px;
         color:#555;
         margin-left:20px;
       }
       .caption {
         margin-right:10px;
+        min-width: 130px;
       }
       td {
         padding:5px 0;
@@ -75,6 +76,8 @@
         background-color: #eee;
         color: #666;
       }
+      /* Boolean options have a tighter form representation than text options. */
+      td.booleanOption { font-size: 12px; }
     </style>
 
   <script type="text/javascript">
@@ -229,7 +232,7 @@
         </td>
       </tr>
       <tr class="advancedOption">
-        <td class="caption">Key mappings</td>
+        <td class="caption">Custom key<br/>mappings</td>
         <td id="mappingsHelp" verticalAlign="top">
           <div class="help">
             <div class="example">
@@ -273,15 +276,18 @@
         </td>
       </tr>
       <tr class="advancedOption">
-        <td class="caption">Filter link hints</td>
-        <td verticalAlign="top">
+        <td class="caption"></td>
+        <td verticalAlign="top" class="booleanOption">
           <div class="help">
             <div class="example">
-              Typing in link hints mode will filter link hints by the link text.<br/><br/>
-              Note: You <em>must</em> use numeric link hint characters in this mode
+              After typing "F" to enter link hinting mode, this option lets you type the text of a link
+              to select it.
             </div>
           </div>
-          <input id="filterLinkHints" type="checkbox"/>
+          <label>
+            <input id="filterLinkHints" type="checkbox"/>
+            Use the link's name and numbers for link hint filtering
+          </label>
         </td>
       </tr>
     </table>
