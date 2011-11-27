@@ -1,17 +1,15 @@
 (function(window, document) {
 
-  var CompletionDialog = function(options) {
-    this.options = options;
-  }
+  var CompletionDialog = function(options) { this.options = options; }
 
   CompletionDialog.prototype = {
     show: function() {
-      if(!this.isShown) {
+      if (!this.isShown) {
         this.isShown=true;
         this.query = [];
-        if(!this.initialized) {
+        if (!this.initialized) {
           initialize.call(this);
-          this.initialized=true;
+          this.initialized = true;
         }
         handlerStack.push({ keydown: this.onKeydown });
         render.call(this);
@@ -20,53 +18,51 @@
         this._tweenId = Tween.fade(this.container, 1.0, 150);
       }
     },
+
     hide: function() {
-      if(this.isShown) {
+      if (this.isShown) {
         handlerStack.pop();
-        this.isShown=false;
-        this.currentSelection=0;
+        this.isShown = false;
+        this.currentSelection = 0;
         clearInterval(this._tweenId);
         var completionContainer = this.container;
-        var cssHide = function() {
-          completionContainer.style.display = "none";
-        }
+        var cssHide = function() { completionContainer.style.display = "none"; }
         this._tweenId = Tween.fade(this.container, 0, 150, cssHide);
       }
     },
+
     getDisplayElement: function() {
-      if(!this.container) {
+      if (!this.container)
         this.container = createDivInside(document.body);
-      }
       return this.container;
     },
-    getQueryString: function() {
-      return this.query.join("");
-    }
+
+    getQueryString: function() { return this.query.join(""); }
   }
 
   var initialize = function() {
     var self = this;
     addCssToPage(completionCSS);
 
-    self.currentSelection=0;
+    self.currentSelection = 0;
 
     self.onKeydown = function(event) {
       var keyChar = getKeyChar(event);
       // change selection with up or Shift-Tab
-      if(keyChar==="up" || (event.keyCode == 9 && event.shiftKey)) {
-        if(self.currentSelection>0) {
+      if (keyChar==="up" || (event.keyCode == 9 && event.shiftKey)) {
+        if (self.currentSelection>0) {
           self.currentSelection-=1;
         }
         render.call(self,self.getQueryString(), self.completions);
       }
       // change selection with down or Tab
-      else if(keyChar==="down" || (event.keyCode == 9 && !event.shiftKey)) {
-        if(self.currentSelection<self.completions.length-1) {
-          self.currentSelection+=1;
+      else if (keyChar==="down" || (event.keyCode == 9 && !event.shiftKey)) {
+        if (self.currentSelection < self.completions.length - 1) {
+          self.currentSelection += 1;
         }
         render.call(self,self.getQueryString(), self.completions);
       }
-      else if(event.keyCode == keyCodes.enter) {
+      else if (event.keyCode == keyCodes.enter) {
         self.options.onSelect(self.completions[self.currentSelection]);
       }
       else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
@@ -77,11 +73,11 @@
           })
         }
       }
-      else if(keyChar!=="left" && keyChar!="right") {
+      else if (keyChar!=="left" && keyChar!="right") {
         self.query.push(keyChar);
         self.options.source(self.getQueryString(), function(completions) {
           render.call(self, self.getQueryString(), completions);
-        })
+        });
       }
 
       event.stopPropagation();
@@ -91,15 +87,15 @@
   }
 
   var render = function(searchString, completions) {
-    if(this.isShown) {
+    if (this.isShown) {
       this.searchString = searchString;
       this.completions = completions;
       var container = this.getDisplayElement();
       clearChildren(container);
 
-      if(searchString===undefined) {
+      if (searchString === undefined) {
         this.container.className = "vimium-dialog";
-        createDivInside(container).innerHTML=this.options.initialSearchText || "Begin typing";
+        createDivInside(container).innerHTML = this.options.initialSearchText || "Begin typing";
       }
       else {
         this.container.className = "vimium-dialog vimium-completions";
@@ -109,15 +105,15 @@
 
         searchResults = createDivInside(container);
         searchResults.className="vimium-searchResults";
-        if(completions.length<=0) {
+        if (completions.length<=0) {
           var resultDiv = createDivInside(searchResults);
           resultDiv.className="vimium-noResults";
           resultDiv.innerHTML="No results found";
         }
         else {
-          for(var i=0;i<completions.length;i++) {
+          for (var i = 0; i < completions.length; i++) {
             var resultDiv = createDivInside(searchResults);
-            if(i===this.currentSelection) {
+            if (i === this.currentSelection) {
               resultDiv.className="vimium-selected";
             }
             resultDiv.innerHTML=this.options.renderOption(searchString, completions[i]);
@@ -125,8 +121,8 @@
         }
       }
 
-      container.style.top=Math.max(0,(window.innerHeight/2-container.clientHeight/2)) + "px";
-      container.style.left=(window.innerWidth/2-container.clientWidth/2) + "px";
+      container.style.top = Math.max(0, (window.innerHeight/2-container.clientHeight/2)) + "px";
+      container.style.left = (window.innerWidth/2-container.clientWidth/2) + "px";
     }
   };
   var createDivInside = function(parent) {
