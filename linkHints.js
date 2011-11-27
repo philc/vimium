@@ -16,7 +16,7 @@ var linkHints = {
   shouldOpenWithQueue: false,
   // flag for copying link instead of opening
   shouldCopyLinkUrl: false,
-  // Whether link hint's "open in current/new tab" setting is currently toggled 
+  // Whether link hint's "open in current/new tab" setting is currently toggled
   openLinkModeToggle: false,
   // Whether we have added to the page the CSS needed to display link hints.
   cssAdded: false,
@@ -35,7 +35,7 @@ var linkHints = {
     this.markerMatcher = settings.get('filterLinkHints') == "true" ? filterHints : alphabetHints;
   },
 
-  /* 
+  /*
    * Generate an XPath describing what a clickable element is.
    * The final expression will be something like "//button | //xhtml:button | ..."
    */
@@ -65,7 +65,7 @@ var linkHints = {
       keydown: this.onKeyDownInMode,
       keyup: this.onKeyUpInMode
     });
-        
+
     this.openLinkModeToggle = false;
   },
 
@@ -229,7 +229,7 @@ var linkHints = {
 
   onKeyUpInMode: function(event) {
     if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
-      // Revert toggle on whether to open link in new or current tab. 
+      // Revert toggle on whether to open link in new or current tab.
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
       this.openLinkModeToggle = false;
     }
@@ -278,7 +278,7 @@ var linkHints = {
     return (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
         element.nodeName.toLowerCase() == "textarea";
   },
-  
+
   copyLinkUrl: function(link) {
     chrome.extension.sendRequest({handler: 'copyLinkUrl', data: link.href});
   },
