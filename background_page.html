@@ -64,7 +64,9 @@
     returnScrollPosition: handleReturnScrollPosition,
     getCurrentTabUrl:     getCurrentTabUrl,
     getSetting:           getSetting,
-    getBookmarks:         getBookmarks
+    getBookmarks:         getBookmarks,
+    getTabs:              getTabs,
+    selectTabById:        selectTabById
   };
 
   var sendRequestHandlers = {
@@ -292,6 +294,23 @@
     chrome.bookmarks.search(args.query, function(bookmarks) {
         port.postMessage({bookmarks:bookmarks})
     })
+  }
+
+  function getTabs(args, port) {
+    chrome.tabs.getAllInWindow(null, function(tabs) {
+      var found = [];
+      var re = new RegExp(args.query, "i");
+      for(var i = 0; i < tabs.length; i++) {
+        if((tabs[i].url + tabs[i].title).match(re)) {
+          found.push(tabs[i]);
+        }
+      }
+      port.postMessage({tabs:found});
+    });
+  }
+
+  function selectTabById(args, port) {
+    chrome.tabs.update(args.tabId, { selected: true });
   }
 
   /*
