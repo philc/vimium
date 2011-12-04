@@ -133,7 +133,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.30
+1.30 (12/04/2011)
 
 - Support for image maps in link hints.
 - Counts now work with forward & backward navigation.
