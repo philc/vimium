@@ -331,9 +331,11 @@
 
   function nextTab(callback) { selectTab(callback, "next"); }
   function previousTab(callback) { selectTab(callback, "previous"); }
+  function firstTab(callback) { selectTab(callback, "first"); }
+  function lastTab(callback) { selectTab(callback, "last"); }
 
   /*
-   * Selects a tab before or after the currently selected tab. Direction is either "next" or "previous".
+   * Selects a tab before or after the currently selected tab. Direction is either "next", "previous", "first" or "last".
    */
   function selectTab(callback, direction) {
     chrome.tabs.getAllInWindow(null, function(tabs) {
@@ -346,6 +348,12 @@
               break;
             case "previous":
               toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length];
+              break;
+            case "first":
+              toSelect = tabs[0];
+              break;
+            case "last":
+              toSelect = tabs[tabs.length - 1];
               break;
           }
           selectionChangedHandlers.push(callback);
