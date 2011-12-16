@@ -131,6 +131,8 @@ function clearKeyMappingsAndSetDefaults() {
     "J": "previousTab",
     "gt": "nextTab",
     "gT": "previousTab",
+    "g0": "firstTab",
+    "g$": "lastTab",
 
     "t": "createTab",
     "x": "removeTab",
@@ -195,6 +197,8 @@ var commandDescriptions = {
   // Manipulating tabs
   nextTab: ["Go one tab right", { background: true }],
   previousTab: ["Go one tab left", { background: true }],
+  firstTab: ["Go to the first tab", { background: true }],
+  lastTab: ["Go to the last tab", { background: true }],
   createTab: ["Create new tab", { background: true }],
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
@@ -225,7 +229,7 @@ var commandGroups = {
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:
-    ["nextTab", "previousTab", "createTab", "removeTab", "restoreTab"],
+    ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "removeTab", "restoreTab"],
   misc:
     ["showHelp"]
 };
