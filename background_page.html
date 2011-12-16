@@ -339,15 +339,18 @@
     chrome.tabs.getAllInWindow(null, function(tabs) {
       if (tabs.length <= 1)
         return;
-      for (var i = 0; i < tabs.length; i++) {
-        if (tabs[i].selected) {
-          var delta = (direction == "next") ? 1 : -1;
-          var toSelect = tabs[(i + delta + tabs.length) % tabs.length];
+      chrome.tabs.getSelected(null, function(currentTab) {
+          switch (direction) {
+            case "next":
+              toSelect = tabs[(currentTab.index + 1 + tabs.length) % tabs.length];
+              break;
+            case "previous":
+              toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length];
+              break;
+          }
           selectionChangedHandlers.push(callback);
           chrome.tabs.update(toSelect.id, { selected: true });
-          break;
-        }
-      }
+      });
     });
   }
 
