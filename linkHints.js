@@ -216,15 +216,28 @@ var linkHints = {
       } else if (linksMatched.length == 1) {
         this.activateLink(linksMatched[0].clickableItem, delay);
       } else {
-        for (var i in this.hintMarkers)
-          this.hideMarker(this.hintMarkers[i]);
-        for (var i in linksMatched)
-          this.showMarker(linksMatched[i], this.markerMatcher.hintKeystrokeQueue.length);
+        if (this.targetsAreSame(linksMatched)) {
+          this.activateLink(linksMatched[0].clickableItem, delay);
+        } else {
+          for (var i in this.hintMarkers)
+            this.hideMarker(this.hintMarkers[i]);
+          for (var i in linksMatched)
+            this.showMarker(linksMatched[i], this.markerMatcher.hintKeystrokeQueue.length);
+        }
       }
     }
 
     event.stopPropagation();
     event.preventDefault();
+  },
+
+  targetsAreSame: function(linksMatched) {
+    var firstHint = linksMatched[0].getAttribute('hintstring');
+    for (var i in linksMatched)
+      if (linksMatched[i].getAttribute('hintstring') != firstHint)
+        return false;
+
+    return true;
   },
 
   onKeyUpInMode: function(event) {
@@ -350,6 +363,7 @@ var linkHints = {
 
 var alphabetHints = {
   hintKeystrokeQueue: [],
+  hintStringFor: {},
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
   getHintMarkers: function(visibleElements) {
@@ -360,7 +374,7 @@ var alphabetHints = {
     var hintMarkers = [];
 
     for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.numberToHintString(i, digitsNeeded);
+      var hintString = this.numberToHintString(i, digitsNeeded, visibleElements[i]);
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
@@ -373,7 +387,11 @@ var alphabetHints = {
    * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
    * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
    */
-  numberToHintString: function(number, numHintDigits) {
+  numberToHintString: function(number, numHintDigits, link) {
+    var href = link.element.href;
+    if (href && this.hintStringFor[href])
+	    return this.hintStringFor[href];
+
     var base = settings.get('linkHintCharacters').length;
     var hintString = [];
     var remainder = 0;
@@ -395,7 +413,11 @@ var alphabetHints = {
     // page that has http links that are close to each other where link hints
     // of 2 characters or more occlude each other.
     hintString.reverse();
-    return hintString.join("");
+    var str = hintString.join("");
+    if (href)
+      this.hintStringFor[href] = str;
+
+    return str;
   },
 
   matchHintsByKey: function(event, hintMarkers) {
