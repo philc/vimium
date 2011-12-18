@@ -60,6 +60,8 @@ Manipulating tabs:
 
     J, gT      go one tab left
     K, gt      go one tab right
+    g0         go to the first tab
+    g$         go to the last tab
     t          create tab
     x          close current tab
     X          restore closed tab (i.e. unwind the 'x' command)
