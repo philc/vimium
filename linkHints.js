@@ -353,14 +353,24 @@ var alphabetHints = {
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
   getHintMarkers: function(visibleElements) {
+    var i, trie;
     //Initialize the number used to generate the character hints to be as many digits as we need to highlight
     //all the links on the page; we don't want some link hints to have more chars than others.
     var digitsNeeded = Math.ceil(this.logXOfBase(
           visibleElements.length, settings.get('linkHintCharacters').length));
+
+    var hintStrings = [];
+    for (i = 0, count = visibleElements.length; i < count; i++) {
+      var hintString = this.numberToHintString(i, digitsNeeded);
+      hintStrings.push(hintString);
+    }
+
+    trie = this.buildTrie(hintStrings);
+
     var hintMarkers = [];
 
-    for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.numberToHintString(i, digitsNeeded);
+    for (i = 0, count = visibleElements.length; i < count; i++) {
+      var hintString = this.dropUniqueTail(hintStrings[i], trie);
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
@@ -369,6 +379,42 @@ var alphabetHints = {
 
     return hintMarkers;
   },
+
+  dropUniqueTail: function(hint, trie) {
+    var c, i, len;
+    len = hint.length;
+    for(i = 0, len = hint.length; i < len; i++) {
+      c = hint[i];
+      if (trie[c].unique)
+        break;
+      trie = trie[c];
+    }
+
+    if (i < len - 1)
+      return hint.substr(0, i + 1);
+
+    return hint;
+  },
+
+  buildTrie: function(hintStrings) {
+    var i, j, len, hslen, hint, c;
+    var trie = {};
+    var ptrie = trie;
+    for (i = 0, len = hintStrings.length; i < len; i++) {
+      hint = hintStrings[i];
+      for (j = 0, hslen = hint.length; j < hslen; j++) {
+        c = hint[j];
+        if (ptrie[c])
+          ptrie[c].unique = 0;
+        else
+          ptrie[c] = { unique: 1 };
+        ptrie = ptrie[c];
+      }
+      ptrie = trie;
+    }
+    return trie;
+  },
+
   /*
    * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
    * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
