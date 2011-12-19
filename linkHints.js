@@ -379,6 +379,13 @@ var alphabetHints = {
     return hintMarkers;
   },
 
+  /*
+   * Check the hint string against the trie structure and replace consecutive
+   * runs of characters that makes a unique path by the first character. Due to
+   * the way the trie is built, the first entry found with 'unique' flag set to
+   * 1 is guarateed to be the start of a unique trail, hence we can remove the
+   * trailing characters (tail) after that point until the end of the string.
+   */
   dropUniqueTail: function(hint, length, trie) {
     var c, i;
     for(i = 0; i < length; i++) {
