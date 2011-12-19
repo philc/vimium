@@ -369,7 +369,7 @@ var alphabetHints = {
     var hintMarkers = [];
 
     for (i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.dropUniqueTail(hintStrings[i], trie);
+      var hintString = this.dropUniqueTail(hintStrings[i], digitsNeeded, trie);
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
@@ -379,17 +379,16 @@ var alphabetHints = {
     return hintMarkers;
   },
 
-  dropUniqueTail: function(hint, trie) {
-    var c, i, len;
-    len = hint.length;
-    for(i = 0, len = hint.length; i < len; i++) {
+  dropUniqueTail: function(hint, length, trie) {
+    var c, i;
+    for(i = 0; i < length; i++) {
       c = hint[i];
       if (trie[c].unique)
         break;
       trie = trie[c];
     }
 
-    if (i < len - 1)
+    if (i < length - 1)
       return hint.substr(0, i + 1);
 
     return hint;
