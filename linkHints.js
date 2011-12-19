@@ -394,12 +394,48 @@ var alphabetHints = {
     return hint;
   },
 
+  /*
+   * The following example shows the resulting trie after the insertion of the
+   * hint strings 'AA', 'AB' and 'CA':
+   *
+   * trie = {
+   *  'A' : {
+   *    'unique': 0,
+   *    'A' : {
+   *      'unique': 1,
+   *    },
+   *    'B' : {
+   *      'unique': 1,
+   *    },
+   *  },
+   *  'C' : {
+   *    'unique': 1,
+   *    'A' {
+   *      'unique': 1
+   *    }
+   * }
+   *
+   * Think of the paths in the trie ('AA', 'AB' and 'CA') as trails in a
+   * forest. Each time we add a new hintString we create a new trail because it
+   * leads to a new path. When a trail overlaps (most likely in the middle of
+   * getting to a new endpoint) then that particular point in that trail is no
+   * longer 'unique' - meaning that that point is shared by multiple paths.
+   *
+   * A continuous run of unique trails ('CA' from the above, not 'AA' and 'AB')
+   * can be represented wholly only by the first unique point. From the example
+   * above the trail 'CA' can be represented wholly by 'C' alone.
+   *
+   * In the function below 'ptrie' is a pointer to a trie structure as explained
+   * above. It is used to travel down the trail as new character 'c' from each
+   * hintString is added.
+   */
   addTrieEntry: function(ptrie, hintString, length) {
     var i, c;
     for (i = 0; i < length; i++) {
       c = hintString[i];
       if (ptrie[c])
-        ptrie[c].unique = 0;
+        ptrie[c].unique = 0; // We've been through this path before so it's no
+                             // longer unique at this point.
       else
         ptrie[c] = { unique: 1 };
       ptrie = ptrie[c];
