@@ -363,7 +363,7 @@ var alphabetHints = {
     for (i = 0, count = visibleElements.length; i < count; i++) {
       var hintString = this.numberToHintString(i, digitsNeeded);
       hintStrings.push(hintString);
-      this.addTrieEntry(trie, hintString);
+      this.addTrieEntry(trie, hintString, digitsNeeded);
     }
 
     var hintMarkers = [];
@@ -395,9 +395,9 @@ var alphabetHints = {
     return hint;
   },
 
-  addTrieEntry: function(ptrie, hintString) {
-    var i, len = hintString.length;
-    for (i = 0; i < len; i++) {
+  addTrieEntry: function(ptrie, hintString, length) {
+    var i, c;
+    for (i = 0; i < length; i++) {
       c = hintString[i];
       if (ptrie[c])
         ptrie[c].unique = 0;
