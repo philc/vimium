@@ -353,7 +353,7 @@ var alphabetHints = {
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
   getHintMarkers: function(visibleElements) {
-    var i, trie;
+    var i, trie = {};
     //Initialize the number used to generate the character hints to be as many digits as we need to highlight
     //all the links on the page; we don't want some link hints to have more chars than others.
     var digitsNeeded = Math.ceil(this.logXOfBase(
@@ -363,9 +363,8 @@ var alphabetHints = {
     for (i = 0, count = visibleElements.length; i < count; i++) {
       var hintString = this.numberToHintString(i, digitsNeeded);
       hintStrings.push(hintString);
+      this.addTrieEntry(trie, hintString);
     }
-
-    trie = this.buildTrie(hintStrings);
 
     var hintMarkers = [];
 
@@ -396,23 +395,16 @@ var alphabetHints = {
     return hint;
   },
 
-  buildTrie: function(hintStrings) {
-    var i, j, len, hslen, hint, c;
-    var trie = {};
-    var ptrie = trie;
-    for (i = 0, len = hintStrings.length; i < len; i++) {
-      hint = hintStrings[i];
-      for (j = 0, hslen = hint.length; j < hslen; j++) {
-        c = hint[j];
-        if (ptrie[c])
-          ptrie[c].unique = 0;
-        else
-          ptrie[c] = { unique: 1 };
-        ptrie = ptrie[c];
-      }
-      ptrie = trie;
+  addTrieEntry: function(ptrie, hintString) {
+    var i, len = hintString.length;
+    for (i = 0; i < len; i++) {
+      c = hintString[i];
+      if (ptrie[c])
+        ptrie[c].unique = 0;
+      else
+        ptrie[c] = { unique: 1 };
+      ptrie = ptrie[c];
     }
-    return trie;
   },
 
   /*
