@@ -231,12 +231,16 @@ function focusInput(count) {
   var i = 0;
 
   while (i < count) {
-    i += 1;
-
     var currentInputBox = results.iterateNext();
     if (!currentInputBox) { break; }
 
+    var clientRect = currentInputBox.getClientRects()[0];
+    if (!linkHints.isVisible(currentInputBox, clientRect))
+        continue;
+
     lastInputBox = currentInputBox;
+
+    i += 1;
   }
 
   if (lastInputBox) { lastInputBox.focus(); }
