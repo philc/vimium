@@ -39,14 +39,8 @@ var linkHints = {
    * Generate an XPath describing what a clickable element is.
    * The final expression will be something like "//button | //xhtml:button | ..."
    */
-  clickableElementsXPath: (function() {
-    var clickableElements = ["a", "area[@href]", "textarea", "button", "select", "input[not(@type='hidden')]",
-                             "*[@onclick or @tabindex or @role='link' or @role='button']"];
-    var xpath = [];
-    for (var i in clickableElements)
-      xpath.push("//" + clickableElements[i], "//xhtml:" + clickableElements[i]);
-    return xpath.join(" | ")
-  })(),
+  clickableElementsXPath: utils.makeXPath(["a", "area[@href]", "textarea", "button", "select","input[not(@type='hidden')]",
+                             "*[@onclick or @tabindex or @role='link' or @role='button']"]),
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: function() { this.activateMode(true, false, false); },
@@ -115,11 +109,7 @@ var linkHints = {
    * of digits needed to enumerate all of the links on screen.
    */
   getVisibleClickableElements: function() {
-    var resultSet = document.evaluate(this.clickableElementsXPath, document.body,
-      function(namespace) {
-        return namespace == "xhtml" ? "http://www.w3.org/1999/xhtml" : null;
-      },
-      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    var resultSet = utils.evaluateXPath(this.clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
     var visibleElements = [];
 

@@ -27,11 +27,15 @@ var linkHintCss;
 // fetch it each time.
 //
 // Should we include the HTML5 date pickers here?
-var textInputTypes = ["text", "search", "email", "url", "number"];
+
 // The corresponding XPath for such elements.
-var textInputXPath = '//input[' +
-                     textInputTypes.map(function (type) { return '@type="' + type + '"'; }).join(" or ") +
-                     ' or not(@type)]';
+var textInputXPath = (function() {
+  var textInputTypes = ["text", "search", "email", "url", "number"];
+  var inputElements = ["input[" +
+    textInputTypes.map(function (type) { return '@type="' + type + '"'; }).join(" or ") + "or not(@type)]",
+    "textarea"];
+  return utils.makeXPath(inputElements);
+})();
 
 var settings = {
   values: {},
@@ -223,9 +227,7 @@ function scrollLeft() { window.scrollBy(-1 * settings.get("scrollStepSize"), 0);
 function scrollRight() { window.scrollBy(settings.get("scrollStepSize"), 0); }
 
 function focusInput(count) {
-  var results = document.evaluate(textInputXPath,
-                                  document.documentElement, null,
-                                  XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+  var results = utils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
 
   var lastInputBox;
   var i = 0;
