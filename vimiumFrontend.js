@@ -32,7 +32,7 @@ var textInputXPath = (function() {
   var textInputTypes = ["text", "search", "email", "url", "number"];
   var inputElements = ["input[" +
     textInputTypes.map(function (type) { return '@type="' + type + '"'; }).join(" or ") + "or not(@type)]",
-    "textarea"];
+    "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"];
   return utils.makeXPath(inputElements);
 })();
 

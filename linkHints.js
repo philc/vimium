@@ -39,9 +39,11 @@ var linkHints = {
   /*
    * Generate an XPath describing what a clickable element is.
    * The final expression will be something like "//button | //xhtml:button | ..."
+   * We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
    */
   clickableElementsXPath: utils.makeXPath(["a", "area[@href]", "textarea", "button", "select","input[not(@type='hidden')]",
-                             "*[@onclick or @tabindex or @role='link' or @role='button']"]),
+                             "*[@onclick or @tabindex or @role='link' or @role='button' or " +
+                             "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]),
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: function() { this.activateMode(true, false, false); },
