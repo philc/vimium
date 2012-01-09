@@ -4,7 +4,6 @@
  * background page that we're in domReady and ready to accept normal commands by connectiong to a port named
  * "domReady".
  */
-
 var getCurrentUrlHandlers = []; // function(url)
 
 var insertModeLock = null;
@@ -40,7 +39,7 @@ var textInputXPath = (function() {
 var settings = {
   values: {},
   loadedValues: 0,
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints"],
+  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "previousPatterns", "nextPatterns"],
 
   get: function (key) { return this.values[key]; },
 
@@ -635,15 +634,14 @@ function findAndFollowRel(value) {
 }
 
 function goPrevious() {
-  // NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in most
-  // cases the single bracket link will be "prev/next page" and the double bracket link will be "first/last
-  // page", so check for single bracket first.
-  var previousStrings = ["\bprev\b", "\bprevious\b", "\bback\b", "<", "←", "«", "≪", "<<"];
+  var previousPatterns = settings.get("previousPatterns") || "";
+  var previousStrings = previousPatterns.split(",");
   findAndFollowRel('prev') || findAndFollowLink(previousStrings);
 }
 
 function goNext() {
-  var nextStrings = ["\bnext\b", "\bmore\b", ">", "→", "»", "≫", ">>"];
+  var nextPatterns = settings.get("nextPatterns") || "";
+  var nextStrings = nextPatterns.split(",");
   findAndFollowRel('next') || findAndFollowLink(nextStrings);
 }
 

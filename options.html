@@ -84,8 +84,8 @@
   $ = function(id) { return document.getElementById(id); };
   var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
 
-  var editableFields = ["scrollStepSize", "excludedUrls", "linkHintCharacters",
-                        "userDefinedLinkHintCss", "keyMappings", "filterLinkHints"];
+  var editableFields = ["scrollStepSize", "excludedUrls", "linkHintCharacters", "userDefinedLinkHintCss",
+                        "keyMappings", "filterLinkHints", "previousPatterns", "nextPatterns"];
 
   var canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"];
 
@@ -288,6 +288,28 @@
             <input id="filterLinkHints" type="checkbox"/>
             Use the link's name and numbers for link hint filtering
           </label>
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Previous Patterns</td>
+        <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                  Vimium will match against these patterns to navigate to a 'previous' page.
+              </div>
+            </div>
+            <input id="previousPatterns" type="text" style="width:320px" />
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Next Patterns</td>
+        <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                  Vimium will match against these patterns to navigate to a 'next' page.
+              </div>
+            </div>
+            <input id="nextPatterns" type="text" style="width:320px" />
         </td>
       </tr>
     </table>

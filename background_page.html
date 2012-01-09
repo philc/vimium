@@ -31,7 +31,17 @@
       ".vimiumHintMarker {\n\n}\n" +
       ".vimiumHintMarker > .matchingCharacter {\n\n}",
     excludedUrls: "http*://mail.google.com/*\n" +
-                  "http*://www.google.com/reader/*\n"
+                  "http*://www.google.com/reader/*\n",
+
+    // NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in
+    // most cases the single bracket link will be "prev/next page" and the double bracket link will be
+    // "first/last page", so we put the single bracket first in the pattern string so that it gets searched
+    // for first.
+
+    // "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
+    previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<",
+    // "\bnext\b,\bmore\b,>,→,»,≫,>>"
+    nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>",
   };
 
   // This is the base internal link hints CSS. It's combined with the userDefinedLinkHintCss before
