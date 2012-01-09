@@ -337,6 +337,10 @@ function onKeypress(event) {
   }
 }
 
+/**
+ * Called whenever we receive a key event.  Each individual handler has the option to stop the event's
+ * propagation by returning a falsy value.
+ */
 function bubbleEvent(type, event) {
   for (var i = handlerStack.length-1; i >= 0; i--) {
     // We need to check for existence of handler because the last function call may have caused the release of

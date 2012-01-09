@@ -31,6 +31,7 @@ var linkHints = {
    */
   init: function() {
     this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
+    this.onKeyPressInMode = this.onKeyPressInMode.bind(this);
     this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
     this.markerMatcher = settings.get('filterLinkHints') == "true" ? filterHints : alphabetHints;
   },
@@ -57,6 +58,7 @@ var linkHints = {
     this.buildLinkHints();
     handlerStack.push({ // modeKeyHandler is declared by vimiumFrontend.js
       keydown: this.onKeyDownInMode,
+      keypress: this.onKeyPressInMode,
       keyup: this.onKeyUpInMode
     });
 
@@ -217,7 +219,14 @@ var linkHints = {
     event.preventDefault();
   },
 
+  onKeyPressInMode: function(event) {
+    return !this.delayMode;
+  },
+
   onKeyUpInMode: function(event) {
+    if (this.delayMode)
+      return;
+
     if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
       // Revert toggle on whether to open link in new or current tab.
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
