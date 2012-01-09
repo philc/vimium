@@ -124,6 +124,15 @@ discussion on the issues tracker or on the [mailing list][list_url]. If it mirro
 another browser or in Vim itself, let us know! Once you've picked something to work on, add a comment to the
 respective issue so others don't duplicate your effort.
 
+Please ensure that existing tests pass. The tests are defined in `test_harnesses/automated.html`.  To run the
+tests:
+1. Go to the extensions page
+2. Click on the arrow beside Vimium to expand the menu, and then inspect `background_page.html` in the console
+3. Type in `runTests()`.
+
+We encourage you to write tests for any new features or bugfixes. Contributing more tests for existing
+features is great too!
+
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
 your patch.
 

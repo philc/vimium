@@ -765,6 +765,13 @@
     });
   }
   init();
+
+  /**
+   * Convenience function for development use.
+   */
+  function runTests() {
+    open(chrome.extension.getURL('test_harnesses/automated.html'));
+  }
 </script>
 </head>
 </html>
