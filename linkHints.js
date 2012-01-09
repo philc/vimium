@@ -151,8 +151,9 @@ var linkHints = {
   getVisibleClientRect: function(element) {
     // Note: this call will be expensive if we modify the DOM in between calls.
     var clientRects = element.getClientRects();
+    var clientRectsLength = clientRects.length;
 
-    for (var i = 0, len = clientRects.length; i < len; i++) {
+    for (var i = 0; i < clientRectsLength; i++) {
       // Exclude links which have just a few pixels on screen, because the link hints won't show for them
       // anyway.
       if (clientRects[i].top < 0 || clientRects[i].top >= window.innerHeight - 4 ||
@@ -168,6 +169,10 @@ var linkHints = {
           computedStyle.getPropertyValue('display') == 'none')
         continue;
 
+      return clientRects[i];
+    }
+
+    for (var i = 0; i < clientRectsLength; i++) {
       // If the link has zero dimensions, it may be wrapping visible
       // but floated elements. Check for this.
       if (clientRects[i].width == 0 || clientRects[i].height == 0) {
@@ -182,8 +187,6 @@ var linkHints = {
           return childClientRect;
         }
       }
-
-      return clientRects[i];
     };
     return null;
   },
