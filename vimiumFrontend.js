@@ -236,8 +236,7 @@ function focusInput(count) {
     var currentInputBox = results.iterateNext();
     if (!currentInputBox) { break; }
 
-    var clientRect = currentInputBox.getClientRects()[0];
-    if (!linkHints.isVisible(currentInputBox, clientRect))
+    if (linkHints.getVisibleClientRect(currentInputBox) === null)
         continue;
 
     lastInputBox = currentInputBox;

@@ -118,27 +118,9 @@ var linkHints = {
     // Find all visible clickable elements.
     for (var i = 0, count = resultSet.snapshotLength; i < count; i++) {
       var element = resultSet.snapshotItem(i);
-      // Note: this call will be expensive if we modify the DOM in between calls.
-      var clientRect = element.getClientRects()[0];
-
-      if (this.isVisible(element, clientRect))
+      var clientRect = this.getVisibleClientRect(element, clientRect);
+      if (clientRect !== null)
         visibleElements.push({element: element, rect: clientRect});
-
-      // If the link has zero dimensions, it may be wrapping visible
-      // but floated elements. Check for this.
-      if (clientRect && (clientRect.width == 0 || clientRect.height == 0)) {
-        for (var j = 0, childrenCount = element.children.length; j < childrenCount; j++) {
-          var computedStyle = window.getComputedStyle(element.children[j], null);
-          // Ignore child elements which are not floated and not absolutely positioned for parent elements with zero width/height
-          if (computedStyle.getPropertyValue('float') == 'none' && computedStyle.getPropertyValue('position') != 'absolute')
-            continue;
-          var childClientRect = element.children[j].getClientRects()[0];
-          if (!this.isVisible(element.children[j], childClientRect))
-            continue;
-          visibleElements.push({element: element.children[j], rect: childClientRect});
-          break;
-        }
-      }
 
       if (element.localName === "area") {
         var map = element.parentElement;
@@ -161,26 +143,47 @@ var linkHints = {
     return visibleElements;
   },
 
-  /*
-   * Returns true if element is visible.
+  /**
+   * Returns the first visible clientRect of an element if it exists. Otherwise it returns null.
    */
-  isVisible: function(element, clientRect) {
-    // Exclude links which have just a few pixels on screen, because the link hints won't show for them
-    // anyway.
-    if (!clientRect || clientRect.top < 0 || clientRect.top >= window.innerHeight - 4 ||
-        clientRect.left < 0 || clientRect.left  >= window.innerWidth - 4)
-      return false;
+  getVisibleClientRect: function(element) {
+    // Note: this call will be expensive if we modify the DOM in between calls.
+    var clientRects = element.getClientRects();
 
-    if (clientRect.width < 3 || clientRect.height < 3)
-      return false;
+    for (var i = 0, len = clientRects.length; i < len; i++) {
+      // Exclude links which have just a few pixels on screen, because the link hints won't show for them
+      // anyway.
+      if (clientRects[i].top < 0 || clientRects[i].top >= window.innerHeight - 4 ||
+          clientRects[i].left < 0 || clientRects[i].left  >= window.innerWidth - 4)
+        continue;
 
-    // eliminate invisible elements (see test_harnesses/visibility_test.html)
-    var computedStyle = window.getComputedStyle(element, null);
-    if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-        computedStyle.getPropertyValue('display') == 'none')
-      return false;
+      if (clientRects[i].width < 3 || clientRects[i].height < 3)
+        continue;
 
-    return true;
+      // eliminate invisible elements (see test_harnesses/visibility_test.html)
+      var computedStyle = window.getComputedStyle(element, null);
+      if (computedStyle.getPropertyValue('visibility') != 'visible' ||
+          computedStyle.getPropertyValue('display') == 'none')
+        continue;
+
+      // If the link has zero dimensions, it may be wrapping visible
+      // but floated elements. Check for this.
+      if (clientRects[i].width == 0 || clientRects[i].height == 0) {
+        for (var j = 0, childrenCount = element.children.length; j < childrenCount; j++) {
+          var computedStyle = window.getComputedStyle(element.children[j], null);
+          // Ignore child elements which are not floated and not absolutely positioned for parent elements with zero width/height
+          if (computedStyle.getPropertyValue('float') == 'none' && computedStyle.getPropertyValue('position') != 'absolute')
+            continue;
+          var childClientRect = this.getVisibleClientRect(element.children[j]);
+          if (childClientRect === null)
+            continue;
+          return childClientRect;
+        }
+      }
+
+      return clientRects[i];
+    };
+    return null;
   },
 
   /*
