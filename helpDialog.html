@@ -28,6 +28,22 @@
       top:50px;
       -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
       z-index:99999998;
+      overflow-y: scroll;
+    }
+    @media screen and (max-height: 600px) {
+        #vimiumHelpDialog {
+            height: 430px;
+        }
+    }
+    @media screen and (max-height: 500px) {
+        #vimiumHelpDialog {
+            height: 330px;
+        }
+    }
+    @media screen and (max-height: 400px) {
+        #vimiumHelpDialog {
+            height: 230px;
+        }
     }
     #vimiumHelpDialog a { color:blue; }
     #vimiumTitle, #vimiumTitle * { font-size:20px; }
