@@ -30,21 +30,6 @@
       z-index:99999998;
       overflow-y: scroll;
     }
-    @media screen and (max-height: 600px) {
-        #vimiumHelpDialog {
-            height: 430px;
-        }
-    }
-    @media screen and (max-height: 500px) {
-        #vimiumHelpDialog {
-            height: 330px;
-        }
-    }
-    @media screen and (max-height: 400px) {
-        #vimiumHelpDialog {
-            height: 230px;
-        }
-    }
     #vimiumHelpDialog a { color:blue; }
     #vimiumTitle, #vimiumTitle * { font-size:20px; }
     .vimiumColumn {
@@ -156,6 +141,7 @@
         this.dialogElement = document.getElementById("vimiumHelpDialog");
         this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", 
           VimiumHelpDialog.toggleAdvancedCommands, false);
+        this.dialogElement.style.maxHeight = window.innerHeight - 80;
         this.showAdvancedCommands(this.advancedCommandsVisible);
       },
 
