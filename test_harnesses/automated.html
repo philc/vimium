@@ -224,6 +224,30 @@
           })
 
         )
+
+      );
+
+      context("Input focus",
+
+        setup(function() {
+          var testContent =
+            "<input type='text' id='first'/>" +
+            "<input style='display:none;' id='second'/>" +
+            "<input type='password' id='third' value='some value'/>";
+          document.getElementById("test-div").innerHTML = testContent;
+        }),
+
+        tearDown(function() {
+          document.getElementById("test-div").innerHTML = "";
+        }),
+
+        should("focus the right element", function() {
+          focusInput(1);
+          assert.equal('first', document.activeElement.id);
+          focusInput(100);
+          assert.equal('third', document.activeElement.id);
+        })
+
       );
 
       Tests.outputMethod = function(output) {
