@@ -20,6 +20,7 @@ var isEnabledForUrl = true;
 var currentCompletionKeys;
 var validFirstKeys;
 var linkHintCss;
+var activatedElement;
 
 // The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 // each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -159,6 +160,7 @@ function initializeWhenEnabled() {
   document.addEventListener("keyup", onKeyup, true);
   document.addEventListener("focus", onFocusCapturePhase, true);
   window.addEventListener("blur", onBlurCapturePhase, true);
+  document.addEventListener("DOMActivate", onDOMActivate, true);
   enterInsertModeIfElementIsFocused();
 }
 
@@ -212,18 +214,67 @@ function enterInsertModeIfElementIsFocused() {
     enterInsertModeWithoutShowingIndicator(document.activeElement);
 }
 
+function onDOMActivate(event) {
+  activatedElement = event.target;
+}
+
+/**
+ * activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
+ * input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
+ */
+function scrollActivatedElementBy(x, y) {
+  if (!activatedElement) {
+    // if this is called before domReady, just use the window scroll function
+    if (document.body)
+      activatedElement = document.body;
+    else
+      window.scrollBy(x, y);
+  }
+
+  // Chrome does not report scrollHeight accurately for nodes with pseudo-elements of height 0 (bug 110149).
+  // Therefore we just try to increase scrollTop blindly -- if it fails we know we have reached the end of the
+  // content.
+  if (y !== 0) {
+    var element = activatedElement;
+    do {
+      var oldScrollTop = element.scrollTop;
+      element.scrollTop += y;
+      var lastElement = element;
+      element = element.parentElement;
+    } while(lastElement.scrollTop == oldScrollTop && lastElement.nodeName.toLowerCase() != 'body');
+  }
+
+  if (x !== 0) {
+    element = lastElement;
+    do {
+      var oldScrollLeft = element.scrollLeft;
+      element.scrollLeft += x;
+      var lastElement = element;
+      element = element.parentElement;
+    } while(lastElement.scrollLeft == oldScrollLeft && lastElement.nodeName.toLowerCase() != 'body');
+  }
+
+  // if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
+  // position will not provide any more visual feedback to the user. therefore we deactivate it so that
+  // subsequent scrolls only move the parent element.
+  var rect = activatedElement.getBoundingClientRect();
+  if (rect.top < 0 || rect.top > window.innerHeight ||
+      rect.left < 0 || rect.left > window.innerWidth)
+    activatedElement = lastElement;
+}
+
 function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.scrollHeight); }
 function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
 function scrollToRight() { window.scrollTo(document.body.scrollWidth, window.pageYOffset); }
-function scrollUp() { window.scrollBy(0, -1 * settings.get("scrollStepSize")); }
-function scrollDown() { window.scrollBy(0, settings.get("scrollStepSize")); }
-function scrollPageUp() { window.scrollBy(0, -1 * window.innerHeight / 2); }
-function scrollPageDown() { window.scrollBy(0, window.innerHeight / 2); }
-function scrollFullPageUp() { window.scrollBy(0, -window.innerHeight); }
-function scrollFullPageDown() { window.scrollBy(0, window.innerHeight); }
-function scrollLeft() { window.scrollBy(-1 * settings.get("scrollStepSize"), 0); }
-function scrollRight() { window.scrollBy(settings.get("scrollStepSize"), 0); }
+function scrollUp() { scrollActivatedElementBy(0, -1 * settings.get("scrollStepSize")); }
+function scrollDown() { scrollActivatedElementBy(0, settings.get("scrollStepSize")); }
+function scrollPageUp() { scrollActivatedElementBy(0, -1 * window.innerHeight / 2); }
+function scrollPageDown() { scrollActivatedElementBy(0, window.innerHeight / 2); }
+function scrollFullPageUp() { scrollActivatedElementBy(0, -window.innerHeight); }
+function scrollFullPageDown() { scrollActivatedElementBy(0, window.innerHeight); }
+function scrollLeft() { scrollActivatedElementBy(-1 * settings.get("scrollStepSize"), 0); }
+function scrollRight() { scrollActivatedElementBy(settings.get("scrollStepSize"), 0); }
 
 function focusInput(count) {
   var results = utils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
