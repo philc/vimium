@@ -223,13 +223,14 @@ function onDOMActivate(event) {
  * input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
  */
 function scrollActivatedElementBy(x, y) {
-  if (!activatedElement) {
-    // if this is called before domReady, just use the window scroll function
-    if (document.body)
-      activatedElement = document.body;
-    else
-      window.scrollBy(x, y);
+  // if this is called before domReady, just use the window scroll function
+  if (!document.body) {
+    window.scrollBy(x, y);
+    return;
   }
+
+  if (!activatedElement || utils.getVisibleClientRect(activatedElement) === null)
+    activatedElement = document.body;
 
   // Chrome does not report scrollHeight accurately for nodes with pseudo-elements of height 0 (bug 110149).
   // Therefore we just try to increase scrollTop blindly -- if it fails we know we have reached the end of the
@@ -240,7 +241,8 @@ function scrollActivatedElementBy(x, y) {
       var oldScrollTop = element.scrollTop;
       element.scrollTop += y;
       var lastElement = element;
-      element = element.parentElement;
+      // we may have an orphaned element. if so, just scroll the body element.
+      element = element.parentElement || document.body;
     } while(lastElement.scrollTop == oldScrollTop && lastElement.nodeName.toLowerCase() != 'body');
   }
 
@@ -250,7 +252,7 @@ function scrollActivatedElementBy(x, y) {
       var oldScrollLeft = element.scrollLeft;
       element.scrollLeft += x;
       var lastElement = element;
-      element = element.parentElement;
+      element = element.parentElement || document.body;
     } while(lastElement.scrollLeft == oldScrollLeft && lastElement.nodeName.toLowerCase() != 'body');
   }
 
@@ -286,7 +288,7 @@ function focusInput(count) {
     var currentInputBox = results.iterateNext();
     if (!currentInputBox) { break; }
 
-    if (linkHints.getVisibleClientRect(currentInputBox) === null)
+    if (utils.getVisibleClientRect(currentInputBox) === null)
         continue;
 
     lastInputBox = currentInputBox;
