@@ -406,29 +406,20 @@ var alphabetHints = {
   },
 
   matchHintsByKey: function(event, hintMarkers) {
-    var linksMatched = hintMarkers;
     var keyChar = getKeyChar(event);
-    if (!keyChar)
-      return { 'linksMatched': linksMatched };
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-      if (this.hintKeystrokeQueue.length == 0) {
-        var linksMatched = [];
-      } else {
-        this.hintKeystrokeQueue.pop();
-        var matchString = this.hintKeystrokeQueue.join("");
-        var linksMatched = linksMatched.filter(function(linkMarker) {
-          return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
-        });
-      }
-    } else if (settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
+      if (!this.hintKeystrokeQueue.pop())
+        return { linksMatched: [] };
+    } else if (keyChar && settings.get('linkHintCharacters').indexOf(keyChar) >= 0) {
       this.hintKeystrokeQueue.push(keyChar);
-      var matchString = this.hintKeystrokeQueue.join("");
-      var linksMatched = linksMatched.filter(function(linkMarker) {
-        return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
-      });
     }
-    return { 'linksMatched': linksMatched };
+
+    var matchString = this.hintKeystrokeQueue.join("");
+    var linksMatched = hintMarkers.filter(function(linkMarker) {
+      return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+    });
+    return { linksMatched: linksMatched };
   },
 
   deactivate: function() {
@@ -503,56 +494,55 @@ var filterHints = {
   },
 
   matchHintsByKey: function(event, hintMarkers) {
-    var linksMatched = hintMarkers;
-    var delay = 0;
     var keyChar = getKeyChar(event);
+    var delay = 0;
+    var userIsTypingLinkText = false;
 
-    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
-      // backspace clears hint key queue first, then acts on link text key queue
-      if (this.hintKeystrokeQueue.pop())
-        linksMatched = this.filterLinkHints(linksMatched);
-      else if (this.linkTextKeystrokeQueue.pop())
-        linksMatched = this.filterLinkHints(linksMatched);
-      else // both queues are empty. exit hinting mode
-        linksMatched = [];
-    } else if (event.keyCode == keyCodes.enter) {
-        // activate the lowest-numbered link hint that is visible
-        for (var i = 0, count = linksMatched.length; i < count; i++)
-          if (linksMatched[i].style.display  != 'none') {
-            linksMatched = [ linksMatched[i] ];
-            break;
-          }
+    if (event.keyCode == keyCodes.enter) {
+      // activate the lowest-numbered link hint that is visible
+      for (var i = 0, count = hintMarkers.length; i < count; i++)
+        if (hintMarkers[i].style.display  != 'none') {
+          return { linksMatched: [ hintMarkers[i] ] };
+        }
+    } else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
+      // backspace clears hint key queue first, then acts on link text key queue.
+      // if both queues are empty. exit hinting mode
+      if (!this.hintKeystrokeQueue.pop() && !this.linkTextKeystrokeQueue.pop())
+          return { linksMatched: [] };
     } else if (keyChar) {
-      var matchString;
-      if (/[0-9]/.test(keyChar)) {
+      if (/[0-9]/.test(keyChar))
         this.hintKeystrokeQueue.push(keyChar);
-        matchString = this.hintKeystrokeQueue.join("");
-        linksMatched = linksMatched.filter(function(linkMarker) {
-          return linkMarker.getAttribute('filtered') != 'true'
-            && linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
-        });
-      } else {
+      else {
         // since we might renumber the hints, the current hintKeyStrokeQueue
         // should be rendered invalid (i.e. reset).
         this.hintKeystrokeQueue = [];
         this.linkTextKeystrokeQueue.push(keyChar);
-        linksMatched = this.filterLinkHints(linksMatched);
-      }
-
-      if (linksMatched.length == 1 && !/[0-9]/.test(keyChar)) {
-        // In filter mode, people tend to type out words past the point
-        // needed for a unique match. Hence we should avoid passing
-        // control back to command mode immediately after a match is found.
-        var delay = 200;
+        userIsTypingLinkText = true;
       }
     }
-    return { 'linksMatched': linksMatched, 'delay': delay };
+
+    // at this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
+    // input. use them to filter the link hints accordingly.
+    var linksMatched = this.filterLinkHints(hintMarkers);
+    var matchString = this.hintKeystrokeQueue.join("");
+    linksMatched = linksMatched.filter(function(linkMarker) {
+      return linkMarker.getAttribute('filtered') != 'true'
+        && linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+    });
+
+    if (linksMatched.length == 1 && userIsTypingLinkText) {
+      // In filter mode, people tend to type out words past the point
+      // needed for a unique match. Hence we should avoid passing
+      // control back to command mode immediately after a match is found.
+      var delay = 200;
+    }
+
+    return { linksMatched: linksMatched, delay: delay };
   },
 
   /*
    * Hides the links that do not match the linkText search string and marks them with the 'filtered' DOM
-   * property. Renumbers the remainder.  Should only be called when there is a change in
-   * linkTextKeystrokeQueue, to avoid undesired renumbering.
+   * property. Renumbers the remainder.
    */
   filterLinkHints: function(hintMarkers) {
     var linksMatched = [];
