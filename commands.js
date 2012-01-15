@@ -127,6 +127,9 @@ function clearKeyMappingsAndSetDefaults() {
     "yy": "copyCurrentUrl",
     "yf": "linkHints.activateModeToCopyLinkUrl",
 
+    "p": "openCopiedUrlInCurrentTab",
+    "P": "openCopiedUrlInNewTab",
+
     "K": "nextTab",
     "J": "previousTab",
     "gt": "nextTab",
@@ -168,9 +171,11 @@ var commandDescriptions = {
 
   reload: ["Reload the page"],
   toggleViewSource: ["View page source"],
-  copyCurrentUrl: ["Copy the current URL to the clipboard"],
 
+  copyCurrentUrl: ["Copy the current URL to the clipboard"],
   'linkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"],
+  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }],
+  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }],
 
   enterInsertMode: ["Enter insert mode"],
 
@@ -220,7 +225,8 @@ var commandGroups = {
     ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
      "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
      "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-     "reload", "toggleViewSource", "copyCurrentUrl", "linkHints.activateModeToCopyLinkUrl", "goUp",
+     "reload", "toggleViewSource", "copyCurrentUrl", "linkHints.activateModeToCopyLinkUrl",
+     "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
      "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab",

@@ -267,6 +267,14 @@
     Clipboard.copy(request.data);
   }
 
+  function openCopiedUrlInCurrentTab(request) {
+    openUrlInCurrentTab({ url: Clipboard.paste() });
+  }
+
+  function openCopiedUrlInNewTab(request) {
+    openUrlInNewTab({ url: Clipboard.paste() });
+  }
+
   /*
    * Returns the core CSS used for link hints, along with any user-provided overrides.
    */
