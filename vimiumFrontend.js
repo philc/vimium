@@ -8,8 +8,7 @@ var getCurrentUrlHandlers = []; // function(url)
 
 var insertModeLock = null;
 var findMode = false;
-var findModeMatchIndex = 0;
-var findModeQuery = "";
+var findModeQuery = { rawQuery: "" };
 var findModeQueryHasResults = false;
 var isShowingHelpDialog = false;
 var handlerStack = [];
@@ -601,60 +600,87 @@ function exitInsertMode(target) {
 
 function isInsertMode() { return insertModeLock !== null; }
 
+// should be called whenever rawQuery is modified.
+function updateFindModeQuery() {
+  // the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
+  // escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
+  // character. here we grep for the relevant escape sequences.
+  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace(/\\./g, function(match) {
+    switch (match) {
+      case "\\r":
+        findModeQuery.isRegex = true;
+        return '';
+      case "\\\\":
+        return "\\";
+      default:
+        return match;
+    }
+  });
+
+  // if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
+  // sequentially so the browser handles the scrolling / text selection.
+  if (findModeQuery.isRegex) {
+    var pattern = new RegExp(findModeQuery.parsedQuery, "gi");
+    // innerText will not return the text of hidden elements, and strip out tags while preserving newlines
+    var text = document.body.innerText;
+    findModeQuery.regexMatches = text.match(pattern);
+    findModeQuery.activeRegexIndex = 0;
+  }
+}
+
 function handleKeyCharForFindMode(keyChar) {
-  findModeQuery = findModeQuery + keyChar;
+  findModeQuery.rawQuery += keyChar;
+  updateFindModeQuery();
   performFindInPlace();
   showFindModeHUDForQuery();
 }
 
 function handleDeleteForFindMode() {
-  if (findModeQuery.length == 0) {
+  if (findModeQuery.rawQuery.length == 0) {
     exitFindMode();
     performFindInPlace();
   }
   else {
-    findModeQuery = findModeQuery.substring(0, findModeQuery.length - 1);
+    findModeQuery.rawQuery = findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1);
+    updateFindModeQuery();
     performFindInPlace();
     showFindModeHUDForQuery();
   }
 }
 
 function handleEnterForFindMode() {
-  performFindInPlace();
   exitFindMode();
+  performFindInPlace();
 }
 
 function performFindInPlace() {
   var cachedScrollX = window.scrollX;
   var cachedScrollY = window.scrollY;
 
+  if (findModeQuery.isRegex) {
+    if (findModeQuery.regexMatches === null) {
+      findModeQueryHasResults = false;
+      return;
+    }
+    else
+      var query = findModeQuery.regexMatches[0];
+  }
+  else
+    var query = findModeQuery.parsedQuery;
+
   // Search backwards first to "free up" the current word as eligible for the real forward search. This allows
   // us to search in place without jumping around between matches as the query grows.
-  window.find(findModeQuery, false, true, true, false, true, false);
+  window.find(query, false, true, true, false, true, false);
 
   // We need to restore the scroll position because we might've lost the right position by searching
   // backwards.
   window.scrollTo(cachedScrollX, cachedScrollY);
 
-  executeFind();
+  findModeQueryHasResults = executeFind(query);
 }
 
-function executeFind(backwards) {
-  var pattern = new RegExp(findModeQuery, "g");
-  var text = document.body.textContent;
-  var result = text.match(pattern);
-  if ( ! findMode )
-    if (backwards)
-      if (findModeMatchIndex > 0)
-        findModeMatchIndex -= 1;
-      else
-        findModeMatchIndex = result.length - 1;
-    else
-      if (findModeMatchIndex < result.length - 1)
-        findModeMatchIndex += 1;
-      else
-        findModeMatchIndex = 0;
-  findModeQueryHasResults = window.find(result[findModeMatchIndex], false, backwards, true, false, true, false);
+function executeFind(query, backwards) {
+  return window.find(query, false, backwards, true, false, true, false);
 }
 
 function focusFoundLink() {
@@ -666,7 +692,24 @@ function focusFoundLink() {
 }
 
 function findAndFocus(backwards) {
-  executeFind(backwards);
+  if (!findModeQueryHasResults)
+    return;
+
+  if (findModeQuery.isRegex) {
+    if (!backwards) {
+      if (++findModeQuery.activeRegexIndex == findModeQuery.regexMatches.length)
+        findModeQuery.activeRegexIndex = 0;
+    }
+    else {
+      if (--findModeQuery.activeRegexIndex == -1)
+        findModeQuery.activeRegexIndex = findModeQuery.regexMatches.length - 1;
+    }
+    var query = findModeQuery.regexMatches[findModeQuery.activeRegexIndex];
+  }
+  else
+    var query = findModeQuery.parsedQuery;
+
+  executeFind(query, backwards);
   focusFoundLink();
 }
 
@@ -723,10 +766,10 @@ function goNext() {
 }
 
 function showFindModeHUDForQuery() {
-  if (findModeQueryHasResults || findModeQuery.length == 0)
-    HUD.show("/" + insertSpaces(findModeQuery));
+  if (findModeQueryHasResults || findModeQuery.rawQuery.length == 0)
+    HUD.show("/" + insertSpaces(findModeQuery.rawQuery));
   else
-    HUD.show("/" + insertSpaces(findModeQuery + " (No Matches)"));
+    HUD.show("/" + insertSpaces(findModeQuery.rawQuery + " (No Matches)"));
 }
 
 /*
@@ -746,7 +789,7 @@ function insertSpaces(query) {
 }
 
 function enterFindMode() {
-  findModeQuery = "";
+  findModeQuery = { rawQuery: "" };
   findMode = true;
   HUD.show("/");
 }
