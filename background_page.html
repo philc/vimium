@@ -29,8 +29,11 @@
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
     userDefinedLinkHintCss:
-      ".vimiumHintMarker {\n\n}\n" +
-      ".vimiumHintMarker > .matchingCharacter {\n\n}",
+      "#vimiumHintMarkerContainer .vimiumHintMarker \n/* linkhint boxes */ " +
+      "{\nbackground-color:yellow;\nborder:1px solid #E3BE23;\n}\n\n" +
+      "#vimiumHintMarkerContainer .vimiumHintMarker span \n/* linkhint text */ " +
+      "{\ncolor: black;\nfont-weight: bold;\nfont-size: 12px;\n}\n\n" +
+      "#vimiumHintMarkerContainer .vimiumHintMarker > .matchingCharacter {\n\n}",
     excludedUrls: "http*://mail.google.com/*\n" +
                   "http*://www.google.com/reader/*\n",
 
@@ -44,31 +47,6 @@
     // "\bnext\b,\bmore\b,>,→,»,≫,>>"
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>",
   };
-
-  // This is the base internal link hints CSS. It's combined with the userDefinedLinkHintCss before
-  // being sent to the frontend.
-  var linkHintCss =
-    '.internalVimiumHintMarker {' +
-      'position:absolute;' +
-      'background-color:yellow;' +
-      'color:black;' +
-      'font-weight:bold;' +
-      'font-size:12px;' +
-      'padding:0 1px;' +
-      'line-height:100%;' +
-      'width:auto;' +
-      'display:block;' +
-      'border:1px solid #E3BE23;' +
-      'z-index:99999999;' +
-      'font-family:"Helvetica Neue", "Helvetica", "Arial", "Sans";' +
-      'top:-1px;' +
-      'left:-1px;' +
-      'white-space:nowrap;' +
-    '}' +
-    '.internalVimiumHintMarker > .matchingCharacter {' +
-      'color:#C79F0B;' +
-    '}';
-
 
   // Port handler mapping
   var portHandlers = {
@@ -207,12 +185,12 @@
       bindings = (commandsToKey[command] || [""]).join(", ");
       if (showUnboundCommands || commandsToKey[command]) {
         html.push(
-          "<tr class='" + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
-          "<td>", escapeHtml(bindings), "</td>",
-          "<td>:</td><td>", availableCommands[command].description);
+          "<tr class='vimiumReset " + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
+          "<td class='vimiumReset'>", escapeHtml(bindings), "</td>",
+          "<td class='vimiumReset'>:</td><td>", availableCommands[command].description);
 
         if (showCommandNames)
-          html.push("<span class='commandName'>(" + command + ")</span>");
+          html.push("<span class='vimiumReset commandName'>(" + command + ")</span>");
 
         html.push("</td></tr>");
       }
@@ -277,10 +255,10 @@
   }
 
   /*
-   * Returns the core CSS used for link hints, along with any user-provided overrides.
+   * Returns the user-provided CSS overrides.
    */
   function getLinkHintCss(request) {
-    return { linkHintCss: linkHintCss + (localStorage['userDefinedLinkHintCss'] || "") };
+    return { linkHintCss: (localStorage['userDefinedLinkHintCss'] || "") };
   }
 
   /*
