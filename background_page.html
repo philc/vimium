@@ -2,6 +2,7 @@
 <head>
 <script type="text/javascript" src="commands.js"></script>
 <script type="text/javascript" src="lib/clipboard.js"></script>
+<script type="text/javascript" src="lib/utils.js"></script>
 <script type="text/javascript" charset="utf-8">
   // Chromium #15242 will make this XHR request to access the manifest unnecessary.
   var manifestRequest = new XMLHttpRequest();
@@ -268,11 +269,11 @@
   }
 
   function openCopiedUrlInCurrentTab(request) {
-    openUrlInCurrentTab({ url: Clipboard.paste() });
+    openUrlInCurrentTab({ url: utils.ensureUrl(Clipboard.paste()) });
   }
 
   function openCopiedUrlInNewTab(request) {
-    openUrlInNewTab({ url: Clipboard.paste() });
+    openUrlInNewTab({ url: utils.ensureUrl(Clipboard.paste()) });
   }
 
   /*

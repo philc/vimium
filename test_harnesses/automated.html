@@ -250,6 +250,19 @@
 
       );
 
+      context("Web query parsing",
+
+        should("Convert query string to valid URL", function() {
+          assert.equal("http://www.google.com/", utils.ensureUrl("http://www.google.com/"));
+          assert.equal("http://www.google.com/", utils.ensureUrl("    http://www.google.com/     "));
+          assert.equal("http://www.google.com", utils.ensureUrl("www.google.com"));
+          assert.equal("http://google.com", utils.ensureUrl("google.com"));
+          assert.equal("http://www.google.com/search?q=google", utils.ensureUrl("google"));
+          assert.equal("http://www.google.com/search?q=go ogle.com", utils.ensureUrl("go ogle.com"));
+        })
+
+      );
+
       Tests.outputMethod = function(output) {
         var newOutput = Array.prototype.join.call(arguments, "\n");
         newOutput = newOutput.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); // escape html
