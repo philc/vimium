@@ -25,6 +25,7 @@
              "completionDialog.js",
              "bookmarks.js"
             ],
+      "css": ["vimium.css"],
       "run_at": "document_start",
       "all_frames": true
     }

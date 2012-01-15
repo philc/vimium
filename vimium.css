@@ -1,0 +1,272 @@
+/* All of these declarations contain more specifiers than nesscesary to increase their specificity and help to
+   ensure they override broad CSS declarations by the website vimium overlays. */
+.vimiumReset,
+div.vimiumReset,
+span.vimiumReset,
+table.vimiumReset,
+a.vimiumReset,
+a:visited.vimiumReset,
+a:link.vimiumReset,
+a:hover.vimiumReset,
+td.vimiumReset,
+tr.vimiumReset {
+  background: none;
+  border: none;
+  border: none;
+  bottom: auto;
+  box-shadow: none;
+  color: black;
+  cursor: auto;
+  display: inline;
+  float: none;
+  font-family : "Helvetica Neue", "Helvetica", "Arial", "Sans";
+  font-size: 12px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  height: auto;
+  left: auto;
+  letter-spacing: 0;
+  line-height: 100%;
+  margin: 0;
+  max-height: none;
+  max-width: none;
+  min-height: 0;
+  min-width: 0;
+  opacity: 1;
+  padding: 0;
+  position: static;
+  right: auto;
+  text-align: left;
+  text-decoration: none;
+  text-indent: 0;
+  text-shadow: none;
+  text-transform: none;
+  top: auto;
+  vertical-align: baseline;
+  white-space: normal;
+  width: auto;
+  z-index: 99999999;
+}
+
+/* Linkhints CSS */
+div.internalVimiumHintMarker {
+  position: absolute;
+  background-color: yellow;
+  border: 1px solid #E3BE23;
+  display: block;
+  top: -1px;
+  left: -1px;
+  padding: 0 1px;
+  box-shadow: rgba(0, 0, 0, 0.3) 2px 2px;
+}
+
+div.internalVimiumHintMarker span {
+  font-weight: bold;
+}
+
+div.internalVimiumHintMarker > .matchingCharacter {
+  color: #C79F0B;
+}
+
+/* Help Dialog CSS */
+
+div#vimiumHelpDialog {
+  border:3px solid red;
+  opacity:0.92;
+  background-color:#eee;
+  position:fixed;
+  border:2px solid #b3b3b3;
+  border-radius:6px;
+  padding:8px 12px;
+  width:640px;
+  left:50%;
+  /* This needs to be 1/2 width to horizontally center the help dialog */
+  margin-left:-320px;
+  top:50px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
+  overflow-y: scroll;
+  z-index:99999998;
+}
+  
+div#vimiumHelpDialog a { color:blue; }
+div#vimiumTitle, div#vimiumTitle span,  div#vimiumTitle * { font-size:20px; }
+#vimiumTitle {
+  display: block;
+  line-height: 130%;
+}
+div.vimiumColumn {
+  width:50%;
+  float:left;
+  font-size: 11px;
+  line-height: 130%;
+}
+
+div.vimiumColumn tr {
+    display: table-row;
+}
+
+div.vimiumColumn td {
+    display: table-cell;
+    font-size: 11px;
+    line-height: 130%;
+}
+div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr { padding:0; margin:0; }
+div.vimiumColumn table { width:100%; table-layout:auto; }
+div.vimiumColumn td { vertical-align:top; padding:1px; }
+div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
+  text-align:right;
+  font-weight:bold;
+  color:#2f508e;
+  white-space:nowrap;
+}
+/* Make the description column as wide as it can be. */
+div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) { width:100%; }
+div#vimiumHelpDialog div.vimiumDivider {
+  display: block;
+  height:1px;
+  width:92%;
+  margin:10px auto;
+  background-color:#9a9a9a;
+}
+div#vimiumHelpDialog td.vimiumHelpSectionTitle {
+  font-weight:bold;
+  padding-top:3px;
+}
+div#vimiumHelpDialog div.commandName { font-family:"courier new"; }
+/* Advanced commands are hidden by default until you show them. */
+div#vimiumHelpDialog div.advanced { display: none; }
+div#vimiumHelpDialog div.advanced td:nth-of-type(3) { color: #555; }
+div#vimiumHelpDialog a.closeButton {
+  position:absolute;
+  right:10px;
+  top:5px;
+  font-family:"courier new";
+  font-weight:bold;
+  color:#555;
+  text-decoration:none;
+  padding-left:10px;
+  font-size:16px;
+}
+div#vimiumHelpDialog a {
+  text-decoration: underline;
+}
+
+div#vimiumHelpDialog .optionsPage {
+  position: absolute;
+  display: block;
+  font-size: 11px;
+  line-height: 130%;
+  right: 60px;
+  top: 8px;
+}
+div#vimiumHelpDialog a.closeButton:hover {
+  color:black;
+  cursor:default;
+  -webkit-user-select:none;
+}
+div#vimiumHelpDialogFooter { 
+  display: block;
+  position: relative;
+}
+div#vimiumHelpDialogFooter * { font-size:10px; }
+div#vimiumHelpDialogFooter .toggleAdvancedCommands {
+  position: absolute;
+  right: 2px;
+  top: -34px;
+}
+
+/* Vimium HUD CSS */
+
+div.vimiumHUD { 
+  display: block;
+  position: fixed; 
+  top: auto; 
+  left: auto; 
+  bottom: 0px; 
+  color: black; 
+  height: 13px; 
+  min-height: 13px; 
+  width: auto; 
+  max-width: 400px; 
+  min-width: 150px; 
+  text-align: left; 
+  background-color: #ebebeb; 
+  padding: 3px 3px 2px 3px; 
+  margin: 0;  
+  border: 1px solid #b3b3b3; 
+  border-radius: 4px 4px 0 0; 
+  font-family: "Lucida Grande", "Arial", "Sans"; 
+  // One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button.
+  z-index: 99999998; 
+  text-shadow: 0px 1px 2px #FFF; 
+  line-height: 1.0; 
+  opacity: 0; 
+} 
+// Hide the span between search box letters
+div.vimiumHUD span { 
+  display: none; 
+} 
+div.vimiumHUD a:link, div.vimiumHUD a:hover { 
+  background: transparent; 
+  color: blue; 
+  text-decoration: underline; 
+} 
+div.vimiumHUD a:link.close-button { 
+  float:right; 
+  font-family:courier new; 
+  font-weight:bold; 
+  color:#9C9A9A; 
+  text-decoration:none; 
+  padding-left:10px; 
+  margin-top:-1px; 
+  font-size:14px; 
+} 
+div.vimiumHUD a.close-button:hover { 
+  color:#333333; 
+  cursor:default; 
+  -webkit-user-select:none; 
+}
+
+/* Bookmarks completion dialog CSS */
+
+div.vimium-dialog {
+  background-color: #ebebeb; 
+  display: block;
+  position:fixed;
+  z-index: 99999998; 
+  border: 1px solid #b3b3b3; 
+  padding:10px;
+  border-radius: 4px; 
+}
+
+div.vimium-completions {
+  width:400px;
+}
+
+div.vimium-completions .vimium-searchBar {
+  display: block;
+  height: 15px;
+  border-bottom: 1px solid #b3b3b3;
+}
+
+div.vimium-completions div.vimium-searchResults div {
+  display: block;
+}
+
+div.vimium-completions div.vimium-searchResults div.vimium-selected{
+  background-color:#aaa;
+  border-radius: 4px; 
+}
+
+div.vimium-completions div{
+  padding:4px;
+}
+
+div.vimium-completions div strong{
+  font-weight:bold;
+}
+
+div.vimium-completions div.vimium-noResults{
+  color:#555;
+};

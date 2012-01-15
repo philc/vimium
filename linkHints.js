@@ -54,7 +54,8 @@ var linkHints = {
 
   activateMode: function(openInNewTab, withQueue, copyLinkUrl) {
     if (!this.cssAdded)
-      addCssToPage(linkHintCss); // linkHintCss is declared by vimiumFrontend.js
+      // linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
+      addCssToPage(linkHintCss); 
     this.linkHintCssAdded = true;
     this.setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl);
     this.buildLinkHints();
@@ -95,7 +96,8 @@ var linkHints = {
     // that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
     // Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
     this.hintMarkerContainingDiv = document.createElement("div");
-    this.hintMarkerContainingDiv.className = "internalVimiumHintMarker";
+    this.hintMarkerContainingDiv.id = "vimiumHintMarkerContainer";
+    this.hintMarkerContainingDiv.className = "vimiumReset internalVimiumHintMarker";
     for (var i = 0; i < this.hintMarkers.length; i++)
       this.hintMarkerContainingDiv.appendChild(this.hintMarkers[i]);
 
@@ -533,7 +535,7 @@ var hintUtils = {
   spanWrap: function(hintString) {
     var innerHTML = [];
     for (var i = 0; i < hintString.length; i++)
-      innerHTML.push("<span>" + hintString[i].toUpperCase() + "</span>");
+      innerHTML.push("<span class='vimiumReset'>" + hintString[i].toUpperCase() + "</span>");
     return innerHTML.join("");
   },
 
@@ -542,7 +544,7 @@ var hintUtils = {
    */
   createMarkerFor: function(link) {
     var marker = document.createElement("div");
-    marker.className = "internalVimiumHintMarker vimiumHintMarker";
+    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
     marker.clickableItem = link.element;
 
     var clientRect = link.rect;

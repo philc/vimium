@@ -29,9 +29,11 @@
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
     userDefinedLinkHintCss:
-      ".vimiumHintMarker \n/* linkhint boxes */ {\nbackground-color:yellow;\nborder:1px solid #E3BE23;\n}\n\n" +
-      ".vimiumHintMarker span \n/* linkhint text */ {\ncolor: black;\nfont-weight: bold;\nfont-size: 12px;\n}\n\n" +
-      ".vimiumHintMarker > .matchingCharacter {\n\n}",
+      "#vimiumHintMarkerContainer .vimiumHintMarker \n/* linkhint boxes */ " +
+      "{\nbackground-color:yellow;\nborder:1px solid #E3BE23;\n}\n\n" +
+      "#vimiumHintMarkerContainer .vimiumHintMarker span \n/* linkhint text */ " +
+      "{\ncolor: black;\nfont-weight: bold;\nfont-size: 12px;\n}\n\n" +
+      "#vimiumHintMarkerContainer .vimiumHintMarker > .matchingCharacter {\n\n}",
     excludedUrls: "http*://mail.google.com/*\n" +
                   "http*://www.google.com/reader/*\n",
 
@@ -45,69 +47,6 @@
     // "\bnext\b,\bmore\b,>,→,»,≫,>>"
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>",
   };
-
-  // This is the base internal link hints CSS. It's combined with the userDefinedLinkHintCss before
-  // being sent to the frontend.
-  var linkHintCss =
-    '.internalVimiumHintMarker {' +
-      'position:absolute;' +
-      'background-color:yellow;' +
-      'padding:0 1px;' +
-      'margin: 0;' +
-      'width:auto;' +
-      'height:auto;' +
-      'display:block;' +
-      'border:1px solid #E3BE23;' +
-      'opacity: 1;' +
-      'z-index:99999999;' +
-      'top:-1px;' +
-      'left:-1px;' +
-      'bottom: auto;' +
-      'right: auto;' +
-      'text-indent: 0;' +
-      // set font-size and line-height to ensure the box height adjust to the span height
-      'font-size: 0px;' +
-      'line-height: 100%;' +
-      // Add drop shadow in case the linkhint color is the same as the page color
-      'box-shadow: rgba(0, 0, 0, 0.3) 2px 2px;' +
-      'max-width: none;' +
-      'min-width: 0;' +
-      'max-height: none;' +
-      'min-height: 0;' +
-    '}' +
-    '.internalVimiumHintMarker span {' +
-      'color: black;' +
-      'opacity: 1;' +
-      'text-decoration: none;' +
-      'font-weight: bold;' +
-      'font-size: 12px;' +
-      'font-size-adjust: normal;' +
-      'font-style: normal;' +
-      'font-width: normal;' +
-      'letter-spacing: 0;' +
-      'text-transform: none;' +
-      'text-align: left;' +
-      'text-indent: 0;' +
-      'text-shadow: none;' +
-      'line-height: 100%;' +
-      'font-family: "Helvetica Neue", "Helvetica", "Arial", "Sans";' +
-      'padding: 0;' +
-      'margin: 0;' +
-      'width: auto;' +
-      'height: auto;' +
-      'min-height: 0;' +
-      'max-height: none;' +
-      'min-width: 0;' +
-      'max-width: none;' +
-      'display: inline;' +
-      'float: none;' +
-      'border: none;' +
-      'background: none;' +
-    '}' +
-    '.internalVimiumHintMarker > .matchingCharacter {' +
-      'color:#C79F0B;' +
-    '}';
-
 
   // Port handler mapping
   var portHandlers = {
@@ -246,12 +185,12 @@
       bindings = (commandsToKey[command] || [""]).join(", ");
       if (showUnboundCommands || commandsToKey[command]) {
         html.push(
-          "<tr class='" + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
-          "<td>", escapeHtml(bindings), "</td>",
-          "<td>:</td><td>", availableCommands[command].description);
+          "<tr class='vimiumReset " + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
+          "<td class='vimiumReset'>", escapeHtml(bindings), "</td>",
+          "<td class='vimiumReset'>:</td><td>", availableCommands[command].description);
 
         if (showCommandNames)
-          html.push("<span class='commandName'>(" + command + ")</span>");
+          html.push("<span class='vimiumReset commandName'>(" + command + ")</span>");
 
         html.push("</td></tr>");
       }
@@ -316,10 +255,10 @@
   }
 
   /*
-   * Returns the core CSS used for link hints, along with any user-provided overrides.
+   * Returns the user-provided CSS overrides.
    */
   function getLinkHintCss(request) {
-    return { linkHintCss: linkHintCss + (localStorage['userDefinedLinkHintCss'] || "") };
+    return { linkHintCss: (localStorage['userDefinedLinkHintCss'] || "") };
   }
 
   /*
