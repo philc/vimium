@@ -14,7 +14,6 @@
         handlerStack.push({ keydown: this.onKeydown });
         render.call(this);
         clearInterval(this._tweenId);
-        this.container.style.display = "";
         this._tweenId = Tween.fade(this.container, 1.0, 150);
       }
     },
@@ -92,6 +91,7 @@
       this.completions = completions;
       var container = this.getDisplayElement();
       clearChildren(container);
+      container.style.display = "";
 
       if (searchString === undefined) {
         this.container.className = "vimium-dialog";
