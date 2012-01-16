@@ -261,7 +261,6 @@
           assert.equal("http://www.google.com/search?q=go ogle.com", utils.ensureUrl("go ogle.com"));
           assert.equal("http://localhost", utils.ensureUrl("localhost"));
           assert.equal("http://xyz.museum", utils.ensureUrl("xyz.museum"));
-          assert.equal("http://barney", utils.ensureUrl("//barney"));
           assert.equal("chrome://extensions", utils.ensureUrl("chrome://extensions"));
           assert.equal("http://user:pass@ftp.xyz.com/test",
                        utils.ensureUrl("user:pass@ftp.xyz.com/test"));
