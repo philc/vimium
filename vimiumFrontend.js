@@ -744,6 +744,7 @@ function showHelpDialog(html, fid) {
   isShowingHelpDialog = true;
   var container = document.createElement("div");
   container.id = "vimiumHelpDialogContainer";
+  container.className = "vimiumReset";
 
   document.body.appendChild(container);
 
@@ -779,54 +780,6 @@ HUD = {
   // This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   // test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
   // it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
-  _hudCss:
-    ".vimiumHUD, .vimiumHUD * {" +
-      "line-height: 100%;" +
-      "font-size: 11px;" +
-      "font-weight: normal;" +
-    "}" +
-    ".vimiumHUD {" +
-      "position: fixed;" +
-      "bottom: 0px;" +
-      "color: black;" +
-      "height: 13px;" +
-      "width: auto;" +
-      "max-width: 400px;" +
-      "min-width: 150px;" +
-      "text-align: left;" +
-      "background-color: #ebebeb;" +
-      "padding: 3px 3px 2px 3px;" +
-      "border: 1px solid #b3b3b3;" +
-      "border-radius: 4px 4px 0 0;" +
-      "font-family: Lucida Grande, Arial, Sans;" +
-      // One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button.
-      "z-index: 99999998;" +
-      "text-shadow: 0px 1px 2px #FFF;" +
-      "line-height: 1.0;" +
-      "opacity: 0;" +
-    "}" +
-    ".vimiumHUD a, .vimiumHUD a:hover {" +
-      "background: transparent;" +
-      "color: blue;" +
-      "text-decoration: underline;" +
-    "}" +
-    ".vimiumHUD a.close-button {" +
-      "float:right;" +
-      "font-family:courier new;" +
-      "font-weight:bold;" +
-      "color:#9C9A9A;" +
-      "text-decoration:none;" +
-      "padding-left:10px;" +
-      "margin-top:-1px;" +
-      "font-size:14px;" +
-    "}" +
-    ".vimiumHUD a.close-button:hover {" +
-      "color:#333333;" +
-      "cursor:default;" +
-      "-webkit-user-select:none;" +
-    "}",
-
-  _cssHasBeenAdded: false,
 
   showForDuration: function(text, duration) {
     HUD.show(text);
@@ -843,8 +796,8 @@ HUD = {
 
   showUpgradeNotification: function(version) {
     HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to " +
-      "<a href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>" +
-      version + "</a>.<a class='close-button' href='#'>x</a>";
+      "<a class='vimiumReset' href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>" +
+      version + "</a>.<a class='vimiumReset close-button' href='#'>x</a>";
     var links = HUD.upgradeNotificationElement().getElementsByTagName("a");
     links[0].addEventListener("click", HUD.onUpdateLinkClicked, false);
     links[1].addEventListener("click", function(event) {
@@ -886,12 +839,8 @@ HUD = {
   },
 
   createHudElement: function() {
-    if (!HUD._cssHasBeenAdded) {
-      addCssToPage(HUD._hudCss);
-      HUD._cssHasBeenAdded = true;
-    }
     var element = document.createElement("div");
-    element.className = "vimiumHUD";
+    element.className = "vimiumReset vimiumHUD";
     document.body.appendChild(element);
     return element;
   },

@@ -14,6 +14,7 @@
         handlerStack.push({ keydown: this.onKeydown });
         render.call(this);
         clearInterval(this._tweenId);
+        this.container.style.display = "block";
         this._tweenId = Tween.fade(this.container, 1.0, 150);
       }
     },
@@ -41,7 +42,6 @@
 
   var initialize = function() {
     var self = this;
-    addCssToPage(completionCSS);
 
     self.currentSelection = 0;
 
@@ -94,27 +94,27 @@
       container.style.display = "";
 
       if (searchString === undefined) {
-        this.container.className = "vimium-dialog";
+        this.container.className = "vimiumReset vimium-dialog";
         createDivInside(container).innerHTML = this.options.initialSearchText || "Begin typing";
       }
       else {
-        this.container.className = "vimium-dialog vimium-completions";
+        this.container.className = "vimiumReset vimium-dialog vimium-completions";
         var searchBar = createDivInside(container);
         searchBar.innerHTML=searchString;
-        searchBar.className="vimium-searchBar";
+        searchBar.className="vimiumReset vimium-searchBar";
 
         searchResults = createDivInside(container);
-        searchResults.className="vimium-searchResults";
+        searchResults.className="vimiumReset vimium-searchResults";
         if (completions.length<=0) {
           var resultDiv = createDivInside(searchResults);
-          resultDiv.className="vimium-noResults";
+          resultDiv.className="vimiumReset vimium-noResults";
           resultDiv.innerHTML="No results found";
         }
         else {
           for (var i = 0; i < completions.length; i++) {
             var resultDiv = createDivInside(searchResults);
             if (i === this.currentSelection) {
-              resultDiv.className="vimium-selected";
+              resultDiv.className="vimiumReset vimium-selected";
             }
             resultDiv.innerHTML=this.options.renderOption(searchString, completions[i]);
           }
@@ -127,6 +127,7 @@
   };
   var createDivInside = function(parent) {
     var element = document.createElement("div");
+    element.className = "vimiumReset";
     parent.appendChild(element);
     return element;
   }
@@ -138,42 +139,6 @@
       }
     }
   }
-
-  var completionCSS = ".vimium-dialog {"+
-    "position:fixed;"+
-    "background-color: #ebebeb;" +
-    "z-index: 99999998;" +
-    "border: 1px solid #b3b3b3;" +
-    "font-size: 12px;" +
-    "text-align:left;"+
-    "color: black;" +
-    "padding:10px;"+
-    "border-radius: 4px;" +
-    "font-family: Lucida Grande, Arial, Sans;" +
-    "}"+
-    ".vimium-completions {"+
-    "width:400px;"+
-    "}"+
-    ".vimium-completions .vimium-searchBar {"+
-    "height: 15px;"+
-    "border-bottom: 1px solid #b3b3b3;"+
-    "}"+
-    ".vimium-completions .vimium-searchResults {"+
-    "}"+
-    ".vimium-completions .vimium-searchResults .vimium-selected{"+
-    "background-color:#aaa;"+
-    "border-radius: 4px;" +
-    "}"+
-    ".vimium-completions div{"+
-    "padding:4px;"+
-    "}"+
-    ".vimium-completions div strong{"+
-    "color: black;" +
-    "font-weight:bold;"+
-    "}"+
-    ".vimium-completions .vimium-noResults{"+
-    "color:#555;"+
-    "}";
 
   window.CompletionDialog = CompletionDialog;
 
