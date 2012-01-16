@@ -282,6 +282,14 @@
           assert.equal("http://google.com", utils.ensureUrl("google.com"));
           assert.equal("http://www.google.com/search?q=google", utils.ensureUrl("google"));
           assert.equal("http://www.google.com/search?q=go ogle.com", utils.ensureUrl("go ogle.com"));
+          assert.equal("http://localhost", utils.ensureUrl("localhost"));
+          assert.equal("http://xyz.museum", utils.ensureUrl("xyz.museum"));
+          assert.equal("chrome://extensions", utils.ensureUrl("chrome://extensions"));
+          assert.equal("http://user:pass@ftp.xyz.com/test",
+                       utils.ensureUrl("user:pass@ftp.xyz.com/test"));
+          assert.equal("http://127.0.0.1", utils.ensureUrl("127.0.0.1"));
+          assert.equal("http://127.0.0.1:8080", utils.ensureUrl("127.0.0.1:8080"));
+          assert.equal("http://[::]:8080", utils.ensureUrl("[::]:8080"));
         })
 
       );
