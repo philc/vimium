@@ -10,6 +10,7 @@
   "permissions": [
     "tabs",
     "bookmarks",
+    "history",
     "clipboardRead",
     "http://*/*",
     "https://*/*"
