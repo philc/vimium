@@ -396,10 +396,8 @@ function onKeypress(event) {
     if (keyChar) {
       if (findMode) {
         handleKeyCharForFindMode(keyChar);
-
-        // Don't let the space scroll us if we're searching.
-        if (event.keyCode == keyCodes.space)
-          event.preventDefault();
+        event.preventDefault();
+        event.stopPropagation();
       } else if (!isInsertMode() && !findMode) {
         if (currentCompletionKeys.indexOf(keyChar) != -1) {
           event.preventDefault();
@@ -479,14 +477,19 @@ function onKeydown(event) {
   else if (findMode) {
     if (isEscape(event)) {
       exitFindMode();
-    // Don't let backspace take us back in history.
+      event.stopPropagation();
     }
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       handleDeleteForFindMode();
       event.preventDefault();
+      event.stopPropagation();
     }
     else if (event.keyCode == keyCodes.enter) {
       handleEnterForFindMode();
+      event.stopPropagation();
+    }
+    else if (!modifiers) {
+      event.stopPropagation();
     }
   }
   else if (isShowingHelpDialog && isEscape(event)) {
