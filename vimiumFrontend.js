@@ -792,16 +792,8 @@ function showFindModeHUDForQuery() {
  * We need this so that the find mode HUD doesn't match its own searches.
  */
 function insertSpaces(query) {
-  var newQuery = "";
-
-  for (var i = 0; i < query.length; i++) {
-    if (query[i] == " " || (i + 1 < query.length && query[i + 1] == " "))
-      newQuery = newQuery + query[i];
-    else //  &#8203; is a zero-width space
-      newQuery = newQuery + query[i] + "<span>&#8203;</span>";
-  }
-
-  return newQuery;
+  // &#8203; is a zero-width space
+  return query.split("").join("&#8203");
 }
 
 function enterFindMode() {
