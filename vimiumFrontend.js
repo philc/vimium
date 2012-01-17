@@ -605,10 +605,15 @@ function updateFindModeQuery() {
   // the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   // escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   // character. here we grep for the relevant escape sequences.
+  findModeQuery.isRegex = false;
+  var hasNoIgnoreCaseFlag = false;
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace(/\\./g, function(match) {
     switch (match) {
       case "\\r":
         findModeQuery.isRegex = true;
+        return '';
+      case "\\I":
+        hasNoIgnoreCaseFlag = true;
         return '';
       case "\\\\":
         return "\\";
@@ -617,10 +622,19 @@ function updateFindModeQuery() {
     }
   });
 
+  // default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
+  findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !/[A-Z]/.test(findModeQuery.parsedQuery);
+
   // if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
   // sequentially so the browser handles the scrolling / text selection.
   if (findModeQuery.isRegex) {
-    var pattern = new RegExp(findModeQuery.parsedQuery, "gi");
+    try {
+      var pattern = new RegExp(findModeQuery.parsedQuery, "g" + (findModeQuery.ignoreCase ? "i" : ""));
+    }
+    catch (e) {
+      // if we catch a SyntaxError, assume the user is not done typing yet and return quietly
+      return;
+    }
     // innerText will not return the text of hidden elements, and strip out tags while preserving newlines
     var text = document.body.innerText;
     findModeQuery.regexMatches = text.match(pattern);
@@ -658,7 +672,7 @@ function performFindInPlace() {
   var cachedScrollY = window.scrollY;
 
   if (findModeQuery.isRegex) {
-    if (findModeQuery.regexMatches === null) {
+    if (!findModeQuery.regexMatches) {
       findModeQueryHasResults = false;
       return;
     }
@@ -670,17 +684,19 @@ function performFindInPlace() {
 
   // Search backwards first to "free up" the current word as eligible for the real forward search. This allows
   // us to search in place without jumping around between matches as the query grows.
-  window.find(query, false, true, true, false, true, false);
+  executeFind(query, { backwards: true, caseSensitive: !findModeQuery.ignoreCase });
 
   // We need to restore the scroll position because we might've lost the right position by searching
   // backwards.
   window.scrollTo(cachedScrollX, cachedScrollY);
 
-  findModeQueryHasResults = executeFind(query);
+  findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase });
 }
 
-function executeFind(query, backwards) {
-  return window.find(query, false, backwards, true, false, true, false);
+// :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
+function executeFind(query, options) {
+  options = options || {};
+  return window.find(query, options.caseSensitive, options.backwards, true, false, true, false);
 }
 
 function focusFoundLink() {
@@ -709,7 +725,7 @@ function findAndFocus(backwards) {
   else
     var query = findModeQuery.parsedQuery;
 
-  executeFind(query, backwards);
+  executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase });
   focusFoundLink();
 }
 
@@ -766,7 +782,7 @@ function goNext() {
 }
 
 function showFindModeHUDForQuery() {
-  if (findModeQueryHasResults || findModeQuery.rawQuery.length == 0)
+  if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
     HUD.show("/" + insertSpaces(findModeQuery.rawQuery));
   else
     HUD.show("/" + insertSpaces(findModeQuery.rawQuery + " (No Matches)"));
