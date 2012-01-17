@@ -13,7 +13,6 @@ var findModeQueryHasResults = false;
 var isShowingHelpDialog = false;
 var handlerStack = [];
 var keyPort;
-var settingPort;
 // Users can disable Vimium on URL patterns via the settings page.
 var isEnabledForUrl = true;
 // The user's operating system.
@@ -37,26 +36,46 @@ var textInputXPath = (function() {
   return utils.makeXPath(inputElements);
 })();
 
+/**
+ * settings provides a browser-global localStorage-backed dict. get() and set() are synchronous, but load()
+ * must be called beforehand to ensure get() will return up-to-date values.
+ */
 var settings = {
+  port: null,
   values: {},
   loadedValues: 0,
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "previousPatterns", "nextPatterns"],
+  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "previousPatterns", "nextPatterns",
+                 "findQuery"],
+
+  init: function () {
+    this.port = chrome.extension.connect({ name: "settings" });
+    this.port.onMessage.addListener(this.receiveMessage);
+  },
 
   get: function (key) { return this.values[key]; },
 
-  load: function() {
-    for (var i in this.valuesToLoad) { this.sendMessage(this.valuesToLoad[i]); }
+  set: function (key, value) {
+    if (!this.port)
+      this.init();
+
+    this.values[key] = value;
+    this.port.postMessage({ operation: "set", key: key, value: value });
   },
 
-  sendMessage: function (key) {
-    if (!settingPort)
-      settingPort = chrome.extension.connect({ name: "getSetting" });
-    settingPort.postMessage({ key: key });
+  load: function() {
+    if (!this.port)
+      this.init();
+
+    for (var i in this.valuesToLoad) {
+      this.port.postMessage({ operation: "get", key: this.valuesToLoad[i] });
+    }
   },
 
   receiveMessage: function (args) {
     // not using 'this' due to issues with binding on callback
     settings.values[args.key] = args.value;
+    // since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
+    // for equality so initializeOnReady only runs once
     if (++settings.loadedValues == settings.valuesToLoad.length)
       settings.initializeOnReady();
   },
@@ -146,8 +165,6 @@ function initializePreDomReady() {
       port.onMessage.addListener(function(args) {
         if (getCurrentUrlHandlers.length > 0) { getCurrentUrlHandlers.pop()(args.url); }
       });
-    } else if (port.name == "returnSetting") {
-      port.onMessage.addListener(settings.receiveMessage);
     } else if (port.name == "refreshCompletionKeys") {
       port.onMessage.addListener(function (args) {
         refreshCompletionKeys(args.completionKeys);
@@ -174,6 +191,8 @@ function initializeWhenEnabled() {
  * The backend needs to know which frame has focus.
  */
 window.addEventListener("focus", function(e) {
+  // settings may have changed since the frame last had focus
+  settings.load();
   chrome.extension.sendRequest({ handler: "frameFocused", frameId: frameId });
 });
 

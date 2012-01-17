@@ -63,7 +63,7 @@
     keyDown:              handleKeyDown,
     returnScrollPosition: handleReturnScrollPosition,
     getCurrentTabUrl:     getCurrentTabUrl,
-    getSetting:           getSetting,
+    settings:             handleSettings,
     getBookmarks:         getBookmarks
   };
 
@@ -290,10 +290,14 @@
   /*
    * Used by the content scripts to get settings from the local storage.
    */
-  function getSetting(args, port) {
-    var value = getSettingFromLocalStorage(args.key);
-    var returnPort = chrome.tabs.connect(port.tab.id, { name: "returnSetting" });
-    returnPort.postMessage({ key: args.key, value: value });
+  function handleSettings(args, port) {
+    if (args.operation == "get") {
+      var value = getSettingFromLocalStorage(args.key);
+      port.postMessage({ key: args.key, value: value });
+    }
+    else { // operation == "set"
+      localStorage[args.key] = args.value;
+    }
   }
 
   function getBookmarks(args, port) {
