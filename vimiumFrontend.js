@@ -10,6 +10,7 @@ var insertModeLock = null;
 var findMode = false;
 var findModeQuery = { rawQuery: "" };
 var findModeQueryHasResults = false;
+var findModeAnchorNode = null;
 var isShowingHelpDialog = false;
 var handlerStack = [];
 var keyPort;
@@ -234,7 +235,7 @@ function registerFrameIfSizeAvailable (is_top) {
  * Enters insert mode if the currently focused element in the DOM is focusable.
  */
 function enterInsertModeIfElementIsFocused() {
-  if (document.activeElement && isEditable(document.activeElement))
+  if (document.activeElement && isEditable(document.activeElement) && !findMode)
     enterInsertModeWithoutShowingIndicator(document.activeElement);
 }
 
@@ -396,8 +397,7 @@ function onKeypress(event) {
     if (keyChar) {
       if (findMode) {
         handleKeyCharForFindMode(keyChar);
-        event.preventDefault();
-        event.stopPropagation();
+        suppressEvent(event);
       } else if (!isInsertMode() && !findMode) {
         if (currentCompletionKeys.indexOf(keyChar) != -1) {
           event.preventDefault();
@@ -425,6 +425,11 @@ function bubbleEvent(type, event) {
     }
   }
   return true;
+}
+
+function suppressEvent(event) {
+  event.preventDefault();
+  event.stopPropagation();
 }
 
 function onKeydown(event) {
@@ -476,17 +481,16 @@ function onKeydown(event) {
   }
   else if (findMode) {
     if (isEscape(event)) {
-      exitFindMode();
-      event.stopPropagation();
+      handleEscapeForFindMode();
+      suppressEvent(event);
     }
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       handleDeleteForFindMode();
-      event.preventDefault();
-      event.stopPropagation();
+      suppressEvent(event);
     }
     else if (event.keyCode == keyCodes.enter) {
       handleEnterForFindMode();
-      event.stopPropagation();
+      suppressEvent(event);
     }
     else if (!modifiers) {
       event.stopPropagation();
@@ -558,7 +562,7 @@ function refreshCompletionKeys(response) {
 }
 
 function onFocusCapturePhase(event) {
-  if (isFocusable(event.target))
+  if (isFocusable(event.target) && !findMode)
     enterInsertModeWithoutShowingIndicator(event.target);
 }
 
@@ -671,6 +675,11 @@ function handleKeyCharForFindMode(keyChar) {
   showFindModeHUDForQuery();
 }
 
+function handleEscapeForFindMode() {
+  exitFindMode();
+  focusFoundLink() || selectFoundInputElement();
+}
+
 function handleDeleteForFindMode() {
   if (findModeQuery.rawQuery.length == 0) {
     exitFindMode();
@@ -684,10 +693,13 @@ function handleDeleteForFindMode() {
   }
 }
 
+// <esc> sends us into insert mode if possible, but <cr> does not.
+// <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
+// this query and do more searches with it'
 function handleEnterForFindMode() {
   exitFindMode();
+  focusFoundLink();
   settings.set("findModeRawQuery", findModeQuery.rawQuery);
-  performFindInPlace();
 }
 
 function performFindInPlace() {
@@ -718,8 +730,17 @@ function performFindInPlace() {
 
 // :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 function executeFind(query, options) {
+  // rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
+  // changes that find() induces.
+  var oldFindMode = findMode;
+  findMode = true;
   options = options || {};
-  return window.find(query, options.caseSensitive, options.backwards, true, false, true, false);
+  var rv = window.find(query, options.caseSensitive, options.backwards, true, false, true, false);
+  findMode = oldFindMode;
+  // we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
+  // preventDefault()
+  findModeAnchorNode = document.getSelection().anchorNode;
+  return rv;
 }
 
 function focusFoundLink() {
@@ -727,6 +748,29 @@ function focusFoundLink() {
     var link = getLinkFromSelection();
     if (link)
       link.focus();
+  }
+}
+
+function isDOMDescendant(parent, child) {
+  var node = child;
+  while (node !== null) {
+    if (node === parent)
+      return true;
+    node = node.parentNode;
+  }
+  return false;
+}
+
+function selectFoundInputElement() {
+  // if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
+  // instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
+  // the current one might be disabled and therefore unable to receive focus), we use the approximate
+  // heuristic of checking that the last anchor node is an ancestor of our element.
+  if (findModeQueryHasResults && linkHints.isSelectable(document.activeElement) &&
+      isDOMDescendant(findModeAnchorNode, document.activeElement)) {
+    linkHints.simulateSelect(document.activeElement);
+    // the element has already received focus via find(), so invoke insert mode manually
+    enterInsertModeWithoutShowingIndicator(document.activeElement);
   }
 }
 
@@ -757,7 +801,26 @@ function findAndFocus(backwards) {
   else
     var query = findModeQuery.parsedQuery;
 
-  executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase });
+  findModeQueryHasResults = executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase });
+
+  // if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
+  // mode
+  var elementCanTakeInput = findModeQueryHasResults && domUtils.isSelectable(document.activeElement) &&
+    isDOMDescendant(findModeAnchorNode, document.activeElement);
+  if (elementCanTakeInput) {
+    handlerStack.push({
+      keydown: function(event) {
+        handlerStack.pop();
+        if (isEscape(event)) {
+          linkHints.simulateSelect(document.activeElement);
+          enterInsertModeWithoutShowingIndicator(document.activeElement);
+          return false; // we have 'consumed' this event, so do not propagate
+        }
+        return true;
+      }
+    });
+  }
+
   focusFoundLink();
 }
 
@@ -767,7 +830,7 @@ function performBackwardsFind() { findAndFocus(true); }
 
 function getLinkFromSelection() {
   var node = window.getSelection().anchorNode;
-  while (node.nodeName.toLowerCase() !== 'body') {
+  while (node && node.nodeName.toLowerCase() !== 'body') {
     if (node.nodeName.toLowerCase() === 'a') return node;
     node = node.parentNode;
   }
@@ -836,7 +899,6 @@ function enterFindMode() {
 
 function exitFindMode() {
   findMode = false;
-  focusFoundLink();
   HUD.hide();
 }
 
