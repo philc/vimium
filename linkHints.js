@@ -314,14 +314,24 @@ var alphabetHints = {
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
   getHintMarkers: function(visibleElements) {
+    var i;
     //Initialize the number used to generate the character hints to be as many digits as we need to highlight
     //all the links on the page; we don't want some link hints to have more chars than others.
     var digitsNeeded = Math.ceil(this.logXOfBase(
           visibleElements.length, settings.get('linkHintCharacters').length));
+
+    var hintStrings = [];
+    for (i = 0, count = visibleElements.length; i < count; i++) {
+      var hintString = this.numberToHintString(i, digitsNeeded);
+      hintStrings.push(hintString);
+    }
+
+    this.dropTailIfPossible(hintStrings);
+
     var hintMarkers = [];
 
-    for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.numberToHintString(i, digitsNeeded);
+    for (i = 0, count = visibleElements.length; i < count; i++) {
+      var hintString = hintStrings[i];
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
@@ -329,6 +339,35 @@ var alphabetHints = {
     }
 
     return hintMarkers;
+  },
+
+  isUnique: function(uniq, hintStrings, count, idx) {
+    var i, len;
+    len = uniq.length;
+    for (i = 0; i < count; i++) {
+      if (i == idx)
+        continue;
+      if(hintStrings[i].substr(0, len) == uniq)
+        return false;
+    }
+    return true;
+  },
+
+  dropTailIfPossible: function(hintStrings) {
+    var i, str, len, c, uniq;
+    for (i = 0, count = hintStrings.length; i < count; i++) {
+      str = hintStrings[i];
+      len = str.length;
+      if (len == 1)
+        continue;
+      for (c = 1; c < len; c++) {
+        uniq = str.substr(0, c);
+        if (this.isUnique(uniq, hintStrings, count, i)) {
+          hintStrings[i] = uniq;
+          break;
+        }
+      }
+    }
   },
   /*
    * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
