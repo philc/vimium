@@ -295,13 +295,13 @@ function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
 function scrollToRight() { window.scrollTo(document.body.scrollWidth, window.pageYOffset); }
 function scrollUp() { scrollActivatedElementBy(0, -1 * settings.get("scrollStepSize")); }
-function scrollDown() { scrollActivatedElementBy(0, settings.get("scrollStepSize")); }
+function scrollDown() { scrollActivatedElementBy(0, parseFloat(settings.get("scrollStepSize"))); }
 function scrollPageUp() { scrollActivatedElementBy(0, -1 * window.innerHeight / 2); }
 function scrollPageDown() { scrollActivatedElementBy(0, window.innerHeight / 2); }
 function scrollFullPageUp() { scrollActivatedElementBy(0, -window.innerHeight); }
 function scrollFullPageDown() { scrollActivatedElementBy(0, window.innerHeight); }
 function scrollLeft() { scrollActivatedElementBy(-1 * settings.get("scrollStepSize"), 0); }
-function scrollRight() { scrollActivatedElementBy(settings.get("scrollStepSize"), 0); }
+function scrollRight() { scrollActivatedElementBy(parseFloat(settings.get("scrollStepSize")), 0); }
 
 function focusInput(count) {
   var results = domUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
