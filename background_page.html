@@ -5,12 +5,7 @@
 <script type="text/javascript" src="lib/utils.js"></script>
 <script type="text/javascript" src="background/settings.js"></script>
 <script type="text/javascript" charset="utf-8">
-  // Chromium #15242 will make this XHR request to access the manifest unnecessary.
-  var manifestRequest = new XMLHttpRequest();
-  manifestRequest.open("GET", chrome.extension.getURL("manifest.json"), false);
-  manifestRequest.send(null);
-
-  var currentVersion = JSON.parse(manifestRequest.responseText).version;
+  var currentVersion = utils.getCurrentVersion();
 
   var tabQueue = {}; // windowId -> Array
   var openTabs = {}; // tabId -> object with various tab properties
@@ -617,7 +612,7 @@
     // installs.
     if (!settings.get("previousVersion"))
       settings.set("previousVersion", currentVersion);
-    return compareVersions(currentVersion, localStorage.previousVersion) == 1;
+    return compareVersions(currentVersion, settings.get("previousVersion")) == 1;
   }
 
   function openOptionsPageInNewTab() {
@@ -695,7 +690,7 @@
     // In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
     // and restore tab. For existing users, we want to preserve existing behavior for them by adding some
     // custom key mappings on their behalf.
-    if (localStorage.previousVersion == "1.21") {
+    if (settings.get("previousVersion") == "1.21") {
       var customKeyMappings = settings.get("keyMappings") || "";
       if ((keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
         customKeyMappings += "\nmap d removeTab";

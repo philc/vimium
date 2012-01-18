@@ -35,6 +35,19 @@ var settings = {
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>",
   },
 
+  init: function() {
+    // settingsVersion was introduced in v1.31, and is used to coordinate data migration. We do not use
+    // previousVersion as it is used to coordinate the display of the upgrade message, and is not updated
+    // early enough when the extension loads.
+    // 1.31 was also the version where we converted all localStorage values to JSON.
+    if (!this.has("settingsVersion")) {
+      for (var key in localStorage) {
+        localStorage[key] = JSON.stringify(localStorage[key]);
+      }
+      this.set("settingsVersion", utils.getCurrentVersion());
+    }
+  },
+
   get: function(key) {
     if (!(key in localStorage))
       return this.defaultSettings[key];
@@ -59,3 +72,5 @@ var settings = {
   },
 
 };
+
+settings.init();
