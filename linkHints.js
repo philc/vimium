@@ -314,14 +314,23 @@ var alphabetHints = {
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
   getHintMarkers: function(visibleElements) {
+    var i, trie = {};
     //Initialize the number used to generate the character hints to be as many digits as we need to highlight
     //all the links on the page; we don't want some link hints to have more chars than others.
     var digitsNeeded = Math.ceil(this.logXOfBase(
           visibleElements.length, settings.get('linkHintCharacters').length));
+
+    var hintStrings = [];
+    for (i = 0, count = visibleElements.length; i < count; i++) {
+      var hintString = this.numberToHintString(i, digitsNeeded);
+      hintStrings.push(hintString);
+      this.addTrieEntry(trie, hintString, digitsNeeded);
+    }
+
     var hintMarkers = [];
 
-    for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.numberToHintString(i, digitsNeeded);
+    for (i = 0, count = visibleElements.length; i < count; i++) {
+      var hintString = this.dropUniqueTail(hintStrings[i], digitsNeeded, trie);
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
@@ -330,6 +339,77 @@ var alphabetHints = {
 
     return hintMarkers;
   },
+
+  /*
+   * Check the hint string against the trie structure and replace consecutive
+   * runs of characters that makes a unique path by the first character. Due to
+   * the way the trie is built, the first entry found with 'unique' flag set to
+   * 1 is guarateed to be the start of a unique trail, hence we can remove the
+   * trailing characters (tail) after that point until the end of the string.
+   */
+  dropUniqueTail: function(hint, length, trie) {
+    var c, i;
+    for(i = 0; i < length; i++) {
+      c = hint[i];
+      if (trie[c].unique)
+        break;
+      trie = trie[c];
+    }
+
+    if (i < length - 1)
+      return hint.substr(0, i + 1);
+
+    return hint;
+  },
+
+  /*
+   * The following example shows the resulting trie after the insertion of the
+   * hint strings 'AA', 'AB' and 'CA':
+   *
+   * trie = {
+   *  'A' : {
+   *    'unique': 0,
+   *    'A' : {
+   *      'unique': 1,
+   *    },
+   *    'B' : {
+   *      'unique': 1,
+   *    },
+   *  },
+   *  'C' : {
+   *    'unique': 1,
+   *    'A' {
+   *      'unique': 1
+   *    }
+   * }
+   *
+   * Think of the paths in the trie ('AA', 'AB' and 'CA') as trails in a
+   * forest. Each time we add a new hintString we create a new trail because it
+   * leads to a new path. When a trail overlaps (most likely in the middle of
+   * getting to a new endpoint) then that particular point in that trail is no
+   * longer 'unique' - meaning that that point is shared by multiple paths.
+   *
+   * A continuous run of unique trails ('CA' from the above, not 'AA' and 'AB')
+   * can be represented wholly only by the first unique point. From the example
+   * above the trail 'CA' can be represented wholly by 'C' alone.
+   *
+   * In the function below 'ptrie' is a pointer to a trie structure as explained
+   * above. It is used to travel down the trail as new character 'c' from each
+   * hintString is added.
+   */
+  addTrieEntry: function(ptrie, hintString, length) {
+    var i, c;
+    for (i = 0; i < length; i++) {
+      c = hintString[i];
+      if (ptrie[c])
+        ptrie[c].unique = 0; // We've been through this path before so it's no
+                             // longer unique at this point.
+      else
+        ptrie[c] = { unique: 1 };
+      ptrie = ptrie[c];
+    }
+  },
+
   /*
    * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
    * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
