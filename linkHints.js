@@ -128,15 +128,18 @@ var linkHints = {
 
       if (element.localName === "area") {
         var map = element.parentElement;
+        if (!map) continue;
         var img = document.querySelector("img[usemap='#" + map.getAttribute("name") + "']");
-        var clientRect = img.getClientRects()[0];
+        if (!img) continue;
+        var imgClientRects = img.getClientRects();
+        if (!imgClientRects) continue;
         var c = element.coords.split(/,/);
         var coords = [parseInt(c[0], 10), parseInt(c[1], 10), parseInt(c[2], 10), parseInt(c[3], 10)];
         var rect = {
-          top: clientRect.top + coords[1],
-          left: clientRect.left + coords[0],
-          right: clientRect.left + coords[2],
-          bottom: clientRect.top + coords[3],
+          top: imgClientRects[0].top + coords[1],
+          left: imgClientRects[0].left + coords[0],
+          right: imgClientRects[0].left + coords[2],
+          bottom: imgClientRects[0].top + coords[3],
           width: coords[2] - coords[0],
           height: coords[3] - coords[1]
         };
