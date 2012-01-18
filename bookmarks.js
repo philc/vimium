@@ -35,6 +35,7 @@ function activateBookmarkFindMode() {
 
       handlerStack.push({
         keydown: this.onKeydown,
+        keypress: this.onKeypress,
         keyup: this.onKeyup
       });
 
@@ -102,10 +103,9 @@ function activateBookmarkFindMode() {
       // TODO(philc): Ignore keys that have modifiers.
       if (isEscape(event))
         self.disable();
-
-      event.stopPropagation();
-      event.preventDefault();
     };
+
+    self.onKeypress = function(event) { return false; }
 
     self.onKeyup = function(event) {
       // shift key will toggle between new tab/same tab
@@ -113,8 +113,6 @@ function activateBookmarkFindMode() {
         self.invertNewTabSetting();
         shiftWasPressedWhileToggled = false;
       }
-      event.stopPropagation();
-      event.preventDefault();
     };
   }
 

@@ -401,8 +401,10 @@ function bubbleEvent(type, event) {
   for (var i = handlerStack.length-1; i >= 0; i--) {
     // We need to check for existence of handler because the last function call may have caused the release of
     // more than one handler.
-    if (handlerStack[i] && handlerStack[i][type] && !handlerStack[i][type](event))
+    if (handlerStack[i] && handlerStack[i][type] && !handlerStack[i][type](event)) {
+      suppressEvent(event);
       return false;
+    }
   }
   return true;
 }

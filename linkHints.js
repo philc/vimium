@@ -181,13 +181,10 @@ var linkHints = {
           this.showMarker(linksMatched[i], this.markerMatcher.hintKeystrokeQueue.length);
       }
     }
-
-    event.stopPropagation();
-    event.preventDefault();
   },
 
   onKeyPressInMode: function(event) {
-    return !this.delayMode;
+    return false;
   },
 
   onKeyUpInMode: function(event) {
@@ -199,8 +196,6 @@ var linkHints = {
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
       this.openLinkModeToggle = false;
     }
-    event.stopPropagation();
-    event.preventDefault();
   },
 
   /*
