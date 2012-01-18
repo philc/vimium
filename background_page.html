@@ -3,6 +3,7 @@
 <script type="text/javascript" src="commands.js"></script>
 <script type="text/javascript" src="lib/clipboard.js"></script>
 <script type="text/javascript" src="lib/utils.js"></script>
+<script type="text/javascript" src="background/settings.js"></script>
 <script type="text/javascript" charset="utf-8">
   // Chromium #15242 will make this XHR request to access the manifest unnecessary.
   var manifestRequest = new XMLHttpRequest();
@@ -24,39 +25,6 @@
   // This regular expression captures two groups: the first is a named key, the second is the remainder of
   // the string.
   var namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/;
-
-  var defaultSettings = {
-    scrollStepSize: 60,
-    linkHintCharacters: "sadfjklewcmpgh",
-    filterLinkHints: false,
-    userDefinedLinkHintCss:
-      "#vimiumHintMarkerContainer .vimiumHintMarker {" + "\n" +
-      "/* linkhint boxes */ " + "\n" +
-      "background-color: yellow;" + "\n" +
-      "border: 1px solid #E3BE23;" + "\n" +
-      "}" + "\n\n" +
-      "#vimiumHintMarkerContainer .vimiumHintMarker span {" + "\n" +
-      "/* linkhint text */ " + "\n" +
-      "color: black;" + "\n" +
-      "font-weight: bold;" + "\n" + 
-      "font-size: 12px;" + "\n" +
-      "}" + "\n\n" +
-      "#vimiumHintMarkerContainer .vimiumHintMarker > .matchingCharacter {" + "\n" +
-      "}",
-
-    excludedUrls: "http*://mail.google.com/*\n" +
-                  "http*://www.google.com/reader/*\n",
-
-    // NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in
-    // most cases the single bracket link will be "prev/next page" and the double bracket link will be
-    // "first/last page", so we put the single bracket first in the pattern string so that it gets searched
-    // for first.
-
-    // "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
-    previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<",
-    // "\bnext\b,\bmore\b,>,→,»,≫,>>"
-    nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>",
-  };
 
   // Port handler mapping
   var portHandlers = {
@@ -141,7 +109,7 @@
    */
   function isEnabledForUrl(request) {
     // excludedUrls are stored as a series of URL expressions separated by newlines.
-    var excludedUrls = getSettingFromLocalStorage("excludedUrls").split("\n");
+    var excludedUrls = settings.get("excludedUrls").split("\n");
     var isEnabled = true;
     for (var i = 0; i < excludedUrls.length; i++) {
       // The user can add "*" to the URL which means ".*"
@@ -153,7 +121,7 @@
   }
 
   function saveHelpDialogSettings(request) {
-    localStorage["helpDialog_showAdvancedCommands"] = request.showAdvancedCommands;
+    settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands);
   }
 
   function showHelp(callback, frameId) {
@@ -179,8 +147,7 @@
                                         showUnboundCommands, showCommandNames));
     dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
     dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help");
-    dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}",
-        localStorage["helpDialog_showAdvancedCommands"] == "true");
+    dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}", settings.get("helpDialog_showAdvancedCommands"));
     return dialogHtml;
   }
 
@@ -268,7 +235,7 @@
    * Returns the user-provided CSS overrides.
    */
   function getLinkHintCss(request) {
-    return { linkHintCss: (localStorage['userDefinedLinkHintCss'] || "") };
+    return { linkHintCss: (settings.get("userDefinedLinkHintCss") || "") };
   }
 
   /*
@@ -276,7 +243,7 @@
    * We should now dismiss that message in all tabs.
    */
   function upgradeNotificationClosed(request) {
-    localStorage.previousVersion = currentVersion;
+    settings.set("previousVersion", currentVersion);
     sendRequestToAllTabs({ name: "hideUpgradeNotification" });
   }
 
@@ -292,11 +259,11 @@
    */
   function handleSettings(args, port) {
     if (args.operation == "get") {
-      var value = getSettingFromLocalStorage(args.key);
+      var value = settings.get(args.key);
       port.postMessage({ key: args.key, value: value });
     }
     else { // operation == "set"
-      localStorage[args.key] = args.value;
+      settings.set(args.key, args.value);
     }
   }
 
@@ -304,17 +271,6 @@
     chrome.bookmarks.search(args.query, function(bookmarks) {
         port.postMessage({bookmarks:bookmarks})
     })
-  }
-
-  /*
-   * Used by everyone to get settings from local storage.
-   */
-  function getSettingFromLocalStorage(setting) {
-    if (localStorage[setting] != "" && !localStorage[setting]) {
-      return defaultSettings[setting];
-    } else {
-      return localStorage[setting];
-    }
   }
 
   function getCurrentTimeInSeconds() { Math.floor((new Date()).getTime() / 1000); }
@@ -657,10 +613,10 @@
    * localStorage, and false otherwise.
    */
   function shouldShowUpgradeMessage() {
-    // Avoid showing the upgrade notification when localStorage.previousVersion is undefined, which is the
-    // case for new installs.
-    if (!localStorage.previousVersion)
-      localStorage.previousVersion = currentVersion;
+    // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
+    // installs.
+    if (!settings.get("previousVersion"))
+      settings.set("previousVersion", currentVersion);
     return compareVersions(currentVersion, localStorage.previousVersion) == 1;
   }
 
@@ -733,20 +689,20 @@
   function init() {
     clearKeyMappingsAndSetDefaults();
 
-    if (localStorage["keyMappings"])
-      parseCustomKeyMappings(localStorage["keyMappings"]);
+    if (settings.has("keyMappings"))
+      parseCustomKeyMappings(settings.get("keyMappings"));
 
     // In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
     // and restore tab. For existing users, we want to preserve existing behavior for them by adding some
     // custom key mappings on their behalf.
     if (localStorage.previousVersion == "1.21") {
-      var customKeyMappings = localStorage["keyMappings"] || "";
+      var customKeyMappings = settings.get("keyMappings") || "";
       if ((keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
         customKeyMappings += "\nmap d removeTab";
       if ((keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
         customKeyMappings += "\nmap u restoreTab";
       if (customKeyMappings != "") {
-        localStorage["keyMappings"] = customKeyMappings;
+        settings.set("keyMappings", customKeyMappings);
         parseCustomKeyMappings(customKeyMappings);
       }
     }

@@ -1,11 +1,7 @@
 <html>
   <head>
     <title>Vimium Options</title>
-    <script src="lib/utils.js"></script>
-    <script src="lib/keyboardUtils.js"></script>
-    <script src="linkHints.js"></script>
-    <script src="lib/clipboard.js"></script>
-    <script src="vimiumFrontend.js"></script>
+    <script src="background/settings.js"></script>
     <style type="text/css" media="screen">
       body {
         font-family:"helvetica neue", "helvetica", "arial", "sans";
@@ -142,18 +138,12 @@
         field.value = fieldValue;
       }
 
-      var defaultFieldValue = (defaultSettings[fieldName] != null) ?
-        defaultSettings[fieldName].toString() : "";
-
-      // Don't save to storage if it's equal to the default
-      if (fieldValue == defaultFieldValue)
-        delete localStorage[fieldName];
-      // ..or if it's empty and not a field that we allow to be empty.
-      else if (!fieldValue && canBeEmptyFields.indexOf(fieldName) == -1) {
-        delete localStorage[fieldName];
-        fieldValue = defaultFieldValue;
+      // If it's empty and not a field that we allow to be empty, restore to the default value
+      if (!fieldValue && canBeEmptyFields.indexOf(fieldName) == -1) {
+        settings.clear(fieldName);
+        fieldValue = settings.get(fieldName);
       } else
-        localStorage[fieldName] = fieldValue;
+        settings.set(fieldName, fieldValue);
 
       $(fieldName).value = fieldValue;
       $(fieldName).setAttribute("savedValue", fieldValue);
@@ -166,13 +156,8 @@
   // Restores select box state to saved value from localStorage.
   function populateOptions() {
     for (var i = 0; i < editableFields.length; i++) {
-      // If it's null or undefined, let's go to the default. We want to allow empty strings in certain cases.
-      if (localStorage[editableFields[i]] != "" && !localStorage[editableFields[i]]) {
-        var val = defaultSettings[editableFields[i]] || "";
-      } else {
-	    var val = localStorage[editableFields[i]];
-      }
-	  setFieldValue($(editableFields[i]), val);
+      var val = settings.get(editableFields[i]) || "";
+      setFieldValue($(editableFields[i]), val);
     }
     onDataLoaded();
   }
