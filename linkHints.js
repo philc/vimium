@@ -320,9 +320,26 @@ var alphabetHints = {
           visibleElements.length, settings.get('linkHintCharacters').length));
     var hintMarkers = [];
 
-    for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.numberToHintString(i, digitsNeeded);
+    var start = 0, j = 0, increment = 1;
+    var count = visibleElements.length;
+    if (count > 10)
+      increment = parseInt(count / 3, 10); // Dividing by 3 seems to work fine
+                                           // for achieving the spread out effect
+
+    for (var i = 0; i < count; i++) {
+      var hintString = this.numberToHintString(j, digitsNeeded);
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
+
+      // The following makes the link hints appear to spread out after the
+      // first key is hit. This is helpful on a page that has http links that
+      // are close to each other where link hints of 2 characters or more
+      // occlude each other.
+      j += increment;
+      if (j >= count) {
+        start++;
+        j = start;
+      }
+
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
       hintMarkers.push(marker);
@@ -351,11 +368,6 @@ var alphabetHints = {
     for (var i = 0; i < numHintDigits - hintStringLength; i++)
       hintString.unshift(settings.get('linkHintCharacters')[0]);
 
-    // Reversing the hint string has the advantage of making the link hints
-    // appear to spread out after the first key is hit. This is helpful on a
-    // page that has http links that are close to each other where link hints
-    // of 2 characters or more occlude each other.
-    hintString.reverse();
     return hintString.join("");
   },
 
