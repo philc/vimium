@@ -843,7 +843,11 @@ function findAndFollowLink(linkStrings) {
     if (hasResults) {
       var link = getLinkFromSelection();
       if (link) {
-        window.location = link.href;
+        domUtils.simulateClick(link);
+        // blur the element just in case it already has focus. then when we re-focus it, the browser will
+        // scroll such that it is visible.
+        link.blur();
+        link.focus();
         return true;
       }
     }
@@ -857,7 +861,9 @@ function findAndFollowRel(value) {
     var elements = document.getElementsByTagName(relTags[i]);
     for (j = 0; j < elements.length; j++) {
       if (elements[j].hasAttribute('rel') && elements[j].rel == value) {
-        window.location = elements[j].href;
+        domUtils.simulateClick(elements[j]);
+        link.blur();
+        link.focus();
         return true;
       }
     }
