@@ -408,9 +408,10 @@ function onKeydown(event) {
 
   var keyChar = "";
 
-  // handle modifiers being pressed.don't handle shiftKey alone (to avoid / being interpreted as ?
-  if (event.metaKey && event.keyCode > 31 || event.ctrlKey && event.keyCode > 31 ||
-      event.altKey && event.keyCode > 31) {
+  // handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
+  // avoid / being interpreted as ?
+  if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31)
+      || event.keyIdentifier.slice(0, 2) != "U+") {
     keyChar = getKeyChar(event);
 
     if (keyChar != "") { // Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
