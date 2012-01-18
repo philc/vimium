@@ -18,6 +18,7 @@
   var singleKeyCommands = [];
   var focusedFrame = null;
   var framesForTab = {};
+  var lastActiveTabIds = {};
 
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
   // This regular expression captures two groups: the first is a named key, the second is the remainder of
@@ -307,6 +308,10 @@
 
   chrome.tabs.onSelectionChanged.addListener(function(tabId, selectionInfo) {
     if (selectionChangedHandlers.length > 0) { selectionChangedHandlers.pop().call(); }
+
+    if (lastActiveTabIds[selectionInfo.windowId] !== undefined)
+      chrome.tabs.sendRequest(lastActiveTabIds[selectionInfo.windowId], { name: "exitImplicitInsertMode" });
+    lastActiveTabIds[selectionInfo.windowId] = tabId;
   });
 
   function repeatFunction(func, totalCount, currentCount, frameId) {
@@ -428,6 +433,7 @@
 
   chrome.windows.onRemoved.addListener(function(windowId) {
     delete tabQueue[windowId];
+    delete lastActiveTabIds[windowId];
   });
 
   function restoreTab(callback) {
