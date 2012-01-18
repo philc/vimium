@@ -837,21 +837,65 @@ function getLinkFromSelection() {
   return null;
 }
 
+// used by the findAndFollow* functions.
+function followLink(link) {
+  domUtils.simulateClick(link);
+  // blur the element just in case it already has focus. then when we re-focus it, the browser will scroll
+  // such that it is visible.
+  link.blur();
+  link.focus();
+}
+
+/**
+ * Find and follow the shortest link (shortest == fewest words) which matches any one of a list of strings.
+ * If there are multiple shortest links, strings are prioritized for exact word matches, followed by their
+ * position in :linkStrings.  Practically speaking, this means we favor 'next page' over 'the next big thing',
+ * and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
+ */
 function findAndFollowLink(linkStrings) {
-  for (i = 0; i < linkStrings.length; i++) {
-    var hasResults = window.find(linkStrings[i], false, true, true, false, true, false);
-    if (hasResults) {
-      var link = getLinkFromSelection();
-      if (link) {
-        domUtils.simulateClick(link);
-        // blur the element just in case it already has focus. then when we re-focus it, the browser will
-        // scroll such that it is visible.
-        link.blur();
-        link.focus();
+  var linksXPath = domUtils.makeXPath(["a", "*[@onclick or @role='link']"]);
+  var links = domUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+  var shortestLinks = [];
+  var shortestLinkLength = null;
+
+  for (var i = 0, count = links.snapshotLength; i < count; i++) {
+    var link = links.snapshotItem(i);
+    var linkMatches = false;
+    for (var j = 0; j < linkStrings.length; j++) {
+      if (link.innerText.toLowerCase().indexOf(linkStrings[j]) !== -1) {
+        linkMatches = true;
+        break;
+      }
+    }
+    if (!linkMatches) continue;
+
+    var wordCount = link.innerText.trim().split(/\s+/).length;
+    if (shortestLinkLength === null || wordCount < shortestLinkLength) {
+      shortestLinkLength = wordCount;
+      shortestLinks = [ link ];
+    }
+    else if (wordCount === shortestLinkLength) {
+      shortestLinks.push(link);
+    }
+  }
+
+  for (var i = 0; i < linkStrings.length; i++)
+    for (var j = 0; j < shortestLinks.length; j++) {
+      var exactWordRegex = new RegExp("\\b" + linkStrings[i] + "\\b", "i");
+      if (exactWordRegex.test(shortestLinks[j].innerText)) {
+        followLink(shortestLinks[j]);
         return true;
       }
     }
-  }
+
+  for (var i = 0; i < linkStrings.length; i++)
+    for (var j = 0; j < shortestLinks.length; j++) {
+      if (shortestLinks[j].innerText.toLowerCase().indexOf(linkStrings[i]) !== -1) {
+        followLink(shortestLinks[j]);
+        return true;
+      }
+    }
+
   return false;
 }
 
@@ -861,9 +905,7 @@ function findAndFollowRel(value) {
     var elements = document.getElementsByTagName(relTags[i]);
     for (j = 0; j < elements.length; j++) {
       if (elements[j].hasAttribute('rel') && elements[j].rel == value) {
-        domUtils.simulateClick(elements[j]);
-        link.blur();
-        link.focus();
+        followLink(elements[j]);
         return true;
       }
     }
