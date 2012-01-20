@@ -402,7 +402,8 @@ function bubbleEvent(type, event) {
     // We need to check for existence of handler because the last function call may have caused the release of
     // more than one handler.
     if (handlerStack[i] && handlerStack[i][type] && !handlerStack[i][type](event)) {
-      suppressEvent(event);
+      event.preventDefault();
+      event.stopPropagation();
       return false;
     }
   }
