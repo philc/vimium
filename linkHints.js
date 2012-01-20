@@ -314,14 +314,10 @@ var alphabetHints = {
   logXOfBase: function(x, base) { return Math.log(x) / Math.log(base); },
 
   getHintMarkers: function(visibleElements) {
-    //Initialize the number used to generate the character hints to be as many digits as we need to highlight
-    //all the links on the page; we don't want some link hints to have more chars than others.
-    var digitsNeeded = Math.ceil(this.logXOfBase(
-          visibleElements.length, settings.get('linkHintCharacters').length));
+    var hintStrings = this.hintStrings(visibleElements.length);
     var hintMarkers = [];
-
     for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = this.numberToHintString(i, digitsNeeded);
+      var hintString = hintStrings[i];
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.innerHTML = hintUtils.spanWrap(hintString);
       marker.setAttribute("hintString", hintString);
@@ -330,17 +326,46 @@ var alphabetHints = {
 
     return hintMarkers;
   },
+
+  /*
+   * Returns a list of hint strings which will uniquely identify the given number of links. The hint strings
+   * may be of different lengths.
+   */
+  hintStrings: function(linkCount) {
+    var linkHintCharacters = settings.get("linkHintCharacters");
+    // Determine how many digits the link hints will require in the worst case. Usually we do not need
+    // all of these digits for every link single hint, so we can show shorter hints for a few of the links.
+    var digitsNeeded = Math.ceil(this.logXOfBase(linkCount, linkHintCharacters.length));
+    // Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
+    var shortHintCount = Math.floor(
+        (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) /
+        linkHintCharacters.length);
+    var longHintCount = linkCount - shortHintCount;
+
+    var hintStrings = [];
+
+    if (digitsNeeded > 1)
+      for (var i = 0; i < shortHintCount; i++)
+        hintStrings.push(this.numberToHintString(i, digitsNeeded - 1, linkHintCharacters));
+
+    var start = shortHintCount * linkHintCharacters.length;
+    for (var i = start; i < start + longHintCount; i++)
+      hintStrings.push(this.numberToHintString(i, digitsNeeded, linkHintCharacters));
+
+    return hintStrings;
+  },
+
   /*
    * Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
    * the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
    */
-  numberToHintString: function(number, numHintDigits) {
-    var base = settings.get('linkHintCharacters').length;
+  numberToHintString: function(number, numHintDigits, characterSet) {
+    var base = characterSet.length;
     var hintString = [];
     var remainder = 0;
     do {
       remainder = number % base;
-      hintString.unshift(settings.get('linkHintCharacters')[remainder]);
+      hintString.unshift(characterSet[remainder]);
       number -= remainder;
       number /= Math.floor(base);
     } while (number > 0);
@@ -349,13 +374,8 @@ var alphabetHints = {
     // Note: the loop body changes hintString.length, so the original length must be cached!
     var hintStringLength = hintString.length;
     for (var i = 0; i < numHintDigits - hintStringLength; i++)
-      hintString.unshift(settings.get('linkHintCharacters')[0]);
+      hintString.unshift(characterSet[0]);
 
-    // Reversing the hint string has the advantage of making the link hints
-    // appear to spread out after the first key is hit. This is helpful on a
-    // page that has http links that are close to each other where link hints
-    // of 2 characters or more occlude each other.
-    hintString.reverse();
     return hintString.join("");
   },
 
