@@ -26,7 +26,9 @@
     returnScrollPosition: handleReturnScrollPosition,
     getCurrentTabUrl:     getCurrentTabUrl,
     settings:             handleSettings,
-    getBookmarks:         getBookmarks
+    getBookmarks:         getBookmarks,
+    getAllBookmarks:      getAllBookmarks,
+    getHistory:           getHistory,
   };
 
   var sendRequestHandlers = {
@@ -274,6 +276,57 @@
     chrome.bookmarks.search(args.query, function(bookmarks) {
         port.postMessage({bookmarks:bookmarks})
     })
+  }
+
+  function getAllBookmarks(args, port) {
+    function traverseTree(bookmarks, callback) {
+      for (var i = 0; i < bookmarks.length; ++i) {
+        callback(bookmarks[i]);
+        if (typeof bookmarks[i].children === "undefined")
+          continue;
+        traverseTree(bookmarks[i].children, callback);
+      }
+    };
+
+    chrome.bookmarks.getTree(function(bookmarks) {
+      var results = [];
+      traverseTree(bookmarks, function(bookmark) {
+        if (typeof bookmark.url === "undefined")
+          return;
+        results.push(bookmark);
+      });
+      port.postMessage({bookmarks:results});
+    });
+  };
+
+  function getHistory(args, port) {
+    chrome.history.search({ text: '',
+                            maxResults: args.maxResults || 1000 },
+                      function(history) {
+      // sort by visit cound descending
+      history.sort(function(a, b) {
+        // visitCount may be undefined
+        var visitCountForA = a.visitCount || 0;
+        var visitCountForB = a.visitCount || 0;
+        return visitCountForB - visitCountForA;
+      });
+      var results = [];
+      for (var i = 0; i < history.length; ++i) {
+        results.push(history[i]);
+      }
+      port.postMessage({history:results});
+    });
+  };
+
+  /*
+   * Used by everyone to get settings from local storage.
+   */
+  function getSettingFromLocalStorage(setting) {
+    if (localStorage[setting] != "" && !localStorage[setting]) {
+      return defaultSettings[setting];
+    } else {
+      return localStorage[setting];
+    }
   }
 
   function getCurrentTimeInSeconds() { Math.floor((new Date()).getTime() / 1000); }

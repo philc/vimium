@@ -282,4 +282,74 @@ div.vimium-completions div.vimium-noResults{
 
 body.vimiumFindMode ::selection {
   background: #ff9632;
+};
+
+/* fuzzymode CSS */
+
+#fuzzybox ol, #fuzzybox ul {
+  list-style: none;
+}
+
+#fuzzybox {
+  position: fixed;
+  width: 80%;
+  top: 70px;
+  left: 50%;
+  margin: 0 0 0 -40%;
+  background: black;
+  color: white;
+  font-family: sans-serif;
+  font-size: 30px;
+  text-align: left;
+  padding: 7px 20px 7px 20px;
+  opacity: 0.9;
+  border-radius: 10px;
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
+  z-index: 99999998;
+}
+
+#fuzzybox ul {
+  list-style: none;
+  padding: 7px 0 0 0;
+  margin: 7px 0 0 0;
+  border-top: 2px solid #444;
+}
+
+#fuzzybox li {
+  border-bottom: 1px solid #111;
+  line-height: 1.1em;
+  padding: 7px;
+  margin: 0 -7px 0 -7px;
+  font-size: 18px;
+  color: #aaa;
+}
+
+#fuzzybox li strong {
+  color: red;
+}
+
+#fuzzybox li em {
+  color: #444;
+  font-weight: normal;
+  font-style: italic;
+}
+
+#fuzzybox li.selected {
+  background: #222;
+  color: #ccc;
+  border-radius: 4px;
+}
+#fuzzybox li.selected em {
+  color: #666;
+}
+
+#fuzzybox .input {
+  font-size: 28px;
+  padding: 0;
+  margin: 0;
+}
+
+#fuzzybox .input .prompt {
+  color: orange;
+  content: '>> ';
 }
