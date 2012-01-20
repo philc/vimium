@@ -256,7 +256,7 @@ var linkHints = {
   showMarker: function(linkMarker, matchingCharCount) {
     linkMarker.style.display = "";
     for (var j = 0, count = linkMarker.childNodes.length; j < count; j++)
-      linkMarker.childNodes[j].className = (j >= matchingCharCount) ? "" : "vimiumReset matchingCharacter";
+      linkMarker.childNodes[j].className = (j >= matchingCharCount) ? "vimiumReset" : "vimiumReset matchingCharacter";
   },
 
   hideMarker: function(linkMarker) {
