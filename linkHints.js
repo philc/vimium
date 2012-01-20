@@ -352,7 +352,23 @@ var alphabetHints = {
     for (var i = start; i < start + longHintCount; i++)
       hintStrings.push(this.numberToHintString(i, digitsNeeded, linkHintCharacters));
 
-    return hintStrings;
+    return this.shuffleHints(hintStrings, linkHintCharacters.length);
+  },
+
+  /*
+   * This shuffles the given set of hints so that they're scattered -- hints starting with the same character
+   * will be spread evenly throughout the array.
+   */
+  shuffleHints: function(hints, characterSetLength) {
+    var buckets = [], i = 0;
+    for (i = 0; i < characterSetLength; i++)
+      buckets[i] = []
+    for (i = 0; i < hints.length; i++)
+      buckets[i % buckets.length].push(hints[i]);
+    var result = [];
+    for (i = 0; i < buckets.length; i++)
+      result = result.concat(buckets[i]);
+    return result;
   },
 
   /*
