@@ -29,6 +29,7 @@
     getBookmarks:         getBookmarks,
     getAllBookmarks:      getAllBookmarks,
     getHistory:           getHistory,
+    getTabsInCurrentWindow: getTabsInCurrentWindow,
   };
 
   var sendRequestHandlers = {
@@ -43,7 +44,8 @@
     updateScrollPosition: handleUpdateScrollPosition,
     copyToClipboard: copyToClipboard,
     isEnabledForUrl: isEnabledForUrl,
-    saveHelpDialogSettings: saveHelpDialogSettings
+    saveHelpDialogSettings: saveHelpDialogSettings,
+    selectSpecificTab: selectSpecificTab,
   };
 
   // Event handlers
@@ -259,6 +261,14 @@
     Clipboard.copy(request.data);
   }
 
+  /**
+    * Selects the tab with the ID specified in request.id
+    */
+  function selectSpecificTab(request) {
+    console.log("selectSpecificTab");
+    chrome.tabs.update(request.id, { selected: true });
+  }
+
   /*
    * Used by the content scripts to get settings from the local storage.
    */
@@ -302,6 +312,12 @@
                             maxResults: args.maxResults || 1000 },
                           function(history) {
       port.postMessage({history:history});
+    });
+  };
+
+  function getTabsInCurrentWindow(args, port) {
+    chrome.tabs.getAllInWindow(null, function(tabs) {
+      port.postMessage({tabs:tabs});
     });
   };
 

@@ -13,6 +13,7 @@ var fuzzyMode = (function() {
         }),
         new completion.FuzzyHistoryCompleter(500),
         new completion.FuzzyBookmarkCompleter(),
+        new completion.FuzzyTabCompleter(),
       ]);
       completer.refresh();
       fuzzyBox = new FuzzyBox(completer, 10);
