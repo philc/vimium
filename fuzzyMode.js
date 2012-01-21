@@ -7,7 +7,8 @@ var fuzzyMode = (function() {
         new completion.SmartCompleter({
           'wiki ': [ 'Wikipedia (en)', 'http://en.wikipedia.org/wiki/%s' ],
           'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
-          ';'    : [ 'goto',           '%s' ]
+          ';'    : [ 'goto',           '%s' ],
+          '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
         }),
         new completion.FuzzyHistoryCompleter(1000),
         new completion.FuzzyBookmarkCompleter(),
