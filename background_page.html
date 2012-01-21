@@ -291,8 +291,6 @@
     chrome.bookmarks.getTree(function(bookmarks) {
       var results = [];
       traverseTree(bookmarks, function(bookmark) {
-        if (typeof bookmark.url === "undefined")
-          return;
         results.push(bookmark);
       });
       port.postMessage({bookmarks:results});
@@ -302,19 +300,8 @@
   function getHistory(args, port) {
     chrome.history.search({ text: '',
                             maxResults: args.maxResults || 1000 },
-                      function(history) {
-      // sort by visit cound descending
-      history.sort(function(a, b) {
-        // visitCount may be undefined
-        var visitCountForA = a.visitCount || 0;
-        var visitCountForB = a.visitCount || 0;
-        return visitCountForB - visitCountForA;
-      });
-      var results = [];
-      for (var i = 0; i < history.length; ++i) {
-        results.push(history[i]);
-      }
-      port.postMessage({history:results});
+                          function(history) {
+      port.postMessage({history:history});
     });
   };
 
