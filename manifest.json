@@ -12,7 +12,8 @@
     "bookmarks",
     "clipboardRead",
     "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "file://*/*"
   ],
   "content_scripts": [
     {
