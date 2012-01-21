@@ -319,7 +319,7 @@ var alphabetHints = {
     for (var i = 0, count = visibleElements.length; i < count; i++) {
       var hintString = hintStrings[i];
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
-      marker.innerHTML = hintUtils.spanWrap(hintString);
+      marker.innerHTML = hintUtils.spanWrap(hintString.toUpperCase());
       marker.setAttribute("hintString", hintString);
       hintMarkers.push(marker);
     }
@@ -569,7 +569,7 @@ var hintUtils = {
   spanWrap: function(hintString) {
     var innerHTML = [];
     for (var i = 0; i < hintString.length; i++)
-      innerHTML.push("<span class='vimiumReset'>" + hintString[i].toUpperCase() + "</span>");
+      innerHTML.push("<span class='vimiumReset'>" + hintString[i] + "</span>");
     return innerHTML.join("");
   },
 
