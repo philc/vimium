@@ -9,6 +9,7 @@ var fuzzyMode = (function() {
           'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
           ';'    : [ 'goto',           '%s' ]
         }),
+        completer.refresh();
         new completion.FuzzyHistoryCompleter(1000),
         new completion.FuzzyBookmarkCompleter(),
       ]);
@@ -27,8 +28,6 @@ var fuzzyMode = (function() {
   FuzzyBox.prototype = {
     show: function(reverseAction) {
       this.reverseAction = reverseAction;
-      this.completer.refresh();
-      this.update();
       this.box.style.display = 'block';
       var self = this;
       handlerStack.push({ keydown: function(event) { self.onKeydown(event); }});
@@ -106,30 +105,27 @@ var fuzzyMode = (function() {
       this.query = this.query.replace(/^\s*/, '');
       this.input.textContent = this.query;
 
-      // clear completions
-      this.completions = [];
-      while (this.completionList.hasChildNodes())
-        this.completionList.removeChild(this.completionList.firstChild);
-
       if (this.query.length == 0) {
         this.completionList.style.display = 'none';
         return;
       }
-
       this.completionList.style.display = 'block';
 
-      var li;
-      var counter = 0;
       var self = this;
-      this.completer.filter(this.query, function(completion) {
-        self.completions.push(completion);
-        li = document.createElement('li');
-        li.innerHTML = completion.render();
-        self.completionList.appendChild(li);
-        return ++counter < 10;
-      });
+      this.completer.filter(this.query, function(completions) {
+        // clear completions
+        self.completions = [];
+        while (self.completionList.hasChildNodes())
+          self.completionList.removeChild(self.completionList.firstChild);
 
-      this.updateSelection();
+        for (var i = 0; i < completions.length && i < 10; ++i) {
+          self.completions.push(completions[i]);
+          var li = document.createElement('li');
+          li.innerHTML = completions[i].render();
+          self.completionList.appendChild(li);
+        }
+        self.updateSelection();
+      });
     },
 
     initDom: function() {
