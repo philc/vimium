@@ -317,10 +317,9 @@ var alphabetHints = {
     var hintStrings = this.hintStrings(visibleElements.length);
     var hintMarkers = [];
     for (var i = 0, count = visibleElements.length; i < count; i++) {
-      var hintString = hintStrings[i];
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
-      marker.innerHTML = hintUtils.spanWrap(hintString.toUpperCase());
-      marker.setAttribute("hintString", hintString);
+      marker.hintString = hintStrings[i];
+      marker.innerHTML = hintUtils.spanWrap(marker.hintString.toUpperCase());
       hintMarkers.push(marker);
     }
 
@@ -407,7 +406,7 @@ var alphabetHints = {
 
     var matchString = this.hintKeystrokeQueue.join("");
     var linksMatched = hintMarkers.filter(function(linkMarker) {
-      return linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+      return linkMarker.hintString.indexOf(matchString) == 0;
     });
     return { linksMatched: linksMatched };
   },
@@ -440,11 +439,13 @@ var filterHints = {
     }
   },
 
-  setMarkerAttributes: function(marker, linkHintNumber) {
-    var hintString = (linkHintNumber + 1).toString();
+  generateHintString: function(linkHintNumber) {
+    return (linkHintNumber + 1).toString();
+  },
+
+  generateLinkText: function(element) {
     var linkText = "";
     var showLinkText = false;
-    var element = marker.clickableItem;
     // toLowerCase is necessary as html documents return 'IMG'
     // and xhtml documents return 'img'
     var nodeName = element.nodeName.toLowerCase();
@@ -466,10 +467,12 @@ var filterHints = {
     } else {
       linkText = element.textContent || element.innerHTML;
     }
-    linkText = linkText.trim().toLowerCase();
-    marker.setAttribute("hintString", hintString);
-    marker.innerHTML = hintUtils.spanWrap(hintString + (showLinkText ? ": " + linkText : ""));
-    marker.setAttribute("linkText", linkText);
+    return { text: linkText, show: showLinkText };
+  },
+
+  renderMarker: function(marker) {
+    marker.innerHTML = hintUtils.spanWrap(marker.hintString +
+                                          (marker.showLinkText ? ": " + marker.linkText : ""));
   },
 
   getHintMarkers: function(visibleElements) {
@@ -477,7 +480,11 @@ var filterHints = {
     var hintMarkers = [];
     for (var i = 0, count = visibleElements.length; i < count; i++) {
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
-      this.setMarkerAttributes(marker, i);
+      marker.hintString = this.generateHintString(i);
+      var linkTextObject = this.generateLinkText(marker.clickableItem);
+      marker.linkText = linkTextObject.text;
+      marker.showLinkText = linkTextObject.show;
+      this.renderMarker(marker);
       hintMarkers.push(marker);
     }
     return hintMarkers;
@@ -516,8 +523,7 @@ var filterHints = {
     var linksMatched = this.filterLinkHints(hintMarkers);
     var matchString = this.hintKeystrokeQueue.join("");
     linksMatched = linksMatched.filter(function(linkMarker) {
-      return linkMarker.getAttribute('filtered') != 'true'
-        && linkMarker.getAttribute("hintString").indexOf(matchString) == 0;
+      return !linkMarker.filtered && linkMarker.hintString.indexOf(matchString) == 0;
     });
 
     if (linksMatched.length == 1 && userIsTypingLinkText) {
@@ -531,8 +537,8 @@ var filterHints = {
   },
 
   /*
-   * Hides the links that do not match the linkText search string and marks them with the 'filtered' DOM
-   * property. Renumbers the remainder.
+   * Marks the links that do not match the linkText search string with the 'filtered' DOM property. Renumbers
+   * the remainder if necessary.
    */
   filterLinkHints: function(hintMarkers) {
     var linksMatched = [];
@@ -540,14 +546,16 @@ var filterHints = {
 
     for (var i = 0; i < hintMarkers.length; i++) {
       var linkMarker = hintMarkers[i];
-      var matchedLink = linkMarker.getAttribute("linkText").toLowerCase()
-                                  .indexOf(linkSearchString.toLowerCase()) >= 0;
+      var matchedLink = linkMarker.linkText.toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0;
 
       if (!matchedLink) {
-        linkMarker.setAttribute("filtered", "true");
+        linkMarker.filtered = true;
       } else {
-        this.setMarkerAttributes(linkMarker, linksMatched.length);
-        linkMarker.setAttribute("filtered", "false");
+        linkMarker.filtered = false;
+        var oldHintString = linkMarker.hintString;
+        linkMarker.hintString = this.generateHintString(linksMatched.length);
+        if (linkMarker.hintString != oldHintString)
+          this.renderMarker(linkMarker);
         linksMatched.push(linkMarker);
       }
     }

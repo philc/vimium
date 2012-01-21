@@ -120,7 +120,7 @@
         should("label the hints correctly", function() {
           var hintStrings = ["ss", "as", "ds"];
           for (var i = 0; i < 3; i++)
-          assert.equal(hintStrings[i], linkHints.hintMarkers[i].getAttribute("hintString"));
+          assert.equal(hintStrings[i], linkHints.hintMarkers[i].hintString);
         }),
 
         should("narrow the hints", function() {
@@ -164,10 +164,10 @@
             linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
             linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
             assert.equal("none", linkHints.hintMarkers[0].style.display);
-            assert.equal("1", linkHints.hintMarkers[1].getAttribute("hintString"));
+            assert.equal("1", linkHints.hintMarkers[1].hintString);
             assert.equal("", linkHints.hintMarkers[1].style.display);
             linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-            assert.equal("2", linkHints.hintMarkers[3].getAttribute("hintString"));
+            assert.equal("2", linkHints.hintMarkers[3].hintString);
           })
 
         ),
