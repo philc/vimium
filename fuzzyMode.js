@@ -4,7 +4,11 @@ var fuzzyMode = (function() {
   function start(newTab) {
     if (!fuzzyBox) {
       var completer = new completion.MergingCompleter([
-        new completion.SmartCompleter(),
+        new completion.SmartCompleter({
+          'wiki ': [ 'Wikipedia (en)', 'http://en.wikipedia.org/wiki/%s' ],
+          'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
+          ';'    : [ 'goto',           '%s' ]
+        }),
         new completion.FuzzyHistoryCompleter(1000),
         new completion.FuzzyBookmarkCompleter(),
       ]);
