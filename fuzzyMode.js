@@ -169,4 +169,3 @@ var fuzzyMode = (function() {
   }
 
 })();
-
