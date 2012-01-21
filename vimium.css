@@ -321,17 +321,24 @@ body.vimiumFindMode ::selection {
   padding: 7px !important;
   margin: 0 -7px 0 -7px !important;
   font-size: 18px !important;
-  color: #aaa !important;
+  color: #ddd !important;
 }
 
-#fuzzybox li strong {
+#fuzzybox li .fuzzyMatch {
   color: red !important;
 }
 
-#fuzzybox li em {
+#fuzzybox li em, #fuzzybox li .title {
   color: #444 !important;
   font-weight: normal !important;
+}
+#fuzzybox li em {
   font-style: italic !important;
+}
+#fuzzybox li em .fuzzyMatch, #fuzzybox li .title .fuzzyMatch {
+  color: #888 !important;
+  font-style: inherit !important;
+  font-weight: bold !important;
 }
 
 #fuzzybox li.selected {
@@ -340,7 +347,7 @@ body.vimiumFindMode ::selection {
   border-radius: 4px !important;
   font-weight: normal !important;
 }
-#fuzzybox li.selected em {
+#fuzzybox li.selected em, #fuzzybox li.selected .title {
   color: #666 !important;
 }
 
