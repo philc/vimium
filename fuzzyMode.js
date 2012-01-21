@@ -10,7 +10,7 @@ var fuzzyMode = (function() {
           ';'    : [ 'goto',           '%s' ],
           '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
         }),
-        new completion.FuzzyHistoryCompleter(1000),
+        new completion.FuzzyHistoryCompleter(500),
         new completion.FuzzyBookmarkCompleter(),
       ]);
       completer.refresh();
