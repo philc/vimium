@@ -351,5 +351,4 @@ body.vimiumFindMode ::selection {
 
 #fuzzybox .input .prompt {
   color: orange;
-  content: '>> ';
 }
