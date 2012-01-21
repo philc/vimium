@@ -9,10 +9,10 @@ var fuzzyMode = (function() {
           'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
           ';'    : [ 'goto',           '%s' ]
         }),
-        completer.refresh();
         new completion.FuzzyHistoryCompleter(1000),
         new completion.FuzzyBookmarkCompleter(),
       ]);
+      completer.refresh();
       fuzzyBox = new FuzzyBox(completer);
     }
     fuzzyBox.show(newTab);
