@@ -80,6 +80,12 @@ var fuzzyMode = (function() {
         }
       }
 
+      // refresh with F5
+      else if (keyChar == 'f5') {
+        this.completer.refresh();
+        this.update();
+      }
+
       // use primary action with Enter. Holding down Shift/Ctrl uses the alternative action
       // (opening in new tab)
       else if (event.keyCode == keyCodes.enter) {
