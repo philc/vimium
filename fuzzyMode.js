@@ -14,14 +14,15 @@ var fuzzyMode = (function() {
         new completion.FuzzyBookmarkCompleter(),
       ]);
       completer.refresh();
-      fuzzyBox = new FuzzyBox(completer);
+      fuzzyBox = new FuzzyBox(completer, 10);
     }
     fuzzyBox.show(newTab);
   }
 
   /** User interface for fuzzy completion */
-  var FuzzyBox = function(completer, reverseAction) {
+  var FuzzyBox = function(completer, maxResults) {
     this.prompt = '> ';
+    this.maxResults = maxResults || 10;
     this.completer = completer;
     this.initDom();
     this.reset();
@@ -125,7 +126,7 @@ var fuzzyMode = (function() {
         while (self.completionList.hasChildNodes())
           self.completionList.removeChild(self.completionList.firstChild);
 
-        for (var i = 0; i < completions.length && i < 10; ++i) {
+        for (var i = 0; i < completions.length && i < self.maxResults; ++i) {
           self.completions.push(completions[i]);
           var li = document.createElement('li');
           li.innerHTML = completions[i].render();
