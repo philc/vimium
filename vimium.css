@@ -287,68 +287,69 @@ body.vimiumFindMode ::selection {
 /* fuzzymode CSS */
 
 #fuzzybox ol, #fuzzybox ul {
-  list-style: none;
+  list-style: none !important;
 }
 
 #fuzzybox {
-  position: fixed;
-  width: 80%;
-  top: 70px;
-  left: 50%;
-  margin: 0 0 0 -40%;
-  background: black;
-  color: white;
-  font-family: sans-serif;
-  font-size: 30px;
-  text-align: left;
-  padding: 7px 20px 7px 20px;
-  opacity: 0.9;
-  border-radius: 10px;
-  box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
-  z-index: 99999998;
+  position: fixed !important;
+  width: 80% !important;
+  top: 70px !important;
+  left: 50% !important;
+  margin: 0 0 0 -40% !important;
+  background: black !important;
+  color: white !important;
+  font-family: sans-serif !important;
+  font-size: 30px !important;
+  text-align: left !important;
+  padding: 7px 20px 7px 20px !important;
+  opacity: 0.9 !important;
+  border-radius: 10px !important;
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.5) !important;
+  z-index: 99999998 !important;
 }
 
 #fuzzybox ul {
-  list-style: none;
-  padding: 7px 0 0 0;
-  margin: 7px 0 0 0;
-  border-top: 2px solid #444;
+  list-style: none !important;
+  padding: 7px 0 0 0 !important;
+  margin: 7px 0 0 0 !important;
+  border-top: 2px solid #444 !important;
 }
 
 #fuzzybox li {
-  border-bottom: 1px solid #111;
-  line-height: 1.1em;
-  padding: 7px;
-  margin: 0 -7px 0 -7px;
-  font-size: 18px;
-  color: #aaa;
+  border-bottom: 1px solid #111 !important;
+  line-height: 1.1em !important;
+  padding: 7px !important;
+  margin: 0 -7px 0 -7px !important;
+  font-size: 18px !important;
+  color: #aaa !important;
 }
 
 #fuzzybox li strong {
-  color: red;
+  color: red !important;
 }
 
 #fuzzybox li em {
-  color: #444;
-  font-weight: normal;
-  font-style: italic;
+  color: #444 !important;
+  font-weight: normal !important;
+  font-style: italic !important;
 }
 
 #fuzzybox li.selected {
-  background: #222;
-  color: #ccc;
-  border-radius: 4px;
+  background: #222 !important;
+  color: #ccc !important;
+  border-radius: 4px !important;
+  font-weight: normal !important;
 }
 #fuzzybox li.selected em {
-  color: #666;
+  color: #666 !important;
 }
 
 #fuzzybox .input {
-  font-size: 28px;
-  padding: 0;
-  margin: 0;
+  font-size: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 #fuzzybox .input .prompt {
-  color: orange;
+  color: orange !important;
 }
