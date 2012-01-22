@@ -11,8 +11,7 @@
     "tabs",
     "bookmarks",
     "clipboardRead",
-    "http://*/*",
-    "https://*/*"
+    "<all_urls>"
   ],
   "content_scripts": [
     {

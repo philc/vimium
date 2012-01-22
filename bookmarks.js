@@ -70,9 +70,9 @@ function activateBookmarkFindMode() {
         var isABookmarklet = function(url) { return url.indexOf("javascript:") === 0; }
 
         if (!self.newTab || isABookmarklet(url))
-          window.location = url;
+          chrome.extension.sendRequest({ handler: "openUrlInCurrentTab", url: url });
         else
-          window.open(url);
+          chrome.extension.sendRequest({ handler: "openUrlInNewTab", url: url });
 
         self.disable();
       },
