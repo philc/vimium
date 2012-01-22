@@ -308,9 +308,11 @@
   };
 
   function getHistory(args, port) {
-    chrome.history.search({ text: '',
-                            maxResults: args.maxResults || 1000 },
-                          function(history) {
+    chrome.history.search({
+        text: '',
+        maxResults: args.maxResults || 1000,
+        startTime: 0,
+    }, function(history) {
       port.postMessage({history:history});
     });
   };

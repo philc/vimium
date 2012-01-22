@@ -11,7 +11,7 @@ var fuzzyMode = (function() {
           ';'    : [ 'goto',           '%s' ],
           '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
         }),
-        new completion.FuzzyHistoryCompleter(500),
+        new completion.FuzzyHistoryCompleter(2000),
         new completion.FuzzyBookmarkCompleter(),
         new completion.FuzzyTabCompleter(),
       ]);
