@@ -265,7 +265,6 @@
     * Selects the tab with the ID specified in request.id
     */
   function selectSpecificTab(request) {
-    console.log("selectSpecificTab");
     chrome.tabs.update(request.id, { selected: true });
   }
 
