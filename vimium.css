@@ -326,11 +326,15 @@ body.vimiumFindMode ::selection {
 
 #fuzzybox li .fuzzyMatch {
   color: red !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
 }
 
 #fuzzybox li em, #fuzzybox li .title {
   color: #444 !important;
   font-weight: normal !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
 }
 #fuzzybox li em {
   font-style: italic !important;
@@ -346,6 +350,7 @@ body.vimiumFindMode ::selection {
   color: #ccc !important;
   border-radius: 4px !important;
   font-weight: normal !important;
+  font-family: inherit !important;
 }
 #fuzzybox li.selected em, #fuzzybox li.selected .title {
   color: #666 !important;
@@ -355,8 +360,12 @@ body.vimiumFindMode ::selection {
   font-size: 28px !important;
   padding: 0 !important;
   margin: 0 !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
 }
 
 #fuzzybox .input .prompt {
   color: orange !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
 }
