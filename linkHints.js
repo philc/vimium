@@ -319,7 +319,7 @@ var alphabetHints = {
     for (var i = 0, count = visibleElements.length; i < count; i++) {
       var marker = hintUtils.createMarkerFor(visibleElements[i]);
       marker.hintString = hintStrings[i];
-      hintUtils.spanWrap(marker, marker.hintString.toUpperCase());
+      marker.innerHTML = hintUtils.spanWrap(marker.hintString.toUpperCase());
       hintMarkers.push(marker);
     }
 
@@ -471,7 +471,8 @@ var filterHints = {
   },
 
   renderMarker: function(marker) {
-    hintUtils.spanWrap(marker, marker.hintString + (marker.showLinkText ? ": " + marker.linkText : ""));
+    marker.innerHTML = hintUtils.spanWrap(marker.hintString +
+                                          (marker.showLinkText ? ": " + marker.linkText : ""));
   },
 
   getHintMarkers: function(visibleElements) {
@@ -573,16 +574,11 @@ var hintUtils = {
   /*
    * Make each hint character a span, so that we can highlight the typed characters as you type them.
    */
-  spanWrap: function(marker, hintString) {
-    while (marker.childNodes.length > 0)
-      marker.removeChild(marker.lastChild);
-
-    for (var i = 0; i < hintString.length; i++) {
-      var span = document.createElement("span");
-      span.className = "vimiumReset";
-      span.textContent = hintString[i];
-      marker.appendChild(span);
-    }
+  spanWrap: function(hintString) {
+    var innerHTML = [];
+    for (var i = 0; i < hintString.length; i++)
+      innerHTML.push("<span class='vimiumReset'>" + hintString[i] + "</span>");
+    return innerHTML.join("");
   },
 
   /*
