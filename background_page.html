@@ -320,7 +320,7 @@
         maxResults: 20000,
         startTime: 0,
     }, function(history) {
-      // sorting in asceding order, so we can push new items to the end later
+      // sorting in ascending order, so we can push new items to the end later
       history.sort(function(a, b) {
         // visitCount may be undefined
         return (a.visitCount || 0) - (b.visitCount || 0);
