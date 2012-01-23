@@ -75,6 +75,8 @@
     if (portHandlers[port.name])
       port.onMessage.addListener(portHandlers[port.name]);
 
+    // prefetch history
+    useHistory(function() {});
   });
 
   chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
@@ -306,13 +308,38 @@
     });
   };
 
-  function getHistory(args, port) {
+  var cachedHistory = null;
+  function useHistory(callback) {
+    if (cachedHistory !== null) {
+      callback(cachedHistory);
+      return;
+    }
+
     chrome.history.search({
         text: '',
-        maxResults: args.maxResults || 1000,
+        maxResults: 20000,
         startTime: 0,
     }, function(history) {
-      port.postMessage({history:history});
+      // sorting in asceding order, so we can push new items to the end later
+      history.sort(function(a, b) {
+        // visitCount may be undefined
+        return (a.visitCount || 0) - (b.visitCount || 0);
+      });
+      cachedHistory = history;
+      callback(cachedHistory);
+    });
+  }
+
+  chrome.history.onVisited.addListener(function(item) {
+    if (cachedHistory === null) return;
+    cachedHistory.push(item);
+  });
+
+  function getHistory(args, port) {
+    useHistory(function(history) {
+      port.postMessage({
+        history: history.slice(history.length - args.maxResults)
+      });
     });
   };
 
