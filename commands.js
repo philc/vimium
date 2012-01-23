@@ -147,6 +147,8 @@ function clearKeyMappingsAndSetDefaults() {
     "o": "fuzzyMode.activateAll",
     "O": "fuzzyMode.activateAllNewTab",
 
+    "T": "fuzzyMode.activateTabs",
+
     "gf": "nextFrame",
   };
 
@@ -216,6 +218,7 @@ var commandDescriptions = {
 
   'fuzzyMode.activateAll': ["Open URL, bookmark, history entry or a custom search (fuzzy)"],
   'fuzzyMode.activateAllNewTab': ["Open URL, bookmark, history entry or a custom search (fuzzy, new tab)"],
+  'fuzzyMode.activateTabs': ["Go to a tab in this window (fuzzy)"],
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 };
@@ -236,7 +239,7 @@ var commandGroups = {
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
      "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab",
-     "fuzzyMode.activateAll", "fuzzyMode.activateAllNewTab",
+     "fuzzyMode.activateAll", "fuzzyMode.activateAllNewTab", "fuzzyMode.activateTabs",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:

@@ -31,13 +31,13 @@ var fuzzyMode = (function() {
   }
 
   /** Trigger the fuzzy mode dialog */
-  function start(name, newTab) {
+  function start(name, reverseAction) {
     var completer = getCompleter(name);
     if (!fuzzyBox)
       fuzzyBox = new FuzzyBox(10);
     completer.refresh();
     fuzzyBox.setCompleter(completer);
-    fuzzyBox.show(newTab);
+    fuzzyBox.show(reverseAction);
   }
 
   /** User interface for fuzzy completion */
@@ -191,8 +191,9 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start('all', false); },
-    activateAllNewTab: function() { start('all', true);  },
+    activateAll:       function() { start('all',  false); },
+    activateAllNewTab: function() { start('all',  true);  },
+    activateTabs:      function() { start('tabs', false); },
   }
 
 })();
