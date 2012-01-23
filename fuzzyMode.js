@@ -17,6 +17,8 @@ var fuzzyMode = (function() {
       return new completion.FuzzyBookmarkCompleter();
     else if (name === 'tabs')
       return new completion.FuzzyTabCompleter();
+    else if (name === 'tabsSorted')
+      return new completion.MergingCompleter([getCompleter('tabs')]);
     else if (name === 'all')
       return new completion.MergingCompleter([
         getCompleter('smart'),
@@ -191,9 +193,9 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start('all',  false); },
-    activateAllNewTab: function() { start('all',  true);  },
-    activateTabs:      function() { start('tabs', false); },
+    activateAll:       function() { start('all',        false); },
+    activateAllNewTab: function() { start('all',        true);  },
+    activateTabs:      function() { start('tabsSorted', false); },
   }
 
 })();
