@@ -1,35 +1,58 @@
 var fuzzyMode = (function() {
+  var fuzzyBox = null;  // the dialog instance for this window
+  var completers = {};  // completer cache
+
+  function createCompleter(name) {
+    if (name === 'smart')
+      return new completion.SmartCompleter({
+        'wiki ': [ 'Wikipedia (en)', 'http://en.wikipedia.org/wiki/%s' ],
+        'luck ': [ 'Google Lucky (en)', 'http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky' ],
+        'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
+        ';'    : [ 'goto',           '%s' ],
+        '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
+        });
+    else if (name === 'history')
+      return new completion.FuzzyHistoryCompleter(2000);
+    else if (name === 'bookmarks')
+      return new completion.FuzzyBookmarkCompleter();
+    else if (name === 'tabs')
+      return new completion.FuzzyTabCompleter();
+    else if (name === 'all')
+      return new completion.MergingCompleter([
+        getCompleter('smart'),
+        getCompleter('history'),
+        getCompleter('tabs'),
+        ]);
+  }
+  function getCompleter(name) {
+    if (!(name in completers))
+      completers[name] = createCompleter(name);
+    return completers[name];
+  }
+
   /** Trigger the fuzzy mode dialog */
-  var fuzzyBox = null;
-  function start(newTab) {
-    if (!fuzzyBox) {
-      var completer = new completion.MergingCompleter([
-        new completion.SmartCompleter({
-          'wiki ': [ 'Wikipedia (en)', 'http://en.wikipedia.org/wiki/%s' ],
-          'luck ': [ 'Google Lucky (en)', 'http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky' ],
-          'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
-          ';'    : [ 'goto',           '%s' ],
-          '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
-        }),
-        new completion.FuzzyHistoryCompleter(2000),
-        new completion.FuzzyBookmarkCompleter(),
-        new completion.FuzzyTabCompleter(),
-      ]);
-      completer.refresh();
-      fuzzyBox = new FuzzyBox(completer, 10);
-    }
+  function start(name, newTab) {
+    var completer = getCompleter(name);
+    if (!fuzzyBox)
+      fuzzyBox = new FuzzyBox(10);
+    completer.refresh();
+    fuzzyBox.setCompleter(completer);
     fuzzyBox.show(newTab);
   }
 
   /** User interface for fuzzy completion */
-  var FuzzyBox = function(completer, maxResults) {
+  var FuzzyBox = function(maxResults) {
     this.prompt = '> ';
     this.maxResults = maxResults || 10;
-    this.completer = completer;
     this.initDom();
     this.reset();
   }
   FuzzyBox.prototype = {
+    setCompleter: function(completer) {
+      this.completer = completer;
+      this.reset();
+    },
+
     show: function(reverseAction) {
       this.reverseAction = reverseAction;
       this.box.style.display = 'block';
@@ -168,8 +191,8 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activate:       function() { start(false); },
-    activateNewTab: function() { start(true);  },
+    activateAll:       function() { start('all', false); },
+    activateAllNewTab: function() { start('all', true);  },
   }
 
 })();
