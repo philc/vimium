@@ -22,6 +22,7 @@ var fuzzyMode = (function() {
     else if (name === 'all')
       return new completion.MergingCompleter([
         getCompleter('smart'),
+        getCompleter('bookmarks'),
         getCompleter('history'),
         getCompleter('tabs'),
         ]);
