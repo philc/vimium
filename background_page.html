@@ -332,7 +332,9 @@
 
   chrome.history.onVisited.addListener(function(item) {
     if (cachedHistory === null) return;
-    cachedHistory.push(item);
+    // only cache newly visited sites
+    if (item.visitCount === 1)
+      cachedHistory.push(item);
   });
 
   function getHistory(args, port) {
