@@ -18,14 +18,14 @@ var fuzzyMode = (function() {
     else if (name === 'tabs')
       return new completion.FuzzyTabCompleter();
     else if (name === 'tabsSorted')
-      return new completion.MergingCompleter([getCompleter('tabs')]);
+      return new completion.MergingCompleter([getCompleter('tabs')], 0);
     else if (name === 'all')
       return new completion.MergingCompleter([
         getCompleter('smart'),
         getCompleter('bookmarks'),
         getCompleter('history'),
         getCompleter('tabs'),
-        ]);
+        ], 1);
   }
   function getCompleter(name) {
     if (!(name in completers))
@@ -49,7 +49,6 @@ var fuzzyMode = (function() {
     this.maxResults = maxResults;
     this.refreshInterval = refreshInterval;
     this.initDom();
-    this.reset();
   }
   FuzzyBox.prototype = {
     setCompleter: function(completer) {
@@ -141,17 +140,7 @@ var fuzzyMode = (function() {
       return true;
     },
 
-    updateInput: function() {
-      this.query = this.query.replace(/^\s*/, '');
-      this.input.textContent = this.query;
-    },
-
     updateCompletions: function() {
-      if (this.query.length == 0) {
-        this.completionList.style.display = 'none';
-        return;
-      }
-
       var self = this;
       this.completer.filter(this.query, function(completions) {
         self.completions = completions.slice(0, self.maxResults);
@@ -168,7 +157,9 @@ var fuzzyMode = (function() {
 
     update: function(sync) {
       sync = sync || false; // explicitely default to asynchronous updating
-      this.updateInput();
+
+      this.query = this.query.replace(/^\s*/, '');
+      this.input.textContent = this.query;
 
       if (sync) {
         this.updateCompletions();
