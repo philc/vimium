@@ -152,7 +152,6 @@ var fuzzyMode = (function() {
         this.completionList.style.display = 'none';
         return;
       }
-      this.completionList.style.display = 'block';
 
       var self = this;
       this.completer.filter(this.query, function(completions) {
@@ -167,6 +166,8 @@ var fuzzyMode = (function() {
           li.innerHTML = completions[i].render();
           self.completionList.appendChild(li);
         }
+
+        self.completionList.style.display = completions.length > 0 ? 'block' : 'none';
         self.updateSelection();
       });
     },
