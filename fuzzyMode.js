@@ -37,16 +37,19 @@ var fuzzyMode = (function() {
   function start(name, reverseAction) {
     var completer = getCompleter(name);
     if (!fuzzyBox)
-      fuzzyBox = new FuzzyBox(10);
+      fuzzyBox = new FuzzyBox(10, 300);
     completer.refresh();
     fuzzyBox.setCompleter(completer);
     fuzzyBox.show(reverseAction);
   }
 
   /** User interface for fuzzy completion */
-  var FuzzyBox = function(maxResults) {
+  var FuzzyBox = function(maxResults, refreshInterval) {
     this.prompt = '> ';
-    this.maxResults = maxResults || 10;
+    this.maxResults = maxResults;
+    this.refreshInterval = refreshInterval;
+    // query used to filter the last completion result. We need this for asynchronous updating
+    this.lastQuery = '';
     this.initDom();
     this.reset();
   }
@@ -72,7 +75,8 @@ var fuzzyMode = (function() {
       this.query = '';
       this.completions = [];
       this.selection = 0;
-      this.update();
+      // force synchronous updating so that the old results will not be flash up shortly
+      this.update(true);
     },
 
     updateSelection: function() {
@@ -129,6 +133,7 @@ var fuzzyMode = (function() {
 
       else if (keyChar.length == 1) {
         this.query += keyChar;
+
         this.update();
       }
 
@@ -137,10 +142,12 @@ var fuzzyMode = (function() {
       return true;
     },
 
-    update: function() {
+    updateInput: function() {
       this.query = this.query.replace(/^\s*/, '');
       this.input.textContent = this.query;
+    },
 
+    updateCompletions: function() {
       if (this.query.length == 0) {
         this.completionList.style.display = 'none';
         return;
@@ -162,6 +169,25 @@ var fuzzyMode = (function() {
         }
         self.updateSelection();
       });
+    },
+
+    update: function(sync) {
+      sync = sync || false; // explicitely default to asynchronous updating
+      this.updateInput();
+
+      if (sync) {
+        this.updateCompletions();
+      } else {
+        var self = this;
+        // always update asynchronously for better user experience and to take some load off the CPU
+        // (not every keystroke will cause a dedicated update)
+        setTimeout(function() {
+          if (self.query == self.lastQuery)
+            return;
+          self.lastQuery = self.query;
+          self.updateCompletions();
+        }, this.refreshInterval);
+      }
     },
 
     initDom: function() {
