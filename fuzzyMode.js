@@ -80,10 +80,9 @@ var fuzzyMode = (function() {
     },
 
     updateSelection: function() {
-      var items = this.completionList.childNodes;
-      for (var i = 0; i < items.length; ++i) {
-        items[i].className = (i == this.selection) ? 'selected' : '';
-      }
+      this.completionList.childNodes.forEach(function(child, i) {
+        child.className = (i == this.selection) ? 'selected' : '';
+      });
     },
 
     onKeydown: function(event) {
@@ -135,7 +134,6 @@ var fuzzyMode = (function() {
 
       else if (keyChar.length == 1) {
         this.query += keyChar;
-
         this.update();
       }
 
@@ -157,19 +155,14 @@ var fuzzyMode = (function() {
 
       var self = this;
       this.completer.filter(this.query, function(completions) {
+        self.completions = completions.slice(0, self.maxResults);
+
         // clear completions
-        self.completions = [];
-        while (self.completionList.hasChildNodes())
-          self.completionList.removeChild(self.completionList.firstChild);
+        self.completionList.innerHTML = self.completions.map(function(completion) {
+          return '<li>' + completion.render() + '</li>';
+        }).join('');
 
-        for (var i = 0; i < completions.length && i < self.maxResults; ++i) {
-          self.completions.push(completions[i]);
-          var li = document.createElement('li');
-          li.innerHTML = completions[i].render();
-          self.completionList.appendChild(li);
-        }
-
-        self.completionList.style.display = completions.length > 0 ? 'block' : 'none';
+        self.completionList.style.display = self.completions.length > 0 ? 'block' : 'none';
         self.updateSelection();
       });
     },
