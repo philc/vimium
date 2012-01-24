@@ -45,7 +45,7 @@ var fuzzyMode = (function() {
 
   /** User interface for fuzzy completion */
   var FuzzyBox = function(maxResults, refreshInterval) {
-    this.prompt = '> ';
+    this.prompt = '>';
     this.maxResults = maxResults;
     this.refreshInterval = refreshInterval;
     this.initDom();
@@ -187,30 +187,17 @@ var fuzzyMode = (function() {
     },
 
     initDom: function() {
-      this.box = document.createElement('div');
-      this.box.id = 'fuzzybox';
-      this.box.className = 'vimiumReset';
-
-      var inputBox = document.createElement('div');
-      inputBox.className = 'input';
-
-      var promptSpan = document.createElement('span');
-      promptSpan.className = 'prompt';
-      promptSpan.textContent = this.prompt;
-
-      this.input = document.createElement('span');
-      this.input.className = 'query';
-
-      inputBox.appendChild(promptSpan);
-      inputBox.appendChild(this.input);
-
-      this.completionList = document.createElement('ul');
-
-      this.box.appendChild(inputBox);
-      this.box.appendChild(this.completionList);
-
-      this.hide();
+      this.box = utils.createElementFromHtml(
+        '<div id="fuzzybox" class="vimiumReset">'+
+          '<div class="input">'+
+            '<span id="fuzzyboxPrompt" class="prompt">' + utils.escapeHtml(this.prompt) + '</span> '+
+            '<span id="fuzzyboxInput" class="query"></span></div>'+
+          '<ul id="fuzzyboxCompletions"></ul></div>');
+      this.box.style.display = 'none';
       document.body.appendChild(this.box);
+
+      this.input          = document.getElementById("fuzzyboxInput");
+      this.completionList = document.getElementById("fuzzyboxCompletions");
     },
   }
 
