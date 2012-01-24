@@ -48,8 +48,6 @@ var fuzzyMode = (function() {
     this.prompt = '> ';
     this.maxResults = maxResults;
     this.refreshInterval = refreshInterval;
-    // query used to filter the last completion result. We need this for asynchronous updating
-    this.lastQuery = '';
     this.initDom();
     this.reset();
   }
@@ -73,6 +71,8 @@ var fuzzyMode = (function() {
 
     reset: function() {
       this.query = '';
+      // query used to filter the last completion result. We need this for asynchronous updating
+      this.lastQuery = null;
       this.completions = [];
       this.selection = 0;
       // force synchronous updating so that the old results will not be flash up shortly
@@ -182,7 +182,7 @@ var fuzzyMode = (function() {
         // always update asynchronously for better user experience and to take some load off the CPU
         // (not every keystroke will cause a dedicated update)
         setTimeout(function() {
-          if (self.query == self.lastQuery)
+          if (self.query === self.lastQuery)
             return;
           self.lastQuery = self.query;
           self.updateCompletions();
