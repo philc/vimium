@@ -123,6 +123,8 @@ var fuzzyMode = (function() {
       // use primary action with Enter. Holding down Shift/Ctrl uses the alternative action
       // (opening in new tab)
       else if (event.keyCode == keyCodes.enter) {
+        this.update(true); // force synchronous update
+
         var alternative = (event.shiftKey || isPrimaryModifierKey(event));
         if (this.reverseAction)
           alternative = !alternative;
