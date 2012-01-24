@@ -34,26 +34,31 @@ var fuzzyMode = (function() {
   }
 
   /** Trigger the fuzzy mode dialog */
-  function start(name, reverseAction) {
+  function start(name, reverseAction, refreshInterval) {
     var completer = getCompleter(name);
     if (!fuzzyBox)
-      fuzzyBox = new FuzzyBox(10, 300);
+      fuzzyBox = new FuzzyBox(10);
     completer.refresh();
     fuzzyBox.setCompleter(completer);
+    fuzzyBox.setRefreshInterval(refreshInterval);
     fuzzyBox.show(reverseAction);
   }
 
   /** User interface for fuzzy completion */
-  var FuzzyBox = function(maxResults, refreshInterval) {
+  var FuzzyBox = function(maxResults) {
     this.prompt = '>';
     this.maxResults = maxResults;
-    this.refreshInterval = refreshInterval;
+    this.refreshInterval = 0;
     this.initDom();
   }
   FuzzyBox.prototype = {
     setCompleter: function(completer) {
       this.completer = completer;
       this.reset();
+    },
+
+    setRefreshInterval: function(refreshInterval) {
+      this.refreshInterval = refreshInterval;
     },
 
     show: function(reverseAction) {
@@ -193,9 +198,9 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start('all',        false); },
-    activateAllNewTab: function() { start('all',        true);  },
-    activateTabs:      function() { start('tabsSorted', false); },
+    activateAll:       function() { start('all',        false, 300); },
+    activateAllNewTab: function() { start('all',        true,  300);  },
+    activateTabs:      function() { start('tabsSorted', false, 0); },
   }
 
 })();
