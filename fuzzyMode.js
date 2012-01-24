@@ -80,9 +80,8 @@ var fuzzyMode = (function() {
     },
 
     updateSelection: function() {
-      this.completionList.childNodes.forEach(function(child, i) {
-        child.className = (i == this.selection) ? 'selected' : '';
-      });
+      for (var i = 0; i < this.completionList.children.length; ++i)
+        this.completionList.children[i].className = (i == this.selection) ? 'selected' : '';
     },
 
     onKeydown: function(event) {
