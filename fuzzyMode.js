@@ -150,12 +150,12 @@ var fuzzyMode = (function() {
 
     updateCompletions: function() {
       var self = this;
-      this.completer.filter(this.query, function(completions) {
-        self.completions = completions.slice(0, self.maxResults);
+      this.completer.filter(this.query, this.maxResults, function(completions) {
+        self.completions = completions;
 
         // clear completions
-        self.completionList.innerHTML = self.completions.map(function(completion) {
-          return '<li>' + completion.render() + '</li>';
+        self.completionList.innerHTML = completions.map(function(completion) {
+          return '<li>' + completion.html + '</li>';
         }).join('');
 
         self.completionList.style.display = self.completions.length > 0 ? 'block' : 'none';
