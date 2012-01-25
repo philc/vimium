@@ -792,6 +792,7 @@ HUD = {
   },
 
   show: function(text) {
+    if (hudDisabled()) return;
     clearTimeout(HUD._showForDurationTimerId);
     HUD.displayElement().innerHTML = text;
     clearInterval(HUD._tweenId);
