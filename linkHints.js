@@ -256,7 +256,8 @@ var linkHints = {
   showMarker: function(linkMarker, matchingCharCount) {
     linkMarker.style.display = "";
     for (var j = 0, count = linkMarker.childNodes.length; j < count; j++)
-      if (j < matchingCharCount) linkMarker.childNodes[j].classList.add("matchingCharacter");
+      (j < matchingCharCount) ? linkMarker.childNodes[j].classList.add("matchingCharacter") :
+                                linkMarker.childNodes[j].classList.remove("matchingCharacter");
   },
 
   hideMarker: function(linkMarker) {
