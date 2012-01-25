@@ -339,7 +339,7 @@
   function getHistory(args, port) {
     useHistory(function(history) {
       port.postMessage({
-        history: history.slice(history.length - args.maxResults)
+        history: history.slice(Math.max(history.length - args.maxResults, 0))
       });
     });
   };
