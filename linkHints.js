@@ -255,10 +255,8 @@ var linkHints = {
    */
   showMarker: function(linkMarker, matchingCharCount) {
     linkMarker.style.display = "";
-    for (var j = 0, count = linkMarker.childNodes.length; j < count; j++) {
-      linkMarker.childNodes[j].classList.add("vimiumReset");
+    for (var j = 0, count = linkMarker.childNodes.length; j < count; j++)
       if (j < matchingCharCount) linkMarker.childNodes[j].classList.add("matchingCharacter");
-    }
   },
 
   hideMarker: function(linkMarker) {
