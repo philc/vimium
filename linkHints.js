@@ -97,7 +97,7 @@ var linkHints = {
     // Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
     this.hintMarkerContainingDiv = document.createElement("div");
     this.hintMarkerContainingDiv.id = "vimiumHintMarkerContainer";
-    this.hintMarkerContainingDiv.className = "vimiumReset internalVimiumHintMarker";
+    this.hintMarkerContainingDiv.className = "vimiumReset";
     for (var i = 0; i < this.hintMarkers.length; i++)
       this.hintMarkerContainingDiv.appendChild(this.hintMarkers[i]);
 
@@ -256,7 +256,7 @@ var linkHints = {
   showMarker: function(linkMarker, matchingCharCount) {
     linkMarker.style.display = "";
     for (var j = 0, count = linkMarker.childNodes.length; j < count; j++)
-      linkMarker.childNodes[j].className = (j >= matchingCharCount) ? "" : "matchingCharacter";
+      linkMarker.childNodes[j].className = (j >= matchingCharCount) ? "vimiumReset" : "vimiumReset matchingCharacter";
   },
 
   hideMarker: function(linkMarker) {
