@@ -322,8 +322,7 @@
     }, function(history) {
       // sorting in ascending order, so we can push new items to the end later
       history.sort(function(a, b) {
-        // visitCount may be undefined
-        return (a.visitCount || 0) - (b.visitCount || 0);
+        return (a.lastVisitTime|| 0) - (b.lastVisitTime || 0);
       });
       cachedHistory = history;
       callback(cachedHistory);

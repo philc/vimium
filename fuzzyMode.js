@@ -12,7 +12,7 @@ var fuzzyMode = (function() {
         '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
         });
     else if (name === 'history')
-      return new completion.FuzzyHistoryCompleter(1500);
+      return new completion.FuzzyHistoryCompleter(2000);
     else if (name === 'bookmarks')
       return new completion.FuzzyBookmarkCompleter();
     else if (name === 'tabs')
