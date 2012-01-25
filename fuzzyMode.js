@@ -119,6 +119,7 @@ var fuzzyMode = (function() {
       // refresh with F5
       else if (keyChar == 'f5') {
         this.completer.refresh();
+        this.lastQuery = null;
         this.update();
       }
 
