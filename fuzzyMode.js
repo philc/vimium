@@ -84,7 +84,8 @@ var fuzzyMode = (function() {
     },
 
     updateSelection: function() {
-      this.selection = Math.min(this.selection, this.completions.length - 1)
+      if (this.completions.length > 0)
+        this.selection = Math.min(this.selection, this.completions.length - 1);
       for (var i = 0; i < this.completionList.children.length; ++i)
         this.completionList.children[i].className = (i == this.selection) ? 'selected' : '';
     },
