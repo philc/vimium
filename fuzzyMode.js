@@ -187,14 +187,14 @@ var fuzzyMode = (function() {
       this.box = utils.createElementFromHtml(
         '<div id="fuzzybox" class="vimiumReset">'+
           '<div class="input">'+
-            '<span id="fuzzyboxPrompt" class="prompt">' + utils.escapeHtml(this.prompt) + '</span> '+
-            '<span id="fuzzyboxInput" class="query"></span></div>'+
-          '<ul id="fuzzyboxCompletions"></ul></div>');
+            '<span class="prompt">' + utils.escapeHtml(this.prompt) + '</span> '+
+            '<span class="query"></span></div>'+
+          '<ul></ul></div>');
       this.box.style.display = 'none';
       document.body.appendChild(this.box);
 
-      this.input          = document.getElementById("fuzzyboxInput");
-      this.completionList = document.getElementById("fuzzyboxCompletions");
+      this.input          = document.querySelector("#fuzzybox .query");
+      this.completionList = document.querySelector("#fuzzybox ul");
     },
   }
 
