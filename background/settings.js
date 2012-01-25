@@ -3,7 +3,7 @@
  */
 var settings = {
 
-  defaultSettings: {
+  defaults: {
     scrollStepSize: 60,
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
@@ -50,14 +50,14 @@ var settings = {
 
   get: function(key) {
     if (!(key in localStorage))
-      return this.defaultSettings[key];
+      return this.defaults[key];
     else
       return JSON.parse(localStorage[key]);
   },
 
   set: function(key, value) {
     // don't store the value if it is equal to the default, so we can change the defaults in the future
-    if (value === this.defaultSettings[key])
+    if (value === this.defaults[key])
       this.clear(key);
     else
       localStorage[key] = JSON.stringify(value);

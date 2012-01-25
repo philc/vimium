@@ -47,6 +47,8 @@ var settings = {
   loadedValues: 0,
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "previousPatterns", "nextPatterns",
                  "findModeRawQuery"],
+  isLoaded: false,
+  eventListeners: {},
 
   init: function () {
     this.port = chrome.extension.connect({ name: "settings" });
@@ -77,13 +79,20 @@ var settings = {
     settings.values[args.key] = args.value;
     // since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
     // for equality so initializeOnReady only runs once
-    if (++settings.loadedValues == settings.valuesToLoad.length)
-      settings.initializeOnReady();
+    if (++settings.loadedValues == settings.valuesToLoad.length) {
+      settings.isLoaded = true;
+      var listener;
+      while (listener = settings.eventListeners["load"].pop())
+        listener();
+    }
   },
 
-  initializeOnReady: function () {
-    linkHints.init();
-  }
+  addEventListener: function(eventName, callback) {
+    if (!(eventName in this.eventListeners))
+      this.eventListeners[eventName] = [];
+    this.eventListeners[eventName].push(callback);
+  },
+
 };
 
 /*
@@ -98,6 +107,7 @@ var googleRegex = /:\/\/[^/]*google[^/]+/;
  * Complete initialization work that sould be done prior to DOMReady.
  */
 function initializePreDomReady() {
+  settings.addEventListener("load", linkHints.init.bind(linkHints));
   settings.load();
 
   checkIfEnabledForUrl();

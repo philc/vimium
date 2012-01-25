@@ -2,7 +2,13 @@
   <head>
     <title>Vimium Options</title>
     <script src="lib/utils.js"></script>
-    <script src="background/settings.js"></script>
+    <script src="lib/keyboardUtils.js"></script>
+    <script src="lib/domUtils.js"></script>
+    <script src="lib/clipboard.js"></script>
+    <script src="linkHints.js"></script>
+    <script src="vimiumFrontend.js"></script>
+    <script src="completionDialog.js"></script>
+    <script src="bookmarks.js"></script>
     <style type="text/css" media="screen">
       body {
         font-family:"helvetica neue", "helvetica", "arial", "sans";
@@ -80,7 +86,7 @@
 
   <script type="text/javascript">
   $ = function(id) { return document.getElementById(id); };
-  var defaultSettings = chrome.extension.getBackgroundPage().defaultSettings;
+  var defaultSettings = chrome.extension.getBackgroundPage().settings.defaults;
 
   var editableFields = ["scrollStepSize", "excludedUrls", "linkHintCharacters", "userDefinedLinkHintCss",
                         "keyMappings", "filterLinkHints", "previousPatterns", "nextPatterns"];
@@ -97,7 +103,10 @@
   };
 
   function initializeOptions() {
-    populateOptions();
+    if (settings.isLoaded)
+      populateOptions();
+    else
+      settings.addEventListener("load", populateOptions);
 
     for (var i = 0; i < editableFields.length; i++) {
       $(editableFields[i]).addEventListener("keyup", onOptionKeyup, false);
