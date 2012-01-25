@@ -69,7 +69,9 @@ function activateBookmarkFindMode() {
         var url = selection.url;
         var isABookmarklet = function(url) { return url.indexOf("javascript:") === 0; }
 
-        if (!self.newTab || isABookmarklet(url))
+        if (isABookmarklet(url))
+          window.location = url;
+        else if (!self.newTab)
           chrome.extension.sendRequest({ handler: "openUrlInCurrentTab", url: url });
         else
           chrome.extension.sendRequest({ handler: "openUrlInNewTab", url: url });
