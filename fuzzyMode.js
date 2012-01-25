@@ -75,8 +75,7 @@ var fuzzyMode = (function() {
 
     reset: function() {
       this.query = '';
-      // query used to filter the last completion result. We need this for asynchronous updating
-      this.lastQuery = null;
+      this.updateTimer = null;
       this.completions = [];
       this.selection = 0;
       // force synchronous updating so that the old results will not be flash up shortly
@@ -121,8 +120,7 @@ var fuzzyMode = (function() {
       // refresh with F5
       else if (keyChar == 'f5') {
         this.completer.refresh();
-        this.lastQuery = null;
-        this.update();
+        this.update(true); // force synchronous update
       }
 
       // use primary action with Enter. Holding down Shift/Ctrl uses the alternative action
@@ -150,6 +148,7 @@ var fuzzyMode = (function() {
 
     updateCompletions: function() {
       var self = this;
+      var start = Date.now();
       this.completer.filter(this.query, this.maxResults, function(completions) {
         self.completions = completions;
 
@@ -157,6 +156,7 @@ var fuzzyMode = (function() {
         self.completionList.innerHTML = completions.map(function(completion) {
           return '<li>' + completion.html + '</li>';
         }).join('');
+        console.log("total update time: " + (Date.now() - start));
 
         self.completionList.style.display = self.completions.length > 0 ? 'block' : 'none';
         self.updateSelection();
@@ -170,16 +170,20 @@ var fuzzyMode = (function() {
       this.input.textContent = this.query;
 
       if (sync) {
+        // cancel scheduled update
+        if (this.updateTimer !== null)
+          window.clearTimeout(this.updateTimer);
         this.updateCompletions();
+      } else if (this.updateTimer !== null) {
+        // an update is already scheduled, don't do anything
+        return;
       } else {
         var self = this;
         // always update asynchronously for better user experience and to take some load off the CPU
         // (not every keystroke will cause a dedicated update)
-        setTimeout(function() {
-          if (self.query === self.lastQuery)
-            return;
-          self.lastQuery = self.query;
+        this.updateTimer = setTimeout(function() {
           self.updateCompletions();
+          self.updateTimer = null;
         }, this.refreshInterval);
       }
     },
@@ -201,8 +205,8 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start('all',        false, 300); },
-    activateAllNewTab: function() { start('all',        true,  300);  },
+    activateAll:       function() { start('all',        false, 100); },
+    activateAllNewTab: function() { start('all',        true,  100);  },
     activateTabs:      function() { start('tabsSorted', false, 0); },
   }
 
