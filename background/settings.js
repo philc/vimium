@@ -8,18 +8,18 @@ var settings = {
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
     userDefinedLinkHintCss:
-      "#vimiumHintMarkerContainer .vimiumHintMarker {" + "\n" +
+      "div > .vimiumHintMarker {" + "\n" +
       "/* linkhint boxes */ " + "\n" +
       "background-color: yellow;" + "\n" +
       "border: 1px solid #E3BE23;" + "\n" +
       "}" + "\n\n" +
-      "#vimiumHintMarkerContainer .vimiumHintMarker span {" + "\n" +
+      "div > .vimiumHintMarker span {" + "\n" +
       "/* linkhint text */ " + "\n" +
       "color: black;" + "\n" +
       "font-weight: bold;" + "\n" +
       "font-size: 12px;" + "\n" +
       "}" + "\n\n" +
-      "#vimiumHintMarkerContainer .vimiumHintMarker > .matchingCharacter {" + "\n" +
+      "div > .vimiumHintMarker > .matchingCharacter {" + "\n" +
       "}",
     excludedUrls: "http*://mail.google.com/*\n" +
                   "http*://www.google.com/reader/*\n",
