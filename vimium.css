@@ -59,6 +59,7 @@ div.internalVimiumHintMarker {
   left: -1px;
   padding: 0 1px;
   box-shadow: rgba(0, 0, 0, 0.3) 2px 2px;
+  white-space: nowrap;
 }
 
 div.internalVimiumHintMarker span {
