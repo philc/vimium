@@ -270,4 +270,8 @@ div.vimium-completions div strong{
 
 div.vimium-completions div.vimium-noResults{
   color:#555;
-};
+}
+
+body.vimiumFindMode ::selection {
+  background: #ff9632;
+}
