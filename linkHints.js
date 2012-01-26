@@ -41,7 +41,7 @@ var linkHints = {
    * The final expression will be something like "//button | //xhtml:button | ..."
    * We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
    */
-  clickableElementsXPath: utils.makeXPath(["a", "area[@href]", "textarea", "button", "select","input[not(@type='hidden')]",
+  clickableElementsXPath: domUtils.makeXPath(["a", "area[@href]", "textarea", "button", "select","input[not(@type='hidden')]",
                              "*[@onclick or @tabindex or @role='link' or @role='button' or " +
                              "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]),
 
@@ -115,14 +115,14 @@ var linkHints = {
    * of digits needed to enumerate all of the links on screen.
    */
   getVisibleClickableElements: function() {
-    var resultSet = utils.evaluateXPath(this.clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+    var resultSet = domUtils.evaluateXPath(this.clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
     var visibleElements = [];
 
     // Find all visible clickable elements.
     for (var i = 0, count = resultSet.snapshotLength; i < count; i++) {
       var element = resultSet.snapshotItem(i);
-      var clientRect = utils.getVisibleClientRect(element, clientRect);
+      var clientRect = domUtils.getVisibleClientRect(element, clientRect);
       if (clientRect !== null)
         visibleElements.push({element: element, rect: clientRect});
 
@@ -204,8 +204,8 @@ var linkHints = {
   activateLink: function(matchedLink, delay) {
     var that = this;
     this.delayMode = true;
-    if (this.isSelectable(matchedLink)) {
-      this.simulateSelect(matchedLink);
+    if (domUtils.isSelectable(matchedLink)) {
+      domUtils.simulateSelect(matchedLink);
       this.deactivateMode(delay, function() { that.delayMode = false; });
     } else {
       if (this.shouldOpenWithQueue) {
@@ -231,23 +231,8 @@ var linkHints = {
     }
   },
 
-  /*
-   * Selectable means the element has a text caret; this is not the same as "focusable".
-   */
-  isSelectable: function(element) {
-    var selectableTypes = ["search", "text", "password"];
-    return (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
-        element.nodeName.toLowerCase() == "textarea";
-  },
-
   copyLinkUrl: function(link) {
     chrome.extension.sendRequest({handler: 'copyLinkUrl', data: link.href});
-  },
-
-  simulateSelect: function(element) {
-    element.focus();
-    // When focusing a textbox, put the selection caret at the end of the textbox's contents.
-    element.setSelectionRange(element.value.length, element.value.length);
   },
 
   /*
@@ -265,16 +250,11 @@ var linkHints = {
   },
 
   simulateClick: function(link) {
-    var event = document.createEvent("MouseEvents");
     // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
     // to open it in a new tab if necessary.
     var metaKey = (platform == "Mac" && linkHints.shouldOpenInNewTab);
     var ctrlKey = (platform != "Mac" && linkHints.shouldOpenInNewTab);
-    event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, ctrlKey, false, false, metaKey, 0, null);
-
-    // Debugging note: Firefox will not execute the link's default action if we dispatch this click event,
-    // but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
-    link.dispatchEvent(event);
+    domUtils.simulateClick(link, { metaKey: metaKey, ctrlKey: ctrlKey });
 
     // TODO(int3): do this for @role='link' and similar elements as well
     var nodeName = link.nodeName.toLowerCase();

@@ -18,6 +18,7 @@
       "matches": ["<all_urls>"],
       "js": ["lib/utils.js",
              "lib/keyboardUtils.js",
+             "lib/domUtils.js",
              "lib/clipboard.js",
              "linkHints.js",
              "vimiumFrontend.js",
