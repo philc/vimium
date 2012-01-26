@@ -877,11 +877,9 @@ function getLinkFromSelection() {
 
 // used by the findAndFollow* functions.
 function followLink(link) {
-  domUtils.simulateClick(link);
-  // blur the element just in case it already has focus. then when we re-focus it, the browser will scroll
-  // such that it is visible.
-  link.blur();
+  link.scrollIntoView();
   link.focus();
+  domUtils.simulateClick(link);
 }
 
 /**
@@ -896,8 +894,20 @@ function findAndFollowLink(linkStrings) {
   var shortestLinks = [];
   var shortestLinkLength = null;
 
-  for (var i = 0, count = links.snapshotLength; i < count; i++) {
+  // at the end of this loop, shortestLinks will be populated with a list of candidates
+  // links lower in the page are more likely to be the ones we want, so we loop through the snapshot backwards
+  for (var i = links.snapshotLength - 1; i >= 0; i--) {
     var link = links.snapshotItem(i);
+
+    // ensure link is visible (we don't mind if it is scrolled offscreen)
+    var boundingClientRect = link.getBoundingClientRect();
+    if (boundingClientRect.width == 0 || boundingClientRect.height == 0)
+      continue;
+    var computedStyle = window.getComputedStyle(link, null);
+    if (computedStyle.getPropertyValue('visibility') != 'visible' ||
+        computedStyle.getPropertyValue('display') == 'none')
+      continue;
+
     var linkMatches = false;
     for (var j = 0; j < linkStrings.length; j++) {
       if (link.innerText.toLowerCase().indexOf(linkStrings[j]) !== -1) {
@@ -917,6 +927,7 @@ function findAndFollowLink(linkStrings) {
     }
   }
 
+  // try to get exact word matches first
   for (var i = 0; i < linkStrings.length; i++)
     for (var j = 0; j < shortestLinks.length; j++) {
       var exactWordRegex = new RegExp("\\b" + linkStrings[i] + "\\b", "i");
