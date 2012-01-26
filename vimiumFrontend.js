@@ -788,7 +788,7 @@ function selectFoundInputElement() {
 
 function findAndFocus(backwards) {
   // check if the query has been changed by a script in another frame
-  var mostRecentQuery = settings.get("findModeRawQuery");
+  var mostRecentQuery = settings.get("findModeRawQuery") || "";
   if (mostRecentQuery !== findModeQuery.rawQuery) {
     findModeQuery.rawQuery = mostRecentQuery;
     updateFindModeQuery();
@@ -796,8 +796,10 @@ function findAndFocus(backwards) {
     return;
   }
 
-  if (!findModeQueryHasResults)
+  if (!findModeQueryHasResults) {
+    HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000);
     return;
+  }
 
   if (findModeQuery.isRegex) {
     if (!backwards) {
