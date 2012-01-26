@@ -973,8 +973,9 @@ function showFindModeHUDForQuery() {
  * We need this so that the find mode HUD doesn't match its own searches.
  */
 function insertSpaces(query) {
-  // &#8203; is a zero-width space
-  return query.split("").join("&#8203");
+  // &#8203; is a zero-width space. the <span>s are necessary because the zero-width space tends to interfere
+  // with subsequent characters in the same text node.
+  return query.split("").join("<span class='vimiumReset'>&#8203</span>");
 }
 
 function enterFindMode() {
