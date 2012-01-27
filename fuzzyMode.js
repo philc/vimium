@@ -1,35 +1,10 @@
 var fuzzyMode = (function() {
   var fuzzyBox = null;  // the dialog instance for this window
-  var completers = {};  // completer cache
+  var completers = { };
 
-  function createCompleter(name) {
-    if (name === 'smart')
-      return new completion.SmartCompleter({
-        'wiki ': [ 'Wikipedia (en)', 'http://en.wikipedia.org/wiki/%s' ],
-        'luck ': [ 'Google Lucky (en)', 'http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky' ],
-        'cc '  : [ 'dict.cc',        'http://www.dict.cc/?s=%s' ],
-        ';'    : [ 'goto',           '%s' ],
-        '?'    : [ 'search',         function(query) { return utils.createSearchUrl(query) } ],
-        });
-    else if (name === 'history')
-      return new completion.FuzzyHistoryCompleter(8000);
-    else if (name === 'bookmarks')
-      return new completion.FuzzyBookmarkCompleter();
-    else if (name === 'tabs')
-      return new completion.FuzzyTabCompleter();
-    else if (name === 'tabsSorted')
-      return new completion.MergingCompleter([getCompleter('tabs')], 0);
-    else if (name === 'all')
-      return new completion.MergingCompleter([
-        getCompleter('smart'),
-        getCompleter('bookmarks'),
-        getCompleter('history'),
-        getCompleter('tabs'),
-        ], 1);
-  }
   function getCompleter(name) {
     if (!(name in completers))
-      completers[name] = createCompleter(name);
+      completers[name] = new completion.BackgroundCompleter(name);
     return completers[name];
   }
 
@@ -70,6 +45,7 @@ var fuzzyMode = (function() {
 
     hide: function() {
       this.box.style.display = 'none';
+      this.completionList.style.display = 'none';
       handlerStack.pop();
     },
 
@@ -78,7 +54,6 @@ var fuzzyMode = (function() {
       this.updateTimer = null;
       this.completions = [];
       this.selection = 0;
-      // force synchronous updating so that the old results will not be flash up shortly
       this.update(true);
     },
 
@@ -90,6 +65,7 @@ var fuzzyMode = (function() {
     },
 
     onKeydown: function(event) {
+      var self = this;
       var keyChar = getKeyChar(event);
 
       if (isEscape(event)) {
@@ -120,20 +96,19 @@ var fuzzyMode = (function() {
       // refresh with F5
       else if (keyChar == 'f5') {
         this.completer.refresh();
-        this.update(true); // force synchronous update
+        this.update(true); // force immediate update
       }
 
       // use primary action with Enter. Holding down Shift/Ctrl uses the alternative action
       // (opening in new tab)
       else if (event.keyCode == keyCodes.enter) {
-        this.update(true); // force synchronous update
-
-        var alternative = (event.shiftKey || isPrimaryModifierKey(event));
-        if (this.reverseAction)
-          alternative = !alternative;
-        this.completions[this.selection].action[alternative ? 1 : 0]();
-        this.hide();
-        this.reset();
+        this.update(true, function() {
+          var alternative = (event.shiftKey || isPrimaryModifierKey(event));
+          if (self.reverseAction)
+            alternative = !alternative;
+          self.completions[self.selection].action[alternative ? 1 : 0]();
+          self.hide();
+        });
       }
 
       else if (keyChar.length == 1) {
@@ -146,34 +121,34 @@ var fuzzyMode = (function() {
       return true;
     },
 
-    updateCompletions: function() {
+    updateCompletions: function(callback) {
       var self = this;
-      var start = Date.now();
+      //var start = Date.now();
       this.completer.filter(this.query, this.maxResults, function(completions) {
         self.completions = completions;
 
-        // clear completions
+        // update completion list with the new data
         self.completionList.innerHTML = completions.map(function(completion) {
           return '<li>' + completion.html + '</li>';
         }).join('');
-        console.log("total update time: " + (Date.now() - start));
 
         self.completionList.style.display = self.completions.length > 0 ? 'block' : 'none';
         self.updateSelection();
+        if (callback) callback();
       });
     },
 
-    update: function(sync) {
-      sync = sync || false; // explicitely default to asynchronous updating
+    update: function(force, callback) {
+      force = force || false; // explicitely default to asynchronous updating
 
       this.query = this.query.replace(/^\s*/, '');
       this.input.textContent = this.query;
 
-      if (sync) {
+      if (force) {
         // cancel scheduled update
         if (this.updateTimer !== null)
           window.clearTimeout(this.updateTimer);
-        this.updateCompletions();
+        this.updateCompletions(callback);
       } else if (this.updateTimer !== null) {
         // an update is already scheduled, don't do anything
         return;
@@ -182,7 +157,7 @@ var fuzzyMode = (function() {
         // always update asynchronously for better user experience and to take some load off the CPU
         // (not every keystroke will cause a dedicated update)
         this.updateTimer = setTimeout(function() {
-          self.updateCompletions();
+          self.updateCompletions(callback);
           self.updateTimer = null;
         }, this.refreshInterval);
       }
@@ -205,9 +180,9 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start('all',        false, 100); },
-    activateAllNewTab: function() { start('all',        true,  100);  },
-    activateTabs:      function() { start('tabsSorted', false, 0); },
+    activateAll:       function() { start('omni', false, 200); },
+    activateAllNewTab: function() { start('omni', true,  200);  },
+    activateTabs:      function() { start('tabs', false,  200);  },
   }
 
 })();
