@@ -282,7 +282,7 @@ function scrollActivatedElementBy(x, y) {
   }
 
   if (x !== 0) {
-    element = lastElement;
+    element = activatedElement;
     do {
       var oldScrollLeft = element.scrollLeft;
       element.scrollLeft += x;
