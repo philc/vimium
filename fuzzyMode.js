@@ -175,14 +175,15 @@ var fuzzyMode = (function() {
 
       this.input          = document.querySelector("#fuzzybox .query");
       this.completionList = document.querySelector("#fuzzybox ul");
+      this.completionList.style.display = 'none';
     },
   }
 
   // public interface
   return {
-    activateAll:       function() { start('omni', false, 200); },
-    activateAllNewTab: function() { start('omni', true,  200);  },
-    activateTabs:      function() { start('tabs', false,  200);  },
+    activateAll:       function() { start('omni', false, 100); },
+    activateAllNewTab: function() { start('omni', true,  100);  },
+    activateTabs:      function() { start('tabs', false, 0);  },
   }
 
 })();
