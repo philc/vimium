@@ -61,12 +61,14 @@
       ';'    : [ 'goto',              '%s' ],
       '?'    : [ 'search',            function(query) { return utils.createSearchUrl(query) } ],
       }),
+    domain:    new completion.DomainCompletionSource(),
     bookmarks: new completion.FuzzyBookmarkCompletionSource(),
     history:   new completion.FuzzyHistoryCompletionSource(20000),
     tabs:      new completion.FuzzyTabCompletionSource(),
   }
   var completers = {
     omni: new completion.MultiCompleter([
+                  completionSources.domain,
                   completionSources.smart,
                   completionSources.bookmarks,
                   completionSources.history,
