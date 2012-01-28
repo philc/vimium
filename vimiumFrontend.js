@@ -278,7 +278,7 @@ function scrollActivatedElementBy(x, y) {
       var lastElement = element;
       // we may have an orphaned element. if so, just scroll the body element.
       element = element.parentElement || document.body;
-    } while(lastElement.scrollTop == oldScrollTop && lastElement.nodeName.toLowerCase() != 'body');
+    } while(lastElement.scrollTop == oldScrollTop && lastElement != document.body);
   }
 
   if (x !== 0) {
@@ -288,7 +288,7 @@ function scrollActivatedElementBy(x, y) {
       element.scrollLeft += x;
       var lastElement = element;
       element = element.parentElement || document.body;
-    } while(lastElement.scrollLeft == oldScrollLeft && lastElement.nodeName.toLowerCase() != 'body');
+    } while(lastElement.scrollLeft == oldScrollLeft && lastElement != document.body);
   }
 
   // if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
@@ -868,7 +868,7 @@ function performBackwardsFind() { findAndFocus(true); }
 
 function getLinkFromSelection() {
   var node = window.getSelection().anchorNode;
-  while (node && node.nodeName.toLowerCase() !== 'body') {
+  while (node && node !== document.body) {
     if (node.nodeName.toLowerCase() === 'a') return node;
     node = node.parentNode;
   }
