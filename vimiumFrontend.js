@@ -728,16 +728,7 @@ function performFindInPlace() {
   var cachedScrollX = window.scrollX;
   var cachedScrollY = window.scrollY;
 
-  if (findModeQuery.isRegex) {
-    if (!findModeQuery.regexMatches) {
-      findModeQueryHasResults = false;
-      return;
-    }
-    else
-      var query = findModeQuery.regexMatches[0];
-  }
-  else
-    var query = findModeQuery.parsedQuery;
+  var query = findModeQuery.isRegex ? getNextQueryFromRegexMatches(0) : findModeQuery.parsedQuery;
 
   // Search backwards first to "free up" the current word as eligible for the real forward search. This allows
   // us to search in place without jumping around between matches as the query grows.
@@ -810,40 +801,38 @@ function selectFoundInputElement() {
   }
 }
 
+function getNextQueryFromRegexMatches(stepSize) {
+  if (!findModeQuery.regexMatches)
+    return ""; // find()ing an empty query always returns false
+
+  var totalMatches = findModeQuery.regexMatches.length;
+  findModeQuery.activeRegexIndex += stepSize + totalMatches;
+  findModeQuery.activeRegexIndex %= totalMatches;
+
+  return findModeQuery.regexMatches[findModeQuery.activeRegexIndex];
+}
+
 function findAndFocus(backwards) {
   // check if the query has been changed by a script in another frame
   var mostRecentQuery = settings.get("findModeRawQuery") || "";
   if (mostRecentQuery !== findModeQuery.rawQuery) {
     findModeQuery.rawQuery = mostRecentQuery;
     updateFindModeQuery();
-    performFindInPlace();
-    return;
   }
 
-  if (!findModeQueryHasResults) {
-    HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000);
-    return;
-  }
-
-  if (findModeQuery.isRegex) {
-    if (!backwards) {
-      if (++findModeQuery.activeRegexIndex == findModeQuery.regexMatches.length)
-        findModeQuery.activeRegexIndex = 0;
-    }
-    else {
-      if (--findModeQuery.activeRegexIndex == -1)
-        findModeQuery.activeRegexIndex = findModeQuery.regexMatches.length - 1;
-    }
-    var query = findModeQuery.regexMatches[findModeQuery.activeRegexIndex];
-  }
-  else
-    var query = findModeQuery.parsedQuery;
+  var query = findModeQuery.isRegex ? getNextQueryFromRegexMatches(backwards ? -1 : 1) :
+                                      findModeQuery.parsedQuery;
 
   findModeQueryHasResults = executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase });
 
+  if (!findModeQueryHasResults) {
+    HUD.showForDuration(insertSpaces("No matches for '" + findModeQuery.rawQuery + "'"), 1000);
+    return;
+  }
+
   // if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   // mode
-  var elementCanTakeInput = findModeQueryHasResults && domUtils.isSelectable(document.activeElement) &&
+  var elementCanTakeInput = domUtils.isSelectable(document.activeElement) &&
     isDOMDescendant(findModeAnchorNode, document.activeElement);
   if (elementCanTakeInput) {
     handlerStack.push({
