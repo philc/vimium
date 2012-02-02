@@ -170,7 +170,9 @@ function initializePreDomReady() {
       });
     } else if (port.name == "setScrollPosition") {
       port.onMessage.addListener(function(args) {
-        if (args.scrollX > 0 || args.scrollY > 0) { window.scrollBy(args.scrollX, args.scrollY); }
+        if (args.scrollX > 0 || args.scrollY > 0) {
+          domUtils.documentReady(function() { window.scrollBy(args.scrollX, args.scrollY); });
+        }
       });
     } else if (port.name == "returnCurrentTabUrl") {
       port.onMessage.addListener(function(args) {
