@@ -59,7 +59,7 @@ div.internalVimiumHintMarker {
   white-space: nowrap;
 
   font-size: 11px;
-  padding: 1px 3px 0px 3px;
+  padding: 0px 2px 1px 2px;
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#FFF785), color-stop(100%,#FFC542));
   border: solid 1px #C38A22;
   border-radius: 3px;
