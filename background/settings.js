@@ -7,6 +7,7 @@ var settings = {
     scrollStepSize: 60,
     linkHintCharacters: "sadfjklewcmpgh",
     filterLinkHints: false,
+    hideHud: false,
     userDefinedLinkHintCss:
       "div > .vimiumHintMarker {" + "\n" +
       "/* linkhint boxes */ " + "\n" +

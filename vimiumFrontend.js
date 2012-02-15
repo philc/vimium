@@ -45,8 +45,8 @@ var settings = {
   port: null,
   values: {},
   loadedValues: 0,
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "previousPatterns", "nextPatterns",
-                 "findModeRawQuery"],
+  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "hideHud", "previousPatterns",
+      "nextPatterns", "findModeRawQuery"],
   isLoaded: false,
   eventListeners: {},
 
