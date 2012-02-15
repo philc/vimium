@@ -144,6 +144,15 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.31 (unreleased)
+- Improve style of link hints, and use fewer characters for hints.
+- Add an option to hide the heads up display (HUD). Notably, the HUD obscures Facebook Chat's textbox.
+- Detection and following of next / previous links has been improved.
+- Addition of g0 and g$ commands, for switching tabs.
+- Addition of p/P commands for URL pasting.
+- A new find mode which optionally supports case sensitivity and regular expressions.
+- Bug fixes.
+
 1.30 (12/04/2011)
 
 - Support for image maps in link hints.
