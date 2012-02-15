@@ -89,7 +89,7 @@
   var defaultSettings = chrome.extension.getBackgroundPage().settings.defaults;
 
   var editableFields = ["scrollStepSize", "excludedUrls", "linkHintCharacters", "userDefinedLinkHintCss",
-                        "keyMappings", "filterLinkHints", "previousPatterns", "nextPatterns"];
+                        "keyMappings", "filterLinkHints", "previousPatterns", "nextPatterns", "hideHud"];
 
   var canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"];
 
@@ -306,6 +306,19 @@
               </div>
             </div>
             <input id="nextPatterns" type="text" style="width:320px" />
+        </td>
+      </tr>
+      <tr class="advancedOption">
+        <td class="caption">Hide HUD notifications</td>
+        <td verticalAlign="top" class="booleanOption">
+          <label>
+            <div class="help">
+              <div class="example">
+                Hide the notification HUD that appears on the bottom of the screen.
+              </div>
+            </div>
+            <input id="hideHud" type="checkbox"/>
+          </label>
         </td>
       </tr>
     </table>
