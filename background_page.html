@@ -143,7 +143,8 @@
                                         showUnboundCommands, showCommandNames));
     dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
     dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help");
-    dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}", settings.get("helpDialog_showAdvancedCommands"));
+    dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}",
+        settings.get("helpDialog_showAdvancedCommands"));
     return dialogHtml;
   }
 
