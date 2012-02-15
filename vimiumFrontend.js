@@ -1043,7 +1043,7 @@ HUD = {
   },
 
   show: function(text) {
-    if (!hudEnabled()) return;
+    if (!HUD.enabled()) return;
     clearTimeout(HUD._showForDurationTimerId);
     HUD.displayElement().innerHTML = text;
     clearInterval(HUD._tweenId);
@@ -1113,7 +1113,11 @@ HUD = {
     this.isShowing = false;
   },
 
-  isReady: function() { return document.body != null; }
+  isReady: function() { return document.body != null; },
+
+  /* A preference which can be toggled in the Options page. */
+  enabled: function() { return settings.get("hideHud") !== "true"; }
+
 };
 
 Tween = {
