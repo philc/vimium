@@ -145,6 +145,7 @@ Release Notes
 -------------
 
 1.31 (unreleased)
+
 - Improve style of link hints, and use fewer characters for hints.
 - Add an option to hide the heads up display (HUD). Notably, the HUD obscures Facebook Chat's textbox.
 - Detection and following of next / previous links has been improved.
