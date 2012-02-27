@@ -188,7 +188,7 @@ function initializeWhenEnabled() {
   document.addEventListener("keypress", onKeypress, true);
   document.addEventListener("keyup", onKeyup, true);
   document.addEventListener("focus", onFocusCapturePhase, true);
-  window.addEventListener("blur", onBlurCapturePhase, true);
+  document.addEventListener("blur", onBlurCapturePhase, true);
   document.addEventListener("DOMActivate", onDOMActivate, true);
   enterInsertModeIfElementIsFocused();
 }
@@ -563,12 +563,7 @@ function onFocusCapturePhase(event) {
 }
 
 function onBlurCapturePhase(event) {
-  if (event.target == window)
-    // At this point, we will have exited insert mode already, but the browser remembers which element last
-    // had focus, and fires a focus event on it when the window regains focus. We blur this element to prevent
-    // implicit insert mode from reactivating when we switch back to this tab.
-    document.activeElement.blur();
-  else if (isFocusable(event.target))
+  if (isFocusable(event.target))
     exitInsertMode(event.target);
 }
 
