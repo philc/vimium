@@ -135,11 +135,6 @@ function initializePreDomReady() {
         focusThisFrame(request.highlight);
     } else if (request.name == "refreshCompletionKeys") {
       refreshCompletionKeys(request);
-    } else if (request.name == "exitImplicitInsertMode") {
-      if (!HUD.isShowing) {
-        document.activeElement.blur();
-        exitInsertMode();
-      }
     }
     sendResponse({}); // Free up the resources used by this open connection.
   });
@@ -193,7 +188,7 @@ function initializeWhenEnabled() {
   document.addEventListener("keypress", onKeypress, true);
   document.addEventListener("keyup", onKeyup, true);
   document.addEventListener("focus", onFocusCapturePhase, true);
-  document.addEventListener("blur", onBlurCapturePhase, true);
+  window.addEventListener("blur", onBlurCapturePhase, true);
   document.addEventListener("DOMActivate", onDOMActivate, true);
   enterInsertModeIfElementIsFocused();
 }
@@ -568,7 +563,12 @@ function onFocusCapturePhase(event) {
 }
 
 function onBlurCapturePhase(event) {
-  if (isFocusable(event.target))
+  if (event.target == window)
+    // At this point, we will have exited insert mode already, but the browser remembers which element last
+    // had focus, and fires a focus event on it when the window regains focus. We blur this element to prevent
+    // implicit insert mode from reactivating when we switch back to this tab.
+    document.activeElement.blur();
+  else if (isFocusable(event.target))
     exitInsertMode(event.target);
 }
 
@@ -1009,7 +1009,6 @@ HUD = {
   _tweenId: -1,
   _displayElement: null,
   _upgradeNotificationElement: null,
-  isShowing: false,
 
   // This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   // test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
@@ -1027,7 +1026,6 @@ HUD = {
     clearInterval(HUD._tweenId);
     HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150);
     HUD.displayElement().style.display = "";
-    this.isShowing = true;
   },
 
   showUpgradeNotification: function(version) {
@@ -1088,7 +1086,6 @@ HUD = {
     else
       HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
         function() { HUD.displayElement().style.display = "none"; });
-    this.isShowing = false;
   },
 
   isReady: function() { return document.body != null; },
