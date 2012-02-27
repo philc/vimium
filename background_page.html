@@ -38,7 +38,6 @@
     openOptionsPageInNewTab: openOptionsPageInNewTab,
     registerFrame: registerFrame,
     frameFocused: handleFrameFocused,
-    focusTopFrame: focusTopFrame,
     upgradeNotificationClosed: upgradeNotificationClosed,
     updateScrollPosition: handleUpdateScrollPosition,
     copyToClipboard: copyToClipboard,
@@ -629,7 +628,6 @@
 
     if (request.is_top) {
       focusedFrame = request.frameId;
-      framesForTab[sender.tab.id].topId = request.frameId;
       framesForTab[sender.tab.id].total = request.total;
     }
 
@@ -655,11 +653,6 @@
     }
 
     chrome.tabs.sendRequest(tabId, { name: "focusFrame", frameId: mainFrameId, highlight: false });
-  }
-
-  function focusTopFrame(request, sender) {
-    var tabId = sender.tab.id;
-    chrome.tabs.sendRequest(tabId, { name: "focusFrame", frameId: framesForTab[tabId].topId, highlight: true });
   }
 
   function handleFrameFocused(request, sender) {

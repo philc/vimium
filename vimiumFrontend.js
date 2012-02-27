@@ -517,8 +517,6 @@ function onKeydown(event) {
     }
     else if (isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
-      handleEscapeForNormalMode();
-      suppressEvent(event);
     }
   }
 
@@ -1001,15 +999,6 @@ function hideHelpDialog(clickEvent) {
     helpDialog.parentNode.removeChild(helpDialog);
   if (clickEvent)
     clickEvent.preventDefault();
-}
-
-// do our best to return the document to its 'default' state.
-function handleEscapeForNormalMode() {
-  window.getSelection().collapse();
-  if (document.activeElement !== document.body)
-    document.activeElement.blur();
-  else if (window.top !== window.self)
-    chrome.extension.sendRequest({ handler: "focusTopFrame" });
 }
 
 /*
