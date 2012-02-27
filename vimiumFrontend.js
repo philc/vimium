@@ -1086,7 +1086,7 @@ HUD = {
   isReady: function() { return document.body != null; },
 
   /* A preference which can be toggled in the Options page. */
-  enabled: function() { return settings.get("hideHud") !== "true"; }
+  enabled: function() { return settings.get("hideHud"); }
 
 };
 

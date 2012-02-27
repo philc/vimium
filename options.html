@@ -120,7 +120,8 @@
   }
 
   function onOptionKeyup(event) {
-    if (event.target.getAttribute("savedValue") != event.target.value)
+    if (event.target.getAttribute("type") !== "checkbox" &&
+        event.target.getAttribute("savedValue") != event.target.value)
       enableSaveButton();
   }
 
@@ -140,7 +141,7 @@
 
       var fieldValue;
       if (field.getAttribute("type") == "checkbox") {
-        fieldValue = field.checked ? "true" : "false";
+        fieldValue = field.checked;
       } else {
         fieldValue = field.value.trim();
         field.value = fieldValue;
@@ -181,11 +182,11 @@
 
   function setFieldValue(field, value) {
     if (field.getAttribute('type') == 'checkbox')
-      field.checked = value == "true";
-    else
+      field.checked = value;
+    else {
       field.value = value;
-
-    field.setAttribute("savedValue", value);
+      field.setAttribute("savedValue", value);
+    }
   }
 
   function openAdvancedOptions(event) {

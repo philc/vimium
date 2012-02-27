@@ -43,7 +43,11 @@ var settings = {
     // 1.31 was also the version where we converted all localStorage values to JSON.
     if (!this.has("settingsVersion")) {
       for (var key in localStorage) {
-        localStorage[key] = JSON.stringify(localStorage[key]);
+        // filterLinkHints' checkbox state used to be stored as a string
+        if (key == "filterLinkHints")
+          localStorage[key] = localStorage[key] === "true" ? true : false;
+        else
+          localStorage[key] = JSON.stringify(localStorage[key]);
       }
       this.set("settingsVersion", utils.getCurrentVersion());
     }

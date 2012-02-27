@@ -33,7 +33,7 @@ var linkHints = {
     this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
     this.onKeyPressInMode = this.onKeyPressInMode.bind(this);
     this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
-    this.markerMatcher = settings.get('filterLinkHints') == "true" ? filterHints : alphabetHints;
+    this.markerMatcher = settings.get('filterLinkHints') ? filterHints : alphabetHints;
   },
 
   /*
