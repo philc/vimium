@@ -253,46 +253,48 @@ function onDOMActivate(event) {
  * activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
  * input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
  */
-function scrollActivatedElementBy(x, y) {
+function scrollActivatedElementBy(direction, amount) {
   // if this is called before domReady, just use the window scroll function
   if (!document.body) {
-    window.scrollBy(x, y);
+    if (direction === "x")
+      window.scrollBy(amount, 0);
+    else // "y"
+      window.scrollBy(0, amount);
     return;
   }
 
-  if (!activatedElement || domUtils.getVisibleClientRect(activatedElement) === null)
+  // TODO refactor and put this together with the code in getVisibleClientRect
+  function isRendered(element) {
+    var computedStyle = window.getComputedStyle(element, null);
+    return !(computedStyle.getPropertyValue('visibility') != 'visible' ||
+        computedStyle.getPropertyValue('display') == 'none');
+  }
+
+  if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body;
+
+  scrollName = direction === "x" ? "scrollLeft" : "scrollTop";
 
   // Chrome does not report scrollHeight accurately for nodes with pseudo-elements of height 0 (bug 110149).
   // Therefore we just try to increase scrollTop blindly -- if it fails we know we have reached the end of the
   // content.
-  if (y !== 0) {
+  if (amount !== 0) {
     var element = activatedElement;
     do {
-      var oldScrollTop = element.scrollTop;
-      element.scrollTop += y;
+      var oldScrollValue = element[scrollName];
+      element[scrollName] += amount;
       var lastElement = element;
       // we may have an orphaned element. if so, just scroll the body element.
       element = element.parentElement || document.body;
-    } while(lastElement.scrollTop == oldScrollTop && lastElement != document.body);
-  }
-
-  if (x !== 0) {
-    element = activatedElement;
-    do {
-      var oldScrollLeft = element.scrollLeft;
-      element.scrollLeft += x;
-      var lastElement = element;
-      element = element.parentElement || document.body;
-    } while(lastElement.scrollLeft == oldScrollLeft && lastElement != document.body);
+    } while(lastElement[scrollName] == oldScrollValue && lastElement != document.body);
   }
 
   // if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
   // position will not provide any more visual feedback to the user. therefore we deactivate it so that
   // subsequent scrolls only move the parent element.
   var rect = activatedElement.getBoundingClientRect();
-  if (rect.top < 0 || rect.top > window.innerHeight ||
-      rect.left < 0 || rect.left > window.innerWidth)
+  if (rect.bottom < 0 || rect.top > window.innerHeight ||
+      rect.right < 0 || rect.left > window.innerWidth)
     activatedElement = lastElement;
 }
 
@@ -300,14 +302,14 @@ function scrollToBottom() { window.scrollTo(window.pageXOffset, document.body.sc
 function scrollToTop() { window.scrollTo(window.pageXOffset, 0); }
 function scrollToLeft() { window.scrollTo(0, window.pageYOffset); }
 function scrollToRight() { window.scrollTo(document.body.scrollWidth, window.pageYOffset); }
-function scrollUp() { scrollActivatedElementBy(0, -1 * settings.get("scrollStepSize")); }
-function scrollDown() { scrollActivatedElementBy(0, parseFloat(settings.get("scrollStepSize"))); }
-function scrollPageUp() { scrollActivatedElementBy(0, -1 * window.innerHeight / 2); }
-function scrollPageDown() { scrollActivatedElementBy(0, window.innerHeight / 2); }
-function scrollFullPageUp() { scrollActivatedElementBy(0, -window.innerHeight); }
-function scrollFullPageDown() { scrollActivatedElementBy(0, window.innerHeight); }
-function scrollLeft() { scrollActivatedElementBy(-1 * settings.get("scrollStepSize"), 0); }
-function scrollRight() { scrollActivatedElementBy(parseFloat(settings.get("scrollStepSize")), 0); }
+function scrollUp() { scrollActivatedElementBy("y", -1 * settings.get("scrollStepSize")); }
+function scrollDown() { scrollActivatedElementBy("y", parseFloat(settings.get("scrollStepSize"))); }
+function scrollPageUp() { scrollActivatedElementBy("y", -1 * window.innerHeight / 2); }
+function scrollPageDown() { scrollActivatedElementBy("y", window.innerHeight / 2); }
+function scrollFullPageUp() { scrollActivatedElementBy("y", -window.innerHeight); }
+function scrollFullPageDown() { scrollActivatedElementBy("y", window.innerHeight); }
+function scrollLeft() { scrollActivatedElementBy("x", -1 * settings.get("scrollStepSize")); }
+function scrollRight() { scrollActivatedElementBy("x", parseFloat(settings.get("scrollStepSize"))); }
 
 function focusInput(count) {
   var results = domUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
