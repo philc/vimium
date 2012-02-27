@@ -101,7 +101,6 @@ var settings = {
 frameId = Math.floor(Math.random()*999999999)
 
 var hasModifiersRegex = /^<([amc]-)+.>/;
-var googleRegex = /:\/\/[^/]*google[^/]+/;
 
 /*
  * Complete initialization work that sould be done prior to DOMReady.
@@ -484,11 +483,7 @@ function onKeydown(event) {
       if (isEditable(event.srcElement))
         event.srcElement.blur();
       exitInsertMode();
-
-      // Added to prevent Google Instant from reclaiming the keystroke and putting us back into the search
-      // box.
-      if (isGoogleSearch())
-        event.stopPropagation();
+      suppressEvent(event);
     }
   }
   else if (findMode) {
@@ -555,12 +550,6 @@ function checkIfEnabledForUrl() {
       // Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide();
   });
-}
-
-// TODO(ilya): This just checks if "google" is in the domain name. Probably should be more targeted.
-function isGoogleSearch() {
-  var url = window.location.toString();
-  return !!url.match(googleRegex);
 }
 
 function refreshCompletionKeys(response) {
