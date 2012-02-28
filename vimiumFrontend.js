@@ -925,7 +925,7 @@ function findAndFollowLink(linkStrings) {
   return false;
 }
 
-// Shamelessly stolen from http://j.mp/xgN3Zp
+// From http://j.mp/xgN3Zp
 function getTextInElement(el) {
   var text = '';
   // Text node (3) or CDATA node (4) - return its text
