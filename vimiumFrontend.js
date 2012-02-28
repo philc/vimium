@@ -887,14 +887,14 @@ function findAndFollowLink(linkStrings) {
 
     var linkMatches = false;
     for (var j = 0; j < linkStrings.length; j++) {
-      if (link.innerText.toLowerCase().indexOf(linkStrings[j]) !== -1) {
+      if (getTextInElement(link).toLowerCase().indexOf(linkStrings[j]) !== -1) {
         linkMatches = true;
         break;
       }
     }
     if (!linkMatches) continue;
 
-    var wordCount = link.innerText.trim().split(/\s+/).length;
+    var wordCount = getTextInElement(link).trim().split(/\s+/).length;
     if (shortestLinkLength === null || wordCount < shortestLinkLength) {
       shortestLinkLength = wordCount;
       shortestLinks = [ link ];
@@ -908,7 +908,7 @@ function findAndFollowLink(linkStrings) {
   for (var i = 0; i < linkStrings.length; i++)
     for (var j = 0; j < shortestLinks.length; j++) {
       var exactWordRegex = new RegExp("\\b" + linkStrings[i] + "\\b", "i");
-      if (exactWordRegex.test(shortestLinks[j].innerText)) {
+      if (exactWordRegex.test(getTextInElement(shortestLinks[j]))) {
         followLink(shortestLinks[j]);
         return true;
       }
@@ -916,13 +916,36 @@ function findAndFollowLink(linkStrings) {
 
   for (var i = 0; i < linkStrings.length; i++)
     for (var j = 0; j < shortestLinks.length; j++) {
-      if (shortestLinks[j].innerText.toLowerCase().indexOf(linkStrings[i]) !== -1) {
+      if (getTextInElement(shortestLinks[j]).toLowerCase().indexOf(linkStrings[i]) !== -1) {
         followLink(shortestLinks[j]);
         return true;
       }
     }
 
   return false;
+}
+
+// Shamelessly stolen from http://j.mp/xgN3Zp
+function getTextInElement(el) {
+  var text = '';
+  // Text node (3) or CDATA node (4) - return its text
+  if ( (el.nodeType === 3) || (el.nodeType === 4) ) {
+      text = el.nodeValue;
+  // If node is an element (1) and an img, input[type=image], or area element, return its alt text
+  } else if ( (el.nodeType === 1) && (
+          (el.tagName.toLowerCase() == 'img') ||
+          (el.tagName.toLowerCase() == 'area') ||
+          ((el.tagName.toLowerCase() == 'input') && el.getAttribute('type') && (el.getAttribute('type').toLowerCase() == 'image'))
+          ) ) {
+      text = el.getAttribute('alt') || '';
+  // Traverse children unless this is a script or style element
+  } else if ( (el.nodeType === 1) && !el.tagName.match(/^(script|style)$/i) ) {
+      var children = el.childNodes;
+      for (var i = 0, l = children.length; i < l; i++) {
+          text += getTextInElement(children[i]);
+      }
+  }
+  return text;
 }
 
 function findAndFollowRel(value) {
