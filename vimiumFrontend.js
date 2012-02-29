@@ -853,10 +853,16 @@ function getLinkFromSelection() {
 }
 
 // used by the findAndFollow* functions.
-function followLink(link) {
-  link.scrollIntoView();
-  link.focus();
-  domUtils.simulateClick(link);
+function followLink(linkElement) {
+  if (linkElement.nodeName.toLowerCase() === 'link')
+    window.location.href = linkElement.href;
+  else {
+    // if we can click on it, don't simply set location.href: some pages listen for click events to fire off
+    // AJAX calls.
+    linkElement.scrollIntoView();
+    linkElement.focus();
+    domUtils.simulateClick(linkElement);
+  }
 }
 
 /**
