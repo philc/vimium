@@ -857,8 +857,8 @@ function followLink(linkElement) {
   if (linkElement.nodeName.toLowerCase() === 'link')
     window.location.href = linkElement.href;
   else {
-    // if we can click on it, don't simply set location.href: some pages listen for click events to fire off
-    // AJAX calls.
+    // if we can click on it, don't simply set location.href: some next/prev links are meant to trigger AJAX
+    // calls, like the 'more' button on GitHub's newsfeed.
     linkElement.scrollIntoView();
     linkElement.focus();
     domUtils.simulateClick(linkElement);
