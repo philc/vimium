@@ -866,18 +866,17 @@ function followLink(linkElement) {
 }
 
 /**
- * Find and follow the shortest link (shortest == fewest words) which matches any one of a list of strings.
- * If there are multiple shortest links, strings are prioritized for exact word matches, followed by their
- * position in :linkStrings.  Practically speaking, this means we favor 'next page' over 'the next big thing',
- * and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
+ * Find and follow a link which matches any one of a list of strings. If there are multiple such links, they
+ * are prioritized for shortness, by their position in :linkStrings, how far down the page they are located,
+ * and finally by whether the match is exact. Practically speaking, this means we favor 'next page' over 'the
+ * next big thing', and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
  */
 function findAndFollowLink(linkStrings) {
   var linksXPath = domUtils.makeXPath(["a", "*[@onclick or @role='link']"]);
   var links = domUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
-  var shortestLinks = [];
-  var shortestLinkLength = null;
+  var candidateLinks = [];
 
-  // at the end of this loop, shortestLinks will be populated with a list of candidates
+  // at the end of this loop, candidateLinks will contain all visible links that match our patterns
   // links lower in the page are more likely to be the ones we want, so we loop through the snapshot backwards
   for (var i = links.snapshotLength - 1; i >= 0; i--) {
     var link = links.snapshotItem(i);
@@ -900,30 +899,40 @@ function findAndFollowLink(linkStrings) {
     }
     if (!linkMatches) continue;
 
-    var wordCount = link.innerText.trim().split(/\s+/).length;
-    if (shortestLinkLength === null || wordCount < shortestLinkLength) {
-      shortestLinkLength = wordCount;
-      shortestLinks = [ link ];
-    }
-    else if (wordCount === shortestLinkLength) {
-      shortestLinks.push(link);
-    }
+    candidateLinks.push(link);
   }
+
+  if (candidateLinks.length === 0) return;
+
+  function wordCount(link) { return link.innerText.trim().split(/\s+/).length; }
+
+  // We can use this trick to ensure that Array.sort is stable. We need this property to retain the reverse
+  // in-page order of the links.
+  candidateLinks.forEach(function(a,i){ a.originalIndex = i; });
+
+  // favor shorter links, and ignore those that are more than one word longer than the shortest link
+  candidateLinks =
+    candidateLinks
+      .sort(function(a,b) {
+        var wcA = wordCount(a), wcB = wordCount(b);
+        return wcA === wcB ? a.originalIndex - b.originalIndex : wcA - wcB;
+      })
+      .filter(function(a){return wordCount(a) <= wordCount(candidateLinks[0]) + 1});
 
   // try to get exact word matches first
   for (var i = 0; i < linkStrings.length; i++)
-    for (var j = 0; j < shortestLinks.length; j++) {
+    for (var j = 0; j < candidateLinks.length; j++) {
       var exactWordRegex = new RegExp("\\b" + linkStrings[i] + "\\b", "i");
-      if (exactWordRegex.test(shortestLinks[j].innerText)) {
-        followLink(shortestLinks[j]);
+      if (exactWordRegex.test(candidateLinks[j].innerText)) {
+        followLink(candidateLinks[j]);
         return true;
       }
     }
 
   for (var i = 0; i < linkStrings.length; i++)
-    for (var j = 0; j < shortestLinks.length; j++) {
-      if (shortestLinks[j].innerText.toLowerCase().indexOf(linkStrings[i]) !== -1) {
-        followLink(shortestLinks[j]);
+    for (var j = 0; j < candidateLinks.length; j++) {
+      if (candidateLinks[j].innerText.toLowerCase().indexOf(linkStrings[i]) !== -1) {
+        followLink(candidateLinks[j]);
         return true;
       }
     }
