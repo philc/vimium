@@ -144,7 +144,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.31 (unreleased)
+1.31 (02/28/2012)
 
 - Improve style of link hints, and use fewer characters for hints.
 - Add an option to hide the heads up display (HUD). Notably, the HUD obscures Facebook Chat's textbox.
