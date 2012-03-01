@@ -925,7 +925,7 @@ function findAndFollowLink(linkStrings) {
   return false;
 }
 
-// From http://j.mp/xgN3Zp
+// Adapted from http://j.mp/xgN3Zp
 function getTextInElement(el) {
   var text = '';
   // Text node (3) or CDATA node (4) - return its text
@@ -938,8 +938,8 @@ function getTextInElement(el) {
           ((el.tagName.toLowerCase() == 'input') && el.getAttribute('type') && (el.getAttribute('type').toLowerCase() == 'image'))
           ) ) {
       text = el.getAttribute('alt') || '';
-  // Traverse children unless this is a script or style element
-  } else if ( (el.nodeType === 1) && !el.tagName.match(/^(script|style)$/i) ) {
+  // Traverse children
+  } else if ( (el.nodeType === 1) ) {
       var children = el.childNodes;
       for (var i = 0, l = children.length; i < l; i++) {
           text += getTextInElement(children[i]);
