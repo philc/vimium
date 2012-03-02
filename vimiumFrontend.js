@@ -32,7 +32,8 @@ var activatedElement;
 var textInputXPath = (function() {
   var textInputTypes = ["text", "search", "email", "url", "number", "password"];
   var inputElements = ["input[" +
-    textInputTypes.map(function (type) { return '@type="' + type + '"'; }).join(" or ") + "or not(@type)]",
+    "(" + textInputTypes.map(function(type) {return '@type="' + type + '"'}).join(" or ") + "or not(@type))" +
+    " and not(@disabled or @readonly)]",
     "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"];
   return domUtils.makeXPath(inputElements);
 })();
