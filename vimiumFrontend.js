@@ -408,10 +408,8 @@ function onKeypress(event) {
         handleKeyCharForFindMode(keyChar);
         suppressEvent(event);
       } else if (!isInsertMode() && !findMode) {
-        if (currentCompletionKeys.indexOf(keyChar) != -1) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
+        if (currentCompletionKeys.indexOf(keyChar) != -1)
+          suppressEvent(event);
 
         keyPort.postMessage({keyChar:keyChar, frameId:frameId});
       }
@@ -428,8 +426,7 @@ function bubbleEvent(type, event) {
     // We need to check for existence of handler because the last function call may have caused the release of
     // more than one handler.
     if (handlerStack[i] && handlerStack[i][type] && !handlerStack[i][type](event)) {
-      event.preventDefault();
-      event.stopPropagation();
+      suppressEvent(event);
       return false;
     }
   }
@@ -506,10 +503,8 @@ function onKeydown(event) {
   }
   else if (!isInsertMode() && !findMode) {
     if (keyChar) {
-      if (currentCompletionKeys.indexOf(keyChar) != -1) {
-          event.preventDefault();
-          event.stopPropagation();
-      }
+      if (currentCompletionKeys.indexOf(keyChar) != -1)
+        suppressEvent(event);
 
       keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
