@@ -526,7 +526,7 @@ function onKeydown(event) {
   //
   // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if (keyChar == "" && !isInsertMode() && (currentCompletionKeys.indexOf(getKeyChar(event)) != -1 ||
-      validFirstKeys[getKeyChar(event)]))
+      isValidFirstKey(getKeyChar(event))))
     event.stopPropagation();
 }
 
@@ -558,6 +558,10 @@ function refreshCompletionKeys(response) {
   else {
     chrome.extension.sendRequest({ handler: "getCompletionKeys" }, refreshCompletionKeys);
   }
+}
+
+function isValidFirstKey(keyChar) {
+  return validFirstKeys[keyChar] || /\d/.test(keyChar);
 }
 
 function onFocusCapturePhase(event) {
