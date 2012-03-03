@@ -26,8 +26,6 @@ var linkHints = {
    */
   init: function() {
     this.onKeyDownInMode = this.onKeyDownInMode.bind(this);
-    this.onKeyPressInMode = this.onKeyPressInMode.bind(this);
-    this.onKeyUpInMode = this.onKeyUpInMode.bind(this);
     this.markerMatcher = settings.get('filterLinkHints') ? filterHints : alphabetHints;
   },
 
@@ -54,10 +52,11 @@ var linkHints = {
       addCssToPage(linkHintCss, 'vimiumLinkHintCss');
     this.setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl);
     this.buildLinkHints();
-    handlerStack.push({ // modeKeyHandler is declared by vimiumFrontend.js
+    handlerStack.push({ // handlerStack is declared by vimiumFrontend.js
       keydown: this.onKeyDownInMode,
-      keypress: this.onKeyPressInMode,
-      keyup: this.onKeyUpInMode
+      // trap all key events
+      keypress: function() { return false; },
+      keyup: function() { return false; }
     });
   },
 
@@ -195,15 +194,6 @@ var linkHints = {
           this.showMarker(linksMatched[i], this.markerMatcher.hintKeystrokeQueue.length);
       }
     }
-  },
-
-  onKeyPressInMode: function(event) {
-    return false;
-  },
-
-  onKeyUpInMode: function(event) {
-    if (this.delayMode)
-      return;
   },
 
   /*
