@@ -216,7 +216,7 @@ var linkHints = {
           that.activateModeWithQueue();
         });
       } else if (this.shouldCopyLinkUrl) {
-        this.copyLinkUrl(matchedLink);
+        chrome.extension.sendRequest({handler: 'copyToClipboard', data: matchedLink.href});
         this.deactivateMode(delay, function() { that.delayMode = false; });
       } else if (this.shouldOpenInNewTab) {
         this.simulateClick(matchedLink);
@@ -230,10 +230,6 @@ var linkHints = {
         this.deactivateMode(delay, function() { that.delayMode = false; });
       }
     }
-  },
-
-  copyLinkUrl: function(link) {
-    chrome.extension.sendRequest({handler: 'copyLinkUrl', data: link.href});
   },
 
   /*
