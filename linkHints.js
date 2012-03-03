@@ -57,7 +57,7 @@ var linkHints = {
     if (!this.cssAdded)
       // linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
       addCssToPage(linkHintCss); 
-    this.linkHintCssAdded = true;
+    this.cssAdded = true;
     this.setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl);
     this.buildLinkHints();
     handlerStack.push({ // modeKeyHandler is declared by vimiumFrontend.js
