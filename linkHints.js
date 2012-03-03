@@ -11,7 +11,6 @@
 var linkHints = {
   hintMarkers: [],
   hintMarkerContainingDiv: null,
-  // The characters that were typed in while in "link hints" mode.
   shouldOpenInNewTab: false,
   shouldOpenWithQueue: false,
   // function that does the appropriate action on the selected link
