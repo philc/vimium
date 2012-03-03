@@ -1141,13 +1141,14 @@ Tween = {
 /*
  * Adds the given CSS to the page.
  */
-function addCssToPage(css) {
+function addCssToPage(css, id) {
   var head = document.getElementsByTagName("head")[0];
   if (!head) {
     head = document.createElement("head");
     document.documentElement.appendChild(head);
   }
   var style = document.createElement("style");
+  style.id = id;
   style.type = "text/css";
   style.appendChild(document.createTextNode(css));
   head.appendChild(style);

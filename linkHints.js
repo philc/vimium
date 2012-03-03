@@ -18,8 +18,6 @@ var linkHints = {
   linkActivator: undefined,
   // Whether link hint's "open in current/new tab" setting is currently toggled
   openLinkModeToggle: false,
-  // Whether we have added to the page the CSS needed to display link hints.
-  cssAdded: false,
   // While in delayMode, all keypresses have no effect.
   delayMode: false,
   // Handle the link hinting marker generation and matching. Must be initialized after settings have been
@@ -54,10 +52,9 @@ var linkHints = {
   activateModeWithQueue: function() { this.activateMode(true, true, false); },
 
   activateMode: function(openInNewTab, withQueue, copyLinkUrl) {
-    if (!this.cssAdded)
+    if (!document.getElementById('vimiumLinkHintCss'))
       // linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
-      addCssToPage(linkHintCss); 
-    this.cssAdded = true;
+      addCssToPage(linkHintCss, 'vimiumLinkHintCss');
     this.setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl);
     this.buildLinkHints();
     handlerStack.push({ // modeKeyHandler is declared by vimiumFrontend.js
