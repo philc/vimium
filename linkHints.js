@@ -14,8 +14,8 @@ var linkHints = {
   // The characters that were typed in while in "link hints" mode.
   shouldOpenInNewTab: false,
   shouldOpenWithQueue: false,
-  // flag for copying link instead of opening
-  shouldCopyLinkUrl: false,
+  // function that does the appropriate action on the selected link
+  linkActivator: undefined,
   // Whether link hint's "open in current/new tab" setting is currently toggled
   openLinkModeToggle: false,
   // Whether we have added to the page the CSS needed to display link hints.
@@ -72,16 +72,29 @@ var linkHints = {
   setOpenLinkMode: function(openInNewTab, withQueue, copyLinkUrl) {
     this.shouldOpenInNewTab = openInNewTab;
     this.shouldOpenWithQueue = withQueue;
-    this.shouldCopyLinkUrl = copyLinkUrl;
-    if (this.shouldCopyLinkUrl) {
-      HUD.show("Copy link URL to Clipboard");
-    } else if (this.shouldOpenWithQueue) {
-      HUD.show("Open multiple links in a new tab");
-    } else {
-      if (this.shouldOpenInNewTab)
+
+    if (openInNewTab || withQueue) {
+      if (openInNewTab)
         HUD.show("Open link in new tab");
-      else
-        HUD.show("Open link in current tab");
+      else if (withQueue)
+        HUD.show("Open multiple links in a new tab");
+      this.linkActivator = function(link) {
+        // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
+        // to open it in a new tab if necessary.
+        domUtils.simulateClick(link, { metaKey: platform == "Mac", ctrlKey: platform != "Mac" });
+      }
+    } else if (copyLinkUrl) {
+      HUD.show("Copy link URL to Clipboard");
+      this.linkActivator = function(link) {
+        chrome.extension.sendRequest({handler: 'copyToClipboard', data: link.href});
+      }
+    } else {
+      HUD.show("Open link in current tab");
+      // When we're opening the link in the current tab, don't navigate to the selected link immediately;
+      // we want to give the user some time to notice which link has received focus.
+      this.linkActivator = function(link) {
+        setTimeout(domUtils.simulateClick.bind(domUtils, link), 400);
+      }
     }
   },
 
@@ -209,24 +222,21 @@ var linkHints = {
       domUtils.simulateSelect(matchedLink);
       this.deactivateMode(delay, function() { that.delayMode = false; });
     } else {
+      // focus the link momentarily to give user some visual feedback
+      matchedLink.focus();
+      setTimeout(function() {
+        // TODO(int3): do this for @role='link' and similar elements as well
+        var nodeName = matchedLink.nodeName.toLowerCase();
+        if (nodeName == 'a' || nodeName == 'button')
+          matchedLink.blur();
+      }, 400);
+      this.linkActivator(matchedLink);
       if (this.shouldOpenWithQueue) {
-        this.simulateClick(matchedLink);
         this.deactivateMode(delay, function() {
           that.delayMode = false;
           that.activateModeWithQueue();
         });
-      } else if (this.shouldCopyLinkUrl) {
-        chrome.extension.sendRequest({handler: 'copyToClipboard', data: matchedLink.href});
-        this.deactivateMode(delay, function() { that.delayMode = false; });
-      } else if (this.shouldOpenInNewTab) {
-        this.simulateClick(matchedLink);
-        matchedLink.focus();
-        this.deactivateMode(delay, function() { that.delayMode = false; });
       } else {
-        // When we're opening the link in the current tab, don't navigate to the selected link immediately;
-        // we want to give the user some feedback depicting which link they've selected by focusing it.
-        setTimeout(this.simulateClick.bind(this, matchedLink), 400);
-        matchedLink.focus();
         this.deactivateMode(delay, function() { that.delayMode = false; });
       }
     }
@@ -244,19 +254,6 @@ var linkHints = {
 
   hideMarker: function(linkMarker) {
     linkMarker.style.display = "none";
-  },
-
-  simulateClick: function(link) {
-    // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
-    // to open it in a new tab if necessary.
-    var metaKey = (platform == "Mac" && linkHints.shouldOpenInNewTab);
-    var ctrlKey = (platform != "Mac" && linkHints.shouldOpenInNewTab);
-    domUtils.simulateClick(link, { metaKey: metaKey, ctrlKey: ctrlKey });
-
-    // TODO(int3): do this for @role='link' and similar elements as well
-    var nodeName = link.nodeName.toLowerCase();
-    if (nodeName == 'a' || nodeName == 'button')
-      link.blur();
   },
 
   /*
