@@ -16,8 +16,6 @@ var linkHints = {
   shouldOpenWithQueue: false,
   // function that does the appropriate action on the selected link
   linkActivator: undefined,
-  // Whether link hint's "open in current/new tab" setting is currently toggled
-  openLinkModeToggle: false,
   // While in delayMode, all keypresses have no effect.
   delayMode: false,
   // Handle the link hinting marker generation and matching. Must be initialized after settings have been
@@ -47,7 +45,7 @@ var linkHints = {
   // We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: function() { this.activateMode(true, false, false); },
 
-  activateModeToCopyLinkUrl: function() { this.activateMode(false, false, true); },
+  activateModeToCopyLinkUrl: function() { this.activateMode(null, false, true); },
 
   activateModeWithQueue: function() { this.activateMode(true, true, false); },
 
@@ -62,8 +60,6 @@ var linkHints = {
       keypress: this.onKeyPressInMode,
       keyup: this.onKeyUpInMode
     });
-
-    this.openLinkModeToggle = false;
   },
 
   setOpenLinkMode: function(openInNewTab, withQueue, copyLinkUrl) {
@@ -168,10 +164,18 @@ var linkHints = {
     if (this.delayMode)
       return;
 
-    if (event.keyCode == keyCodes.shiftKey && !this.openLinkModeToggle) {
+    var that = this;
+
+    if (event.keyCode == keyCodes.shiftKey && this.shouldOpenInNewTab !== null) {
       // Toggle whether to open link in a new or current tab.
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
-      this.openLinkModeToggle = true;
+      handlerStack.push({
+        keyup: function(event) {
+          if (event.keyCode !== keyCodes.shiftKey) return;
+          linkHints.setOpenLinkMode(!that.shouldOpenInNewTab, that.shouldOpenWithQueue, false);
+          handlerStack.pop();
+        }
+      });
     }
 
     // TODO(philc): Ignore keys that have modifiers.
@@ -201,12 +205,6 @@ var linkHints = {
   onKeyUpInMode: function(event) {
     if (this.delayMode)
       return;
-
-    if (event.keyCode == keyCodes.shiftKey && this.openLinkModeToggle) {
-      // Revert toggle on whether to open link in new or current tab.
-      this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
-      this.openLinkModeToggle = false;
-    }
   },
 
   /*
