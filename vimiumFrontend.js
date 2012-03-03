@@ -872,7 +872,7 @@ function followLink(linkElement) {
  * next big thing', and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
  */
 function findAndFollowLink(linkStrings) {
-  var linksXPath = domUtils.makeXPath(["a", "*[@onclick or @role='link']"]);
+  var linksXPath = domUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"]);
   var links = domUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
   var candidateLinks = [];
 

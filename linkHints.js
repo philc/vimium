@@ -36,7 +36,7 @@ var linkHints = {
    */
   clickableElementsXPath: domUtils.makeXPath(["a", "area[@href]", "textarea", "button", "select",
                              "input[not(@type='hidden' or @disabled or @readonly)]",
-                             "*[@onclick or @tabindex or @role='link' or @role='button' or " +
+                             "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
                              "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]),
 
   // We need this as a top-level function because our command system doesn't yet support arguments.
