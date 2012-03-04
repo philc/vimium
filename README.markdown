@@ -144,6 +144,11 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.32
+
+- More tweaks to the next / previous link-detection algorithm
+- Minor bug fixes.
+
 1.31 (02/28/2012)
 
 - Improve style of link hints, and use fewer characters for hints.
