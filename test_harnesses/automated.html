@@ -103,13 +103,11 @@
 
         setup(function() {
           stub(settings.values, "filterLinkHints", "false");
+          stub(settings.values, "linkHintCharacters", "ab")
           linkHints.markerMatcher = alphabetHints;
-          // we need at least 16 elements to have double-character link hints
-          for (var i = 0; i < 16; i++) {
-            var link = document.createElement("a");
-            link.textContent = "test";
-            document.getElementById("test-div").appendChild(link);
-          }
+
+          // Three hints will trigger double hint chars.
+          createLinks(3);
           linkHints.activateMode();
         }),
 
@@ -119,15 +117,18 @@
         }),
 
         should("label the hints correctly", function() {
-          var hintStrings = ["ss", "as", "ds"];
-          for (var i = 0; i < 3; i++)
-          assert.equal(hintStrings[i], linkHints.hintMarkers[i].hintString);
+          // TODO(philc): This test verifies the current behavior, but the current behavior is incorrect.
+          // The output here should be something like aa, ab, b.
+          var expectedHints = ["aa", "ba", "ab"];
+          console.log(linkHints.hintMarkers);
+          for (var i = 0; i < expectedHints.length; i++)
+            assert.equal(expectedHints[i], linkHints.hintMarkers[i].hintString);
         }),
 
         should("narrow the hints", function() {
           linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-          assert.equal("none", linkHints.hintMarkers[0].style.display);
-          assert.equal("", linkHints.hintMarkers[15].style.display);
+          assert.equal("none", linkHints.hintMarkers[1].style.display);
+          assert.equal("", linkHints.hintMarkers[0].style.display);
         })
 
       );
@@ -180,11 +181,11 @@
               "<a><img alt='alt text'/></a>" +
               "<a><img alt='alt text' title='some title'/></a>" +
               "<a><img title='some title'/></a>" +
-              "<a><img src='blah' width='320px' height='100px'/></a>";
+              "<a><img src='' width='320px' height='100px'/></a>";
             document.getElementById("test-div").innerHTML = testContent;
             linkHints.activateMode();
           }),
-          
+
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
             linkHints.deactivateMode();
@@ -299,14 +300,25 @@
         var newOutput = Array.prototype.join.call(arguments, "\n");
         newOutput = newOutput.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); // escape html
         // highlight the source of the error
-        newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3");
-        document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>";
+        newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/,
+            "/<span class='errorPosition'>$1:$2</span>:$3");
+        document.getElementById("output-div").innerHTML +=
+            "<div class='output-section'>" + newOutput + "</div>";
         console.log.apply(console, arguments);
       }
+
       // ensure the extension has time to load before commencing the tests
-      document.addEventListener("DOMContentLoaded", function(){
+      document.addEventListener("DOMContentLoaded", function() {
         setTimeout(Tests.run, 200);
       });
+
+      function createLinks(n) {
+        for (var i = 0; i < n; i++) {
+          var link = document.createElement("a");
+          link.textContent = "test";
+          document.getElementById("test-div").appendChild(link);
+        }
+      }
     </script>
   </head>
   <body>
