@@ -206,14 +206,11 @@ var linkHints = {
       domUtils.simulateSelect(matchedLink);
       this.deactivateMode(delay, function() { that.delayMode = false; });
     } else {
-      // focus the link momentarily to give user some visual feedback
-      matchedLink.focus();
-      setTimeout(function() {
-        // TODO(int3): do this for @role='link' and similar elements as well
-        var nodeName = matchedLink.nodeName.toLowerCase();
-        if (nodeName == 'a' || nodeName == 'button')
-          matchedLink.blur();
-      }, 400);
+      // TODO figure out which other input elements should not receive focus
+      if (matchedLink.nodeName.toLowerCase() === 'input' &&
+          matchedLink.type !== 'button')
+        matchedLink.focus();
+      domUtils.flashElement(matchedLink);
       this.linkActivator(matchedLink);
       if (this.shouldOpenWithQueue) {
         this.deactivateMode(delay, function() {
