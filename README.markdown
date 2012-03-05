@@ -144,7 +144,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.32
+1.32 (03/05/2011)
 
 - More tweaks to the next / previous link-detection algorithm
 - Minor bug fixes.
