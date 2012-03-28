@@ -332,6 +332,14 @@
     delete framesForTab[tab.id];
   }
 
+  function updateIconState(tabId) {
+    if (openTabs[tabId]) {
+      var isEnabled = isEnabledForUrl({url: openTabs[tabId].url}).isEnabledForUrl;
+      var iconPath = isEnabled ? "icons/icon48.png" : "icons/icon48disabled.png";
+      chrome.browserAction.setIcon({path: iconPath});
+    }
+  }
+
   function handleUpdateScrollPosition(request, sender) {
     updateScrollPosition(sender.tab, request.scrollX, request.scrollY);
   }
@@ -345,6 +353,7 @@
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (changeInfo.status != "loading") { return; } // only do this once per URL change
     updateOpenTabs(tab);
+    updateIconState(tabId);
   });
 
   chrome.tabs.onAttached.addListener(function(tabId, attachedInfo) {
@@ -381,6 +390,10 @@
 
     delete openTabs[tabId];
     delete framesForTab[tabId];
+  });
+
+  chrome.tabs.onActiveChanged.addListener(function(tabId, selectInfo) {
+    updateIconState(tabId);
   });
 
   chrome.windows.onRemoved.addListener(function(windowId) {
