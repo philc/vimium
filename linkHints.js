@@ -162,15 +162,13 @@ var linkHints = {
     if (this.delayMode)
       return;
 
-    var that = this;
-
     if (event.keyCode == keyCodes.shiftKey && this.shouldOpenInNewTab !== null) {
       // Toggle whether to open link in a new or current tab.
       this.setOpenLinkMode(!this.shouldOpenInNewTab, this.shouldOpenWithQueue, false);
       handlerStack.push({
         keyup: function(event) {
           if (event.keyCode !== keyCodes.shiftKey) return;
-          linkHints.setOpenLinkMode(!that.shouldOpenInNewTab, that.shouldOpenWithQueue, false);
+          linkHints.setOpenLinkMode(!linkHints.shouldOpenInNewTab, linkHints.shouldOpenWithQueue, false);
           handlerStack.pop();
         }
       });
@@ -200,25 +198,23 @@ var linkHints = {
    * When only one link hint remains, this function activates it in the appropriate way.
    */
   activateLink: function(matchedLink, delay) {
-    var that = this;
     this.delayMode = true;
     if (domUtils.isSelectable(matchedLink)) {
       domUtils.simulateSelect(matchedLink);
-      this.deactivateMode(delay, function() { that.delayMode = false; });
+      this.deactivateMode(delay, function() { linkHints.delayMode = false; });
     } else {
       // TODO figure out which other input elements should not receive focus
-      if (matchedLink.nodeName.toLowerCase() === 'input' &&
-          matchedLink.type !== 'button')
+      if (matchedLink.nodeName.toLowerCase() === 'input' && matchedLink.type !== 'button')
         matchedLink.focus();
       domUtils.flashElement(matchedLink);
       this.linkActivator(matchedLink);
       if (this.shouldOpenWithQueue) {
         this.deactivateMode(delay, function() {
-          that.delayMode = false;
-          that.activateModeWithQueue();
+          linkHints.delayMode = false;
+          linkHints.activateModeWithQueue();
         });
       } else {
-        this.deactivateMode(delay, function() { that.delayMode = false; });
+        this.deactivateMode(delay, function() { linkHints.delayMode = false; });
       }
     }
   },
@@ -242,14 +238,13 @@ var linkHints = {
    * executes after 'delay' and invokes 'callback' when it is finished.
    */
   deactivateMode: function(delay, callback) {
-    var that = this;
     function deactivate() {
-      if (that.markerMatcher.deactivate)
-        that.markerMatcher.deactivate();
-      if (that.hintMarkerContainingDiv)
-        that.hintMarkerContainingDiv.parentNode.removeChild(that.hintMarkerContainingDiv);
-      that.hintMarkerContainingDiv = null;
-      that.hintMarkers = [];
+      if (linkHints.markerMatcher.deactivate)
+        linkHints.markerMatcher.deactivate();
+      if (linkHints.hintMarkerContainingDiv)
+        linkHints.hintMarkerContainingDiv.parentNode.removeChild(linkHints.hintMarkerContainingDiv);
+      linkHints.hintMarkerContainingDiv = null;
+      linkHints.hintMarkers = [];
       handlerStack.pop();
       HUD.hide();
     }
