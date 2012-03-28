@@ -113,6 +113,12 @@
     return { isEnabledForUrl: isEnabled };
   }
 
+  function addExcludedUrl(url) {
+    var excludedUrls = settings.get("excludedUrls");
+    excludedUrls += "\n" + url;
+    settings.set("excludedUrls", excludedUrls);
+  }
+
   function saveHelpDialogSettings(request) {
     settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands);
   }

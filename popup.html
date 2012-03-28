@@ -1,0 +1,27 @@
+<style>
+  #vimiumPopup { width: 300px; }
+  #popupInput { width: 200px; }
+  #popupButton { margin-left: 10px; }
+</style>
+
+<div id="vimiumPopup">
+  <input id="popupInput" type="text" />
+  <input id="popupButton" type="button" value="Exclude URL" />
+</div>
+
+<script type="text/javascript">
+  function onLoad() {
+    chrome.tabs.getSelected(null, function(tab) {
+      document.getElementById("popupInput").value = tab.url;
+    });
+  }
+
+  function onExcludeUrl(e) {
+    var url = document.getElementById("popupInput").value;
+    chrome.extension.getBackgroundPage().addExcludedUrl(url);
+  }
+
+  window.addEventListener("load", onLoad, false);
+  document.getElementById("popupButton").addEventListener("click", onExcludeUrl, false);
+</script>
+

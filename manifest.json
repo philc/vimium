@@ -31,6 +31,7 @@
     }
   ],
   "browser_action": {
-    "default_icon": "icons/icon48disabled.png"
+    "default_icon": "icons/icon48disabled.png",
+    "popup": "popup.html"
   }
 }
