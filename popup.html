@@ -12,7 +12,10 @@
 <script type="text/javascript">
   function onLoad() {
     chrome.tabs.getSelected(null, function(tab) {
-      document.getElementById("popupInput").value = tab.url;
+      // The common use case is to disable Vimium at the domain level.
+      // This regexp will match "http://www.example.com/" from "http://www.example.com/path/to/page.html".
+      var domain = tab.url.match(/[^\/]*\/\/[^\/]*\//) || tab.url;
+      document.getElementById("popupInput").value = domain + "*";
     });
   }
 
