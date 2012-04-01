@@ -352,13 +352,15 @@
    * 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
    */
   function updateActiveState(tabId) {
-    if (openTabs[tabId]) {
+    var enabledIcon = "icons/icon48.png";
+    var disabledIcon = "icons/icon48disabled.png";
+    chrome.tabs.get(tabId, function(tab) {
+      // Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
+      chrome.browserAction.setIcon({ path: disabledIcon });
       var returnPort = chrome.tabs.connect(tabId, { name: "getActiveState" });
       returnPort.onMessage.addListener(function(response) {
         var isCurrentlyEnabled = response.enabled;
-        var shouldBeEnabled = isEnabledForUrl({url: openTabs[tabId].url}).isEnabledForUrl;
-        var enabledIcon = "icons/icon48.png";
-        var disabledIcon = "icons/icon48disabled.png";
+        var shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl;
 
         if (isCurrentlyEnabled) {
           if (shouldBeEnabled) {
@@ -372,7 +374,7 @@
         }
       });
       returnPort.postMessage();
-    }
+    });
   }
 
   function handleUpdateScrollPosition(request, sender) {
