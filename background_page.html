@@ -342,15 +342,36 @@
     delete framesForTab[tab.id];
   }
 
+  /* Updates the browserAction icon to indicated whether Vimium is enabled or disabled on the current page.
+   * Also disables Vimium if it is currently enabled but should be disabled according to the url blacklist.
+   * This lets you disable Vimium on a page without needing to reload.
+   *
+   * Three situations are considered:
+   * 1. Active tab is disabled -> disable icon
+   * 2. Active tab is enabled and should be enabled -> enable icon
+   * 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
+   */
   function updateActiveState(tabId) {
     if (openTabs[tabId]) {
-      var isEnabled = isEnabledForUrl({url: openTabs[tabId].url}).isEnabledForUrl;
-      var iconPath = isEnabled ? "icons/icon48.png" : "icons/icon48disabled.png";
-      chrome.browserAction.setIcon({path: iconPath});
+      var returnPort = chrome.tabs.connect(tabId, { name: "getActiveState" });
+      returnPort.onMessage.addListener(function(response) {
+        var isCurrentlyEnabled = response.enabled;
+        var shouldBeEnabled = isEnabledForUrl({url: openTabs[tabId].url}).isEnabledForUrl;
+        var enabledIcon = "icons/icon48.png";
+        var disabledIcon = "icons/icon48disabled.png";
 
-      if (!isEnabled) {
-        chrome.tabs.connect(tabId, { name: "disableVimium" }).postMessage();
-      }
+        if (isCurrentlyEnabled) {
+          if (shouldBeEnabled) {
+            chrome.browserAction.setIcon({ path: enabledIcon });
+          } else {
+            chrome.browserAction.setIcon({ path: disabledIcon });
+            chrome.tabs.connect(tabId, { name: "disableVimium" }).postMessage();
+          }
+        } else {
+          chrome.browserAction.setIcon({ path: disabledIcon });
+        }
+      });
+      returnPort.postMessage();
     }
   }
 

@@ -177,6 +177,10 @@ function initializePreDomReady() {
       port.onMessage.addListener(function (args) {
         refreshCompletionKeys(args.completionKeys);
       });
+    } else if (port.name == "getActiveState") {
+      port.onMessage.addListener(function(args) {
+        port.postMessage({ enabled: isEnabledForUrl });
+      });
     } else if (port.name == "disableVimium") {
       port.onMessage.addListener(function(args) {
         disableVimium();
@@ -205,6 +209,7 @@ function disableVimium() {
   document.removeEventListener("focus", onFocusCapturePhase, true);
   document.removeEventListener("blur", onBlurCapturePhase, true);
   document.removeEventListener("DOMActivate", onDOMActivate, true);
+  isEnabledForUrl = false;
 }
 
 /*
