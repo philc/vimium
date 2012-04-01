@@ -117,6 +117,10 @@
     var excludedUrls = settings.get("excludedUrls");
     excludedUrls += "\n" + url;
     settings.set("excludedUrls", excludedUrls);
+
+    chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, function(tabs) {
+      updateActiveState(tabs[0].id);
+    });
   }
 
   function saveHelpDialogSettings(request) {
@@ -338,11 +342,15 @@
     delete framesForTab[tab.id];
   }
 
-  function updateIconState(tabId) {
+  function updateActiveState(tabId) {
     if (openTabs[tabId]) {
       var isEnabled = isEnabledForUrl({url: openTabs[tabId].url}).isEnabledForUrl;
       var iconPath = isEnabled ? "icons/icon48.png" : "icons/icon48disabled.png";
       chrome.browserAction.setIcon({path: iconPath});
+
+      if (!isEnabled) {
+        chrome.tabs.connect(tabId, { name: "disableVimium" }).postMessage();
+      }
     }
   }
 
@@ -359,7 +367,7 @@
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (changeInfo.status != "loading") { return; } // only do this once per URL change
     updateOpenTabs(tab);
-    updateIconState(tabId);
+    updateActiveState(tabId);
   });
 
   chrome.tabs.onAttached.addListener(function(tabId, attachedInfo) {
@@ -399,7 +407,7 @@
   });
 
   chrome.tabs.onActiveChanged.addListener(function(tabId, selectInfo) {
-    updateIconState(tabId);
+    updateActiveState(tabId);
   });
 
   chrome.windows.onRemoved.addListener(function(windowId) {

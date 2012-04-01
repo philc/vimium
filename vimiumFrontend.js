@@ -177,6 +177,10 @@ function initializePreDomReady() {
       port.onMessage.addListener(function (args) {
         refreshCompletionKeys(args.completionKeys);
       });
+    } else if (port.name == "disableVimium") {
+      port.onMessage.addListener(function(args) {
+        disableVimium();
+      });
     }
   });
 }
@@ -194,6 +198,14 @@ function initializeWhenEnabled() {
   enterInsertModeIfElementIsFocused();
 }
 
+function disableVimium() {
+  document.removeEventListener("keydown", onKeydown, true);
+  document.removeEventListener("keypress", onKeypress, true);
+  document.removeEventListener("keyup", onKeyup, true);
+  document.removeEventListener("focus", onFocusCapturePhase, true);
+  document.removeEventListener("blur", onBlurCapturePhase, true);
+  document.removeEventListener("DOMActivate", onDOMActivate, true);
+}
 
 /*
  * The backend needs to know which frame has focus.
