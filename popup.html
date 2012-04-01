@@ -5,10 +5,23 @@
   }
 
   #vimiumPopup { width: 300px; }
+
   #excludeControls {
     padding: 10px;
   }
-  #popupInput { width: 180px; }
+
+  #popupInput {
+    width: 160px;
+  }
+
+  #excludeConfirm {
+    display: inline-block;
+    width: 18px;
+    height: 13px;
+    background: url(icons/check.png) 3px 2px no-repeat;
+    display: none;
+  }
+
   #popupButton { margin-left: 10px; }
 
   #popupMenu ul {
@@ -32,6 +45,7 @@
   <div id="excludeControls">
     <input id="popupInput" type="text" />
     <input id="popupButton" type="button" value="Exclude URL" />
+    <span id="excludeConfirm"></span>
   </div>
 
   <div id="popupMenu">
@@ -56,6 +70,7 @@
   function onExcludeUrl(e) {
     var url = document.getElementById("popupInput").value;
     chrome.extension.getBackgroundPage().addExcludedUrl(url);
+    document.getElementById("excludeConfirm").setAttribute("style", "display: inline-block");
   }
 
   window.addEventListener("load", onLoad, false);
