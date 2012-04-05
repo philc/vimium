@@ -200,6 +200,10 @@ function initializeWhenEnabled() {
   enterInsertModeIfElementIsFocused();
 }
 
+/*
+ * Used to disable Vimium without needing to reload the page.
+ * This is called if the current page's url is blacklisted using the popup UI.
+ */
 function disableVimium() {
   document.removeEventListener("keydown", onKeydown, true);
   document.removeEventListener("keypress", onKeypress, true);
