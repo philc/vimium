@@ -182,9 +182,7 @@ function initializePreDomReady() {
         port.postMessage({ enabled: isEnabledForUrl });
       });
     } else if (port.name == "disableVimium") {
-      port.onMessage.addListener(function(args) {
-        disableVimium();
-      });
+      port.onMessage.addListener(function(args) { disableVimium(); });
     }
   });
 }
