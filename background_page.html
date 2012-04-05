@@ -113,7 +113,13 @@
     return { isEnabledForUrl: isEnabled };
   }
 
+  /*
+   * Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
+   */
   function addExcludedUrl(url) {
+    url = trim(url);
+    if (url === "") { return; }
+
     var excludedUrls = settings.get("excludedUrls");
     excludedUrls += "\n" + url;
     settings.set("excludedUrls", excludedUrls);
@@ -717,6 +723,12 @@
     return index;
   }
 
+  /*
+   * Convenience function for trimming leading and trailing whitespace.
+   */
+  function trim(str) {
+    return str.replace(/^\s*/, "").replace(/\s*$/, "");
+  }
 
   function init() {
     clearKeyMappingsAndSetDefaults();
