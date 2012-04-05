@@ -113,6 +113,22 @@
     return { isEnabledForUrl: isEnabled };
   }
 
+  /*
+   * Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
+   */
+  function addExcludedUrl(url) {
+    url = trim(url);
+    if (url === "") { return; }
+
+    var excludedUrls = settings.get("excludedUrls");
+    excludedUrls += "\n" + url;
+    settings.set("excludedUrls", excludedUrls);
+
+    chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, function(tabs) {
+      updateActiveState(tabs[0].id);
+    });
+  }
+
   function saveHelpDialogSettings(request) {
     settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands);
   }
@@ -332,6 +348,41 @@
     delete framesForTab[tab.id];
   }
 
+  /* Updates the browserAction icon to indicated whether Vimium is enabled or disabled on the current page.
+   * Also disables Vimium if it is currently enabled but should be disabled according to the url blacklist.
+   * This lets you disable Vimium on a page without needing to reload.
+   *
+   * Three situations are considered:
+   * 1. Active tab is disabled -> disable icon
+   * 2. Active tab is enabled and should be enabled -> enable icon
+   * 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
+   */
+  function updateActiveState(tabId) {
+    var enabledIcon = "icons/icon48.png";
+    var disabledIcon = "icons/icon48disabled.png";
+    chrome.tabs.get(tabId, function(tab) {
+      // Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
+      chrome.browserAction.setIcon({ path: disabledIcon });
+      var returnPort = chrome.tabs.connect(tabId, { name: "getActiveState" });
+      returnPort.onMessage.addListener(function(response) {
+        var isCurrentlyEnabled = response.enabled;
+        var shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl;
+
+        if (isCurrentlyEnabled) {
+          if (shouldBeEnabled) {
+            chrome.browserAction.setIcon({ path: enabledIcon });
+          } else {
+            chrome.browserAction.setIcon({ path: disabledIcon });
+            chrome.tabs.connect(tabId, { name: "disableVimium" }).postMessage();
+          }
+        } else {
+          chrome.browserAction.setIcon({ path: disabledIcon });
+        }
+      });
+      returnPort.postMessage();
+    });
+  }
+
   function handleUpdateScrollPosition(request, sender) {
     updateScrollPosition(sender.tab, request.scrollX, request.scrollY);
   }
@@ -345,6 +396,7 @@
   chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (changeInfo.status != "loading") { return; } // only do this once per URL change
     updateOpenTabs(tab);
+    updateActiveState(tabId);
   });
 
   chrome.tabs.onAttached.addListener(function(tabId, attachedInfo) {
@@ -381,6 +433,10 @@
 
     delete openTabs[tabId];
     delete framesForTab[tabId];
+  });
+
+  chrome.tabs.onActiveChanged.addListener(function(tabId, selectInfo) {
+    updateActiveState(tabId);
   });
 
   chrome.windows.onRemoved.addListener(function(windowId) {
@@ -667,6 +723,12 @@
     return index;
   }
 
+  /*
+   * Convenience function for trimming leading and trailing whitespace.
+   */
+  function trim(str) {
+    return str.replace(/^\s*/, "").replace(/\s*$/, "");
+  }
 
   function init() {
     clearKeyMappingsAndSetDefaults();

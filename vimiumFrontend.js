@@ -177,6 +177,12 @@ function initializePreDomReady() {
       port.onMessage.addListener(function (args) {
         refreshCompletionKeys(args.completionKeys);
       });
+    } else if (port.name == "getActiveState") {
+      port.onMessage.addListener(function(args) {
+        port.postMessage({ enabled: isEnabledForUrl });
+      });
+    } else if (port.name == "disableVimium") {
+      port.onMessage.addListener(function(args) { disableVimium(); });
     }
   });
 }
@@ -194,6 +200,19 @@ function initializeWhenEnabled() {
   enterInsertModeIfElementIsFocused();
 }
 
+/*
+ * Used to disable Vimium without needing to reload the page.
+ * This is called if the current page's url is blacklisted using the popup UI.
+ */
+function disableVimium() {
+  document.removeEventListener("keydown", onKeydown, true);
+  document.removeEventListener("keypress", onKeypress, true);
+  document.removeEventListener("keyup", onKeyup, true);
+  document.removeEventListener("focus", onFocusCapturePhase, true);
+  document.removeEventListener("blur", onBlurCapturePhase, true);
+  document.removeEventListener("DOMActivate", onDOMActivate, true);
+  isEnabledForUrl = false;
+}
 
 /*
  * The backend needs to know which frame has focus.
