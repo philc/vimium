@@ -1,0 +1,79 @@
+<style>
+  * {
+    margin: 0px;
+    padding: 0px;
+  }
+
+  #vimiumPopup { width: 300px; }
+
+  #excludeControls {
+    padding: 10px;
+  }
+
+  #popupInput {
+    width: 160px;
+  }
+
+  #excludeConfirm {
+    display: inline-block;
+    width: 18px;
+    height: 13px;
+    background: url(icons/check.png) 3px 2px no-repeat;
+    display: none;
+  }
+
+  #popupButton { margin-left: 10px; }
+
+  #popupMenu ul {
+    list-style: none;
+  }
+
+  #popupMenu a, #popupMenu a:active, #popupMenu a:visited {
+    color: #3F6EC2;
+    display: block;
+    border-top: 1px solid #DDDDDD;
+    padding: 3px;
+    padding-left: 10px;
+  }
+
+  #popupMenu a:hover {
+    background: #EEEEEE;
+  }
+</style>
+
+<div id="vimiumPopup">
+  <div id="excludeControls">
+    <input id="popupInput" type="text" />
+    <input id="popupButton" type="button" value="Exclude URL" />
+    <span id="excludeConfirm"></span>
+  </div>
+
+  <div id="popupMenu">
+    <ul>
+      <li><a id="optionsLink" target="_blank">Options</a></li>
+    </ul>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+  function onLoad() {
+    document.getElementById("optionsLink").setAttribute("href", chrome.extension.getURL("options.html"));
+    chrome.tabs.getSelected(null, function(tab) {
+      // The common use case is to disable Vimium at the domain level.
+      // This regexp will match "http://www.example.com/" from "http://www.example.com/path/to/page.html".
+      var domain = tab.url.match(/[^\/]*\/\/[^\/]*\//) || tab.url;
+      document.getElementById("popupInput").value = domain + "*";
+    });
+  }
+
+  function onExcludeUrl(e) {
+    var url = document.getElementById("popupInput").value;
+    chrome.extension.getBackgroundPage().addExcludedUrl(url);
+    document.getElementById("excludeConfirm").setAttribute("style", "display: inline-block");
+  }
+
+  window.addEventListener("load", onLoad, false);
+  document.getElementById("popupButton").addEventListener("click", onExcludeUrl, false);
+</script>
+
