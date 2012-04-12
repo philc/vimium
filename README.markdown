@@ -144,6 +144,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.33 (Unreleased)
+
+- A browser icon to quickly add sites to Vimium's exclude list.
+
 1.32 (03/05/2011)
 
 - More tweaks to the next / previous link-detection algorithm
