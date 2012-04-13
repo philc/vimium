@@ -293,6 +293,7 @@ body.vimiumFindMode ::selection {
 #fuzzybox {
   position: fixed !important;
   width: 80% !important;
+  min-width: 400px !important;
   top: 70px !important;
   left: 50% !important;
   margin: 0 0 0 -40% !important;
@@ -374,7 +375,8 @@ body.vimiumFindMode ::selection {
   font-size: inherit !important;
   font-family: inherit !important;
   color: inherit !important;
-  background: none;
-  outline: none;
-  border: none;
+  background: none !important;
+  outline: none !important;
+  border: none !important;
+  width: 90% !important;
 }
