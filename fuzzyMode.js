@@ -39,8 +39,8 @@ var fuzzyMode = (function() {
     show: function(reverseAction) {
       this.reverseAction = reverseAction;
       this.box.style.display = 'block';
-      var self = this;
-      handlerStack.push({ keydown: function(event) { self.onKeydown(event); }});
+      this.input.focus();
+      handlerStack.push({ keydown: this.onKeydown.bind(this) });
     },
 
     hide: function() {
@@ -50,7 +50,7 @@ var fuzzyMode = (function() {
     },
 
     reset: function() {
-      this.query = '';
+      this.input.value = '';
       this.updateTimer = null;
       this.completions = [];
       this.selection = 0;
@@ -86,13 +86,6 @@ var fuzzyMode = (function() {
         this.updateSelection();
       }
 
-      else if (event.keyCode == keyCodes.backspace) {
-        if (this.query.length > 0) {
-          this.query = this.query.substr(0, this.query.length-1);
-          this.update();
-        }
-      }
-
       // refresh with F5
       else if (keyChar == 'f5') {
         this.completer.refresh();
@@ -110,12 +103,11 @@ var fuzzyMode = (function() {
           self.hide();
         });
       }
-
-      else if (keyChar.length == 1) {
-        this.query += keyChar;
-        this.update();
+      else {
+        return true; // pass through
       }
 
+      // it seems like we have to manually supress the event here and still return true...
       event.stopPropagation();
       event.preventDefault();
       return true;
@@ -123,8 +115,9 @@ var fuzzyMode = (function() {
 
     updateCompletions: function(callback) {
       var self = this;
-      //var start = Date.now();
-      this.completer.filter(this.query, this.maxResults, function(completions) {
+      query = this.input.value.replace(/^\s*/, '');
+
+      this.completer.filter(query, this.maxResults, function(completions) {
         self.completions = completions;
 
         // update completion list with the new data
@@ -140,9 +133,6 @@ var fuzzyMode = (function() {
 
     update: function(force, callback) {
       force = force || false; // explicitely default to asynchronous updating
-
-      this.query = this.query.replace(/^\s*/, '');
-      this.input.textContent = this.query;
 
       if (force) {
         // cancel scheduled update
@@ -168,12 +158,13 @@ var fuzzyMode = (function() {
         '<div id="fuzzybox" class="vimiumReset">'+
           '<div class="input">'+
             '<span class="prompt">' + utils.escapeHtml(this.prompt) + '</span> '+
-            '<span class="query"></span></div>'+
+            '<input type="text" class="query"></span></div>'+
           '<ul></ul></div>');
       this.box.style.display = 'none';
       document.body.appendChild(this.box);
 
-      this.input          = document.querySelector("#fuzzybox .query");
+      this.input = document.querySelector("#fuzzybox .query");
+      this.input.addEventListener("input", function() { this.update(); }.bind(this));
       this.completionList = document.querySelector("#fuzzybox ul");
       this.completionList.style.display = 'none';
     },
