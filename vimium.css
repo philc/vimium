@@ -282,4 +282,101 @@ div.vimium-completions div.vimium-noResults{
 
 body.vimiumFindMode ::selection {
   background: #ff9632;
+};
+
+/* fuzzymode CSS */
+
+#fuzzybox ol, #fuzzybox ul {
+  list-style: none !important;
+}
+
+#fuzzybox {
+  position: fixed !important;
+  width: 80% !important;
+  min-width: 400px !important;
+  top: 70px !important;
+  left: 50% !important;
+  margin: 0 0 0 -40% !important;
+  background: black !important;
+  color: white !important;
+  font-family: sans-serif !important;
+  font-size: 30px !important;
+  text-align: left !important;
+  padding: 7px 20px 7px 20px !important;
+  opacity: 0.9 !important;
+  border-radius: 10px !important;
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.5) !important;
+  z-index: 99999998 !important;
+}
+
+#fuzzybox ul {
+  list-style: none !important;
+  padding: 7px 0 0 0 !important;
+  margin: 7px 0 0 0 !important;
+  border-top: 2px solid #444 !important;
+}
+
+#fuzzybox li {
+  border-bottom: 1px solid #111 !important;
+  line-height: 1.1em !important;
+  padding: 7px !important;
+  margin: 0 -7px 0 -7px !important;
+  font-size: 18px !important;
+  color: #ddd !important;
+}
+
+#fuzzybox li .fuzzyMatch {
+  color: red !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+}
+
+#fuzzybox li em, #fuzzybox li .title {
+  color: #444 !important;
+  font-weight: normal !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+}
+#fuzzybox li em {
+  font-style: italic !important;
+}
+#fuzzybox li em .fuzzyMatch, #fuzzybox li .title .fuzzyMatch {
+  color: #888 !important;
+  font-style: inherit !important;
+  font-weight: bold !important;
+}
+
+#fuzzybox li.selected {
+  background: #222 !important;
+  color: #ccc !important;
+  border-radius: 4px !important;
+  font-weight: normal !important;
+  font-family: inherit !important;
+}
+#fuzzybox li.selected em, #fuzzybox li.selected .title {
+  color: #666 !important;
+}
+
+#fuzzybox .input {
+  font-size: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+}
+
+#fuzzybox .input .prompt {
+  color: orange !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+}
+
+#fuzzybox .input .query {
+  font-size: inherit !important;
+  font-family: inherit !important;
+  color: inherit !important;
+  background: none !important;
+  outline: none !important;
+  border: none !important;
+  width: 90% !important;
 }

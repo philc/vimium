@@ -4,6 +4,7 @@
 <script type="text/javascript" src="lib/clipboard.js"></script>
 <script type="text/javascript" src="lib/utils.js"></script>
 <script type="text/javascript" src="background/settings.js"></script>
+<script type="text/javascript" src="lib/completion.js"></script>
 <script type="text/javascript" charset="utf-8">
   var currentVersion = utils.getCurrentVersion();
 
@@ -26,7 +27,8 @@
     returnScrollPosition: handleReturnScrollPosition,
     getCurrentTabUrl:     getCurrentTabUrl,
     settings:             handleSettings,
-    getBookmarks:         getBookmarks
+    getBookmarks:         getBookmarks,
+    filterCompleter:      filterCompleter,
   };
 
   var sendRequestHandlers = {
@@ -41,13 +43,38 @@
     updateScrollPosition: handleUpdateScrollPosition,
     copyToClipboard: copyToClipboard,
     isEnabledForUrl: isEnabledForUrl,
-    saveHelpDialogSettings: saveHelpDialogSettings
+    saveHelpDialogSettings: saveHelpDialogSettings,
+    selectSpecificTab: selectSpecificTab,
+    refreshCompleter: refreshCompleter,
   };
 
   // Event handlers
   var selectionChangedHandlers = [];
   var getScrollPositionHandlers = {}; // tabId -> function(tab, scrollX, scrollY);
   var tabLoadedHandlers = {}; // tabId -> function()
+
+  var completionSources = {
+    smart:     new completion.SmartCompletionSource({
+      'wiki ': [ 'Wikipedia (en)',    'http://en.wikipedia.org/wiki/%s' ],
+      'luck ': [ 'Google Lucky (en)', 'http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky' ],
+      'cc '  : [ 'dict.cc',           'http://www.dict.cc/?s=%s' ],
+      ';'    : [ 'goto',              '%s' ],
+      '?'    : [ 'search',            function(query) { return utils.createSearchUrl(query) } ],
+      }),
+    domain:    new completion.DomainCompletionSource(),
+    bookmarks: new completion.FuzzyBookmarkCompletionSource(),
+    history:   new completion.FuzzyHistoryCompletionSource(20000),
+    tabs:      new completion.FuzzyTabCompletionSource(),
+  }
+  var completers = {
+    omni: new completion.MultiCompleter([
+                  completionSources.domain,
+                  completionSources.smart,
+                  completionSources.bookmarks,
+                  completionSources.history,
+                  ], 1),
+    tabs: new completion.MultiCompleter([ completionSources.tabs ], 0),
+  };
 
   chrome.extension.onConnect.addListener(function(port, name) {
     var senderTabId = port.sender.tab ? port.sender.tab.id : null;
@@ -70,7 +97,6 @@
 
     if (portHandlers[port.name])
       port.onMessage.addListener(portHandlers[port.name]);
-
   });
 
   chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
@@ -257,6 +283,13 @@
     Clipboard.copy(request.data);
   }
 
+  /**
+    * Selects the tab with the ID specified in request.id
+    */
+  function selectSpecificTab(request) {
+    chrome.tabs.update(request.id, { selected: true });
+  }
+
   /*
    * Used by the content scripts to get settings from the local storage.
    */
@@ -274,6 +307,27 @@
     chrome.bookmarks.search(args.query, function(bookmarks) {
         port.postMessage({bookmarks:bookmarks})
     })
+  }
+
+  function refreshCompleter(request) {
+    completers[request.name].refresh();
+  }
+
+  function filterCompleter(args, port) {
+    completers[args.name].filter(args.query, args.maxResults, function(results) {
+      port.postMessage({ id: args.id, results: results });
+    });
+  }
+
+  /*
+   * Used by everyone to get settings from local storage.
+   */
+  function getSettingFromLocalStorage(setting) {
+    if (localStorage[setting] != "" && !localStorage[setting]) {
+      return defaultSettings[setting];
+    } else {
+      return localStorage[setting];
+    }
   }
 
   function getCurrentTimeInSeconds() { Math.floor((new Date()).getTime() / 1000); }

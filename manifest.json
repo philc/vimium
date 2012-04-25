@@ -10,6 +10,7 @@
   "permissions": [
     "tabs",
     "bookmarks",
+    "history",
     "clipboardRead",
     "<all_urls>"
   ],
@@ -20,7 +21,9 @@
              "lib/keyboardUtils.js",
              "lib/domUtils.js",
              "lib/clipboard.js",
+             "lib/completion.js",
              "linkHints.js",
+             "fuzzyMode.js",
              "vimiumFrontend.js",
              "completionDialog.js",
              "bookmarks.js"
