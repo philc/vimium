@@ -13,6 +13,7 @@ var settings = {
       "/* linkhint boxes */ " + "\n" +
       "background-color: yellow;" + "\n" +
       "border: 1px solid #E3BE23;" + "\n" +
+      "overflow: hidden;" + "\n" +
       "}" + "\n\n" +
       "div > .vimiumHintMarker span {" + "\n" +
       "/* linkhint text */ " + "\n" +
