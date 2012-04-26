@@ -575,7 +575,7 @@ function refreshCompletionKeys(response) {
 }
 
 function isValidFirstKey(keyChar) {
-  return validFirstKeys[keyChar] || /\d/.test(keyChar);
+  return validFirstKeys[keyChar] || /[1-9]/.test(keyChar);
 }
 
 function onFocusCapturePhase(event) {

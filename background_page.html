@@ -602,7 +602,7 @@
   }
 
   function splitKeyQueue(queue) {
-    var match = /([0-9]*)(.*)/.exec(queue);
+    var match = /([1-9][0-9]*)?(.*)/.exec(queue);
     var count = parseInt(match[1]);
     var command = match[2];
 
