@@ -184,7 +184,7 @@ var linkHints = {
       if (linksMatched.length == 0) {
         this.deactivateMode();
       } else if (linksMatched.length == 1) {
-        this.activateLink(linksMatched[0].clickableItem, delay);
+        this.activateLink(linksMatched[0], delay);
       } else {
         for (var i in this.hintMarkers)
           this.hideMarker(this.hintMarkers[i]);
@@ -199,15 +199,16 @@ var linkHints = {
    */
   activateLink: function(matchedLink, delay) {
     this.delayMode = true;
-    if (domUtils.isSelectable(matchedLink)) {
-      domUtils.simulateSelect(matchedLink);
+    var clickEl = matchedLink.clickableItem;
+    if (domUtils.isSelectable(clickEl)) {
+      domUtils.simulateSelect(clickEl);
       this.deactivateMode(delay, function() { linkHints.delayMode = false; });
     } else {
       // TODO figure out which other input elements should not receive focus
-      if (matchedLink.nodeName.toLowerCase() === 'input' && matchedLink.type !== 'button')
-        matchedLink.focus();
-      domUtils.flashElement(matchedLink);
-      this.linkActivator(matchedLink);
+      if (clickEl.nodeName.toLowerCase() === 'input' && clickEl.type !== 'button')
+        clickEl.focus();
+      domUtils.flashElement(clickEl, matchedLink.rect);
+      this.linkActivator(clickEl);
       if (this.shouldOpenWithQueue) {
         this.deactivateMode(delay, function() {
           linkHints.delayMode = false;
@@ -543,6 +544,8 @@ var hintUtils = {
     var clientRect = link.rect;
     marker.style.left = clientRect.left + window.scrollX + "px";
     marker.style.top = clientRect.top  + window.scrollY  + "px";
+
+    marker.rect = link.rect;
 
     return marker;
   }
