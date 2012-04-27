@@ -381,8 +381,9 @@ body.vimiumFindMode ::selection {
   width: 90% !important;
 }
 
-#vimiumFlash {
+div#vimiumFlash {
   box-shadow: 0px 0px 4px 2px #4183C4;
+  padding: 1px;
   background: transparent;
   position: absolute;
   z-index: 99999;

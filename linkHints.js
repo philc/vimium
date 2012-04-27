@@ -207,7 +207,7 @@ var linkHints = {
       // TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() === 'input' && clickEl.type !== 'button')
         clickEl.focus();
-      domUtils.flashElement(clickEl, matchedLink.rect);
+      domUtils.flashRect(matchedLink.rect);
       this.linkActivator(clickEl);
       if (this.shouldOpenWithQueue) {
         this.deactivateMode(delay, function() {
