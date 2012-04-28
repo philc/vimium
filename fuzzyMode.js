@@ -46,6 +46,7 @@ var fuzzyMode = (function() {
     hide: function() {
       this.box.style.display = 'none';
       this.completionList.style.display = 'none';
+      this.input.blur();
       handlerStack.pop();
     },
 
