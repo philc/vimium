@@ -37,20 +37,20 @@ var fuzzyMode = (function() {
     },
 
     show: function() {
-      this.box.style.display = 'block';
+      this.box.style.display = "block";
       this.input.focus();
       handlerStack.push({ keydown: this.onKeydown.bind(this) });
     },
 
     hide: function() {
-      this.box.style.display = 'none';
-      this.completionList.style.display = 'none';
+      this.box.style.display = "none";
+      this.completionList.style.display = "none";
       this.input.blur();
       handlerStack.pop();
     },
 
     reset: function() {
-      this.input.value = '';
+      this.input.value = "";
       this.updateTimer = null;
       this.completions = [];
       this.selection = 0;
@@ -61,7 +61,7 @@ var fuzzyMode = (function() {
       if (this.completions.length > 0)
         this.selection = Math.min(this.selection, this.completions.length - 1);
       for (var i = 0; i < this.completionList.children.length; ++i)
-        this.completionList.children[i].className = (i == this.selection) ? 'selected' : '';
+        this.completionList.children[i].className = (i == this.selection) ? "selected" : "";
     },
 
     onKeydown: function(event) {
@@ -86,7 +86,7 @@ var fuzzyMode = (function() {
       }
 
       // refresh with F5
-      else if (keyChar == 'f5') {
+      else if (keyChar == "f5") {
         this.completer.refresh();
         this.update(true); // force immediate update
       }
@@ -112,17 +112,17 @@ var fuzzyMode = (function() {
 
     updateCompletions: function(callback) {
       var self = this;
-      query = this.input.value.replace(/^\s*/, '');
+      query = this.input.value.replace(/^\s*/, "");
 
       this.completer.filter(query, this.maxResults, function(completions) {
         self.completions = completions;
 
         // update completion list with the new data
         self.completionList.innerHTML = completions.map(function(completion) {
-          return '<li>' + completion.html + '</li>';
+          return "<li>" + completion.html + "</li>";
         }).join('');
 
-        self.completionList.style.display = self.completions.length > 0 ? 'block' : 'none';
+        self.completionList.style.display = self.completions.length > 0 ? "block" : "none";
         self.updateSelection();
         if (callback) callback();
       });
@@ -163,15 +163,15 @@ var fuzzyMode = (function() {
       this.input = document.querySelector("#fuzzybox .query");
       this.input.addEventListener("input", function() { this.update(); }.bind(this));
       this.completionList = document.querySelector("#fuzzybox ul");
-      this.completionList.style.display = 'none';
+      this.completionList.style.display = "none";
     },
   }
 
   // public interface
   return {
-    activateAll:       function() { start('omni', false, 100); },
-    activateAllNewTab: function() { start('omni', true,  100);  },
-    activateTabs:      function() { start('tabs', false, 0);  },
+    activateAll:       function() { start("omni", false, 100); },
+    activateAllNewTab: function() { start("omni", true,  100);  },
+    activateTabs:      function() { start("tabs", false, 0);  },
   }
 
 })();
