@@ -24,9 +24,7 @@
              "lib/completion.js",
              "linkHints.js",
              "fuzzyMode.js",
-             "vimiumFrontend.js",
-             "completionDialog.js",
-             "bookmarks.js"
+             "vimiumFrontend.js"
             ],
       "css": ["vimium.css"],
       "run_at": "document_start",

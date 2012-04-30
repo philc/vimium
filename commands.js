@@ -141,9 +141,6 @@ function clearKeyMappingsAndSetDefaults() {
     "x": "removeTab",
     "X": "restoreTab",
 
-    "b": "activateBookmarkFindMode",
-    "B": "activateBookmarkFindModeToOpenInNewTab",
-
     "o": "fuzzyMode.activateAll",
     "O": "fuzzyMode.activateAllNewTab",
 
@@ -213,9 +210,6 @@ var commandDescriptions = {
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
 
-  activateBookmarkFindMode: ["Open a bookmark in the current tab"],
-  activateBookmarkFindModeToOpenInNewTab: ["Open a bookmark in a new tab"],
-
   'fuzzyMode.activateAll': ["Open URL, bookmark, history entry or a custom search (fuzzy)"],
   'fuzzyMode.activateAllNewTab': ["Open URL, bookmark, history entry or a custom search (fuzzy, new tab)"],
   'fuzzyMode.activateTabs': ["Go to a tab in this window (fuzzy)"],
@@ -238,7 +232,6 @@ var commandGroups = {
      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
-     "activateBookmarkFindMode", "activateBookmarkFindModeToOpenInNewTab",
      "fuzzyMode.activateAll", "fuzzyMode.activateAllNewTab", "fuzzyMode.activateTabs",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
