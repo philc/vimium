@@ -71,16 +71,15 @@ var fuzzyMode = (function() {
       if (isEscape(event)) {
         this.hide();
       }
-
       // move selection with Up/Down, Tab/Shift-Tab, Ctrl-k/Ctrl-j
-      else if (keyChar === 'up' || (event.keyCode == 9 && event.shiftKey)
-              || (keyChar === 'k' && event.ctrlKey)) {
+      else if (keyChar === "up" || (event.keyCode == keyCodes.tab && event.shiftKey)
+              || (keyChar === "k" && event.ctrlKey)) {
         if (this.selection > 0)
           this.selection -= 1;
         this.updateSelection();
       }
-      else if (keyChar === 'down' || (event.keyCode == 9 && !event.shiftKey)
-              || (keyChar === 'j' && isPrimaryModifierKey(event))) {
+      else if (keyChar === "down" || (event.keyCode == keyCodes.tab && !event.shiftKey)
+              || (keyChar === "j" && isPrimaryModifierKey(event))) {
         if (this.selection < this.completions.length - 1)
           this.selection += 1;
         this.updateSelection();
