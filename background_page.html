@@ -247,7 +247,7 @@
    */
   function openUrlInNewTab(request) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: request.selected });
+      chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: true });
     });
   }
 

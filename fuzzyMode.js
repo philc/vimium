@@ -9,14 +9,14 @@ var fuzzyMode = (function() {
   }
 
   /** Trigger the fuzzy mode dialog */
-  function start(name, reverseAction, refreshInterval) {
+  function start(name, refreshInterval) {
     var completer = getCompleter(name);
     if (!fuzzyBox)
       fuzzyBox = new FuzzyBox(10);
     completer.refresh();
     fuzzyBox.setCompleter(completer);
     fuzzyBox.setRefreshInterval(refreshInterval);
-    fuzzyBox.show(reverseAction);
+    fuzzyBox.show();
   }
 
   /** User interface for fuzzy completion */
@@ -36,8 +36,7 @@ var fuzzyMode = (function() {
       this.refreshInterval = refreshInterval;
     },
 
-    show: function(reverseAction) {
-      this.reverseAction = reverseAction;
+    show: function() {
       this.box.style.display = 'block';
       this.input.focus();
       handlerStack.push({ keydown: this.onKeydown.bind(this) });
@@ -97,10 +96,8 @@ var fuzzyMode = (function() {
       // (opening in new tab)
       else if (event.keyCode == keyCodes.enter) {
         this.update(true, function() {
-          var alternative = (event.shiftKey || isPrimaryModifierKey(event));
-          if (self.reverseAction)
-            alternative = !alternative;
-          self.completions[self.selection].action[alternative ? 1 : 0]();
+          var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
+          self.completions[self.selection].action[openInNewTab ? 1 : 0]();
           self.hide();
         });
       }
