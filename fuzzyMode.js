@@ -91,12 +91,11 @@ var fuzzyMode = (function() {
         this.update(true); // force immediate update
       }
 
-      // use primary action with Enter. Holding down Shift/Ctrl uses the alternative action
-      // (opening in new tab)
       else if (event.keyCode == keyCodes.enter) {
         this.update(true, function() {
+          // Shift+Enter will open the result in a new tab instead of the current tab.
           var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
-          self.completions[self.selection].action[openInNewTab ? 1 : 0]();
+          self.completions[self.selection].action(openInNewTab);
           self.hide();
         });
       }
@@ -197,28 +196,22 @@ var fuzzyMode = (function() {
 
   /** Creates an action that opens :url in the current tab by default or in a new tab as an alternative. */
   function createActionOpenUrl(url) {
-    var open = function(newTab, selected) {
-      return function() {
-        chrome.extension.sendRequest({
-          handler:  newTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
-          url:      url,
-          selected: selected
-        });
-      }
-    }
-
-    if (url.indexOf("javascript:") == 0)
-      return [ open(false), open(false), open(false) ];
-    else
-      return [ open(false), open(true, true), open(true, false) ];
+    return function(openInNewTab) {
+      // If the URL is a bookmarklet prefixed with javascript:, we don't need to open that in a new tab.
+      if (url.indexOf("javascript:") == 0)
+        openInNewTab = false;
+      var selected = openInNewTab;
+      chrome.extension.sendRequest({
+        handler:  openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+        url:      url,
+        selected: openInNewTab
+      });
+    };
   }
 
   /** Returns an action that switches to the tab with the given :id. */
   function createActionSwitchToTab(id) {
-    var open = function() {
-      chrome.extension.sendRequest({ handler: 'selectSpecificTab', id: id });
-    }
-    return [open, open, open];
+    return function() { chrome.extension.sendRequest({ handler: "selectSpecificTab", id: id }); };
   }
 
 
