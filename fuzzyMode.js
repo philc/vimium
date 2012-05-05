@@ -95,7 +95,7 @@ var fuzzyMode = (function() {
         this.update(true, function() {
           // Shift+Enter will open the result in a new tab instead of the current tab.
           var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
-          self.completions[self.selection].action(openInNewTab);
+          self.completions[self.selection].performAction(openInNewTab);
           self.hide();
         });
       }
@@ -170,9 +170,7 @@ var fuzzyMode = (function() {
    * Sends filter and refresh requests to a Vomnibar completer on the background page.
    */
   var BackgroundCompleter = Class.extend({
-    /*
-     * - name: The name of the background page completer that you want to interface with. One of [omni, tabs].
-     */
+    /* - name: The background page completer that you want to interface with. Either "omni" or "tabs". */
     init: function(name) {
       this.name = name;
       this.filterPort = chrome.extension.connect({ name: "filterCompleter" });
@@ -185,8 +183,8 @@ var fuzzyMode = (function() {
       this.filterPort.onMessage.addListener(function(msg) {
         if (msg.id != id) return;
         callback(msg.results.map(function(result) {
-          var action = result.action;
-          result.action = eval(action.func).curry(action.args);
+          var functionToCall = eval(result.action.func);
+          result.performAction = functionToCall.curry(result.action.args);
           return result;
         }));
       });
@@ -194,25 +192,20 @@ var fuzzyMode = (function() {
     }
   });
 
-  /** Creates an action that opens :url in the current tab by default or in a new tab as an alternative. */
-  function createActionOpenUrl(url, openInNewTab) {
-    console.log("arguments:", arguments);
-    // If the URL is a bookmarklet prefixed with javascript:, we don't need to open that in a new tab.
+  /* Called when an item in the Vomnibar is chosen and requires navigating to a URL. */
+  function navigateToUrl(url, openInNewTab) {
+    // If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
     if (url.indexOf("javascript:") == 0)
       openInNewTab = false;
-    var selected = openInNewTab;
     chrome.extension.sendRequest({
-      handler:  openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
-      url:      url,
+      handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+      url: url,
       selected: openInNewTab
     });
   }
 
-  /** Returns an action that switches to the tab with the given :id. */
-  function createActionSwitchToTab(tabId) {
-    chrome.extension.sendRequest({ handler: "selectSpecificTab", id: tabId });
-  }
-
+  /* Called when an item in the Vomnibar is chosen and requires switching to a tab. */
+  function switchToTab(tabId) { chrome.extension.sendRequest({ handler: "selectSpecificTab", id: tabId }); }
 
   // public interface
   return {
