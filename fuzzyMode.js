@@ -4,7 +4,7 @@ var fuzzyMode = (function() {
 
   function getCompleter(name) {
     if (!(name in completers))
-      completers[name] = new completion.BackgroundCompleter(name);
+      completers[name] = new BackgroundCompleter(name);
     return completers[name];
   }
 
@@ -166,6 +166,34 @@ var fuzzyMode = (function() {
       this.completionList.style.display = "none";
     },
   }
+
+  /*
+   * Sends filter and refresh requests to a Vomnibar completer on the background page.
+   */
+  var BackgroundCompleter = Class.extend({
+    /*
+     * - name: The name of the background page completer that you want to interface with. One of [omni, tabs].
+     */
+    init: function(name) {
+      this.name = name;
+      this.filterPort = chrome.extension.connect({ name: "filterCompleter" });
+    },
+
+    refresh: function() { chrome.extension.sendRequest({ handler: "refreshCompleter", name: this.name }); },
+
+    filter: function(query, maxResults, callback) {
+      var id = utils.createUniqueId();
+      this.filterPort.onMessage.addListener(function(msg) {
+        if (msg.id != id) return;
+        callback(msg.results.map(function(result) {
+          var action = result.action;
+          result.action = eval(action.func).apply(null, action.args);
+          return result;
+        }));
+      });
+      this.filterPort.postMessage({ id: id, name: this.name, query: query, maxResults: maxResults });
+    }
+  });
 
   // public interface
   return {
