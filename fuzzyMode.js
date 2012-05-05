@@ -195,6 +195,33 @@ var fuzzyMode = (function() {
     }
   });
 
+  /** Creates an action that opens :url in the current tab by default or in a new tab as an alternative. */
+  function createActionOpenUrl(url) {
+    var open = function(newTab, selected) {
+      return function() {
+        chrome.extension.sendRequest({
+          handler:  newTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+          url:      url,
+          selected: selected
+        });
+      }
+    }
+
+    if (url.indexOf("javascript:") == 0)
+      return [ open(false), open(false), open(false) ];
+    else
+      return [ open(false), open(true, true), open(true, false) ];
+  }
+
+  /** Returns an action that switches to the tab with the given :id. */
+  function createActionSwitchToTab(id) {
+    var open = function() {
+      chrome.extension.sendRequest({ handler: 'selectSpecificTab', id: id });
+    }
+    return [open, open, open];
+  }
+
+
   // public interface
   return {
     activateAll:       function() { start("omni", false, 100); },
