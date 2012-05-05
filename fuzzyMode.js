@@ -186,7 +186,7 @@ var fuzzyMode = (function() {
         if (msg.id != id) return;
         callback(msg.results.map(function(result) {
           var action = result.action;
-          result.action = eval(action.func).apply(null, action.args);
+          result.action = eval(action.func).curry(action.args);
           return result;
         }));
       });
@@ -195,23 +195,22 @@ var fuzzyMode = (function() {
   });
 
   /** Creates an action that opens :url in the current tab by default or in a new tab as an alternative. */
-  function createActionOpenUrl(url) {
-    return function(openInNewTab) {
-      // If the URL is a bookmarklet prefixed with javascript:, we don't need to open that in a new tab.
-      if (url.indexOf("javascript:") == 0)
-        openInNewTab = false;
-      var selected = openInNewTab;
-      chrome.extension.sendRequest({
-        handler:  openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
-        url:      url,
-        selected: openInNewTab
-      });
-    };
+  function createActionOpenUrl(url, openInNewTab) {
+    console.log("arguments:", arguments);
+    // If the URL is a bookmarklet prefixed with javascript:, we don't need to open that in a new tab.
+    if (url.indexOf("javascript:") == 0)
+      openInNewTab = false;
+    var selected = openInNewTab;
+    chrome.extension.sendRequest({
+      handler:  openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+      url:      url,
+      selected: openInNewTab
+    });
   }
 
   /** Returns an action that switches to the tab with the given :id. */
-  function createActionSwitchToTab(id) {
-    return function() { chrome.extension.sendRequest({ handler: "selectSpecificTab", id: id }); };
+  function createActionSwitchToTab(tabId) {
+    chrome.extension.sendRequest({ handler: "selectSpecificTab", id: tabId });
   }
 
 
