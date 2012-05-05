@@ -183,7 +183,7 @@ var fuzzyMode = (function() {
       this.filterPort.onMessage.addListener(function(msg) {
         if (msg.id != id) return;
         callback(msg.results.map(function(result) {
-          var functionToCall = eval(result.action.func);
+          var functionToCall = eval(result.action.functionName);
           result.performAction = functionToCall.curry(result.action.args);
           return result;
         }));
