@@ -167,7 +167,7 @@ var fuzzyMode = (function() {
   }
 
   /*
-   * Sends filter and refresh requests to a Vomnibar completer on the background page.
+   * Sends filter and refresh requests to a Vomnibox completer on the background page.
    */
   var BackgroundCompleter = Class.extend({
     /* - name: The background page completer that you want to interface with. Either "omni" or "tabs". */
@@ -193,7 +193,7 @@ var fuzzyMode = (function() {
     }
   });
 
-  /* Called when an item in the Vomnibar is chosen and requires navigating to a URL. */
+  /* Called when an item in the Vomnibox is chosen and requires navigating to a URL. */
   function navigateToUrl(url, openInNewTab) {
     // If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
     if (url.indexOf("javascript:") == 0)
@@ -205,7 +205,7 @@ var fuzzyMode = (function() {
     });
   }
 
-  /* Called when an item in the Vomnibar is chosen and requires switching to a tab. */
+  /* Called when an item in the Vomnibox is chosen and requires switching to a tab. */
   function switchToTab(tabId) { chrome.extension.sendRequest({ handler: "selectSpecificTab", id: tabId }); }
 
   // public interface
