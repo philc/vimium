@@ -141,10 +141,10 @@ function clearKeyMappingsAndSetDefaults() {
     "x": "removeTab",
     "X": "restoreTab",
 
-    "o": "fuzzyMode.activate",
-    "O": "fuzzyMode.activateWithCurrentUrl",
+    "o": "vomnibar.activate",
+    "O": "vomnibar.activateWithCurrentUrl",
 
-    "T": "fuzzyMode.activateTabSelection",
+    "T": "vomnibar.activateTabSelection",
 
     "gf": "nextFrame",
   };
@@ -210,9 +210,9 @@ var commandDescriptions = {
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
 
-  "fuzzyMode.activate": ["Open URL, bookmark, or history entry"],
-  "fuzzyMode.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"],
-  "fuzzyMode.activateTabSelection": ["Search through your open tabs"],
+  "vomnibar.activate": ["Open URL, bookmark, or history entry"],
+  "vomnibar.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"],
+  "vomnibar.activateTabSelection": ["Search through your open tabs"],
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 };
@@ -232,7 +232,7 @@ var commandGroups = {
      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
-     "fuzzyMode.active", "fuzzyMode.activateWithCurrentUrl", "fuzzyMode.activateTabSelection",
+     "vomnibar.activate", "vomnibar.activateWithCurrentUrl", "vomnibar.activateTabSelection",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:

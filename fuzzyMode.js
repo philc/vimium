@@ -1,4 +1,4 @@
-var fuzzyMode = (function() {
+var vomnibar = (function() {
   var vomnibarUI = null;  // the dialog instance for this window
   var completers = { };
 
