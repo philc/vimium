@@ -18,12 +18,12 @@
     {
       "matches": ["<all_urls>"],
       "js": ["lib/utils.js",
-             "lib/keyboardUtils.js",
-             "lib/domUtils.js",
+             "lib/keyboard_utils.js",
+             "lib/dom_utils.js",
              "lib/clipboard.js",
-             "linkHints.js",
-             "vomnibar.js",
-             "vimiumFrontend.js"
+             "content_scripts/link_hints.js",
+             "content_scripts/vomnibar.js",
+             "content_scripts/vimium_frontend.js"
             ],
       "css": ["vimium.css"],
       "run_at": "document_start",
