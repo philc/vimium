@@ -180,7 +180,7 @@ var fuzzyMode = (function() {
         if (msg.id != id) return;
         callback(msg.results.map(function(result) {
           // functionName will be either "navigateToUrl" or "switchToTab". args will be a URL or a tab ID.
-          var functionToCall = eval(result.action.functionName);
+          var functionToCall = completionActions[result.action.functionName];
           result.performAction = functionToCall.curry(result.action.args);
           return result;
         }));
@@ -189,20 +189,25 @@ var fuzzyMode = (function() {
     }
   });
 
-  /* Called when an item in the Vomnibox is chosen and requires navigating to a URL. */
-  function navigateToUrl(url, openInNewTab) {
-    // If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
-    if (url.indexOf("javascript:") == 0)
-      openInNewTab = false;
-    chrome.extension.sendRequest({
-      handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
-      url: url,
-      selected: openInNewTab
-    });
-  }
+  /*
+   * These are the actions we can perform when the user selects a result in the Vomnibox.
+   */
+  var completionActions = {
+    navigateToUrl: function(url, openInNewTab) {
+      // If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
+      if (url.indexOf("javascript:") == 0)
+        openInNewTab = false;
+      chrome.extension.sendRequest({
+        handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+        url: url,
+        selected: openInNewTab
+      });
+    },
 
-  /* Called when an item in the Vomnibox is chosen and requires switching to a tab. */
-  function switchToTab(tabId) { chrome.extension.sendRequest({ handler: "selectSpecificTab", id: tabId }); }
+    switchToTab: function(tabId) {
+      chrome.extension.sendRequest({ handler: "selectSpecificTab", id: tabId });
+    }
+  };
 
   // public interface
   return {
@@ -210,5 +215,4 @@ var fuzzyMode = (function() {
     activateAllNewTab: function() { start("omni", true,  100);  },
     activateTabs:      function() { start("tabs", false, 0);  },
   }
-
 })();
