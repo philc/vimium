@@ -183,6 +183,7 @@ var fuzzyMode = (function() {
       this.filterPort.onMessage.addListener(function(msg) {
         if (msg.id != id) return;
         callback(msg.results.map(function(result) {
+          // functionName will be either "navigateToUrl" or "switchToTab". args will be a URL or a tab ID.
           var functionToCall = eval(result.action.functionName);
           result.performAction = functionToCall.curry(result.action.args);
           return result;
