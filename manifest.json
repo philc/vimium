@@ -22,7 +22,7 @@
              "lib/domUtils.js",
              "lib/clipboard.js",
              "linkHints.js",
-             "fuzzyMode.js",
+             "vomnibar.js",
              "vimiumFrontend.js"
             ],
       "css": ["vimium.css"],
