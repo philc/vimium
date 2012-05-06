@@ -211,8 +211,8 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start("omni", false, 100); },
-    activateAllNewTab: function() { start("omni", true,  100);  },
-    activateTabs:      function() { start("tabs", false, 0);  },
+    activateAll:       function() { start("omni", 100); },
+    activateAllNewTab: function() { start("omni", 100); },
+    activateTabs:      function() { start("tabs", 0); },
   }
 })();
