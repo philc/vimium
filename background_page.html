@@ -174,7 +174,7 @@
       var command = keyToCommandRegistry[key].command;
       commandsToKey[command] = (commandsToKey[command] || []).concat(key);
     }
-    var dialogHtml = fetchFileContents("helpDialog.html");
+    var dialogHtml = fetchFileContents("help_dialog.html");
     for (var group in commandGroups)
       dialogHtml = dialogHtml.replace("{{" + group + "}}",
           helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands,
