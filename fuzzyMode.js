@@ -1,5 +1,5 @@
 var fuzzyMode = (function() {
-  var fuzzyBox = null;  // the dialog instance for this window
+  var vomnibarUI = null;  // the dialog instance for this window
   var completers = { };
 
   function getCompleter(name) {
@@ -13,18 +13,18 @@ var fuzzyMode = (function() {
    */
   function activate(completerName, refreshInterval, initialQueryValue) {
     var completer = getCompleter(completerName);
-    if (!fuzzyBox)
-      fuzzyBox = new FuzzyBox(10);
+    if (!vomnibarUI)
+      vomnibarUI = new VomnibarUI(10);
     completer.refresh();
-    fuzzyBox.setCompleter(completer);
-    fuzzyBox.setRefreshInterval(refreshInterval);
+    vomnibarUI.setCompleter(completer);
+    vomnibarUI.setRefreshInterval(refreshInterval);
     if (initialQueryValue)
-      fuzzyBox.setQuery(initialQueryValue);
-    fuzzyBox.show();
+      vomnibarUI.setQuery(initialQueryValue);
+    vomnibarUI.show();
   }
 
   /** User interface for fuzzy completion */
-  var FuzzyBox = Class.extend({
+  var VomnibarUI = Class.extend({
     init: function(maxResults) {
       this.prompt = '>';
       this.maxResults = maxResults;
@@ -161,7 +161,7 @@ var fuzzyMode = (function() {
 
     initDom: function() {
       this.box = utils.createElementFromHtml(
-        '<div id="fuzzybox" class="vimiumReset">'+
+        '<div id="vomnibar" class="vimiumReset">'+
           '<div class="input">'+
             '<span class="prompt">' + utils.escapeHtml(this.prompt) + '</span> '+
             '<input type="text" class="query"></span></div>'+
@@ -169,9 +169,9 @@ var fuzzyMode = (function() {
       this.box.style.display = 'none';
       document.body.appendChild(this.box);
 
-      this.input = document.querySelector("#fuzzybox .query");
+      this.input = document.querySelector("#vomnibar .query");
       this.input.addEventListener("input", function() { this.update(); }.bind(this));
-      this.completionList = document.querySelector("#fuzzybox ul");
+      this.completionList = document.querySelector("#vomnibar ul");
       this.completionList.style.display = "none";
     }
   });

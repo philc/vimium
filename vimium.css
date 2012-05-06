@@ -286,11 +286,11 @@ body.vimiumFindMode ::selection {
 
 /* fuzzymode CSS */
 
-#fuzzybox ol, #fuzzybox ul {
+#vomnibar ol, #vomnibar ul {
   list-style: none !important;
 }
 
-#fuzzybox {
+#vomnibar {
   position: fixed !important;
   width: 80% !important;
   min-width: 400px !important;
@@ -309,14 +309,14 @@ body.vimiumFindMode ::selection {
   z-index: 99999998 !important;
 }
 
-#fuzzybox ul {
+#vomnibar ul {
   list-style: none !important;
   padding: 7px 0 0 0 !important;
   margin: 7px 0 0 0 !important;
   border-top: 2px solid #444 !important;
 }
 
-#fuzzybox li {
+#vomnibar li {
   border-bottom: 1px solid #111 !important;
   line-height: 1.1em !important;
   padding: 7px !important;
@@ -325,39 +325,39 @@ body.vimiumFindMode ::selection {
   color: #ddd !important;
 }
 
-#fuzzybox li .fuzzyMatch {
+#vomnibar li .fuzzyMatch {
   color: red !important;
   font-size: inherit !important;
   font-family: inherit !important;
 }
 
-#fuzzybox li em, #fuzzybox li .title {
+#vomnibar li em, #vomnibar li .title {
   color: #444 !important;
   font-weight: normal !important;
   font-size: inherit !important;
   font-family: inherit !important;
 }
-#fuzzybox li em {
+#vomnibar li em {
   font-style: italic !important;
 }
-#fuzzybox li em .fuzzyMatch, #fuzzybox li .title .fuzzyMatch {
+#vomnibar li em .fuzzyMatch, #vomnibar li .title .fuzzyMatch {
   color: #888 !important;
   font-style: inherit !important;
   font-weight: bold !important;
 }
 
-#fuzzybox li.selected {
+#vomnibar li.selected {
   background: #222 !important;
   color: #ccc !important;
   border-radius: 4px !important;
   font-weight: normal !important;
   font-family: inherit !important;
 }
-#fuzzybox li.selected em, #fuzzybox li.selected .title {
+#vomnibar li.selected em, #vomnibar li.selected .title {
   color: #666 !important;
 }
 
-#fuzzybox .input {
+#vomnibar .input {
   font-size: 28px !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -365,13 +365,13 @@ body.vimiumFindMode ::selection {
   font-family: inherit !important;
 }
 
-#fuzzybox .input .prompt {
+#vomnibar .input .prompt {
   color: orange !important;
   font-size: inherit !important;
   font-family: inherit !important;
 }
 
-#fuzzybox .input .query {
+#vomnibar .input .query {
   font-size: inherit !important;
   font-family: inherit !important;
   color: inherit !important;
