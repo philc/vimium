@@ -69,33 +69,42 @@ var fuzzyMode = (function() {
         this.completionList.children[i].className = (i == this.selection) ? "selected" : "";
     },
 
-    onKeydown: function(event) {
-      var keyChar = getKeyChar(event);
+    /*
+     * Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
+     * We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
+     */
+    actionFromKeyEvent: function(event) {
+      var key = getKeyChar(event);
+      if (isEscape(event))
+        return "dismiss";
+      else if (key == "up" || (event.keyCode == keyCodes.tab && event.shiftKey) ||
+          (key == "k" && event.ctrlKey))
+        return "up";
+      else if (key == "down" || (event.keyCode == keyCodes.tab && !event.shiftKey) ||
+        (key == "j" && isPrimaryModifierKey(event)))
+        return "down";
+      else if (event.keyCode == keyCodes.enter)
+        return "enter";
+    },
 
-      if (isEscape(event)) {
+    onKeydown: function(event) {
+      var action = this.actionFromKeyEvent(event);
+      if (!action) return true; // pass through
+
+      if (action == "dismiss") {
         this.hide();
       }
-      // move selection with Up/Down, Tab/Shift-Tab, Ctrl-k/Ctrl-j
-      else if (keyChar === "up" || (event.keyCode == keyCodes.tab && event.shiftKey)
-              || (keyChar === "k" && event.ctrlKey)) {
+      else if (action == "up") {
         if (this.selection > 0)
           this.selection -= 1;
         this.updateSelection();
       }
-      else if (keyChar === "down" || (event.keyCode == keyCodes.tab && !event.shiftKey)
-              || (keyChar === "j" && isPrimaryModifierKey(event))) {
+      else if (action == "down") {
         if (this.selection < this.completions.length - 1)
           this.selection += 1;
         this.updateSelection();
       }
-
-      // refresh with F5
-      else if (keyChar == "f5") {
-        this.completer.refresh();
-        this.update(true); // force immediate update
-      }
-
-      else if (event.keyCode == keyCodes.enter) {
+      else if (action == "enter") {
         this.update(true, function() {
           // Shift+Enter will open the result in a new tab instead of the current tab.
           var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
@@ -103,11 +112,8 @@ var fuzzyMode = (function() {
           this.hide();
         }.proxy(this));
       }
-      else {
-        return true; // pass through
-      }
 
-      // it seems like we have to manually supress the event here and still return true...
+      // It seems like we have to manually supress the event here and still return true.
       event.stopPropagation();
       event.preventDefault();
       return true;
