@@ -77,11 +77,13 @@ var fuzzyMode = (function() {
       var key = getKeyChar(event);
       if (isEscape(event))
         return "dismiss";
-      else if (key == "up" || (event.keyCode == keyCodes.tab && event.shiftKey) ||
-          (key == "k" && event.ctrlKey))
+      else if (key == "up" ||
+          (event.shiftKey && event.keyCode == keyCodes.tab) ||
+          (event.ctrlKey && (key == "k" || key == "p")))
         return "up";
-      else if (key == "down" || (event.keyCode == keyCodes.tab && !event.shiftKey) ||
-        (key == "j" && isPrimaryModifierKey(event)))
+      else if (key == "down" ||
+        (event.keyCode == keyCodes.tab && !event.shiftKey) ||
+        (event.ctrlKey && (key == "j" || key == "n")))
         return "down";
       else if (event.keyCode == keyCodes.enter)
         return "enter";
