@@ -911,7 +911,7 @@ function findAndFollowLink(linkStrings) {
 
     var linkMatches = false;
     for (var j = 0; j < linkStrings.length; j++) {
-      if (link.innerText.toLowerCase().indexOf(linkStrings[j]) !== -1) {
+      if (getTextInElement(link).toLowerCase().indexOf(linkStrings[j]) !== -1) {
         linkMatches = true;
         break;
       }
@@ -923,7 +923,7 @@ function findAndFollowLink(linkStrings) {
 
   if (candidateLinks.length === 0) return;
 
-  function wordCount(link) { return link.innerText.trim().split(/\s+/).length; }
+  function wordCount(link) { return getTextInElement(link).trim().split(/\s+/).length; }
 
   // We can use this trick to ensure that Array.sort is stable. We need this property to retain the reverse
   // in-page order of the links.
@@ -942,7 +942,7 @@ function findAndFollowLink(linkStrings) {
   for (var i = 0; i < linkStrings.length; i++)
     for (var j = 0; j < candidateLinks.length; j++) {
       var exactWordRegex = new RegExp("\\b" + linkStrings[i] + "\\b", "i");
-      if (exactWordRegex.test(candidateLinks[j].innerText)) {
+      if (exactWordRegex.test(getTextInElement(candidateLinks[j]))) {
         followLink(candidateLinks[j]);
         return true;
       }
@@ -950,13 +950,36 @@ function findAndFollowLink(linkStrings) {
 
   for (var i = 0; i < linkStrings.length; i++)
     for (var j = 0; j < candidateLinks.length; j++) {
-      if (candidateLinks[j].innerText.toLowerCase().indexOf(linkStrings[i]) !== -1) {
+      if (getTextInElement(candidateLinks[j]).toLowerCase().indexOf(linkStrings[i]) !== -1) {
         followLink(candidateLinks[j]);
         return true;
       }
     }
 
   return false;
+}
+
+// Adapted from http://j.mp/xgN3Zp
+function getTextInElement(el) {
+  var text = '';
+  // Text node (3) or CDATA node (4) - return its text
+  if ( (el.nodeType === 3) || (el.nodeType === 4) ) {
+      text = el.nodeValue;
+  // If node is an element (1) and an img, input[type=image], or area element, return its alt text
+  } else if ( (el.nodeType === 1) && (
+          (el.tagName.toLowerCase() == 'img') ||
+          (el.tagName.toLowerCase() == 'area') ||
+          ((el.tagName.toLowerCase() == 'input') && el.getAttribute('type') && (el.getAttribute('type').toLowerCase() == 'image'))
+          ) ) {
+      text = el.getAttribute('alt') || '';
+  // Traverse children
+  } else if ( (el.nodeType === 1) ) {
+      var children = el.childNodes;
+      for (var i = 0, l = children.length; i < l; i++) {
+          text += getTextInElement(children[i]);
+      }
+  }
+  return text;
 }
 
 function findAndFollowRel(value) {
