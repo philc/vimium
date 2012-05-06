@@ -53,17 +53,17 @@
   var tabLoadedHandlers = {}; // tabId -> function()
 
   var completionSources = {
-    smart:     new completion.SmartCompletionSource({
-      'wiki ': [ 'Wikipedia (en)',    'http://en.wikipedia.org/wiki/%s' ],
-      'luck ': [ 'Google Lucky (en)', 'http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky' ],
-      'cc '  : [ 'dict.cc',           'http://www.dict.cc/?s=%s' ],
-      ';'    : [ 'goto',              '%s' ],
-      '?'    : [ 'search',            function(query) { return utils.createSearchUrl(query) } ],
+    smart:     new completion.SmartKeywordCompleter({
+      "wiki ": [ "Wikipedia (en)",    "http://en.wikipedia.org/wiki/%s" ],
+      "luck ": [ "Google Lucky (en)", "http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky" ],
+      "cc "  : [ "dict.cc",           "http://www.dict.cc/?s=%s" ],
+      ";"    : [ "goto",              "%s" ],
+      "?"    : [ "search",            function(query) { return utils.createSearchUrl(query); }],
       }),
-    domain:    new completion.DomainCompletionSource(),
-    bookmarks: new completion.FuzzyBookmarkCompletionSource(),
-    history:   new completion.FuzzyHistoryCompletionSource(20000),
-    tabs:      new completion.FuzzyTabCompletionSource(),
+    domain:    new completion.DomainCompleter(),
+    bookmarks: new completion.FuzzyBookmarkCompleter(),
+    history:   new completion.FuzzyHistoryCompleter(20000),
+    tabs:      new completion.FuzzyTabCompleter(),
   }
   var completers = {
     omni: new completion.MultiCompleter([
