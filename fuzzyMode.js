@@ -20,21 +20,20 @@ var fuzzyMode = (function() {
   }
 
   /** User interface for fuzzy completion */
-  var FuzzyBox = function(maxResults) {
-    this.prompt = '>';
-    this.maxResults = maxResults;
-    this.refreshInterval = 0;
-    this.initDom();
-  }
-  FuzzyBox.prototype = {
+  var FuzzyBox = Class.extend({
+    init: function(maxResults) {
+      this.prompt = '>';
+      this.maxResults = maxResults;
+      this.refreshInterval = 0;
+      this.initDom();
+    },
+
     setCompleter: function(completer) {
       this.completer = completer;
       this.reset();
     },
 
-    setRefreshInterval: function(refreshInterval) {
-      this.refreshInterval = refreshInterval;
-    },
+    setRefreshInterval: function(refreshInterval) { this.refreshInterval = refreshInterval; },
 
     show: function() {
       this.box.style.display = "block";
@@ -160,8 +159,8 @@ var fuzzyMode = (function() {
       this.input.addEventListener("input", function() { this.update(); }.bind(this));
       this.completionList = document.querySelector("#fuzzybox ul");
       this.completionList.style.display = "none";
-    },
-  }
+    }
+  });
 
   /*
    * Sends filter and refresh requests to a Vomnibox completer on the background page.
