@@ -232,7 +232,7 @@ var commandGroups = {
      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
      "enterInsertMode", "focusInput",
      "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
-     "fuzzyMode.activateAll", "fuzzyMode.activateAllNewTab", "fuzzyMode.activateTabs",
+     "fuzzyMode.active", "fuzzyMode.activateWithCurrentUrl", "fuzzyMode.activateTabSelection",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
   historyNavigation:
