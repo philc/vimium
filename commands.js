@@ -141,10 +141,10 @@ function clearKeyMappingsAndSetDefaults() {
     "x": "removeTab",
     "X": "restoreTab",
 
-    "o": "fuzzyMode.activateAll",
-    "O": "fuzzyMode.activateAllNewTab",
+    "o": "fuzzyMode.activate",
+    "O": "fuzzyMode.activateWithCurrentUrl",
 
-    "T": "fuzzyMode.activateTabs",
+    "T": "fuzzyMode.activateTabSelection",
 
     "gf": "nextFrame",
   };
@@ -184,7 +184,7 @@ var commandDescriptions = {
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }],
 
   'linkHints.activateMode': ["Open a link in the current tab"],
-  'linkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"],
+  'linkHints.activateWithCurrentUrl': ["Open a link in a new tab"],
   'linkHints.activateModeWithQueue': ["Open multiple links in a new tab"],
 
   enterFindMode: ["Enter find mode"],
@@ -210,9 +210,9 @@ var commandDescriptions = {
   removeTab: ["Close current tab", { background: true }],
   restoreTab: ["Restore closed tab", { background: true }],
 
-  'fuzzyMode.activateAll': ["Open URL, bookmark, history entry or a custom search (fuzzy)"],
-  'fuzzyMode.activateAllNewTab': ["Open URL, bookmark, history entry or a custom search (fuzzy, new tab)"],
-  'fuzzyMode.activateTabs': ["Go to a tab in this window (fuzzy)"],
+  "fuzzyMode.activate": ["Open URL, bookmark, or history entry"],
+  "fuzzyMode.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"],
+  "fuzzyMode.activateTabSelection": ["Search through your open tabs"],
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 };

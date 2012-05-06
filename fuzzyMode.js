@@ -8,14 +8,18 @@ var fuzzyMode = (function() {
     return completers[name];
   }
 
-  /** Trigger the fuzzy mode dialog */
-  function start(name, refreshInterval) {
-    var completer = getCompleter(name);
+  /*
+   * Activate the Vomnibox.
+   */
+  function activate(completerName, refreshInterval, initialQueryValue) {
+    var completer = getCompleter(completerName);
     if (!fuzzyBox)
       fuzzyBox = new FuzzyBox(10);
     completer.refresh();
     fuzzyBox.setCompleter(completer);
     fuzzyBox.setRefreshInterval(refreshInterval);
+    if (initialQueryValue)
+      fuzzyBox.setQuery(initialQueryValue);
     fuzzyBox.show();
   }
 
@@ -27,6 +31,8 @@ var fuzzyMode = (function() {
       this.refreshInterval = 0;
       this.initDom();
     },
+
+    setQuery: function(query) { this.input.value = query; },
 
     setCompleter: function(completer) {
       this.completer = completer;
@@ -211,8 +217,8 @@ var fuzzyMode = (function() {
 
   // public interface
   return {
-    activateAll:       function() { start("omni", 100); },
-    activateAllNewTab: function() { start("omni", 100); },
-    activateTabs:      function() { start("tabs", 0); },
+    activate: function() { activate("omni", 100); },
+    activateWithCurrentUrl: function() { activate("omni", 100, window.location.toString()); },
+    activateTabSelection: function() { activate("tabs", 0); }
   }
 })();
