@@ -65,7 +65,6 @@ var fuzzyMode = (function() {
     },
 
     onKeydown: function(event) {
-      var self = this;
       var keyChar = getKeyChar(event);
 
       if (isEscape(event)) {
@@ -95,9 +94,9 @@ var fuzzyMode = (function() {
         this.update(true, function() {
           // Shift+Enter will open the result in a new tab instead of the current tab.
           var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
-          self.completions[self.selection].performAction(openInNewTab);
-          self.hide();
-        });
+          this.completions[this.selection].performAction(openInNewTab);
+          this.hide();
+        }.proxy(this));
       }
       else {
         return true; // pass through
@@ -110,21 +109,20 @@ var fuzzyMode = (function() {
     },
 
     updateCompletions: function(callback) {
-      var self = this;
       query = this.input.value.replace(/^\s*/, "");
 
       this.completer.filter(query, this.maxResults, function(completions) {
-        self.completions = completions;
+        this.completions = completions;
 
         // update completion list with the new data
-        self.completionList.innerHTML = completions.map(function(completion) {
+        this.completionList.innerHTML = completions.map(function(completion) {
           return "<li>" + completion.html + "</li>";
         }).join('');
 
-        self.completionList.style.display = self.completions.length > 0 ? "block" : "none";
-        self.updateSelection();
+        this.completionList.style.display = this.completions.length > 0 ? "block" : "none";
+        this.updateSelection();
         if (callback) callback();
-      });
+      }.proxy(this));
     },
 
     update: function(force, callback) {
@@ -139,13 +137,12 @@ var fuzzyMode = (function() {
         // an update is already scheduled, don't do anything
         return;
       } else {
-        var self = this;
         // always update asynchronously for better user experience and to take some load off the CPU
         // (not every keystroke will cause a dedicated update)
         this.updateTimer = setTimeout(function() {
-          self.updateCompletions(callback);
-          self.updateTimer = null;
-        }, this.refreshInterval);
+          this.updateCompletions(callback);
+          this.updateTimer = null;
+        }.proxy(this), this.refreshInterval);
       }
     },
 
