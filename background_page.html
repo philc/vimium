@@ -509,6 +509,8 @@
       return;
     }
 
+    clearMarksForTabId(tabId);
+
     if (tabQueue[openTabInfo.windowId])
       tabQueue[openTabInfo.windowId].push(openTabInfo);
     else
