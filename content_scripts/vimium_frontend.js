@@ -6,6 +6,9 @@
  */
 var getCurrentUrlHandlers = []; // function(url)
 
+var setMarkMode = false;
+var gotoMarkMode = false;
+
 var insertModeLock = null;
 var findMode = false;
 var findModeQuery = { rawQuery: "" };
@@ -261,7 +264,7 @@ function registerFrameIfSizeAvailable (is_top) {
  * Enters insert mode if the currently focused element in the DOM is focusable.
  */
 function enterInsertModeIfElementIsFocused() {
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
+  if (document.activeElement && isEditable(document.activeElement) && !findMode && !setMarkMode && !gotoMarkMode)
     enterInsertModeWithoutShowingIndicator(document.activeElement);
 }
 
@@ -426,6 +429,12 @@ function onKeypress(event) {
       if (findMode) {
         handleKeyCharForFindMode(keyChar);
         suppressEvent(event);
+      } else if (setMarkMode) {
+        handleKeyCharForSetMarkMode(keyChar);
+        suppressEvent(event);
+      } else if (gotoMarkMode) {
+        handleKeyCharForGotoMarkMode(keyChar);
+        suppressEvent(event);
       } else if (!isInsertMode() && !findMode) {
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           suppressEvent(event);
@@ -515,6 +524,18 @@ function onKeydown(event) {
     }
     else if (!modifiers) {
       event.stopPropagation();
+    }
+  }
+  else if (setMarkMode) {
+    if (isEscape(event)) {
+      handleEscapeForSetMarkMode();
+      suppressEvent(event);
+    }
+  }
+  else if (gotoMarkMode) {
+    if (isEscape(event)) {
+      handleEscapeForGotoMarkMode();
+      suppressEvent(event);
     }
   }
   else if (isShowingHelpDialog && isEscape(event)) {
@@ -690,6 +711,30 @@ function handleKeyCharForFindMode(keyChar) {
   updateFindModeQuery();
   performFindInPlace();
   showFindModeHUDForQuery();
+}
+
+function handleKeyCharForSetMarkMode(keyChar) {
+  if (/[a-zA-Z]/.test(keyChar)) {
+    chrome.extension.sendRequest({handler: 'setMarkForTab', mark: keyChar});
+  }
+
+  exitSetMarkMode();
+}
+
+function handleEscapeForSetMarkMode() {
+  exitSetMarkMode();
+}
+
+function handleKeyCharForGotoMarkMode(keyChar) {
+  if (/[a-zA-Z]/.test(keyChar)) {
+    chrome.extension.sendRequest({handler: 'gotoTabForMark', mark: keyChar});
+  }
+
+  exitGotoMarkMode();
+}
+
+function handleEscapeForGotoMarkMode() {
+  exitGotoMarkMode();
 }
 
 function handleEscapeForFindMode() {
@@ -999,6 +1044,26 @@ function enterFindMode() {
 
 function exitFindMode() {
   findMode = false;
+  HUD.hide();
+}
+
+function enterSetMarkMode() {
+  setMarkMode = true;
+  HUD.show("m");
+}
+
+function exitSetMarkMode() {
+  setMarkMode = false;
+  HUD.hide();
+}
+
+function enterGotoMarkMode() {
+  gotoMarkMode = true;
+  HUD.show("`");
+}
+
+function exitGotoMarkMode() {
+  gotoMarkMode = false;
   HUD.hide();
 }
 

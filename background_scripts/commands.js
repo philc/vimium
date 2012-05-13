@@ -151,6 +151,9 @@ function clearKeyMappingsAndSetDefaults() {
 
   for (var key in defaultKeyMappings)
     mapKeyToCommand(key, defaultKeyMappings[key]);
+
+  mapKeyToCommand("m", "enterSetMarkMode");
+  mapKeyToCommand("`", "enterGotoMarkMode");
 }
 
 // This is a mapping of: commandIdentifier => [description, options].
@@ -190,6 +193,9 @@ var commandDescriptions = {
   enterFindMode: ["Enter find mode"],
   performFind: ["Cycle forward to the next find match"],
   performBackwardsFind: ["Cycle backward to the previous find match"],
+
+  enterSetMarkMode: ["Enter set mark mode"],
+  enterGotoMarkMode: ["Enter go to mark mode"],
 
   goPrevious: ["Follow the link labeled previous or <"],
   goNext: ["Follow the link labeled next or >"],
@@ -235,6 +241,7 @@ var commandGroups = {
      "vomnibar.activate", "vomnibar.activateWithCurrentUrl", "vomnibar.activateTabSelection",
      "goPrevious", "goNext", "nextFrame"],
   findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
+  markCommands: ["enterSetMarkMode", "enterGotoMarkMode"],
   historyNavigation:
     ["goBack", "goForward"],
   tabManipulation:

@@ -16,6 +16,10 @@
   var focusedFrame = null;
   var framesForTab = {};
 
+  // State for marks
+  var tabIdForMarks = {};
+  var markForTabIds = {};
+
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
   // This regular expression captures two groups: the first is a named key, the second is the remainder of
   // the string.
@@ -45,6 +49,8 @@
     saveHelpDialogSettings: saveHelpDialogSettings,
     selectSpecificTab: selectSpecificTab,
     refreshCompleter: refreshCompleter,
+    setMarkForTab: setMarkForTab,
+    gotoTabForMark: gotoTabForMark,
   };
 
   // Event handlers
@@ -287,6 +293,36 @@
     */
   function selectSpecificTab(request) {
     chrome.tabs.update(request.id, { selected: true });
+  }
+
+  function setMarkForTab(request) {
+    chrome.tabs.getSelected(null, function (tab) {
+      tabIdForMarks[request.mark] = tab.id;
+      markForTabIds[tab.id] = request.mark;
+    });
+  }
+
+  function gotoTabForMark(request) {
+    if (request.mark in tabIdForMarks) {
+      var tabId = tabIdForMarks[request.mark];
+      chrome.tabs.update(tabId, {selected: true});
+    }
+  }
+
+  function clearTabIdsForMark(mark) {
+    if (mark in tabForMarkIds) {
+      var tabId = tabIdForMarks[mark];
+      delete tabIdForMarks[mark];
+      delete markForTabIds[tabId];
+    }
+  }
+
+  function clearMarksForTabId(tabId) {
+    if (tabId in markForTabIds) {
+      var mark = markForTabIds[tabId];
+      delete markForTabIds[tabId];
+      delete tabIdForMarks[mark];
+    }
   }
 
   /*
