@@ -726,7 +726,7 @@ function handleEscapeForSetMarkMode() {
 }
 
 function handleKeyCharForGotoMarkMode(keyChar) {
-  if (/[a-zA-Z]/.test(keyChar)) {
+  if (/[a-zA-Z]/.test(keyChar) || keyChar === '`') {
     chrome.extension.sendRequest({handler: 'gotoTabForMark', mark: keyChar});
   }
 

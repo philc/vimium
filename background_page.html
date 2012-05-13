@@ -20,6 +20,8 @@
   var tabIdForMarks = {};
   var markForTabIds = {};
 
+  var currTabId = -1;
+
   // Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
   // This regular expression captures two groups: the first is a named key, the second is the remainder of
   // the string.
@@ -511,6 +513,10 @@
 
     clearMarksForTabId(tabId);
 
+    if (tabId === tabIdForMarks['`']) {
+      delete tabIdForMarks['`'];
+    }
+
     if (tabQueue[openTabInfo.windowId])
       tabQueue[openTabInfo.windowId].push(openTabInfo);
     else
@@ -521,6 +527,8 @@
   });
 
   chrome.tabs.onActiveChanged.addListener(function(tabId, selectInfo) {
+    tabIdForMarks['`'] = currTabId;
+    currTabId = tabId;
     updateActiveState(tabId);
   });
 
