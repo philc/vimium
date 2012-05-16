@@ -325,6 +325,11 @@
       delete markForTabIds[tabId];
       delete tabIdForMarks[mark];
     }
+
+    // Clear mark for previous open tab
+    if (tabId === tabIdForMarks['`']) {
+      delete tabIdForMarks['`'];
+    }
   }
 
   /*
@@ -512,10 +517,6 @@
     }
 
     clearMarksForTabId(tabId);
-
-    if (tabId === tabIdForMarks['`']) {
-      delete tabIdForMarks['`'];
-    }
 
     if (tabQueue[openTabInfo.windowId])
       tabQueue[openTabInfo.windowId].push(openTabInfo);
