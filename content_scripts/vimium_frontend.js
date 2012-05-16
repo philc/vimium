@@ -531,11 +531,17 @@ function onKeydown(event) {
       handleEscapeForSetMarkMode();
       suppressEvent(event);
     }
+    else if (!modifiers) {
+      event.stopPropagation();
+    }
   }
   else if (gotoMarkMode) {
     if (isEscape(event)) {
       handleEscapeForGotoMarkMode();
       suppressEvent(event);
+    }
+    else if (!modifiers) {
+      event.stopPropagation();
     }
   }
   else if (isShowingHelpDialog && isEscape(event)) {
