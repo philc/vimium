@@ -184,7 +184,7 @@ var commandDescriptions = {
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }],
 
   'linkHints.activateMode': ["Open a link in the current tab"],
-  'linkHints.activateWithCurrentUrl': ["Open a link in a new tab"],
+  'linkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"],
   'linkHints.activateModeWithQueue': ["Open multiple links in a new tab"],
 
   enterFindMode: ["Enter find mode"],
