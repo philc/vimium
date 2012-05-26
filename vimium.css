@@ -299,6 +299,7 @@ body.vimiumFindMode ::selection {
   padding: 7px 10px !important;
   font-size: 16px !important;
   color: #222 !important;
+  position: relative !important;
 }
 
 #vomnibar li:last-of-type {
@@ -309,6 +310,15 @@ body.vimiumFindMode ::selection {
   color: #999 !important;
   margin-right: 4px !important;
 }
+#vomnibar li .relevancy {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 5px;
+  background-color: white;
+  color: black !important;
+}
+
 #vomnibar li .fuzzyMatch {
   font-size: inherit !important;
   font-family: inherit !important;

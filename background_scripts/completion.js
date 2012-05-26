@@ -21,6 +21,9 @@
  */
 var completion = (function() {
 
+  // This is a development option, useful for tuning the ranking of vomnibox results.
+  var showRelevancyScoreInResults = false;
+
   /*
    * An object which contains a relevancy score for the given completion, and a function which can be
    * invoked to build its HTML.
@@ -66,9 +69,10 @@ var completion = (function() {
         var url = (typeof pattern == "function") ? pattern(term) : pattern.replace(/%s/g, term);
 
         // this will appear even before the URL/search suggestion
-        return new LazyCompletionResult(-2, function() {
+        var relevancy = -2;
+        return new LazyCompletionResult(relevancy, function() {
           return {
-            html:   createCompletionHtml(desc, term),
+            html:   createCompletionHtml(desc, term, null, relevancy),
             action: { functionName: "navigateToUrl", args: [utils.createFullUrl(url)] },
           }})
       }.proxy(this));
@@ -80,9 +84,10 @@ var completion = (function() {
       // trim query
       query = query.replace(/^\s+|\s+$/g, '');
       var isUrl = utils.isUrl(query);
-      return new LazyCompletionResult(-1, function() {
+      var relevancy = -1;
+      return new LazyCompletionResult(relevancy, function() {
         return {
-            html: createCompletionHtml(isUrl ? "goto" : "search", query),
+            html: createCompletionHtml(isUrl ? "goto" : "search", query, null, relevancy),
             action: { functionName: "navigateToUrl",
                 args: isUrl ? [utils.createFullUrl(query)] : [utils.createSearchUrl(query)] }
         }});
@@ -135,7 +140,7 @@ var completion = (function() {
         var relevancy = url.length / fuzzyMatcher.calculateRelevancy(query, completionString);
         return new LazyCompletionResult(relevancy, function() {
           return {
-            html: renderFuzzy(query, createCompletionHtml(type, displayUrl, item.title)),
+            html: renderFuzzy(query, createCompletionHtml(type, displayUrl, item.title, relevancy)),
             action: action
           }});
       }
@@ -305,9 +310,10 @@ var completion = (function() {
 
           // found a new optimum
           bestOffset = offset;
-          best = new LazyCompletionResult(-1.5, function() {
+          var relevancy = -1.5;
+          best = new LazyCompletionResult(relevancy, function() {
             return {
-              html:   createCompletionHtml("site", domain),
+              html:   createCompletionHtml("site", domain, null, relevancy),
               action: { functionName: "navigateToUrl", args: [protocol + "://" + domain] },
             }});
         });
@@ -542,12 +548,18 @@ var completion = (function() {
     return split.join('');
   }
 
-  /** Creates an file-internal representation of a URL match with the given paramters */
-  function createCompletionHtml(type, str, title) {
-    title = title || '';
-    // sanitize input, it could come from a malicious web site
-    title = title.length > 0 ? ' <span class="title">' + utils.escapeHtml(title) + '</span>' : '';
-    return '<span class="source">' + type + '</span> ' + utils.escapeHtml(str) + title;
+  /*
+   * Creates the HTML used to display this completion.
+   * :title and :relevancy are optional.
+   */
+  function createCompletionHtml(type, url, title, relevancy) {
+    title = title || "";
+    var html = '<span class="source">' + type + '</span> ' + utils.escapeHtml(url);
+    if (title.length > 0)
+      html += '<span class="title">' + utils.escapeHtml(title) + '</span>';
+    if (showRelevancyScoreInResults)
+      html += '<span class="relevancy">' + (Math.floor(relevancy * 10000) / 10000.0) + '</span>';
+    return html;
   }
 
   /** Renders a completion by marking fuzzy-matched parts. */
