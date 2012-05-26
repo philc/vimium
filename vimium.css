@@ -237,49 +237,6 @@ div.vimiumHUD a.close-button:hover {
   -webkit-user-select:none; 
 }
 
-/* Bookmarks completion dialog CSS */
-
-div.vimium-dialog {
-  background-color: #ebebeb; 
-  display: block;
-  position:fixed;
-  z-index: 99999998; 
-  border: 1px solid #b3b3b3; 
-  padding:10px;
-  border-radius: 4px; 
-}
-
-div.vimium-completions {
-  width:400px;
-}
-
-div.vimium-completions .vimium-searchBar {
-  display: block;
-  height: 15px;
-  border-bottom: 1px solid #b3b3b3;
-}
-
-div.vimium-completions div.vimium-searchResults div {
-  display: block;
-}
-
-div.vimium-completions div.vimium-searchResults div.vimium-selected{
-  background-color:#aaa;
-  border-radius: 4px; 
-}
-
-div.vimium-completions div{
-  padding:4px;
-}
-
-div.vimium-completions div strong{
-  font-weight:bold;
-}
-
-div.vimium-completions div.vimium-noResults{
-  color:#555;
-}
-
 body.vimiumFindMode ::selection {
   background: #ff9632;
 };
