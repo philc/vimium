@@ -207,7 +207,7 @@ div.vimiumHUD {
   border-radius: 4px 4px 0 0;
   font-family: "Lucida Grande", "Arial", "Sans";
   /* One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button. */
-  z-index: 99999998;
+  z-index: 99999997;
   text-shadow: 0px 1px 2px #FFF;
   line-height: 1.0;
   opacity: 0;
@@ -257,12 +257,12 @@ body.vimiumFindMode ::selection {
   font-family: sans-serif !important;
 
   background: #F1F1F1 !important;
-  color: white !important;
   text-align: left !important;
   border-radius: 4px !important;
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8) !important;
   border: 1px solid #aaa;
-  z-index: 99999998 !important;
+  /* One less than hint markers and the help dialog. */
+  z-index: 99999996 !important;
 }
 
 #vomnibar input {
@@ -270,22 +270,22 @@ body.vimiumFindMode ::selection {
   padding: 4px !important;
   font-family: inherit !important;
   border-radius: 3px;
-  border: 1px solid #E8E8E8;
-  box-shadow: #444 0px 0px 1px;
+  border: 1px solid #E8E8E8 !important;
+  box-shadow: #444 0px 0px 1px !important;
   width: 100% !important;
   outline: none !important;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
 }
 
 #vomnibar .topHalf {
   padding: 10px !important;
-  background-color: #F1F1F1;
+  background-color: #F1F1F1 !important;
   border-radius: 4px 4px 0 0 !important;
-  border-bottom: 1px solid #C6C9CE;
+  border-bottom: 1px solid #C6C9CE !important;
 }
 
 #vomnibar ul {
-  background-color: white;
+  background-color: white !important;
   border-radius: 0 0 4px 4px !important;
   list-style: none !important;
   padding: 10px 0 !important;
@@ -323,9 +323,7 @@ body.vimiumFindMode ::selection {
   font-size: inherit !important;
   font-family: inherit !important;
 }
-#vomnibar li em {
-  font-style: italic !important;
-}
+#vomnibar li em { font-style: italic !important; }
 #vomnibar li em .fuzzyMatch, #vomnibar li .title .fuzzyMatch {
   color: #888 !important;
   font-style: inherit !important;
