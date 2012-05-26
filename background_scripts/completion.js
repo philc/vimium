@@ -137,6 +137,7 @@ var completion = (function() {
       var displayUrl = this.stripTrailingSlash(url);
 
       function createLazyCompletion(query) {
+        // We want shorter URLs (i.e. top level domains) to rank more highly.
         var relevancy = url.length / fuzzyMatcher.calculateRelevancy(query, completionString);
         return new LazyCompletionResult(relevancy, function() {
           return {
@@ -436,9 +437,11 @@ var completion = (function() {
       str   = self.normalize(str);
       var sum = 0;
 
-      // only iterate over slices of the query starting at an offset up to 10 to save resources
+      // Ignore any matches between the query and the str which are 2 characters are less.
+      var minimumCharacterMatch = 3;
+      // only iterate over slices of the query starting at an offset up to 20 to save resources
       for (var start = 0; start < 20 && start < query.length; ++start) {
-        for (var i = query.length; i >= start; --i) {
+        for (var i = query.length; i >= start + (minimumCharacterMatch - 1); --i) {
           if (str.indexOf(query.slice(start, i)) >= 0) {
             var length = i - start;
             sum += length * length;
