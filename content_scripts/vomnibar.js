@@ -21,6 +21,7 @@ var vomnibar = (function() {
     if (initialQueryValue)
       vomnibarUI.setQuery(initialQueryValue);
     vomnibarUI.show();
+    return vomnibarUI;
   }
 
   /** User interface for fuzzy completion */
@@ -126,16 +127,19 @@ var vomnibar = (function() {
 
       this.completer.filter(query, this.maxResults, function(completions) {
         this.completions = completions;
-
-        // update completion list with the new data
-        this.completionList.innerHTML = completions.map(function(completion) {
-          return "<li>" + completion.html + "</li>";
-        }).join('');
-
-        this.completionList.style.display = this.completions.length > 0 ? "block" : "none";
-        this.updateSelection();
+        this.populateUiWithCompletions(completions);
         if (callback) callback();
       }.proxy(this));
+    },
+
+    populateUiWithCompletions: function(completions) {
+      // update completion list with the new data
+      this.completionList.innerHTML = completions.map(function(completion) {
+        return "<li>" + completion.html + "</li>";
+      }).join('');
+
+      this.completionList.style.display = (completions.length > 0) ? "block" : "none";
+      this.updateSelection();
     },
 
     update: function(force, callback) {
@@ -161,15 +165,16 @@ var vomnibar = (function() {
 
     initDom: function() {
       this.box = utils.createElementFromHtml(
-        '<div id="vomnibar" class="vimiumReset">'+
-          '<div class="input">'+
-            '<span class="prompt">' + utils.escapeHtml(this.prompt) + '</span> '+
-            '<input type="text" class="query"></span></div>'+
-          '<ul></ul></div>');
+        '<div id="vomnibar" class="vimiumReset">' +
+          '<div class="topHalf">' +
+            '<input type="text" />' +
+          '</div>' +
+          '<ul></ul>' +
+        '</div>');
       this.box.style.display = 'none';
       document.body.appendChild(this.box);
 
-      this.input = document.querySelector("#vomnibar .query");
+      this.input = document.querySelector("#vomnibar input");
       this.input.addEventListener("input", function() { this.update(); }.bind(this));
       this.completionList = document.querySelector("#vomnibar ul");
       this.completionList.style.display = "none";
@@ -227,6 +232,8 @@ var vomnibar = (function() {
   return {
     activate: function() { activate("omni", 100); },
     activateWithCurrentUrl: function() { activate("omni", 100, window.location.toString()); },
-    activateTabSelection: function() { activate("tabs", 0); }
+    activateTabSelection: function() { activate("tabs", 0); },
+    /* Used by our vomnibar dev harness. */
+    getUI: function() { return vomnibarUI; }
   }
 })();

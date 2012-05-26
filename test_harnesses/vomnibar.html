@@ -1,0 +1,60 @@
+<!--
+  This harness is used to show our vomnibar with some sample suggestions. It's a convenient way to restyle
+  the Vomnibar without having to make changes, reload the extension, refresh the page, open it and type
+  something.
+ -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script type="text/javascript" src="../lib/utils.js"></script>
+  <script type="text/javascript" src="../lib/keyboard_utils.js"></script>
+  <script type="text/javascript" src="../lib/dom_utils.js"></script>
+  <script src="https://github.com/ooyala/livecss/raw/master/livecss.js"></script>
+  <script type="text/javascript" src="../content_scripts/vomnibar.js"></script>
+  <link rel="stylesheet" type="text/css" href="../vimium.css" />
+  <script>
+    function setup() {
+      window.handlerStack = [];
+      // This itemHtml was obtained just by copying and pasting what was generated when using it in practice.
+      var itemHtml = '<span class="source">history</span> http://<span class="fuzzyMatch">n</span><span class="fuzzyMatch">i</span><span class="fuzzyMatch">n</span><span class="fuzzyMatch">j</span><span class="fuzzyMatch">a</span>words.com/info/about <span class="title">Ninjawords - a really fast dictionary</span>';
+      var results = [{ html: itemHtml }, { html: itemHtml }];
+
+      // Stub out the chrome extension apis needed by the Vomnibar.
+      window.chrome = { };
+      var port = {
+        onMessage: { addListener: function(callback) { } },
+        postMessage: function() { }
+      };
+      window.chrome.extension = {
+        connect: function() { return port; },
+        sendRequest: function() { },
+      };
+
+      vomnibar.activate();
+      var ui = vomnibar.getUI();
+      ui.populateUiWithCompletions(results)
+    };
+
+    document.addEventListener("DOMContentLoaded", setup, false);
+  </script>
+
+  <style type="text/css" media="screen">
+    body {
+      font-size: 19px;
+      width: 800px;
+      margin: 0 auto;
+      color: #333;
+      padding: 20px;
+      background-color: #f0e5bc;
+    }
+  </style>
+
+</head>
+
+<body>
+  Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<br/><br/>
+
+  Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+</body>
+</html>
