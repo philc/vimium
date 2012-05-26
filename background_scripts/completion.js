@@ -120,8 +120,8 @@ var completion = (function() {
      * This creates an intermediate representation of a completion which will later be called with a specific
      * query.
      * - type: the type of item we're completing against, e.g. "bookmark", "history", "tab".
-     * - item: the item itself. This should include a url and title property (bookmark, history and tab
-     *   objects include both of these).
+     * - item: the item itself. This should include a url and title property (Chrome's bookmark, history
+     *   and tab objects include both of these).
      * - action: the action to take in the Vomnibox frontend 
      *
      * It's used to save us work -- we call this on every bookmark in your bookmarks list when we first fetch
@@ -322,21 +322,27 @@ var completion = (function() {
     }
   });
 
-  /** A meta-completer that delegates queries and merges and sorts the results of a collection of other
-   * completer instances given in :sources. The optional argument :queryThreshold determines how long a
-   * query has to be to trigger a search. */
+  /*
+   * A meta-completer merges and sorts the results retrieved from a list of other completers.
+   */
   var MultiCompleter = Class.extend({
-    init: function(sources, queryThreshold) {
-      if (queryThreshold === undefined)
-        queryThreshold = 1; // default
+    // Used to hide results which are not very relevant. Increase this to include more results.
+    maximiumRelevancyThreshold: 0.03,
+
+    /*
+     * - minQueryLength: the min length of a query. Anything less will return no results.
+     */
+    init: function(sources, minQueryLength) {
+      if (minQueryLength === undefined)
+        minQueryLength = 1;
       this.sources = sources;
-      this.queryThreshold = queryThreshold;
+      this.minQueryLength = minQueryLength;
     },
 
     refresh: function() { this.sources.forEach(function(source) { source.refresh(); }); },
 
     filter: function(query, maxResults, callback) {
-      if (query.length < this.queryThreshold) {
+      if (query.length < this.minQueryLength) {
         callback([]);
         return;
       }
@@ -344,11 +350,14 @@ var completion = (function() {
       var allResults = [];
       var counter = this.sources.length;
 
+      var self = this;
       this.sources.forEach(function(source) {
         source.filter(query, function(results) {
           allResults = allResults.concat(results);
           if (--counter > 0)
             return;
+          allResults = allResults.filter(
+              function(result) { return result.relevancy <= self.maximiumRelevancyThreshold });
 
           // all sources have provided results by now, so we can sort and return
           allResults.sort(function(a,b) { return a.relevancy - b.relevancy; });
@@ -373,11 +382,12 @@ var completion = (function() {
     self.filterCache = {};
     self.normalizationCache = {};
 
-    /** Normalizes the string specified in :query. Strips any non-word characters and converts
-     * to lower case. */
+    /*
+     * Normalizes the query by stripping any non-word characters and converting to lowercase.
+     */
     self.normalize = function(query) {
       if (!(query in self.normalizationCache))
-        self.normalizationCache[query] = query.replace(self.regexNonWord, '').toLowerCase();
+        self.normalizationCache[query] = query.replace(self.regexNonWord, "").toLowerCase();
       return self.normalizationCache[query];
     }
 
@@ -558,7 +568,7 @@ var completion = (function() {
     if (title.length > 0)
       html += '<span class="title">' + utils.escapeHtml(title) + '</span>';
     if (showRelevancyScoreInResults)
-      html += '<span class="relevancy">' + (Math.floor(relevancy * 10000) / 10000.0) + '</span>';
+      html += '<span class="relevancy">' + (Math.floor(relevancy * 100000) / 100000.0) + '</span>';
     return html;
   }
 
