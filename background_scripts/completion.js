@@ -124,29 +124,35 @@ var completion = (function() {
      * processed.
      *
      * TODO(philc): It would be nice if this could be removed; it's confusing.
-     * */
+     */
     createUnrankedCompletion: function(type, item, action) {
       var url = item.url;
-      var parts = [type, url, item.title];
-      var str = parts.join(" ");
+      var completionString = [type, url, item.title].join(" ")
       action = action || { functionName: "navigateToUrl", args: [url] };
+      var displayUrl = this.stripTrailingSlash(url);
 
       function createLazyCompletion(query) {
-        var relevancy = url.length / fuzzyMatcher.calculateRelevancy(query, str)
+        var relevancy = url.length / fuzzyMatcher.calculateRelevancy(query, completionString);
         return new LazyCompletionResult(relevancy, function() {
           return {
-            html:   renderFuzzy(query, createCompletionHtml.apply(null, parts)),
-            action: action,
+            html: renderFuzzy(query, createCompletionHtml(type, displayUrl, item.title)),
+            action: action
           }});
       }
 
-      // add one more layer of indirection: For filtering, we only need the string to match.
-      // Only after we reduced the number of possible results, we call :bind on them to get
-      // an actual completion object
+      // Add one more layer of indirection: when filtering, we only need the string to match.
+      // Only after we reduced the number of possible results, we call :createLazyCompletion on them to get
+      // an actual completion object.
       return {
-        completionString: parts.join(" "),
+        completionString: completionString,
         createLazyCompletion: createLazyCompletion,
       }
+    },
+
+    stripTrailingSlash: function(url) {
+      if (url[url.length - 1] == "/")
+        url = url.substring(url, url.length - 1);
+      return url;
     },
 
     processResults: function(query, results) {
