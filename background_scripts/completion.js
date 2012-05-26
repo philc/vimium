@@ -541,7 +541,7 @@ var completion = (function() {
     title = title || '';
     // sanitize input, it could come from a malicious web site
     title = title.length > 0 ? ' <span class="title">' + utils.escapeHtml(title) + '</span>' : '';
-    return '<em>' + type + '</em> ' + utils.escapeHtml(str) + title;
+    return '<span class="source">' + type + '</span> ' + utils.escapeHtml(str) + title;
   }
 
   /** Renders a completion by marking fuzzy-matched parts. */
