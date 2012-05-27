@@ -142,10 +142,8 @@ var vomnibar = (function() {
       this.updateSelection();
     },
 
-    update: function(force, callback) {
-      force = force || false; // explicitely default to asynchronous updating
-
-      if (force) {
+    update: function(updateSynchronously, callback) {
+      if (updateSynchronously) {
         // cancel scheduled update
         if (this.updateTimer !== null)
           window.clearTimeout(this.updateTimer);
