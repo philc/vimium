@@ -601,9 +601,12 @@ var completion = (function() {
         addToHtml(before + str[i] + after);
     }
 
+    // Don't render matches between the query and the str which are 2 characters are less.
+    var minimumCharacterMatch = 3;
+
     // iterate over the match groups. They are non-matched and matched string parts, in alternating order
     for (var i = 0; i < groups.length; ++i) {
-      if (i % 2 == 0)
+      if (i % 2 == 0 || groups[i].length < minimumCharacterMatch)
         // we have a non-matched part, it could have several characters. We need to insert them character
         // by character, so that addToHtml can keep track of the position in the original string
         addCharsWithDecoration(groups[i]);
