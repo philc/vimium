@@ -166,7 +166,7 @@ var vomnibar = (function() {
     initDom: function() {
       this.box = utils.createElementFromHtml(
         '<div id="vomnibar" class="vimiumReset">' +
-          '<div class="topHalf">' +
+          '<div class="searchArea">' +
             '<input type="text" />' +
           '</div>' +
           '<ul></ul>' +

@@ -277,7 +277,7 @@ body.vimiumFindMode ::selection {
   box-sizing: border-box !important;
 }
 
-#vomnibar .topHalf {
+#vomnibar .searchArea {
   padding: 10px !important;
   background-color: #F1F1F1 !important;
   border-radius: 4px 4px 0 0 !important;
