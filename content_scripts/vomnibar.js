@@ -195,11 +195,15 @@ var vomnibar = (function() {
       this.filterPort.onMessage.addListener(function(msg) {
         if (msg.id != id) return;
         // The result objects coming from the background page will be of the form:
-        //   { html: "", action: { functionName: "", args: [] } }
-        // functionName will be either "navigateToUrl" or "switchToTab". args will be a URL or a tab ID.
+        //   { html: "", action: "", url: "" }
+        // action will be either "navigateToUrl" or "switchToTab".
         var results = msg.results.map(function(result) {
-          var functionToCall = completionActions[result.action.functionName];
-          result.performAction = functionToCall.curry(result.action.args);
+          var functionToCall = completionActions[result.action];
+          if (result.action == "navigateToUrl")
+            functionToCall = functionToCall.curry(result.url);
+          else if (result.action == "switchToTab")
+            functionToCall = functionToCall.curry(result.tabId);
+          result.performAction = functionToCall;
           return result;
         });
         callback(results);
