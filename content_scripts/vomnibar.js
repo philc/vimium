@@ -14,7 +14,7 @@ var vomnibar = (function() {
   function activate(completerName, refreshInterval, initialQueryValue) {
     var completer = getCompleter(completerName);
     if (!vomnibarUI)
-      vomnibarUI = new VomnibarUI(10);
+      vomnibarUI = new VomnibarUI();
     completer.refresh();
     vomnibarUI.setCompleter(completer);
     vomnibarUI.setRefreshInterval(refreshInterval);
@@ -26,9 +26,8 @@ var vomnibar = (function() {
 
   /** User interface for fuzzy completion */
   var VomnibarUI = Class.extend({
-    init: function(maxResults) {
+    init: function() {
       this.prompt = '>';
-      this.maxResults = maxResults;
       this.refreshInterval = 0;
       this.initDom();
     },
@@ -125,7 +124,7 @@ var vomnibar = (function() {
     updateCompletions: function(callback) {
       query = this.input.value.replace(/^\s*/, "");
 
-      this.completer.filter(query, this.maxResults, function(completions) {
+      this.completer.filter(query, function(completions) {
         this.completions = completions;
         this.populateUiWithCompletions(completions);
         if (callback) callback();
@@ -191,7 +190,7 @@ var vomnibar = (function() {
 
     refresh: function() { chrome.extension.sendRequest({ handler: "refreshCompleter", name: this.name }); },
 
-    filter: function(query, maxResults, callback) {
+    filter: function(query, callback) {
       var id = utils.createUniqueId();
       this.filterPort.onMessage.addListener(function(msg) {
         if (msg.id != id) return;
@@ -205,7 +204,7 @@ var vomnibar = (function() {
         });
         callback(results);
       });
-      this.filterPort.postMessage({ id: id, name: this.name, query: query, maxResults: maxResults });
+      this.filterPort.postMessage({ id: id, name: this.name, query: query });
     }
   });
 
