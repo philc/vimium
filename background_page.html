@@ -198,7 +198,7 @@
       if (showUnboundCommands || commandsToKey[command]) {
         html.push(
           "<tr class='vimiumReset " + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
-          "<td class='vimiumReset'>", escapeHtml(bindings), "</td>",
+          "<td class='vimiumReset'>", utils.escapeHtml(bindings), "</td>",
           "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description);
 
         if (showCommandNames)
@@ -209,8 +209,6 @@
     }
     return html.join("\n");
   }
-
-  function escapeHtml(string) { return string.replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   /*
    * Fetches the contents of a file bundled with this extension.
