@@ -25,23 +25,37 @@ class Suggestion
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
     url
 
+  # Merges the given list of ranges such that any overlapping regions are combined. E.g.
+  #   mergeRanges([0, 4], [3, 6]) => [0, 6].  A range is [startIndex, endIndex].
+  mergeRanges: (ranges) ->
+    previous = ranges.shift()
+    mergedRanges = [previous]
+    ranges.forEach (range) ->
+      if previous[1] >= range[0]
+        previous[1] = Math.max(range[1], previous[1])
+      else
+        mergedRanges.push(range)
+        previous = range
+    mergedRanges
+
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
-    toReplace = {}
+    ranges = []
     for term in @queryTerms
       regexp = @escapeRegexp(term)
       i = string.search(regexp)
-      toReplace[i] = term.length if i >= 0 && (!toReplace[i] || toReplace[i].length < term.length)
+      ranges.push([i, i + term.length]) if i >= 0
 
-    indices = []
-    indices.push([key, toReplace[key]]) for key of toReplace
-    indices.sort (a, b) -> b - a
-    for [i, length] in indices
-      i = +i # convert i from String to Integer.
+    return string if ranges.length == 0
+
+    ranges = @mergeRanges(ranges.sort (a, b) -> a[0] - b[0])
+    # Replace portions of the string from right to left.
+    ranges = ranges.sort (a, b) -> b[0] - a[0]
+    for [start, end] in ranges
       string =
-        string.substr(0, i) +
-        "<span class='match'>" + string.substr(i, length) + "</span>" +
-        string.substr(i + length)
+        string.substring(0, start) +
+        "<span class='match'>" + string.substring(start, end) + "</span>" +
+        string.substring(end)
     string
 
   # Creates a Regexp from the given string, with all special Regexp characters escaped.

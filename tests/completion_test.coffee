@@ -73,8 +73,14 @@ context "suggestions",
     assert.isTrue suggestion.generateHtml().indexOf("title &lt;span&gt;") >= 0
 
   should "highlight query words", ->
-    suggestion = new Suggestion(["ninja"], "tab", "url", "ninjawords", returns(1))
-    assert.isTrue suggestion.generateHtml().indexOf("<span class='match'>ninja</span>words") >= 0
+    suggestion = new Suggestion(["ninj", "words"], "tab", "url", "ninjawords", returns(1))
+    expected = "<span class='match'>ninj</span>a<span class='match'>words</span>"
+    assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
+
+  should "highlight query words correctly when whey they overlap", ->
+    suggestion = new Suggestion(["ninj", "jaword"], "tab", "url", "ninjawords", returns(1))
+    expected = "<span class='match'>ninjaword</span>s"
+    assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "shorten urls", ->
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
