@@ -35,15 +35,37 @@ context "history completer",
     @completer = new HistoryCompleter()
 
   should "return matching history entries when searching", ->
-    @completer.filter(["story1"], (@results) =>)
-    assert.arrayEqual [@history1.url], @results.map (entry) -> entry.url
+    assert.arrayEqual [@history1.url], filterCompleter(@completer, ["story1"]).map (entry) -> entry.url
 
   should "rank recent results higher than nonrecent results", ->
     stub(Date, "now", returns(hours(24)))
-    @completer.filter(["hist"], (@results) =>)
-    @results.forEach (result) -> result.computeRelevancy()
-    @results.sort (a, b) -> b.relevancy - a.relevancy
-    assert.arrayEqual [@history2.url, @history1.url], @results.map (result) -> result.url
+    results = filterCompleter(@completer, ["hist"])
+    results.forEach (result) -> result.computeRelevancy()
+    results.sort (a, b) -> b.relevancy - a.relevancy
+    assert.arrayEqual [@history2.url, @history1.url], results.map (result) -> result.url
+
+context "domain completer",
+  setup ->
+    @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) }
+    @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
+
+    stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
+    stub(Date, "now", returns(hours(24)))
+
+    @completer = new DomainCompleter()
+
+  should "return only a single matching domain", ->
+    results = filterCompleter(@completer, ["story"])
+    assert.arrayEqual ["history1.com"], results.map (result) -> result.url
+
+  should "pick domains which are more recent", ->
+    # This domains are the same except for their last visited time.
+    assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
+    @history2.lastVisitTime = hours(3)
+    assert.equal "history2.com", filterCompleter(@completer, ["story"])[0].url
+
+  should "returns no results when there's more than one query term, because clearly it's not a domain", ->
+    assert.arrayEqual [], filterCompleter(@completer, ["his", "tory"])
 
 context "suggestions",
   should "escape html in page titles", ->
@@ -57,6 +79,12 @@ context "suggestions",
   should "shorten urls", ->
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
+
+# A convenience wrapper around completer.filter() so it can be called synchronously in tests.
+filterCompleter = (completer, queryTerms) ->
+  results = []
+  completer.filter(queryTerms, (completionResults) -> results = completionResults)
+  results
 
 hours = (n) -> 1000 * 60 * 60 * n
 

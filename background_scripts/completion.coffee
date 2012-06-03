@@ -110,11 +110,57 @@ class HistoryCompleter
 
   refresh: ->
 
+# The domain completer is designed to match a single-word query which looks like it is a domain. This supports
+# the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
+class DomainCompleter
+  domains: null # A map of domain -> history
+
+  filter: (queryTerms, onComplete) ->
+    return onComplete([]) if queryTerms.length > 1
+    if @domains
+      @performSearch(queryTerms, onComplete)
+    else
+      @populateDomains => @performSearch(queryTerms, onComplete)
+
+  performSearch: (queryTerms, onComplete) ->
+    query = queryTerms[0]
+    domainCandidates = (domain for domain of @domains when domain.indexOf(query) >= 0)
+    domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
+    return onComplete([]) if domains.length == 0
+    topDomain = domains[0][0]
+    onComplete([new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)])
+
+  # Returns a list of domains of the form: [ [domain, relevancy], ... ]
+  sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
+    results = []
+    for domain in domainCandidates
+      recencyScore = RankingUtils.recencyScore(@domains[domain].lastVisitTime || 0)
+      wordRelevancy = RankingUtils.wordRelevancy(queryTerms, domain, null)
+      score = wordRelevancy + Math.max(recencyScore, wordRelevancy) / 2
+      results.push([domain, score])
+    results.sort (a, b) -> b[1] - a[1]
+    results
+
+  populateDomains: (onComplete) ->
+    HistoryCache.use (history) =>
+      @domains = {}
+      history.forEach (entry) =>
+        # We want each key in our domains hash to point to the most recent History entry for that domain.
+        # Thankfully, the domains in HistoryCache are sorted from oldest to most recent.
+        domain = @parseDomain(entry.url)
+        @domains[domain] = entry if domain
+      onComplete()
+
+  parseDomain: (url) -> url.split("/")[2] || ""
+
+  # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
+  computeRelevancy: -> 1
+
 class MultiCompleter
   constructor: (@completers) ->
     @maxResults = 10 # TODO(philc): Should this be configurable?
 
-  refresh: -> completer.refresh() for completer in @completers
+  refresh: -> completer.refresh() for completer in @completers when completer.refresh
 
   filter: (queryTerms, onComplete) ->
     suggestions = []
@@ -208,3 +254,5 @@ root.Suggestion = Suggestion
 root.BookmarkCompleter = BookmarkCompleter
 root.MultiCompleter = MultiCompleter
 root.HistoryCompleter = HistoryCompleter
+root.DomainCompleter = DomainCompleter
+root.HistoryCache = HistoryCache

@@ -54,11 +54,15 @@
 
   var completionSources = {
     bookmarks: new BookmarkCompleter(),
-    history: new HistoryCompleter()
+    history: new HistoryCompleter(),
+    domains: new DomainCompleter()
   };
 
   var completers = {
-    omni: new MultiCompleter([completionSources.bookmarks, completionSources.history])
+    omni: new MultiCompleter([
+      completionSources.bookmarks,
+      completionSources.history,
+      completionSources.domains])
   };
 
   chrome.extension.onConnect.addListener(function(port, name) {
