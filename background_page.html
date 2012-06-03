@@ -53,26 +53,12 @@
   var tabLoadedHandlers = {}; // tabId -> function()
 
   var completionSources = {
-    smart:     new completion.SmartKeywordCompleter({
-      "wiki ": [ "Wikipedia (en)",    "http://en.wikipedia.org/wiki/%s" ],
-      "luck ": [ "Google Lucky (en)", "http://www.google.com/search?q=%s&btnI=I%27m+Feeling+Lucky" ],
-      "cc "  : [ "dict.cc",           "http://www.dict.cc/?s=%s" ],
-      ";"    : [ "goto",              "%s" ],
-      "?"    : [ "search",            function(query) { return utils.createSearchUrl(query); }],
-      }),
-    domain:    new completion.DomainCompleter(),
-    bookmarks: new completion.FuzzyBookmarkCompleter(),
-    history:   new completion.FuzzyHistoryCompleter(20000),
-    tabs:      new completion.FuzzyTabCompleter(),
-  }
+    bookmarks: new BookmarkCompleter(),
+    history: new HistoryCompleter()
+  };
+
   var completers = {
-    omni: new completion.MultiCompleter([
-                  completionSources.domain,
-                  completionSources.smart,
-                  completionSources.bookmarks,
-                  completionSources.history,
-                  ], 1),
-    tabs: new completion.MultiCompleter([ completionSources.tabs ], 0),
+    omni: new MultiCompleter([completionSources.bookmarks, completionSources.history])
   };
 
   chrome.extension.onConnect.addListener(function(port, name) {
@@ -305,7 +291,8 @@
   }
 
   function filterCompleter(args, port) {
-    completers[args.name].filter(args.query, args.maxResults, function(results) {
+    var queryTerms = args.query == "" ? [] : args.query.split(" ");
+    completers[args.name].filter(queryTerms, function(results) {
       port.postMessage({ id: args.id, results: results });
     });
   }

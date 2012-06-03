@@ -327,7 +327,7 @@ body.vimiumFindMode ::selection {
 
 #vomnibar li .url { color: #224684 !important; }
 
-#vomnibar li .fuzzyMatch {
+#vomnibar li .match {
   font-size: inherit !important;
   font-family: inherit !important;
   font-weight: bold !important;
@@ -342,7 +342,7 @@ body.vimiumFindMode ::selection {
   font-family: inherit !important;
 }
 #vomnibar li em { font-style: italic !important; }
-#vomnibar li em .fuzzyMatch, #vomnibar li .title .fuzzyMatch {
+#vomnibar li em .match, #vomnibar li .title .match {
   color: #333 !important;
   text-decoration: underline !important;
 }
