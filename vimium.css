@@ -323,6 +323,9 @@ body.vimiumFindMode ::selection {
   padding: 5px;
   background-color: white;
   color: black !important;
+  font-family: monospace;
+  width: 100px;
+  overflow: hidden;
 }
 
 #vomnibar li .url { color: #224684 !important; }

@@ -1,14 +1,21 @@
 class Suggestion
+  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
+
   # - type: one of [bookmark, history, tab].
   constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
 
   generateHtml: ->
-    @html ||=
+    return @html if @html
+    relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy() + ''}</span>" else ""
+    @html =
       "<div class='topHalf'>
          <span class='source'>#{@type}</span>
          <span class='title'>#{@highlightTerms(utils.escapeHtml(@title))}</span>
        </div>
-       <div class='bottomHalf'><span class='url'>#{@shortenUrl(@highlightTerms(@url))}</span></div>"
+       <div class='bottomHalf'>
+        <span class='url'>#{@shortenUrl(@highlightTerms(@url))}</span>
+        #{relevancyHtml}
+      </div>"
 
   shortenUrl: (url) ->
     @stripTrailingSlash(url).replace(/^http:\/\//, "")
