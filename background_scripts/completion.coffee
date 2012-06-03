@@ -101,15 +101,8 @@ class HistoryCompleter
     onComplete(suggestions)
 
   computeRelevancy: (queryTerms, suggestion) ->
-    @oneMonthAgo ||= 1000 * 60 * 60 * 24 * 30
     historyEntry = suggestion.extraRelevancyData
-    recency = Date.now() - historyEntry.lastVisitTime
-    recencyDifference = Math.max(0, @oneMonthAgo - recency) / @oneMonthAgo
-
-    # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This qudratic equation will
-    # incresingly discount older history entries.
-    recencyScore = recencyDifference * recencyDifference * recencyDifference
-
+    recencyScore = RankingUtils.recencyScore(historyEntry.lastVisitTime)
     wordRelevancy = RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
     # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
     score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
@@ -164,6 +157,20 @@ RankingUtils =
     titleScore = titleScore / queryTerms.length
     titleScore = titleScore * RankingUtils.normalizeDifference(queryLength, title.length)
     (urlScore + titleScore) / 2
+
+  # Returns a score between [0, 1] which indicates how recent the given timestamp is. Items which are over
+  # a month old are counted as 0. This range is quadratic, so an item from one day ago has a much stronger
+  # score than an item from two days ago.
+  recencyScore: (lastAccessedTime) ->
+    @oneMonthAgo ||= 1000 * 60 * 60 * 24 * 30
+    recency = Date.now() - lastAccessedTime
+    recencyDifference = Math.max(0, @oneMonthAgo - recency) / @oneMonthAgo
+
+    # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This quadratic equation will
+    # incresingly discount older history entries.
+    recencyScore = recencyDifference * recencyDifference * recencyDifference
+
+
 
   # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
   normalizeDifference: (a, b) ->
