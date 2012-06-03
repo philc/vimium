@@ -26,9 +26,21 @@ class Suggestion
 
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
+    toReplace = {}
     for term in @queryTerms
       regexp = @escapeRegexp(term)
-      string = string.replace(regexp, "<span class='match'>$&</span>")
+      i = string.search(regexp)
+      toReplace[i] = term.length if i >= 0 && (!toReplace[i] || toReplace[i].length < term.length)
+
+    indices = []
+    indices.push([key, toReplace[key]]) for key of toReplace
+    indices.sort (a, b) -> b - a
+    for [i, length] in indices
+      i = +i # convert i from String to Integer.
+      string =
+        string.substr(0, i) +
+        "<span class='match'>" + string.substr(i, length) + "</span>" +
+        string.substr(i + length)
     string
 
   # Creates a Regexp from the given string, with all special Regexp characters escaped.
