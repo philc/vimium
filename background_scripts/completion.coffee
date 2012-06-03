@@ -138,7 +138,7 @@ class MultiCompleter
   sortSuggestions: (suggestions) ->
     for suggestion in suggestions
       suggestion.computeRelevancy(@queryTerms)
-    suggestions.sort (a, b) -> a.relevancy - b.relevancy
+    suggestions.sort (a, b) -> b.relevancy - a.relevancy
     suggestions
 
 RankingUtils =

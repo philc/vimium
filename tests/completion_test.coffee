@@ -47,15 +47,15 @@ context "history completer",
 
 context "suggestions",
   should "escape html in page titles", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "url", "title <span>")
+    suggestion = new Suggestion(["queryterm"], "tab", "url", "title <span>", returns(1))
     assert.isTrue suggestion.generateHtml().indexOf("title &lt;span&gt;") >= 0
 
   should "highlight query words", ->
-    suggestion = new Suggestion(["ninja"], "tab", "url", "ninjawords")
+    suggestion = new Suggestion(["ninja"], "tab", "url", "ninjawords", returns(1))
     assert.isTrue suggestion.generateHtml().indexOf("<span class='match'>ninja</span>words") >= 0
 
   should "shorten urls", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords")
+    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
 hours = (n) -> 1000 * 60 * 60 * n
