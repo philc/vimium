@@ -3,6 +3,7 @@ class Suggestion
 
   # - type: one of [bookmark, history, tab].
   constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
+    @title ||= ""
 
   generateHtml: ->
     return @html if @html
@@ -151,11 +152,14 @@ RankingUtils =
     for term in queryTerms
       queryLength += term.length
       urlScore += 1 if url.indexOf(term) >= 0
-      titleScore += 1 if title.indexOf(term) >= 0
+      titleScore += 1 if title && title.indexOf(term) >= 0
     urlScore = urlScore / queryTerms.length
     urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
-    titleScore = titleScore / queryTerms.length
-    titleScore = titleScore * RankingUtils.normalizeDifference(queryLength, title.length)
+    if title
+      titleScore = titleScore / queryTerms.length
+      titleScore = titleScore * RankingUtils.normalizeDifference(queryLength, title.length)
+    else
+      titleScore = urlScore
     (urlScore + titleScore) / 2
 
   # Returns a score between [0, 1] which indicates how recent the given timestamp is. Items which are over
