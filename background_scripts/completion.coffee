@@ -1,8 +1,6 @@
 class Suggestion
   # - type: one of [bookmark, history, tab].
-  # - action: one of [navigateToUrl, switchToTab].
-  # TODO(philc): remove action. I don't think we need it here.
-  constructor: (@queryTerms, @type, @url, @title, @action) ->
+  constructor: (@queryTerms, @type, @url, @title) ->
 
   generateHtml: ->
     @html ||=
@@ -51,7 +49,7 @@ class BookmarkCompleter
     results = @bookmarks.filter (bookmark) =>
         RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
     suggestions = results.map (bookmark) =>
-      new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, "navigateToUrl")
+      new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title)
     onComplete = @currentSearch.onComplete
     @currentSearch = null
     onComplete(suggestions)
@@ -79,8 +77,7 @@ class HistoryCompleter
     results = []
     HistoryCache.use (history) ->
       results = history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-    suggestions = results.map (entry) =>
-      new Suggestion(queryTerms, "history", entry.url, entry.title, "navigateToUrl")
+    suggestions = results.map (entry) => new Suggestion(queryTerms, "history", entry.url, entry.title)
     onComplete(suggestions)
 
   refresh: ->
