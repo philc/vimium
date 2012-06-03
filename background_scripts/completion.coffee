@@ -1,6 +1,6 @@
 class Suggestion
   # - type: one of [bookmark, history, tab].
-  constructor: (@queryTerms, @type, @url, @title) ->
+  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
 
   generateHtml: ->
     @html ||=
@@ -30,9 +30,7 @@ class Suggestion
     Suggestion.escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
     new RegExp(string.replace(Suggestion.escapeRegExp, "\\$&"), "i")
 
-  computeRelevancy: ->
-    # TODO(philc):
-    1
+  computeRelevancy: -> @relevancy = @computeRelevancyFunction(@queryTerms, this)
 
 class BookmarkCompleter
   currentSearch: null
@@ -49,7 +47,7 @@ class BookmarkCompleter
     results = @bookmarks.filter (bookmark) =>
         RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
     suggestions = results.map (bookmark) =>
-      new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title)
+      new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, @computeRelevancy)
     onComplete = @currentSearch.onComplete
     @currentSearch = null
     onComplete(suggestions)
@@ -68,8 +66,10 @@ class BookmarkCompleter
       bookmark = toVisit.shift()
       results.push(bookmark)
       toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
-
     results
+
+  computeRelevancy: (queryTerms, suggestion) ->
+    RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
 
 class HistoryCompleter
   filter: (queryTerms, onComplete) ->
@@ -77,8 +77,23 @@ class HistoryCompleter
     results = []
     HistoryCache.use (history) ->
       results = history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-    suggestions = results.map (entry) => new Suggestion(queryTerms, "history", entry.url, entry.title)
+    suggestions = results.map (entry) =>
+      new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
     onComplete(suggestions)
+
+  computeRelevancy: (queryTerms, suggestion) ->
+    @oneMonthAgo ||= 1000 * 60 * 60 * 24 * 30
+    historyEntry = suggestion.extraRelevancyData
+    recency = Date.now() - historyEntry.lastVisitTime
+    recencyDifference = Math.max(0, @oneMonthAgo - recency) / @oneMonthAgo
+
+    # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This qudratic equation will
+    # incresingly discount older history entries.
+    recencyScore = recencyDifference * recencyDifference * recencyDifference
+
+    wordRelevancy = RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
+    # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
+    score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
 
   refresh: ->
 
@@ -115,6 +130,26 @@ RankingUtils =
     for term in queryTerms
       return false unless title.indexOf(term) >= 0 || url.indexOf(term) >= 0
     true
+
+  # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
+  wordRelevancy: (queryTerms, url, title) ->
+    queryLength = 0
+    urlScore = 0.0
+    titleScore = 0.0
+    for term in queryTerms
+      queryLength += term.length
+      urlScore += 1 if url.indexOf(term) >= 0
+      titleScore += 1 if title.indexOf(term) >= 0
+    urlScore = urlScore / queryTerms.length
+    urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
+    titleScore = titleScore / queryTerms.length
+    titleScore = titleScore * RankingUtils.normalizeDifference(queryLength, title.length)
+    (urlScore + titleScore) / 2
+
+  # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
+  normalizeDifference: (a, b) ->
+    max = Math.max(a, b)
+    (max - Math.abs(a - b)) / max
 
 # Provides cached access to Chrome's history.
 HistoryCache =

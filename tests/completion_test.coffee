@@ -24,8 +24,9 @@ context "bookmark completer",
 
 context "history completer",
   setup ->
-    @history1 = { title: "history1", url: "history1.com" }
-    @history2 = { title: "history2", url: "history2.com" }
+    # history2 is more recent than history1.
+    @history1 = { title: "history1", url: "history1.com", lastVisitTime: hours(1) }
+    @history2 = { title: "history2", url: "history2.com", lastVisitTime: hours(5) }
 
     global.chrome.history =
       search: (options, callback) => callback([@history1, @history2])
@@ -36,6 +37,13 @@ context "history completer",
   should "return matching history entries when searching", ->
     @completer.filter(["story1"], (@results) =>)
     assert.arrayEqual [@history1.url], @results.map (entry) -> entry.url
+
+  should "rank recent results higher than nonrecent results", ->
+    stub(Date, "now", returns(hours(24)))
+    @completer.filter(["hist"], (@results) =>)
+    @results.forEach (result) -> result.computeRelevancy()
+    @results.sort (a, b) -> b.relevancy - a.relevancy
+    assert.arrayEqual [@history2.url, @history1.url], @results.map (result) -> result.url
 
 context "suggestions",
   should "escape html in page titles", ->
@@ -49,5 +57,7 @@ context "suggestions",
   should "shorten urls", ->
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords")
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
+
+hours = (n) -> 1000 * 60 * 60 * n
 
 Tests.run()
