@@ -163,7 +163,12 @@ class DomainCompleter
         # Thankfully, the domains in HistoryCache are sorted from oldest to most recent.
         domain = @parseDomain(entry.url)
         @domains[domain] = entry if domain
+      chrome.history.onVisited.addListener(@onPageVisited.proxy(this))
       onComplete()
+
+  onPageVisited: (newPage) ->
+    domain = @parseDomain(newPage.url)
+    @domains[domain] = newPage if domain
 
   parseDomain: (url) -> url.split("/")[2] || ""
 
@@ -233,8 +238,6 @@ RankingUtils =
     # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This quadratic equation will
     # incresingly discount older history entries.
     recencyScore = recencyDifference * recencyDifference * recencyDifference
-
-
 
   # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
   normalizeDifference: (a, b) ->

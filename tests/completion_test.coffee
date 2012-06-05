@@ -50,6 +50,7 @@ context "domain completer",
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
 
     stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
+    global.chrome.history = { onVisited: { addListener: -> } }
     stub(Date, "now", returns(hours(24)))
 
     @completer = new DomainCompleter()
