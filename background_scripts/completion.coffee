@@ -257,11 +257,13 @@ HistoryCache =
       # sorting in ascending order. We will push new items on to the end as the user navigates to new pages.
       history.sort((a, b) -> (a.lastVisitTime || 0) - (b.lastVisitTime || 0))
       @history = history
-      chrome.history.onVisited.addListener (newSite) =>
-        firstTimeVisit = (newSite.visitedCount == 1)
-        @history.push(newSite) if firstTimeVisit
+      chrome.history.onVisited.addListener(@onPageVisited.proxy(this))
       callback(@history) for callback in @callbacks
       @callbacks = null
+
+  onPageVisited: (newPage) ->
+    firstTimeVisit = (newSite.visitedCount == 1)
+    @history.push(newSite) if firstTimeVisit
 
 root = exports ? window
 root.Suggestion = Suggestion
