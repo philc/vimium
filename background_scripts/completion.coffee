@@ -160,9 +160,10 @@ class DomainCompleter
       @domains = {}
       history.forEach (entry) =>
         # We want each key in our domains hash to point to the most recent History entry for that domain.
-        # Thankfully, the domains in HistoryCache are sorted from oldest to most recent.
         domain = @parseDomain(entry.url)
-        @domains[domain] = entry if domain
+        if domain
+          previousEntry = @domains[domain]
+          @domains[domain] = entry if !previousEntry || (previousEntry.lastVisitTime < entry.lastVisitTime)
       chrome.history.onVisited.addListener(@onPageVisited.proxy(this))
       onComplete()
 
@@ -249,6 +250,10 @@ HistoryCache =
   size: 20000
   history: null # An array of History items returned from Chrome.
 
+  reset: ->
+    @history = null
+    @callbacks = null
+
   use: (callback) ->
     return @fetchHistory(callback) unless @history?
     callback(@history)
@@ -257,16 +262,43 @@ HistoryCache =
     return @callbacks.push(callback) if @callbacks
     @callbacks = [callback]
     chrome.history.search { text: "", maxResults: @size, startTime: 0 }, (history) =>
-      # sorting in ascending order. We will push new items on to the end as the user navigates to new pages.
-      history.sort((a, b) -> (a.lastVisitTime || 0) - (b.lastVisitTime || 0))
+      history.sort @compareHistoryByUrl
       @history = history
       chrome.history.onVisited.addListener(@onPageVisited.proxy(this))
       callback(@history) for callback in @callbacks
       @callbacks = null
 
+  compareHistoryByUrl: (a, b) ->
+    return 0 if a.url == b.url
+    return 1 if a.url > b.url
+    -1
+
   onPageVisited: (newPage) ->
-    firstTimeVisit = (newSite.visitedCount == 1)
-    @history.push(newSite) if firstTimeVisit
+    i = HistoryCache.binarySearch(newPage, @history, @compareHistoryByUrl)
+    pageWasFound = (@history[i].url == newPage.url)
+    if pageWasFound
+      @history[i] = newPage
+    else
+      @history.splice(i, 0, newPage)
+
+# Returns the matching index or the closest matching index if the element is not found. That means you
+# must check the element at the returned index to know whether the element was actually found.
+HistoryCache.binarySearch = (targetElement, array, compareFunction) ->
+  high = array.length - 1
+  low = 0
+
+  while (low <= high)
+    middle = Math.floor((low + high) / 2)
+    element = array[middle]
+    compareResult = compareFunction(element, targetElement)
+    if (compareResult > 0)
+      high = middle - 1
+    else if (compareResult < 0)
+      low = middle + 1
+    else
+      return middle
+  # We didn't find the element. Return the position where it should be in this array.
+  return if compareFunction(element, targetElement) < 0 then middle + 1 else middle
 
 root = exports ? window
 root.Suggestion = Suggestion

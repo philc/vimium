@@ -22,9 +22,60 @@ context "bookmark completer",
     @completer.filter(["mark2"], (@results) =>)
     assert.arrayEqual [@bookmark2.url], @results.map (suggestion) -> suggestion.url
 
+context "HistoryCache",
+  context "binary search",
+    setup ->
+      @compare = (a, b) -> a - b
+
+    should "find elements to the left of the middle", ->
+      assert.equal 0, HistoryCache.binarySearch(3, [3, 5, 8], @compare)
+
+    should "find elements to the right of the middle", ->
+      assert.equal 2, HistoryCache.binarySearch(8, [3, 5, 8], @compare)
+
+    context "unfound elements",
+      should "return 0 if it should be the head of the list", ->
+        assert.equal 0, HistoryCache.binarySearch(1, [3, 5, 8], @compare)
+
+      should "return length - 1 if it should be at the end of the list", ->
+        assert.equal 0, HistoryCache.binarySearch(3, [3, 5, 8], @compare)
+
+      should "found return the position if it's between two elements", ->
+        assert.equal 1, HistoryCache.binarySearch(4, [3, 5, 8], @compare)
+        assert.equal 2, HistoryCache.binarySearch(7, [3, 5, 8], @compare)
+
+  context "fetchHistory",
+    setup ->
+      @history1 = { url: "b.com", lastVisitTime: 5 }
+      @history2 = { url: "a.com", lastVisitTime: 10 }
+      history = [@history1, @history2]
+      @onVisitedListener = null
+      global.chrome.history =
+        search: (options, callback) -> callback(history)
+        onVisited: { addListener: (@onVisitedListener) => }
+      HistoryCache.reset()
+
+    should "store visits sorted by url ascending", ->
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, @history1], @results
+
+    should "add new visits to the history", ->
+      HistoryCache.use () ->
+      newSite = { url: "ab.com" }
+      @onVisitedListener(newSite)
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, newSite, @history1], @results
+
+    should "replace new visits in the history", ->
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, @history1], @results
+      newSite = { url: "a.com", lastVisitTime: 15 }
+      @onVisitedListener(newSite)
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [newSite, @history1], @results
+
 context "history completer",
   setup ->
-    # history2 is more recent than history1.
     @history1 = { title: "history1", url: "history1.com", lastVisitTime: hours(1) }
     @history2 = { title: "history2", url: "history2.com", lastVisitTime: hours(5) }
 
