@@ -109,7 +109,7 @@ var linkHints = {
     // sometimes this is triggered before documentElement is created
     // TODO(int3): fail more gracefully?
     if (document.documentElement)
-      document.documentElement.appendChild(this.hintMarkerContainingDiv);
+      document.body.appendChild(this.hintMarkerContainingDiv);
     else
       this.deactivateMode();
   },
