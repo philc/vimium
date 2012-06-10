@@ -1,9 +1,28 @@
+# This file contains the definition of the completers used for the Vomnibox's suggestion UI. A completer will
+# take a query (whatever the user typed into the Vomnibox) and return a list of Suggestions, e.g. bookmarks,
+# domains, URLs from history.
+#
+# The Vomnibox frontend script makes a "filterCompleter" request to the background page, which in turn calls
+# filter() on each these completers.
+#
+# A completer is a class which has two functions:
+#  - filter(query, onComplete): "query" will be whatever the user typed into the Vomnibox.
+#  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
+
+# A Suggestion is a bookmark or history entry which matches the current query.
+# It also has an attached "computeRelevancyFunction" which determines how well this item matches the given
+# query terms.
 class Suggestion
   showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
 
   # - type: one of [bookmark, history, tab].
+  # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
+  #   between [0, 1]
+  # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
   constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
     @title ||= ""
+
+  computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
   generateHtml: ->
     return @html if @html
@@ -18,25 +37,11 @@ class Suggestion
         #{relevancyHtml}
       </div>"
 
-  shortenUrl: (url) ->
-    @stripTrailingSlash(url).replace(/^http:\/\//, "")
+  shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
 
   stripTrailingSlash: (url) ->
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
     url
-
-  # Merges the given list of ranges such that any overlapping regions are combined. E.g.
-  #   mergeRanges([0, 4], [3, 6]) => [0, 6].  A range is [startIndex, endIndex].
-  mergeRanges: (ranges) ->
-    previous = ranges.shift()
-    mergedRanges = [previous]
-    ranges.forEach (range) ->
-      if previous[1] >= range[0]
-        previous[1] = Math.max(range[1], previous[1])
-      else
-        mergedRanges.push(range)
-        previous = range
-    mergedRanges
 
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
@@ -57,7 +62,19 @@ class Suggestion
         string.substring(end)
     string
 
-  computeRelevancy: -> @relevancy = @computeRelevancyFunction(@queryTerms, this)
+  # Merges the given list of ranges such that any overlapping regions are combined. E.g.
+  #   mergeRanges([0, 4], [3, 6]) => [0, 6].  A range is [startIndex, endIndex].
+  mergeRanges: (ranges) ->
+    previous = ranges.shift()
+    mergedRanges = [previous]
+    ranges.forEach (range) ->
+      if previous[1] >= range[0]
+        previous[1] = Math.max(range[1], previous[1])
+      else
+        mergedRanges.push(range)
+        previous = range
+    mergedRanges
+
 
 class BookmarkCompleter
   currentSearch: null
@@ -95,8 +112,8 @@ class BookmarkCompleter
       toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
     results
 
-  computeRelevancy: (queryTerms, suggestion) ->
-    RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
+  computeRelevancy: (suggestion) ->
+    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
 
 class HistoryCompleter
   filter: (queryTerms, onComplete) ->
@@ -108,10 +125,10 @@ class HistoryCompleter
         new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
       onComplete(suggestions)
 
-  computeRelevancy: (queryTerms, suggestion) ->
+  computeRelevancy: (suggestion) ->
     historyEntry = suggestion.extraRelevancyData
     recencyScore = RankingUtils.recencyScore(historyEntry.lastVisitTime)
-    wordRelevancy = RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
+    wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
     # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
     score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
 
@@ -182,17 +199,18 @@ class TabCompleter
         suggestion
       onComplete(suggestions)
 
-  computeRelevancy: (queryTerms, suggestion) ->
-    RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
+  computeRelevancy: (suggestion) ->
+    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
 
+# A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
+# 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
-  constructor: (@completers) ->
-    @maxResults = 10 # TODO(philc): Should this be configurable?
+  constructor: (@completers) -> @maxResults = 10
 
   refresh: -> completer.refresh() for completer in @completers when completer.refresh
 
   filter: (queryTerms, onComplete) ->
-    # Only allow one query to run at a time.
+    # Allow only one query to run at a time.
     if @filterInProgress
       @mostRecentQuery = { queryTerms: queryTerms, onComplete: onComplete }
       return
@@ -214,11 +232,11 @@ class MultiCompleter
           @filter(@mostRecentQuery.queryTerms, @mostRecentQuery.onComplete) if @mostRecentQuery
 
   sortSuggestions: (suggestions) ->
-    for suggestion in suggestions
-      suggestion.computeRelevancy(@queryTerms)
+    suggestion.computeRelevancy(@queryTerms) for suggestion in suggestions
     suggestions.sort (a, b) -> b.relevancy - a.relevancy
     suggestions
 
+# Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
   # Whether the given URL or title match any one of the query terms. This is used to prune out irrelevant
   # suggestions before we try to rank them.
@@ -282,7 +300,8 @@ RegexpCache =
   # Creates a Regexp from the given string, with all special Regexp characters escaped.
   escapeRegexp: (string) -> new RegExp(string.replace(@escapeRegExp, "\\$&"), "i")
 
-# Provides cached access to Chrome's history.
+# Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
+# history cache.
 HistoryCache =
   size: 20000
   history: null # An array of History items returned from Chrome.
@@ -310,6 +329,8 @@ HistoryCache =
     return 1 if a.url > b.url
     -1
 
+  # When a page we've seen before has been visited again, be sure to replace our History item so it has the
+  # correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
   onPageVisited: (newPage) ->
     i = HistoryCache.binarySearch(newPage, @history, @compareHistoryByUrl)
     pageWasFound = (@history[i].url == newPage.url)
@@ -320,6 +341,7 @@ HistoryCache =
 
 # Returns the matching index or the closest matching index if the element is not found. That means you
 # must check the element at the returned index to know whether the element was actually found.
+# This method is used for quickly searching through our history cache.
 HistoryCache.binarySearch = (targetElement, array, compareFunction) ->
   high = array.length - 1
   low = 0
