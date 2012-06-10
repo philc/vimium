@@ -18,10 +18,11 @@ var vomnibar = (function() {
     completer.refresh();
     vomnibarUI.setCompleter(completer);
     vomnibarUI.setRefreshInterval(refreshInterval);
-    if (initialQueryValue)
-      vomnibarUI.setQuery(initialQueryValue);
     vomnibarUI.show();
-    return vomnibarUI;
+    if (initialQueryValue) {
+      vomnibarUI.setQuery(initialQueryValue);
+      vomnibarUI.update();
+    }
   }
 
   /** User interface for fuzzy completion */
@@ -196,7 +197,7 @@ var vomnibar = (function() {
         if (msg.id != id) return;
         // The result objects coming from the background page will be of the form:
         //   { html: "", type: "", url: "" }
-        // type will be one of [tab, bookmark, history].
+        // type will be one of [tab, bookmark, history, domain].
         var results = msg.results.map(function(result) {
           var functionToCall;
           if (result.type == "tab")
