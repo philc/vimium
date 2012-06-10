@@ -328,7 +328,10 @@ body.vimiumFindMode ::selection {
   overflow: hidden;
 }
 
-#vomnibar li .url { color: #224684 !important; }
+#vomnibar li .url {
+  white-space: nowrap;
+  color: #224684 !important;
+}
 
 #vomnibar li .match {
   font-size: inherit !important;
