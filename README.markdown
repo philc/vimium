@@ -117,26 +117,20 @@ Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+s
 
 Contributing
 ------------
-
 You'd like to fix a bug or implement a feature? Great! Check out the bugs on our issues tracker, or implement
 one of the suggestions there that have been tagged 'todo'. If you have a suggestion of your own, start a
-discussion on the issues tracker or on the [mailing list][list_url]. If it mirrors a similar feature in
-another browser or in Vim itself, let us know! Once you've picked something to work on, add a comment to the
-respective issue so others don't duplicate your effort.
+discussion on the issues tracker or on the [mailing list](http://groups.google.com/group/vimium-dev?hl=en). If
+it mirrors a similar feature in another browser or in Vim itself, let us know! Once you've picked something to
+work on, add a comment to the respective issue so others don't duplicate your effort.
 
-Please ensure that existing tests pass. The tests are defined in `test_harnesses/automated.html`.  To run the
-tests:
-1. Go to the extensions page
-2. Click on the arrow beside Vimium to expand the menu, and then inspect `background_page.html` in the console
-3. Type in `runTests()`.
+Vimium is written in Coffeescript, which compiles to Javascript. To build Vimium from source:
 
-We encourage you to write tests for any new features or bugfixes. Contributing more tests for existing
-features is great too!
+1. Install [Coffeescript](http://coffeescript.org/#installation).
+2. Run `cake autobuild` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+3. `cake test` to run the tests.
 
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
 your patch.
-
-[list_url]: http://groups.google.com/group/vimium-dev?hl=en
 
 Some brief coding style guidelines: 1) follow the style already present in the file, 2) ensure your lines
 don't exceed 110 characters.
