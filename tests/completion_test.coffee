@@ -119,6 +119,19 @@ context "domain completer",
   should "returns no results when there's more than one query term, because clearly it's not a domain", ->
     assert.arrayEqual [], filterCompleter(@completer, ["his", "tory"])
 
+context "tab completer",
+  setup ->
+    @tabs = [
+      { url: "tab1.com", title: "tab1", id: 1 }
+      { url: "tab2.com", title: "tab2", id: 2 }]
+    chrome.tabs = { query: (args, onComplete) => onComplete(@tabs) }
+    @completer = new TabCompleter()
+
+  should "return matching tabs", ->
+    results = filterCompleter(@completer, ["tab2"])
+    assert.equal "tab2.com", results.map (tab) -> tab.url
+    assert.equal 2, results.map (tab) -> tab.tabId
+
 context "suggestions",
   should "escape html in page titles", ->
     suggestion = new Suggestion(["queryterm"], "tab", "url", "title <span>", returns(1))

@@ -169,6 +169,22 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
+# Searches through all open tabs, matching on title and URL.
+class TabCompleter
+  filter: (queryTerms, onComplete) ->
+    # NOTE(philc): We search all tabs, not just those in the current window. I'm not sure if this is the
+    # correct UX.
+    chrome.tabs.query {}, (tabs) =>
+      results = tabs.filter (tab) -> RankingUtils.matches(queryTerms, tab.url, tab.title)
+      suggestions = results.map (tab) =>
+        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
+        suggestion.tabId = tab.id
+        suggestion
+      onComplete(suggestions)
+
+  computeRelevancy: (queryTerms, suggestion) ->
+    RankingUtils.wordRelevancy(queryTerms, suggestion.url, suggestion.title)
+
 class MultiCompleter
   constructor: (@completers) ->
     @maxResults = 10 # TODO(philc): Should this be configurable?
@@ -327,5 +343,6 @@ root.BookmarkCompleter = BookmarkCompleter
 root.MultiCompleter = MultiCompleter
 root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
+root.TabCompleter = TabCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
