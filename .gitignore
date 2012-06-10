@@ -1,0 +1,3 @@
+background_scripts/completion.js
+tests/completion_test.js
+tests/test_helper.js
