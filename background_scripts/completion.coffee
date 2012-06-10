@@ -183,6 +183,12 @@ class MultiCompleter
   refresh: -> completer.refresh() for completer in @completers when completer.refresh
 
   filter: (queryTerms, onComplete) ->
+    # Only allow one query to run at a time.
+    if @filterInProgress
+      @mostRecentQuery = { queryTerms: queryTerms, onComplete: onComplete }
+      return
+    @mostRecentQuery = null
+    @filterInProgress = true
     suggestions = []
     completersFinished = 0
     for completer in @completers
@@ -194,6 +200,8 @@ class MultiCompleter
           results = @sortSuggestions(suggestions)[0...@maxResults]
           result.generateHtml() for result in results
           onComplete(results)
+          @filterInProgress = false
+          @filter(@mostRecentQuery.queryTerms, @mostRecentQuery.onComplete) if @mostRecentQuery
 
   sortSuggestions: (suggestions) ->
     for suggestion in suggestions
