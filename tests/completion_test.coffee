@@ -163,5 +163,3 @@ filterCompleter = (completer, queryTerms) ->
   results
 
 hours = (n) -> 1000 * 60 * 60 * n
-
-Tests.run()
