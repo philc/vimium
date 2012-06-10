@@ -1,6 +1,10 @@
 fs = require "fs"
 {spawn, exec} = require "child_process"
 
+task "build", "compile all coffeescript files to javascript", ->
+  coffee = spawn "coffee", ["tests", "background_scripts"]
+  coffee.stdout.on "data", (data) -> console.log data.toString().trim()
+
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw", "tests", "background_scripts"]
   coffee.stdout.on "data", (data) -> console.log data.toString().trim()
