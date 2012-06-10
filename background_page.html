@@ -222,32 +222,27 @@
            };
   }
 
-  /**
+  /*
     * Opens the url in the current tab.
     */
    function openUrlInCurrentTab(request) {
      chrome.tabs.getSelected(null, function(tab) {
-       chrome.tabs.update(tab.id, {url: request.url});
+       chrome.tabs.update(tab.id, { url: utils.convertToUrl(request.url) });
      });
    }
 
-  /**
+  /*
    * Opens request.url in new tab and switches to it if request.selected is true.
-   *
    */
   function openUrlInNewTab(request) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.create({ url: request.url, index: tab.index + 1, selected: true });
+      chrome.tabs.create({ url: utils.convertToUrl(request.url), index: tab.index + 1, selected: true });
     });
   }
 
-  function openCopiedUrlInCurrentTab(request) {
-    openUrlInCurrentTab({ url: utils.ensureUrl(Clipboard.paste()) });
-  }
+  function openCopiedUrlInCurrentTab(request) { openUrlInCurrentTab({ url: Clipboard.paste() }); }
 
-  function openCopiedUrlInNewTab(request) {
-    openUrlInNewTab({ url: utils.ensureUrl(Clipboard.paste()) });
-  }
+  function openCopiedUrlInNewTab(request) { openUrlInNewTab({ url: Clipboard.paste() }); }
 
   /*
    * Returns the user-provided CSS overrides.

@@ -28,7 +28,6 @@ var vomnibar = (function() {
   /** User interface for fuzzy completion */
   var VomnibarUI = Class.extend({
     init: function() {
-      this.prompt = '>';
       this.refreshInterval = 0;
       this.initDom();
     },
@@ -59,7 +58,7 @@ var vomnibar = (function() {
       this.input.value = "";
       this.updateTimer = null;
       this.completions = [];
-      this.selection = 0;
+      this.selection = -1;
       this.update(true);
     },
 
@@ -94,11 +93,12 @@ var vomnibar = (function() {
       var action = this.actionFromKeyEvent(event);
       if (!action) return true; // pass through
 
+      var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
       if (action == "dismiss") {
         this.hide();
       }
       else if (action == "up") {
-        if (this.selection > 0)
+        if (this.selection >= 0)
           this.selection -= 1;
         this.updateSelection();
       }
@@ -108,12 +108,21 @@ var vomnibar = (function() {
         this.updateSelection();
       }
       else if (action == "enter") {
-        this.update(true, function() {
-          // Shift+Enter will open the result in a new tab instead of the current tab.
-          var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
-          this.completions[this.selection].performAction(openInNewTab);
-          this.hide();
-        }.proxy(this));
+        // If they type something and hit enter without selecting a completion from our list of suggestions,
+        // try to open their query as a URL directly. If it doesn't look like a URL, we will search using
+        // google.
+        if (this.selection == -1) {
+          var query = this.input.value.trim();
+          chrome.extension.sendRequest({
+            handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+            url: query });
+        } else {
+          this.update(true, function() {
+            // Shift+Enter will open the result in a new tab instead of the current tab.
+            this.completions[this.selection].performAction(openInNewTab);
+            this.hide();
+          }.proxy(this));
+        }
       }
 
       // It seems like we have to manually supress the event here and still return true.
@@ -123,7 +132,7 @@ var vomnibar = (function() {
     },
 
     updateCompletions: function(callback) {
-      query = this.input.value.replace(/^\s*/, "").trim();
+      query = this.input.value.trim();
 
       this.completer.filter(query, function(completions) {
         this.completions = completions;
