@@ -141,7 +141,7 @@ Release Notes
 1.33 (Unreleased)
 
 - A browser icon to quickly add sites to Vimium's exclude list.
-- A Vomnibar, which allows you to open sites from history, bookmarks, and tabs using Vimium's UI. Type "O" to try it.
+- A Vomnibar, which allows you to open sites from history, bookmarks, and tabs using Vimium's UI. Type "o" to try it.
 
 1.32 (03/05/2011)
 
