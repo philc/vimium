@@ -42,8 +42,7 @@ class Suggestion
   highlightTerms: (string) ->
     ranges = []
     for term in @queryTerms
-      regexp = @escapeRegexp(term)
-      i = string.search(regexp)
+      i = string.search(RegexpCache.get(term))
       ranges.push([i, i + term.length]) if i >= 0
 
     return string if ranges.length == 0
@@ -57,12 +56,6 @@ class Suggestion
         "<span class='match'>" + string.substring(start, end) + "</span>" +
         string.substring(end)
     string
-
-  # Creates a Regexp from the given string, with all special Regexp characters escaped.
-  escapeRegexp: (string) ->
-    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    Suggestion.escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
-    new RegExp(string.replace(Suggestion.escapeRegExp, "\\$&"), "i")
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(@queryTerms, this)
 
@@ -109,11 +102,11 @@ class HistoryCompleter
   filter: (queryTerms, onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
-    HistoryCache.use (history) ->
+    HistoryCache.use (history) =>
       results = history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-    suggestions = results.map (entry) =>
-      new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
-    onComplete(suggestions)
+      suggestions = results.map (entry) =>
+        new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
+      onComplete(suggestions)
 
   computeRelevancy: (queryTerms, suggestion) ->
     historyEntry = suggestion.extraRelevancyData
@@ -187,6 +180,7 @@ class MultiCompleter
     if @filterInProgress
       @mostRecentQuery = { queryTerms: queryTerms, onComplete: onComplete }
       return
+    RegexpCache.clear()
     @mostRecentQuery = null
     @filterInProgress = true
     suggestions = []
@@ -215,7 +209,8 @@ RankingUtils =
   matches: (queryTerms, url, title) ->
     return false if queryTerms.length == 0
     for term in queryTerms
-      return false unless title.indexOf(term) >= 0 || url.indexOf(term) >= 0
+      regexp = RegexpCache.get(term)
+      return false unless title.match(regexp) || url.match(regexp)
     true
 
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
@@ -252,6 +247,24 @@ RankingUtils =
   normalizeDifference: (a, b) ->
     max = Math.max(a, b)
     (max - Math.abs(a - b)) / max
+
+# We cache regexps because we use them frequently when comparing a query to history entries and bookmarks,
+# and we don't want to create fresh objects for every comparison.
+RegexpCache =
+  init: ->
+    @initialized = true
+    @clear()
+    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+
+  clear: -> @cache = {}
+
+  get: (string) ->
+    @init() unless @initialized
+    @cache[string] ||= @escapeRegexp(string)
+
+  # Creates a Regexp from the given string, with all special Regexp characters escaped.
+  escapeRegexp: (string) -> new RegExp(string.replace(@escapeRegExp, "\\$&"), "i")
 
 # Provides cached access to Chrome's history.
 HistoryCache =
@@ -315,3 +328,4 @@ root.MultiCompleter = MultiCompleter
 root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
 root.HistoryCache = HistoryCache
+root.RankingUtils = RankingUtils

@@ -19,8 +19,8 @@ context "bookmark completer",
 
   should "return matching bookmarks when searching", ->
     @completer.refresh()
-    @completer.filter(["mark2"], (@results) =>)
-    assert.arrayEqual [@bookmark2.url], @results.map (suggestion) -> suggestion.url
+    results = filterCompleter(@completer, ["mark2"])
+    assert.arrayEqual [@bookmark2.url], results.map (suggestion) -> suggestion.url
 
 context "HistoryCache",
   context "binary search",
@@ -137,6 +137,11 @@ context "suggestions",
   should "shorten urls", ->
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
+
+context "RankingUtils",
+  should "do a case insensitive match", ->
+    assert.isTrue RankingUtils.matches(["maRiO"], "MARIO", "MARIo")
+
 
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
