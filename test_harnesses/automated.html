@@ -275,27 +275,6 @@
 
       );
 
-      context("Web query parsing",
-
-        should("Convert query string to valid URL", function() {
-          assert.equal("http://www.google.com/", utils.convertToUrl("http://www.google.com/"));
-          assert.equal("http://www.google.com/", utils.convertToUrl("    http://www.google.com/     "));
-          assert.equal("http://www.google.com", utils.convertToUrl("www.google.com"));
-          assert.equal("http://google.com", utils.convertToUrl("google.com"));
-          assert.equal("http://www.google.com/search?q=google", utils.convertToUrl("google"));
-          assert.equal("http://www.google.com/search?q=go ogle.com", utils.convertToUrl("go ogle.com"));
-          assert.equal("http://localhost", utils.convertToUrl("localhost"));
-          assert.equal("http://xyz.museum", utils.convertToUrl("xyz.museum"));
-          assert.equal("chrome://extensions", utils.convertToUrl("chrome://extensions"));
-          assert.equal("http://user:pass@ftp.xyz.com/test",
-                       utils.convertToUrl("user:pass@ftp.xyz.com/test"));
-          assert.equal("http://127.0.0.1", utils.convertToUrl("127.0.0.1"));
-          assert.equal("http://127.0.0.1:8080", utils.convertToUrl("127.0.0.1:8080"));
-          assert.equal("http://[::]:8080", utils.convertToUrl("[::]:8080"));
-        })
-
-      );
-
       Tests.outputMethod = function(output) {
         var newOutput = Array.prototype.join.call(arguments, "\n");
         newOutput = newOutput.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); // escape html
