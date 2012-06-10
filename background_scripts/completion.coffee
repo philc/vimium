@@ -1,5 +1,5 @@
 class Suggestion
-  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
 
   # - type: one of [bookmark, history, tab].
   constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
