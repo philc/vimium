@@ -122,7 +122,7 @@ var vomnibar = (function() {
     },
 
     updateCompletions: function(callback) {
-      query = this.input.value.replace(/^\s*/, "");
+      query = this.input.value.replace(/^\s*/, "").trim();
 
       this.completer.filter(query, function(completions) {
         this.completions = completions;
