@@ -35,7 +35,7 @@ var textInputXPath = (function() {
     "(" + textInputTypes.map(function(type) {return '@type="' + type + '"'}).join(" or ") + "or not(@type))" +
     " and not(@disabled or @readonly)]",
     "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"];
-  return domUtils.makeXPath(inputElements);
+  return DomUtils.makeXPath(inputElements);
 })();
 
 /**
@@ -166,7 +166,7 @@ function initializePreDomReady() {
     } else if (port.name == "setScrollPosition") {
       port.onMessage.addListener(function(args) {
         if (args.scrollX > 0 || args.scrollY > 0) {
-          domUtils.documentReady(function() { window.scrollBy(args.scrollX, args.scrollY); });
+          DomUtils.documentReady(function() { window.scrollBy(args.scrollX, args.scrollY); });
         }
       });
     } else if (port.name == "returnCurrentTabUrl") {
@@ -332,7 +332,7 @@ function scrollLeft() { scrollActivatedElementBy("x", -1 * settings.get("scrollS
 function scrollRight() { scrollActivatedElementBy("x", parseFloat(settings.get("scrollStepSize"))); }
 
 function focusInput(count) {
-  var results = domUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
+  var results = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
 
   var lastInputBox;
   var i = 0;
@@ -341,7 +341,7 @@ function focusInput(count) {
     var currentInputBox = results.iterateNext();
     if (!currentInputBox) { break; }
 
-    if (domUtils.getVisibleClientRect(currentInputBox) === null)
+    if (DomUtils.getVisibleClientRect(currentInputBox) === null)
         continue;
 
     lastInputBox = currentInputBox;
@@ -800,9 +800,9 @@ function selectFoundInputElement() {
   // instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
   // the current one might be disabled and therefore unable to receive focus), we use the approximate
   // heuristic of checking that the last anchor node is an ancestor of our element.
-  if (findModeQueryHasResults && domUtils.isSelectable(document.activeElement) &&
+  if (findModeQueryHasResults && DomUtils.isSelectable(document.activeElement) &&
       isDOMDescendant(findModeAnchorNode, document.activeElement)) {
-    domUtils.simulateSelect(document.activeElement);
+    DomUtils.simulateSelect(document.activeElement);
     // the element has already received focus via find(), so invoke insert mode manually
     enterInsertModeWithoutShowingIndicator(document.activeElement);
   }
@@ -839,14 +839,14 @@ function findAndFocus(backwards) {
 
   // if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   // mode
-  var elementCanTakeInput = domUtils.isSelectable(document.activeElement) &&
+  var elementCanTakeInput = DomUtils.isSelectable(document.activeElement) &&
     isDOMDescendant(findModeAnchorNode, document.activeElement);
   if (elementCanTakeInput) {
     handlerStack.push({
       keydown: function(event) {
         handlerStack.pop();
         if (isEscape(event)) {
-          domUtils.simulateSelect(document.activeElement);
+          DomUtils.simulateSelect(document.activeElement);
           enterInsertModeWithoutShowingIndicator(document.activeElement);
           return false; // we have 'consumed' this event, so do not propagate
         }
@@ -880,7 +880,7 @@ function followLink(linkElement) {
     // calls, like the 'more' button on GitHub's newsfeed.
     linkElement.scrollIntoView();
     linkElement.focus();
-    domUtils.simulateClick(linkElement);
+    DomUtils.simulateClick(linkElement);
   }
 }
 
@@ -891,8 +891,8 @@ function followLink(linkElement) {
  * next big thing', and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
  */
 function findAndFollowLink(linkStrings) {
-  var linksXPath = domUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"]);
-  var links = domUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+  var linksXPath = DomUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"]);
+  var links = DomUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
   var candidateLinks = [];
 
   // at the end of this loop, candidateLinks will contain all visible links that match our patterns

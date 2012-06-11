@@ -1,7 +1,8 @@
 background_scripts/completion.js
 background_scripts/commands.js
+background_scripts/settings.js
 tests/completion_test.js
 tests/test_helper.js
 tests/utils_test.js
-background_scripts/settings.js
 lib/clipboard.js
+lib/dom_utils.js

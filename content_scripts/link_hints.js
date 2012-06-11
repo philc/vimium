@@ -34,7 +34,7 @@ var linkHints = {
    * The final expression will be something like "//button | //xhtml:button | ..."
    * We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
    */
-  clickableElementsXPath: domUtils.makeXPath(["a", "area[@href]", "textarea", "button", "select",
+  clickableElementsXPath: DomUtils.makeXPath(["a", "area[@href]", "textarea", "button", "select",
                              "input[not(@type='hidden' or @disabled or @readonly)]",
                              "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
                              "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]),
@@ -72,7 +72,7 @@ var linkHints = {
       this.linkActivator = function(link) {
         // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
         // to open it in a new tab if necessary.
-        domUtils.simulateClick(link, { metaKey: platform == "Mac", ctrlKey: platform != "Mac" });
+        DomUtils.simulateClick(link, { metaKey: platform == "Mac", ctrlKey: platform != "Mac" });
       }
     } else if (copyLinkUrl) {
       HUD.show("Copy link URL to Clipboard");
@@ -84,7 +84,7 @@ var linkHints = {
       // When we're opening the link in the current tab, don't navigate to the selected link immediately;
       // we want to give the user some time to notice which link has received focus.
       this.linkActivator = function(link) {
-        setTimeout(domUtils.simulateClick.bind(domUtils, link), 400);
+        setTimeout(DomUtils.simulateClick.bind(DomUtils, link), 400);
       }
     }
   },
@@ -120,14 +120,14 @@ var linkHints = {
    * of digits needed to enumerate all of the links on screen.
    */
   getVisibleClickableElements: function() {
-    var resultSet = domUtils.evaluateXPath(this.clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+    var resultSet = DomUtils.evaluateXPath(this.clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
     var visibleElements = [];
 
     // Find all visible clickable elements.
     for (var i = 0, count = resultSet.snapshotLength; i < count; i++) {
       var element = resultSet.snapshotItem(i);
-      var clientRect = domUtils.getVisibleClientRect(element, clientRect);
+      var clientRect = DomUtils.getVisibleClientRect(element, clientRect);
       if (clientRect !== null)
         visibleElements.push({element: element, rect: clientRect});
 
@@ -200,14 +200,14 @@ var linkHints = {
   activateLink: function(matchedLink, delay) {
     this.delayMode = true;
     var clickEl = matchedLink.clickableItem;
-    if (domUtils.isSelectable(clickEl)) {
-      domUtils.simulateSelect(clickEl);
+    if (DomUtils.isSelectable(clickEl)) {
+      DomUtils.simulateSelect(clickEl);
       this.deactivateMode(delay, function() { linkHints.delayMode = false; });
     } else {
       // TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() === 'input' && clickEl.type !== 'button')
         clickEl.focus();
-      domUtils.flashRect(matchedLink.rect);
+      DomUtils.flashRect(matchedLink.rect);
       this.linkActivator(clickEl);
       if (this.shouldOpenWithQueue) {
         this.deactivateMode(delay, function() {
