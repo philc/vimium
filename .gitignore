@@ -1,4 +1,5 @@
 background_scripts/completion.js
+background_scripts/commands.js
 tests/completion_test.js
 tests/test_helper.js
 tests/utils_test.js

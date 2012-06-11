@@ -95,10 +95,10 @@
 
   var postSaveHooks = {
     keyMappings: function (value) {
-      backgroundPage = chrome.extension.getBackgroundPage();
-      backgroundPage.clearKeyMappingsAndSetDefaults();
-      backgroundPage.parseCustomKeyMappings(value);
-      backgroundPage.refreshCompletionKeysAfterMappingSave();
+      commands = chrome.extension.getBackgroundPage().Commands;
+      commands.clearKeyMappingsAndSetDefaults();
+      commands.parseCustomKeyMappings(value);
+      chrome.extension.getBackgroundPage().refreshCompletionKeysAfterMappingSave();
     }
   };
 

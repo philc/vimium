@@ -162,14 +162,14 @@
    */
   function helpDialogHtml(showUnboundCommands, showCommandNames, customTitle) {
     var commandsToKey = {};
-    for (var key in keyToCommandRegistry) {
-      var command = keyToCommandRegistry[key].command;
+    for (var key in Commands.keyToCommandRegistry) {
+      var command = Commands.keyToCommandRegistry[key].command;
       commandsToKey[command] = (commandsToKey[command] || []).concat(key);
     }
     var dialogHtml = fetchFileContents("help_dialog.html");
-    for (var group in commandGroups)
+    for (var group in Commands.commandGroups)
       dialogHtml = dialogHtml.replace("{{" + group + "}}",
-          helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands,
+          helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
                                         showUnboundCommands, showCommandNames));
     dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
     dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help");
@@ -184,12 +184,13 @@
   function helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands,
                                          showUnboundCommands, showCommandNames) {
     var html = [];
-    for (var i = 0; i < commandGroups[group].length; i++) {
-      var command = commandGroups[group][i];
+    for (var i = 0; i < Commands.commandGroups[group].length; i++) {
+      var command = Commands.commandGroups[group][i];
       bindings = (commandsToKey[command] || [""]).join(", ");
       if (showUnboundCommands || commandsToKey[command]) {
         html.push(
-          "<tr class='vimiumReset " + (advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
+          "<tr class='vimiumReset " +
+              (Commands.advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
           "<td class='vimiumReset'>", utils.escapeHtml(bindings), "</td>",
           "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description);
 
@@ -531,7 +532,7 @@
   }
 
   function populateValidFirstKeys() {
-    for (var key in keyToCommandRegistry)
+    for (var key in Commands.keyToCommandRegistry)
     {
       if (getActualKeyStrokeLength(key) == 2)
         validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true;
@@ -539,7 +540,7 @@
   }
 
   function populateSingleKeyCommands() {
-    for (var key in keyToCommandRegistry)
+    for (var key in Commands.keyToCommandRegistry)
     {
       if (getActualKeyStrokeLength(key) == 1)
         singleKeyCommands.push(key);
@@ -569,7 +570,7 @@
 
     if (getActualKeyStrokeLength(command) == 1)
     {
-      for (var key in keyToCommandRegistry)
+      for (var key in Commands.keyToCommandRegistry)
       {
         var splitKey = splitKeyIntoFirstAndSecond(key);
         if (splitKey.first == command)
@@ -610,9 +611,8 @@
     if (command.length == 0) { return keysToCheck; }
     if (isNaN(count)) { count = 1; }
 
-    if (keyToCommandRegistry[command]) {
-      registryEntry = keyToCommandRegistry[command];
-      console.log("command found for [", keysToCheck, "],", registryEntry.command);
+    if (Commands.keyToCommandRegistry[command]) {
+      registryEntry = Commands.keyToCommandRegistry[command];
 
       if (!registryEntry.isBackgroundCommand) {
         var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
@@ -637,7 +637,7 @@
       var splitKey = splitKeyIntoFirstAndSecond(command);
 
       // The second key might be a valid command by its self.
-      if (keyToCommandRegistry[splitKey.second])
+      if (Commands.keyToCommandRegistry[splitKey.second])
         newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId);
       else
         newKeyQueue = (validFirstKeys[splitKey.second] ? splitKey.second : "");
@@ -764,23 +764,23 @@
   }
 
   function init() {
-    clearKeyMappingsAndSetDefaults();
+    Commands.clearKeyMappingsAndSetDefaults();
 
     if (settings.has("keyMappings"))
-      parseCustomKeyMappings(settings.get("keyMappings"));
+      Commands.parseCustomKeyMappings(settings.get("keyMappings"));
 
     // In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
     // and restore tab. For existing users, we want to preserve existing behavior for them by adding some
     // custom key mappings on their behalf.
     if (settings.get("previousVersion") == "1.21") {
       var customKeyMappings = settings.get("keyMappings") || "";
-      if ((keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
+      if ((Commands.keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
         customKeyMappings += "\nmap d removeTab";
-      if ((keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
+      if ((Commands.keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
         customKeyMappings += "\nmap u restoreTab";
       if (customKeyMappings != "") {
         settings.set("keyMappings", customKeyMappings);
-        parseCustomKeyMappings(customKeyMappings);
+        Commands.parseCustomKeyMappings(customKeyMappings);
       }
     }
 
