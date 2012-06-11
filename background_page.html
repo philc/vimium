@@ -119,7 +119,7 @@
    */
   function isEnabledForUrl(request) {
     // excludedUrls are stored as a series of URL expressions separated by newlines.
-    var excludedUrls = settings.get("excludedUrls").split("\n");
+    var excludedUrls = Settings.get("excludedUrls").split("\n");
     var isEnabled = true;
     for (var i = 0; i < excludedUrls.length; i++) {
       // The user can add "*" to the URL which means ".*"
@@ -137,9 +137,9 @@
     url = trim(url);
     if (url === "") { return; }
 
-    var excludedUrls = settings.get("excludedUrls");
+    var excludedUrls = Settings.get("excludedUrls");
     excludedUrls += "\n" + url;
-    settings.set("excludedUrls", excludedUrls);
+    Settings.set("excludedUrls", excludedUrls);
 
     chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, function(tabs) {
       updateActiveState(tabs[0].id);
@@ -147,7 +147,7 @@
   }
 
   function saveHelpDialogSettings(request) {
-    settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands);
+    Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands);
   }
 
   function showHelp(callback, frameId) {
@@ -174,7 +174,7 @@
     dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
     dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help");
     dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}",
-        settings.get("helpDialog_showAdvancedCommands"));
+        Settings.get("helpDialog_showAdvancedCommands"));
     return dialogHtml;
   }
 
@@ -249,7 +249,7 @@
    * Returns the user-provided CSS overrides.
    */
   function getLinkHintCss(request) {
-    return { linkHintCss: (settings.get("userDefinedLinkHintCss") || "") };
+    return { linkHintCss: (Settings.get("userDefinedLinkHintCss") || "") };
   }
 
   /*
@@ -257,7 +257,7 @@
    * We should now dismiss that message in all tabs.
    */
   function upgradeNotificationClosed(request) {
-    settings.set("previousVersion", currentVersion);
+    Settings.set("previousVersion", currentVersion);
     sendRequestToAllTabs({ name: "hideUpgradeNotification" });
   }
 
@@ -280,11 +280,11 @@
    */
   function handleSettings(args, port) {
     if (args.operation == "get") {
-      var value = settings.get(args.key);
+      var value = Settings.get(args.key);
       port.postMessage({ key: args.key, value: value });
     }
     else { // operation == "set"
-      settings.set(args.key, args.value);
+      Settings.set(args.key, args.value);
     }
   }
 
@@ -686,9 +686,9 @@
   function shouldShowUpgradeMessage() {
     // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
     // installs.
-    if (!settings.get("previousVersion"))
-      settings.set("previousVersion", currentVersion);
-    return compareVersions(currentVersion, settings.get("previousVersion")) == 1;
+    if (!Settings.get("previousVersion"))
+      Settings.set("previousVersion", currentVersion);
+    return compareVersions(currentVersion, Settings.get("previousVersion")) == 1;
   }
 
   function openOptionsPageInNewTab() {
@@ -766,20 +766,20 @@
   function init() {
     Commands.clearKeyMappingsAndSetDefaults();
 
-    if (settings.has("keyMappings"))
-      Commands.parseCustomKeyMappings(settings.get("keyMappings"));
+    if (Settings.has("keyMappings"))
+      Commands.parseCustomKeyMappings(Settings.get("keyMappings"));
 
     // In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
     // and restore tab. For existing users, we want to preserve existing behavior for them by adding some
     // custom key mappings on their behalf.
-    if (settings.get("previousVersion") == "1.21") {
-      var customKeyMappings = settings.get("keyMappings") || "";
+    if (Settings.get("previousVersion") == "1.21") {
+      var customKeyMappings = Settings.get("keyMappings") || "";
       if ((Commands.keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
         customKeyMappings += "\nmap d removeTab";
       if ((Commands.keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
         customKeyMappings += "\nmap u restoreTab";
       if (customKeyMappings != "") {
-        settings.set("keyMappings", customKeyMappings);
+        Settings.set("keyMappings", customKeyMappings);
         Commands.parseCustomKeyMappings(customKeyMappings);
       }
     }
