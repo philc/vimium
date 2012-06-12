@@ -129,6 +129,12 @@ Class =
     newClass.constructor = newClass
     newClass
 
+globalRoot = if window? then window else global
+globalRoot.extend = (hash1, hash2) ->
+  for key of hash2
+    hash1[key] = hash2[key]
+  hash1
+
 root = exports ? window
 root.Utils = Utils
 root.Class = Class
