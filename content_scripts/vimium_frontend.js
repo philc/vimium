@@ -417,7 +417,7 @@ function onKeypress(event) {
     keyChar = String.fromCharCode(event.charCode);
 
     // Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && isPrimaryModifierKey(event)) {
+    if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event)) {
       enterInsertModeWithoutShowingIndicator();
       return;
     }
@@ -467,7 +467,7 @@ function onKeydown(event) {
   // avoid / being interpreted as ?
   if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31)
       || event.keyIdentifier.slice(0, 2) != "U+") {
-    keyChar = getKeyChar(event);
+    keyChar = KeyboardUtils.getKeyChar(event);
 
     if (keyChar != "") { // Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
       var modifiers = [];
@@ -489,7 +489,7 @@ function onKeydown(event) {
     }
   }
 
-  if (isInsertMode() && isEscape(event)) {
+  if (isInsertMode() && KeyboardUtils.isEscape(event)) {
     // Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement)) {
       // Remove focus so the user can't just get himself back into insert mode by typing in the same input
@@ -501,7 +501,7 @@ function onKeydown(event) {
     }
   }
   else if (findMode) {
-    if (isEscape(event)) {
+    if (KeyboardUtils.isEscape(event)) {
       handleEscapeForFindMode();
       suppressEvent(event);
     }
@@ -517,7 +517,7 @@ function onKeydown(event) {
       event.stopPropagation();
     }
   }
-  else if (isShowingHelpDialog && isEscape(event)) {
+  else if (isShowingHelpDialog && KeyboardUtils.isEscape(event)) {
     hideHelpDialog();
   }
   else if (!isInsertMode() && !findMode) {
@@ -527,7 +527,7 @@ function onKeydown(event) {
 
       keyPort.postMessage({keyChar:keyChar, frameId:frameId});
     }
-    else if (isEscape(event)) {
+    else if (KeyboardUtils.isEscape(event)) {
       keyPort.postMessage({keyChar:"<ESC>", frameId:frameId});
     }
   }
@@ -539,8 +539,9 @@ function onKeydown(event) {
   // Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   //
   // TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() && (currentCompletionKeys.indexOf(getKeyChar(event)) != -1 ||
-      isValidFirstKey(getKeyChar(event))))
+  if (keyChar == "" && !isInsertMode() &&
+     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
+      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     event.stopPropagation();
 }
 
@@ -845,7 +846,7 @@ function findAndFocus(backwards) {
     handlerStack.push({
       keydown: function(event) {
         handlerStack.pop();
-        if (isEscape(event)) {
+        if (KeyboardUtils.isEscape(event)) {
           DomUtils.simulateSelect(document.activeElement);
           enterInsertModeWithoutShowingIndicator(document.activeElement);
           return false; // we have 'consumed' this event, so do not propagate

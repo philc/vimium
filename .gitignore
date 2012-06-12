@@ -6,3 +6,4 @@ tests/test_helper.js
 tests/utils_test.js
 lib/clipboard.js
 lib/dom_utils.js
+lib/keyboard_utils.js

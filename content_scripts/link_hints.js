@@ -72,7 +72,9 @@ var linkHints = {
       this.linkActivator = function(link) {
         // When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
         // to open it in a new tab if necessary.
-        DomUtils.simulateClick(link, { metaKey: platform == "Mac", ctrlKey: platform != "Mac" });
+        DomUtils.simulateClick(link, {
+          metaKey: KeyboardUtils.platform == "Mac",
+          ctrlKey: KeyboardUtils.platform != "Mac" });
       }
     } else if (copyLinkUrl) {
       HUD.show("Copy link URL to Clipboard");
@@ -175,7 +177,7 @@ var linkHints = {
     }
 
     // TODO(philc): Ignore keys that have modifiers.
-    if (isEscape(event)) {
+    if (KeyboardUtils.isEscape(event)) {
       this.deactivateMode();
     } else {
       var keyResult = this.markerMatcher.matchHintsByKey(event, this.hintMarkers);
@@ -347,7 +349,7 @@ var alphabetHints = {
   },
 
   matchHintsByKey: function(event, hintMarkers) {
-    var keyChar = getKeyChar(event);
+    var keyChar = KeyboardUtils.getKeyChar(event);
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (!this.hintKeystrokeQueue.pop())
@@ -443,7 +445,7 @@ var filterHints = {
   },
 
   matchHintsByKey: function(event, hintMarkers) {
-    var keyChar = getKeyChar(event);
+    var keyChar = KeyboardUtils.getKeyChar(event);
     var delay = 0;
     var userIsTypingLinkText = false;
 

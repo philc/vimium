@@ -74,8 +74,8 @@ var vomnibar = (function() {
      * We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
      */
     actionFromKeyEvent: function(event) {
-      var key = getKeyChar(event);
-      if (isEscape(event))
+      var key = KeyboardUtils.getKeyChar(event);
+      if (KeyboardUtils.isEscape(event))
         return "dismiss";
       else if (key == "up" ||
           (event.shiftKey && event.keyCode == keyCodes.tab) ||
@@ -93,7 +93,7 @@ var vomnibar = (function() {
       var action = this.actionFromKeyEvent(event);
       if (!action) return true; // pass through
 
-      var openInNewTab = (event.shiftKey || isPrimaryModifierKey(event));
+      var openInNewTab = (event.shiftKey || KeyboardUtils.isPrimaryModifierKey(event));
       if (action == "dismiss") {
         this.hide();
       }
