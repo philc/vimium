@@ -62,7 +62,7 @@
               "<a>test</a>" +
               "<a>tress</a>";
             document.getElementById("test-div").innerHTML = testContent;
-            linkHints.markerMatcher = alphabetHints;
+            LinkHints.markerMatcher = alphabetHints;
           }),
 
           tearDown(function() {
@@ -70,10 +70,10 @@
           }),
 
           should("create hints when activated, discard them when deactivated", function() {
-            linkHints.activateMode();
-            assert.isFalse(linkHints.hintMarkerContainingDiv == null);
-            linkHints.deactivateMode();
-            assert.isTrue(linkHints.hintMarkerContainingDiv == null);
+            LinkHints.activateMode();
+            assert.isFalse(LinkHints.hintMarkerContainingDiv == null);
+            LinkHints.deactivateMode();
+            assert.isTrue(LinkHints.hintMarkerContainingDiv == null);
           }),
 
           should("position items correctly", function() {
@@ -82,16 +82,16 @@
               assert.equal(element1.getClientRects()[0].top, element2.getClientRects()[0].top);
             }
             stub(document.body, "style", "static");
-            linkHints.activateMode();
-            assertStartPosition(document.getElementsByTagName("a")[0], linkHints.hintMarkers[0]);
-            assertStartPosition(document.getElementsByTagName("a")[1], linkHints.hintMarkers[1]);
-            linkHints.deactivateMode();
+            LinkHints.activateMode();
+            assertStartPosition(document.getElementsByTagName("a")[0], LinkHints.hintMarkers[0]);
+            assertStartPosition(document.getElementsByTagName("a")[1], LinkHints.hintMarkers[1]);
+            LinkHints.deactivateMode();
 
             stub(document.body.style, "position", "relative");
-            linkHints.activateMode();
-            assertStartPosition(document.getElementsByTagName("a")[0], linkHints.hintMarkers[0]);
-            assertStartPosition(document.getElementsByTagName("a")[1], linkHints.hintMarkers[1]);
-            linkHints.deactivateMode();
+            LinkHints.activateMode();
+            assertStartPosition(document.getElementsByTagName("a")[0], LinkHints.hintMarkers[0]);
+            assertStartPosition(document.getElementsByTagName("a")[1], LinkHints.hintMarkers[1]);
+            LinkHints.deactivateMode();
           })
 
         );
@@ -104,15 +104,15 @@
         setup(function() {
           stub(settings.values, "filterLinkHints", "false");
           stub(settings.values, "linkHintCharacters", "ab")
-          linkHints.markerMatcher = alphabetHints;
+          LinkHints.markerMatcher = alphabetHints;
 
           // Three hints will trigger double hint chars.
           createLinks(3);
-          linkHints.activateMode();
+          LinkHints.activateMode();
         }),
 
         tearDown(function() {
-          linkHints.deactivateMode();
+          LinkHints.deactivateMode();
           document.getElementById("test-div").innerHTML = "";
         }),
 
@@ -120,15 +120,15 @@
           // TODO(philc): This test verifies the current behavior, but the current behavior is incorrect.
           // The output here should be something like aa, ab, b.
           var expectedHints = ["aa", "ba", "ab"];
-          console.log(linkHints.hintMarkers);
+          console.log(LinkHints.hintMarkers);
           for (var i = 0; i < expectedHints.length; i++)
-            assert.equal(expectedHints[i], linkHints.hintMarkers[i].hintString);
+            assert.equal(expectedHints[i], LinkHints.hintMarkers[i].hintString);
         }),
 
         should("narrow the hints", function() {
-          linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-          assert.equal("none", linkHints.hintMarkers[1].style.display);
-          assert.equal("", linkHints.hintMarkers[0].style.display);
+          LinkHints.onKeyDownInMode(mockKeyboardEvent("A"));
+          assert.equal("none", LinkHints.hintMarkers[1].style.display);
+          assert.equal("", LinkHints.hintMarkers[0].style.display);
         })
 
       );
@@ -137,7 +137,7 @@
 
         setup(function() {
           stub(settings.values, "filterLinkHints", "true");
-          linkHints.markerMatcher = filterHints;
+          LinkHints.markerMatcher = filterHints;
         }),
 
         context("Text hints",
@@ -149,27 +149,27 @@
               "<a>trait</a>" +
               "<a>track<img alt='alt text'/></a>";
             document.getElementById("test-div").innerHTML = testContent;
-            linkHints.activateMode();
+            LinkHints.activateMode();
           }),
 
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
-            linkHints.deactivateMode();
+            LinkHints.deactivateMode();
           }),
 
           should("label the hints", function() {
             for (var i = 0; i < 4; i++)
-              assert.equal((i + 1).toString(), linkHints.hintMarkers[i].textContent.toLowerCase());
+              assert.equal((i + 1).toString(), LinkHints.hintMarkers[i].textContent.toLowerCase());
           }),
 
           should("narrow the hints", function() {
-            linkHints.onKeyDownInMode(mockKeyboardEvent("T"));
-            linkHints.onKeyDownInMode(mockKeyboardEvent("R"));
-            assert.equal("none", linkHints.hintMarkers[0].style.display);
-            assert.equal("1", linkHints.hintMarkers[1].hintString);
-            assert.equal("", linkHints.hintMarkers[1].style.display);
-            linkHints.onKeyDownInMode(mockKeyboardEvent("A"));
-            assert.equal("2", linkHints.hintMarkers[3].hintString);
+            LinkHints.onKeyDownInMode(mockKeyboardEvent("T"));
+            LinkHints.onKeyDownInMode(mockKeyboardEvent("R"));
+            assert.equal("none", LinkHints.hintMarkers[0].style.display);
+            assert.equal("1", LinkHints.hintMarkers[1].hintString);
+            assert.equal("", LinkHints.hintMarkers[1].style.display);
+            LinkHints.onKeyDownInMode(mockKeyboardEvent("A"));
+            assert.equal("2", LinkHints.hintMarkers[3].hintString);
           })
 
         ),
@@ -183,19 +183,19 @@
               "<a><img title='some title'/></a>" +
               "<a><img src='' width='320px' height='100px'/></a>";
             document.getElementById("test-div").innerHTML = testContent;
-            linkHints.activateMode();
+            LinkHints.activateMode();
           }),
 
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
-            linkHints.deactivateMode();
+            LinkHints.deactivateMode();
           }),
 
           should("label the images", function() {
-            assert.equal("1: alt text", linkHints.hintMarkers[0].textContent.toLowerCase());
-            assert.equal("2: alt text", linkHints.hintMarkers[1].textContent.toLowerCase());
-            assert.equal("3: some title", linkHints.hintMarkers[2].textContent.toLowerCase());
-            assert.equal("4", linkHints.hintMarkers[3].textContent.toLowerCase());
+            assert.equal("1: alt text", LinkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2: alt text", LinkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3: some title", LinkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4", LinkHints.hintMarkers[3].textContent.toLowerCase());
           })
 
         ),
@@ -210,20 +210,20 @@
               "<label for='test-input'/>a label</label><input type='text' id='test-input' value='some value'/>" +
               "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>";
             document.getElementById("test-div").innerHTML = testContent;
-            linkHints.activateMode();
+            LinkHints.activateMode();
           }),
 
           tearDown(function() {
             document.getElementById("test-div").innerHTML = "";
-            linkHints.deactivateMode();
+            LinkHints.deactivateMode();
           }),
 
           should("label the input elements", function() {
-            assert.equal("1", linkHints.hintMarkers[0].textContent.toLowerCase());
-            assert.equal("2", linkHints.hintMarkers[1].textContent.toLowerCase());
-            assert.equal("3", linkHints.hintMarkers[2].textContent.toLowerCase());
-            assert.equal("4: a label", linkHints.hintMarkers[3].textContent.toLowerCase());
-            assert.equal("5: a label", linkHints.hintMarkers[4].textContent.toLowerCase());
+            assert.equal("1", LinkHints.hintMarkers[0].textContent.toLowerCase());
+            assert.equal("2", LinkHints.hintMarkers[1].textContent.toLowerCase());
+            assert.equal("3", LinkHints.hintMarkers[2].textContent.toLowerCase());
+            assert.equal("4: a label", LinkHints.hintMarkers[3].textContent.toLowerCase());
+            assert.equal("5: a label", LinkHints.hintMarkers[4].textContent.toLowerCase());
           })
 
         ),

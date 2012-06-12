@@ -87,10 +87,10 @@ Commands =
       ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
        "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
        "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-       "reload", "toggleViewSource", "copyCurrentUrl", "linkHints.activateModeToCopyLinkUrl",
+       "reload", "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
        "enterInsertMode", "focusInput",
-       "linkHints.activateMode", "linkHints.activateModeToOpenInNewTab", "linkHints.activateModeWithQueue",
+       "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
        "vomnibar.activate", "vomnibar.activateWithCurrentUrl", "vomnibar.activateTabSelection",
        "goPrevious", "goNext", "nextFrame"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
@@ -106,7 +106,7 @@ Commands =
   # from Vimium will uncover these gems.
   advancedCommands: [
     "scrollToLeft", "scrollToRight",
-    "goUp", "focusInput", "linkHints.activateModeWithQueue",
+    "goUp", "focusInput", "LinkHints.activateModeWithQueue",
     "goPrevious", "goNext"]
 
 defaultKeyMappings =
@@ -135,9 +135,9 @@ defaultKeyMappings =
 
   "gi": "focusInput"
 
-  "f":     "linkHints.activateMode"
-  "F":     "linkHints.activateModeToOpenInNewTab"
-  "<a-f>": "linkHints.activateModeWithQueue"
+  "f":     "LinkHints.activateMode"
+  "F":     "LinkHints.activateModeToOpenInNewTab"
+  "<a-f>": "LinkHints.activateModeWithQueue"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -147,7 +147,7 @@ defaultKeyMappings =
   "]]": "goNext"
 
   "yy": "copyCurrentUrl"
-  "yf": "linkHints.activateModeToCopyLinkUrl"
+  "yf": "LinkHints.activateModeToCopyLinkUrl"
 
   "p": "openCopiedUrlInCurrentTab"
   "P": "openCopiedUrlInNewTab"
@@ -193,7 +193,7 @@ commandDescriptions =
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'linkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
@@ -201,9 +201,9 @@ commandDescriptions =
 
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }]
 
-  'linkHints.activateMode': ["Open a link in the current tab"]
-  'linkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
-  'linkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
+  'LinkHints.activateMode': ["Open a link in the current tab"]
+  'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
+  'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
 
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]

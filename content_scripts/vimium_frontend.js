@@ -107,7 +107,7 @@ var hasModifiersRegex = /^<([amc]-)+.>/;
  * Complete initialization work that sould be done prior to DOMReady.
  */
 function initializePreDomReady() {
-  settings.addEventListener("load", linkHints.init.bind(linkHints));
+  settings.addEventListener("load", LinkHints.init.bind(LinkHints));
   settings.load();
 
   checkIfEnabledForUrl();
