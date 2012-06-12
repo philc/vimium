@@ -349,7 +349,8 @@ var alphabetHints = {
   },
 
   matchHintsByKey: function(event, hintMarkers) {
-    var keyChar = KeyboardUtils.getKeyChar(event);
+    // If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
+    var keyChar = KeyboardUtils.getKeyChar(event).toLowerCase();
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey) {
       if (!this.hintKeystrokeQueue.pop())
