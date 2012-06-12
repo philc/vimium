@@ -6,7 +6,7 @@
 <script type="text/javascript" src="background_scripts/settings.js"></script>
 <script type="text/javascript" src="background_scripts/completion.js"></script>
 <script type="text/javascript" charset="utf-8">
-  var currentVersion = utils.getCurrentVersion();
+  var currentVersion = Utils.getCurrentVersion();
 
   var tabQueue = {}; // windowId -> Array
   var openTabs = {}; // tabId -> object with various tab properties
@@ -191,7 +191,7 @@
         html.push(
           "<tr class='vimiumReset " +
               (Commands.advancedCommands.indexOf(command) >= 0 ? "advanced" : "") + "'>",
-          "<td class='vimiumReset'>", utils.escapeHtml(bindings), "</td>",
+          "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
           "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description);
 
         if (showCommandNames)
@@ -228,7 +228,7 @@
     */
    function openUrlInCurrentTab(request) {
      chrome.tabs.getSelected(null, function(tab) {
-       chrome.tabs.update(tab.id, { url: utils.convertToUrl(request.url) });
+       chrome.tabs.update(tab.id, { url: Utils.convertToUrl(request.url) });
      });
    }
 
@@ -237,7 +237,7 @@
    */
   function openUrlInNewTab(request) {
     chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.create({ url: utils.convertToUrl(request.url), index: tab.index + 1, selected: true });
+      chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true });
     });
   }
 

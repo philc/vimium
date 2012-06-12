@@ -145,9 +145,9 @@ function initializePreDomReady() {
       port.onMessage.addListener(function(args) {
         if (frameId == args.frameId) {
           if (args.passCountToFunction) {
-            utils.invokeCommandString(args.command, [args.count]);
+            Utils.invokeCommandString(args.command, [args.count]);
           } else {
-            for (var i = 0; i < args.count; i++) { utils.invokeCommandString(args.command); }
+            for (var i = 0; i < args.count; i++) { Utils.invokeCommandString(args.command); }
           }
         }
 

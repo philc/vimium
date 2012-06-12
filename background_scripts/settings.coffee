@@ -46,7 +46,7 @@ Settings =
           localStorage[key] = if (localStorage[key] == "true") then true else false
         else
           localStorage[key] = JSON.stringify(localStorage[key])
-      this.set("settingsVersion", utils.getCurrentVersion())
+      this.set("settingsVersion", Utils.getCurrentVersion())
 
   get: (key) ->
     if (key of localStorage) then JSON.parse(localStorage[key]) else this.defaults[key]

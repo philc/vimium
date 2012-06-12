@@ -30,7 +30,7 @@ class Suggestion
     @html =
       "<div class='topHalf'>
          <span class='source'>#{@type}</span>
-         <span class='title'>#{@highlightTerms(utils.escapeHtml(@title))}</span>
+         <span class='title'>#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
        <div class='bottomHalf'>
         <span class='url'>#{@shortenUrl(@highlightTerms(@url))}</span>

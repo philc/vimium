@@ -171,7 +171,7 @@ var vomnibar = (function() {
     },
 
     initDom: function() {
-      this.box = utils.createElementFromHtml(
+      this.box = Utils.createElementFromHtml(
         '<div id="vomnibar" class="vimiumReset">' +
           '<div class="searchArea">' +
             '<input type="text" />' +
@@ -201,7 +201,7 @@ var vomnibar = (function() {
     refresh: function() { chrome.extension.sendRequest({ handler: "refreshCompleter", name: this.name }); },
 
     filter: function(query, callback) {
-      var id = utils.createUniqueId();
+      var id = Utils.createUniqueId();
       this.filterPort.onMessage.addListener(function(msg) {
         if (msg.id != id) return;
         // The result objects coming from the background page will be of the form:
