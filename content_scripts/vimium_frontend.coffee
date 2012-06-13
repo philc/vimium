@@ -4,7 +4,7 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
-getCurrentUrlHandlers = []; # function(url)
+getCurrentUrlHandlers = [] # function(url)
 
 insertModeLock = null
 findMode = false
