@@ -4,7 +4,7 @@ fs = require "fs"
 src_directories = ["tests", "background_scripts", "content_scripts", "lib"]
 
 task "build", "compile all coffeescript files to javascript", ->
-  coffee = spawn "coffee", src_directories
+  coffee = spawn "coffee", ["-c"].concat(src_directories)
   coffee.stdout.on "data", (data) -> console.log data.toString().trim()
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
