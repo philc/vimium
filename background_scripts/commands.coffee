@@ -91,7 +91,7 @@ Commands =
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
-       "vomnibar.activate", "vomnibar.activateWithCurrentUrl", "vomnibar.activateTabSelection",
+       "Vomnibar.activate", "Vomnibar.activateWithCurrentUrl", "Vomnibar.activateTabSelection",
        "goPrevious", "goNext", "nextFrame"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -163,10 +163,10 @@ defaultKeyMappings =
   "x": "removeTab"
   "X": "restoreTab"
 
-  "o": "vomnibar.activate"
-  "O": "vomnibar.activateWithCurrentUrl"
+  "o": "Vomnibar.activate"
+  "O": "Vomnibar.activateWithCurrentUrl"
 
-  "T": "vomnibar.activateTabSelection"
+  "T": "Vomnibar.activateTabSelection"
 
   "gf": "nextFrame"
 
@@ -228,9 +228,9 @@ commandDescriptions =
   removeTab: ["Close current tab", { background: true }]
   restoreTab: ["Restore closed tab", { background: true }]
 
-  "vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "vomnibar.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"]
-  "vomnibar.activateTabSelection": ["Search through your open tabs"]
+  "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
+  "Vomnibar.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"]
+  "Vomnibar.activateTabSelection": ["Search through your open tabs"]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 
