@@ -3,6 +3,7 @@ background_scripts/commands.js
 background_scripts/settings.js
 content_scripts/link_hints.js
 content_scripts/vimium_frontend.js
+content_scripts/vomnibar.js
 tests/completion_test.js
 tests/test_helper.js
 tests/utils_test.js
