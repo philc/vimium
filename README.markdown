@@ -11,10 +11,12 @@ You can install the stable version of Vimium from the
 
 Alternatively, you can install it from source:
 
-1. Navigate to `chrome://extensions`
-2. Toggle into Developer Mode
-3. Click on "Load Unpacked Extension..."
-4. Select the Vimium directory.
+1. Install [Coffeescript](http://coffeescript.org/#installation) (needed to build vimium).
+2. Run `cake build` in the Vimium directory.
+3. Navigate to `chrome://extensions`
+4. Toggle into Developer Mode
+5. Click on "Load Unpacked Extension..."
+6. Select the Vimium directory.
 
 The Options page can be reached via a link on the help dialog (hit `?`) or via the button next to Vimium on
 the Chrome Extensions page (`chrome://extensions`).
@@ -132,7 +134,7 @@ Vimium is written in Coffeescript, which compiles to Javascript. To build Vimium
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
 your patch.
 
-Some brief coding style guidelines: 1) follow the style already present in the file, 2) ensure your lines
+A few coding style guidelines: 1) follow the style already present in the file, 2) ensure your lines
 don't exceed 110 characters.
 
 Release Notes
