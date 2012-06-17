@@ -174,7 +174,7 @@ class DomainCompleter
         if domain
           previousEntry = @domains[domain]
           @domains[domain] = entry if !previousEntry || (previousEntry.lastVisitTime < entry.lastVisitTime)
-      chrome.history.onVisited.addListener(@onPageVisited.proxy(this))
+      chrome.history.onVisited.addListener(@onPageVisited.bind(this))
       onComplete()
 
   onPageVisited: (newPage) ->
@@ -320,7 +320,7 @@ HistoryCache =
     chrome.history.search { text: "", maxResults: @size, startTime: 0 }, (history) =>
       history.sort @compareHistoryByUrl
       @history = history
-      chrome.history.onVisited.addListener(@onPageVisited.proxy(this))
+      chrome.history.onVisited.addListener(@onPageVisited.bind(this))
       callback(@history) for callback in @callbacks
       @callbacks = null
 

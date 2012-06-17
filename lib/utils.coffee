@@ -103,11 +103,6 @@ Utils =
     string = string.trim()
     if (Utils.isUrl(string)) then Utils.createFullUrl(string) else Utils.createSearchUrl(string)
 
-# Execute a function with the given value for "this". Equivalent to jQuery.proxy(). */
-Function.prototype.proxy = (self) ->
-  fn = this
-  return -> fn.apply(self, arguments)
-
 # This creates a new function out of an existing function, where the new function takes fewer arguments.
 # This allows us to pass around functions instead of functions + a partial list of arguments.
 Function.prototype.curry = ->
