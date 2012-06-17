@@ -178,6 +178,7 @@ LinkHints =
           @hideMarker(@hintMarkers[i])
         for i of linksMatched
           @showMarker(linksMatched[i], @markerMatcher.hintKeystrokeQueue.length)
+    false # We've handled this key, so prevent propagation.
 
   #
   # When only one link hint remains, this function activates it in the appropriate way.
