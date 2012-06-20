@@ -292,21 +292,6 @@ extend window,
   scrollLeft: -> scrollActivatedElementBy("x", -1 * settings.get("scrollStepSize"))
   scrollRight: -> scrollActivatedElementBy("x", parseFloat(settings.get("scrollStepSize")))
 
-focusInput = (count) ->
-  results = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
-
-  lastInputBox
-  i = 0
-
-  while (i < count)
-    currentInputBox = results.iterateNext()
-    break unless currentInputBox
-    continue if (DomUtils.getVisibleClientRect(currentInputBox) == null)
-    lastInputBox = currentInputBox
-    i += 1
-
-  lastInputBox.focus() if lastInputBox
-
 extend window,
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
@@ -346,6 +331,21 @@ extend window,
     getCurrentUrlPort.postMessage({})
 
     HUD.showForDuration("Yanked URL", 1000)
+
+  focusInput: (count) ->
+    results = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+
+    lastInputBox
+    i = 0
+
+    while (i < count)
+      currentInputBox = results.iterateNext()
+      break unless currentInputBox
+      continue if (DomUtils.getVisibleClientRect(currentInputBox) == null)
+      lastInputBox = currentInputBox
+      i += 1
+
+    lastInputBox.focus() if lastInputBox
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
