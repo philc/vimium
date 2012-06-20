@@ -839,7 +839,7 @@ findAndFollowLink = (linkStrings) ->
 findAndFollowRel = (value) ->
   relTags = ["link", "a", "area"]
   for tag in relTags
-    elements = document.getElementsByTagName(relTag)
+    elements = document.getElementsByTagName(tag)
     for element in elements
       if (element.hasAttribute("rel") && element.rel == value)
         followLink(element)
