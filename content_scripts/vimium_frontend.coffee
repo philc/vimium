@@ -585,7 +585,7 @@ updateFindModeQuery = ->
   # sequentially so the browser handles the scrolling / text selection.
   if findModeQuery.isRegex
     try
-      pattern = new RegExp(findModeQuery.parsedQuery, "g" + (findModeQuery.ignoreCase ? "i" : ""))
+      pattern = new RegExp(findModeQuery.parsedQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
     catch error
       # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
       return
