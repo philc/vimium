@@ -30,9 +30,15 @@ Utils =
     return -> id += 1
   )()
 
+  hasChromePrefix: (url) ->
+    chromePrefixes = [ 'about', 'view-source' ]
+    for prefix in chromePrefixes
+      return true if url.startsWith prefix
+    false
+
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
-    if (!/^[a-z]{3,}:\/\//.test(partialUrl)) and not /^view-source:/.test partialUrl
+    if (!/^[a-z]{3,}:\/\//.test(partialUrl))
       "http://" + partialUrl
     else
       partialUrl
@@ -53,10 +59,6 @@ Utils =
 
     # are there more?
     specialHostNames = [ 'localhost' ]
-
-    # special-case view-source:[url]
-    if /^view-source:/.test str
-      return true
 
     # it starts with a scheme, so it's definitely an URL
     if (/^[a-z]{3,}:\/\//.test(str))
@@ -106,7 +108,10 @@ Utils =
   # We don't bother with escaping characters as Chrome will do that for us.
   convertToUrl: (string) ->
     string = string.trim()
-    if (Utils.isUrl(string)) then Utils.createFullUrl(string) else Utils.createSearchUrl(string)
+    # special-case about:[url] and view-source:[url]
+    if Utils.hasChromePrefix string then string
+    else
+      if (Utils.isUrl(string)) then Utils.createFullUrl(string) else Utils.createSearchUrl(string)
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments.
 # This allows us to pass around functions instead of functions + a partial list of arguments.
@@ -116,6 +121,8 @@ Function.prototype.curry = ->
   -> fn.apply(this, fixedArguments.concat(Array.copy(arguments)))
 
 Array.copy = (array) -> Array.prototype.slice.call(array, 0)
+
+String::startsWith = (str) -> @indexOf(str) == 0
 
 # A very simple method for defining a new class (constructor and methods) using a single hash.
 # No support for inheritance is included because we really shouldn't need it.
