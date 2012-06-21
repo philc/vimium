@@ -32,9 +32,10 @@ Utils =
 
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
-    if (!/^[a-z]{3,}:\/\//.test(partialUrl))
-      partialUrl = "http://" + partialUrl
-    partialUrl
+    if (!/^[a-z]{3,}:\/\//.test(partialUrl)) and not /^view-source:/.test partialUrl
+      "http://" + partialUrl
+    else
+      partialUrl
 
   # Tries to detect, whether :str is a valid URL.
   isUrl: (str) ->
@@ -52,6 +53,10 @@ Utils =
 
     # are there more?
     specialHostNames = [ 'localhost' ]
+
+    # special-case view-source:[url]
+    if /^view-source:/.test str
+      return true
 
     # it starts with a scheme, so it's definitely an URL
     if (/^[a-z]{3,}:\/\//.test(str))
