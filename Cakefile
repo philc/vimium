@@ -40,7 +40,7 @@ task "package", "build .crx file", ->
     "ignore-dir": "^(\\.|test)"
 
   crxmake.stdout.on "data", (data) -> console.log data.toString().trim()
-  crxmake.stdout.on "exit", -> fs.writeFileSync "manifest.json", orig_manifest_text
+  crxmake.on "exit", -> fs.writeFileSync "manifest.json", orig_manifest_text
 
 task "test", "run all unit tests", ->
   test_files = fs.readdirSync("tests/").filter((filename) -> filename.indexOf("_test.js") > 0)
