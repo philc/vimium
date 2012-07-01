@@ -299,7 +299,7 @@ extend window,
 
   goUp: (count) ->
     url = window.location.href
-    if (url[url.length - 1] == " / ")
+    if (url[url.length - 1] == "/")
       url = url.substring(0, url.length - 1)
 
     urlsplit = url.split("/")
