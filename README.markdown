@@ -50,7 +50,7 @@ Navigating the current page:
 Navigating to new pages:
 
     o       Open URL, bookmark, or history entry
-    O       Open URL, bookmark, history entry, starting with the current URL"
+    O       Open URL, bookmark, history entry, starting with the current URL
 
 Using find:
 
