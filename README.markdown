@@ -55,6 +55,7 @@ Navigating to new pages:
 Using find:
 
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
+            See here for advanced usage (regular expressions): https://github.com/philc/vimium/wiki/Find-Mode
     n       cycle forward to the next find match
     N       cycle backward to the previous find match
 
