@@ -47,6 +47,11 @@ Navigating the current page:
     yf      copy a link url to the clipboard
     gf      cycle forward to the next frame
 
+Navigating to new pages:
+
+    o       Open URL, bookmark, or history entry
+    O       Open URL, bookmark, history entry, starting with the current URL"
+
 Using find:
 
     /       enter find mode -- type your search query and hit enter to search or esc to cancel
@@ -67,6 +72,7 @@ Manipulating tabs:
     t          create tab
     x          close current tab
     X          restore closed tab (i.e. unwind the 'x' command)
+    T          search through your open tabs
 
 Additional advanced browsing commands:
 
