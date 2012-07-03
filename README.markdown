@@ -140,13 +140,13 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.33 (Unreleased)
+1.33 (07/02/2012)
 
 - A Vomnibar, which allows you to open sites from history, bookmarks, and tabs using Vimium's UI. Type "o" to try it.
 
-1.32 (03/05/2011)
+1.32 (03/05/2012)
 
-- More tweaks to the next / previous link-detection algorithm
+- More tweaks to the next / previous link-detection algorithm.
 - Minor bug fixes.
 
 1.31 (02/28/2012)
