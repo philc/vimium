@@ -147,6 +147,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.34 (07/03/2012)
+
+- A bugfix for bookmarklets in Vomnibar.
+
 1.33 (07/02/2012)
 
 - A Vomnibar, which allows you to open sites from history, bookmarks, and tabs using Vimium's UI. Type "o" to try it.
