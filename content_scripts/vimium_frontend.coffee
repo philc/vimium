@@ -1034,3 +1034,4 @@ root.linkHintCss = linkHintCss
 root.addCssToPage = addCssToPage
 root.HUD = HUD
 root.handlerStack = handlerStack
+root.frameId = frameId
