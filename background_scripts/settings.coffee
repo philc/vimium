@@ -8,21 +8,28 @@ Settings =
     filterLinkHints: false
     hideHud: false
     userDefinedLinkHintCss:
-      "div > .vimiumHintMarker {" + "\n" +
-      "/* linkhint boxes */ " + "\n" +
-      "background-color: yellow;" + "\n" +
-      "border: 1px solid #E3BE23;" + "\n" +
-      "}" + "\n\n" +
-      "div > .vimiumHintMarker span {" + "\n" +
-      "/* linkhint text */ " + "\n" +
-      "color: black;" + "\n" +
-      "font-weight: bold;" + "\n" +
-      "font-size: 12px;" + "\n" +
-      "}" + "\n\n" +
-      "div > .vimiumHintMarker > .matchingCharacter {" + "\n" +
-      "}"
-    excludedUrls: "http*://mail.google.com/*\n" +
-                  "http*://www.google.com/reader/*\n"
+      """
+      div > .vimiumHintMarker {
+      /* linkhint boxes */
+      background-color: yellow;
+      border: 1px solid #E3BE23;
+      }
+
+      div > .vimiumHintMarker span {
+      /* linkhint text */
+      color: black;
+      font-weight: bold;
+      font-size: 12px;
+      }
+
+      div > .vimiumHintMarker > .matchingCharacter {
+      }
+      """
+    excludedUrls:
+      """
+      http*://mail.google.com/*
+      http*://www.google.com/reader/*
+      """
 
     # NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in
     # most cases the single bracket link will be "prev/next page" and the double bracket link will be
