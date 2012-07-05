@@ -117,8 +117,7 @@ LinkHints =
     visibleElements = []
 
     # Find all visible clickable elements.
-    for i in [0...resultSet.snapshotLength]
-    # for (i = 0, count = resultSet.snapshotLength; i < count; i++) {
+    for i in [0...resultSet.snapshotLength] by 1
       element = resultSet.snapshotItem(i)
       clientRect = DomUtils.getVisibleClientRect(element, clientRect)
       if (clientRect != null)
@@ -168,16 +167,16 @@ LinkHints =
     else
       keyResult = @markerMatcher.matchHintsByKey(event, @hintMarkers)
       linksMatched = keyResult.linksMatched
-      delay = (if keyResult.delay? then keyResult.delay else 0)
+      delay = keyResult.delay ? 0
       if (linksMatched.length == 0)
         @deactivateMode()
       else if (linksMatched.length == 1)
         @activateLink(linksMatched[0], delay)
       else
-        for i of @hintMarkers
-          @hideMarker(@hintMarkers[i])
-        for i of linksMatched
-          @showMarker(linksMatched[i], @markerMatcher.hintKeystrokeQueue.length)
+        for i, marker of @hintMarkers
+          @hideMarker(marker)
+        for i, matched of linksMatched
+          @showMarker(matched, @markerMatcher.hintKeystrokeQueue.length)
     false # We've handled this key, so prevent propagation.
 
   #
@@ -289,13 +288,12 @@ alphabetHints =
   # will be spread evenly throughout the array.
   #
   shuffleHints: (hints, characterSetLength) ->
-    buckets = []
-    buckets[i] = [] for i in [0...characterSetLength]
-    for i in [0...hints.length]
-      buckets[i % buckets.length].push(hints[i])
+    buckets = ([] for i in [0...characterSetLength] by 1)
+    for hint in hints
+      buckets[i % buckets.length].push(hint)
     result = []
-    for i in [0...buckets.length]
-      result = result.concat(buckets[i])
+    for bucket in buckets
+      result = result.concat(bucket)
     result
 
   #
@@ -316,7 +314,7 @@ alphabetHints =
     # Pad the hint string we're returning so that it matches numHintDigits.
     # Note: the loop body changes hintString.length, so the original length must be cached!
     hintStringLength = hintString.length
-    for i in [0...(numHintDigits - hintStringLength)]
+    for i in [0...(numHintDigits - hintStringLength)] by 1
       hintString.unshift(characterSet[0])
 
     hintString.join("")
@@ -347,10 +345,10 @@ filterHints =
   #
   generateLabelMap: ->
     labels = document.querySelectorAll("label")
-    for i in [0...labels.length]
-      forElement = labels[i].getAttribute("for")
+    for label in labels
+      forElement = label.getAttribute("for")
       if (forElement)
-        labelText = labels[i].textContent.trim()
+        labelText = label.textContent.trim()
         # remove trailing : commonly found in labels
         if (labelText[labelText.length-1] == ":")
           labelText = labelText.substr(0, labelText.length-1)
@@ -388,8 +386,8 @@ filterHints =
   getHintMarkers: (visibleElements) ->
     @generateLabelMap()
     hintMarkers = []
-    for i in [0...visibleElements.length]
-      marker = hintUtils.createMarkerFor(visibleElements[i])
+    for visibleElement, i in visibleElements
+      marker = hintUtils.createMarkerFor(visibleElement)
       marker.hintString = @generateHintString(i)
       linkTextObject = @generateLinkText(marker.clickableItem)
       marker.linkText = linkTextObject.text
@@ -406,9 +404,9 @@ filterHints =
 
     if (event.keyCode == keyCodes.enter)
       # activate the lowest-numbered link hint that is visible
-      for i in [0...hintMarkers.length]
-        if (hintMarkers[i].style.display  != "none")
-          return { linksMatched: [ hintMarkers[i] ] }
+      for marker in hintMarkers
+        if (marker.style.display  != "none")
+          return { linksMatched: [ marker ] }
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       # backspace clears hint key queue first, then acts on link text key queue.
       # if both queues are empty. exit hinting mode
@@ -447,8 +445,7 @@ filterHints =
     linksMatched = []
     linkSearchString = @linkTextKeystrokeQueue.join("")
 
-    for i in [0...hintMarkers.length]
-      linkMarker = hintMarkers[i]
+    for linkMarker in hintMarkers
       matchedLink = linkMarker.linkText.toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0
 
       if (!matchedLink)
@@ -473,8 +470,8 @@ hintUtils =
   #
   spanWrap: (hintString) ->
     innerHTML = []
-    for i in [0...hintString.length]
-      innerHTML.push("<span class='vimiumReset'>" + hintString[i] + "</span>")
+    for char in hintString
+      innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
     innerHTML.join("")
 
   #

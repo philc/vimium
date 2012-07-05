@@ -227,7 +227,7 @@ onDOMActivate = (event) -> activatedElement = event.target
 # activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
 # input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
 #
-scrollActivatedElementBy= (direction, amount) ->
+scrollActivatedElementBy = (direction, amount) ->
   # if this is called before domReady, just use the window scroll function
   if (!document.body)
     if (direction == "x")

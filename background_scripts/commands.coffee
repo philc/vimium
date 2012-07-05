@@ -1,7 +1,7 @@
 Commands =
   init: ->
-    for command of commandDescriptions
-      @addCommand(command, commandDescriptions[command][0], commandDescriptions[command][1])
+    for command, description of commandDescriptions
+      @addCommand(command, description[0], description[1])
 
   availableCommands: {}
   keyToCommandRegistry: {}
@@ -12,7 +12,7 @@ Commands =
   #  - passCountToFunction: true if this command should have any digits which were typed prior to the
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options) ->
-    if @availableCommands[command]
+    if command of @availableCommands
       console.log(command, "is already defined! Check commands.js for duplicates.")
       return
 
@@ -52,23 +52,23 @@ Commands =
 
     for line in lines
       continue if (line[0] == "\"" || line[0] == "#")
-      split_line = line.split(/\s+/)
+      splitLine = line.split(/\s+/)
 
-      lineCommand = split_line[0]
+      lineCommand = splitLine[0]
 
       if (lineCommand == "map")
-        continue if (split_line.length != 3)
-        key = @normalizeKey(split_line[1])
-        vimiumCommand = split_line[2]
+        continue if (splitLine.length != 3)
+        key = @normalizeKey(splitLine[1])
+        vimiumCommand = splitLine[2]
 
         continue unless @availableCommands[vimiumCommand]
 
         console.log("Mapping", key, "to", vimiumCommand)
         @mapKeyToCommand(key, vimiumCommand)
       else if (lineCommand == "unmap")
-        continue if (split_line.length != 2)
+        continue if (splitLine.length != 2)
 
-        key = @normalizeKey(split_line[1])
+        key = @normalizeKey(splitLine[1])
         console.log("Unmapping", key)
         @unmapKey(key)
       else if (lineCommand == "unmapAll")
