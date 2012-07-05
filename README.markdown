@@ -147,6 +147,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.35 (07/05/2012)
+
+- Bugfixes.
+
 1.34 (07/03/2012)
 
 - A bugfix for bookmarklets in Vomnibar.
