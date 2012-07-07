@@ -20,6 +20,8 @@ LinkHints =
   # Handle the link hinting marker generation and matching. Must be initialized after settings have been
   # loaded, so that we can retrieve the option setting.
   markerMatcher: undefined
+  # lock to ensure only one instance runs at a time
+  isActive: false
 
   #
   # To be called after linkHints has been generated from linkHintsBase.
@@ -45,6 +47,10 @@ LinkHints =
   activateModeWithQueue: -> @activateMode(true, true, false)
 
   activateMode: (openInNewTab, withQueue, copyLinkUrl) ->
+    if @isActive
+      return
+    @isActive = true
+
     if (!document.getElementById("vimiumLinkHintCss"))
       # linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
       addCssToPage(linkHintCss, "vimiumLinkHintCss")
@@ -220,7 +226,7 @@ LinkHints =
   # executes after 'delay' and invokes 'callback' when it is finished.
   #
   deactivateMode: (delay, callback) ->
-    deactivate = ->
+    deactivate = =>
       if (LinkHints.markerMatcher.deactivate)
         LinkHints.markerMatcher.deactivate()
       if (LinkHints.hintMarkerContainingDiv)
@@ -229,6 +235,7 @@ LinkHints =
       LinkHints.hintMarkers = []
       handlerStack.pop()
       HUD.hide()
+      @isActive = false
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
     # deactivateMode can be tested synchronously
