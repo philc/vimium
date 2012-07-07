@@ -147,9 +147,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.36 (Unreleased)
+1.36 (07/07/2012)
 
 - 'b' brings up a bookmark-only Vomnibar.
+- Better support for some bookmarklets.
 
 1.35 (07/05/2012)
 
