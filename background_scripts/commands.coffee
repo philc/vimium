@@ -92,6 +92,7 @@ Commands =
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
        "Vomnibar.activate", "Vomnibar.activateWithCurrentUrl", "Vomnibar.activateTabSelection",
+       "Vomnibar.activateBookmarks",
        "goPrevious", "goNext", "nextFrame"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -168,6 +169,8 @@ defaultKeyMappings =
 
   "T": "Vomnibar.activateTabSelection"
 
+  "b": "Vomnibar.activateBookmarks"
+
   "gf": "nextFrame"
 
 
@@ -231,6 +234,7 @@ commandDescriptions =
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"]
   "Vomnibar.activateTabSelection": ["Search through your open tabs"]
+  "Vomnibar.activateBookmarks": ["Open a bookmark"]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 

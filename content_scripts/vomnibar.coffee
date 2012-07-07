@@ -24,6 +24,7 @@ Vomnibar =
   activate: -> @activateWithCompleter("omni", 100)
   activateWithCurrentUrl: -> @activateWithCompleter("omni", 100, window.location.toString())
   activateTabSelection: -> @activateWithCompleter("tabs", 0)
+  activateBookmarks: -> @activateWithCompleter("bookmarks", 0)
   getUI: -> @vomnibarUI
 
 
