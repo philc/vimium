@@ -92,10 +92,12 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if (action == "up")
-      @selection -=1 if @selection >= 0
+      @selection -= 1
+      @selection = @completions.length - 1 if @selection < -1
       @updateSelection()
     else if (action == "down")
-      @selection += 1 if (@selection < @completions.length - 1)
+      @selection += 1
+      @selection = -1 if @selection == @completions.length
       @updateSelection()
     else if (action == "enter")
       # If they type something and hit enter without selecting a completion from our list of suggestions,
