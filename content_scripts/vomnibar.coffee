@@ -203,7 +203,7 @@ extend BackgroundCompleter,
     navigateToUrl: (url, openInNewTab) ->
       # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
       if url.startsWith "javascript:"
-        eval url["javascript:".length..]
+        eval decodeURIComponent(url["javascript:".length..])
       else
         chrome.extension.sendRequest(
           handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
