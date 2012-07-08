@@ -147,6 +147,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.37 (07/07/2012)
+
+- Select the first result by default in Vomnibar tab and bookmark modes.
+
 1.36 (07/07/2012)
 
 - 'b' brings up a bookmark-only Vomnibar.
