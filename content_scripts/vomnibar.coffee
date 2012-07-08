@@ -10,10 +10,11 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activateWithCompleter: (completerName, refreshInterval, initialQueryValue) ->
+  activateWithCompleter: (completerName, refreshInterval, initialQueryValue, selectFirstResult) ->
     completer = @getCompleter(completerName)
     @vomnibarUI = new VomnibarUI() unless @vomnibarUI
     completer.refresh()
+    @vomnibarUI.setInitialSelectionValue(if selectFirstResult then 0 else -1)
     @vomnibarUI.setCompleter(completer)
     @vomnibarUI.setRefreshInterval(refreshInterval)
     @vomnibarUI.show()
@@ -23,8 +24,8 @@ Vomnibar =
 
   activate: -> @activateWithCompleter("omni", 100)
   activateWithCurrentUrl: -> @activateWithCompleter("omni", 100, window.location.toString())
-  activateTabSelection: -> @activateWithCompleter("tabs", 0)
-  activateBookmarks: -> @activateWithCompleter("bookmarks", 0)
+  activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
+  activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
   getUI: -> @vomnibarUI
 
 
@@ -34,6 +35,9 @@ class VomnibarUI
     @initDom()
 
   setQuery: (query) -> @input.value = query
+
+  setInitialSelectionValue: (initialSelectionValue) ->
+    @initialSelectionValue = initialSelectionValue
 
   setCompleter: (completer) ->
     @completer = completer
@@ -56,7 +60,7 @@ class VomnibarUI
     @input.value = ""
     @updateTimer = null
     @completions = []
-    @selection = -1
+    @selection = @initialSelectionValue
     @update(true)
 
   updateSelection: ->
@@ -93,11 +97,11 @@ class VomnibarUI
       @hide()
     else if (action == "up")
       @selection -= 1
-      @selection = @completions.length - 1 if @selection < -1
+      @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "down")
       @selection += 1
-      @selection = -1 if @selection == @completions.length
+      @selection = @initialSelectionValue if @selection == @completions.length
       @updateSelection()
     else if (action == "enter")
       # If they type something and hit enter without selecting a completion from our list of suggestions,
