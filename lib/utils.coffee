@@ -6,6 +6,8 @@ Utils =
     manifestRequest.send(null)
     JSON.parse(manifestRequest.responseText).version
 
+  map: (l, fn) -> fn x for x in l
+
   # Takes a dot-notation object string and call the function
   # that it points to with the correct value for 'this'.
   invokeCommandString: (str, argArray) ->
