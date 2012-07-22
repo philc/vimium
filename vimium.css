@@ -1,5 +1,14 @@
-/* All of these declarations contain more specifiers than nesscesary to increase their specificity and help to
-   ensure they override broad CSS declarations by the website vimium overlays. */
+/*
+ * Many CSS class names in this file use the verbose "vimiumXYZ" as the class name. This is so we don't
+ * use the same CSS class names that the page is using, so the page's CSS doesn't mess with the style of our
+ * Vimium dialogs.
+ */
+
+/*
+ * This vimiumReset class can be added to any of our UI elements to give it a clean slate. This is useful in
+ * case the page has declared a broad rule like "a { padding: 50px; }" which will mess up our UI. These
+ * declarations contain more specifiers than necessary to increase their specificity (precedence).
+ */
 .vimiumReset,
 div.vimiumReset,
 span.vimiumReset,
