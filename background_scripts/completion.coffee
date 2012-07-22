@@ -27,13 +27,14 @@ class Suggestion
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy() + ''}</span>" else ""
+    # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
-      "<div class='topHalf'>
-         <span class='source'>#{@type}</span>
-         <span class='title'>#{@highlightTerms(Utils.escapeHtml(@title))}</span>
+      "<div class='vimiumReset vomnibarTopHalf'>
+         <span class='vimiumReset vomnibarSource'>#{@type}</span>
+         <span class='vimiumReset vomnibarTitle'>#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
-       <div class='bottomHalf'>
-        <span class='url'>#{@shortenUrl(@highlightTerms(@url))}</span>
+       <div class='vimiumReset vomnibarBottomHalf'>
+        <span class='vimiumReset vomnibarUrl'>#{@shortenUrl(@highlightTerms(@url))}</span>
         #{relevancyHtml}
       </div>"
 
@@ -58,7 +59,7 @@ class Suggestion
     for [start, end] in ranges
       string =
         string.substring(0, start) +
-        "<span class='match'>" + string.substring(start, end) + "</span>" +
+        "<span class='vomnibarMatch'>" + string.substring(start, end) + "</span>" +
         string.substring(end)
     string
 

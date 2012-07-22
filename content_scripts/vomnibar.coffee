@@ -67,7 +67,7 @@ class VomnibarUI
     if (@completions.length > 0)
       @selection = Math.min(@selection, @completions.length - 1)
     for i in [0...@completionList.children.length]
-      @completionList.children[i].className = (if i == @selection then "selected" else "")
+      @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
@@ -158,8 +158,8 @@ class VomnibarUI
   initDom: ->
     @box = Utils.createElementFromHtml(
       '<div id="vomnibar" class="vimiumReset">' +
-        '<div class="searchArea">' +
-          '<input type="text" />' +
+        '<div class="vimiumReset vomnibarSearchArea">' +
+          '<input type="text" class="vimiumReset" />' +
         '</div>' +
         '<ul></ul>' +
       '</div>')

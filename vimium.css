@@ -253,9 +253,11 @@ body.vimiumFindMode ::selection {
 
 #vomnibar ol, #vomnibar ul {
   list-style: none !important;
+  display: block;
 }
 
 #vomnibar {
+  display: block;
   position: fixed !important;
   width: 80% !important;
   min-width: 400px !important;
@@ -277,6 +279,7 @@ body.vimiumFindMode ::selection {
   font-size: 20px !important;
   padding: 4px !important;
   font-family: inherit !important;
+  background-color: white;
   border-radius: 3px;
   border: 1px solid #E8E8E8 !important;
   box-shadow: #444 0px 0px 1px !important;
@@ -285,7 +288,8 @@ body.vimiumFindMode ::selection {
   box-sizing: border-box !important;
 }
 
-#vomnibar .searchArea {
+#vomnibar .vomnibarSearchArea {
+  display: block;
   padding: 10px !important;
   background-color: #F1F1F1 !important;
   border-radius: 4px 4px 0 0 !important;
@@ -305,7 +309,7 @@ body.vimiumFindMode ::selection {
   border-bottom: 1px solid #ddd !important;
   line-height: 1.1em !important;
   padding: 7px 10px !important;
-  font-size: 16px !important;
+  font-size: 16px;
   color: black !important;
   position: relative !important;
 }
@@ -314,17 +318,22 @@ body.vimiumFindMode ::selection {
   border-bottom: none !important;
 }
 
-#vomnibar li .topHalf, #vomnibar li .bottomHalf { overflow: hidden !important; }
-#vomnibar li .bottomHalf {
-  margin-top: 2px;
-  font-size: 15px !important;
+#vomnibar li .vomnibarTopHalf, #vomnibar li .vomnibarBottomHalf {
+  display: block;
+  overflow: hidden !important;
 }
 
-#vomnibar li .source {
+#vomnibar li .vomnibarBottomHalf {
+  font-size: 15px;
+  margin-top: 3px;
+  padding: 2px 0;
+}
+
+#vomnibar li .vomnibarSource {
   color: #777 !important;
   margin-right: 4px !important;
 }
-#vomnibar li .relevancy {
+#vomnibar li .vomnibarRelevancy {
   position: absolute;
   right: 0;
   top: 0;
@@ -336,19 +345,19 @@ body.vimiumFindMode ::selection {
   overflow: hidden;
 }
 
-#vomnibar li .url {
+#vomnibar li .vomnibarUrl {
   white-space: nowrap;
   color: #224684 !important;
 }
 
-#vomnibar li .match {
+#vomnibar li .vomnibarMatch {
   font-size: inherit !important;
   font-family: inherit !important;
   font-weight: bold !important;
   color: black !important;
 }
 
-#vomnibar li em, #vomnibar li .title {
+#vomnibar li em, #vomnibar li .vomnibarTitle {
   color: black !important;
   margin-left: 4px !important;
   font-weight: normal !important;
@@ -356,16 +365,18 @@ body.vimiumFindMode ::selection {
   font-family: inherit !important;
 }
 #vomnibar li em { font-style: italic !important; }
-#vomnibar li em .match, #vomnibar li .title .match {
+#vomnibar li em .vomnibarMatch, #vomnibar li .vomnibarTitle .vomnibarMatch {
   color: #333 !important;
   text-decoration: underline !important;
 }
 
-#vomnibar li.selected {
+#vomnibar li.vomnibarSelected {
   background: #BBCEE9 !important;
   font-weight: normal !important;
   font-family: inherit !important;
 }
+
+
 
 div#vimiumFlash {
   box-shadow: 0px 0px 4px 2px #4183C4;
