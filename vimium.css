@@ -21,7 +21,6 @@ td.vimiumReset,
 tr.vimiumReset {
   background: none;
   border: none;
-  border: none;
   bottom: auto;
   box-shadow: none;
   color: black;
@@ -29,7 +28,7 @@ tr.vimiumReset {
   display: inline;
   float: none;
   font-family : "Helvetica Neue", "Helvetica", "Arial", "Sans";
-  font-size: 12px;
+  font-size: inherit;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
