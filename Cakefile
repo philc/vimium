@@ -47,3 +47,5 @@ task "test", "run all unit tests", ->
   test_files = test_files.map((filename) -> "tests/" + filename)
   test_files.forEach (file) -> require "./" + file
   Tests.run()
+  if Tests.testsFailed > 0
+    process.exit 1

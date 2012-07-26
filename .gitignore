@@ -1,3 +1,7 @@
+*.un~
+*.swo
+*.swp
+*.crx
 background_scripts/completion.js
 background_scripts/commands.js
 background_scripts/settings.js

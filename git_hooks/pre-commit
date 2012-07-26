@@ -1,0 +1,18 @@
+#!/bin/sh
+
+TDIR=`mktemp -d -t vimium`
+
+if [ $? -ne 0 ]
+then
+  exit 1
+fi
+
+git checkout-index --prefix=$TDIR/ -af
+
+cake test
+
+TEST_RESULT=$?
+
+rm -rf $TDIR
+
+exit $TEST_RESULT
