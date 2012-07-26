@@ -139,12 +139,12 @@ context "suggestions",
 
   should "highlight query words", ->
     suggestion = new Suggestion(["ninj", "words"], "tab", "url", "ninjawords", returns(1))
-    expected = "<span class='match'>ninj</span>a<span class='match'>words</span>"
+    expected = "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "highlight query words correctly when whey they overlap", ->
     suggestion = new Suggestion(["ninj", "jaword"], "tab", "url", "ninjawords", returns(1))
-    expected = "<span class='match'>ninjaword</span>s"
+    expected = "<span class='vomnibarMatch'>ninjaword</span>s"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "shorten urls", ->
