@@ -214,6 +214,7 @@ div.vimiumHUD {
   border: 1px solid #b3b3b3;
   border-radius: 4px 4px 0 0;
   font-family: "Lucida Grande", "Arial", "Sans";
+  font-size: 12px;
   /* One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button. */
   z-index: 99999997;
   text-shadow: 0px 1px 2px #FFF;
