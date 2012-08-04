@@ -29,6 +29,9 @@ document.addEventListener("DOMContentLoaded", function() {
     showHelpDialog(
       chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId);
   }, false);
+
+  document.getElementById("restoreSettings").addEventListener("click", restoreToDefaults);
+  document.getElementById("saveOptions").addEventListener("click", saveOptions);
 });
 
 function onOptionKeyup(event) {

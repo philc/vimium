@@ -13,7 +13,7 @@ Commands =
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options) ->
     if command of @availableCommands
-      console.log(command, "is already defined! Check commands.js for duplicates.")
+      console.log(command, "is already defined! Check commands.coffee for duplicates.")
       return
 
     options ||= {}
