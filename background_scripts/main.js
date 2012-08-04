@@ -16,7 +16,6 @@ var namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/;
 // Port handler mapping
 var portHandlers = {
   keyDown:              handleKeyDown,
-  returnScrollPosition: handleReturnScrollPosition,
   getCurrentTabUrl:     getCurrentTabUrl,
   settings:             handleSettings,
   filterCompleter:      filterCompleter
@@ -40,7 +39,6 @@ var sendRequestHandlers = {
 
 // Event handlers
 var selectionChangedHandlers = [];
-var getScrollPositionHandlers = {}; // tabId -> function(tab, scrollX, scrollY);
 var tabLoadedHandlers = {}; // tabId -> function()
 
 var completionSources = {
@@ -87,15 +85,6 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender));
 });
-
-function handleReturnScrollPosition(args) {
-  if (getScrollPositionHandlers[args.currentTab.id]) {
-    // Delete first to be sure there's no circular events.
-    var toCall = getScrollPositionHandlers[args.currentTab.id];
-    delete getScrollPositionHandlers[args.currentTab.id];
-    toCall(args.currentTab, args.scrollX, args.scrollY);
-  }
-}
 
 /*
  * Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:// .."
@@ -304,14 +293,6 @@ chrome.tabs.onSelectionChanged.addListener(function(tabId, selectionInfo) {
 function repeatFunction(func, totalCount, currentCount, frameId) {
   if (currentCount < totalCount)
     func(function() { repeatFunction(func, totalCount, currentCount + 1, frameId); }, frameId);
-}
-
-// Returns the scroll coordinates of the given tab. Pass in a callback of the form:
-//   function(tab, scrollX, scrollY) { .. }
-function getScrollPosition(tab, callback) {
-  getScrollPositionHandlers[tab.id] = callback;
-  var scrollPort = chrome.tabs.connect(tab.id, { name: "getScrollPosition" });
-  scrollPort.postMessage({currentTab: tab});
 }
 
 // Start action functions
@@ -783,11 +764,13 @@ function init() {
       for (var j in windows[i].tabs) {
         var tab = windows[i].tabs[j];
         updateOpenTabs(tab);
-        getScrollPosition(tab, function(tab, scrollX, scrollY) {
-          // Not using the tab defined in the for loop because
-          // it might have changed by the time this callback is activated.
-          updateScrollPosition(tab, scrollX, scrollY);
-        });
+	chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, function() {
+	    return function(response) {
+		if (response === undefined)
+		    return;
+		updateScrollPosition(tab, response.scrollX, response.scrollY);
+	    };
+	}());
       }
     }
   });

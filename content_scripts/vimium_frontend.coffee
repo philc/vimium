@@ -119,9 +119,13 @@ initializePreDomReady = ->
         focusThisFrame(request.highlight)
     else if (request.name == "refreshCompletionKeys")
       refreshCompletionKeys(request)
+    else if (request.name == "getScrollPosition")
+      sendResponse
+        scrollX: window.scrollX
+        scrollY: window.scrollY
 
-    # Free up the resources used by this open connection.
-    sendResponse({})
+    # Ensure the sendResponse callback is freed.
+    false
 
   chrome.extension.onConnect.addListener (port, name) ->
     if (port.name == "executePageCommand")
@@ -133,13 +137,6 @@ initializePreDomReady = ->
             Utils.invokeCommandString(args.command) for i in [0...args.count]
 
         refreshCompletionKeys(args)
-    else if (port.name == "getScrollPosition")
-      port.onMessage.addListener (args) ->
-        scrollPort = chrome.extension.connect({ name: "returnScrollPosition" })
-        scrollPort.postMessage
-          scrollX: window.scrollX,
-          scrollY: window.scrollY,
-          currentTab: args.currentTab
     else if (port.name == "setScrollPosition")
       port.onMessage.addListener (args) ->
         if (args.scrollX > 0 || args.scrollY > 0)
