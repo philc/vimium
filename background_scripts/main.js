@@ -24,7 +24,6 @@ var portHandlers = {
 
 var sendRequestHandlers = {
   getCompletionKeys: getCompletionKeysRequest,
-  getLinkHintCss: getLinkHintCss,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
@@ -237,13 +236,6 @@ function openUrlInNewTab(request) {
 function openCopiedUrlInCurrentTab(request) { openUrlInCurrentTab({ url: Clipboard.paste() }); }
 
 function openCopiedUrlInNewTab(request) { openUrlInNewTab({ url: Clipboard.paste() }); }
-
-/*
- * Returns the user-provided CSS overrides.
- */
-function getLinkHintCss(request) {
-  return { linkHintCss: (Settings.get("userDefinedLinkHintCss") || "") };
-}
 
 /*
  * Called when the user has clicked the close icon on the "Vimium has been updated" message.

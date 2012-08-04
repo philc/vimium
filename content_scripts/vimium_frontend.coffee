@@ -19,7 +19,6 @@ isEnabledForUrl = true
 # The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
-linkHintCss = null
 activatedElement = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
@@ -46,7 +45,7 @@ settings =
   values: {}
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "hideHud", "previousPatterns",
-      "nextPatterns", "findModeRawQuery"]
+      "nextPatterns", "findModeRawQuery", "userDefinedLinkHintCss"]
   isLoaded: false
   eventListeners: {}
 
@@ -99,9 +98,6 @@ initializePreDomReady = ->
   settings.load()
 
   checkIfEnabledForUrl()
-
-  chrome.extension.sendRequest { handler: "getLinkHintCss" }, (response) ->
-    linkHintCss = response.linkHintCss
 
   refreshCompletionKeys()
 
@@ -1030,7 +1026,6 @@ window.onbeforeunload = ->
 root = exports ? window
 root.window = window
 root.settings = settings
-root.linkHintCss = linkHintCss
 root.addCssToPage = addCssToPage
 root.HUD = HUD
 root.handlerStack = handlerStack

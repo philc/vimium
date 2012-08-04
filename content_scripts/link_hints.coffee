@@ -53,7 +53,7 @@ LinkHints =
 
     if (!document.getElementById("vimiumLinkHintCss"))
       # linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
-      addCssToPage(linkHintCss, "vimiumLinkHintCss")
+      addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
     @setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl)
     @buildLinkHints()
     # handlerStack is declared by vimiumFrontend.js
