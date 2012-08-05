@@ -9,6 +9,11 @@ DomUtils =
   )()
 
   #
+  # Remove an element from its DOM tree.
+  #
+  removeElement: (el) -> el.parentNode.removeChild el
+
+  #
   # Takes an array of XPath selectors, adds the necessary namespaces (currently only XHTML), and applies them
   # to the document root. The namespaceResolver in evaluateXPath should be kept in sync with the namespaces
   # here.

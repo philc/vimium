@@ -9,7 +9,6 @@
 # typing the text of the link itself.
 #
 LinkHints =
-  hintMarkers: []
   hintMarkerContainingDiv: null
   shouldOpenInNewTab: false
   shouldOpenWithQueue: false
@@ -27,7 +26,6 @@ LinkHints =
   # To be called after linkHints has been generated from linkHintsBase.
   #
   init: ->
-    @onKeyDownInMode = @onKeyDownInMode.bind(this)
     @markerMatcher = if settings.get("filterLinkHints") then filterHints else alphabetHints
 
   #
@@ -47,18 +45,19 @@ LinkHints =
   activateModeWithQueue: -> @activateMode(true, true, false)
 
   activateMode: (openInNewTab, withQueue, copyLinkUrl) ->
+    # we need documentElement to be ready in order to append links
+    return unless document.documentElement
+
     if @isActive
       return
     @isActive = true
 
-    if (!document.getElementById("vimiumLinkHintCss"))
-      # linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
-      addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
     @setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl)
-    @buildLinkHints()
+    hintMarkers = @markerMatcher.fillInMarkers(@createMarkerFor(el) for el in @getVisibleClickableElements())
+    @hintMarkerContainingDiv = @displayHints(hintMarkers)
     # handlerStack is declared by vimiumFrontend.js
     handlerStack.push({
-      keydown: @onKeyDownInMode,
+      keydown: @onKeyDownInMode.bind(this, hintMarkers),
       # trap all key events
       keypress: -> false
       keyup: -> false
@@ -90,27 +89,37 @@ LinkHints =
       @linkActivator = (link) -> setTimeout(DomUtils.simulateClick.bind(DomUtils, link), 400)
 
   #
-  # Builds and displays link hints for every visible clickable item on the page.
+  # Creates a link marker for the given link.
   #
-  buildLinkHints: ->
-    visibleElements = @getVisibleClickableElements()
-    @hintMarkers = @markerMatcher.getHintMarkers(visibleElements)
+  createMarkerFor: (link) ->
+    marker = document.createElement("div")
+    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+    marker.clickableItem = link.element
+
+    clientRect = link.rect
+    marker.style.left = clientRect.left + window.scrollX + "px"
+    marker.style.top = clientRect.top  + window.scrollY  + "px"
+
+    marker.rect = link.rect
+
+    marker
+
+  displayHints: (hintMarkers) ->
+    if (!document.getElementById("vimiumLinkHintCss"))
+      # linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
+      addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
     # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
     # Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
-    @hintMarkerContainingDiv = document.createElement("div")
-    @hintMarkerContainingDiv.id = "vimiumHintMarkerContainer"
-    @hintMarkerContainingDiv.className = "vimiumReset"
-    @hintMarkerContainingDiv.appendChild(marker) for marker in @hintMarkers
+    hintMarkerContainingDiv = document.createElement("div")
+    hintMarkerContainingDiv.id = "vimiumHintMarkerContainer"
+    hintMarkerContainingDiv.className = "vimiumReset"
+    hintMarkerContainingDiv.appendChild(marker) for marker in hintMarkers
 
-    # sometimes this is triggered before documentElement is created
-    # TODO(int3): fail more gracefully?
-    if (document.documentElement)
-      document.documentElement.appendChild(@hintMarkerContainingDiv)
-    else
-      @deactivateMode()
+    document.documentElement.appendChild(hintMarkerContainingDiv)
+    hintMarkerContainingDiv
 
   #
   # Returns all clickable elements that are not hidden and are in the current viewport.
@@ -154,7 +163,7 @@ LinkHints =
   #
   # Handles shift and esc keys. The other keys are passed to markerMatcher.matchHintsByKey.
   #
-  onKeyDownInMode: (event) ->
+  onKeyDownInMode: (hintMarkers, event) ->
     return if @delayMode
 
     if (event.keyCode == keyCodes.shiftKey && @shouldOpenInNewTab != null)
@@ -171,7 +180,7 @@ LinkHints =
     if (KeyboardUtils.isEscape(event))
       @deactivateMode()
     else
-      keyResult = @markerMatcher.matchHintsByKey(event, @hintMarkers)
+      keyResult = @markerMatcher.matchHintsByKey(hintMarkers, event)
       linksMatched = keyResult.linksMatched
       delay = keyResult.delay ? 0
       if (linksMatched.length == 0)
@@ -179,7 +188,7 @@ LinkHints =
       else if (linksMatched.length == 1)
         @activateLink(linksMatched[0], delay)
       else
-        for i, marker of @hintMarkers
+        for i, marker of hintMarkers
           @hideMarker(marker)
         for i, matched of linksMatched
           @showMarker(matched, @markerMatcher.hintKeystrokeQueue.length)
@@ -230,9 +239,8 @@ LinkHints =
       if (LinkHints.markerMatcher.deactivate)
         LinkHints.markerMatcher.deactivate()
       if (LinkHints.hintMarkerContainingDiv)
-        LinkHints.hintMarkerContainingDiv.parentNode.removeChild(LinkHints.hintMarkerContainingDiv)
+        DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
-      LinkHints.hintMarkers = []
       handlerStack.pop()
       HUD.hide()
       @isActive = false
@@ -252,14 +260,11 @@ alphabetHints =
   hintKeystrokeQueue: []
   logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
 
-  getHintMarkers: (visibleElements) ->
-    hintStrings = @hintStrings(visibleElements.length)
-    hintMarkers = []
-    for i in [0...visibleElements.length]
-      marker = hintUtils.createMarkerFor(visibleElements[i])
-      marker.hintString = hintStrings[i]
-      marker.innerHTML = hintUtils.spanWrap(marker.hintString.toUpperCase())
-      hintMarkers.push(marker)
+  fillInMarkers: (hintMarkers) ->
+    hintStrings = @hintStrings(hintMarkers.length)
+    for marker, idx in hintMarkers
+      marker.hintString = hintStrings[idx]
+      marker.innerHTML = spanWrap(marker.hintString.toUpperCase())
 
     hintMarkers
 
@@ -326,7 +331,7 @@ alphabetHints =
 
     hintString.join("")
 
-  matchHintsByKey: (event, hintMarkers) ->
+  matchHintsByKey: (hintMarkers, event) ->
     # If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
     keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
@@ -387,24 +392,21 @@ filterHints =
     { text: linkText, show: showLinkText }
 
   renderMarker: (marker) ->
-    marker.innerHTML = hintUtils.spanWrap(marker.hintString +
+    marker.innerHTML = spanWrap(marker.hintString +
         (if marker.showLinkText then ": " + marker.linkText else ""))
 
-  getHintMarkers: (visibleElements) ->
+  fillInMarkers: (hintMarkers) ->
     @generateLabelMap()
-    hintMarkers = []
-    for visibleElement, i in visibleElements
-      marker = hintUtils.createMarkerFor(visibleElement)
-      marker.hintString = @generateHintString(i)
+    for marker, idx in hintMarkers
+      marker.hintString = @generateHintString(idx)
       linkTextObject = @generateLinkText(marker.clickableItem)
       marker.linkText = linkTextObject.text
       marker.showLinkText = linkTextObject.show
       @renderMarker(marker)
-      hintMarkers.push(marker)
 
     hintMarkers
 
-  matchHintsByKey: (event, hintMarkers) ->
+  matchHintsByKey: (hintMarkers, event) ->
     keyChar = KeyboardUtils.getKeyChar(event)
     delay = 0
     userIsTypingLinkText = false
@@ -471,31 +473,14 @@ filterHints =
     @linkTextKeystrokeQueue = []
     @labelMap = {}
 
-hintUtils =
-  #
-  # Make each hint character a span, so that we can highlight the typed characters as you type them.
-  #
-  spanWrap: (hintString) ->
-    innerHTML = []
-    for char in hintString
-      innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
-    innerHTML.join("")
-
-  #
-  # Creates a link marker for the given link.
-  #
-  createMarkerFor: (link) ->
-    marker = document.createElement("div")
-    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-    marker.clickableItem = link.element
-
-    clientRect = link.rect
-    marker.style.left = clientRect.left + window.scrollX + "px"
-    marker.style.top = clientRect.top  + window.scrollY  + "px"
-
-    marker.rect = link.rect
-
-    marker
+#
+# Make each hint character a span, so that we can highlight the typed characters as you type them.
+#
+spanWrap = (hintString) ->
+  innerHTML = []
+  for char in hintString
+    innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
+  innerHTML.join("")
 
 root = exports ? window
 root.LinkHints = LinkHints
