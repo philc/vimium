@@ -301,19 +301,34 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   focusInput: (count) ->
-    results = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+    xpathResult = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+    visibleInputs =
+      while (currentInputBox = xpathResult.iterateNext())
+        rect = DomUtils.getVisibleClientRect(currentInputBox)
+        continue if rect == null
+        { element: currentInputBox, rect: rect }
 
-    lastInputBox
-    i = 0
+    return if visibleInputs.length == 0
 
-    while (i < count)
-      currentInputBox = results.iterateNext()
-      break unless currentInputBox
-      continue if (DomUtils.getVisibleClientRect(currentInputBox) == null)
-      lastInputBox = currentInputBox
-      i += 1
+    selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    lastInputBox.focus() if lastInputBox
+    visibleInputs[selectedInputIndex].element.focus()
+
+    hintMarkers = (LinkHints.createMarkerFor(el) for el in visibleInputs)
+
+    for marker, idx in hintMarkers
+      marker.innerHTML = "<span>#{idx + 1}</span>"
+
+    hintMarkerContainingDiv = LinkHints.displayHints(hintMarkers)
+
+    handlerStack.push keydown: ->
+      if event.keyCode == KeyboardUtils.keyCodes.tab
+        if ++selectedInputIndex == hintMarkers.length
+          selectedInputIndex = 0
+        hintMarkers[selectedInputIndex].clickableItem.focus()
+      else
+        DomUtils.removeElement hintMarkerContainingDiv
+        handlerStack.pop()
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
