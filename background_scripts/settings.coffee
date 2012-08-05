@@ -5,12 +5,12 @@
 root = exports ? window
 root.Settings = Settings =
   get: (key) ->
-    if (key of localStorage) then JSON.parse(localStorage[key]) else defaults[key]
+    if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
   set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
-    if (value == defaults[key])
-      this.clear(key)
+    if (value == @defaults[key])
+      @clear(key)
     else
       localStorage[key] = JSON.stringify(value)
 
@@ -18,43 +18,43 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
-defaults =
-  scrollStepSize: 60
-  linkHintCharacters: "sadfjklewcmpgh"
-  filterLinkHints: false
-  hideHud: false
-  userDefinedLinkHintCss:
-    """
-    div > .vimiumHintMarker {
-    /* linkhint boxes */
-    background-color: yellow;
-    border: 1px solid #E3BE23;
-    }
+  defaults:
+    scrollStepSize: 60
+    linkHintCharacters: "sadfjklewcmpgh"
+    filterLinkHints: false
+    hideHud: false
+    userDefinedLinkHintCss:
+      """
+      div > .vimiumHintMarker {
+      /* linkhint boxes */
+      background-color: yellow;
+      border: 1px solid #E3BE23;
+      }
 
-    div > .vimiumHintMarker span {
-    /* linkhint text */
-    color: black;
-    font-weight: bold;
-    font-size: 12px;
-    }
+      div > .vimiumHintMarker span {
+      /* linkhint text */
+      color: black;
+      font-weight: bold;
+      font-size: 12px;
+      }
 
-    div > .vimiumHintMarker > .matchingCharacter {
-    }
-    """
-  excludedUrls:
-    """
-    http*://mail.google.com/*
-    http*://www.google.com/reader/*
-    """
-  # NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in
-  # most cases the single bracket link will be "prev/next page" and the double bracket link will be
-  # "first/last page", so we put the single bracket first in the pattern string so that it gets searched
-  # for first.
+      div > .vimiumHintMarker > .matchingCharacter {
+      }
+      """
+    excludedUrls:
+      """
+      http*://mail.google.com/*
+      http*://www.google.com/reader/*
+      """
+    # NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in
+    # most cases the single bracket link will be "prev/next page" and the double bracket link will be
+    # "first/last page", so we put the single bracket first in the pattern string so that it gets searched
+    # for first.
 
-  # "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
-  previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<"
-  # "\bnext\b,\bmore\b,>,→,»,≫,>>"
-  nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
+    # "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
+    previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<"
+    # "\bnext\b,\bmore\b,>,→,»,≫,>>"
+    nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
 
 # Initialization code.
 # settingsVersion was introduced in v1.31, and is used to coordinate data migration. We do not use
