@@ -4,8 +4,6 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
-getCurrentUrlHandlers = [] # function(url)
-
 insertModeLock = null
 findMode = false
 findModeQuery = { rawQuery: "" }
@@ -104,52 +102,22 @@ initializePreDomReady = ->
   # Send the key to the key handler in the background page.
   keyPort = chrome.extension.connect({ name: "keyDown" })
 
-  chrome.extension.onRequest.addListener (request, sender, sendResponse) ->
-    if (request.name == "hideUpgradeNotification")
-      HUD.hideUpgradeNotification()
-    else if (request.name == "showUpgradeNotification" && isEnabledForUrl)
-      HUD.showUpgradeNotification(request.version)
-    else if (request.name == "showHelpDialog")
-      if (isShowingHelpDialog)
-        hideHelpDialog()
-      else
-        showHelpDialog(request.dialogHtml, request.frameId)
-    else if (request.name == "focusFrame")
-      if (frameId == request.frameId)
-        focusThisFrame(request.highlight)
-    else if (request.name == "refreshCompletionKeys")
-      refreshCompletionKeys(request)
-    else if (request.name == "getScrollPosition")
-      sendResponse
-        scrollX: window.scrollX
-        scrollY: window.scrollY
+  requestHandlers =
+    hideUpgradeNotification: -> HUD.hideUpgradeNotification()
+    showUpgradeNotification: -> HUD.showUpgradeNotification()
+    toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
+    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
+    refreshCompletionKeys: refreshCompletionKeys
+    getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
+    setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
+    executePageCommand: executePageCommand
+    getActiveState: -> { enabled: isEnabledForUrl }
+    disableVimium: disableVimium
 
+  chrome.extension.onRequest.addListener (request, sender, sendResponse) ->
+    sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
-
-  chrome.extension.onConnect.addListener (port, name) ->
-    if (port.name == "executePageCommand")
-      port.onMessage.addListener (args) ->
-        if (frameId == args.frameId)
-          if (args.passCountToFunction)
-            Utils.invokeCommandString(args.command, [args.count])
-          else
-            Utils.invokeCommandString(args.command) for i in [0...args.count]
-
-        refreshCompletionKeys(args)
-    else if (port.name == "setScrollPosition")
-      port.onMessage.addListener (args) ->
-        if (args.scrollX > 0 || args.scrollY > 0)
-          DomUtils.documentReady(-> window.scrollBy(args.scrollX, args.scrollY))
-    else if (port.name == "returnCurrentTabUrl")
-      port.onMessage.addListener (args) ->
-        getCurrentUrlHandlers.pop()(args.url) if (getCurrentUrlHandlers.length > 0)
-    else if (port.name == "refreshCompletionKeys")
-      port.onMessage.addListener (args) -> refreshCompletionKeys(args.completionKeys)
-    else if (port.name == "getActiveState")
-      port.onMessage.addListener (args) -> port.postMessage({ enabled: isEnabledForUrl })
-    else if (port.name == "disableVimium")
-      port.onMessage.addListener (args) -> disableVimium()
 
 #
 # This is called once the background page has told us that Vimium should be enabled for the current URL.
@@ -216,6 +184,16 @@ enterInsertModeIfElementIsFocused = ->
 
 onDOMActivate = (event) -> activatedElement = event.target
 
+executePageCommand = (request) ->
+  return unless frameId == request.frameId
+
+  if (request.passCountToFunction)
+    Utils.invokeCommandString(request.command, [request.count])
+  else
+    Utils.invokeCommandString(request.command) for i in [0...request.count]
+
+  refreshCompletionKeys(request)
+
 #
 # activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
 # input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
@@ -260,6 +238,10 @@ scrollActivatedElementBy = (direction, amount) ->
   if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
     activatedElement = lastElement
 
+setScrollPosition = (scrollX, scrollY) ->
+  if (scrollX > 0 || scrollY > 0)
+    DomUtils.documentReady(-> window.scrollBy(scrollX, scrollY))
+
 #
 # Called from the backend in order to change frame focus.
 #
@@ -302,26 +284,19 @@ extend window,
       window.location.href = urlsplit.join('/')
 
   toggleViewSource: ->
-    toggleViewSourceCallback = (url) ->
+    chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
       if (url.substr(0, 12) == "view-source:")
         url = url.substr(12, url.length - 12)
       else
         url = "view-source:" + url
       chrome.extension.sendRequest({ handler: "openUrlInNewTab", url: url, selected: true })
-    getCurrentUrlHandlers.push(toggleViewSourceCallback)
-    getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" })
-    getCurrentUrlPort.postMessage({})
 
   copyCurrentUrl: ->
     # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background page
     # to copy.
     # http://code.google.com/p/chromium/issues/detail?id=55188
-    # getCurrentUrlHandlers.push(function (url) { Clipboard.copy(url); })
-    getCurrentUrlHandlers.push((url) -> chrome.extension.sendRequest({ handler: "copyToClipboard", data: url }))
-
-    # TODO(ilya): Convert to sendRequest.
-    getCurrentUrlPort = chrome.extension.connect({ name: "getCurrentTabUrl" })
-    getCurrentUrlPort.postMessage({})
+    chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
+      chrome.extension.sendRequest { handler: "copyToClipboard", data: url }
 
     HUD.showForDuration("Yanked URL", 1000)
 
@@ -863,7 +838,7 @@ exitFindMode = ->
   findMode = false
   HUD.hide()
 
-window.showHelpDialog = (html, fid) ->
+showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
   container = document.createElement("div")
@@ -889,6 +864,12 @@ hideHelpDialog = (clickEvent) ->
     helpDialog.parentNode.removeChild(helpDialog)
   if (clickEvent)
     clickEvent.preventDefault()
+
+toggleHelpDialog = (html, fid) ->
+  if (isShowingHelpDialog)
+    hideHelpDialog()
+  else
+    showHelpDialog(html, fid)
 
 #
 # A heads-up-display (HUD) for showing Vimium page operations.

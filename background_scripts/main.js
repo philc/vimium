@@ -16,13 +16,13 @@ var namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/;
 // Port handler mapping
 var portHandlers = {
   keyDown:              handleKeyDown,
-  getCurrentTabUrl:     getCurrentTabUrl,
   settings:             handleSettings,
   filterCompleter:      filterCompleter
 };
 
 var sendRequestHandlers = {
   getCompletionKeys: getCompletionKeysRequest,
+  getCurrentTabUrl: getCurrentTabUrl,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
@@ -84,15 +84,16 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
   var senderTabId = sender.tab ? sender.tab.id : null;
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender));
+  // Ensure the sendResponse callback is freed.
+  return false;
 });
 
 /*
  * Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:// .."
  * because window.location doesn't know anything about the Chrome-specific "view-source:".
  */
-function getCurrentTabUrl(args, port) {
-  var returnPort = chrome.tabs.connect(port.sender.tab.id, { name: "returnCurrentTabUrl" });
-  returnPort.postMessage({ url: port.sender.tab.url });
+function getCurrentTabUrl(request, sender) {
+  return sender.tab.url;
 }
 
 /*
@@ -134,7 +135,7 @@ function saveHelpDialogSettings(request) {
 function showHelp(callback, frameId) {
   chrome.tabs.getSelected(null, function(tab) {
     chrome.tabs.sendRequest(tab.id,
-      { name: "showHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
+      { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId });
   });
 }
 
@@ -366,8 +367,7 @@ function updateActiveState(tabId) {
     // Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
     // TODO(philc): Re-enable once we've restyled the browser action icon.
     // chrome.browserAction.setIcon({ path: disabledIcon });
-    var returnPort = chrome.tabs.connect(tabId, { name: "getActiveState" });
-    returnPort.onMessage.addListener(function(response) {
+    chrome.tabs.sendRequest(tabId, { name: "getActiveState" }, function(response) {
       var isCurrentlyEnabled = response.enabled;
       var shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl;
 
@@ -376,13 +376,12 @@ function updateActiveState(tabId) {
           chrome.browserAction.setIcon({ path: enabledIcon });
         } else {
           chrome.browserAction.setIcon({ path: disabledIcon });
-          chrome.tabs.connect(tabId, { name: "disableVimium" }).postMessage();
+          chrome.tabs.sendRequest(tabId, { name: "disableVimium" });
         }
       } else {
         chrome.browserAction.setIcon({ path: disabledIcon });
       }
     });
-    returnPort.postMessage();
   });
 }
 
@@ -462,10 +461,12 @@ function restoreTab(callback) {
       // wait until that's over before we can call setScrollPosition.
       chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, function(tab) {
         tabLoadedHandlers[tab.id] = function() {
-          var scrollPort = chrome.tabs.connect(tab.id, {name: "setScrollPosition"});
-          scrollPort.postMessage({ scrollX: tabQueueEntry.scrollX, scrollY: tabQueueEntry.scrollY });
+          var scrollPort = chrome.tabs.sendRequest(tab.id, {
+            name: "setScrollPosition",
+            scrollX: tabQueueEntry.scrollX,
+            scrollY: tabQueueEntry.scrollY
+          });
         };
-
         callback();
       });
     }
@@ -584,14 +585,14 @@ function checkKeyQueue(keysToCheck, tabId, frameId) {
     registryEntry = Commands.keyToCommandRegistry[command];
 
     if (!registryEntry.isBackgroundCommand) {
-      var port = chrome.tabs.connect(tabId, { name: "executePageCommand" });
-      port.postMessage({ command: registryEntry.command,
-                         frameId: frameId,
-                         count: count,
-                         passCountToFunction: registryEntry.passCountToFunction,
-                         completionKeys: generateCompletionKeys("")
-                       });
-
+      chrome.tabs.sendRequest(tabId, {
+        name: "executePageCommand",
+        command: registryEntry.command,
+        frameId: frameId,
+        count: count,
+        passCountToFunction: registryEntry.passCountToFunction,
+        completionKeys: generateCompletionKeys("")
+      });
       refreshedCompletionKeys = true;
     } else {
       if(registryEntry.passCountToFunction){
