@@ -91,8 +91,8 @@ Commands =
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
-       "Vomnibar.activate", "Vomnibar.activateWithCurrentUrl", "Vomnibar.activateTabSelection",
-       "Vomnibar.activateBookmarks",
+       "Vomnibar.activate", "Vomnibar.activateWithCurrentUrl", "Vomnibar.activateWithNewTab",
+       "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
        "goPrevious", "goNext", "nextFrame"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -166,6 +166,7 @@ defaultKeyMappings =
 
   "o": "Vomnibar.activate"
   "O": "Vomnibar.activateWithCurrentUrl"
+  "B": "Vomnibar.activateWithNewTab"
 
   "T": "Vomnibar.activateTabSelection"
 
@@ -233,6 +234,7 @@ commandDescriptions =
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"]
+  "Vomnibar.activateWithNewTab": ["Open URL, bookmark, history entry, in a new tab"]
   "Vomnibar.activateTabSelection": ["Search through your open tabs"]
   "Vomnibar.activateBookmarks": ["Open a bookmark"]
 
