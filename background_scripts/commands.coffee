@@ -91,8 +91,8 @@ Commands =
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
-       "Vomnibar.activate", "Vomnibar.activateWithCurrentUrl", "Vomnibar.activateTabSelection",
-       "Vomnibar.activateBookmarks",
+       "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
+       "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
        "goPrevious", "goNext", "nextFrame"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -165,11 +165,12 @@ defaultKeyMappings =
   "X": "restoreTab"
 
   "o": "Vomnibar.activate"
-  "O": "Vomnibar.activateWithCurrentUrl"
+  "O": "Vomnibar.activateInNewTab"
 
   "T": "Vomnibar.activateTabSelection"
 
   "b": "Vomnibar.activateBookmarks"
+  "B": "Vomnibar.activateBookmarksInNewTab"
 
   "gf": "nextFrame"
 
@@ -232,9 +233,10 @@ commandDescriptions =
   restoreTab: ["Restore closed tab", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "Vomnibar.activateWithCurrentUrl": ["Open URL, bookmark, history entry, starting with the current URL"]
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
   "Vomnibar.activateTabSelection": ["Search through your open tabs"]
   "Vomnibar.activateBookmarks": ["Open a bookmark"]
+  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 
