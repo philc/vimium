@@ -1,4 +1,5 @@
 fs = require "fs"
+path = require "path"
 {spawn, exec} = require "child_process"
 
 spawn_with_opts = (proc_name, opts) ->
@@ -16,13 +17,13 @@ task "build", "compile all coffeescript files to javascript", ->
 task "clean", "removes any js files which were compiled from coffeescript", ->
   src_directories.forEach (directory) ->
     fs.readdirSync(directory).forEach (filename) ->
-      return if (filename.indexOf ".js", filename.length - ".js".length) == -1
-      filepath = "#{directory}/#{filename}"
+      return unless (path.extname filename) == ".js"
+      filepath = path.join directory, filename
       return unless (fs.statSync filepath).isFile()
 
       # Check if there exists a corresponding .coffee file
       try
-        coffeeFile = fs.statSync "#{filepath.slice 0, -".js".length}.coffee"
+        coffeeFile = fs.statSync path.join directory, "#{path.basename filepath, ".js"}.coffee"
       catch _
         return
 
