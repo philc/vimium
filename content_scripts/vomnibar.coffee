@@ -10,22 +10,24 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activateWithCompleter: (completerName, refreshInterval, initialQueryValue, selectFirstResult) ->
+  activateWithCompleter: (completerName, refreshInterval, initialQueryValue, selectFirstResult, forceNewTab) ->
     completer = @getCompleter(completerName)
     @vomnibarUI = new VomnibarUI() unless @vomnibarUI
     completer.refresh()
     @vomnibarUI.setInitialSelectionValue(if selectFirstResult then 0 else -1)
     @vomnibarUI.setCompleter(completer)
     @vomnibarUI.setRefreshInterval(refreshInterval)
+    @vomnibarUI.setForceNewTab(forceNewTab)
     @vomnibarUI.show()
     if (initialQueryValue)
       @vomnibarUI.setQuery(initialQueryValue)
       @vomnibarUI.update()
 
   activate: -> @activateWithCompleter("omni", 100)
-  activateWithCurrentUrl: -> @activateWithCompleter("omni", 100, window.location.toString())
+  activateInNewTab: -> @activateWithCompleter("omni", 100, null, true, true)
   activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
   activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
+  activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, true)
   getUI: -> @vomnibarUI
 
 
@@ -44,6 +46,8 @@ class VomnibarUI
     @reset()
 
   setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
+
+  setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
   show: ->
     @box.style.display = "block"
@@ -92,7 +96,7 @@ class VomnibarUI
     action = @actionFromKeyEvent(event)
     return true unless action # pass through
 
-    openInNewTab = (event.shiftKey || KeyboardUtils.isPrimaryModifierKey(event))
+    openInNewTab = @forceNewTab || (event.shiftKey || KeyboardUtils.isPrimaryModifierKey(event))
     if (action == "dismiss")
       @hide()
     else if (action == "up")
