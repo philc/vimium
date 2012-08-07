@@ -15,9 +15,12 @@ task "build", "compile all coffeescript files to javascript", ->
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   src_directories.forEach (directory) ->
-    files = fs.readdirSync(directory).filter((filename) -> filename.indexOf(".js") > 0)
-    files = files.map((filename) -> "#{directory}/#{filename}")
-    files.forEach((file) -> fs.unlinkSync file if fs.statSync(file).isFile())
+    fs.readdirSync(directory).forEach (filename) ->
+      return if (filename.indexOf ".js", filename.length - ".js".length) == -1
+      filepath = "#{directory}/#{filename}"
+      return if filepath == "background_scripts/main.js"
+      return unless (fs.statSync filepath).isFile()
+      fs.unlinkSync filepath
 
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw"].concat(src_directories)
