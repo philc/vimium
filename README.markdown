@@ -149,6 +149,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.38 (Unreleased)
+
+- 'O' now opens Vomnibar results in a new tab. 'B' does the same for bookmarks only.
+
 1.37 (07/07/2012)
 
 - Select the first result by default in Vomnibar tab and bookmark modes.
