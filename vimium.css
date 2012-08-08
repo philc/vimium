@@ -74,6 +74,15 @@ div.internalVimiumHintMarker {
   box-shadow: 0px 3px 7px 0px rgba(0, 0, 0, 0.3);
 }
 
+div.internalVimiumSelectedHintMarker {
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#FF6666), color-stop(100%,#FF3333)) !important;
+  border: solid 1px #993333 !important;
+}
+
+div.internalVimiumSelectedHintMarker span {
+  color: white !important;
+}
+
 div.internalVimiumHintMarker span {
   color: #302505;
   font-family: Helvetica, Arial, sans-serif;

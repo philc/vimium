@@ -318,6 +318,8 @@ extend window,
 
     hintMarkers = (LinkHints.createMarkerFor(el) for el in visibleInputs)
 
+    hintMarkers[0].classList.add 'internalVimiumSelectedHintMarker'
+
     for marker, idx in hintMarkers
       marker.innerHTML = "<span>#{idx + 1}</span>"
 
@@ -325,8 +327,10 @@ extend window,
 
     handlerStack.push keydown: ->
       if event.keyCode == KeyboardUtils.keyCodes.tab
+        hintMarkers[selectedInputIndex].classList.remove 'internalVimiumSelectedHintMarker'
         if ++selectedInputIndex == hintMarkers.length
           selectedInputIndex = 0
+        hintMarkers[selectedInputIndex].classList.add 'internalVimiumSelectedHintMarker'
         hintMarkers[selectedInputIndex].clickableItem.focus()
       else
         DomUtils.removeElement hintMarkerContainingDiv
