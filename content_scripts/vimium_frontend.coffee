@@ -314,6 +314,8 @@ extend window,
 
     visibleInputs[selectedInputIndex].element.focus()
 
+    return if visibleInputs.length == 1
+
     hintMarkers = (LinkHints.createMarkerFor(el) for el in visibleInputs)
 
     for marker, idx in hintMarkers
