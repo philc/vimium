@@ -301,7 +301,7 @@ alphabetHints =
   #
   shuffleHints: (hints, characterSetLength) ->
     buckets = ([] for i in [0...characterSetLength] by 1)
-    for hint in hints
+    for hint, i in hints
       buckets[i % buckets.length].push(hint)
     result = []
     for bucket in buckets
