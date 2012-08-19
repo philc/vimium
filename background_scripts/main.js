@@ -359,16 +359,13 @@ function updateOpenTabs(tab) {
  * 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
  */
 function updateActiveState(tabId) {
-  // TODO(philc): Re-enable once we've restyled the browser action icon.
-  return;
-  var enabledIcon = "icons/icon48.png";
-  var disabledIcon = "icons/icon48disabled.png";
+  var enabledIcon = "icons/browser_action_enabled.png";
+  var disabledIcon = "icons/browser_action_disabled.png";
   chrome.tabs.get(tabId, function(tab) {
     // Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
-    // TODO(philc): Re-enable once we've restyled the browser action icon.
-    // chrome.browserAction.setIcon({ path: disabledIcon });
+    chrome.browserAction.setIcon({ path: disabledIcon });
     chrome.tabs.sendRequest(tabId, { name: "getActiveState" }, function(response) {
-      var isCurrentlyEnabled = response.enabled;
+      var isCurrentlyEnabled = response !== undefined && response.enabled;
       var shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl;
 
       if (isCurrentlyEnabled) {
