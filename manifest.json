@@ -16,7 +16,7 @@
       "background_scripts/main.js"
     ]
   },
-  "options_page": "options.html",
+  "options_page": "options/options.html",
   "permissions": [
     "tabs",
     "bookmarks",
