@@ -325,14 +325,18 @@ extend window,
 
     hintMarkerContainingDiv = LinkHints.displayHints(hintMarkers)
 
-    handlerStack.push keydown: ->
+    handlerStack.push keydown: (event) ->
       if event.keyCode == KeyboardUtils.keyCodes.tab
         hintMarkers[selectedInputIndex].classList.remove 'internalVimiumSelectedHintMarker'
-        if ++selectedInputIndex == hintMarkers.length
-          selectedInputIndex = 0
+        if event.shiftKey
+          if --selectedInputIndex == -1
+            selectedInputIndex = hintMarkers.length - 1
+        else
+          if ++selectedInputIndex == hintMarkers.length
+            selectedInputIndex = 0
         hintMarkers[selectedInputIndex].classList.add 'internalVimiumSelectedHintMarker'
         hintMarkers[selectedInputIndex].clickableItem.focus()
-      else
+      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
         DomUtils.removeElement hintMarkerContainingDiv
         handlerStack.pop()
 
