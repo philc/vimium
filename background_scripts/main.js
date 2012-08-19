@@ -765,13 +765,13 @@ function init() {
       for (var j in windows[i].tabs) {
         var tab = windows[i].tabs[j];
         updateOpenTabs(tab);
-	chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, function() {
-	    return function(response) {
-		if (response === undefined)
-		    return;
-		updateScrollPosition(tab, response.scrollX, response.scrollY);
-	    };
-	}());
+        chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, function() {
+            return function(response) {
+                if (response === undefined)
+                    return;
+                updateScrollPosition(tab, response.scrollX, response.scrollY);
+            };
+        }());
       }
     }
   });
