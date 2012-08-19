@@ -43,60 +43,68 @@ Utils =
     else
       partialUrl
 
-  # Tries to detect, whether :str is a valid URL.
+  # Tries to detect if :str is a valid URL.
   isUrl: (str) ->
-    # more or less RFC compliant URL host part parsing. This should be sufficient
-    # for our needs
+    # More or less RFC compliant URL host part parsing. This should be
+    # sufficient for our needs
     urlRegex = new RegExp(
-      '^(?:([^:]+)(?::([^:]+))?@)?' +   # user:password (optional)     => \1, \2
-      '([^:]+|\\[[^\\]]+\\])'       +   # host name (IPv6 addresses in square brackets allowed) => \3
-      '(?::(\\d+))?$'                   # port number (optional)       => \4
+      # user:password (optional)     => \1, \2
+      '^(?:([^:]+)(?::([^:]+))?@)?' +
+      # host name (IPv6 addresses in square brackets allowed) => \3
+      '([^:]+|\\[[^\\]]+\\])' +
+      # port number (optional) => \4
+      '(?::(\\d+))?$'
       )
 
-    # these are all official ASCII TLDs that are longer than 3 characters
-    # (including the inofficial .onion TLD used by TOR)
-    longTlds = [ 'arpa', 'asia', 'coop', 'info', 'jobs', 'local', 'mobi', 'museum', 'name', 'onion' ]
+    # Official ASCII TLDs that are longer than 3 characters
+    longTlds = [
+      'arpa'
+      'asia'
+      'coop'
+      'info'
+      'jobs'
+      'local'
+      'mobi'
+      'museum'
+      'name'
+      'onion'  # Inofficial .onion TLD used by TOR
+    ]
 
-    # are there more?
-    specialHostNames = [ 'localhost' ]
+    specialHostNames = ['localhost']
 
-    # it starts with a scheme, so it's definitely an URL
-    if (/^[a-z]{3,}:\/\//.test(str))
-      return true
+    # Starts with a scheme: URL
+    return true if /^[a-z]{3,}:\/\//.test str
 
-    # spaces => definitely not a valid URL
-    if (str.indexOf(' ') >= 0)
-      return false
+    # Must not contain spaces
+    return false if ' ' in str
 
-    # assuming that this is an URL, try to parse it into its meaningful parts. If matching fails, we're
+    # Try to parse the URL into its meaningful parts. If matching fails we're
     # pretty sure that we don't have some kind of URL here.
-    match = urlRegex.exec(str.split('/')[0])
-    if (!match)
-      return false
-    hostname = match[3]
+    match = urlRegex.exec (str.split '/')[0]
+    return false unless match
+    hostName = match[3]
 
-    # allow known special host names
-    if (specialHostNames.indexOf(hostname) >= 0)
-      return true
+    # Allow known special host names
+    return true if hostName in specialHostNames
 
-    # allow IPv6 addresses (need to be wrapped in brackets, as required by RFC).  It is sufficient to check
-    # for a colon here, as the regex wouldn't match colons in the host name unless it's an v6 address
-    if (hostname.indexOf(':') >= 0)
-      return true
+    # Allow IPv6 addresses (need to be wrapped in brackets as required by
+    # RFC). It is sufficient to check for a colon, as the regex wouldn't
+    # match colons in the host name unless it's an v6 address
+    return true if ':' in hostName
 
-    # at this point we have to make a decision. As a heuristic, we check if the input has dots in it. If
-    # yes, and if the last part could be a TLD, treat it as an URL.
-    dottedParts = hostname.split('.')
-    lastPart = dottedParts[dottedParts.length-1]
-    if (dottedParts.length > 1 && ((lastPart.length >= 2 && lastPart.length <= 3) ||
-        longTlds.indexOf(lastPart) >= 0))
-      return true
+    # At this point we have to make a decision. As a heuristic, we check
+    # if the input has dots in it. If yes, and if the last part could be a
+    # TLD, treat it as an URL
+    dottedParts = hostName.split '.'
 
-    # also allow IPv4 addresses
-    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(hostname))
-      return true
+    if dottedParts.length > 1
+      lastPart = dottedParts.pop()
+      return true if 2 <= lastPart.length <= 3 or lastPart in longTlds
 
-    # fallback: no URL
+    # Allow IPv4 addresses
+    return true if /^(\d{1,3}\.){3}\d{1,3}$/.test hostName
+
+    # Fallback: no URL
     return false
 
   # Creates a search URL from the given :query.
