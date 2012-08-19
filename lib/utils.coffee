@@ -1,6 +1,7 @@
 Utils =
   getCurrentVersion: ->
-    # Chromium #15242 will make this XHR request to access the manifest unnecessary.
+    # Chromium #15242 will make this XHR request to access the manifest
+    # unnecessary
     manifestRequest = new XMLHttpRequest()
     manifestRequest.open("GET", chrome.extension.getURL("manifest.json"), false)
     manifestRequest.send(null)
@@ -25,10 +26,9 @@ Utils =
   escapeHtml: (string) -> string.replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
   # Generates a unique ID
-  createUniqueId: (->
+  createUniqueId: do ->
     id = 0
-    return -> id += 1
-  )()
+    -> id += 1
 
   hasChromePrefix: (url) ->
     chromePrefixes = [ 'about', 'view-source' ]
@@ -109,21 +109,26 @@ Utils =
 
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # we need to escape explictely to encode characters like "+" correctly
+    # Escape explicitely to encode characters like "+" correctly
     "http://www.google.com/search?q=" + encodeURIComponent(query)
 
-  # Converts :string into a google search if it's not already a URL.
-  # We don't bother with escaping characters as Chrome will do that for us.
+  # Converts :string into a Google search if it's not already a URL. We
+  # don't bother with escaping characters as Chrome will do that for us.
   convertToUrl: (string) ->
     string = string.trim()
-    # special-case about:[url] and view-source:[url]
-    if Utils.hasChromePrefix string then string
-    else
-      if (Utils.isUrl(string)) then Utils.createFullUrl(string) else Utils.createSearchUrl(string)
 
-# This creates a new function out of an existing function, where the new function takes fewer arguments.
-# This allows us to pass around functions instead of functions + a partial list of arguments.
-Function.prototype.curry = ->
+    # Special-case about:[url] and view-source:[url]
+    if Utils.hasChromePrefix string
+      string
+    else if Utils.isUrl string
+      Utils.createFullUrl string
+    else
+      Utils.createSearchUrl string
+
+# This creates a new function out of an existing function, where the new
+# function takes fewer arguments. This allows us to pass around functions
+# instead of functions + a partial list of arguments.
+Function::curry = ->
   fixedArguments = Array.copy(arguments)
   fn = this
   -> fn.apply(this, fixedArguments.concat(Array.copy(arguments)))
@@ -132,19 +137,20 @@ Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
 String::startsWith = (str) -> @indexOf(str) == 0
 
-# A very simple method for defining a new class (constructor and methods) using a single hash.
-# No support for inheritance is included because we really shouldn't need it.
+# A very simple method for defining a new class (constructor and methods)
+# using a single hash. No support for inheritance is included because we
+# really shouldn't need it.
 # TODO(philc): remove this.
 Class =
   extend: (properties) ->
     newClass = ->
-      this.init.apply(this, arguments) if (this.init)
+      @init.apply(this, arguments) if @init
       null
     newClass.prototype = properties
     newClass.constructor = newClass
     newClass
 
-globalRoot = if window? then window else global
+globalRoot = window ? global
 globalRoot.extend = (hash1, hash2) ->
   for key of hash2
     hash1[key] = hash2[key]
