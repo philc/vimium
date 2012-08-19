@@ -2,11 +2,10 @@ DomUtils =
   #
   # Runs :callback if the DOM has loaded, otherwise runs it on load
   #
-  documentReady: (->
+  documentReady: do ->
     loaded = false
     window.addEventListener("DOMContentLoaded", -> loaded = true)
     (callback) -> if loaded then callback() else window.addEventListener("DOMContentLoaded", callback)
-  )()
 
   #
   # Remove an element from its DOM tree.
@@ -35,14 +34,13 @@ DomUtils =
   getVisibleClientRect: (element) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
     clientRects = element.getClientRects()
-    clientRectsLength = clientRects.length
 
-    for i in [0...clientRectsLength]
-      if (clientRects[i].top < -2 || clientRects[i].top >= window.innerHeight - 4 ||
-          clientRects[i].left < -2 || clientRects[i].left  >= window.innerWidth - 4)
+    for clientRect in clientRects
+      if (clientRect.top < -2 || clientRect.top >= window.innerHeight - 4 ||
+          clientRect.left < -2 || clientRect.left  >= window.innerWidth - 4)
         continue
 
-      if (clientRects[i].width < 3 || clientRects[i].height < 3)
+      if (clientRect.width < 3 || clientRect.height < 3)
         continue
 
       # eliminate invisible elements (see test_harnesses/visibility_test.html)
@@ -51,19 +49,18 @@ DomUtils =
           computedStyle.getPropertyValue('display') == 'none')
         continue
 
-      return clientRects[i]
+      return clientRect
 
-    for i in [0...clientRectsLength]
+    for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible
       # but floated elements. Check for this.
-      if (clientRects[i].width == 0 || clientRects[i].height == 0)
-        childrenCount = element.children.length
-        for j in [0...childrenCount]
-          computedStyle = window.getComputedStyle(element.children[j], null)
+      if (clientRect.width == 0 || clientRect.height == 0)
+        for child in element.children
+          computedStyle = window.getComputedStyle(child, null)
           # Ignore child elements which are not floated and not absolutely positioned for parent elements with zero width/height
           if (computedStyle.getPropertyValue('float') == 'none' && computedStyle.getPropertyValue('position') != 'absolute')
             continue
-          childClientRect = this.getVisibleClientRect(element.children[j])
+          childClientRect = @getVisibleClientRect(child)
           if (childClientRect == null)
             continue
           return childClientRect
