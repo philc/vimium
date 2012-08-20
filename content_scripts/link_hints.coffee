@@ -54,7 +54,14 @@ LinkHints =
 
     @setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl)
     hintMarkers = @markerMatcher.fillInMarkers(@createMarkerFor(el) for el in @getVisibleClickableElements())
-    @hintMarkerContainingDiv = @displayHints(hintMarkers)
+
+    DomUtils.addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
+    # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
+    # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
+    # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
+    @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
+      { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
+
     # handlerStack is declared by vimiumFrontend.js
     handlerStack.push({
       keydown: @onKeyDownInMode.bind(this, hintMarkers),
@@ -103,23 +110,6 @@ LinkHints =
     marker.rect = link.rect
 
     marker
-
-  displayHints: (hintMarkers) ->
-    if (!document.getElementById("vimiumLinkHintCss"))
-      # linkHintCss is declared by vimiumFrontend.js and contains the user supplied css overrides.
-      addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
-
-    # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
-    # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
-    # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
-    # Also note that adding these nodes to document.body all at once is significantly faster than one-by-one.
-    hintMarkerContainingDiv = document.createElement("div")
-    hintMarkerContainingDiv.id = "vimiumHintMarkerContainer"
-    hintMarkerContainingDiv.className = "vimiumReset"
-    hintMarkerContainingDiv.appendChild(marker) for marker in hintMarkers
-
-    document.documentElement.appendChild(hintMarkerContainingDiv)
-    hintMarkerContainingDiv
 
   #
   # Returns all clickable elements that are not hidden and are in the current viewport.

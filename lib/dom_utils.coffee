@@ -1,11 +1,39 @@
 DomUtils =
   #
+  # Adds the given CSS to the page.
+  #
+  addCssToPage: (css, id) ->
+    return if document.getElementById(id)
+    head = document.getElementsByTagName("head")[0]
+    if (!head)
+      head = document.createElement("head")
+      document.documentElement.appendChild(head)
+    style = document.createElement("style")
+    style.id = id
+    style.type = "text/css"
+    style.appendChild(document.createTextNode(css))
+    head.appendChild(style)
+
+  #
   # Runs :callback if the DOM has loaded, otherwise runs it on load
   #
   documentReady: do ->
     loaded = false
     window.addEventListener("DOMContentLoaded", -> loaded = true)
     (callback) -> if loaded then callback() else window.addEventListener("DOMContentLoaded", callback)
+
+  #
+  # Adds a list of elements to a page.
+  # Note that adding these nodes all at once (via the parent div) is significantly faster than one-by-one.
+  #
+  addElementList: (els, overlayOptions) ->
+    parent = document.createElement("div")
+    parent.id = overlayOptions.id if overlayOptions.id?
+    parent.className = overlayOptions.className if overlayOptions.className?
+    parent.appendChild(el) for el in els
+
+    document.documentElement.appendChild(parent)
+    parent
 
   #
   # Remove an element from its DOM tree.

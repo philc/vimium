@@ -977,20 +977,6 @@ Tween =
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
 
-#
-# Adds the given CSS to the page.
-#
-addCssToPage = (css, id) ->
-  head = document.getElementsByTagName("head")[0]
-  if (!head)
-    head = document.createElement("head")
-    document.documentElement.appendChild(head)
-  style = document.createElement("style")
-  style.id = id
-  style.type = "text/css"
-  style.appendChild(document.createTextNode(css))
-  head.appendChild(style)
-
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", initializeOnDomReady)
 
@@ -1000,11 +986,8 @@ window.onbeforeunload = ->
     scrollX: window.scrollX
     scrollY: window.scrollY)
 
-# TODO(philc): Export a more tighter, more coherent interface.
 root = exports ? window
-root.window = window
 root.settings = settings
-root.addCssToPage = addCssToPage
 root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
