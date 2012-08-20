@@ -301,12 +301,13 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   focusInput: (count) ->
-    xpathResult = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
     visibleInputs =
-      while (currentInputBox = xpathResult.iterateNext())
-        rect = DomUtils.getVisibleClientRect(currentInputBox)
+      for i in [0...resultSet.snapshotLength] by 1
+        element = resultSet.snapshotItem(i)
+        rect = DomUtils.getVisibleClientRect(element)
         continue if rect == null
-        { element: currentInputBox, rect: rect }
+        { element: element, rect: rect }
 
     return if visibleInputs.length == 0
 
@@ -316,28 +317,36 @@ extend window,
 
     return if visibleInputs.length == 1
 
-    hintMarkers = (LinkHints.createMarkerFor(el) for el in visibleInputs)
+    hints = for tuple in visibleInputs
+      hint = document.createElement("div")
+      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
-    hintMarkers[0].classList.add 'internalVimiumSelectedHintMarker'
+      # minus 1 for the border
+      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+      hint.style.width = tuple.rect.width + "px"
+      hint.style.height = tuple.rect.height + "px"
 
-    for marker, idx in hintMarkers
-      marker.innerHTML = "<span>#{idx + 1}</span>"
+      hint
 
-    hintMarkerContainingDiv = LinkHints.displayHints(hintMarkers)
+    hints[0].classList.add 'internalVimiumSelectedInputHint'
+
+    hintContainingDiv = DomUtils.addElementList(hints,
+      { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
 
     handlerStack.push keydown: (event) ->
       if event.keyCode == KeyboardUtils.keyCodes.tab
-        hintMarkers[selectedInputIndex].classList.remove 'internalVimiumSelectedHintMarker'
+        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
         if event.shiftKey
           if --selectedInputIndex == -1
-            selectedInputIndex = hintMarkers.length - 1
+            selectedInputIndex = hints.length - 1
         else
-          if ++selectedInputIndex == hintMarkers.length
+          if ++selectedInputIndex == hints.length
             selectedInputIndex = 0
-        hintMarkers[selectedInputIndex].classList.add 'internalVimiumSelectedHintMarker'
-        hintMarkers[selectedInputIndex].clickableItem.focus()
+        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        visibleInputs[selectedInputIndex].element.focus()
       else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-        DomUtils.removeElement hintMarkerContainingDiv
+        DomUtils.removeElement hintContainingDiv
         handlerStack.pop()
 
 #
