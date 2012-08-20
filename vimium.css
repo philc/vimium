@@ -27,7 +27,7 @@ tr.vimiumReset {
   cursor: auto;
   display: inline;
   float: none;
-  font-family : "Helvetica Neue", "Helvetica", "Arial", "Sans";
+  font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   font-size: inherit;
   font-style: normal;
   font-variant: normal;

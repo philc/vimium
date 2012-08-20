@@ -41,7 +41,7 @@ enableSaveButton = ->
 
 # Saves options to localStorage.
 saveOptions = ->
-  
+
   # If the value is unchanged from the default, delete the preference from localStorage; this gives us
   # the freedom to change the defaults in the future.
   for fieldName in editableFields
@@ -51,7 +51,7 @@ saveOptions = ->
     else
       fieldValue = field.value.trim()
       field.value = fieldValue
-    
+
     # If it's empty and not a field that we allow to be empty, restore to the default value
     if not fieldValue and canBeEmptyFields.indexOf(fieldName) is -1
       bgSettings.clear fieldName
@@ -87,4 +87,9 @@ openAdvancedOptions = (event) ->
   elements = document.getElementsByClassName("advancedOption")
   for element in elements
     element.style.display = (if (element.style.display is "table-row") then "none" else "table-row")
+  showOrHideLink = $("advancedOptions")
+  if showOrHideLink.innerHTML.match(/^Show/)?
+    showOrHideLink.innerHTML = "Hide advanced options&hellip;"
+  else
+    showOrHideLink.innerHTML = "Show advanced options&hellip;"
   event.preventDefault()

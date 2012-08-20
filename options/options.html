@@ -10,77 +10,165 @@
     <script src="../content_scripts/vimium_frontend.js"></script>
     <style type="text/css" media="screen">
       body {
-        font-family:"helvetica neue", "helvetica", "arial", "sans";
-        width:640px;
-        margin:10px auto;
+        font: 14px "DejaVu Sans", "Arial", sans-serif;
+        color: #303942;
+        width: 680px;
+        margin: 0 auto;
       }
-      a, a:visited { color:blue; }
-      #optionsTableWrapper {
-        width:490px;
-        border:1px solid red;
+      a, a:visited { color: #15c; }
+      a:active { color: #052577; }
+      div#wrapper { width: 500px; }
+      header {
+        font-size: 18px;
+        font-weight: normal;
+        border-bottom: 1px solid #eee;
+        padding: 20px 0 15px 0;
+        width: 100%;
+      }
+      button {
+        -webkit-user-select: none;
+        -webkit-appearance: none;
+        background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        border-radius: 2px;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+        color: #444;
+        font: inherit;
+        text-shadow: 0 1px 0 #f0f0f0;
+        height: 24px;
+        font-size: 12px;
+        padding: 0 10px;
+      }
+      button:hover {
+        background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+        border-color: rgba(0, 0, 0, 0.3);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+        color: black;
+      }
+      button:active {
+        background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+        box-shadow: none;
+        text-shadow: none;
+      }
+      button[disabled], button[disabled]:hover, button[disabled]:active {
+        background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+        text-shadow: 0 1px 0 #f0f0f0;
+        color: #888;
+      }
+      input[type="checkbox"] {
+        -webkit-user-select: none;
+      }
+      label:hover {
+        color: black;
+      }
+      pre, code, .code {
+        font-family: Consolas, "Liberation Mono", Courier, monospace;
+      }
+      pre {
+        margin: 5px;
+        border-left: 1px solid #eee;
+        padding-left: 5px;
+
+      }
+      input, textarea {
+        box-sizing: border-box;
+      }
+      textarea {
+        /* Horizontal resizing is pretty screwy-looking. */
+        resize: vertical;
+      }
+      table {
+        width: 100%;
+        font-size: 14px;
+        position: relative;
+        border-spacing: 0 23px;
       }
       .example {
         font-size: 12px;
-        color:#555;
-        margin-left:20px;
+        line-height: 16px;
+        color: #979ca0;
+        margin-left: 20px;
       }
       .caption {
-        margin-right:10px;
+        margin-right: 10px;
         min-width: 130px;
       }
-      td {
-        padding:5px 0;
-        padding-bottom: 8px;
+      td { padding: 0; }
+      div#exampleKeyMapping {
+        margin-left: 10px;
+        margin-top: 5px;
       }
-      td#mappingsHelp {
-        padding:20px 0;
+      input#linkHintCharacters {
+        width: 160px;
+      }
+      input#scrollStepSize {
+        width: 40px;
+        margin-right: 3px;
       }
       textarea#excludedUrls {
-        width:490px;
-        min-height:100px;
+        margin-top: 5px;
+        width: 100%;
+        min-height: 100px;
       }
       textarea#userDefinedLinkHintCss {
-        width:342px;
-        min-height:100px;
+        width: 100%;;
+        min-height: 100px;
       }
       textarea#keyMappings {
-        width:342px;
-        min-height:100px;
+        width: 100%;
+        min-height: 135px;
+      }
+      input#previousPatterns, input#nextPatterns {
+        width: 100%;
       }
       #status {
-        margin-left:10px;
-        font-size:80%;
+        margin-left: 10px;
+        font-size: 80%;
       }
       /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-      td:nth-child(1) {
-        width:1px;
-        white-space:nowrap;
+      td:first-child {
+        width: 1px;
+        white-space: nowrap;
       }
-      #buttonsPanel {
-        /* This should match the width of #excludedUrls + 5px of padding to move the buttons to the right. */
-        width:495px;
-        text-align:right;
-        margin-top:18px;
-        margin-right:-10px;
+      #buttonsPanel { width: 100%; }
+      #advancedOptions { line-height: 24px; }
+      #buttonContainer { float: right; }
+      #buttonContainer button:last-child {
+        margin-right: 0;
       }
-      #showHelpDialogMessage {
-        width:495px;
-        font-size:15px;
-      }
+      #showHelpDialogMessage { width: 100%; }
       .help {
-        position:absolute;
-        right:-280px;
-        width:280px;
+        position: absolute;
+        right: -320px;
+        width: 320px;
       }
-      tr.advancedOption {
-        display:none;
-      }
+      tr.advancedOption { display: none; }
       input:read-only {
         background-color: #eee;
         color: #666;
+        pointer-events: none;
+        -webkit-user-select: none;
+      }
+      input[type="text"], textarea {
+        border: 1px solid #bfbfbf;
+        border-radius: 2px;
+        color: #444;
+        font: inherit;
+        padding: 3px;
+      }
+      button:focus, input[type="text"]:focus, textarea:focus {
+        -webkit-transition: border-color 200ms;
+        border-color: #4d90fe;
+        outline: none;
       }
       /* Boolean options have a tighter form representation than text options. */
       td.booleanOption { font-size: 12px; }
+      footer {
+        padding: 15px 0;
+        border-top: 1px solid #eee;
+      }
     </style>
   <link rel="stylesheet" type="text/css" href="../vimium.css" />
 
@@ -89,139 +177,138 @@
   </head>
 
   <body>
-    <h1>Vimium - Options</h1>
-    <table style="position:relative">
-      <tr>
-        <td class="caption">Scroll step size</td>
-        <td>
-          <input id="scrollStepSize" type="text" style="width:50px" />px
-        </td>
-      </tr>
-      <tr>
-        <td colspan="3">
-            Excluded URLs<br/>
+    <div id="wrapper">
+      <header>Vimium options</header>
+      <table>
+        <tr>
+          <td class="caption">Scroll step size</td>
+          <td>
+            <input id="scrollStepSize" type="text" />px
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+              Excluded URLs<br/>
+              <div class="help">
+                <div class="example">
+                  e.g. http*://mail.google.com/*<br/>
+                  This will disable Vimium on Gmail.<br/><br/>
+                  Enter one URL per line.<br/>
+                </div>
+              </div>
+              <textarea id="excludedUrls"></textarea>
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption">Custom key<br/>mappings</td>
+          <td id="mappingsHelp" verticalAlign="top">
             <div class="help">
               <div class="example">
-                e.g. http*://mail.google.com/*<br/>
-                This will disable Vimium on Gmail.<br/><br/>
-                Enter one URL per line.<br/>
+                <!-- TODO(ilya/philc): Expand this and style it better. -->
+                Enter commands to remap your keys. Available commands:<br/>
+                <pre id="exampleKeyMapping">
+map j scrollDown
+unmap j
+unmapAll
+" this is a comment
+# this is also a comment</pre>
+                <a href="#" id="showCommands">Show available commands.</a>
               </div>
             </div>
-            <textarea id="excludedUrls"></textarea>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="3">
-          <a href="#" id="advancedOptions">Advanced options &raquo;</a>
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption">Custom key<br/>mappings</td>
-        <td id="mappingsHelp" verticalAlign="top">
-          <div class="help">
-            <div class="example">
-              <!-- TODO(ilya/philc): Expand this and style it better. -->
-              Enter commands to remap your keys. Available commands:<br/>
-              <div style="margin-left:10px;margin-top:5px">
-                map j scrollDown<br/>
-                unmap j<br/>
-                unmapAll<br/>
-                &quot; this is a comment<br/>
-                # this is also a comment<br/>
+            <textarea id="keyMappings" type="text"></textarea>
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption">Characters used<br/> for link hints</td>
+          <td verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  The characters placed next to each link after typing "F" to enter link hinting mode.
+                </div>
               </div>
-              <a href="#" id="showCommands">Show available commands.</a>
-            </div>
-          </div>
-          <textarea id="keyMappings" type="text"></textarea>
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption">Characters used<br/> for link hints</td>
-        <td verticalAlign="top">
+              <input id="linkHintCharacters" type="text" />
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption">CSS for link hints</td>
+          <td verticalAlign="top">
             <div class="help">
               <div class="example">
-                The characters placed next to each link after typing "F" to enter link hinting mode.
+                The CSS used to style the characters next to each link hint.<br/><br/>
+                Note: these styles are used in addition to and take precedence over Vimium's
+                default styles.
               </div>
             </div>
-            <input id="linkHintCharacters" type="text" style="width:150px" />
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption">CSS for link hints</td>
-        <td verticalAlign="top">
-          <div class="help">
-            <div class="example">
-              The CSS used to style the characters next to each link hint.<br/><br/>
-              Note: these styles are used in addition to and take precedence over Vimium's
-              default styles.
-            </div>
-          </div>
-          <textarea id="userDefinedLinkHintCss" type="text"></textarea>
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption"></td>
-        <td verticalAlign="top" class="booleanOption">
-          <div class="help">
-            <div class="example">
-              After typing "F" to enter link hinting mode, this option lets you type the text of a link
-              to select it.
-            </div>
-          </div>
-          <label>
-            <input id="filterLinkHints" type="checkbox"/>
-            Use the link's name and numbers for link hint filtering
-          </label>
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption"></td>
-        <td verticalAlign="top" class="booleanOption">
-          <div class="help">
-            <div class="example">
-              The Heads-Up Display appears when typing into text boxes.
-            </div>
-          </div>
-          <label>
-            <input id="hideHud" type="checkbox"/>
-            Hide the Heads Up Display (HUD)
-          </label>
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption">Previous Patterns</td>
-        <td verticalAlign="top">
+            <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
             <div class="help">
               <div class="example">
-                Vimium will match against these patterns when using the "navigate to the previous page"
-                command.
+                After typing "F" to enter link hinting mode, this option lets you type the text of a link
+                to select it.
               </div>
             </div>
-            <input id="previousPatterns" type="text" style="width:320px" />
-        </td>
-      </tr>
-      <tr class="advancedOption">
-        <td class="caption">Next Patterns</td>
-        <td verticalAlign="top">
+            <label>
+              <input id="filterLinkHints" type="checkbox"/>
+              Use the link's name and numbers for link hint filtering
+            </label>
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
             <div class="help">
               <div class="example">
-                Vimium will match against these patterns when using the "navigate to the next page" command.
+                The Heads-Up Display appears when typing into text boxes.
               </div>
             </div>
-            <input id="nextPatterns" type="text" style="width:320px" />
-        </td>
-      </tr>
-    </table>
+            <label>
+              <input id="hideHud" type="checkbox"/>
+              Hide the Heads Up Display (HUD)
+            </label>
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption">Previous Patterns</td>
+          <td verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  Vimium will match against these patterns when using the "navigate to the previous page"
+                  command.
+                </div>
+              </div>
+              <input id="previousPatterns" type="text" />
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption">Next Patterns</td>
+          <td verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  Vimium will match against these patterns when using the "navigate to the next page" command.
+                </div>
+              </div>
+              <input id="nextPatterns" type="text" />
+          </td>
+        </tr>
+      </table>
 
-    <div id="buttonsPanel">
-      <button id="restoreSettings">Restore to Defaults</button>
-      <button id="saveOptions" disabled="true">Save Options</button>
-    </div>
+      <div id="buttonsPanel">
+        <a href="#" id="advancedOptions">Show advanced options&hellip;</a>
+        <div id="buttonContainer">
+          <button id="restoreSettings">Restore to Defaults</button>
+          <button id="saveOptions" disabled="true">Save Options</button>
+        </div>
+      </div>
 
-    <br/>
+      <br/>
 
-    <div id="showHelpDialogMessage">
-      To view all available shortcuts, type <span style="font-weight:bold">?</span> to show the Vimium help dialog.
+      <footer id="showHelpDialogMessage">
+        To view all available shortcuts, type <strong>?</strong> to show the Vimium help dialog.
+      </footer>
     </div>
   </body>
 </html>
