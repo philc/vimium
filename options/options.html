@@ -17,9 +17,6 @@
       }
       a, a:visited { color: #15c; }
       a:active { color: #052577; }
-      table {
-        font-size: 14px;
-      }
       header {
         font-size: 18px;
         font-weight: normal;
@@ -39,6 +36,7 @@
         text-shadow: 0 1px 0 #f0f0f0;
         height: 24px;
         font-size: 12px;
+        padding: 0 10px;
       }
       button:hover {
         background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
@@ -60,9 +58,6 @@
       }
       input[type="checkbox"] {
         -webkit-user-select: none;
-        /* Line up checkbox text with checkbox. Annoying hack. */
-        position: relative;
-        top: 1px;
       }
       label:hover {
         color: black;
@@ -76,11 +71,15 @@
         padding-left: 5px;
 
       }
+      input, textarea {
+        box-sizing: border-box;
+      }
       textarea {
         /* Horizontal resizing is pretty screwy-looking. */
         resize: vertical;
       }
       table {
+        font-size: 14px;
         position: relative;
         border-spacing: 0 25px;
       }
@@ -151,9 +150,7 @@
         right: -320px;
         width: 320px;
       }
-      tr.advancedOption {
-        display: none;
-      }
+      tr.advancedOption { display: none; }
       input:read-only {
         background-color: #eee;
         color: #666;
