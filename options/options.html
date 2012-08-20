@@ -12,7 +12,7 @@
       body {
         font: 14px "DejaVu Sans", "Arial", sans-serif;
         color: #303942;
-        width: 640px;
+        width: 680px;
         margin: 10px auto;
       }
       a, a:visited { color: #15c; }
@@ -71,6 +71,15 @@
       label:hover {
         color: black;
       }
+      pre, code, .code {
+        font-family: Monaco, Consolas, "Liberation Mono", Courier, monospace;
+      }
+      pre {
+        margin: 5px;
+        border-left: 1px solid #eee;
+        padding-left: 5px;
+
+      }
       textarea {
         /* Horizontal resizing is pretty screwy-looking. */
         resize: vertical;
@@ -86,7 +95,8 @@
       }
       .example {
         font-size: 12px;
-        color: #979CA0;
+        line-height: 16px;
+        color: #979ca0;
         margin-left: 20px;
       }
       .caption {
@@ -106,18 +116,17 @@
         margin-right: 3px;
       }
       textarea#excludedUrls {
+        margin-top: 5px;
         width: 490px;
         min-height: 100px;
       }
       textarea#userDefinedLinkHintCss {
         width: 100%;;
         min-height: 100px;
-        /* Monospace font stack for code. */
-        font-family: Monaco, Consolas, "Liberation Mono", Courier, monospace;
       }
       textarea#keyMappings {
         width: 100%;
-        min-height: 120px;
+        min-height: 135px;
       }
       input#previousPatterns, input#nextPatterns {
         width: 100%;
@@ -144,8 +153,8 @@
       }
       .help {
         position: absolute;
-        right: -280px;
-        width: 280px;
+        right: -320px;
+        width: 320px;
       }
       tr.advancedOption {
         display: none;
@@ -210,13 +219,12 @@
             <div class="example">
               <!-- TODO(ilya/philc): Expand this and style it better. -->
               Enter commands to remap your keys. Available commands:<br/>
-              <div id="exampleKeyMapping">
-                map j scrollDown<br/>
-                unmap j<br/>
-                unmapAll<br/>
-                &quot; this is a comment<br/>
-                # this is also a comment<br/>
-              </div>
+              <pre id="exampleKeyMapping">
+map j scrollDown
+unmap j
+unmapAll
+" this is a comment
+# this is also a comment</pre>
               <a href="#" id="showCommands">Show available commands.</a>
             </div>
           </div>
@@ -244,7 +252,7 @@
               default styles.
             </div>
           </div>
-          <textarea id="userDefinedLinkHintCss" type="text"></textarea>
+          <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
         </td>
       </tr>
       <tr class="advancedOption">
