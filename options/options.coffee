@@ -87,4 +87,9 @@ openAdvancedOptions = (event) ->
   elements = document.getElementsByClassName("advancedOption")
   for element in elements
     element.style.display = (if (element.style.display is "table-row") then "none" else "table-row")
+  showOrHideLink = $("advancedOptions")
+  if showOrHideLink.innerHTML.match(/^Show/)?
+    showOrHideLink.innerHTML = "Hide advanced options&hellip;"
+  else
+    showOrHideLink.innerHTML = "Show advanced options&hellip;"
   event.preventDefault()

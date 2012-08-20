@@ -10,77 +10,170 @@
     <script src="../content_scripts/vimium_frontend.js"></script>
     <style type="text/css" media="screen">
       body {
-        font-family:"Helvetica Heue", "Helvetica", "Arial", sans-serif;
-        width:640px;
-        margin:10px auto;
+        font: 14px "DejaVu Sans", "Arial", sans-serif;
+        color: #303942;
+        width: 640px;
+        margin: 10px auto;
       }
-      a, a:visited { color:blue; }
+      a, a:visited { color: #15c; }
+      a:active { color: #052577; }
+      table {
+        font-size: 14px;
+      }
+      header {
+        font-size: 18px;
+        font-weight: normal;
+        border-bottom: 1px solid #eee;
+        padding: 20px 0 15px 0;
+        width: 495px;
+        position: fixed;
+        top: 0;
+        background-image: -webkit-linear-gradient(white, white 40%, rgba(255, 255, 255, 0.92));
+        z-index: 2;
+      }
+      button {
+        -webkit-user-select: none;
+        -webkit-appearance: none;
+        background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        border-radius: 2px;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+        color: #444;
+        font: inherit;
+        text-shadow: 0 1px 0 #f0f0f0;
+        height: 24px;
+        font-size: 12px;
+      }
+      button:hover {
+        background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+        border-color: rgba(0, 0, 0, 0.3);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+        color: black;
+      }
+      button:active {
+        background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+        box-shadow: none;
+        text-shadow: none;
+      }
+      button[disabled], button[disabled]:hover, button[disabled]:active {
+        background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+        text-shadow: 0 1px 0 #f0f0f0;
+        color: #888;
+      }
+      input[type="checkbox"] {
+        -webkit-user-select: none;
+        /* Line up checkbox text with checkbox. Annoying hack. */
+        position: relative;
+        top: 1px;
+      }
+      label:hover {
+        color: black;
+      }
+      textarea {
+        /* Horizontal resizing is pretty screwy-looking. */
+        resize: vertical;
+      }
+      table {
+        position: relative;
+        margin-top: 60px;
+        border-spacing: 0 25px;
+      }
       #optionsTableWrapper {
-        width:490px;
-        border:1px solid red;
+        width: 490px;
+        border: 1px solid red;
       }
       .example {
         font-size: 12px;
-        color:#555;
-        margin-left:20px;
+        color: #979CA0;
+        margin-left: 20px;
       }
       .caption {
-        margin-right:10px;
+        margin-right: 10px;
         min-width: 130px;
       }
-      td {
-        padding:5px 0;
-        padding-bottom: 8px;
+      td { padding: 0; }
+      div#exampleKeyMapping {
+        margin-left: 10px;
+        margin-top: 5px;
       }
-      td#mappingsHelp {
-        padding:20px 0;
+      input#linkHintCharacters {
+        width: 160px;
+      }
+      input#scrollStepSize {
+        width: 40px;
+        margin-right: 3px;
       }
       textarea#excludedUrls {
-        width:490px;
-        min-height:100px;
+        width: 490px;
+        min-height: 100px;
       }
       textarea#userDefinedLinkHintCss {
-        width:342px;
-        min-height:100px;
+        width: 100%;;
+        min-height: 100px;
+        /* Monospace font stack for code. */
+        font-family: Monaco, Consolas, "Liberation Mono", Courier, monospace;
       }
       textarea#keyMappings {
-        width:342px;
-        min-height:100px;
+        width: 100%;
+        min-height: 120px;
+      }
+      input#previousPatterns, input#nextPatterns {
+        width: 100%;
       }
       #status {
-        margin-left:10px;
-        font-size:80%;
+        margin-left: 10px;
+        font-size: 80%;
       }
       /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-      td:nth-child(1) {
-        width:1px;
-        white-space:nowrap;
+      td:first-child {
+        width: 1px;
+        white-space: nowrap;
       }
       #buttonsPanel {
         /* This should match the width of #excludedUrls + 5px of padding to move the buttons to the right. */
-        width:495px;
-        text-align:right;
-        margin-top:18px;
-        margin-right:-10px;
+        width: 495px;
+      }
+      #advancedOptions { line-height: 24px; }
+      #buttonContainer {
+        float: right;
       }
       #showHelpDialogMessage {
-        width:495px;
-        font-size:15px;
+        width: 495px;
       }
       .help {
-        position:absolute;
-        right:-280px;
-        width:280px;
+        position: absolute;
+        right: -280px;
+        width: 280px;
       }
       tr.advancedOption {
-        display:none;
+        display: none;
       }
       input:read-only {
         background-color: #eee;
         color: #666;
+        pointer-events: none;
+        -webkit-user-select: none;
+      }
+      input[type="text"], textarea {
+        border: 1px solid #bfbfbf;
+        border-radius: 2px;
+        color: #444;
+        font: inherit;
+        padding: 3px;
+      }
+      button:focus, input[type="text"]:focus, textarea:focus {
+        -webkit-transition: border-color 200ms;
+        border-color: #4d90fe;
+        outline: none;
       }
       /* Boolean options have a tighter form representation than text options. */
       td.booleanOption { font-size: 12px; }
+      footer {
+        padding: 15px 0;
+        border-top: 1px solid #eee;
+      }
     </style>
   <link rel="stylesheet" type="text/css" href="../vimium.css" />
 
@@ -89,12 +182,12 @@
   </head>
 
   <body>
-    <h1>Vimium - Options</h1>
-    <table style="position:relative">
+    <header>Vimium options</header>
+    <table>
       <tr>
         <td class="caption">Scroll step size</td>
         <td>
-          <input id="scrollStepSize" type="text" style="width:50px" />px
+          <input id="scrollStepSize" type="text" />px
         </td>
       </tr>
       <tr>
@@ -110,11 +203,6 @@
             <textarea id="excludedUrls"></textarea>
         </td>
       </tr>
-      <tr>
-        <td colspan="3">
-          <a href="#" id="advancedOptions">Advanced options &raquo;</a>
-        </td>
-      </tr>
       <tr class="advancedOption">
         <td class="caption">Custom key<br/>mappings</td>
         <td id="mappingsHelp" verticalAlign="top">
@@ -122,7 +210,7 @@
             <div class="example">
               <!-- TODO(ilya/philc): Expand this and style it better. -->
               Enter commands to remap your keys. Available commands:<br/>
-              <div style="margin-left:10px;margin-top:5px">
+              <div id="exampleKeyMapping">
                 map j scrollDown<br/>
                 unmap j<br/>
                 unmapAll<br/>
@@ -143,7 +231,7 @@
                 The characters placed next to each link after typing "F" to enter link hinting mode.
               </div>
             </div>
-            <input id="linkHintCharacters" type="text" style="width:150px" />
+            <input id="linkHintCharacters" type="text" />
         </td>
       </tr>
       <tr class="advancedOption">
@@ -197,7 +285,7 @@
                 command.
               </div>
             </div>
-            <input id="previousPatterns" type="text" style="width:320px" />
+            <input id="previousPatterns" type="text" />
         </td>
       </tr>
       <tr class="advancedOption">
@@ -208,20 +296,23 @@
                 Vimium will match against these patterns when using the "navigate to the next page" command.
               </div>
             </div>
-            <input id="nextPatterns" type="text" style="width:320px" />
+            <input id="nextPatterns" type="text" />
         </td>
       </tr>
     </table>
 
     <div id="buttonsPanel">
-      <button id="restoreSettings">Restore to Defaults</button>
-      <button id="saveOptions" disabled="true">Save Options</button>
+      <a href="#" id="advancedOptions">Show advanced options&hellip;</a>
+      <div id="buttonContainer">
+        <button id="restoreSettings">Restore to Defaults</button>
+        <button id="saveOptions" disabled="true">Save Options</button>
+      </div>
     </div>
 
     <br/>
 
-    <div id="showHelpDialogMessage">
-      To view all available shortcuts, type <span style="font-weight:bold">?</span> to show the Vimium help dialog.
-    </div>
+    <footer id="showHelpDialogMessage">
+      To view all available shortcuts, type <strong>?</strong> to show the Vimium help dialog.
+    </footer>
   </body>
 </html>
