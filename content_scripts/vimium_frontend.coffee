@@ -788,20 +788,12 @@ findAndFollowLink = (linkStrings) ->
       )
       .filter((a) -> wordCount(a) <= wordCount(candidateLinks[0]) + 1)
 
-  # try to get exact word matches first
   for linkString in linkStrings
     for candidateLink in candidateLinks
       exactWordRegex = new RegExp("\\b" + linkString + "\\b", "i")
       if (exactWordRegex.test(candidateLink.innerText))
         followLink(candidateLink)
         return true
-
-  for linkString in linkStrings
-    for candidateLink in candidateLinks
-      if (candidateLink.innerText.toLowerCase().indexOf(linkString) != -1)
-        followLink(candidateLink)
-        return true
-
   false
 
 findAndFollowRel = (value) ->
