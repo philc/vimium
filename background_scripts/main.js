@@ -660,7 +660,7 @@ function shouldShowUpgradeMessage() {
 
 function openOptionsPageInNewTab() {
   chrome.tabs.getSelected(null, function(tab) {
-    chrome.tabs.create({ url: chrome.extension.getURL("options.html"), index: tab.index + 1 });
+    chrome.tabs.create({ url: chrome.extension.getURL("options/options.html"), index: tab.index + 1 });
   });
 }
 
