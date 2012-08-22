@@ -28,8 +28,7 @@ document.addEventListener "DOMContentLoaded", ->
   document.getElementById("restoreSettings").addEventListener "click", restoreToDefaults
   document.getElementById("saveOptions").addEventListener "click", saveOptions
 
-window.onbeforeunload = ->
-  if $("saveOptions").disabled then null else "You have unsaved changes to options."
+window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
 onOptionKeyup = (event) ->
   if (event.target.getAttribute("type") isnt "checkbox" and
