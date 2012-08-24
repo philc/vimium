@@ -830,7 +830,7 @@ exitFindMode = ->
   findMode = false
   HUD.hide()
 
-showHelpDialog = (html, fid) ->
+window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
   container = document.createElement("div")
