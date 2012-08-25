@@ -841,13 +841,52 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
+  
+  # Chrome's new security policy with manifest version 2 prevents the use
+  # of eval in this case. So instead of keeping the javascript in the help_dialog.html
+  # file we can just put it here as coffee script.
+  # See https://developer.chrome.com/trunk/extensions/sandboxingEval.html for more
+  # information on chrome's new security policies.
+  # @mgarriott - 8-25-2012
+  #
+  # OldMethod:
+  # scripts = Array.prototype.slice.call(container.getElementsByTagName("script"))
+  # scripts.forEach((script) -> eval(script.text))
+  VimiumHelpDialog =
+    # This setting is pulled out of local storage. It's false by default.
+    advancedCommandsVisible: false
+    #chrome.extension.getBackgroundPage().Settings.get('helpDialog_showAdvancedCommands')
+
+    init: () ->
+      this.dialogElement = document.getElementById("vimiumHelpDialog")
+      this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+        VimiumHelpDialog.toggleAdvancedCommands, false)
+      this.dialogElement.style.maxHeight = window.innerHeight - 80
+      this.showAdvancedCommands(this.advancedCommandsVisible)
+
+    # 
+    # Advanced commands are hidden by default so they don't overwhelm new and casual users.
+    # 
+    toggleAdvancedCommands: (event) ->
+      event.preventDefault()
+      VimiumHelpDialog.advancedCommandsVisible = !VimiumHelpDialog.advancedCommandsVisible
+      chrome.extension.sendRequest(
+        { handler: "saveHelpDialogSettings", showAdvancedCommands: VimiumHelpDialog.advancedCommandsVisible })
+      VimiumHelpDialog.showAdvancedCommands(VimiumHelpDialog.advancedCommandsVisible)
+
+    showAdvancedCommands: (visible) ->
+      VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+        if visible then "Hide advanced commands" else "Show advanced commands"
+      advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
+      for el in advancedEls
+        el.style.display = if visible then "table-row" else "none"
+
+  VimiumHelpDialog.init()
+
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
     -> chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" })
     false)
 
-  # This is necessary because innerHTML does not evaluate javascript embedded in <script> tags.
-  scripts = Array.prototype.slice.call(container.getElementsByTagName("script"))
-  scripts.forEach((script) -> eval(script.text))
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
