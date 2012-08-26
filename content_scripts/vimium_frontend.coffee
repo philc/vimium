@@ -698,7 +698,8 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  elementCanTakeInput = DomUtils.isSelectable(document.activeElement) &&
+  elementCanTakeInput = document.activeElement &&
+    DomUtils.isSelectable(document.activeElement) &&
     isDOMDescendant(findModeAnchorNode, document.activeElement)
   if (elementCanTakeInput)
     handlerStack.push({
