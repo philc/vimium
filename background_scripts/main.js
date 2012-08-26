@@ -298,7 +298,7 @@ function repeatFunction(func, totalCount, currentCount, frameId) {
 
 // Start action functions
 function createTab(callback) {
-  chrome.tabs.create({}, function(tab) { callback(); });
+  chrome.tabs.create({ url: "chrome://newtab" }, function(tab) { callback(); });
 }
 
 function nextTab(callback) { selectTab(callback, "next"); }
