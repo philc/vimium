@@ -173,6 +173,70 @@ defaultKeyMappings =
   "B": "Vomnibar.activateBookmarksInNewTab"
 
   "gf": "nextFrame"
+  
+  #Key mappings for russion language
+  "?": "showHelp"
+  "о": "scrollDown"
+  "л": "scrollUp"
+  "р": "scrollLeft"
+  "д": "scrollRight"
+  "пп": "scrollToTop"
+  "П": "scrollToBottom"
+  "яР": "scrollToLeft"
+  "яД": "scrollToRight"
+  "<с-у>": "scrollDown"
+  "<с-н>": "scrollUp"
+
+  "в": "scrollPageDown"
+  "г": "scrollPageUp"
+  "к": "reload"
+  "пы": "toggleViewSource"
+
+  "ш": "enterInsertMode"
+
+  "Р": "goBack"
+  "Д": "goForward"
+  "пг": "goUp"
+
+  "пш": "focusInput"
+
+  "а":     "LinkHints.activateMode"
+  "А":     "LinkHints.activateModeToOpenInNewTab"
+  "<ф-а>": "LinkHints.activateModeWithQueue"
+
+  ".": "enterFindMode"
+  "т": "performFind"
+  "Т": "performBackwardsFind"
+
+  "хх": "goPrevious"
+  "ъъ": "goNext"
+
+  "нн": "copyCurrentUrl"
+  "на": "LinkHints.activateModeToCopyLinkUrl"
+
+  "з": "openCopiedUrlInCurrentTab"
+  "З": "openCopiedUrlInNewTab"
+
+  "Л": "nextTab"
+  "О": "previousTab"
+  "пе": "nextTab"
+  "пЕ": "previousTab"
+  "п0": "firstTab"
+  "п;": "lastTab"
+
+  "е": "createTab"
+  "ч": "removeTab"
+  "Ч": "restoreTab"
+
+  "щ": "Vomnibar.activate"
+  "Щ": "Vomnibar.activateInNewTab"
+
+  "Е": "Vomnibar.activateTabSelection"
+
+  "и": "Vomnibar.activateBookmarks"
+  "И": "Vomnibar.activateBookmarksInNewTab"
+
+  "па": "nextFrame"
 
 
 # This is a mapping of: commandIdentifier => [description, options].
