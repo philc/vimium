@@ -854,25 +854,25 @@ window.showHelpDialog = (html, fid) ->
   # scripts.forEach((script) -> eval(script.text))
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
-    advancedCommandsVisible: false
     #chrome.extension.getBackgroundPage().Settings.get('helpDialog_showAdvancedCommands')
+    getShowAdvancedCommands: (callback) ->
+      chrome.extension.sendRequest({ handler: "getShowAdvancedCommands"}, callback)
 
     init: () ->
       this.dialogElement = document.getElementById("vimiumHelpDialog")
       this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
         VimiumHelpDialog.toggleAdvancedCommands, false)
       this.dialogElement.style.maxHeight = window.innerHeight - 80
-      this.showAdvancedCommands(this.advancedCommandsVisible)
+      this.getShowAdvancedCommands(this.showAdvancedCommands)
 
     # 
     # Advanced commands are hidden by default so they don't overwhelm new and casual users.
     # 
     toggleAdvancedCommands: (event) ->
       event.preventDefault()
-      VimiumHelpDialog.advancedCommandsVisible = !VimiumHelpDialog.advancedCommandsVisible
-      chrome.extension.sendRequest(
-        { handler: "saveHelpDialogSettings", showAdvancedCommands: VimiumHelpDialog.advancedCommandsVisible })
-      VimiumHelpDialog.showAdvancedCommands(VimiumHelpDialog.advancedCommandsVisible)
+      VimiumHelpDialog.getShowAdvancedCommands((value) ->
+        VimiumHelpDialog.showAdvancedCommands(!value)
+        chrome.extension.sendRequest({ handler: "saveHelpDialogSettings", showAdvancedCommands: !value }))
 
     showAdvancedCommands: (visible) ->
       VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
