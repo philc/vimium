@@ -128,8 +128,8 @@ DomUtils =
     flashEl.style.top = rect.top  + window.scrollY  + "px"
     flashEl.style.width = rect.width + "px"
     flashEl.style.height = rect.height + "px"
-    document.body.appendChild(flashEl)
-    setTimeout((-> flashEl.parentNode.removeChild(flashEl)), 400)
+    document.documentElement.appendChild(flashEl)
+    setTimeout((-> DomUtils.removeElement flashEl), 400)
 
 root = exports ? window
 root.DomUtils = DomUtils
