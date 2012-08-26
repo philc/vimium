@@ -660,7 +660,8 @@ selectFoundInputElement = ->
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
   # the current one might be disabled and therefore unable to receive focus), we use the approximate
   # heuristic of checking that the last anchor node is an ancestor of our element.
-  if (findModeQueryHasResults && DomUtils.isSelectable(document.activeElement) &&
+  if (findModeQueryHasResults && document.activeElement &&
+      DomUtils.isSelectable(document.activeElement) &&
       isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
