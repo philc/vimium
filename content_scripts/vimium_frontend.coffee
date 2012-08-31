@@ -286,14 +286,22 @@ extend window,
   goInc: (count) ->
     groups = /^(.+\D)(\d+)(\D*)$/.exec(window.location.href)
     if (groups)
-      groups[2] = (parseInt(groups[2]) + count) + ''
+      prev = groups[2]
+      next = (parseInt(groups[2], 10) + count) + ''
+      if next.length < prev.length
+        next = new Array(prev.length - next.length + 1).join('0') + next
+      groups[2] = next
       groups[0] = ''
       window.location.href = groups.join('')
 
   goDec: (count) ->
     groups = /^(.+\D)(\d+)(\D*)$/.exec(window.location.href)
     if (groups)
-      groups[2] = (parseInt(groups[2]) - count) + ''
+      prev = groups[2]
+      next = (parseInt(groups[2], 10) - count) + ''
+      if next.length < prev.length
+        next = new Array(prev.length - next.length + 1).join('0') + next
+      groups[2] = next
       groups[0] = ''
       window.location.href = groups.join('')
 
