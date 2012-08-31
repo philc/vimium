@@ -842,19 +842,8 @@ window.showHelpDialog = (html, fid) ->
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
   
-  # Chrome's new security policy with manifest version 2 prevents the use
-  # of eval in this case. So instead of keeping the javascript in the help_dialog.html
-  # file we can just put it here as coffee script.
-  # See https://developer.chrome.com/trunk/extensions/sandboxingEval.html for more
-  # information on chrome's new security policies.
-  # @mgarriott - 8-25-2012
-  #
-  # OldMethod:
-  # scripts = Array.prototype.slice.call(container.getElementsByTagName("script"))
-  # scripts.forEach((script) -> eval(script.text))
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
-    #chrome.extension.getBackgroundPage().Settings.get('helpDialog_showAdvancedCommands')
     getShowAdvancedCommands: (callback) ->
       chrome.extension.sendRequest({ handler: "getShowAdvancedCommands"}, callback)
 
