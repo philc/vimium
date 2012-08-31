@@ -23,6 +23,7 @@ var portHandlers = {
 var sendRequestHandlers = {
   getCompletionKeys: getCompletionKeysRequest,
   getCurrentTabUrl: getCurrentTabUrl,
+  getShowAdvancedCommands: getShowAdvancedCommands,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
@@ -128,6 +129,10 @@ function addExcludedUrl(url) {
   });
 }
 
+function getShowAdvancedCommands(request){
+  return Settings.get("helpDialog_showAdvancedCommands");
+}
+
 function saveHelpDialogSettings(request) {
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands);
 }
@@ -155,8 +160,6 @@ function helpDialogHtml(showUnboundCommands, showCommandNames, customTitle) {
                                       showUnboundCommands, showCommandNames));
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion);
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help");
-  dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}",
-      Settings.get("helpDialog_showAdvancedCommands"));
   return dialogHtml;
 }
 
