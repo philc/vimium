@@ -13,6 +13,7 @@ src_directories = ["tests", "background_scripts", "content_scripts", "lib", "opt
 task "build", "compile all coffeescript files to javascript", ->
   coffee = spawn "coffee", ["-c"].concat(src_directories)
   coffee.stdout.on "data", (data) -> console.log data.toString().trim()
+  coffee.stderr.on "data", (data) -> console.log data.toString().trim()
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   src_directories.forEach (directory) ->
@@ -32,6 +33,7 @@ task "clean", "removes any js files which were compiled from coffeescript", ->
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw"].concat(src_directories)
   coffee.stdout.on "data", (data) -> console.log data.toString().trim()
+  coffee.stderr.on "data", (data) -> console.log data.toString().trim()
 
 task "package", "build .crx file", ->
   invoke "build"
