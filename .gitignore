@@ -4,6 +4,7 @@
 *.crx
 background_scripts/completion.js
 background_scripts/commands.js
+background_scripts/main.js
 background_scripts/settings.js
 content_scripts/link_hints.js
 content_scripts/vimium_frontend.js
