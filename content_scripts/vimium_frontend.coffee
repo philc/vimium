@@ -832,7 +832,7 @@ exitFindMode = ->
   findMode = false
   HUD.hide()
 
-showHelpDialog = (html, fid) ->
+window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
   container = document.createElement("div")
@@ -843,13 +843,41 @@ showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
+  
+  VimiumHelpDialog =
+    # This setting is pulled out of local storage. It's false by default.
+    getShowAdvancedCommands: (callback) ->
+      chrome.extension.sendRequest({ handler: "getShowAdvancedCommands"}, callback)
+
+    init: () ->
+      this.dialogElement = document.getElementById("vimiumHelpDialog")
+      this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+        VimiumHelpDialog.toggleAdvancedCommands, false)
+      this.dialogElement.style.maxHeight = window.innerHeight - 80
+      this.getShowAdvancedCommands(this.showAdvancedCommands)
+
+    # 
+    # Advanced commands are hidden by default so they don't overwhelm new and casual users.
+    # 
+    toggleAdvancedCommands: (event) ->
+      event.preventDefault()
+      VimiumHelpDialog.getShowAdvancedCommands((value) ->
+        VimiumHelpDialog.showAdvancedCommands(!value)
+        chrome.extension.sendRequest({ handler: "saveHelpDialogSettings", showAdvancedCommands: !value }))
+
+    showAdvancedCommands: (visible) ->
+      VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+        if visible then "Hide advanced commands" else "Show advanced commands"
+      advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
+      for el in advancedEls
+        el.style.display = if visible then "table-row" else "none"
+
+  VimiumHelpDialog.init()
+
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
     -> chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" })
     false)
 
-  # This is necessary because innerHTML does not evaluate javascript embedded in <script> tags.
-  scripts = Array.prototype.slice.call(container.getElementsByTagName("script"))
-  scripts.forEach((script) -> eval(script.text))
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
