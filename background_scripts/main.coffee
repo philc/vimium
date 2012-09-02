@@ -588,25 +588,12 @@ sendRequestHandlers =
 init = ->
   Commands.clearKeyMappingsAndSetDefaults()
 
-  if (Settings.has("keyMappings"))
+  if Settings.has("keyMappings")
     Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
-
-  # In version 1.22, we changed the mapping for "d" and "u" to be scroll page down/up instead of close
-  # and restore tab. For existing users, we want to preserve existing behavior for them by adding some
-  # custom key mappings on their behalf.
-  if (Settings.get("previousVersion") == "1.21")
-    customKeyMappings = Settings.get("keyMappings") || ""
-    if ((Commands.keyToCommandRegistry["d"] || {}).command == "scrollPageDown")
-      customKeyMappings += "\nmap d removeTab"
-    if ((Commands.keyToCommandRegistry["u"] || {}).command == "scrollPageUp")
-      customKeyMappings += "\nmap u restoreTab"
-    if (customKeyMappings != "")
-      Settings.set("keyMappings", customKeyMappings)
-      Commands.parseCustomKeyMappings(customKeyMappings)
 
   populateValidFirstKeys()
   populateSingleKeyCommands()
-  if (shouldShowUpgradeMessage())
+  if shouldShowUpgradeMessage()
     sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 
   # Ensure that openTabs is populated when Vimium is installed.
@@ -621,7 +608,5 @@ init = ->
 
 init()
 
-#
 # Convenience function for development use.
-#
 runTests = -> open(chrome.extension.getURL('test_harnesses/automated.html'))
