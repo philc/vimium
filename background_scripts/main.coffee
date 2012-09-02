@@ -79,10 +79,8 @@ isEnabledForUrl = (request) ->
     isEnabled = false if request.url.match(regexp)
   { isEnabledForUrl: isEnabled }
 
-#
 # Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
-#
-addExcludedUrl = (url) ->
+root.addExcludedUrl = (url) ->
   return unless url = url.trim()
 
   excludedUrls = Settings.get("excludedUrls")
@@ -97,10 +95,9 @@ getShowAdvancedCommands = (request) -> Settings.get("helpDialog_showAdvancedComm
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
 
-#
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-#
-helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
+# This is called by options.coffee.
+root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   commandsToKey = {}
   for key of Commands.keyToCommandRegistry
     command = Commands.keyToCommandRegistry[key].command
@@ -393,7 +390,8 @@ populateSingleKeyCommands = ->
     if (getActualKeyStrokeLength(key) == 1)
       singleKeyCommands.push(key)
 
-refreshCompletionKeysAfterMappingSave = ->
+# Invoked by options.coffee.
+root.refreshCompletionKeysAfterMappingSave = ->
   validFirstKeys = {}
   singleKeyCommands = []
 
