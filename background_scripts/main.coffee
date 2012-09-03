@@ -200,15 +200,6 @@ filterCompleter = (args, port) ->
   queryTerms = if (args.query == "") then [] else args.query.split(" ")
   completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
 
-#
-# Used by everyone to get settings from local storage.
-#
-getSettingFromLocalStorage = (setting) ->
-  if (localStorage[setting] != "" && !localStorage[setting])
-    defaultSettings[setting]
-  else
-    localStorage[setting]
-
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
 
 chrome.tabs.onSelectionChanged.addListener((tabId, selectionInfo) ->
@@ -261,6 +252,16 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.sendRequest(tab.id,
         { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
+  nextFrame: (count) ->
+    chrome.tabs.getSelected(null, (tab) ->
+      frames = framesForTab[tab.id].frames
+      curr_index = getCurrFrameIndex(frames)
+
+      # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
+      # since it exists only to contain the other frames.
+      new_index = (curr_index + count) % frames.length
+
+      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[new_index].id, highlight: true }))
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
@@ -526,34 +527,7 @@ registerFrame = (request, sender) ->
 
   framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area })
 
-  # We've seen all the frames. Time to focus the largest one.
-  # NOTE: Disabled because it's buggy with iframes.
-  # if (framesForTab[sender.tab.id].frames.length >= framesForTab[sender.tab.id].total)
-  #  focusLargestFrame(sender.tab.id)
-
-focusLargestFrame = (tabId) ->
-  mainFrameId = null
-  mainFrameArea = 0
-
-  for frame in framesForTab[tabId]
-    if (frame.area > mainFrameArea)
-      mainFrameId = frame.id
-      mainFrameArea = frame.area
-
-  chrome.tabs.sendRequest(tabId, { name: "focusFrame", frameId: mainFrameId, highlight: false })
-
 handleFrameFocused = (request, sender) -> focusedFrame = request.frameId
-
-nextFrame = (count) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    frames = framesForTab[tab.id].frames
-    curr_index = getCurrFrameIndex(frames)
-
-    # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
-    # since it exists only to contain the other frames.
-    new_index = (curr_index + count) % frames.length
-
-    chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[new_index].id, highlight: true }))
 
 getCurrFrameIndex = (frames) ->
   for i in [0...frames.length]
@@ -583,28 +557,27 @@ sendRequestHandlers =
   selectSpecificTab: selectSpecificTab,
   refreshCompleter: refreshCompleter
 
-init = ->
-  Commands.clearKeyMappingsAndSetDefaults()
-
-  if Settings.has("keyMappings")
-    Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
-
-  populateValidFirstKeys()
-  populateSingleKeyCommands()
-  if shouldShowUpgradeMessage()
-    sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
-
-  # Ensure that openTabs is populated when Vimium is installed.
-  chrome.windows.getAll({ populate: true }, (windows) ->
-    for window in windows
-      for tab in window.tabs
-        updateOpenTabs(tab)
-        createScrollPositionHandler = ->
-          (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
-        chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler()))
-
-
-init()
-
 # Convenience function for development use.
-runTests = -> open(chrome.extension.getURL('test_harnesses/automated.html'))
+window.runTests = -> open(chrome.extension.getURL('test_harnesses/automated.html'))
+
+#
+# Begin initialization.
+#
+Commands.clearKeyMappingsAndSetDefaults()
+
+if Settings.has("keyMappings")
+  Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
+
+populateValidFirstKeys()
+populateSingleKeyCommands()
+if shouldShowUpgradeMessage()
+  sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
+
+# Ensure that openTabs is populated when Vimium is installed.
+chrome.windows.getAll({ populate: true }, (windows) ->
+  for window in windows
+    for tab in window.tabs
+      updateOpenTabs(tab)
+      createScrollPositionHandler = ->
+        (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
+      chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler()))
