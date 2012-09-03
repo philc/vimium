@@ -1,7 +1,7 @@
 Vimium - The Hacker's Browser
 =============================
 
-Vimium is a Chrome extension that provides keyboard based navigation and control in the spirit of the Vim
+Vimium is a Chrome extension that provides keyboard-based navigation and control in the spirit of the Vim
 editor.
 
 __Installation instructions:__
@@ -24,7 +24,7 @@ the Chrome Extensions page (`chrome://extensions`).
 Keyboard Bindings
 -----------------
 
-Modifier keys are specified as &lt;c-x&gt; &lt;m-x&gt;, &lt;a-x&gt; for ctrl+x, meta+x, and alt+x
+Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x
 respectively. See the next section for instructions on modifying these bindings.
 
 Navigating the current page:
@@ -87,8 +87,8 @@ Additional advanced browsing commands:
     zH      scroll all the way left
     zL      scroll all the way right
 
-Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
-&lt;c-\[&gt;) will clear any partial commands in the queue and will also exit insert and find modes.
+Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. `<ESC>` (or
+`<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
 
 Custom Key Mappings
@@ -151,10 +151,10 @@ Release Notes
 
 1.38 (Unreleased)
 
-- 'O' now opens Vomnibar results in a new tab. 'B' does the same for bookmarks only.
+- `O` now opens Vomnibar results in a new tab. `B` does the same for bookmarks only.
 - Add a browser icon to quickly add sites to Vimium's exclude list.
 - Restyle options page.
-- `gi` now launches a new mode that allows the user to use tab through the input elements on the page.
+- `gi` now launches a new mode that allows the user to tab through the input elements on the page.
 - Bugfixes.
 
 1.37 (07/07/2012)
