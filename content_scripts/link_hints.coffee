@@ -178,9 +178,9 @@ LinkHints =
       else if (linksMatched.length == 1)
         @activateLink(linksMatched[0], delay)
       else
-        for i, marker of hintMarkers
+        for marker in hintMarkers
           @hideMarker(marker)
-        for i, matched of linksMatched
+        for matched in linksMatched
           @showMarker(matched, @markerMatcher.hintKeystrokeQueue.length)
     false # We've handled this key, so prevent propagation.
 
@@ -404,7 +404,7 @@ filterHints =
     if (event.keyCode == keyCodes.enter)
       # activate the lowest-numbered link hint that is visible
       for marker in hintMarkers
-        if (marker.style.display  != "none")
+        if (marker.style.display != "none")
           return { linksMatched: [ marker ] }
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       # backspace clears hint key queue first, then acts on link text key queue.

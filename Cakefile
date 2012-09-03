@@ -8,7 +8,8 @@ spawn_with_opts = (proc_name, opts) ->
     opt_array.push "--#{key}=#{value}"
   spawn proc_name, opt_array
 
-src_directories = ["tests", "background_scripts", "content_scripts", "lib", "options"]
+src_directories = ["tests", "background_scripts", "content_scripts", "lib", "options",
+                   "test_harnesses/automated"]
 
 task "build", "compile all coffeescript files to javascript", ->
   coffee = spawn "coffee", ["-c"].concat(src_directories)
