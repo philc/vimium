@@ -88,7 +88,7 @@ Additional advanced browsing commands:
     zL      scroll all the way right
 
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
-&lt;c-[&gt;) will clear any partial commands in the queue and will also exit insert and find modes.
+&lt;c-\[&gt;) will clear any partial commands in the queue and will also exit insert and find modes.
 
 
 Custom Key Mappings
@@ -152,6 +152,10 @@ Release Notes
 1.38 (Unreleased)
 
 - 'O' now opens Vomnibar results in a new tab. 'B' does the same for bookmarks only.
+- Add a browser icon to quickly add sites to Vimium's exclude list.
+- Restyle options page.
+- `gi` now launches a new mode that allows the user to use tab through the input elements on the page.
+- Bugfixes.
 
 1.37 (07/07/2012)
 
