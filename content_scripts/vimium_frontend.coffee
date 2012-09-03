@@ -301,19 +301,53 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   focusInput: (count) ->
-    results = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+    visibleInputs =
+      for i in [0...resultSet.snapshotLength] by 1
+        element = resultSet.snapshotItem(i)
+        rect = DomUtils.getVisibleClientRect(element)
+        continue if rect == null
+        { element: element, rect: rect }
 
-    lastInputBox
-    i = 0
+    return if visibleInputs.length == 0
 
-    while (i < count)
-      currentInputBox = results.iterateNext()
-      break unless currentInputBox
-      continue if (DomUtils.getVisibleClientRect(currentInputBox) == null)
-      lastInputBox = currentInputBox
-      i += 1
+    selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    lastInputBox.focus() if lastInputBox
+    visibleInputs[selectedInputIndex].element.focus()
+
+    return if visibleInputs.length == 1
+
+    hints = for tuple in visibleInputs
+      hint = document.createElement("div")
+      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+
+      # minus 1 for the border
+      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+      hint.style.width = tuple.rect.width + "px"
+      hint.style.height = tuple.rect.height + "px"
+
+      hint
+
+    hints[0].classList.add 'internalVimiumSelectedInputHint'
+
+    hintContainingDiv = DomUtils.addElementList(hints,
+      { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
+
+    handlerStack.push keydown: (event) ->
+      if event.keyCode == KeyboardUtils.keyCodes.tab
+        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+        if event.shiftKey
+          if --selectedInputIndex == -1
+            selectedInputIndex = hints.length - 1
+        else
+          if ++selectedInputIndex == hints.length
+            selectedInputIndex = 0
+        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        visibleInputs[selectedInputIndex].element.focus()
+      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+        DomUtils.removeElement hintContainingDiv
+        handlerStack.pop()
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control

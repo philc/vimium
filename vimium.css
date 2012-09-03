@@ -86,6 +86,24 @@ div.internalVimiumHintMarker > .matchingCharacter {
   color: #D4AC3A;
 }
 
+/* Input hints CSS */
+
+div.internalVimiumInputHint {
+  position: absolute;
+  display: block;
+  background-color: rgba(255, 247, 133, 0.3);
+  border: solid 1px #C38A22;
+}
+
+div.internalVimiumSelectedInputHint {
+  background-color: rgba(255, 102, 102, 0.3);
+  border: solid 1px #993333 !important;
+}
+
+div.internalVimiumSelectedInputHint span {
+  color: white !important;
+}
+
 /* Help Dialog CSS */
 
 div#vimiumHelpDialog {
