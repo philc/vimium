@@ -251,13 +251,13 @@ BackgroundCommands =
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
       frames = framesForTab[tab.id].frames
-      curr_index = getCurrFrameIndex(frames)
+      currIndex = getCurrFrameIndex(frames)
 
       # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
       # since it exists only to contain the other frames.
-      new_index = (curr_index + count) % frames.length
+      newIndex = (currIndex + count) % frames.length
 
-      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[new_index].id, highlight: true }))
+      chrome.tabs.sendRequest(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
