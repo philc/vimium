@@ -55,10 +55,20 @@ task "package", "build .crx file", ->
   crxmake.stdout.on "data", (data) -> console.log data.toString().trim()
   crxmake.on "exit", -> fs.writeFileSync "manifest.json", orig_manifest_text
 
-task "test", "run all unit tests", ->
-  test_files = fs.readdirSync("tests/").filter((filename) -> filename.indexOf("_test.js") > 0)
-  test_files = test_files.map((filename) -> "tests/" + filename)
+task "test", "run all tests", ->
+  console.log "Running unit tests..."
+  basedir = "tests/unit_tests/"
+  test_files = fs.readdirSync(basedir).filter((filename) -> filename.indexOf("_test.js") > 0)
+  test_files = test_files.map((filename) -> basedir + filename)
   test_files.forEach (file) -> require "./" + file
   Tests.run()
-  if Tests.testsFailed > 0
-    process.exit 1
+  returnCode = if Tests.testsFailed > 0 then 1 else 0
+
+  console.log "Running DOM tests..."
+  spawn = (require "child_process").spawn
+  phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]
+  phantom.stdout.on 'data', (data) -> process.stdout.write data
+  phantom.stderr.on 'data', (data) -> process.stderr.write data
+  phantom.on 'exit', (code) ->
+    returnCode += code
+    process.exit returnCode

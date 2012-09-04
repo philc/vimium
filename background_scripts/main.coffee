@@ -553,7 +553,7 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
 
 # Convenience function for development use.
-window.runTests = -> open(chrome.extension.getURL('test_harnesses/automated/automated.html'))
+window.runTests = -> open(chrome.extension.getURL('tests/dom_tests/dom_tests.html'))
 
 #
 # Begin initialization.

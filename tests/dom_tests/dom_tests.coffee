@@ -30,6 +30,7 @@ createGeneralHintTests = (isFilteredMode) ->
       testContent = "<a>test</a>" + "<a>tress</a>"
       document.getElementById("test-div").innerHTML = testContent
       stub settings.values, "filterLinkHints", false
+      stub settings.values, "linkHintCharacters", "ab"
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
@@ -186,9 +187,11 @@ Tests.outputMethod = (args...) ->
   document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>"
   console.log.apply console, args
 
-# ensure the extension has time to load before commencing the tests
-document.addEventListener "DOMContentLoaded", ->
-  setTimeout Tests.run, 200
+# PhantomJS will call the tests manually
+unless navigator.userAgent == 'phantom'
+  # ensure the extension has time to load before commencing the tests
+  document.addEventListener "DOMContentLoaded", ->
+    setTimeout Tests.run, 200
 
 createLinks = (n) ->
   for i in [0...n] by 1
