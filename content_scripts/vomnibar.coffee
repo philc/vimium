@@ -172,7 +172,6 @@ class VomnibarUI
 
     @input = document.querySelector("#vomnibar input")
     @input.addEventListener "input", => @update()
-    console.log("@input:", @input);
     @completionList = document.querySelector("#vomnibar ul")
     @completionList.style.display = "none"
 

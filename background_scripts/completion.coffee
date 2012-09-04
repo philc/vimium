@@ -26,7 +26,7 @@ class Suggestion
 
   generateHtml: ->
     return @html if @html
-    relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy() + ''}</span>" else ""
+    relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       "<div class='vimiumReset vomnibarTopHalf'>
@@ -90,7 +90,7 @@ class BookmarkCompleter
 
   performSearch: ->
     results = @bookmarks.filter (bookmark) =>
-        RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
+      RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
     suggestions = results.map (bookmark) =>
       new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, @computeRelevancy)
     onComplete = @currentSearch.onComplete

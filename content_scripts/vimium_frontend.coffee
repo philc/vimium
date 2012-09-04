@@ -295,8 +295,8 @@ extend window,
       chrome.extension.sendRequest({ handler: "openUrlInNewTab", url: url, selected: true })
 
   copyCurrentUrl: ->
-    # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background page
-    # to copy.
+    # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
+    # page to copy.
     # http://code.google.com/p/chromium/issues/detail?id=55188
     chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
       chrome.extension.sendRequest { handler: "copyToClipboard", data: url }
@@ -895,9 +895,9 @@ window.showHelpDialog = (html, fid) ->
       this.dialogElement.style.maxHeight = window.innerHeight - 80
       this.showAdvancedCommands(this.getShowAdvancedCommands())
 
-    # 
+    #
     # Advanced commands are hidden by default so they don't overwhelm new and casual users.
-    # 
+    #
     toggleAdvancedCommands: (event) ->
       event.preventDefault()
       showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
@@ -958,9 +958,9 @@ HUD =
     HUD.displayElement().style.display = ""
 
   showUpgradeNotification: (version) ->
-    HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to " +
-      "<a class='vimiumReset' href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>" +
-      version + "</a>.<a class='vimiumReset close-button' href='#'>x</a>"
+    HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to 
+      <a class='vimiumReset' href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>
+      #{version}</a>.<a class='vimiumReset close-button' href='#'>x</a>"
     links = HUD.upgradeNotificationElement().getElementsByTagName("a")
     links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
     links[1].addEventListener "click", (event) ->

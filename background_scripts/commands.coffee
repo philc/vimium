@@ -43,9 +43,9 @@ Commands =
   # On the other hand, <c-a> and <c-A> are different named keys - for one of
   # them you have to press "shift" as well.
   normalizeKey: (key) ->
-      key.replace(/<[acm]-/ig, (match) -> match.toLowerCase())
-          .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
-            "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
+    key.replace(/<[acm]-/ig, (match) -> match.toLowerCase())
+       .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
+          "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
 
   parseCustomKeyMappings: (customKeyMappings) ->
     lines = customKeyMappings.split("\n")
