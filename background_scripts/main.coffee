@@ -90,8 +90,6 @@ root.addExcludedUrl = (url) ->
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
     (tabs) -> updateActiveState(tabs[0].id))
 
-getShowAdvancedCommands = (request) -> Settings.get("helpDialog_showAdvancedCommands")
-
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
 
@@ -110,8 +108,6 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
-  dialogHtml = dialogHtml.replace("{{showAdvancedCommands}}",
-    Settings.get("helpDialog_showAdvancedCommands"))
   dialogHtml
 
 #
@@ -543,7 +539,6 @@ portHandlers =
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
   getCurrentTabUrl: getCurrentTabUrl,
-  getShowAdvancedCommands: getShowAdvancedCommands,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
