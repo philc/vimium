@@ -38,7 +38,7 @@ Utils =
 
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
-    if (!/^[a-z]{3,}:\/\//.test(partialUrl))
+    unless /^[a-z]{3,}:\/\//.test partialUrl
       "http://" + partialUrl
     else
       partialUrl
