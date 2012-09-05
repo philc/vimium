@@ -45,8 +45,7 @@ Utils =
 
   # Tries to detect if :str is a valid URL.
   isUrl: (str) ->
-    # More or less RFC compliant URL host part parsing. This should be
-    # sufficient for our needs
+    # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
       # user:password (optional)     => \1, \2
       '^(?:([^:]+)(?::([^:]+))?@)?' +
@@ -78,8 +77,8 @@ Utils =
     # Must not contain spaces
     return false if ' ' in str
 
-    # Try to parse the URL into its meaningful parts. If matching fails we're
-    # pretty sure that we don't have some kind of URL here.
+    # Try to parse the URL into its meaningful parts. If matching fails we're pretty sure that we don't have
+    # some kind of URL here.
     match = urlRegex.exec (str.split '/')[0]
     return false unless match
     hostName = match[3]
@@ -87,14 +86,12 @@ Utils =
     # Allow known special host names
     return true if hostName in specialHostNames
 
-    # Allow IPv6 addresses (need to be wrapped in brackets as required by
-    # RFC). It is sufficient to check for a colon, as the regex wouldn't
-    # match colons in the host name unless it's an v6 address
+    # Allow IPv6 addresses (need to be wrapped in brackets as required by RFC). It is sufficient to check for
+    # a colon, as the regex wouldn't match colons in the host name unless it's an v6 address
     return true if ':' in hostName
 
-    # At this point we have to make a decision. As a heuristic, we check
-    # if the input has dots in it. If yes, and if the last part could be a
-    # TLD, treat it as an URL
+    # At this point we have to make a decision. As a heuristic, we check if the input has dots in it. If yes,
+    # and if the last part could be a TLD, treat it as an URL
     dottedParts = hostName.split '.'
 
     if dottedParts.length > 1
@@ -112,8 +109,8 @@ Utils =
     # Escape explicitely to encode characters like "+" correctly
     "http://www.google.com/search?q=" + encodeURIComponent(query)
 
-  # Converts :string into a Google search if it's not already a URL. We
-  # don't bother with escaping characters as Chrome will do that for us.
+  # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
+  # as Chrome will do that for us.
   convertToUrl: (string) ->
     string = string.trim()
 
@@ -125,9 +122,8 @@ Utils =
     else
       Utils.createSearchUrl string
 
-# This creates a new function out of an existing function, where the new
-# function takes fewer arguments. This allows us to pass around functions
-# instead of functions + a partial list of arguments.
+# This creates a new function out of an existing function, where the new function takes fewer arguments. This
+# allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
   fixedArguments = Array.copy(arguments)
   fn = this
