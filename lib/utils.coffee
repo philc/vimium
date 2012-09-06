@@ -47,12 +47,9 @@ Utils =
   isUrl: (str) ->
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
-      # user:password (optional)     => \1, \2
-      '^(?:([^:]+)(?::([^:]+))?@)?' +
-      # host name (IPv6 addresses in square brackets allowed) => \3
-      '([^:]+|\\[[^\\]]+\\])' +
-      # port number (optional) => \4
-      '(?::(\\d+))?$'
+      '^(?:([^:]+)(?::([^:]+))?@)?' + # user:password (optional) => \1, \2
+      '([^:]+|\\[[^\\]]+\\])' + # host name (IPv6 addresses in square brackets allowed) => \3
+      '(?::(\\d+))?$' # port number (optional) => \4
       )
 
     # Official ASCII TLDs that are longer than 3 characters
