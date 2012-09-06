@@ -119,19 +119,6 @@ Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
 String::startsWith = (str) -> @indexOf(str) == 0
 
-# A very simple method for defining a new class (constructor and methods)
-# using a single hash. No support for inheritance is included because we
-# really shouldn't need it.
-# TODO(philc): remove this.
-Class =
-  extend: (properties) ->
-    newClass = ->
-      @init.apply(this, arguments) if @init
-      null
-    newClass.prototype = properties
-    newClass.constructor = newClass
-    newClass
-
 globalRoot = window ? global
 globalRoot.extend = (hash1, hash2) ->
   for key of hash2
@@ -140,4 +127,3 @@ globalRoot.extend = (hash1, hash2) ->
 
 root = exports ? window
 root.Utils = Utils
-root.Class = Class
