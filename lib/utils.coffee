@@ -52,19 +52,8 @@ Utils =
       '(?::(\\d+))?$' # port number (optional) => \4
       )
 
-    # Official ASCII TLDs that are longer than 3 characters
-    longTlds = [
-      'arpa'
-      'asia'
-      'coop'
-      'info'
-      'jobs'
-      'local'
-      'mobi'
-      'museum'
-      'name'
-      'onion'  # Inofficial .onion TLD used by TOR
-    ]
+    # Official ASCII TLDs that are longer than 3 characters + inofficial .onion TLD used by TOR
+    longTlds = ['arpa', 'asia', 'coop', 'info', 'jobs', 'local', 'mobi', 'museum', 'name', 'onion']
 
     specialHostNames = ['localhost']
 
