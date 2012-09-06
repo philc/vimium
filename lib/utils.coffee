@@ -45,6 +45,12 @@ Utils =
 
   # Tries to detect if :str is a valid URL.
   isUrl: (str) ->
+    # Starts with a scheme: URL
+    return true if /^[a-z]{3,}:\/\//.test str
+
+    # Must not contain spaces
+    return false if ' ' in str
+
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
       '^(?:([^:]+)(?::([^:]+))?@)?' + # user:password (optional) => \1, \2
@@ -56,12 +62,6 @@ Utils =
     longTlds = ['arpa', 'asia', 'coop', 'info', 'jobs', 'local', 'mobi', 'museum', 'name', 'onion']
 
     specialHostNames = ['localhost']
-
-    # Starts with a scheme: URL
-    return true if /^[a-z]{3,}:\/\//.test str
-
-    # Must not contain spaces
-    return false if ' ' in str
 
     # Try to parse the URL into its meaningful parts. If matching fails we're pretty sure that we don't have
     # some kind of URL here.
