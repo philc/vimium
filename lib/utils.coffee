@@ -1,7 +1,6 @@
 Utils =
   getCurrentVersion: ->
-    # Chromium #15242 will make this XHR request to access the manifest
-    # unnecessary
+    # Chromium #15242 will make this XHR request to access the manifest unnecessary
     manifestRequest = new XMLHttpRequest()
     manifestRequest.open("GET", chrome.extension.getURL("manifest.json"), false)
     manifestRequest.send(null)
@@ -54,8 +53,8 @@ Utils =
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
       '^(?:([^:]+)(?::([^:]+))?@)?' + # user:password (optional) => \1, \2
-      '([^:]+|\\[[^\\]]+\\])' + # host name (IPv6 addresses in square brackets allowed) => \3
-      '(?::(\\d+))?$' # port number (optional) => \4
+      '([^:]+|\\[[^\\]]+\\])'       + # host name (IPv6 addresses in square brackets allowed) => \3
+      '(?::(\\d+))?$'                 # port number (optional) => \4
       )
 
     # Official ASCII TLDs that are longer than 3 characters + inofficial .onion TLD used by TOR
@@ -92,7 +91,7 @@ Utils =
 
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # Escape explicitely to encode characters like "+" correctly
+    # Escape explicitly to encode characters like "+" correctly
     "http://www.google.com/search?q=" + encodeURIComponent(query)
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
