@@ -291,8 +291,8 @@ updateOpenTabs = (tab) ->
 # 2. Active tab is enabled and should be enabled -> enable icon
 # 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
 updateActiveState = (tabId) ->
-  enabledIcon = "icons/browser_action_enabled.png"
-  disabledIcon = "icons/browser_action_disabled.png"
+  enabledIcon = "icons/page_action_enabled.png"
+  disabledIcon = "icons/page_action_disabled.png"
   chrome.tabs.get(tabId, (tab) ->
     # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
     chrome.pageAction.setIcon({ path: disabledIcon })
