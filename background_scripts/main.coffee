@@ -143,9 +143,9 @@ fetchFileContents = (extensionFileName) ->
 #
 # Returns the keys that can complete a valid command given the current key queue.
 #
-getCompletionKeysRequest = (request) ->
+getCompletionKeysRequest = (request, keysToCheck = "") ->
   name: "refreshCompletionKeys"
-  completionKeys: generateCompletionKeys()
+  completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
 
 #
@@ -472,7 +472,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   # If we haven't sent the completion keys piggybacked on executePageCommand,
   # send them by themselves.
   unless refreshedCompletionKeys
-    chrome.tabs.sendRequest(tabId, getCompletionKeysRequest(), null)
+    chrome.tabs.sendRequest(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
 
   newKeyQueue
 
