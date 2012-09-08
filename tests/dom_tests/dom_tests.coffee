@@ -2,7 +2,7 @@
 # Dispatching keyboard events via the DOM would require async tests,
 # which tend to be more complicated. Here we create mock events and
 # invoke the handlers directly.
-# 
+#
 mockKeyboardEvent = (keyChar) ->
   event = {}
   event.charCode = (if keyCodes[keyChar] isnt undefined then keyCodes[keyChar] else keyChar.charCodeAt(0))
@@ -14,14 +14,14 @@ mockKeyboardEvent = (keyChar) ->
 
 #
 # Retrieve the hint markers as an array object.
-# 
+#
 getHintMarkers = ->
   Array::slice.call document.getElementsByClassName("vimiumHintMarker"), 0
 
 #
 # Generate tests that are common to both default and filtered
 # link hinting modes.
-# 
+#
 createGeneralHintTests = (isFilteredMode) ->
 
   context "Link hints",
@@ -125,7 +125,8 @@ context "Filtered link hints",
   context "Image hints",
 
     setup ->
-      testContent = "<a><img alt='alt text'/></a>" + "<a><img alt='alt text' title='some title'/></a>" + "<a><img title='some title'/></a>" + "<a><img src='' width='320px' height='100px'/></a>"
+      testContent = "<a><img alt='alt text'/></a><a><img alt='alt text' title='some title'/></a>
+        <a><img title='some title'/></a>" + "<a><img src='' width='320px' height='100px'/></a>"
       document.getElementById("test-div").innerHTML = testContent
       LinkHints.activateMode()
 
@@ -143,7 +144,10 @@ context "Filtered link hints",
   context "Input hints",
 
     setup ->
-      testContent = "<input type='text' value='some value'/>" + "<input type='password' value='some value'/>" + "<textarea>some text</textarea>" + "<label for='test-input'/>a label</label><input type='text' id='test-input' value='some value'/>" + "<label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>"
+      testContent = "<input type='text' value='some value'/><input type='password' value='some value'/>
+        <textarea>some text</textarea><label for='test-input'/>a label</label>
+        <input type='text' id='test-input' value='some value'/>
+        <label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>"
       document.getElementById("test-div").innerHTML = testContent
       LinkHints.activateMode()
 
@@ -162,7 +166,8 @@ context "Filtered link hints",
 context "Input focus",
 
   setup ->
-    testContent = "<input type='text' id='first'/>" + "<input style='display:none;' id='second'/>" + "<input type='password' id='third' value='some value'/>"
+    testContent = "<input type='text' id='first'/><input style='display:none;' id='second'/>
+      <input type='password' id='third' value='some value'/>"
     document.getElementById("test-div").innerHTML = testContent
 
   tearDown ->
@@ -183,7 +188,7 @@ Tests.outputMethod = (args...) ->
   # escape html
   newOutput = newOutput.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   # highlight the source of the error
-  newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3")
+  newOutput = newOutput.replace /\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3"
   document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>"
   console.log.apply console, args
 

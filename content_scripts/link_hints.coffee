@@ -34,10 +34,10 @@ LinkHints =
   # We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
   #
   clickableElementsXPath: DomUtils.makeXPath(
-      ["a", "area[@href]", "textarea", "button", "select",
-       "input[not(@type='hidden' or @disabled or @readonly)]",
-       "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
-       "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
+    ["a", "area[@href]", "textarea", "button", "select",
+     "input[not(@type='hidden' or @disabled or @readonly)]",
+     "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
+     "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(true, false, false)
@@ -80,8 +80,8 @@ LinkHints =
       else if (withQueue)
         HUD.show("Open multiple links in a new tab")
       @linkActivator = (link) ->
-        # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on windows)
-        # to open it in a new tab if necessary.
+        # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
+        # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick(link, {
           metaKey: KeyboardUtils.platform == "Mac",
           ctrlKey: KeyboardUtils.platform != "Mac" })
@@ -211,7 +211,7 @@ LinkHints =
   #
   showMarker: (linkMarker, matchingCharCount) ->
     linkMarker.style.display = ""
-    # TODO(philc): 
+    # TODO(philc):
     for j in [0...linkMarker.childNodes.length]
       if (j < matchingCharCount)
         linkMarker.childNodes[j].classList.add("matchingCharacter")
@@ -269,8 +269,8 @@ alphabetHints =
     digitsNeeded = Math.ceil(@logXOfBase(linkCount, linkHintCharacters.length))
     # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
     shortHintCount = Math.floor(
-        (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) /
-        linkHintCharacters.length)
+      (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) /
+      linkHintCharacters.length)
     longHintCount = linkCount - shortHintCount
 
     hintStrings = []
@@ -299,8 +299,8 @@ alphabetHints =
     result
 
   #
-  # Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of
-  # the hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
+  # Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of the
+  # hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
   #
   numberToHintString: (number, numHintDigits, characterSet) ->
     base = characterSet.length

@@ -265,17 +265,17 @@ selectTab = (callback, direction) ->
   chrome.tabs.getAllInWindow(null, (tabs) ->
     return unless tabs.length > 1
     chrome.tabs.getSelected(null, (currentTab) ->
-        switch direction
-          when "next"
-            toSelect = tabs[(currentTab.index + 1 + tabs.length) % tabs.length]
-          when "previous"
-            toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length]
-          when "first"
-            toSelect = tabs[0]
-          when "last"
-            toSelect = tabs[tabs.length - 1]
-        selectionChangedHandlers.push(callback)
-        chrome.tabs.update(toSelect.id, { selected: true })))
+      switch direction
+        when "next"
+          toSelect = tabs[(currentTab.index + 1 + tabs.length) % tabs.length]
+        when "previous"
+          toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length]
+        when "first"
+          toSelect = tabs[0]
+        when "last"
+          toSelect = tabs[tabs.length - 1]
+      selectionChangedHandlers.push(callback)
+      chrome.tabs.update(toSelect.id, { selected: true })))
 
 updateOpenTabs = (tab) ->
   openTabs[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId }
@@ -367,7 +367,7 @@ updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
 
 splitKeyIntoFirstAndSecond = (key) ->
   if (key.search(namedKeyRegex) == 0)
-      { first: RegExp.$1, second: RegExp.$2 }
+    { first: RegExp.$1, second: RegExp.$2 }
   else
     { first: key[0], second: key.slice(1) }
 
@@ -409,7 +409,7 @@ generateCompletionKeys = (keysToCheck) ->
     for key of Commands.keyToCommandRegistry
       splitKey = splitKeyIntoFirstAndSecond(key)
       if (splitKey.first == command)
-       completionKeys.push(splitKey.second)
+        completionKeys.push(splitKey.second)
 
   completionKeys
 
