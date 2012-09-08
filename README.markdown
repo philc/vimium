@@ -155,7 +155,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.38 (Unreleased)
+1.38 (09/08/2012)
 
 - `O` now opens Vomnibar results in a new tab. `B` does the same for bookmarks only.
 - Add a browser icon to quickly add sites to Vimium's exclude list.
