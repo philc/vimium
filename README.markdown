@@ -138,6 +138,12 @@ Vimium is written in Coffeescript, which compiles to Javascript. To build Vimium
 
 1. Install [Coffeescript](http://coffeescript.org/#installation).
 2. Run `cake autobuild` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+
+Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run
+the tests:
+
+1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
+2. [Install PhantomJS.](http://phantomjs.org/download.html)
 3. `cake test` to run the tests.
 
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
