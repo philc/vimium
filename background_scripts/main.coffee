@@ -282,7 +282,7 @@ updateOpenTabs = (tab) ->
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
-# Updates the browserAction icon to indicated whether Vimium is enabled or disabled on the current page.
+# Updates the pageAction icon to indicated whether Vimium is enabled or disabled on the current page.
 # Also disables Vimium if it is currently enabled but should be disabled according to the url blacklist.
 # This lets you disable Vimium on a page without needing to reload.
 #
@@ -295,19 +295,19 @@ updateActiveState = (tabId) ->
   disabledIcon = "icons/browser_action_disabled.png"
   chrome.tabs.get(tabId, (tab) ->
     # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
-    chrome.browserAction.setIcon({ path: disabledIcon })
+    chrome.pageAction.setIcon({ path: disabledIcon })
     chrome.tabs.sendRequest(tabId, { name: "getActiveState" }, (response) ->
       isCurrentlyEnabled = (response? && response.enabled)
       shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
 
       if (isCurrentlyEnabled)
         if (shouldBeEnabled)
-          chrome.browserAction.setIcon({ path: enabledIcon })
+          chrome.pageAction.setIcon({ path: enabledIcon })
         else
-          chrome.browserAction.setIcon({ path: disabledIcon })
+          chrome.pageAction.setIcon({ path: disabledIcon })
           chrome.tabs.sendRequest(tabId, { name: "disableVimium" })
       else
-        chrome.browserAction.setIcon({ path: disabledIcon })))
+        chrome.pageAction.setIcon({ path: disabledIcon })))
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
