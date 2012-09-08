@@ -27,7 +27,7 @@ root.Settings = Settings =
       """
       div > .vimiumHintMarker {
       /* linkhint boxes */
-      background-color: yellow;
+      background: yellow;
       border: 1px solid #E3BE23;
       }
 
