@@ -8,20 +8,19 @@ spawn_with_opts = (proc_name, opts) ->
     opt_array.push "--#{key}=#{value}"
   spawn proc_name, opt_array
 
-src_directories = ["tests", "background_scripts", "content_scripts", "lib", "options",
-                   "test_harnesses/automated"]
-
 task "build", "compile all coffeescript files to javascript", ->
-  coffee = spawn "coffee", ["-c"].concat(src_directories)
+  coffee = spawn "coffee", ["-c", __dirname]
   coffee.stdout.on "data", (data) -> console.log data.toString().trim()
   coffee.stderr.on "data", (data) -> console.log data.toString().trim()
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
-  src_directories.forEach (directory) ->
+  visit = (directory) ->
     fs.readdirSync(directory).forEach (filename) ->
-      return unless (path.extname filename) == ".js"
       filepath = path.join directory, filename
-      return unless (fs.statSync filepath).isFile()
+      if (fs.statSync filepath).isDirectory()
+        return visit filepath
+
+      return unless (path.extname filename) == ".js" and (fs.statSync filepath).isFile()
 
       # Check if there exists a corresponding .coffee file
       try
@@ -31,8 +30,10 @@ task "clean", "removes any js files which were compiled from coffeescript", ->
 
       fs.unlinkSync filepath if coffeeFile.isFile()
 
+  visit __dirname
+
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
-  coffee = spawn "coffee", ["-cw"].concat(src_directories)
+  coffee = spawn "coffee", ["-cw", __dirname]
   coffee.stdout.on "data", (data) -> console.log data.toString().trim()
   coffee.stderr.on "data", (data) -> console.log data.toString().trim()
 
