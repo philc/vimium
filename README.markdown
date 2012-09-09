@@ -155,7 +155,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.39 (Unreleased)
+1.39 (09/09/2012)
 - Bugfixes.
 
 1.38 (09/08/2012)
