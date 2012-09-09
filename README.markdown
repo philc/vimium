@@ -146,13 +146,17 @@ the tests:
 2. [Install PhantomJS.](http://phantomjs.org/download.html)
 3. `cake test` to run the tests.
 
-Coverage reporting uses [JSCoverage](http://siliconforks.com/jscoverage/) and requires
-[node-temp](https://github.com/bruce/node-temp). `cake coverage` will generate a coverage report in the form
-of a JSON blob, which can then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).
-See jscoverage-report's README for more details.
+Bugs and features are not the only way to contribute -- more tests are always welcome. You can find out which
+portions of code need them by looking at our coverage reports. To generate these reports:
 
-When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
-your patch.
+1. Download [JSCoverage](http://siliconforks.com/jscoverage/download.html) or `brew install jscoverage`
+2. `npm install temp`
+3. `cake coverage` will generate a coverage report in the form of a JSON file (`jscoverage.json`), which can
+   then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).  See
+   jscoverage-report's [README](https://github.com/int3/jscoverage-report#jscoverage-report) for more details.
+
+When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
+CREDITS file with your patch.
 
 A few coding style guidelines: 1) follow the style already present in the file, 2) ensure your lines
 don't exceed 110 characters.
