@@ -57,15 +57,5 @@ root.Settings = Settings =
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
 
 # Initialization code.
-# settingsVersion was introduced in v1.31, and is used to coordinate data migration. We do not use
-# previousVersion as it is used to coordinate the display of the upgrade message, and is not updated
-# early enough when the extension loads.
-# 1.31 was also the version where we converted all localStorage values to JSON.
-if (!Settings.has("settingsVersion"))
-  for key of localStorage
-    # filterLinkHints' checkbox state used to be stored as a string
-    if (key == "filterLinkHints")
-      localStorage[key] = if (localStorage[key] == "true") then true else false
-    else
-      localStorage[key] = JSON.stringify(localStorage[key])
-  Settings.set("settingsVersion", Utils.getCurrentVersion())
+# We use this parameter to coordinate any necessary schema changes.
+Settings.set("settingsVersion", Utils.getCurrentVersion())
