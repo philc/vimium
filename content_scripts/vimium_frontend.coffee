@@ -104,7 +104,7 @@ initializePreDomReady = ->
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
-    showUpgradeNotification: -> HUD.showUpgradeNotification()
+    showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
@@ -118,6 +118,7 @@ initializePreDomReady = ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return unless sender.tab?.url.startsWith 'chrome-extension://'
+    return unless isEnabledForUrl or request.name == 'getActiveState'
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
