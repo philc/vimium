@@ -155,6 +155,9 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.39 (Unreleased)
+- Bugfixes.
+
 1.38 (09/08/2012)
 
 - `O` now opens Vomnibar results in a new tab. `B` does the same for bookmarks only.
