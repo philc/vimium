@@ -146,6 +146,11 @@ the tests:
 2. [Install PhantomJS.](http://phantomjs.org/download.html)
 3. `cake test` to run the tests.
 
+Coverage reporting uses [JSCoverage](http://siliconforks.com/jscoverage/) and requires
+[node-temp](https://github.com/bruce/node-temp). `cake coverage` will generate a coverage report in the form
+of a JSON blob, which can then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).
+See jscoverage-report's README for more details.
+
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
 your patch.
 

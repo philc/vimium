@@ -1,3 +1,5 @@
+system = require 'system'
+fs = require 'fs'
 page = require('webpage').create()
 
 page.settings.userAgent = 'phantom'
@@ -10,12 +12,10 @@ page.viewportSize =
 page.onConsoleMessage = (msg) ->
   console.log msg
 
-system = require 'system'
-fs = require 'fs'
-
-pathParts = system.args[0].split(fs.separator)
-pathParts[pathParts.length - 1] = ''
-dirname = pathParts.join(fs.separator)
+dirname = do ->
+  pathParts = system.args[0].split(fs.separator)
+  pathParts[pathParts.length - 1] = ''
+  pathParts.join(fs.separator)
 
 page.open dirname + 'dom_tests.html', (status) ->
   if status != 'success'
@@ -25,6 +25,10 @@ page.open dirname + 'dom_tests.html', (status) ->
   testsFailed = page.evaluate ->
     Tests.run()
     return Tests.testsFailed
+
+  if system.args[1] == '--coverage'
+    data = page.evaluate -> JSON.stringify _$jscoverage
+    fs.write dirname + 'dom_tests_coverage.json', data, 'w'
 
   if testsFailed > 0
     phantom.exit 1

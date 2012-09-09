@@ -1,6 +1,7 @@
 fs = require "fs"
 path = require "path"
 child_process = require "child_process"
+{Utils} = require './lib/utils'
 
 spawn = (procName, optArray, silent=false) ->
   proc = child_process.spawn procName, optArray
@@ -9,29 +10,41 @@ spawn = (procName, optArray, silent=false) ->
     proc.stderr.on 'data', (data) -> process.stderr.write data
   proc
 
-optArrayFromDict = (opts) -> "--#{key}=#{value}" for key, value of opts
+optArrayFromDict = (opts) ->
+  result = []
+  for key, value of opts
+    if value instanceof Array
+      result.push "--#{key}=#{v}" for v in value
+    else
+      result.push "--#{key}=#{value}"
+  result
+
+# visitor will get passed the file path as a parameter
+visitDirectory = (directory, visitor) ->
+  fs.readdirSync(directory).forEach (filename) ->
+    filepath = path.join directory, filename
+    if (fs.statSync filepath).isDirectory()
+      return visitDirectory filepath, visitor
+
+    return unless (fs.statSync filepath).isFile()
+    visitor(filepath)
 
 task "build", "compile all coffeescript files to javascript", ->
   coffee = spawn "coffee", ["-c", __dirname]
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
-  visit = (directory) ->
-    fs.readdirSync(directory).forEach (filename) ->
-      filepath = path.join directory, filename
-      if (fs.statSync filepath).isDirectory()
-        return visit filepath
+  visitDirectory __dirname, (filepath) ->
+    return unless (path.extname filepath) == ".js"
 
-      return unless (path.extname filename) == ".js" and (fs.statSync filepath).isFile()
+    directory = path.dirname filepath
 
-      # Check if there exists a corresponding .coffee file
-      try
-        coffeeFile = fs.statSync path.join directory, "#{path.basename filepath, ".js"}.coffee"
-      catch _
-        return
+    # Check if there exists a corresponding .coffee file
+    try
+      coffeeFile = fs.statSync path.join directory, "#{path.basename filepath, ".js"}.coffee"
+    catch _
+      return
 
-      fs.unlinkSync filepath if coffeeFile.isFile()
-
-  visit __dirname
+    fs.unlinkSync filepath if coffeeFile.isFile()
 
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw", __dirname]
@@ -54,17 +67,49 @@ task "package", "build .crx file", ->
 
   crxmake.on "exit", -> fs.writeFileSync "manifest.json", origManifestText
 
-task "test", "run all tests", ->
+runUnitTests = (projectDir=".") ->
   console.log "Running unit tests..."
-  basedir = "tests/unit_tests/"
+  basedir = path.join projectDir, "/tests/unit_tests/"
   test_files = fs.readdirSync(basedir).filter((filename) -> filename.indexOf("_test.js") > 0)
   test_files = test_files.map((filename) -> basedir + filename)
-  test_files.forEach (file) -> require "./" + file
+  test_files.forEach (file) -> require (if file[0] == '/' then '' else './') + file
   Tests.run()
-  returnCode = if Tests.testsFailed > 0 then 1 else 0
+  return Tests.testsFailed
+
+task "test", "run all tests", ->
+  unitTestsFailed = runUnitTests()
 
   console.log "Running DOM tests..."
   phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]
-  phantom.on 'exit', (code) ->
-    returnCode += code
-    process.exit returnCode
+  phantom.on 'exit', (returnCode) ->
+    if returnCode > 0 or unitTestsFailed > 0
+      process.exit 1
+    else
+      process.exit 0
+
+task "coverage", "generate coverage report", ->
+  temp = require 'temp'
+  tmpDir = temp.mkdirSync null
+  jscoverage = spawn "jscoverage", [".", tmpDir].concat optArrayFromDict
+    "exclude": [".git", "node_modules"]
+    "no-instrument": "tests"
+
+  jscoverage.on 'exit', (returnCode) ->
+    process.exit 1 unless returnCode == 0
+
+    console.log "Running DOM tests..."
+    phantom = spawn "phantomjs", [path.join(tmpDir, "tests/dom_tests/phantom_runner.js"), "--coverage"]
+    phantom.on 'exit', ->
+      # merge the coverage counts from the DOM tests with those from the unit tests
+      global._$jscoverage = JSON.parse fs.readFileSync path.join(tmpDir,
+        'tests/dom_tests/dom_tests_coverage.json')
+      runUnitTests(tmpDir)
+
+      # marshal the counts into a form that the JSCoverage front-end expects
+      result = {}
+      for fname, coverage of _$jscoverage
+        result[fname] =
+          coverage: coverage
+          source: (Utils.escapeHtml fs.readFileSync fname, 'utf-8').split '\n'
+
+      fs.writeFileSync 'jscoverage.json', JSON.stringify(result)
