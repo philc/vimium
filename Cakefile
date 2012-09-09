@@ -1,17 +1,18 @@
 fs = require "fs"
 path = require "path"
-{spawn, exec} = require "child_process"
+child_process = require "child_process"
 
-spawn_with_opts = (proc_name, opts) ->
-  opt_array = []
-  for key, value of opts
-    opt_array.push "--#{key}=#{value}"
-  spawn proc_name, opt_array
+spawn = (procName, optArray, silent=false) ->
+  proc = child_process.spawn procName, optArray
+  unless silent
+    proc.stdout.on 'data', (data) -> process.stdout.write data
+    proc.stderr.on 'data', (data) -> process.stderr.write data
+  proc
+
+optArrayFromDict = (opts) -> "--#{key}=#{value}" for key, value of opts
 
 task "build", "compile all coffeescript files to javascript", ->
   coffee = spawn "coffee", ["-c", __dirname]
-  coffee.stdout.on "data", (data) -> console.log data.toString().trim()
-  coffee.stderr.on "data", (data) -> console.log data.toString().trim()
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   visit = (directory) ->
@@ -34,27 +35,24 @@ task "clean", "removes any js files which were compiled from coffeescript", ->
 
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw", __dirname]
-  coffee.stdout.on "data", (data) -> console.log data.toString().trim()
-  coffee.stderr.on "data", (data) -> console.log data.toString().trim()
 
 task "package", "build .crx file", ->
   invoke "build"
 
   # ugly hack to modify our manifest file on-the-fly
-  orig_manifest_text = fs.readFileSync "manifest.json"
-  manifest = JSON.parse orig_manifest_text
+  origManifestText = fs.readFileSync "manifest.json"
+  manifest = JSON.parse origManifestText
   manifest.update_url = "http://philc.github.com/vimium/updates.xml"
   fs.writeFileSync "manifest.json", JSON.stringify manifest
 
-  crxmake = spawn_with_opts "crxmake"
+  crxmake = spawn "crxmake", optArrayFromDict
     "pack-extension": "."
     "pack-extension-key": "vimium.pem"
     "extension-output": "vimium-latest.crx"
     "ignore-file": "(^\\.|\\.(coffee|crx|pem|un~)$)"
     "ignore-dir": "^(\\.|test)"
 
-  crxmake.stdout.on "data", (data) -> console.log data.toString().trim()
-  crxmake.on "exit", -> fs.writeFileSync "manifest.json", orig_manifest_text
+  crxmake.on "exit", -> fs.writeFileSync "manifest.json", origManifestText
 
 task "test", "run all tests", ->
   console.log "Running unit tests..."
@@ -66,10 +64,7 @@ task "test", "run all tests", ->
   returnCode = if Tests.testsFailed > 0 then 1 else 0
 
   console.log "Running DOM tests..."
-  spawn = (require "child_process").spawn
   phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]
-  phantom.stdout.on 'data', (data) -> process.stdout.write data
-  phantom.stderr.on 'data', (data) -> process.stderr.write data
   phantom.on 'exit', (code) ->
     returnCode += code
     process.exit returnCode
