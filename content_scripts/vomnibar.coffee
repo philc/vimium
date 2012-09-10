@@ -165,7 +165,7 @@ class VomnibarUI
         '<div class="vimiumReset vomnibarSearchArea">' +
           '<input type="text" class="vimiumReset" />' +
         '</div>' +
-        '<ul></ul>' +
+        '<ul class="vimiumReset"></ul>' +
       '</div>')
     @box.style.display = "none"
     document.body.appendChild(@box)
