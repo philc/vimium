@@ -242,9 +242,9 @@ LinkHints =
       callback() if (callback)
     else
       setTimeout(->
-          deactivate()
-          callback() if callback
-        delay)
+        deactivate()
+        callback() if callback
+      delay)
 
 alphabetHints =
   hintKeystrokeQueue: []

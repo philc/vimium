@@ -87,11 +87,10 @@ DomUtils =
           computedStyle = window.getComputedStyle(child, null)
           # Ignore child elements which are not floated and not absolutely positioned for parent elements with
           # zero width/height
-          if (computedStyle.getPropertyValue('float') == 'none' && computedStyle.getPropertyValue('position') != 'absolute')
-            continue
+          continue if (computedStyle.getPropertyValue('float') == 'none' &&
+            computedStyle.getPropertyValue('position') != 'absolute')
           childClientRect = @getVisibleClientRect(child)
-          if (childClientRect == null)
-            continue
+          continue if (childClientRect == null)
           return childClientRect
     null
 
