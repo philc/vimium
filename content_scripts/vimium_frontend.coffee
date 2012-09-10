@@ -43,7 +43,8 @@ settings =
   values: {}
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "hideHud", "previousPatterns",
-      "nextPatterns", "findModeRawQuery", "userDefinedLinkHintCss", "helpDialog_showAdvancedCommands"]
+      "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
+      "helpDialog_showAdvancedCommands"]
   isLoaded: false
   eventListeners: {}
 
@@ -572,12 +573,15 @@ updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
-  findModeQuery.isRegex = false
+  findModeQuery.isRegex = settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /\\./g, (match) ->
     switch (match)
       when "\\r"
         findModeQuery.isRegex = true
+        return ""
+      when "\\R"
+        findModeQuery.isRegex = false
         return ""
       when "\\I"
         hasNoIgnoreCaseFlag = true
