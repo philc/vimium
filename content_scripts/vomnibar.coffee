@@ -138,7 +138,7 @@ class VomnibarUI
 
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data
-    @completionList.innerHTML = completions.map((completion) -> "<li>" + completion.html + "</li>").join("")
+    @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else "none"
     @updateSelection()
 
@@ -161,12 +161,14 @@ class VomnibarUI
 
   initDom: ->
     @box = Utils.createElementFromHtml(
-      '<div id="vomnibar" class="vimiumReset">' +
-        '<div class="vimiumReset vomnibarSearchArea">' +
-          '<input type="text" class="vimiumReset" />' +
-        '</div>' +
-        '<ul class="vimiumReset"></ul>' +
-      '</div>')
+      """
+      <div id="vomnibar" class="vimiumReset">
+        <div class="vimiumReset vomnibarSearchArea">
+          <input type="text" class="vimiumReset">
+        </div>
+        <ul class="vimiumReset"></ul>
+      </div>
+      """)
     @box.style.display = "none"
     document.body.appendChild(@box)
 

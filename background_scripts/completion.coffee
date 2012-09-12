@@ -29,14 +29,16 @@ class Suggestion
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
-      "<div class='vimiumReset vomnibarTopHalf'>
-         <span class='vimiumReset vomnibarSource'>#{@type}</span>
-         <span class='vimiumReset vomnibarTitle'>#{@highlightTerms(Utils.escapeHtml(@title))}</span>
+      """
+      <div class="vimiumReset vomnibarTopHalf">
+         <span class="vimiumReset vomnibarSource">#{@type}</span>
+         <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
-       <div class='vimiumReset vomnibarBottomHalf'>
-        <span class='vimiumReset vomnibarUrl'>#{@shortenUrl(@highlightTerms(@url))}</span>
+       <div class="vimiumReset vomnibarBottomHalf">
+        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(@url))}</span>
         #{relevancyHtml}
-      </div>"
+      </div>
+      """
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
 
@@ -59,7 +61,7 @@ class Suggestion
     for [start, end] in ranges
       string =
         string.substring(0, start) +
-        "<span class='vomnibarMatch'>" + string.substring(start, end) + "</span>" +
+        "<span class='vomnibarMatch'>#{string.substring(start, end)}</span>" +
         string.substring(end)
     string
 
