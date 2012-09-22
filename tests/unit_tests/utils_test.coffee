@@ -1,5 +1,5 @@
 require "./test_helper.js"
-extend(global, require "../lib/utils.js")
+extend(global, require "../../lib/utils.js")
 
 context "convertToUrl",
   should "detect and clean up valid URLs", ->

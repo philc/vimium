@@ -84,6 +84,8 @@ setFieldValue = (field, value) ->
   unless field.getAttribute("type") is "checkbox"
     field.value = value
     field.setAttribute "savedValue", value
+  else
+    field.checked = value
 
 openAdvancedOptions = (event) ->
   elements = document.getElementsByClassName("advancedOption")

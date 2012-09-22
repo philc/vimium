@@ -1,7 +1,7 @@
 Vimium - The Hacker's Browser
 =============================
 
-Vimium is a Chrome extension that provides keyboard based navigation and control in the spirit of the Vim
+Vimium is a Chrome extension that provides keyboard-based navigation and control in the spirit of the Vim
 editor.
 
 __Installation instructions:__
@@ -24,7 +24,7 @@ the Chrome Extensions page (`chrome://extensions`).
 Keyboard Bindings
 -----------------
 
-Modifier keys are specified as &lt;c-x&gt; &lt;m-x&gt;, &lt;a-x&gt; for ctrl+x, meta+x, and alt+x
+Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x
 respectively. See the next section for instructions on modifying these bindings.
 
 Navigating the current page:
@@ -89,8 +89,8 @@ Additional advanced browsing commands:
     zH      scroll all the way left
     zL      scroll all the way right
 
-Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. ESC (or
-&lt;c-[&gt;) will clear any partial commands in the queue and will also exit insert and find modes.
+Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. `<ESC>` (or
+`<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
 
 Custom Key Mappings
@@ -140,6 +140,12 @@ Vimium is written in Coffeescript, which compiles to Javascript. To build Vimium
 
 1. Install [Coffeescript](http://coffeescript.org/#installation).
 2. Run `cake autobuild` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+
+Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run
+the tests:
+
+1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
+2. [Install PhantomJS.](http://phantomjs.org/download.html)
 3. `cake test` to run the tests.
 
 When you're done, send us a pull request on Github. Feel free to include a change to the CREDITS file with
@@ -151,9 +157,16 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.38 (Unreleased)
+1.39 (09/09/2012)
+- Bugfixes.
 
-- 'O' now opens Vomnibar results in a new tab. 'B' does the same for bookmarks only.
+1.38 (09/08/2012)
+
+- `O` now opens Vomnibar results in a new tab. `B` does the same for bookmarks only.
+- Add a browser icon to quickly add sites to Vimium's exclude list.
+- Restyle options page.
+- `gi` now launches a new mode that allows the user to tab through the input elements on the page.
+- Bugfixes.
 
 1.37 (07/07/2012)
 

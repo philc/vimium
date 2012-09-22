@@ -1,6 +1,6 @@
 require "./test_helper.js"
-extend(global, require "../lib/utils.js")
-extend(global, require "../background_scripts/completion.js")
+extend(global, require "../../lib/utils.js")
+extend(global, require "../../background_scripts/completion.js")
 
 global.chrome = {}
 

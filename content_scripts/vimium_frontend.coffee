@@ -43,7 +43,7 @@ settings =
   values: {}
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "hideHud", "previousPatterns",
-      "nextPatterns", "findModeRawQuery", "userDefinedLinkHintCss"]
+      "nextPatterns", "findModeRawQuery", "userDefinedLinkHintCss", "helpDialog_showAdvancedCommands"]
   isLoaded: false
   eventListeners: {}
 
@@ -104,7 +104,7 @@ initializePreDomReady = ->
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
-    showUpgradeNotification: -> HUD.showUpgradeNotification()
+    showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
@@ -115,6 +115,10 @@ initializePreDomReady = ->
     disableVimium: disableVimium
 
   chrome.extension.onRequest.addListener (request, sender, sendResponse) ->
+    # in the options page, we will receive requests from both content and background scripts. ignore those
+    # from the former.
+    return unless sender.tab?.url.startsWith 'chrome-extension://'
+    return unless isEnabledForUrl or request.name == 'getActiveState'
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
@@ -323,19 +327,56 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   focusInput: (count) ->
-    results = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+    # Focus the first input element on the page, and create overlays to highlight all the input elements, with
+    # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
+    # Pressing any other key will remove the overlays and the special tab behavior.
+    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+    visibleInputs =
+      for i in [0...resultSet.snapshotLength] by 1
+        element = resultSet.snapshotItem(i)
+        rect = DomUtils.getVisibleClientRect(element)
+        continue if rect == null
+        { element: element, rect: rect }
 
-    lastInputBox
-    i = 0
+    return if visibleInputs.length == 0
 
-    while (i < count)
-      currentInputBox = results.iterateNext()
-      break unless currentInputBox
-      continue if (DomUtils.getVisibleClientRect(currentInputBox) == null)
-      lastInputBox = currentInputBox
-      i += 1
+    selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    lastInputBox.focus() if lastInputBox
+    visibleInputs[selectedInputIndex].element.focus()
+
+    return if visibleInputs.length == 1
+
+    hints = for tuple in visibleInputs
+      hint = document.createElement("div")
+      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+
+      # minus 1 for the border
+      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+      hint.style.width = tuple.rect.width + "px"
+      hint.style.height = tuple.rect.height + "px"
+
+      hint
+
+    hints[0].classList.add 'internalVimiumSelectedInputHint'
+
+    hintContainingDiv = DomUtils.addElementList(hints,
+      { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
+
+    handlerStack.push keydown: (event) ->
+      if event.keyCode == KeyboardUtils.keyCodes.tab
+        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+        if event.shiftKey
+          if --selectedInputIndex == -1
+            selectedInputIndex = hints.length - 1
+        else
+          if ++selectedInputIndex == hints.length
+            selectedInputIndex = 0
+        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        visibleInputs[selectedInputIndex].element.focus()
+      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+        DomUtils.removeElement hintContainingDiv
+        handlerStack.pop()
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -682,7 +723,8 @@ selectFoundInputElement = ->
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
   # the current one might be disabled and therefore unable to receive focus), we use the approximate
   # heuristic of checking that the last anchor node is an ancestor of our element.
-  if (findModeQueryHasResults && DomUtils.isSelectable(document.activeElement) &&
+  if (findModeQueryHasResults && document.activeElement &&
+      DomUtils.isSelectable(document.activeElement) &&
       isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
@@ -720,7 +762,8 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  elementCanTakeInput = DomUtils.isSelectable(document.activeElement) &&
+  elementCanTakeInput = document.activeElement &&
+    DomUtils.isSelectable(document.activeElement) &&
     isDOMDescendant(findModeAnchorNode, document.activeElement)
   if (elementCanTakeInput)
     handlerStack.push({
@@ -852,7 +895,7 @@ exitFindMode = ->
   findMode = false
   HUD.hide()
 
-showHelpDialog = (html, fid) ->
+window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
   container = document.createElement("div")
@@ -863,13 +906,40 @@ showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
+  
+  VimiumHelpDialog =
+    # This setting is pulled out of local storage. It's false by default.
+    getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
+
+    init: () ->
+      this.dialogElement = document.getElementById("vimiumHelpDialog")
+      this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+        VimiumHelpDialog.toggleAdvancedCommands, false)
+      this.dialogElement.style.maxHeight = window.innerHeight - 80
+      this.showAdvancedCommands(this.getShowAdvancedCommands())
+
+    # 
+    # Advanced commands are hidden by default so they don't overwhelm new and casual users.
+    # 
+    toggleAdvancedCommands: (event) ->
+      event.preventDefault()
+      showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
+      VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
+      settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
+
+    showAdvancedCommands: (visible) ->
+      VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+        if visible then "Hide advanced commands" else "Show advanced commands"
+      advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
+      for el in advancedEls
+        el.style.display = if visible then "table-row" else "none"
+
+  VimiumHelpDialog.init()
+
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
     -> chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" })
     false)
 
-  # This is necessary because innerHTML does not evaluate javascript embedded in <script> tags.
-  scripts = Array.prototype.slice.call(container.getElementsByTagName("script"))
-  scripts.forEach((script) -> eval(script.text))
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
