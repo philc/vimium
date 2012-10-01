@@ -221,7 +221,7 @@ div.vimiumHUD {
   left: auto;
   bottom: 0px;
   color: black;
-  height: 13px;
+  height: auto;
   min-height: 13px;
   width: auto;
   max-width: 400px;
