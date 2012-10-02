@@ -40,8 +40,9 @@
       "all_frames": true
     }
   ],
-  "browser_action": {
-    "default_icon": "icons/browser_action_disabled.png",
-    "default_popup": "popup.html"
+  "page_action": {
+    "default_icon": "icons/page_action_disabled.png",
+    "default_popup": "popup.html",
+    "default_title": "Vimium"
   }
 }
