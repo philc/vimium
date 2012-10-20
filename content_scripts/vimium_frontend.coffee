@@ -337,7 +337,7 @@ extend window,
 
       hint
 
-    hints[0].classList.add 'internalVimiumSelectedInputHint'
+    hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
     hintContainingDiv = DomUtils.addElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
