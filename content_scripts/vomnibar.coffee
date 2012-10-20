@@ -24,7 +24,7 @@ Vomnibar =
       @vomnibarUI.update()
 
   activate: -> @activateWithCompleter("omni", 100)
-  activateInNewTab: -> @activateWithCompleter("omni", 100, null, true, true)
+  activateInNewTab: -> @activateWithCompleter("omni", 100, null, false, true)
   activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
   activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
   activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, true)
@@ -68,8 +68,7 @@ class VomnibarUI
     @update(true)
 
   updateSelection: ->
-    if (@completions.length > 0)
-      @selection = Math.min(@selection, @completions.length - 1)
+    @selection = Math.min(@selection, @completions.length - 1)
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
