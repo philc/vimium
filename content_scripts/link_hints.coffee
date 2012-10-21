@@ -328,7 +328,7 @@ alphabetHints =
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       if (!@hintKeystrokeQueue.pop())
         return { linksMatched: [] }
-    else if (keyChar && settings.get("linkHintCharacters").indexOf(keyChar) >= 0)
+    else if keyChar
       @hintKeystrokeQueue.push(keyChar)
 
     matchString = @hintKeystrokeQueue.join("")
