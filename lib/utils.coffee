@@ -92,7 +92,18 @@ Utils =
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
     # Escape explicitly to encode characters like "+" correctly
-    "http://www.google.com/search?q=" + encodeURIComponent(query)
+    # "http://www.google.com/search?q=" + encodeURIComponent(query)
+    #
+    # 1. pull default search engine from settungs
+    # 2. don't URLencode the "+", Google (and other search engines) doesn't
+    #    require it, so it's probably ok
+    # 
+    # note: query is already trimmed in convertToUrl
+    # 
+    # note: it would be better to pull the default search engine from chrome
+    # itself, but I'm not sure if/how that's possible
+    #
+    Settings.get("defaultSearchUrl") + query.split(/\s+/).map(encodeURIComponent).join("+")
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
@@ -126,3 +137,5 @@ globalRoot.extend = (hash1, hash2) ->
 
 root = exports ? window
 root.Utils = Utils
+
+# vim: softtabstop=2

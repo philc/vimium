@@ -123,6 +123,9 @@
       input#previousPatterns, input#nextPatterns {
         width: 100%;
       }
+      input#defaultSearchUrl {
+        width: 100%;
+      }
       #status {
         margin-left: 10px;
         font-size: 80%;
@@ -306,6 +309,17 @@ unmapAll
                 </div>
               </div>
               <input id="nextPatterns" type="text" />
+          </td>
+        </tr>
+        <tr class="advancedOption">
+          <td class="caption">Default Search</td>
+          <td verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  Vomnibar fall back URL/search engine if nothing else matches (examples: "http://duckduckgo.com/?q=", "http://www.google.com/search?q=").
+                </div>
+              </div>
+              <input id="defaultSearchUrl" type="text" />
           </td>
         </tr>
       </table>
