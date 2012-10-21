@@ -10,7 +10,7 @@ findModeQuery = { rawQuery: "" }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
-handlerStack = []
+handlerStack = new HandlerStack
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.
 isEnabledForUrl = true
@@ -355,7 +355,9 @@ extend window,
         visibleInputs[selectedInputIndex].element.focus()
       else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
         DomUtils.removeElement hintContainingDiv
-        handlerStack.pop()
+        @remove()
+
+      false
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -365,7 +367,7 @@ extend window,
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
 onKeypress = (event) ->
-  return unless bubbleEvent('keypress', event)
+  return unless handlerStack.bubbleEvent('keypress', event)
 
   keyChar = ""
 
@@ -381,32 +383,15 @@ onKeypress = (event) ->
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
-        suppressEvent(event)
+        DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if (currentCompletionKeys.indexOf(keyChar) != -1)
-          suppressEvent(event)
+          DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-#
-# Called whenever we receive a key event.  Each individual handler has the option to stop the event's
-# propagation by returning a falsy value.
-#
-bubbleEvent = (type, event) ->
-  for i in [(handlerStack.length - 1)..0]
-    # We need to check for existence of handler because the last function call may have caused the release of
-    # more than one handler.
-    if (handlerStack[i] && handlerStack[i][type] && !handlerStack[i][type](event))
-      suppressEvent(event)
-      return false
-  true
-
-suppressEvent = (event) ->
-  event.preventDefault()
-  event.stopPropagation()
-
 onKeydown = (event) ->
-  return unless bubbleEvent('keydown', event)
+  return unless handlerStack.bubbleEvent('keydown', event)
 
   keyChar = ""
 
@@ -442,20 +427,20 @@ onKeydown = (event) ->
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       exitInsertMode()
-      suppressEvent(event)
+      DomUtils.suppressEvent(event)
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
-      suppressEvent(event)
+      DomUtils.suppressEvent(event)
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
-      suppressEvent(event)
+      DomUtils.suppressEvent(event)
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
-      suppressEvent(event)
+      DomUtils.suppressEvent(event)
 
     else if (!modifiers)
       event.stopPropagation()
@@ -466,7 +451,7 @@ onKeydown = (event) ->
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1)
-        suppressEvent(event)
+        DomUtils.suppressEvent(event)
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -485,7 +470,7 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     event.stopPropagation()
 
-onKeyup = () -> return unless bubbleEvent('keyup', event)
+onKeyup = (event) -> return unless handlerStack.bubbleEvent('keyup', event)
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -750,7 +735,7 @@ findAndFocus = (backwards) ->
   if (elementCanTakeInput)
     handlerStack.push({
       keydown: (event) ->
-        handlerStack.pop()
+        @remove()
         if (KeyboardUtils.isEscape(event))
           DomUtils.simulateSelect(document.activeElement)
           enterInsertModeWithoutShowingIndicator(document.activeElement)

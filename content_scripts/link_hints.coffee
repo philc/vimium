@@ -63,7 +63,7 @@ LinkHints =
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
     # handlerStack is declared by vimiumFrontend.js
-    handlerStack.push({
+    @handlerId = handlerStack.push({
       keydown: @onKeyDownInMode.bind(this, hintMarkers),
       # trap all key events
       keypress: -> false
@@ -163,7 +163,7 @@ LinkHints =
         keyup: (event) ->
           return if (event.keyCode != keyCodes.shiftKey)
           LinkHints.setOpenLinkMode(!LinkHints.shouldOpenInNewTab, LinkHints.shouldOpenWithQueue, false)
-          handlerStack.pop()
+          @remove()
       })
 
     # TODO(philc): Ignore keys that have modifiers.
@@ -231,7 +231,7 @@ LinkHints =
       if (LinkHints.hintMarkerContainingDiv)
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
-      handlerStack.pop()
+      handlerStack.remove @handlerId
       HUD.hide()
       @isActive = false
 

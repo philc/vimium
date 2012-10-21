@@ -30,6 +30,7 @@
       "js": ["lib/utils.js",
              "lib/keyboard_utils.js",
              "lib/dom_utils.js",
+             "lib/handler_stack.js",
              "lib/clipboard.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",

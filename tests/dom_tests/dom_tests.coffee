@@ -177,11 +177,11 @@ context "Input focus",
     focusInput 1
     assert.equal "first", document.activeElement.id
     # deactivate the tabbing mode and its overlays
-    handlerStack[handlerStack.length - 1].keydown mockKeyboardEvent("A")
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
     focusInput 100
     assert.equal "third", document.activeElement.id
-    handlerStack[handlerStack.length - 1].keydown mockKeyboardEvent("A")
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
 Tests.outputMethod = (args...) ->
   newOutput = args.join "\n"

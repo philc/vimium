@@ -15,7 +15,7 @@
   <link rel="stylesheet" type="text/css" href="../vimium.css" />
   <script>
     function setup() {
-      window.handlerStack = [];
+      window.handlerStack = new HandlerStack();
       // This itemHtml was obtained just by copying and pasting what was generated when using it in practice.
       var itemHtml = '<span class="source">history</span> http://<span class="fuzzyMatch">n</span><span class="fuzzyMatch">i</span><span class="fuzzyMatch">n</span><span class="fuzzyMatch">j</span><span class="fuzzyMatch">a</span>words.com/info/about <span class="title">Ninjawords - a really fast dictionary</span>';
       var results = [{ html: itemHtml }, { html: itemHtml }];

@@ -52,13 +52,13 @@ class VomnibarUI
   show: ->
     @box.style.display = "block"
     @input.focus()
-    handlerStack.push({ keydown: @onKeydown.bind(this) })
+    @handlerId = handlerStack.push keydown: @onKeydown.bind @
 
   hide: ->
     @box.style.display = "none"
     @completionList.style.display = "none"
     @input.blur()
-    handlerStack.pop()
+    handlerStack.remove @handlerId
 
   reset: ->
     @input.value = ""
