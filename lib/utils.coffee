@@ -91,15 +91,9 @@ Utils =
 
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # 1. pull default search engine from settings
-    # 2. don't URLencode the "+",
-    #    - chrome does not URLencode the "+" sign when sending requests to its
-    #      default search engine, so we should do the same here
-    # 
-    # note: it would be better to pull the default search engine from chrome
-    # itself, but I'm not sure if/how that's possible
-    #
-    Settings.get("searchUrl") + query.split(/\s+/).map(encodeURIComponent).join("+")
+    # it would be better to pull the default search engine from chrome itself,
+    # but it is not clear if/how that is possible
+    Settings.get("searchUrl") + encodeURIComponent(query)
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
