@@ -1,5 +1,6 @@
 require "./test_helper.js"
 extend(global, require "../../lib/utils.js")
+extend(global, require "../../background_scripts/settings.js")
 
 context "isUrl",
   should "accept valid URLs", ->
