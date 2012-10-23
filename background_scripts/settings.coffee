@@ -57,7 +57,7 @@ root.Settings = Settings =
     # "\bnext\b,\bmore\b,>,→,»,≫,>>"
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
     # default/fall back search engine
-    defaultSearchUrl: "http://www.google.com/search?q="
+    searchUrl: "http://www.google.com/search?q="
 
 # Initialization code.
 # We use this parameter to coordinate any necessary schema changes.
