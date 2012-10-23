@@ -780,7 +780,7 @@ findAndFollowLink = (linkStrings) ->
 
   # at the end of this loop, candidateLinks will contain all visible links that match our patterns
   # links lower in the page are more likely to be the ones we want, so we loop through the snapshot backwards
-  for i in [(links.snapshotLength - 1)..0]
+  for i in [(links.snapshotLength - 1)..0] by -1
     link = links.snapshotItem(i)
 
     # ensure link is visible (we don't mind if it is scrolled offscreen)
@@ -803,7 +803,8 @@ findAndFollowLink = (linkStrings) ->
 
   return if (candidateLinks.length == 0)
 
-  wordCount = (link) -> link.innerText.trim().split(/\s+/).length
+  for link in candidateLinks
+    link.wc = link.innerText.trim().split(/\s+/).length
 
   # We can use this trick to ensure that Array.sort is stable. We need this property to retain the reverse
   # in-page order of the links.
@@ -814,15 +815,17 @@ findAndFollowLink = (linkStrings) ->
   candidateLinks =
     candidateLinks
       .sort((a, b) ->
-        wcA = wordCount(a)
-        wcB = wordCount(b)
-        if (wcA == wcB) then a.originalIndex - b.originalIndex else wcA - wcB
+        if (a.wc == b.wc) then a.originalIndex - b.originalIndex else a.wc - b.wc
       )
-      .filter((a) -> wordCount(a) <= wordCount(candidateLinks[0]) + 1)
+      .filter((a) -> a.wc <= candidateLinks[0].wc + 1)
 
   for linkString in linkStrings
+    exactWordRegex =
+      if /\b/.test linkString[0] or /\b/.test linkString[linkString.length - 1]
+        new RegExp "\\b" + linkString + "\\b", "i"
+      else
+        new RegExp linkString, "i"
     for candidateLink in candidateLinks
-      exactWordRegex = new RegExp("\\b" + linkString + "\\b", "i")
       if (exactWordRegex.test(candidateLink.innerText))
         followLink(candidateLink)
         return true
@@ -839,12 +842,12 @@ findAndFollowRel = (value) ->
 
 window.goPrevious = ->
   previousPatterns = settings.get("previousPatterns") || ""
-  previousStrings = previousPatterns.split(",")
+  previousStrings = previousPatterns.split(",").filter((s) -> s.length)
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
 window.goNext = ->
   nextPatterns = settings.get("nextPatterns") || ""
-  nextStrings = nextPatterns.split(",")
+  nextStrings = nextPatterns.split(",").filter((s) -> s.length)
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->

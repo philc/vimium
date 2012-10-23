@@ -183,6 +183,37 @@ context "Input focus",
     assert.equal "third", document.activeElement.id
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
+context "Find prev / next links",
+
+  setup ->
+    window.location.hash = ""
+
+  should "find exact matches", ->
+    document.getElementById("test-div").innerHTML = """
+    <a href='#first'>nextcorrupted</a>
+    <a href='#second'>next page</a>
+    """
+    stub settings.values, "nextPatterns", "next"
+    goNext()
+    assert.equal '#second', window.location.hash
+
+  should "match against non-word patterns", ->
+    document.getElementById("test-div").innerHTML = """
+    <a href='#first'>&gt;&gt;</a>
+    """
+    stub settings.values, "nextPatterns", ">>"
+    goNext()
+    assert.equal '#first', window.location.hash
+
+  should "favor matches with fewer words", ->
+    document.getElementById("test-div").innerHTML = """
+    <a href='#first'>lorem ipsum next</a>
+    <a href='#second'>next!</a>
+    """
+    stub settings.values, "nextPatterns", "next"
+    goNext()
+    assert.equal '#second', window.location.hash
+
 Tests.outputMethod = (args...) ->
   newOutput = args.join "\n"
   # escape html
