@@ -2,8 +2,9 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = ["scrollStepSize", "excludedUrls", "linkHintCharacters", "userDefinedLinkHintCss",
-  "keyMappings", "filterLinkHints", "previousPatterns", "nextPatterns", "hideHud", "regexFindMode"]
+editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters",
+  "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
+  "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 

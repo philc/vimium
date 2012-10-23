@@ -91,8 +91,9 @@ Utils =
 
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # Escape explicitly to encode characters like "+" correctly
-    "http://www.google.com/search?q=" + encodeURIComponent(query)
+    # it would be better to pull the default search engine from chrome itself,
+    # but it is not clear if/how that is possible
+    Settings.get("searchUrl") + encodeURIComponent(query)
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
