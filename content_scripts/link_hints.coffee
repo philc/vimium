@@ -60,7 +60,6 @@ LinkHints =
     @setOpenLinkMode(mode)
     hintMarkers = @markerMatcher.fillInMarkers(@createMarkerFor(el) for el in @getVisibleClickableElements())
 
-    DomUtils.addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
     # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
