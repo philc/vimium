@@ -160,9 +160,9 @@ LinkHints =
       # Toggle whether to open link in a new or current tab.
       @setOpenLinkMode(!@shouldOpenInNewTab, @shouldOpenWithQueue, false)
       handlerStack.push({
-        keyup: (event) ->
+        keyup: (event) =>
           return if (event.keyCode != keyCodes.shiftKey)
-          LinkHints.setOpenLinkMode(!LinkHints.shouldOpenInNewTab, LinkHints.shouldOpenWithQueue, false)
+          @setOpenLinkMode(!@shouldOpenInNewTab, @shouldOpenWithQueue, false) if @isActive
           @remove()
       })
 
