@@ -8,10 +8,15 @@
 # In 'filter' mode, our link hints are numbers, and the user can narrow down the range of possibilities by
 # typing the text of the link itself.
 #
+OPEN_IN_CURRENT_TAB = {}
+OPEN_IN_NEW_TAB = {}
+OPEN_WITH_QUEUE = {}
+COPY_LINK_URL = {}
+
 LinkHints =
   hintMarkerContainingDiv: null
-  shouldOpenInNewTab: false
-  shouldOpenWithQueue: false
+  # one of the enums listed at the top of this file
+  mode: undefined
   # function that does the appropriate action on the selected link
   linkActivator: undefined
   # While in delayMode, all keypresses have no effect.
@@ -40,11 +45,11 @@ LinkHints =
      "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
-  activateModeToOpenInNewTab: -> @activateMode(true, false, false)
-  activateModeToCopyLinkUrl: -> @activateMode(null, false, true)
-  activateModeWithQueue: -> @activateMode(true, true, false)
+  activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_TAB)
+  activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
+  activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
 
-  activateMode: (openInNewTab, withQueue, copyLinkUrl) ->
+  activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
@@ -52,7 +57,7 @@ LinkHints =
       return
     @isActive = true
 
-    @setOpenLinkMode(openInNewTab, withQueue, copyLinkUrl)
+    @setOpenLinkMode(mode)
     hintMarkers = @markerMatcher.fillInMarkers(@createMarkerFor(el) for el in @getVisibleClickableElements())
 
     DomUtils.addCssToPage(settings.get("userDefinedLinkHintCss"), "vimiumLinkHintCss")
@@ -70,14 +75,11 @@ LinkHints =
       keyup: -> false
     })
 
-  setOpenLinkMode: (openInNewTab, withQueue, copyLinkUrl) ->
-    @shouldOpenInNewTab = openInNewTab
-    @shouldOpenWithQueue = withQueue
-
-    if (openInNewTab || withQueue)
-      if (openInNewTab)
+  setOpenLinkMode: (@mode) ->
+    if @mode is OPEN_IN_NEW_TAB or @mode is OPEN_WITH_QUEUE
+      if @mode is OPEN_IN_NEW_TAB
         HUD.show("Open link in new tab")
-      else if (withQueue)
+      else
         HUD.show("Open multiple links in a new tab")
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
@@ -85,11 +87,11 @@ LinkHints =
         DomUtils.simulateClick(link, {
           metaKey: KeyboardUtils.platform == "Mac",
           ctrlKey: KeyboardUtils.platform != "Mac" })
-    else if (copyLinkUrl)
+    else if @mode is COPY_LINK_URL
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
         chrome.extension.sendRequest({handler: "copyToClipboard", data: link.href})
-    else
+    else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
       # When we're opening the link in the current tab, don't navigate to the selected link immediately
       # we want to give the user some time to notice which link has received focus.
@@ -156,13 +158,16 @@ LinkHints =
   onKeyDownInMode: (hintMarkers, event) ->
     return if @delayMode
 
-    if (event.keyCode == keyCodes.shiftKey && @shouldOpenInNewTab != null)
+    if (event.keyCode == keyCodes.shiftKey && @mode != COPY_LINK_URL)
       # Toggle whether to open link in a new or current tab.
-      @setOpenLinkMode(!@shouldOpenInNewTab, @shouldOpenWithQueue, false)
+      prev_mode = @mode
+
+      @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_TAB else OPEN_IN_CURRENT_TAB)
+
       handlerStack.push({
         keyup: (event) =>
           return if (event.keyCode != keyCodes.shiftKey)
-          @setOpenLinkMode(!@shouldOpenInNewTab, @shouldOpenWithQueue, false) if @isActive
+          @setOpenLinkMode(prev_mode) if @isActive
           @remove()
       })
 
@@ -199,7 +204,7 @@ LinkHints =
         clickEl.focus()
       DomUtils.flashRect(matchedLink.rect)
       @linkActivator(clickEl)
-      if (@shouldOpenWithQueue)
+      if @mode is OPEN_WITH_QUEUE
         @deactivateMode delay, ->
           LinkHints.delayMode = false
           LinkHints.activateModeWithQueue()
