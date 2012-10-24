@@ -27,7 +27,7 @@
 #   - Sync.clear (called by Settings.clear)
 #
 # When is vimium called by Sync?
-#   - Sync calls Settings.doPostUpdateHooks to propagate asynchronous changes
+#   - Sync calls Settings.doPostUpdateHook to propagate asynchronous changes
 #     into vimium's state; this is similar to how the options page is handled
 #   - Sync calls Settings.get to fetch the default value
 #   - Sync also updates localStorage.
@@ -58,7 +58,7 @@ root.Sync = Sync =
   pull: ->
     @storage.get null, (items) ->
       Sync.log "pull: #{Sync.callbackStatus()}"
-      if ! chrome.runtime.lastError
+      if not chrome.runtime.lastError
         Sync.log "pull keys: #{Object.keys items}"
         for own key, value of items
           Sync.storeAndPropagate key, value
@@ -71,6 +71,7 @@ root.Sync = Sync =
   
   # only ever called from synced-storage callbacks
   storeAndPropagate: (key, value) ->
+    @checkHaveStringOrNull(value)
     # ignore, if not accepting this key
     if not @acceptKey key
        @log "callback ignoring: #{key}"
@@ -83,14 +84,15 @@ root.Sync = Sync =
     if value
       @log "callback set: #{key}=#{value}"
       localStorage[key] = value
-      root.doPostUpdateHooks key, JSON.parse(value)
+      root.Settings.doPostUpdateHook key, JSON.parse(value)
     else
       @log "callback clear: #{key}=#{value}"
       delete localStorage[key]
-      root.doPostUpdateHooks key, root.Settings.get(key) # default value
+      root.Settings.doPostUpdateHook key, root.Settings.get(key) # default value
 
   # only called from within vimium, never on a callback
   set: (key, value) ->
+    @checkHaveString(value)
     if value
       if @acceptKey key
         @storage.set @mkKeyValue(key,value), -> Sync.logCallback "DONE set", key
@@ -121,6 +123,17 @@ root.Sync = Sync =
 
   callbackStatus: ->
     if chrome.runtime.lastError then "ERROR: #{chrome.runtime.lastError.message}" else "(OK)"
+
+  checkHaveString: (str) ->
+    if typeof(str) != "string"
+      @log "Yikes! this should be a string: #{str}"
+
+  checkHaveStringOrNull: (thing) ->
+    if typeof(thing) != "string" && thing != null
+      @log "Yikes! this should be a string or null: #{thing}"
+  
+  # end of Sync
+  # ###########
 
 Sync.init()
 
