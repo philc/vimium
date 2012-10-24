@@ -288,6 +288,28 @@ extend window,
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
+  goInc: (count) ->
+    groups = /^(.+\D)(\d+)(\D*)$/.exec(window.location.href)
+    if (groups)
+      prev = groups[2]
+      next = (parseInt(groups[2], 10) + count) + ''
+      if next.length < prev.length
+        next = new Array(prev.length - next.length + 1).join('0') + next
+      groups[2] = next
+      groups[0] = ''
+      window.location.href = groups.join('')
+
+  goDec: (count) ->
+    groups = /^(.+\D)(\d+)(\D*)$/.exec(window.location.href)
+    if (groups)
+      prev = groups[2]
+      next = (parseInt(groups[2], 10) - count) + ''
+      if next.length < prev.length
+        next = new Array(prev.length - next.length + 1).join('0') + next
+      groups[2] = next
+      groups[0] = ''
+      window.location.href = groups.join('')
+
   toggleViewSource: ->
     chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
       if (url.substr(0, 12) == "view-source:")

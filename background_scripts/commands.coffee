@@ -88,7 +88,7 @@ Commands =
        "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
        "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
        "reload", "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-       "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
+       "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goInc", "goDec",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
        "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
@@ -107,7 +107,7 @@ Commands =
   # from Vimium will uncover these gems.
   advancedCommands: [
     "scrollToLeft", "scrollToRight",
-    "goUp", "focusInput", "LinkHints.activateModeWithQueue",
+    "goUp", "goInc", "goDec", "focusInput", "LinkHints.activateModeWithQueue",
     "goPrevious", "goNext"]
 
 defaultKeyMappings =
@@ -133,6 +133,8 @@ defaultKeyMappings =
   "H": "goBack"
   "L": "goForward"
   "gu": "goUp"
+  "<c-a>": "goInc"
+  "<c-x>": "goDec"
 
   "gi": "focusInput"
 
@@ -222,6 +224,8 @@ commandDescriptions =
 
   # Navigating the URL hierarchy
   goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
+  goInc: ["Increment the last number found in the url", { passCountToFunction: true }]
+  goDec: ["Decrement the last number found in the url", { passCountToFunction: true }]
 
   # Manipulating tabs
   nextTab: ["Go one tab right", { background: true }]
