@@ -9,14 +9,51 @@ root.Settings = Settings =
 
   set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
-    if (value == @defaults[key])
-      @clear(key)
-    else
-      localStorage[key] = JSON.stringify(value)
+    # warning: this test never matches for settings with numeric default values
+    console.log "TEST: #{key} " + typeof(value) + " " + typeof(@defaults[key]) + " " + @defaults[key]
+    if ( value == @defaults[key] )
+      console.log("Settings clear key: #{key} has default value") if key of localStorage
+      return @clear(key)
+    # don't update the key/value if it's unchanged; this prevents unnecessary
+    # updates and unnecessary calls to synced storage
+    valueJSON = JSON.stringify value
+    if localStorage[key] == valueJSON
+      console.log("Settings skip update: #{key} unchanged")
+      return localStorage[key]
+    # we have a new value: so update localStorage and synced storage
+    console.log "Settings updating: #{key}"
+    localStorage[key] = valueJSON
+    root.Sync.set key, valueJSON
 
-  clear: (key) -> delete localStorage[key]
+  clear: (key) ->
+    if @has key
+      root.Sync.clear key
+      delete localStorage[key]
 
   has: (key) -> key of localStorage
+
+  # the relevant postUpdateHooks handler is called each time a settings value
+  # changes:
+  #    either from options/options.coffee          (when the settings page is saved)
+  #        or from background_scripts/sync.coffee  (when an update propagates from synced storage)
+  # 
+  # NOTE: this has been refactored and renamed from postSaveHooks in
+  # options.coffee:
+  #   - refactored because it is now also called from background_scripts/sync.coffee
+  #   - renamed because it is no longer associated only with "Save" operations
+  #
+  postUpdateHooks:
+    keyMappings: (value) ->
+      console.log "postUpdateHooks[keyMappings]: #{value}"
+      root.Commands.clearKeyMappingsAndSetDefaults()
+      root.Commands.parseCustomKeyMappings value
+      root.refreshCompletionKeysAfterMappingSave()
+  
+  # postUpdateHooks wrapper
+  doPostUpdateHooks: (key, value) ->
+    if @postUpdateHooks[key]
+       console.log "running postUpdateHooks[#{key}]"
+       @postUpdateHooks[key] value if @postUpdateHooks[key]
 
   defaults:
     scrollStepSize: 60

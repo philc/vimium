@@ -2,17 +2,21 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters",
+# "syncSettings" must appear FIRST in editableFields to ensure that, when it is
+# changed, background_scripts/sync.coffee learns of that change before seeing
+# any of the other settings' new values
+editableFields = [ "syncSettings", "scrollStepSize", "excludedUrls", "linkHintCharacters",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
   "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 
-postSaveHooks = keyMappings: (value) ->
-  commands = chrome.extension.getBackgroundPage().Commands
-  commands.clearKeyMappingsAndSetDefaults()
-  commands.parseCustomKeyMappings value
-  chrome.extension.getBackgroundPage().refreshCompletionKeysAfterMappingSave()
+# # dead code; refactored to Settings.postUpdateHooks
+# postSaveHooks = keyMappings: (value) ->
+#   commands = chrome.extension.getBackgroundPage().Commands
+#   commands.clearKeyMappingsAndSetDefaults()
+#   commands.parseCustomKeyMappings value
+#   chrome.extension.getBackgroundPage().refreshCompletionKeysAfterMappingSave()
 
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
@@ -63,7 +67,9 @@ saveOptions = ->
       bgSettings.set fieldName, fieldValue
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
-    postSaveHooks[fieldName] fieldValue if postSaveHooks[fieldName]
+    # # pre-refactoring of postSaveHooks to Settings.postUpdateHooks
+    # postSaveHooks[fieldName] fieldValue if postSaveHooks[fieldName]
+    chrome.extension.getBackgroundPage().Settings.doPostUpdateHooks fieldName, fieldValue
 
   $("saveOptions").disabled = true
 
