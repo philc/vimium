@@ -11,7 +11,7 @@ editableFields = [ "syncSettings", "scrollStepSize", "excludedUrls", "linkHintCh
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 
-# # dead code; refactored to Settings.postUpdateHooks
+# # dead code; refactored to ../background_scripts/settings.coffee(postUpdateHooks)
 # postSaveHooks = keyMappings: (value) ->
 #   commands = chrome.extension.getBackgroundPage().Commands
 #   commands.clearKeyMappingsAndSetDefaults()

@@ -10,18 +10,14 @@ root.Settings = Settings =
   set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
     # warning: this test never matches for settings with numeric default values
-    console.log "TEST: #{key} " + typeof(value) + " " + typeof(@defaults[key]) + " " + @defaults[key]
     if ( value == @defaults[key] )
-      console.log("Settings clear key: #{key} has default value") if key of localStorage
       return @clear(key)
-    # don't update the key/value if it's unchanged; this prevents unnecessary
-    # updates and unnecessary calls to synced storage
+    # don't update the key/value if it's unchanged; this suppresses unnecessary
+    # calls to synced storage
     valueJSON = JSON.stringify value
     if localStorage[key] == valueJSON
-      console.log("Settings skip update: #{key} unchanged")
       return localStorage[key]
     # we have a new value: so update localStorage and synced storage
-    console.log "Settings updating: #{key}"
     localStorage[key] = valueJSON
     root.Sync.set key, valueJSON
 
@@ -32,13 +28,12 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
-  # the relevant postUpdateHooks handler is called each time a settings value
+  # the postUpdateHooks handler below is called each time a settings value
   # changes:
-  #    either from options/options.coffee          (when the settings page is saved)
+  #    either from options/options.coffee          (when the options page is saved)
   #        or from background_scripts/sync.coffee  (when an update propagates from synced storage)
   # 
-  # NOTE: this has been refactored and renamed from postSaveHooks in
-  # options.coffee:
+  # NOTE: this has been refactored and renamed from ../options/options.coffee(postSaveHooks):
   #   - refactored because it is now also called from background_scripts/sync.coffee
   #   - renamed because it is no longer associated only with "Save" operations
   #
@@ -51,9 +46,7 @@ root.Settings = Settings =
   
   # postUpdateHooks wrapper
   doPostUpdateHooks: (key, value) ->
-    if @postUpdateHooks[key]
-       console.log "running postUpdateHooks[#{key}]"
-       @postUpdateHooks[key] value if @postUpdateHooks[key]
+    @postUpdateHooks[key] value if @postUpdateHooks[key]
 
   defaults:
     scrollStepSize: 60

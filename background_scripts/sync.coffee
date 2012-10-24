@@ -9,16 +9,16 @@
 # synchronized storage and propagates those changes back to localStorage.
 # Sync.pull() fetches remotely-stored data at startup.
 #
-# The effect is to synchronize vimium settings between chrome/vimium instances,
-# whenever:
+# The effect is to synchronize vimium options/settings between chrome/vimium
+# instances, whenever:
 #   - synchronization is enabled on the vimium settings page,
 #   - chrome is logged in to the user's Google account, and
 #   - chrome synchronization is enabled.
 #
 # CAVEAT:
-# localStorage is a synchronous API whereas synchronized storage is
-# asynchronous.  If settings have been changed on a remote chrome/vimium
-# instance, then a race condition exists when vimium is started up.
+#   localStorage is a synchronous API, whereas synchronized storage is
+#   asynchronous.  If settings are changed on a remote chrome/vimium instance,
+#   then a race condition exists when vimium is started up.
 #
 
 #
@@ -28,8 +28,8 @@
 #
 # When is vimium called by Sync?
 #   - Sync calls Settings.doPostUpdateHooks to propagate asynchronous changes
-#     back into vimium's state; this is similar to how the options page is
-#     handled
+#     into vimium's state; this is similar to how the options page is handled
+#   - Sync calls Settings.get to fetch the default value
 #   - Sync also updates localStorage.
 #
 
