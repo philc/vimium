@@ -69,7 +69,7 @@ saveOptions = ->
     $(fieldName).setAttribute "savedValue", fieldValue
     # # pre-refactoring of postSaveHooks to Settings.postUpdateHooks
     # postSaveHooks[fieldName] fieldValue if postSaveHooks[fieldName]
-    chrome.extension.getBackgroundPage().Settings.doPostUpdateHooks fieldName, fieldValue
+    chrome.extension.getBackgroundPage().Settings.doPostUpdateHook fieldName, fieldValue
 
   $("saveOptions").disabled = true
 

@@ -9,7 +9,7 @@ root.Settings = Settings =
 
   set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
-    # warning: this test never matches for settings with numeric default values
+    # warning: this test never matches for settings with numeric default values (such as scrollStepSize)
     if ( value == @defaults[key] )
       return @clear(key)
     # don't update the key/value if it's unchanged; this suppresses unnecessary
@@ -28,7 +28,7 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
-  # the postUpdateHooks handler below is called each time a settings value
+  # the postUpdateHooks handler below is called each time an option
   # changes:
   #    either from options/options.coffee          (when the options page is saved)
   #        or from background_scripts/sync.coffee  (when an update propagates from synced storage)
@@ -39,13 +39,12 @@ root.Settings = Settings =
   #
   postUpdateHooks:
     keyMappings: (value) ->
-      console.log "postUpdateHooks[keyMappings]: #{value}"
       root.Commands.clearKeyMappingsAndSetDefaults()
       root.Commands.parseCustomKeyMappings value
       root.refreshCompletionKeysAfterMappingSave()
   
   # postUpdateHooks wrapper
-  doPostUpdateHooks: (key, value) ->
+  doPostUpdateHook: (key, value) ->
     @postUpdateHooks[key] value if @postUpdateHooks[key]
 
   defaults:
