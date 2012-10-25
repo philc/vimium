@@ -9,7 +9,7 @@ root.Settings = Settings =
 
   set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
-    # warning: this test never matches for settings with numeric default values (such as scrollStepSize)
+    # warning: this test is always false for settings with numeric default values (such as scrollStepSize)
     if ( value == @defaults[key] )
       return @clear(key)
     # don't update the key/value if it's unchanged; thereby suppressing unnecessary calls to synced storage
