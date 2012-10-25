@@ -108,6 +108,9 @@ Utils =
     else
       Utils.createSearchUrl string
 
+  # detects both literals and dynamically created strings
+  isString: (obj) -> typeof obj == 'string' or obj instanceof String
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
