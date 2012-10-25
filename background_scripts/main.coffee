@@ -338,10 +338,10 @@ chrome.tabs.onRemoved.addListener((tabId) ->
   openTabInfo = openTabs[tabId]
   updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId)
 
-  # If we restore chrome:# pages, they'll ignore Vimium keystrokes when they reappear.
-  # Pretend they never existed and adjust tab indices accordingly.
-  # Could possibly expand this into a blacklist in the future
-  if (/^chrome[^:]*:\/\/.*/.test(openTabInfo.url))
+  # If we restore pages that content scripts can't run on, they'll ignore Vimium keystrokes when they
+  # reappear. Pretend they never existed and adjust tab indices accordingly. Could possibly expand this into
+  # a blacklist in the future.
+  if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
     for i of tabQueue[openTabInfo.windowId]
       if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
         tabQueue[openTabInfo.windowId][i].positionIndex--
