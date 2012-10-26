@@ -804,7 +804,7 @@ findAndFollowLink = (linkStrings) ->
   return if (candidateLinks.length == 0)
 
   for link in candidateLinks
-    link.wc = link.innerText.trim().split(/\s+/).length
+    link.wordCount = link.innerText.trim().split(/\s+/).length
 
   # We can use this trick to ensure that Array.sort is stable. We need this property to retain the reverse
   # in-page order of the links.
@@ -815,13 +815,13 @@ findAndFollowLink = (linkStrings) ->
   candidateLinks =
     candidateLinks
       .sort((a, b) ->
-        if (a.wc == b.wc) then a.originalIndex - b.originalIndex else a.wc - b.wc
+        if (a.wordCount == b.wordCount) then a.originalIndex - b.originalIndex else a.wordCount - b.wordCount
       )
-      .filter((a) -> a.wc <= candidateLinks[0].wc + 1)
+      .filter((a) -> a.wordCount <= candidateLinks[0].wordCount + 1)
 
   for linkString in linkStrings
     exactWordRegex =
-      if /\b/.test linkString[0] or /\b/.test linkString[linkString.length - 1]
+      if /\b/.test(linkString[0]) or /\b/.test(linkString[linkString.length - 1])
         new RegExp "\\b" + linkString + "\\b", "i"
       else
         new RegExp linkString, "i"
