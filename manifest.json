@@ -13,6 +13,7 @@
       "lib/clipboard.js",
       "background_scripts/settings.js",
       "background_scripts/completion.js",
+      "background_scripts/marks.js",
       "background_scripts/main.js"
     ]
   },
@@ -35,6 +36,7 @@
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
+             "content_scripts/marks.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["vimium.css"],

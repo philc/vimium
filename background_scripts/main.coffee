@@ -237,7 +237,7 @@ BackgroundCommands =
       # wait until that's over before we can call setScrollPosition.
       chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
         tabLoadedHandlers[tab.id] = ->
-          scrollPort = chrome.tabs.sendRequest(tab.id,
+          chrome.tabs.sendRequest(tab.id,
             name: "setScrollPosition",
             scrollX: tabQueueEntry.scrollX,
             scrollY: tabQueueEntry.scrollY)
@@ -541,6 +541,8 @@ sendRequestHandlers =
   saveHelpDialogSettings: saveHelpDialogSettings,
   selectSpecificTab: selectSpecificTab,
   refreshCompleter: refreshCompleter
+  createMark: Marks.create.bind(Marks),
+  gotoMark: Marks.goto.bind(Marks)
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.extension.getURL('tests/dom_tests/dom_tests.html'))

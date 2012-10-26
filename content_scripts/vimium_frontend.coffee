@@ -108,6 +108,7 @@ initializePreDomReady = ->
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
+    showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
@@ -203,7 +204,7 @@ executePageCommand = (request) ->
 
 setScrollPosition = (scrollX, scrollY) ->
   if (scrollX > 0 || scrollY > 0)
-    DomUtils.documentReady(-> window.scrollBy(scrollX, scrollY))
+    DomUtils.documentReady(-> window.scrollTo(scrollX, scrollY))
 
 #
 # Called from the backend in order to change frame focus.
