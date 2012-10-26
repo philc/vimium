@@ -113,9 +113,11 @@ class VomnibarUI
       if (@selection == -1)
         query = @input.value.trim()
         @hide()
-        chrome.extension.sendRequest({
-          handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-          url: query })
+        # if the query is empty, then treat it as a cancelled request
+        if query
+          chrome.extension.sendRequest({
+            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+            url: query })
       else
         @update true, =>
           # Shift+Enter will open the result in a new tab instead of the current tab.
