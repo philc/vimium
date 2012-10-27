@@ -489,20 +489,6 @@ sendRequestToAllTabs = (args) ->
       for tab in window.tabs
         chrome.tabs.sendRequest(tab.id, args, null))
 
-# Compares two version strings (e.g. "1.1" and "1.5") and returns
-# -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.
-compareVersions = (versionA, versionB) ->
-  versionA = versionA.split(".")
-  versionB = versionB.split(".")
-  for i in [0...(Math.max(versionA.length, versionB.length))]
-    a = parseInt(versionA[i] || 0, 10)
-    b = parseInt(versionB[i] || 0, 10)
-    if (a < b)
-      return -1
-    else if (a > b)
-      return 1
-  0
-
 #
 # Returns true if the current extension version is greater than the previously recorded version in
 # localStorage, and false otherwise.
@@ -511,7 +497,7 @@ shouldShowUpgradeMessage = ->
   # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
   # installs.
   Settings.set("previousVersion", currentVersion) unless Settings.get("previousVersion")
-  compareVersions(currentVersion, Settings.get("previousVersion")) == 1
+  Utils.compareVersions(currentVersion, Settings.get("previousVersion")) == 1
 
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
