@@ -94,6 +94,7 @@ context "Filtered link hints",
 
   setup ->
     stub settings.values, "filterLinkHints", true
+    stub settings.values, "linkHintNumbers", "0123456789"
 
   context "Text hints",
 

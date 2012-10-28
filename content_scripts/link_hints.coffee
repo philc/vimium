@@ -281,11 +281,11 @@ alphabetHints =
 
     if (digitsNeeded > 1)
       for i in [0...shortHintCount]
-        hintStrings.push(@numberToHintString(i, digitsNeeded - 1, linkHintCharacters))
+        hintStrings.push(numberToHintString(i, linkHintCharacters, digitsNeeded - 1))
 
     start = shortHintCount * linkHintCharacters.length
     for i in [start...(start + longHintCount)]
-      hintStrings.push(@numberToHintString(i, digitsNeeded, linkHintCharacters))
+      hintStrings.push(numberToHintString(i, linkHintCharacters, digitsNeeded))
 
     @shuffleHints(hintStrings, linkHintCharacters.length)
 
@@ -301,29 +301,6 @@ alphabetHints =
     for bucket in buckets
       result = result.concat(bucket)
     result
-
-  #
-  # Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of the
-  # hint text. The hint string will be "padded with zeroes" to ensure its length is equal to numHintDigits.
-  #
-  numberToHintString: (number, numHintDigits, characterSet) ->
-    base = characterSet.length
-    hintString = []
-    remainder = 0
-    loop
-      remainder = number % base
-      hintString.unshift(characterSet[remainder])
-      number -= remainder
-      number /= Math.floor(base)
-      break unless number > 0
-
-    # Pad the hint string we're returning so that it matches numHintDigits.
-    # Note: the loop body changes hintString.length, so the original length must be cached!
-    hintStringLength = hintString.length
-    for i in [0...(numHintDigits - hintStringLength)] by 1
-      hintString.unshift(characterSet[0])
-
-    hintString.join("")
 
   matchHintsByKey: (hintMarkers, event) ->
     # If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
@@ -360,7 +337,8 @@ filterHints =
           labelText = labelText.substr(0, labelText.length-1)
         @labelMap[forElement] = labelText
 
-  generateHintString: (linkHintNumber) -> (linkHintNumber + 1).toString()
+  generateHintString: (linkHintNumber) ->
+    (numberToHintString linkHintNumber + 1, settings.get "linkHintNumbers").toUpperCase()
 
   generateLinkText: (element) ->
     linkText = ""
@@ -416,7 +394,7 @@ filterHints =
       if (!@hintKeystrokeQueue.pop() && !@linkTextKeystrokeQueue.pop())
         return { linksMatched: [] }
     else if (keyChar)
-      if (/[0-9]/.test(keyChar))
+      if (settings.get("linkHintNumbers").indexOf(keyChar) >= 0)
         @hintKeystrokeQueue.push(keyChar)
       else
         # since we might renumber the hints, the current hintKeyStrokeQueue
@@ -475,6 +453,30 @@ spanWrap = (hintString) ->
   for char in hintString
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
+
+#
+# Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of the
+# hint text. The hint string will be "padded with zeroes" to ensure its length is >= numHintDigits.
+#
+numberToHintString = (number, characterSet, numHintDigits = 0) ->
+  base = characterSet.length
+  hintString = []
+  remainder = 0
+  loop
+    remainder = number % base
+    hintString.unshift(characterSet[remainder])
+    number -= remainder
+    number /= Math.floor(base)
+    break unless number > 0
+
+  # Pad the hint string we're returning so that it matches numHintDigits.
+  # Note: the loop body changes hintString.length, so the original length must be cached!
+  hintStringLength = hintString.length
+  for i in [0...(numHintDigits - hintStringLength)] by 1
+    hintString.unshift(characterSet[0])
+
+  hintString.join("")
+
 
 root = exports ? window
 root.LinkHints = LinkHints

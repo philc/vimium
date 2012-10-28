@@ -42,9 +42,9 @@ settings =
   port: null
   values: {}
   loadedValues: 0
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "hideHud", "previousPatterns",
-      "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-      "helpDialog_showAdvancedCommands"]
+  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
+    "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
+    "helpDialog_showAdvancedCommands"]
   isLoaded: false
   eventListeners: {}
 

@@ -23,6 +23,7 @@ root.Settings = Settings =
   defaults:
     scrollStepSize: "60"
     linkHintCharacters: "sadfjklewcmpgh"
+    linkHintNumbers: "0123456789"
     filterLinkHints: false
     hideHud: false
     userDefinedLinkHintCss:
