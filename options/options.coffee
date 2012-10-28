@@ -11,13 +11,6 @@ editableFields = [ "syncSettings", "scrollStepSize", "excludedUrls", "linkHintCh
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 
-# # dead code; refactored to ../background_scripts/settings.coffee(postUpdateHooks)
-# postSaveHooks = keyMappings: (value) ->
-#   commands = chrome.extension.getBackgroundPage().Commands
-#   commands.clearKeyMappingsAndSetDefaults()
-#   commands.parseCustomKeyMappings value
-#   chrome.extension.getBackgroundPage().refreshCompletionKeysAfterMappingSave()
-
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
 
@@ -67,8 +60,6 @@ saveOptions = ->
       bgSettings.set fieldName, fieldValue
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
-    # # pre-refactoring of postSaveHooks to Settings.postUpdateHooks
-    # postSaveHooks[fieldName] fieldValue if postSaveHooks[fieldName]
     chrome.extension.getBackgroundPage().Settings.doPostUpdateHook fieldName, fieldValue
 
   $("saveOptions").disabled = true

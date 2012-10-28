@@ -12,11 +12,11 @@ root.Settings = Settings =
     # warning: this test is always false for settings with numeric default values (such as scrollStepSize)
     if ( value == @defaults[key] )
       return @clear(key)
-    # don't update the key/value if it's unchanged; thereby suppressing unnecessary calls to synced storage
+    # don't update the key/value if it's unchanged; thereby suppressing unnecessary calls to chrome.storage
     valueJSON = JSON.stringify value
     if localStorage[key] == valueJSON
       return localStorage[key]
-    # we have a new value: so update synced storage and localStorage
+    # we have a new value: so update chrome.storage and localStorage
     root.Sync.set key, valueJSON
     localStorage[key] = valueJSON
 
@@ -29,9 +29,10 @@ root.Settings = Settings =
 
   # the postUpdateHooks handler below is called each time an option changes:
   #    either from options/options.coffee          (when the options page is saved)
-  #        or from background_scripts/sync.coffee  (when an update propagates from synced storage)
+  #        or from background_scripts/sync.coffee  (when an update propagates from chrome.storage)
   # 
-  # NOTE: this has been refactored and renamed from ../options/options.coffee(postSaveHooks):
+  # NOTE:
+  # this has been refactored and renamed from ../options/options.coffee(postSaveHooks):
   #   - refactored because it is now also called from background_scripts/sync.coffee
   #   - renamed because it is no longer associated only with "Save" operations
   #
@@ -41,9 +42,10 @@ root.Settings = Settings =
       root.Commands.parseCustomKeyMappings value
       root.refreshCompletionKeysAfterMappingSave()
   
-  # postUpdateHooks wrapper
+  # postUpdateHooks convenience wrapper
   doPostUpdateHook: (key, value) ->
-    @postUpdateHooks[key] value if @postUpdateHooks[key]
+    if @postUpdateHooks[key]
+      @postUpdateHooks[key] value 
 
   defaults:
     scrollStepSize: 60
