@@ -2,10 +2,7 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-# "syncSettings" must appear FIRST in editableFields to ensure that, when it is
-# changed, background_scripts/sync.coffee learns of that change before seeing
-# any of the other settings' new values
-editableFields = [ "syncSettings", "scrollStepSize", "excludedUrls", "linkHintCharacters",
+editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
   "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
 

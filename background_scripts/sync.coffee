@@ -27,11 +27,11 @@ root.Sync = Sync =
 
   debug: true
   storage: chrome.storage.sync
-  doNotSync: [ "syncSettings", "settingsVersion", "previousVersion" ]
+  doNotSync: [ "settingsVersion", "previousVersion" ]
 
   init: ->
     chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
-    @pull() if @syncing()
+    @pull()
 
   # asynchronous fetch from synced storage, called at startup
   pull: ->
@@ -51,7 +51,7 @@ root.Sync = Sync =
   storeAndPropagate: (key, value) ->
     # must be JSON.stringifed or undefined
     @checkHaveStringOrUndefined value
-    # ignore, if not accepting this key or not syncing
+    # ignore, if not accepting this key
     if not @syncKey key
        @log "callback ignoring: #{key}"
        return
@@ -99,11 +99,8 @@ root.Sync = Sync =
   # ##################
   # utilities 
 
-  syncing: ->
-    localStorage["syncSettings"]
-   
   syncKey: (key) ->
-    @syncing() and key not in @doNotSync
+    key not in @doNotSync
 
   # there has to be a more elegant way to do this!
   mkKeyValue: (key, value) ->
