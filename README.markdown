@@ -166,7 +166,7 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
-1.40 (Unreleased)
+1.40 (10/27/2012)
 - Bugfixes.
 - Added options for search engines and regex find.
 - Pressing unmapped keys in hints mode now deactivates the mode.
