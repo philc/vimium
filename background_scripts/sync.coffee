@@ -132,15 +132,3 @@ root.Sync = Sync =
 
 Sync.init()
 
-# ##### Note 1 - Default Values
-#
-# What happens if different versions of vimium with DIFFERENT DEFAULT VALUES
-# are installed on chrome instances attached to the same account?
-#
-# When an option is reset to the default on one system, it is also reset to the
-# default on the other.  But that's a different default!  Moreover, it's next
-# to impossible for a user to figure out what's going on.
-#
-# The source of the problem is the "optimization" whereby settings are only
-# stored for non-default values.
-#
