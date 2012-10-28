@@ -18,8 +18,10 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
+  # options/options.(coffee|html) only handle booleans and strings; therefore
+  # all defaults must be booleans or strings
   defaults:
-    scrollStepSize: 60
+    scrollStepSize: "60"
     linkHintCharacters: "sadfjklewcmpgh"
     filterLinkHints: false
     hideHud: false
