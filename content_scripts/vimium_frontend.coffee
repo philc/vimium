@@ -18,6 +18,8 @@ isEnabledForUrl = true
 currentCompletionKeys = null
 validFirstKeys = null
 activatedElement = null
+passkeys = null
+
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -127,7 +129,7 @@ initializePreDomReady = ->
 #
 # This is called once the background page has told us that Vimium should be enabled for the current URL.
 #
-initializeWhenEnabled = ->
+initializeWhenEnabled = (response) ->
   document.addEventListener("keydown", onKeydown, true)
   document.addEventListener("keypress", onKeypress, true)
   document.addEventListener("keyup", onKeyup, true)
@@ -135,6 +137,7 @@ initializeWhenEnabled = ->
   document.addEventListener("blur", onBlurCapturePhase, true)
   document.addEventListener("DOMActivate", onDOMActivate, true)
   enterInsertModeIfElementIsFocused()
+  passkeys = response.passkeys
 
 #
 # Used to disable Vimium without needing to reload the page.
@@ -363,10 +366,8 @@ extend window,
 # Passkeys
 #
 
-passkeys="jknpu"
-
 isPasskey = ( keyChar ) ->
-  passkeys.indexOf(keyChar) >= 0
+  passkeys && typeof(passkeys) == "string" and passkeys.indexOf(keyChar) >= 0
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -396,6 +397,7 @@ onKeypress = (event) ->
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if isPasskey keyChar
+          console.log "onKeypress: passing #{keyChar}"
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
@@ -477,6 +479,7 @@ onKeydown = (event) ->
     #   only if not "<ESC>
     else
       if isPasskey KeyboardUtils.getKeyChar(event)
+        console.log "onKeydown: passing #{KeyboardUtils.getKeyChar(event)}"
         return undefined
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
@@ -499,7 +502,7 @@ checkIfEnabledForUrl = ->
   chrome.extension.sendRequest { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
-      initializeWhenEnabled()
+      initializeWhenEnabled(response)
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
