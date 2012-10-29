@@ -121,7 +121,7 @@ class VomnibarUI
           @completions[@selection].performAction(openInNewTab)
           @hide()
 
-    # It seems like we have to manually supress the event here and still return true.
+    # It seems like we have to manually suppress the event here and still return true.
     event.stopPropagation()
     event.preventDefault()
     true
@@ -180,7 +180,8 @@ class VomnibarUI
 # Sends filter and refresh requests to a Vomnibox completer on the background page.
 #
 class BackgroundCompleter
-  # - name: The background page completer that you want to interface with. Either "omni" or "tabs". */
+  # - name: The background page completer that you want to interface with. Either "omni", "tabs", or
+  # "bookmarks". */
   constructor: (@name) ->
     @filterPort = chrome.extension.connect({ name: "filterCompleter" })
 
