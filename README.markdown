@@ -164,12 +164,18 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.41 (10/27/2012)
+
+- Bugfixes.
+
 1.40 (10/27/2012)
+
 - Bugfixes.
 - Added options for search engines and regex find.
 - Pressing unmapped keys in hints mode now deactivates the mode.
 
 1.39 (09/09/2012)
+
 - Bugfixes.
 
 1.38 (09/08/2012)
