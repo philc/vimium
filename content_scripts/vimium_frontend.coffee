@@ -221,13 +221,13 @@ extend window,
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
-  scrollDown: -> Scroller.scrollBy "y", parseFloat(settings.get("scrollStepSize"))
+  scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
   scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
   scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
   scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
   scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
-  scrollRight: -> Scroller.scrollBy "x", parseFloat(settings.get("scrollStepSize"))
+  scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
 
 extend window,
   reload: -> window.location.reload()

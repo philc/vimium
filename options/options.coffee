@@ -56,11 +56,14 @@ saveOptions = ->
   # the freedom to change the defaults in the future.
   for fieldName in editableFields
     field = $(fieldName)
-    if field.getAttribute("type") is "checkbox"
-      fieldValue = field.checked
-    else
-      fieldValue = field.value.trim()
-      field.value = fieldValue
+    switch field.getAttribute("type")
+      when "checkbox"
+        fieldValue = field.checked
+      when "number"
+        fieldValue = parseFloat field.value
+      else
+        fieldValue = field.value.trim()
+        field.value = fieldValue
 
     # If it's empty and not a field that we allow to be empty, restore to the default value
     if not fieldValue and canBeEmptyFields.indexOf(fieldName) is -1
