@@ -72,23 +72,25 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 isEnabledForUrl = (request) ->
   # excludedUrls are stored as a series of URL expressions separated by newlines.
   excludedUrls = Settings.get("excludedUrls").split("\n")
-  isEnabled = true
-  passkeys = ""
   for url in excludedUrls
-    excludeParts = url.trim().split(/\s+/)
-    url = excludeParts[0]
+    parse = url.trim().split(/\s+/)
+    url = parse[0]
+    passkeys = parse[1..].join("")
     # The user can add "*" to the URL which means ".*"
     regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
     if request.url.match(regexp)
-      if excludeParts[1]
-        # if we're passing keys, then we're not disabled
-        # we might as well accumulate passkeys (alternative would be to accept only the first match)
-        passkeys = passkeys + excludeParts[1]
+      # exclusion or passkeys is decided on the first pattern matching the request.url
+      if passkeys
+        # if passkeys are defined, then vimium is enabled, but the indicated keys are passed through to the undelying page
+        console.log "isEnabledForUrl: true #{passkeys} #{request.url}"
+        return { isEnabledForUrl: true, passkeys: passkeys }
       else
-        # any one match without passkeys disables vimium
-        isEnabled = false
-  console.log "isEnabledForUrl: #{isEnabled} #{passkeys} #{request.url}"
-  { isEnabledForUrl: isEnabled, passkeys: passkeys }
+        # otherwise, vimium is disabled
+        console.log "isEnabledForUrl: false #{request.url}"
+        return { isEnabledForUrl: false }
+  # default to "enabled"
+  console.log "isEnabledForUrl: true #{request.url}"
+  { isEnabledForUrl: true }
 
 # Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
 root.addExcludedUrl = (url) ->
