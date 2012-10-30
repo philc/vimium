@@ -356,6 +356,7 @@ extend window,
       else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
         DomUtils.removeElement hintContainingDiv
         @remove()
+        return true
 
       false
 
