@@ -112,7 +112,10 @@ class BookmarkCompleter
     while toVisit.length > 0
       bookmark = toVisit.shift()
       results.push(bookmark)
-      toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
+      # preorder traversal:
+      # toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
+      # inorder traversal:
+      toVisit.unshift.apply(toVisit, bookmark.children) if (bookmark.children)
     results
 
   computeRelevancy: (suggestion) ->
