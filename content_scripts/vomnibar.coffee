@@ -68,7 +68,6 @@ class VomnibarUI
     @update(true)
 
   updateSelection: ->
-    @selection = Math.min(@selection, @completions.length - 1)
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
@@ -141,6 +140,7 @@ class VomnibarUI
     # update completion list with the new data
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else "none"
+    @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
     @updateSelection()
 
   update: (updateSynchronously, callback) ->
