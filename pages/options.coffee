@@ -100,7 +100,7 @@ setFieldValue = (field, value) ->
 
 toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
   if advancedMode
-    $("advancedOptions").style.display = "table-row-group"
+    $("advancedOptions").style.display = "none"
     $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
   else
     $("advancedOptions").style.display = "table-row-group"

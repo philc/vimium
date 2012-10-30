@@ -17,7 +17,7 @@
       "background_scripts/main.js"
     ]
   },
-  "options_page": "options/options.html",
+  "options_page": "pages/options.html",
   "permissions": [
     "tabs",
     "bookmarks",
@@ -39,13 +39,13 @@
              "content_scripts/marks.js",
              "content_scripts/vimium_frontend.js"
             ],
-      "css": ["vimium.css"],
+      "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
   "browser_action": {
     "default_icon": "icons/browser_action_disabled.png",
-    "default_popup": "popup.html"
+    "default_popup": "pages/popup.html"
   }
 }

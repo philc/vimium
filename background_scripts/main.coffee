@@ -101,7 +101,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
     command = Commands.keyToCommandRegistry[key].command
     commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
-  dialogHtml = fetchFileContents("help_dialog.html")
+  dialogHtml = fetchFileContents("pages/help_dialog.html")
   for group of Commands.commandGroups
     dialogHtml = dialogHtml.replace("{{#{group}}}",
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
@@ -501,7 +501,7 @@ shouldShowUpgradeMessage = ->
 
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: chrome.extension.getURL("options/options.html"), index: tab.index + 1 }))
+    chrome.tabs.create({ url: chrome.extension.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
   unless framesForTab[sender.tab.id]
