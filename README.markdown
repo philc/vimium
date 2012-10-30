@@ -1,6 +1,8 @@
 Vimium - The Hacker's Browser
 =============================
 
+![Build Status](https://travis-ci.org/philc/vimium.png)
+
 Vimium is a Chrome extension that provides keyboard-based navigation and control in the spirit of the Vim
 editor.
 
