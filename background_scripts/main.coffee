@@ -73,11 +73,22 @@ isEnabledForUrl = (request) ->
   # excludedUrls are stored as a series of URL expressions separated by newlines.
   excludedUrls = Settings.get("excludedUrls").split("\n")
   isEnabled = true
+  passkeys = ""
   for url in excludedUrls
+    excludeParts = url.trim().split(/\s+/)
+    url = excludeParts[0]
     # The user can add "*" to the URL which means ".*"
     regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
-    isEnabled = false if request.url.match(regexp)
-  { isEnabledForUrl: isEnabled }
+    if request.url.match(regexp)
+      if excludeParts[1]
+        # if we're passing keys, then we're not disabled
+        # we might as well accumulate passkeys (alternative would be to accept only the first match)
+        passkeys = passkeys + excludeParts[1]
+      else
+        # any one match without passkeys disables vimium
+        isEnabled = false
+  console.log "isEnabledForUrl: #{isEnabled} #{passkeys} #{request.url}"
+  { isEnabledForUrl: isEnabled, passkeys: passkeys }
 
 # Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
 root.addExcludedUrl = (url) ->
