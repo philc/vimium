@@ -110,13 +110,10 @@ class BookmarkCompleter
     results = []
     toVisit = bookmarks
     while toVisit.length > 0
-      bookmark = toVisit.shift()
+      bookmark = toVisit.pop()
+      toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
       results.push(bookmark)
-      # preorder traversal:
-      # toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
-      # inorder traversal:
-      toVisit.unshift.apply(toVisit, bookmark.children) if (bookmark.children)
-    results
+    results.reverse()
 
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
