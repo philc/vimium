@@ -114,10 +114,10 @@ class BookmarkCompleter
     results = []
     toVisit = bookmarks
     while toVisit.length > 0
-      bookmark = toVisit.shift()
-      results.push(bookmark)
+      bookmark = toVisit.pop()
       toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
-    results
+      results.push(bookmark)
+    results.reverse()
 
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
