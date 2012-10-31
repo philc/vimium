@@ -359,15 +359,6 @@ extend window,
 
       false
 
-# 
-# Passkeys
-#
-
-passkeys="jknpu"
-
-isPasskey = ( keyChar ) ->
-  passkeys.indexOf(keyChar) >= 0
-
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
 # insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -375,7 +366,6 @@ isPasskey = ( keyChar ) ->
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
-
 onKeypress = (event) ->
   return unless handlerStack.bubbleEvent('keypress', event)
 
@@ -395,8 +385,6 @@ onKeypress = (event) ->
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
-        if isPasskey keyChar
-          return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
 
@@ -469,15 +457,6 @@ onKeydown = (event) ->
 
     else if (KeyboardUtils.isEscape(event))
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
-  
-    # passkeys:
-    #   only if no meta/control/alt key
-    #   only if !isInsertMode
-    #   only if !findMode
-    #   only if not "<ESC>
-    else
-      if isPasskey KeyboardUtils.getKeyChar(event)
-        return undefined
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
