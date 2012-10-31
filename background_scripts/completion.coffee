@@ -111,8 +111,8 @@ class BookmarkCompleter
     toVisit = bookmarks
     while toVisit.length > 0
       bookmark = toVisit.pop()
-      results.push(bookmark)
       toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
+      results.push(bookmark)
     results.reverse()
 
   computeRelevancy: (suggestion) ->
