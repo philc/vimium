@@ -2,7 +2,7 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters",
+editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
   "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
 
@@ -22,7 +22,7 @@ document.addEventListener "DOMContentLoaded", ->
     $(field).addEventListener "change", enableSaveButton, false
     $(field).addEventListener "change", onDataLoaded, false
 
-  $("advancedOptions").addEventListener "click", openAdvancedOptions, false
+  $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions, false
   $("showCommands").addEventListener "click", (->
     showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
   ), false
@@ -37,7 +37,14 @@ onOptionKeyup = (event) ->
     enableSaveButton()
 
 onDataLoaded = ->
-  $("linkHintCharacters").readOnly = $("filterLinkHints").checked
+  hide = (el) -> el.parentNode.parentNode.style.display = "none"
+  show = (el) -> el.parentNode.parentNode.style.display = "table-row"
+  if $("filterLinkHints").checked
+    hide $("linkHintCharacters")
+    show $("linkHintNumbers")
+  else
+    show $("linkHintCharacters")
+    hide $("linkHintNumbers")
 
 enableSaveButton = ->
   $("saveOptions").removeAttribute "disabled"
@@ -49,11 +56,14 @@ saveOptions = ->
   # the freedom to change the defaults in the future.
   for fieldName in editableFields
     field = $(fieldName)
-    if field.getAttribute("type") is "checkbox"
-      fieldValue = field.checked
-    else
-      fieldValue = field.value.trim()
-      field.value = fieldValue
+    switch field.getAttribute("type")
+      when "checkbox"
+        fieldValue = field.checked
+      when "number"
+        fieldValue = parseFloat field.value
+      else
+        fieldValue = field.value.trim()
+        field.value = fieldValue
 
     # If it's empty and not a field that we allow to be empty, restore to the default value
     if not fieldValue and canBeEmptyFields.indexOf(fieldName) is -1
@@ -88,13 +98,12 @@ setFieldValue = (field, value) ->
   else
     field.checked = value
 
-openAdvancedOptions = (event) ->
-  elements = document.getElementsByClassName("advancedOption")
-  for element in elements
-    element.style.display = (if (element.style.display is "table-row") then "none" else "table-row")
-  showOrHideLink = $("advancedOptions")
-  if showOrHideLink.innerHTML.match(/^Show/)?
-    showOrHideLink.innerHTML = "Hide advanced options&hellip;"
+toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
+  if advancedMode
+    $("advancedOptions").style.display = "none"
+    $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
   else
-    showOrHideLink.innerHTML = "Show advanced options&hellip;"
+    $("advancedOptions").style.display = "table-row-group"
+    $("advancedOptionsLink").innerHTML = "Hide advanced options"
+  advancedMode = !advancedMode
   event.preventDefault()

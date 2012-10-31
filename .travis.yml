@@ -1,0 +1,11 @@
+language: node_js
+node_js: 0.8
+before_install:
+  - "sudo npm install -g coffee-script"
+  - "cake build"
+script: "cake test"
+notifications:
+  email: false
+branches:
+  only:
+    - master

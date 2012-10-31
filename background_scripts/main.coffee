@@ -101,7 +101,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
     command = Commands.keyToCommandRegistry[key].command
     commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
-  dialogHtml = fetchFileContents("help_dialog.html")
+  dialogHtml = fetchFileContents("pages/help_dialog.html")
   for group of Commands.commandGroups
     dialogHtml = dialogHtml.replace("{{#{group}}}",
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
@@ -237,7 +237,7 @@ BackgroundCommands =
       # wait until that's over before we can call setScrollPosition.
       chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
         tabLoadedHandlers[tab.id] = ->
-          scrollPort = chrome.tabs.sendRequest(tab.id,
+          chrome.tabs.sendRequest(tab.id,
             name: "setScrollPosition",
             scrollX: tabQueueEntry.scrollX,
             scrollY: tabQueueEntry.scrollY)
@@ -338,10 +338,10 @@ chrome.tabs.onRemoved.addListener((tabId) ->
   openTabInfo = openTabs[tabId]
   updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId)
 
-  # If we restore chrome:# pages, they'll ignore Vimium keystrokes when they reappear.
-  # Pretend they never existed and adjust tab indices accordingly.
-  # Could possibly expand this into a blacklist in the future
-  if (/^chrome[^:]*:\/\/.*/.test(openTabInfo.url))
+  # If we restore pages that content scripts can't run on, they'll ignore Vimium keystrokes when they
+  # reappear. Pretend they never existed and adjust tab indices accordingly. Could possibly expand this into
+  # a blacklist in the future.
+  if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
     for i of tabQueue[openTabInfo.windowId]
       if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
         tabQueue[openTabInfo.windowId][i].positionIndex--
@@ -489,20 +489,6 @@ sendRequestToAllTabs = (args) ->
       for tab in window.tabs
         chrome.tabs.sendRequest(tab.id, args, null))
 
-# Compares two version strings (e.g. "1.1" and "1.5") and returns
-# -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.
-compareVersions = (versionA, versionB) ->
-  versionA = versionA.split(".")
-  versionB = versionB.split(".")
-  for i in [0...(Math.max(versionA.length, versionB.length))]
-    a = parseInt(versionA[i] || 0, 10)
-    b = parseInt(versionB[i] || 0, 10)
-    if (a < b)
-      return -1
-    else if (a > b)
-      return 1
-  0
-
 #
 # Returns true if the current extension version is greater than the previously recorded version in
 # localStorage, and false otherwise.
@@ -511,11 +497,11 @@ shouldShowUpgradeMessage = ->
   # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
   # installs.
   Settings.set("previousVersion", currentVersion) unless Settings.get("previousVersion")
-  compareVersions(currentVersion, Settings.get("previousVersion")) == 1
+  Utils.compareVersions(currentVersion, Settings.get("previousVersion")) == 1
 
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: chrome.extension.getURL("options/options.html"), index: tab.index + 1 }))
+    chrome.tabs.create({ url: chrome.extension.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
   unless framesForTab[sender.tab.id]
@@ -555,6 +541,8 @@ sendRequestHandlers =
   saveHelpDialogSettings: saveHelpDialogSettings,
   selectSpecificTab: selectSpecificTab,
   refreshCompleter: refreshCompleter
+  createMark: Marks.create.bind(Marks),
+  gotoMark: Marks.goto.bind(Marks)
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.extension.getURL('tests/dom_tests/dom_tests.html'))

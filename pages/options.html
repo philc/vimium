@@ -8,6 +8,7 @@
     <script src="../lib/clipboard.js"></script>
     <script src="../content_scripts/link_hints.js"></script>
     <script src="../content_scripts/vomnibar.js"></script>
+    <script src="../content_scripts/scroller.js"></script>
     <script src="../content_scripts/vimium_frontend.js"></script>
     <style type="text/css" media="screen">
       body {
@@ -137,7 +138,8 @@
         white-space: nowrap;
       }
       #buttonsPanel { width: 100%; }
-      #advancedOptions { line-height: 24px; }
+      #advancedOptions { display: none; }
+      #advancedOptionsLink { line-height: 24px; }
       #buttonContainer { float: right; }
       #buttonContainer button:last-child {
         margin-right: 0;
@@ -148,7 +150,6 @@
         right: -320px;
         width: 320px;
       }
-      tr.advancedOption { display: none; }
       input:read-only {
         background-color: #eee;
         color: #666;
@@ -174,7 +175,7 @@
         border-top: 1px solid #eee;
       }
     </style>
-  <link rel="stylesheet" type="text/css" href="../vimium.css" />
+  <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
   <script type="text/javascript" src="options.js"></script>
 
@@ -187,7 +188,7 @@
         <tr>
           <td class="caption">Scroll step size</td>
           <td>
-            <input id="scrollStepSize" type="text" />px
+            <input id="scrollStepSize" type="number" />px
           </td>
         </tr>
         <tr>
@@ -203,130 +204,143 @@
               <textarea id="excludedUrls"></textarea>
           </td>
         </tr>
-        <tr class="advancedOption">
-          <td class="caption">Custom key<br/>mappings</td>
-          <td id="mappingsHelp" verticalAlign="top">
-            <div class="help">
-              <div class="example">
-                <!-- TODO(ilya/philc): Expand this and style it better. -->
-                Enter commands to remap your keys. Available commands:<br/>
-                <pre id="exampleKeyMapping">
+        <tbody id='advancedOptions'>
+          <tr>
+            <td class="caption">Custom key<br/>mappings</td>
+            <td id="mappingsHelp" verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  <!-- TODO(ilya/philc): Expand this and style it better. -->
+                  Enter commands to remap your keys. Available commands:<br/>
+                  <pre id="exampleKeyMapping">
 map j scrollDown
 unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-                <a href="#" id="showCommands">Show available commands.</a>
-              </div>
-            </div>
-            <textarea id="keyMappings" type="text"></textarea>
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption">Characters used<br/> for link hints</td>
-          <td verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  The characters placed next to each link after typing "F" to enter link hinting mode.
+                  <a href="#" id="showCommands">Show available commands.</a>
                 </div>
               </div>
-              <input id="linkHintCharacters" type="text" />
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption">CSS for link hints</td>
-          <td verticalAlign="top">
-            <div class="help">
-              <div class="example">
-                The CSS used to style the characters next to each link hint.<br/><br/>
-                Note: these styles are used in addition to and take precedence over Vimium's
-                default styles.
-              </div>
-            </div>
-            <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption"></td>
-          <td verticalAlign="top" class="booleanOption">
-            <div class="help">
-              <div class="example">
-                After typing "F" to enter link hinting mode, this option lets you type the text of a link
-                to select it.
-              </div>
-            </div>
-            <label>
-              <input id="filterLinkHints" type="checkbox"/>
-              Use the link's name and numbers for link hint filtering
-            </label>
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption"></td>
-          <td verticalAlign="top" class="booleanOption">
-            <div class="help">
-              <div class="example">
-                The Heads-Up Display appears when typing into text boxes.
-              </div>
-            </div>
-            <label>
-              <input id="hideHud" type="checkbox"/>
-              Hide the Heads Up Display (HUD)
-            </label>
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption"></td>
-          <td verticalAlign="top" class="booleanOption">
-            <div class="help">
-              <div class="example">
-                Switch back to plain find mode by using the <code>\R</code> escape sequence.
-              </div>
-            </div>
-            <label>
-              <input id="regexFindMode" type="checkbox"/>
-              Treat find queries as regular expressions.
-            </label>
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption">Previous Patterns</td>
-          <td verticalAlign="top">
+              <textarea id="keyMappings" type="text"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">CSS for link hints</td>
+            <td verticalAlign="top">
               <div class="help">
                 <div class="example">
-                  Vimium will match against these patterns when using the "navigate to the previous page"
-                  command.
+                  The CSS used to style the characters next to each link hint.<br/><br/>
+                  Note: these styles are used in addition to and take precedence over Vimium's
+                  default styles.
                 </div>
               </div>
-              <input id="previousPatterns" type="text" />
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption">Next Patterns</td>
-          <td verticalAlign="top">
+              <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Characters used<br/> for link hints</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                    The characters placed next to each link after typing "F" to enter link hinting mode.
+                  </div>
+                </div>
+                <input id="linkHintCharacters" type="text" />
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Numbers used<br/> for filtered link hints</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                    The numbers placed next to each link after typing "F" to enter link hinting mode.
+                  </div>
+                </div>
+                <input id="linkHintNumbers" type="text" />
+            </td>
+          </tr>
+          <tr>
+            <td class="caption"></td>
+            <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
-                  Vimium will match against these patterns when using the "navigate to the next page" command.
+                  After typing "F" to enter link hinting mode, this option lets you type the text of a link
+                  to select it.
                 </div>
               </div>
-              <input id="nextPatterns" type="text" />
-          </td>
-        </tr>
-        <tr class="advancedOption">
-          <td class="caption">Search</td>
-          <td verticalAlign="top">
+              <label>
+                <input id="filterLinkHints" type="checkbox"/>
+                Use the link's name and numbers for link hint filtering
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption"></td>
+            <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
-                  Set which search engine is used when searching from the Vomnibar (examples: "http://duckduckgo.com/?q=", "http://www.google.com/search?q=").
+                  The Heads-Up Display appears when typing into text boxes.
                 </div>
               </div>
-              <input id="searchUrl" type="text" />
-          </td>
-        </tr>
+              <label>
+                <input id="hideHud" type="checkbox"/>
+                Hide the Heads Up Display (HUD)
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption"></td>
+            <td verticalAlign="top" class="booleanOption">
+              <div class="help">
+                <div class="example">
+                  Switch back to plain find mode by using the <code>\R</code> escape sequence.
+                </div>
+              </div>
+              <label>
+                <input id="regexFindMode" type="checkbox"/>
+                Treat find queries as regular expressions.
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Previous Patterns</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                    Vimium will match against these patterns when using the "navigate to the previous page"
+                    command.
+                  </div>
+                </div>
+                <input id="previousPatterns" type="text" />
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Next Patterns</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                    Vimium will match against these patterns when using the "navigate to the next page" command.
+                  </div>
+                </div>
+                <input id="nextPatterns" type="text" />
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Search</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                    Set which search engine is used when searching from the Vomnibar (examples: "http://duckduckgo.com/?q=", "http://www.google.com/search?q=").
+                  </div>
+                </div>
+                <input id="searchUrl" type="text" />
+            </td>
+          </tr>
+        </tbody>
       </table>
 
       <div id="buttonsPanel">
-        <a href="#" id="advancedOptions">Show advanced options&hellip;</a>
+        <a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a>
         <div id="buttonContainer">
           <button id="restoreSettings">Restore to Defaults</button>
           <button id="saveOptions" disabled="true">Save Options</button>

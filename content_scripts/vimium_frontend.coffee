@@ -4,20 +4,20 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
+window.handlerStack = new HandlerStack
+
 insertModeLock = null
 findMode = false
 findModeQuery = { rawQuery: "" }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
-handlerStack = new HandlerStack
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.
 isEnabledForUrl = true
 # The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
-activatedElement = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -42,9 +42,9 @@ settings =
   port: null
   values: {}
   loadedValues: 0
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "filterLinkHints", "hideHud", "previousPatterns",
-      "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-      "helpDialog_showAdvancedCommands"]
+  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
+    "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
+    "helpDialog_showAdvancedCommands"]
   isLoaded: false
   eventListeners: {}
 
@@ -96,6 +96,8 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
+  Scroller.init()
+
   checkIfEnabledForUrl()
 
   refreshCompletionKeys()
@@ -106,6 +108,7 @@ initializePreDomReady = ->
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
+    showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
@@ -187,7 +190,7 @@ enterInsertModeIfElementIsFocused = ->
   if (document.activeElement && isEditable(document.activeElement) && !findMode)
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
-onDOMActivate = (event) -> activatedElement = event.target
+onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -199,53 +202,9 @@ executePageCommand = (request) ->
 
   refreshCompletionKeys(request)
 
-#
-# activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
-# input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
-#
-scrollActivatedElementBy = (direction, amount) ->
-  # if this is called before domReady, just use the window scroll function
-  if (!document.body)
-    if (direction == "x")
-      window.scrollBy(amount, 0)
-    else
-      window.scrollBy(0, amount)
-    return
-
-  # TODO refactor and put this together with the code in getVisibleClientRect
-  isRendered = (element) ->
-    computedStyle = window.getComputedStyle(element, null)
-    return !(computedStyle.getPropertyValue("visibility") != "visible" ||
-        computedStyle.getPropertyValue("display") == "none")
-
-  if (!activatedElement || !isRendered(activatedElement))
-    activatedElement = document.body
-
-  scrollName = if (direction == "x") then "scrollLeft" else "scrollTop"
-
-  # Chrome does not report scrollHeight accurately for nodes with pseudo-elements of height 0 (bug 110149).
-  # Therefore we just try to increase scrollTop blindly -- if it fails we know we have reached the end of the
-  # content.
-  if (amount != 0)
-    element = activatedElement
-    loop
-      oldScrollValue = element[scrollName]
-      element[scrollName] += amount
-      lastElement = element
-      # we may have an orphaned element. if so, just scroll the body element.
-      element = element.parentElement || document.body
-      break unless (lastElement[scrollName] == oldScrollValue && lastElement != document.body)
-
-  # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
-  # position will not provide any more visual feedback to the user. therefore we deactivate it so that
-  # subsequent scrolls only move the parent element.
-  rect = activatedElement.getBoundingClientRect()
-  if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
-    activatedElement = lastElement
-
 setScrollPosition = (scrollX, scrollY) ->
   if (scrollX > 0 || scrollY > 0)
-    DomUtils.documentReady(-> window.scrollBy(scrollX, scrollY))
+    DomUtils.documentReady(-> window.scrollTo(scrollX, scrollY))
 
 #
 # Called from the backend in order to change frame focus.
@@ -258,19 +217,18 @@ window.focusThisFrame = (shouldHighlight) ->
     setTimeout((-> document.body.style.border = borderWas), 200)
 
 extend window,
-  scrollToBottom: -> window.scrollTo(window.pageXOffset, document.body.scrollHeight)
-  scrollToTop: -> window.scrollTo(window.pageXOffset, 0)
-  scrollToLeft: -> window.scrollTo(0, window.pageYOffset)
-  scrollToRight: -> window.scrollTo(document.body.scrollWidth, window.pageYOffset)
-  scrollUp: -> scrollActivatedElementBy("y", -1 * settings.get("scrollStepSize"))
-  scrollDown: ->
-    scrollActivatedElementBy("y", parseFloat(settings.get("scrollStepSize")))
-  scrollPageUp: -> scrollActivatedElementBy("y", -1 * window.innerHeight / 2)
-  scrollPageDown: -> scrollActivatedElementBy("y", window.innerHeight / 2)
-  scrollFullPageUp: -> scrollActivatedElementBy("y", -window.innerHeight)
-  scrollFullPageDown: -> scrollActivatedElementBy("y", window.innerHeight)
-  scrollLeft: -> scrollActivatedElementBy("x", -1 * settings.get("scrollStepSize"))
-  scrollRight: -> scrollActivatedElementBy("x", parseFloat(settings.get("scrollStepSize")))
+  scrollToBottom: -> Scroller.scrollTo "y", "max"
+  scrollToTop: -> Scroller.scrollTo "y", 0
+  scrollToLeft: -> Scroller.scrollTo "x", 0
+  scrollToRight: -> Scroller.scrollTo "x", "max"
+  scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
+  scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
+  scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
+  scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
+  scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
+  scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
+  scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
+  scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
 
 extend window,
   reload: -> window.location.reload()
@@ -356,6 +314,7 @@ extend window,
       else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
         DomUtils.removeElement hintContainingDiv
         @remove()
+        return true
 
       false
 
@@ -464,7 +423,7 @@ onKeydown = (event) ->
   #
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
-  # TOOD(ilya): Revisit @ Not sure it's the absolute best approach.
+  # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))

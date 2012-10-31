@@ -21,8 +21,9 @@ root.Settings = Settings =
   # options/options.(coffee|html) only handle booleans and strings; therefore
   # all defaults must be booleans or strings
   defaults:
-    scrollStepSize: "60"
+    scrollStepSize: 60
     linkHintCharacters: "sadfjklewcmpgh"
+    linkHintNumbers: "0123456789"
     filterLinkHints: false
     hideHud: false
     userDefinedLinkHintCss:
@@ -61,6 +62,9 @@ root.Settings = Settings =
     # default/fall back search engine
     searchUrl: "http://www.google.com/search?q="
 
-# Initialization code.
-# We use this parameter to coordinate any necessary schema changes.
+    settingsVersion: Utils.getCurrentVersion()
+
+# We use settingsVersion to coordinate any necessary schema changes.
+if Utils.compareVersions("1.41", Settings.get("settingsVersion")) != -1
+  Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
 Settings.set("settingsVersion", Utils.getCurrentVersion())

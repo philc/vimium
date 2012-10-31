@@ -37,7 +37,22 @@ context "convertToUrl",
     assert.equal "http://127.0.0.1", Utils.convertToUrl("127.0.0.1")
     assert.equal "http://127.0.0.1:8080", Utils.convertToUrl("127.0.0.1:8080")
     assert.equal "http://[::]:8080", Utils.convertToUrl("[::]:8080")
+    assert.equal "view-source:    0.0.0.0", Utils.convertToUrl("view-source:    0.0.0.0")
 
   should "convert non-URL terms into search queries", ->
     assert.equal "http://www.google.com/search?q=google", Utils.convertToUrl("google")
     assert.equal "http://www.google.com/search?q=go%20ogle.com", Utils.convertToUrl("go ogle.com")
+
+context "Function currying",
+  should "Curry correctly", ->
+    foo = (a, b) -> "#{a},#{b}"
+    assert.equal "1,2", foo.curry()(1,2)
+    assert.equal "1,2", foo.curry(1)(2)
+    assert.equal "1,2", foo.curry(1,2)()
+
+context "compare versions",
+  should "compare correctly", ->
+    assert.equal 0, Utils.compareVersions("1.40.1", "1.40.1")
+    assert.equal -1, Utils.compareVersions("1.40.1", "1.40.2")
+    assert.equal -1, Utils.compareVersions("1.40.1", "1.41")
+    assert.equal 1, Utils.compareVersions("1.41", "1.40")

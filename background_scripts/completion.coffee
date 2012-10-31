@@ -91,8 +91,12 @@ class BookmarkCompleter
   onBookmarksLoaded: -> @performSearch() if @currentSearch
 
   performSearch: ->
-    results = @bookmarks.filter (bookmark) =>
-      RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
+    results =
+      if @currentSearch.queryTerms.length > 0
+        @bookmarks.filter (bookmark) =>
+          RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
+      else
+        []
     suggestions = results.map (bookmark) =>
       new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, @computeRelevancy)
     onComplete = @currentSearch.onComplete
@@ -123,7 +127,11 @@ class HistoryCompleter
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
-      results = history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
+      results =
+        if queryTerms.length > 0
+          history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
+        else
+          []
       suggestions = results.map (entry) =>
         new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
       onComplete(suggestions)
@@ -244,7 +252,6 @@ RankingUtils =
   # Whether the given URL or title match any one of the query terms. This is used to prune out irrelevant
   # suggestions before we try to rank them.
   matches: (queryTerms, url, title) ->
-    return false if queryTerms.length == 0
     for term in queryTerms
       regexp = RegexpCache.get(term)
       return false unless title.match(regexp) || url.match(regexp)

@@ -108,6 +108,24 @@ Utils =
     else
       Utils.createSearchUrl string
 
+  # detects both literals and dynamically created strings
+  isString: (obj) -> typeof obj == 'string' or obj instanceof String
+
+
+  # Compares two version strings (e.g. "1.1" and "1.5") and returns
+  # -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.
+  compareVersions: (versionA, versionB) ->
+    versionA = versionA.split(".")
+    versionB = versionB.split(".")
+    for i in [0...(Math.max(versionA.length, versionB.length))]
+      a = parseInt(versionA[i] || 0, 10)
+      b = parseInt(versionB[i] || 0, 10)
+      if (a < b)
+        return -1
+      else if (a > b)
+        return 1
+    0
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
