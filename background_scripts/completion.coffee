@@ -112,11 +112,11 @@ class BookmarkCompleter
   # Traverses the bookmark hierarchy, and retuns a flattened list of all bookmarks in the tree.
   traverseBookmarks: (bookmarks) ->
     results = []
-    toVisit = bookmarks
+    toVisit = bookmarks.reverse()
     while toVisit.length > 0
-      bookmark = toVisit.shift()
+      bookmark = toVisit.pop()
       results.push(bookmark)
-      toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
+      toVisit.push.apply(toVisit, bookmark.children.reverse()) if (bookmark.children)
     results
 
   computeRelevancy: (suggestion) ->
