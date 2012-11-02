@@ -8,12 +8,6 @@ editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "link
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 
-postSaveHooks = keyMappings: (value) ->
-  commands = chrome.extension.getBackgroundPage().Commands
-  commands.clearKeyMappingsAndSetDefaults()
-  commands.parseCustomKeyMappings value
-  chrome.extension.getBackgroundPage().refreshCompletionKeysAfterMappingSave()
-
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
 
@@ -73,7 +67,7 @@ saveOptions = ->
       bgSettings.set fieldName, fieldValue
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
-    postSaveHooks[fieldName] fieldValue if postSaveHooks[fieldName]
+    bgSettings.doPostUpdateHook fieldName, fieldValue
 
   $("saveOptions").disabled = true
 
