@@ -11,6 +11,7 @@
       "lib/utils.js",
       "background_scripts/commands.js",
       "lib/clipboard.js",
+      "background_scripts/sync.js",
       "background_scripts/settings.js",
       "background_scripts/completion.js",
       "background_scripts/marks.js",
@@ -23,6 +24,7 @@
     "bookmarks",
     "history",
     "clipboardRead",
+    "storage",
     "<all_urls>"
   ],
   "content_scripts": [
