@@ -6,6 +6,7 @@ global.chrome = {}
 
 context "bookmark completer",
   setup ->
+    @bookmark3 = { title: "bookmark3", url: "bookmark3.com" }
     @bookmark2 = { title: "bookmark2", url: "bookmark2.com" }
     @bookmark1 = { title: "bookmark1", url: "bookmark1.com", children: [@bookmark2] }
     global.chrome.bookmarks =
@@ -13,9 +14,9 @@ context "bookmark completer",
 
     @completer = new BookmarkCompleter()
 
-  should "flatten a list of bookmarks", ->
-    result = @completer.traverseBookmarks([@bookmark1])
-    assert.arrayEqual [@bookmark1, @bookmark2], @completer.traverseBookmarks([@bookmark1])
+  should "flatten a list of bookmarks with inorder traversal", ->
+    result = @completer.traverseBookmarks([@bookmark1, @bookmark3])
+    assert.arrayEqual [@bookmark1, @bookmark2, @bookmark3], @completer.traverseBookmarks([@bookmark1])
 
   should "return matching bookmarks when searching", ->
     @completer.refresh()
