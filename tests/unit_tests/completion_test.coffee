@@ -16,7 +16,7 @@ context "bookmark completer",
 
   should "flatten a list of bookmarks with inorder traversal", ->
     result = @completer.traverseBookmarks([@bookmark1, @bookmark3])
-    assert.arrayEqual [@bookmark1, @bookmark2, @bookmark3], @completer.traverseBookmarks([@bookmark1])
+    assert.arrayEqual [@bookmark1, @bookmark2, @bookmark3], result
 
   should "return matching bookmarks when searching", ->
     @completer.refresh()
