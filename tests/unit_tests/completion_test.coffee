@@ -167,6 +167,12 @@ context "RankingUtils",
   should "do case insensitive word relevancy (not matching)", ->
     assert.isTrue RankingUtils.wordRelevancy(["DOES_NOT_MATCH"], "MARIO", "MARio") == 0.0
 
+  should "every term must match at least one thing (matching)", ->
+    assert.isTrue RankingUtils.matches(["cat", "dog"], "catapult", "hound dog")
+
+  should "every term must match at least one thing (not matching)", ->
+    assert.isTrue not RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog")
+
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
   results = []

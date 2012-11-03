@@ -251,12 +251,15 @@ class MultiCompleter
 RankingUtils =
   # Whether the given things (usually URLs or titles) match any one of the query terms.
   # This is used to prune out irrelevant suggestions before we try to rank them, and for calculating word relevancy.
+  # Every term must match at least one thing.
   matches: (queryTerms, things...) ->
     for term in queryTerms
       regexp = RegexpCache.get(term)
+      matchedTerm = false
       for thing in things
-        return true if thing?.match && thing.match regexp
-    false
+        matchedTerm = matchedTerm || (thing?.match && thing.match regexp)
+      return false unless matchedTerm
+    true
 
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
   wordRelevancy: (queryTerms, url, title) ->
