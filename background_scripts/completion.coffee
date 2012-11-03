@@ -249,13 +249,14 @@ class MultiCompleter
 
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
-  # Whether the given URL or title match any one of the query terms. This is used to prune out irrelevant
-  # suggestions before we try to rank them.
-  matches: (queryTerms, url, title) ->
+  # Whether the given things (usually URLs or titles) match any one of the query terms.
+  # This is used to prune out irrelevant suggestions before we try to rank them, and for calculating word relevancy.
+  matches: (queryTerms, things...) ->
     for term in queryTerms
       regexp = RegexpCache.get(term)
-      return false unless (title && title.match(regexp)) || (url && url.match(regexp))
-    true
+      for thing in things
+        return true if thing?.match && thing.match regexp
+    false
 
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
   wordRelevancy: (queryTerms, url, title) ->
@@ -264,8 +265,8 @@ RankingUtils =
     titleScore = 0.0
     for term in queryTerms
       queryLength += term.length
-      urlScore += 1 if RankingUtils.matches([term], url, null)
-      titleScore += 1 if RankingUtils.matches([term], null, title)
+      urlScore += 1 if RankingUtils.matches [term], url
+      titleScore += 1 if RankingUtils.matches [term], title
     urlScore = urlScore / queryTerms.length
     urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
     if title
