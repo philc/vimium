@@ -17,7 +17,7 @@ pushd $TDIR > /dev/null
   cake build
   cake test
   TEST_RESULT=$?
-popd
+popd > /dev/null
 
 echo "Tests completed."
 
