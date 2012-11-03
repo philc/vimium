@@ -130,8 +130,8 @@ context "tab completer",
 
   should "return matching tabs", ->
     results = filterCompleter(@completer, ["tab2"])
-    assert.equal "tab2.com", results.map (tab) -> tab.url
-    assert.equal 2, results.map (tab) -> tab.tabId
+    assert.arrayEqual ["tab2.com"], results.map (tab) -> tab.url
+    assert.arrayEqual [2], results.map (tab) -> tab.tabId
 
 context "suggestions",
   should "escape html in page titles", ->
