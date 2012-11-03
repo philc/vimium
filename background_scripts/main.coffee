@@ -198,9 +198,9 @@ filterCompleter = (args, port) ->
 
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
 
-chrome.tabs.onSelectionChanged.addListener((tabId, selectionInfo) ->
+chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
-    selectionChangedHandlers.pop().call())
+    selectionChangedHandlers.pop().call()
 
 repeatFunction = (func, totalCount, currentCount, frameId) ->
   if (currentCount < totalCount)
@@ -316,25 +316,25 @@ updateScrollPosition = (tab, scrollX, scrollY) ->
   openTabs[tab.id].scrollX = scrollX
   openTabs[tab.id].scrollY = scrollY
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) ->
+chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # only do this once per URL change
   chrome.tabs.insertCSS tabId,
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   updateOpenTabs(tab)
-  updateActiveState(tabId))
+  updateActiveState(tabId)
 
-chrome.tabs.onAttached.addListener((tabId, attachedInfo) ->
+chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
   # We should update all the tabs in the old window and the new window.
   if openTabs[tabId]
     updatePositionsAndWindowsForAllTabsInWindow(openTabs[tabId].windowId)
-  updatePositionsAndWindowsForAllTabsInWindow(attachedInfo.newWindowId))
+  updatePositionsAndWindowsForAllTabsInWindow(attachedInfo.newWindowId)
 
-chrome.tabs.onMoved.addListener((tabId, moveInfo) ->
-  updatePositionsAndWindowsForAllTabsInWindow(moveInfo.windowId))
+chrome.tabs.onMoved.addListener (tabId, moveInfo) ->
+  updatePositionsAndWindowsForAllTabsInWindow(moveInfo.windowId)
 
-chrome.tabs.onRemoved.addListener((tabId) ->
+chrome.tabs.onRemoved.addListener (tabId) ->
   openTabInfo = openTabs[tabId]
   updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId)
 
@@ -353,11 +353,11 @@ chrome.tabs.onRemoved.addListener((tabId) ->
     tabQueue[openTabInfo.windowId] = [openTabInfo]
 
   delete openTabs[tabId]
-  delete framesForTab[tabId])
+  delete framesForTab[tabId]
 
-chrome.tabs.onActiveChanged.addListener((tabId, selectInfo) -> updateActiveState(tabId))
+chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
 
-chrome.windows.onRemoved.addListener((windowId) -> delete tabQueue[windowId])
+chrome.windows.onRemoved.addListener (windowId) -> delete tabQueue[windowId]
 
 # End action functions
 
@@ -561,10 +561,10 @@ if shouldShowUpgradeMessage()
   sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 
 # Ensure that openTabs is populated when Vimium is installed.
-chrome.windows.getAll({ populate: true }, (windows) ->
+chrome.windows.getAll { populate: true }, (windows) ->
   for window in windows
     for tab in window.tabs
       updateOpenTabs(tab)
       createScrollPositionHandler = ->
         (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
-      chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler()))
+      chrome.tabs.sendRequest(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
