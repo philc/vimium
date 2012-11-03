@@ -3,7 +3,7 @@ root = exports ? window
 currentVersion = Utils.getCurrentVersion()
 
 tabQueue = {} # windowId -> Array
-openTabs = {} # tabId -> object with various tab properties
+tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
 singleKeyCommands = []
@@ -278,7 +278,7 @@ selectTab = (callback, direction) ->
       chrome.tabs.update(toSelect.id, { selected: true })))
 
 updateOpenTabs = (tab) ->
-  openTabs[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId }
+  tabInfoMap[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId }
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
@@ -313,8 +313,8 @@ handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
 
 updateScrollPosition = (tab, scrollX, scrollY) ->
-  openTabs[tab.id].scrollX = scrollX
-  openTabs[tab.id].scrollY = scrollY
+  tabInfoMap[tab.id].scrollX = scrollX
+  tabInfoMap[tab.id].scrollY = scrollY
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # only do this once per URL change
@@ -327,15 +327,15 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
   # We should update all the tabs in the old window and the new window.
-  if openTabs[tabId]
-    updatePositionsAndWindowsForAllTabsInWindow(openTabs[tabId].windowId)
+  if tabInfoMap[tabId]
+    updatePositionsAndWindowsForAllTabsInWindow(tabInfoMap[tabId].windowId)
   updatePositionsAndWindowsForAllTabsInWindow(attachedInfo.newWindowId)
 
 chrome.tabs.onMoved.addListener (tabId, moveInfo) ->
   updatePositionsAndWindowsForAllTabsInWindow(moveInfo.windowId)
 
 chrome.tabs.onRemoved.addListener (tabId) ->
-  openTabInfo = openTabs[tabId]
+  openTabInfo = tabInfoMap[tabId]
   updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId)
 
   # If we restore pages that content scripts can't run on, they'll ignore Vimium keystrokes when they
@@ -352,7 +352,9 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   else
     tabQueue[openTabInfo.windowId] = [openTabInfo]
 
-  delete openTabs[tabId]
+  # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
+  # scroll position)
+  setTimeout (-> delete tabInfoMap[tabId]), 1000
   delete framesForTab[tabId]
 
 chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
@@ -364,7 +366,7 @@ chrome.windows.onRemoved.addListener (windowId) -> delete tabQueue[windowId]
 updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
   chrome.tabs.getAllInWindow(windowId, (tabs) ->
     for tab in tabs
-      openTabInfo = openTabs[tab.id]
+      openTabInfo = tabInfoMap[tab.id]
       if (openTabInfo)
         openTabInfo.positionIndex = tab.index
         openTabInfo.windowId = tab.windowId)
@@ -560,7 +562,7 @@ populateSingleKeyCommands()
 if shouldShowUpgradeMessage()
   sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 
-# Ensure that openTabs is populated when Vimium is installed.
+# Ensure that tabInfoMap is populated when Vimium is installed.
 chrome.windows.getAll { populate: true }, (windows) ->
   for window in windows
     for tab in window.tabs
