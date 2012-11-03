@@ -153,8 +153,19 @@ context "suggestions",
 
 context "RankingUtils",
   should "do a case insensitive match", ->
-    assert.isTrue RankingUtils.matches(["maRiO"], "MARIO", "MARIo")
+    assert.isTrue RankingUtils.matches(["aRi"], "MARIO", "MARio")
 
+  should "do a case insensitive match on full term", ->
+    assert.isTrue RankingUtils.matches(["MaRiO"], "MARIO", "MARio")
+
+  should "do a case insensitive match on more than just two terms", ->
+    assert.isTrue RankingUtils.matches(["aRi"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio")
+
+  should "do case insensitive word relevancy (matching)", ->
+    assert.isTrue RankingUtils.wordRelevancy(["aRi"], "MARIO", "MARio") > 0.0
+
+  should "do case insensitive word relevancy (not matching)", ->
+    assert.isTrue RankingUtils.wordRelevancy(["DOES_NOT_MATCH"], "MARIO", "MARio") == 0.0
 
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
