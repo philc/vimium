@@ -254,7 +254,7 @@ RankingUtils =
   matches: (queryTerms, url, title) ->
     for term in queryTerms
       regexp = RegexpCache.get(term)
-      return false unless title.match(regexp) || url.match(regexp)
+      return false unless (title && title.match(regexp)) || (url && url.match(regexp))
     true
 
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
@@ -264,8 +264,8 @@ RankingUtils =
     titleScore = 0.0
     for term in queryTerms
       queryLength += term.length
-      urlScore += 1 if url.indexOf(term) >= 0
-      titleScore += 1 if title && title.indexOf(term) >= 0
+      urlScore += 1 if RankingUtils.matches([term], url, null)
+      titleScore += 1 if RankingUtils.matches([term], null, title)
     urlScore = urlScore / queryTerms.length
     urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
     if title
