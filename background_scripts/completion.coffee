@@ -50,8 +50,15 @@ class Suggestion
   highlightTerms: (string) ->
     ranges = []
     for term in @queryTerms
-      i = string.search(RegexpCache.get(term))
-      ranges.push([i, i + term.length]) if i >= 0
+      textPosition = 0
+      splits = string.split(RegexpCache.get(term, "(", ")")).reverse()
+      while 0 < splits.length
+        unmatchedText = splits.pop()
+        textPosition += unmatchedText.length
+        matchedText = if 0 < splits.length then splits.pop() else null
+        if matchedText
+          ranges.push([textPosition, textPosition + matchedText.length])
+          textPosition += matchedText.length
 
     return string if ranges.length == 0
 
