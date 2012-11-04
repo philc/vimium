@@ -6,6 +6,7 @@ global.chrome = {}
 
 context "bookmark completer",
   setup ->
+    @bookmark3 = { title: "bookmark3", url: "bookmark3.com" }
     @bookmark2 = { title: "bookmark2", url: "bookmark2.com" }
     @bookmark1 = { title: "bookmark1", url: "bookmark1.com", children: [@bookmark2] }
     global.chrome.bookmarks =
@@ -13,9 +14,9 @@ context "bookmark completer",
 
     @completer = new BookmarkCompleter()
 
-  should "flatten a list of bookmarks", ->
-    result = @completer.traverseBookmarks([@bookmark1])
-    assert.arrayEqual [@bookmark1, @bookmark2], @completer.traverseBookmarks([@bookmark1])
+  should "flatten a list of bookmarks with inorder traversal", ->
+    result = @completer.traverseBookmarks([@bookmark1, @bookmark3])
+    assert.arrayEqual [@bookmark1, @bookmark2, @bookmark3], result
 
   should "return matching bookmarks when searching", ->
     @completer.refresh()
@@ -129,8 +130,8 @@ context "tab completer",
 
   should "return matching tabs", ->
     results = filterCompleter(@completer, ["tab2"])
-    assert.equal "tab2.com", results.map (tab) -> tab.url
-    assert.equal 2, results.map (tab) -> tab.tabId
+    assert.arrayEqual ["tab2.com"], results.map (tab) -> tab.url
+    assert.arrayEqual [2], results.map (tab) -> tab.tabId
 
 context "suggestions",
   should "escape html in page titles", ->
@@ -153,8 +154,25 @@ context "suggestions",
 
 context "RankingUtils",
   should "do a case insensitive match", ->
-    assert.isTrue RankingUtils.matches(["maRiO"], "MARIO", "MARIo")
+    assert.isTrue RankingUtils.matches(["aRi"], "MARIO", "MARio")
 
+  should "do a case insensitive match on full term", ->
+    assert.isTrue RankingUtils.matches(["MaRiO"], "MARIO", "MARio")
+
+  should "do a case insensitive match on more than just two terms", ->
+    assert.isTrue RankingUtils.matches(["aRi"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio")
+
+  should "do case insensitive word relevancy (matching)", ->
+    assert.isTrue RankingUtils.wordRelevancy(["aRi"], "MARIO", "MARio") > 0.0
+
+  should "do case insensitive word relevancy (not matching)", ->
+    assert.isTrue RankingUtils.wordRelevancy(["DOES_NOT_MATCH"], "MARIO", "MARio") == 0.0
+
+  should "every term must match at least one thing (matching)", ->
+    assert.isTrue RankingUtils.matches(["cat", "dog"], "catapult", "hound dog")
+
+  should "every term must match at least one thing (not matching)", ->
+    assert.isTrue not RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog")
 
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->

@@ -67,17 +67,18 @@ task "package", "build .crx file", ->
 
   crxmake.on "exit", -> fs.writeFileSync "manifest.json", origManifestText
 
-runUnitTests = (projectDir=".") ->
+runUnitTests = (projectDir=".", testNameFilter) ->
   console.log "Running unit tests..."
   basedir = path.join projectDir, "/tests/unit_tests/"
   test_files = fs.readdirSync(basedir).filter((filename) -> filename.indexOf("_test.js") > 0)
   test_files = test_files.map((filename) -> basedir + filename)
   test_files.forEach (file) -> require (if file[0] == '/' then '' else './') + file
-  Tests.run()
+  Tests.run(testNameFilter)
   return Tests.testsFailed
 
-task "test", "run all tests", ->
-  unitTestsFailed = runUnitTests()
+option '', '--filter-tests [string]', 'filter tests by matching string'
+task "test", "run all tests", (options) ->
+  unitTestsFailed = runUnitTests('.', options['filter-tests'])
 
   console.log "Running DOM tests..."
   phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]

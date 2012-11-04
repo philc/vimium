@@ -112,11 +112,11 @@ class BookmarkCompleter
   # Traverses the bookmark hierarchy, and retuns a flattened list of all bookmarks in the tree.
   traverseBookmarks: (bookmarks) ->
     results = []
-    toVisit = bookmarks
+    toVisit = bookmarks.reverse()
     while toVisit.length > 0
-      bookmark = toVisit.shift()
+      bookmark = toVisit.pop()
       results.push(bookmark)
-      toVisit.push.apply(toVisit, bookmark.children) if (bookmark.children)
+      toVisit.push.apply(toVisit, bookmark.children.reverse()) if (bookmark.children)
     results
 
   computeRelevancy: (suggestion) ->
@@ -249,12 +249,16 @@ class MultiCompleter
 
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
-  # Whether the given URL or title match any one of the query terms. This is used to prune out irrelevant
-  # suggestions before we try to rank them.
-  matches: (queryTerms, url, title) ->
+  # Whether the given things (usually URLs or titles) match any one of the query terms.
+  # This is used to prune out irrelevant suggestions before we try to rank them, and for calculating word relevancy.
+  # Every term must match at least one thing.
+  matches: (queryTerms, things...) ->
     for term in queryTerms
       regexp = RegexpCache.get(term)
-      return false unless title.match(regexp) || url.match(regexp)
+      matchedTerm = false
+      for thing in things
+        matchedTerm ||= thing.match regexp
+      return false unless matchedTerm
     true
 
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
@@ -264,8 +268,8 @@ RankingUtils =
     titleScore = 0.0
     for term in queryTerms
       queryLength += term.length
-      urlScore += 1 if url.indexOf(term) >= 0
-      titleScore += 1 if title && title.indexOf(term) >= 0
+      urlScore += 1 if url && RankingUtils.matches [term], url
+      titleScore += 1 if title && RankingUtils.matches [term], title
     urlScore = urlScore / queryTerms.length
     urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
     if title

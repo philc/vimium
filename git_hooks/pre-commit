@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Preparing to run tests..."
+
 TDIR=`mktemp -d -t vimium`
 
 if [ $? -ne 0 ]
@@ -8,10 +10,16 @@ then
 fi
 
 git checkout-index --prefix=$TDIR/ -af
+# because submodules don't get picked up by checkout-index
+cp -r ./tests/shoulda.js/ $TDIR/tests/shoulda.js/
 
-cake test
+pushd $TDIR > /dev/null
+  cake build
+  cake test
+  TEST_RESULT=$?
+popd > /dev/null
 
-TEST_RESULT=$?
+echo "Tests completed."
 
 rm -rf $TDIR
 

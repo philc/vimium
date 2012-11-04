@@ -166,6 +166,10 @@ don't exceed 110 characters.
 Release Notes
 -------------
 
+1.42 (11/03/2012)
+
+- Bugfixes.
+
 1.41 (10/27/2012)
 
 - Bugfixes.
