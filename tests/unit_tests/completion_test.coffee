@@ -174,6 +174,31 @@ context "RankingUtils",
   should "every term must match at least one thing (not matching)", ->
     assert.isTrue not RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog")
 
+context "RegexpCache",
+  should "RegexpCache is in fact caching (positive case)", ->
+    assert.isTrue RegexpCache.get("this") is RegexpCache.get("this")
+
+  should "RegexpCache is in fact caching (negative case)", ->
+    assert.isTrue RegexpCache.get("this") isnt RegexpCache.get("that")
+
+  should "RegexpCache prefix/suffix wrapping is working (positive case)", ->
+    assert.isTrue RegexpCache.get("this", "(", ")") is RegexpCache.get("this", "(", ")")
+
+  should "RegexpCache prefix/suffix wrapping is working (negative case)", ->
+    assert.isTrue RegexpCache.get("this", "(", ")") isnt RegexpCache.get("this")
+
+  should "search for a string", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("dog")) == 6
+
+  should "search for a string which isn't there", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("cat")) == -1
+
+  should "search for a string with a prefix/suffix (positive case)", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("dog", "\\b", "\\b")) == 6
+
+  should "search for a string with a prefix/suffix (negative case)", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("do", "\\b", "\\b")) == -1
+
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
   results = []
