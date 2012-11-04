@@ -307,12 +307,16 @@ RegexpCache =
 
   clear: -> @cache = {}
 
-  get: (string) ->
+  # Get rexexp for string from cache, creating the regexp if necessary.
+  # Regexp meta-characters in string are escaped.
+  # Regexp is wrapped in prefix/suffix, which may contain meta-characters.
+  get: (string, prefix="", suffix="") ->
     @init() unless @initialized
-    @cache[string] ||= @escapeRegexp(string)
-
-  # Creates a Regexp from the given string, with all special Regexp characters escaped.
-  escapeRegexp: (string) -> new RegExp(string.replace(@escapeRegExp, "\\$&"), "i")
+    regexpString = string.replace(@escapeRegExp, "\\$&")
+    # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
+    regexpString = prefix + regexpString if prefix
+    regexpString = regexpString + suffix if suffix
+    @cache[regexpString] ||= new RegExp(regexpString, "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
@@ -382,3 +386,4 @@ root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
+root.RegexpCache = RegexpCache
