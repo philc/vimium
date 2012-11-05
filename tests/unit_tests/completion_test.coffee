@@ -152,6 +152,34 @@ context "suggestions",
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
+  should "extract ranges matching term (simple case, two matches)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}#{one}", two, ranges)
+    assert.equal 2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+
+  should "extract ranges matching term (two matches, one at start of string)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{two}#{three}#{two}#{one}", two, ranges)
+    assert.equal 2, Utils.zip([ ranges, [ [0,3], [8,11] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+
+  should "extract ranges matching term (two matches, one at end of string)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}", two, ranges)
+    assert.equal 2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+
+  should "extract ranges matching term (no matches)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}#{one}", "does-not-match", ranges)
+    assert.equal 0, ranges.length
+
 context "RankingUtils",
   should "do a case insensitive match", ->
     assert.isTrue RankingUtils.matches(["aRi"], "MARIO", "MARio")
