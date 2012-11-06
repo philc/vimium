@@ -262,65 +262,64 @@ RankingUtils =
     true
 
   # Weights used for scoring matches.
-  # `maximumScore` must be the sum of the three above it.
-  # TODO: These are fudge factors, they require tuning.
+  # `matchWeights.maximumScore` must be the sum of the three weights above it.
+  # TODO: These are fudge factors, they can be tuned.
   matchWeights:
     {
-      match:             1
-      startOfWord:       1
-      wholeWord:         1
-      # This must be the sum of the weights above; it is used for normalization.
+      matchAnywhere:     1
+      matchStartOfWord:  1
+      matchWholeWord:    1
+      # The following must be the sum of the weights above; it is used for normalization.
+      # TODO: This can be calculated at runtime.
       maximumScore:      3
+      #
       # Calibration factor for balancing word relevancy and recency.
       recencyCalibrator: 2.0/3.0
       # The current value of 2.0/3.0 has the effect of:
-      #   - favoring the contribution of recency when matches are not on word boundaries   ( because 2.0/3.0 > 1/3       )
-      #   - retaining the current balance when matches are at the starts of words          ( because 2.0/3.0 = (1+1)/3   )
+      #   - favoring the contribution of recency when matches are not on word boundaries   ( because 2.0/3.0 > (1)/3     )
+      #   - retaining the existing balance when matches are at the starts of words         ( because 2.0/3.0 = (1+1)/3   )
       #   - favoring the contribution of word relevance when matches are on whole words    ( because 2.0/3.0 < (1+1+1)/3 )
     }
 
-  # Calculate a score for the match of term against string.
-  # Actual scores are determined by weights from `matchWeights`, above.
+  # Calculate a score for matching `term` against `string`.
+  # The score is in the range [0, `matchWeights.maximumScore`], see above.
   scoreTerm: (term, string) ->
     score = 0
     if string.match RegexpCache.get term
       # Have match.
-      score += RankingUtils.matchWeights.match
+      score += RankingUtils.matchWeights.matchAnywhere
       if string.match RegexpCache.get term, "\\b"
         # Have match at start of word.
-        score += RankingUtils.matchWeights.startOfWord
+        score += RankingUtils.matchWeights.matchStartOfWord
         if string.match RegexpCache.get term, "\\b", "\\b"
           # Have match of whole word.
-          score += RankingUtils.matchWeights.wholeWord
+          score += RankingUtils.matchWeights.matchWholeWord
     score
 
   # TODO: Remove this explanatory comment.
   #
-  # The difference between the following version of wordRelevancy and the old one is:
+  # The differences between the following version of `wordRelevancy` and the old one are:
   #   - It reduces the score of matches which are not at the start of a word by a factor of 1/3.
-  #   - It reduces the score of other matches which are not whole words by a factor of 2/3.
+  #   - It reduces the score of other matches, but which are not whole words, by a factor of 2/3.
   #   - These values come from the fudge factors in `matchWeights`, above.
-  #   - (It has no effect on the score for matches which are whole words)
+  #   - It makes no change to the score for matches which are whole words.
   #   - It doesn't allow a poor urlScore to pull down the titleScore.
   # 
-  # Note:
-  #     Broadly speaking, the structure of how scores are calculated is the
-  #     same here as it was previously.
-  #
-  #     In the absence of matches on word boundaries, the relative ordering of
-  #     scores for URLs and titles is unchanged vis-a-vis the old version.
+  # In the absence of matches on word boundaries, the relative ordering of
+  # scores for URLs and titles is unchanged vis-a-vis the old version.
   #
   # Overall, this change has two effects:
   #
   #   - It changes the *relative order* of scores awarded for word relevancy.
-  #     This is ok.  In fact, it's good: it is the intention.
+  #     This is ok.  In fact, it's good: that is the intention.
   #
   #   - However, it also has another effect ...
   #
   #     It reduces the *absolute values* of word-relevancy scores, on average.
-  #     Overall ranking depends both on word relevancy and recency.  Were the
-  #     absolute values of recency scores not similarly adjusted, recency would
-  #     dominate the final ordering. This is why the fudge factor
+  #
+  #     Overall, ranking depends both on word relevancy and recency.  Were the
+  #     absolute values of recency scores not *similarly adjusted*, recency
+  #     would dominate the overall ordering. This is why the fudge factor
   #     `matchWeights.recencyCalibrator` has been introduced.
   #
   #     See also the comment in the definition of `matchWeights`, above.
@@ -331,9 +330,6 @@ RankingUtils =
     queryLength = 0
     urlScore = 0.0
     titleScore = 0.0
-
-    # TODO:  `url` here contains the scheme ("http://", "https://", etc).  Do
-    # we really want to be including these in relevancy calculations?
 
     # Calculate initial scores.
     for term in queryTerms
@@ -350,20 +346,54 @@ RankingUtils =
 
     if title
       # Normalize titleScore (same as for urlScore, above).
-      # TODO: We've got basically the same code twice, here.  Factor it out?
+      # TODO: (smblott)
+      #       We've got basically the same code here, same as just as above.  Factor it out?
       titleScore /= maximumPossibleScore
       console.log "THIS SHOULD NOT HAPPEN: titleScore exceeds 1.0: #{titleScore} #{title}" if debugging and 1.0 < titleScore
       titleScore *= RankingUtils.normalizeDifference queryLength, title.length
     else
       titleScore = urlScore
 
+    # ######################################################
+    # Up to this point, things are pretty much the same as they were in the old
+    # version, just with additional tests and their corresponding weights.
+    #
+    # However, there are three possible endings to this story ...
+
+    # ######################################################
+    # Ending #1: The old ending ...
+    #
+    # return (urlScore + titleScore) / 2
+    #
+    # It's difficult to argue with that.
+
+    # ######################################################
+    # Ending #2: An ending favoring `titleScore` ...
+    #
     # Prefer matches in the title over matches in the URL.
-    # Here, that means "don't let a poor urlScore pull down the titleScore".
+    # Here, this means "don't let a poor urlScore pull down the titleScore".
     # For example, urlScore can be unreasonably poor if the URL is very long.
     urlScore = titleScore if urlScore < titleScore
 
     # Return the average.
     (urlScore + titleScore) / 2
+
+    # ######################################################
+    # Ending #3: An alternative (better?) ending ...
+    #
+    # return Math.max(urlScore, titleScore)
+    #
+    # Why?
+    #   - Don't let a poor urlScore pull down a good titleScore, as in Ending #2.
+    #   - But also don't let a poor titleScore pull down a good urlScore.
+    #   - The query may be targeting one or the other, so let the best one win.
+
+    # Pick one of these three endings.
+    #
+    # I (smblott) set off planning Ending #2.
+    # My son suggested Ending #3.
+    # I'm thinking he may be on to something.
+    # ######################################################
 
   # Returns a score between [0, 1] which indicates how recent the given timestamp is. Items which are over
   # a month old are counted as 0. This range is quadratic, so an item from one day ago has a much stronger
