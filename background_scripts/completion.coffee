@@ -119,8 +119,8 @@ class BookmarkCompleter
       bookmark = toVisit.pop()
       results.push(bookmark)
       if includeParents
-        parentTitle = parents[bookmark.id]?.title
-        bookmark.title = parentTitle + "/" + bookmark.title if bookmark.title and parentTitle
+        parentTitle = parents[bookmark.id]?.title || ""
+        bookmark.title = parentTitle + "/" + bookmark.title if bookmark.title
       # Schedule processing of children.
       if bookmark.children
         bookmark.children.map (bm) -> parents[bm.id] = bookmark if includeParents
