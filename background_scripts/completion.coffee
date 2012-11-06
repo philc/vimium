@@ -13,7 +13,7 @@
 # It also has an attached "computeRelevancyFunction" which determines how well this item matches the given
 # query terms.
 class Suggestion
-  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
 
   # - type: one of [bookmark, history, tab].
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
@@ -261,22 +261,108 @@ RankingUtils =
       return false unless matchedTerm
     true
 
+  # Weights used for scoring matches.
+  # `maximumScore` must be the sum of the three above it.
+  # TODO: These are fudge factors, they require tuning.
+  matchWeights:
+    {
+      match:             1
+      startOfWord:       1
+      wholeWord:         1
+      # This must be the sum of the weights above; it is used for normalization.
+      maximumScore:      3
+      # Calibration factor for balancing word relevancy and recency.
+      recencyCalibrator: 2.0/3.0
+      # The current value of 2.0/3.0 has the effect of:
+      #   - favoring the contribution of recency when matches are not on word boundaries   ( because 2.0/3.0 > 1/3       )
+      #   - retaining the current balance when matches are at the starts of words          ( because 2.0/3.0 = (1+1)/3   )
+      #   - favoring the contribution of word relevance when matches are on whole words    ( because 2.0/3.0 < (1+1+1)/3 )
+    }
+
+  # Calculate a score for the match of term against string.
+  # Actual scores are determined by weights from `matchWeights`, above.
+  scoreTerm: (term, string) ->
+    score = 0
+    if string.match RegexpCache.get term
+      # Have match.
+      score += RankingUtils.matchWeights.match
+      if string.match RegexpCache.get term, "\\b"
+        # Have match at start of word.
+        score += RankingUtils.matchWeights.startOfWord
+        if string.match RegexpCache.get term, "\\b", "\\b"
+          # Have match of whole word.
+          score += RankingUtils.matchWeights.wholeWord
+    score
+
+  # TODO: Remove this explanatory comment.
+  #
+  # The difference between the following version of wordRelevancy and the old one is:
+  #   - It reduces the score of matches which are not at the start of a word by a factor of 1/3.
+  #   - It reduces the score of other matches which are not whole words by a factor of 2/3.
+  #   - These values come from the fudge factors in `matchWeights`, above.
+  #   - (It has no effect on the score for matches which are whole words)
+  #   - It doesn't allow a poor urlScore to pull down the titleScore.
+  # 
+  # Note:
+  #     Broadly speaking, the structure of how scores are calculated is the
+  #     same here as it was previously.
+  #
+  #     In the absence of matches on word boundaries, the relative ordering of
+  #     scores for URLs and titles is unchanged vis-a-vis the old version.
+  #
+  # Overall, this change has two effects:
+  #
+  #   - It changes the *relative order* of scores awarded for word relevancy.
+  #     This is ok.  In fact, it's good: it is the intention.
+  #
+  #   - However, it also has another effect ...
+  #
+  #     It reduces the *absolute values* of word-relevancy scores, on average.
+  #     Overall ranking depends both on word relevancy and recency.  Were the
+  #     absolute values of recency scores not similarly adjusted, recency would
+  #     dominate the final ordering. This is why the fudge factor
+  #     `matchWeights.recencyCalibrator` has been introduced.
+  #
+  #     See also the comment in the definition of `matchWeights`, above.
+
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
   wordRelevancy: (queryTerms, url, title) ->
+    debugging = true
     queryLength = 0
     urlScore = 0.0
     titleScore = 0.0
+
+    # TODO:  `url` here contains the scheme ("http://", "https://", etc).  Do
+    # we really want to be including these in relevancy calculations?
+
+    # Calculate initial scores.
     for term in queryTerms
       queryLength += term.length
-      urlScore += 1 if url && RankingUtils.matches [term], url
-      titleScore += 1 if title && RankingUtils.matches [term], title
-    urlScore = urlScore / queryTerms.length
-    urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
+      urlScore += RankingUtils.scoreTerm term, url
+      titleScore += RankingUtils.scoreTerm term, title if title
+
+    maximumPossibleScore = RankingUtils.matchWeights.maximumScore * queryTerms.length
+
+    # Normalize urlScore.
+    urlScore /= maximumPossibleScore
+    console.log "THIS SHOULD NOT HAPPEN: urlScore exceeds 1.0: #{urlScore} #{url}" if debugging and 1.0 < urlScore
+    urlScore *= RankingUtils.normalizeDifference queryLength, url.length
+
     if title
-      titleScore = titleScore / queryTerms.length
-      titleScore = titleScore * RankingUtils.normalizeDifference(queryLength, title.length)
+      # Normalize titleScore (same as for urlScore, above).
+      # TODO: We've got basically the same code twice, here.  Factor it out?
+      titleScore /= maximumPossibleScore
+      console.log "THIS SHOULD NOT HAPPEN: titleScore exceeds 1.0: #{titleScore} #{title}" if debugging and 1.0 < titleScore
+      titleScore *= RankingUtils.normalizeDifference queryLength, title.length
     else
       titleScore = urlScore
+
+    # Prefer matches in the title over matches in the URL.
+    # Here, that means "don't let a poor urlScore pull down the titleScore".
+    # For example, urlScore can be unreasonably poor if the URL is very long.
+    urlScore = titleScore if urlScore < titleScore
+
+    # Return the average.
     (urlScore + titleScore) / 2
 
   # Returns a score between [0, 1] which indicates how recent the given timestamp is. Items which are over
@@ -290,6 +376,11 @@ RankingUtils =
     # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This quadratic equation will
     # incresingly discount older history entries.
     recencyScore = recencyDifference * recencyDifference * recencyDifference
+
+    # Calibrate recencyScore vis-a-vis word-relevancy scores.
+    # This does not change the relative order of recency scores.
+    # See also comment in the definition of `matchWeights`, above.
+    recencyScore *= matchWeights.recencyCalibrator
 
   # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
   normalizeDifference: (a, b) ->
