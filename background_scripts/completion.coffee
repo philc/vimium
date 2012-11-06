@@ -109,14 +109,22 @@ class BookmarkCompleter
       @bookmarks = @traverseBookmarks(bookmarks).filter((bookmark) -> bookmark.url?)
       @onBookmarksLoaded()
 
-  # Traverses the bookmark hierarchy, and retuns a flattened list of all bookmarks in the tree.
+  # Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
   traverseBookmarks: (bookmarks) ->
+    includeParents = Settings.get("includeBookmarkFolders")
+    parents = {} if includeParents
     results = []
     toVisit = bookmarks.reverse()
     while toVisit.length > 0
       bookmark = toVisit.pop()
       results.push(bookmark)
-      toVisit.push.apply(toVisit, bookmark.children.reverse()) if (bookmark.children)
+      if includeParents
+        parentTitle = parents[bookmark.id]?.title
+        bookmark.title = parentTitle + "/" + bookmark.title if bookmark.title and parentTitle
+      # Schedule processing of children.
+      if bookmark.children
+        bookmark.children.map (bm) -> parents[bm.id] = bookmark if includeParents
+        toVisit.push.apply(toVisit, bookmark.children.reverse())
     results
 
   computeRelevancy: (suggestion) ->
