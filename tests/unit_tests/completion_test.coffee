@@ -152,6 +152,49 @@ context "suggestions",
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
+context "RankingUtils.wordRelevancy",
+  should "get a higher relevancy score in shorter URLs", ->
+    highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/short",  "nothing")
+    lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/longer", "nothing")
+    assert.isTrue highScore > lowScore
+
+  should "get a higher relevancy score in shorter titles", ->
+    highScore = RankingUtils.wordRelevancy(["ffee"], "http://stackoverflow.com/same", "Coffeescript")
+    lowScore  = RankingUtils.wordRelevancy(["ffee"], "http://stackoverflow.com/same", "Coffeescript rocks")
+    assert.isTrue highScore > lowScore
+
+  should "get a higher relevancy score for matching the start of a word (in a URL)", ->
+    lowScore  = RankingUtils.wordRelevancy(["stack"], "http://Xstackoverflow.com/same", "nothing")
+    highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflowX.com/same", "nothing")
+    assert.isTrue highScore > lowScore
+
+  should "get a higher relevancy score for matching the start of a word (in a title)", ->
+    lowScore  = RankingUtils.wordRelevancy(["ted"], "http://stackoverflow.com/same", "Dist racted")
+    highScore = RankingUtils.wordRelevancy(["ted"], "http://stackoverflow.com/same", "Distrac ted")
+    assert.isTrue highScore > lowScore
+
+  should "get a higher relevancy score for matching a whole word (in a URL)", ->
+    lowScore  = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.comX/same", "nothing")
+    highScore = RankingUtils.wordRelevancy(["com"], "http://stackoverflowX.com/same", "nothing")
+    assert.isTrue highScore > lowScore
+
+  should "get a higher relevancy score for matching a whole word (in a title)", ->
+    lowScore  = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.com/same", "abc comX")
+    highScore = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.com/same", "abcX com")
+    assert.isTrue highScore > lowScore
+
+  # # TODO: (smblott)
+  # #       Word relevancy should take into account the number of matches (it doesn't currently).
+  # should "get a higher relevancy score for multiple matches (in a URL)", ->
+  #   lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xxxxxx", "nothing")
+  #   highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xstack", "nothing")
+  #   assert.isTrue highScore > lowScore
+
+  # should "get a higher relevancy score for multiple matches (in a title)", ->
+  #   lowScore  = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (XBCr4)")
+  #   highScore = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
+  #   assert.isTrue highScore > lowScore
+
 context "RankingUtils",
   should "do a case insensitive match", ->
     assert.isTrue RankingUtils.matches(["aRi"], "MARIO", "MARio")
