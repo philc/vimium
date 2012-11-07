@@ -278,7 +278,7 @@ RankingUtils =
       # The current value of 2.0/3.0 has the effect of:
       #   - favoring the contribution of recency when matches are not on word boundaries   ( because 2.0/3.0 > (1)/3     )
       #   - retaining the existing balance when matches are at the starts of words         ( because 2.0/3.0 = (1+1)/3   )
-      #   - favoring the contribution of word relevance when matches are on whole words    ( because 2.0/3.0 < (1+1+1)/3 )
+      #   - increasing the contribution of word relevance when matches are on whole words  ( because 2.0/3.0 < (1+1+1)/3 )
     }
 
   # Calculate a score for matching `term` against `string`.
@@ -296,26 +296,18 @@ RankingUtils =
           score += RankingUtils.matchWeights.matchWholeWord
     score
 
-  # TODO: Remove this explanatory comment.
+  # TODO: Remove this long explanatory comment.
   #
   # The differences between the following version of `wordRelevancy` and the old one are:
-  #   - It reduces the score of matches which are not at the start of a word by a factor of 1/3.
-  #   - It reduces the score of other matches, but which are not whole words, by a factor of 2/3.
-  #   - These values come from the fudge factors in `matchWeights`, above.
-  #   - It makes no change to the score for matches which are whole words.
-  #   - It doesn't allow a poor urlScore to pull down the titleScore.
+  #   - It reduces the score of matches which are not at the start of a word, using a factor of 1/3.
+  #   - It reduces the score of other matches, but which are not whole words, using a factor of 2/3.
+  #     (These values come from the fudge factors in `matchWeights`, above)
+  #   - It makes *no change* to the relevancy score for matches which are whole words.
+  #   - It recalibrates recency scores to generally retain the existing balance in light of the above.
+  #   - It doesn't allow a poor urlScore to pull down the titleScore (but see possible "Endings", below).
   # 
-  # In the absence of matches on word boundaries, the relative ordering of
-  # scores for URLs and titles is unchanged vis-a-vis the old version.
-  #
-  # Overall, this change has two effects:
-  #
-  #   - It changes the *relative order* of scores awarded for word relevancy.
-  #     This is ok.  In fact, it's good: that is the intention.
-  #
-  #   - However, it also has another effect ...
-  #
-  #     It reduces the *absolute values* of word-relevancy scores, on average.
+  # Note:
+  #     This change reduces the *absolute values* of word-relevancy scores, on average.
   #
   #     Overall, ranking depends both on word relevancy and recency.  Were the
   #     absolute values of recency scores not *similarly adjusted*, recency
