@@ -50,9 +50,10 @@ class Suggestion
   pushMatchingRanges: (string,term,ranges) ->
     textPosition = 0
     # Split `string` into a (flat) list of pairs:
-    #   - splits[i%2] is unmatched text
-    #   - splits[(i%2)+1] is the following matched text (matching `term`)
-    #     (except for the final element, for which there is no following matched text).
+    #   - for i=0,2,4,6,...
+    #     - splits[i] is unmatched text
+    #     - splits[i+1] is the following matched text (matching `term`)
+    #       (except for the final element, for which there is no following matched text).
     # Example:
     #   - string = "Abacab"
     #   - term = "a"
