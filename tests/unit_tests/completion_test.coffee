@@ -183,6 +183,45 @@ context "RankingUtils.wordRelevancy",
     highScore = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.com/same", "abcX com")
     assert.isTrue highScore > lowScore
 
+  # WARNING: The following tests may be hardware dependent.  They depend upon
+  # different but algebraically-equivalent sequences of floating point
+  # operations yielding the same results.  That they ever work at all is quite
+  # remarkable.
+  should "exactly equal oldWordRelevancy for whole word matches (in a URL)", ->
+    newScore  = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.com/same", "irrelevant")
+    oldScore  = RankingUtils.oldWordRelevancy(["com"], "http://stackoverflow.com/same", "irrelevant")
+    assert.isTrue newScore == oldScore # remarkable! Exactly equal floats.
+
+  should "2/3 * oldWordRelevancy for matches at the start of a word (in a URL)", ->
+    newScore  = RankingUtils.wordRelevancy(["sta"], "http://stackoverflow.com/same", "irrelevant")
+    oldScore  = (2.0/3.0) * RankingUtils.oldWordRelevancy(["sta"], "http://stackoverflow.com/same", "irrelevant")
+    assert.isTrue newScore == oldScore # remarkable! Exactly equal floats.
+
+  should "1/3 * oldWordRelevancy for matches within a word (in a URL)", ->
+    newScore  = RankingUtils.wordRelevancy(["over"], "http://stackoverflow.com/same", "irrelevant")
+    oldScore  = (1.0/3.0) * RankingUtils.oldWordRelevancy(["over"], "http://stackoverflow.com/same", "irrelevant")
+    assert.isTrue newScore == oldScore # remarkable! Exactly equal floats.
+
+  should "exactly equal oldWordRelevancy for whole word matches (in a title)", ->
+    newScore  = RankingUtils.wordRelevancy(["relevant"], "http://stackoverflow.com/same", "XX relevant YY")
+    # Multiply by 2 to account for new wordRelevancy favoring title.
+    oldScore  = 2 * RankingUtils.oldWordRelevancy(["relevant"], "http://stackoverflow.com/same", "XX relevant YY")
+    assert.isTrue newScore == oldScore  # remarkable! Exactly equal floats.
+
+  should "2/3 * oldWordRelevancy for matches at the start of a word (in a title)", ->
+    newScore  = RankingUtils.wordRelevancy(["relev"], "http://stackoverflow.com/same", "XX relevant YY")
+    # Multiply by 2 to account for new wordRelevancy favoring title.
+    oldScore  = (2.0/3.0) * 2 * RankingUtils.oldWordRelevancy(["relev"], "http://stackoverflow.com/same", "XX relevant YY")
+    assert.isTrue newScore == oldScore  # remarkable! Exactly equal floats.
+
+  should "1/3 * oldWordRelevancy for matches within a word (in a title)", ->
+    newScore  = RankingUtils.wordRelevancy(["elev"], "http://stackoverflow.com/same", "XX relevant YY")
+    # Multiply by 2 to account for new wordRelevancy favoring title.
+    oldScore  = (1.0/3.0) * 2 * RankingUtils.oldWordRelevancy(["elev"], "http://stackoverflow.com/same", "XX relevant YY")
+    assert.isTrue newScore == oldScore  # remarkable! Exactly equal floats.
+  #
+  # End of possibly hardware-dependent tests.
+
   # # TODO: (smblott)
   # #       Word relevancy should take into account the number of matches (it doesn't currently).
   # should "get a higher relevancy score for multiple matches (in a URL)", ->
