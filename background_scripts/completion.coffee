@@ -350,6 +350,17 @@ RankingUtils =
       #       We've got basically the same code here, same as just as above.  Factor it out?
       titleScore /= maximumPossibleScore
       console.log "THIS SHOULD NOT HAPPEN: titleScore exceeds 1.0: #{titleScore} #{title}" if debugging and 1.0 < titleScore
+      # TODO: (smblott)
+      #       The intuition hehind the following is (I think) to award higher
+      #       scores when there's good coverage of the title by the query
+      #       terms, and vice versa.  So shorter queries matching longer titles
+      #       are pushed down the ranking.
+      #       Suggest:  A query term may match in multiple places. So the
+      #       calculation should account for the *number of characters matched*
+      #       by the query, not just its length.
+      #       Example: Query is "BBC", title is "BBC (BBCr4)".  The coverage of
+      #       the match should be 6/11, rather than 3/11 (as it is currently).
+      #       Obviously, the same applies to urlScore, above.
       titleScore *= RankingUtils.normalizeDifference queryLength, title.length
     else
       titleScore = urlScore
@@ -392,7 +403,7 @@ RankingUtils =
     #
     # I (smblott) set off planning Ending #2.
     # My son suggested Ending #3.
-    # I'm thinking he may be on to something.
+    # I'm thinking now that he may be on to something.
     # ######################################################
 
   # Returns a score between [0, 1] which indicates how recent the given timestamp is. Items which are over
