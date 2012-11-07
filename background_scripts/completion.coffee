@@ -111,19 +111,20 @@ class BookmarkCompleter
 
   # Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
   traverseBookmarks: (bookmarks) ->
-    includeParents = Settings.get("includeBookmarkFolders")
-    parents = {} if includeParents
+    includeBookmarkFolders = Settings.get("includeBookmarkFolders")
+    parents = {} if includeBookmarkFolders
     results = []
     toVisit = bookmarks.reverse()
     while toVisit.length > 0
       bookmark = toVisit.pop()
       results.push(bookmark)
-      if includeParents
+      if includeBookmarkFolders
         parentTitle = parents[bookmark.id]?.title || ""
         bookmark.title = parentTitle + "/" + bookmark.title if bookmark.title
       # Schedule processing of children.
       if bookmark.children
-        bookmark.children.map (bm) -> parents[bm.id] = bookmark if includeParents
+        if includeBookmarkFolders
+          bookmark.children.map (bm) -> parents[bm.id] = bookmark
         toVisit.push.apply(toVisit, bookmark.children.reverse())
     results
 
