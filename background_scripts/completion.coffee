@@ -410,7 +410,7 @@ RankingUtils =
     # Calibrate recencyScore vis-a-vis word-relevancy scores.
     # This does not change the relative order of recency scores.
     # See also comment in the definition of `matchWeights`, above.
-    recencyScore *= matchWeights.recencyCalibrator
+    recencyScore *= RankingUtils.matchWeights.recencyCalibrator
 
   # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
   normalizeDifference: (a, b) ->
