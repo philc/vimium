@@ -152,6 +152,34 @@ context "suggestions",
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
+  should "extract ranges matching term (simple case, two matches)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}#{one}", two, ranges)
+    assert.equal 2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+
+  should "extract ranges matching term (two matches, one at start of string)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{two}#{three}#{two}#{one}", two, ranges)
+    assert.equal 2, Utils.zip([ ranges, [ [0,3], [8,11] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+
+  should "extract ranges matching term (two matches, one at end of string)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}", two, ranges)
+    assert.equal 2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+
+  should "extract ranges matching term (no matches)", ->
+    ranges = []
+    [ one, two, three ] = [ "one", "two", "three" ]
+    suggestion = new Suggestion([], "", "", "", returns(1))
+    suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}#{one}", "does-not-match", ranges)
+    assert.equal 0, ranges.length
+
 context "RankingUtils",
   should "do a case insensitive match", ->
     assert.isTrue RankingUtils.matches(["aRi"], "MARIO", "MARio")
@@ -173,6 +201,31 @@ context "RankingUtils",
 
   should "every term must match at least one thing (not matching)", ->
     assert.isTrue not RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog")
+
+context "RegexpCache",
+  should "RegexpCache is in fact caching (positive case)", ->
+    assert.isTrue RegexpCache.get("this") is RegexpCache.get("this")
+
+  should "RegexpCache is in fact caching (negative case)", ->
+    assert.isTrue RegexpCache.get("this") isnt RegexpCache.get("that")
+
+  should "RegexpCache prefix/suffix wrapping is working (positive case)", ->
+    assert.isTrue RegexpCache.get("this", "(", ")") is RegexpCache.get("this", "(", ")")
+
+  should "RegexpCache prefix/suffix wrapping is working (negative case)", ->
+    assert.isTrue RegexpCache.get("this", "(", ")") isnt RegexpCache.get("this")
+
+  should "search for a string", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("dog")) == 6
+
+  should "search for a string which isn't there", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("cat")) == -1
+
+  should "search for a string with a prefix/suffix (positive case)", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("dog", "\\b", "\\b")) == 6
+
+  should "search for a string with a prefix/suffix (negative case)", ->
+    assert.isTrue "hound dog".search(RegexpCache.get("do", "\\b", "\\b")) == -1
 
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
