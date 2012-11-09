@@ -31,6 +31,7 @@ visitDirectory = (directory, visitor) ->
 
 task "build", "compile all coffeescript files to javascript", ->
   coffee = spawn "coffee", ["-c", __dirname]
+  coffee.on 'exit', (returnCode) -> process.exit returnCode
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   visitDirectory __dirname, (filepath) ->
