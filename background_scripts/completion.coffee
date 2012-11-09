@@ -171,7 +171,7 @@ class DomainCompleter
     for domain in domainCandidates
       recencyScore = RankingUtils.recencyScore(@domains[domain].lastVisitTime || 0)
       wordRelevancy = RankingUtils.wordRelevancy(queryTerms, domain, null)
-      score = wordRelevancy + Math.max(recencyScore, wordRelevancy) / 2
+      score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
       results.push([domain, score])
     results.sort (a, b) -> b[1] - a[1]
     results

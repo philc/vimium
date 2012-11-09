@@ -192,8 +192,9 @@ handleSettings = (args, port) ->
 
 refreshCompleter = (request) -> completers[request.name].refresh()
 
+whitespaceRegexp = /\s+/
 filterCompleter = (args, port) ->
-  queryTerms = if (args.query == "") then [] else args.query.split(" ")
+  queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
   completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
 
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
