@@ -126,6 +126,14 @@ Utils =
         return 1
     0
 
+  # Zip two (or more) arrays:
+  #   - Utils.zip([ [a,b], [1,2] ]) returns [ [a,1], [b,2] ]
+  #   - Length of result is `arrays[0].length`.
+  #   - Adapted from: http://stackoverflow.com/questions/4856717/javascript-equivalent-of-pythons-zip-function
+  zip: (arrays) ->
+    arrays[0].map (_,i) ->
+      arrays.map( (array) -> array[i] )
+    
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
