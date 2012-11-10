@@ -46,12 +46,33 @@ class Suggestion
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
     url
 
+  # Push the ranges within `string` which match `term` onto `ranges`.
+  pushMatchingRanges: (string,term,ranges) ->
+    textPosition = 0
+    # Split `string` into a (flat) list of pairs:
+    #   - for i=0,2,4,6,...
+    #     - splits[i] is unmatched text
+    #     - splits[i+1] is the following matched text (matching `term`)
+    #       (except for the final element, for which there is no following matched text).
+    # Example:
+    #   - string = "Abacab"
+    #   - term = "a"
+    #   - splits = [ "", "A",    "b", "a",    "c", "a",    b" ]
+    #                UM   M       UM   M       UM   M      UM      (M=Matched, UM=Unmatched)
+    splits = string.split(RegexpCache.get(term, "(", ")"))
+    for index in [0..splits.length-2] by 2
+      unmatchedText = splits[index]
+      matchedText = splits[index+1]
+      # Add the indices spanning `matchedText` to `ranges`.
+      textPosition += unmatchedText.length
+      ranges.push([textPosition, textPosition + matchedText.length])
+      textPosition += matchedText.length
+
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
     ranges = []
     for term in @queryTerms
-      i = string.search(RegexpCache.get(term))
-      ranges.push([i, i + term.length]) if i >= 0
+      @pushMatchingRanges string, term, ranges
 
     return string if ranges.length == 0
 
@@ -171,7 +192,7 @@ class DomainCompleter
     for domain in domainCandidates
       recencyScore = RankingUtils.recencyScore(@domains[domain].lastVisitTime || 0)
       wordRelevancy = RankingUtils.wordRelevancy(queryTerms, domain, null)
-      score = wordRelevancy + Math.max(recencyScore, wordRelevancy) / 2
+      score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
       results.push([domain, score])
     results.sort (a, b) -> b[1] - a[1]
     results
@@ -307,12 +328,21 @@ RegexpCache =
 
   clear: -> @cache = {}
 
-  get: (string) ->
+  # Get rexexp for `string` from cache, creating it if necessary.
+  # Regexp meta-characters in `string` are escaped.
+  # Regexp is wrapped in `prefix`/`suffix`, which may contain meta-characters (these are not escaped).
+  # With their default values, `prefix` and `suffix` have no effect.
+  # Example:
+  #   - string="go", prefix="\b", suffix=""
+  #   - this returns regexp matching "google", but not "agog" (the "go" must occur at the start of a word)
+  # TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
+  get: (string, prefix="", suffix="") ->
     @init() unless @initialized
-    @cache[string] ||= @escapeRegexp(string)
-
-  # Creates a Regexp from the given string, with all special Regexp characters escaped.
-  escapeRegexp: (string) -> new RegExp(string.replace(@escapeRegExp, "\\$&"), "i")
+    regexpString = string.replace(@escapeRegExp, "\\$&")
+    # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
+    regexpString = prefix + regexpString if prefix
+    regexpString = regexpString + suffix if suffix
+    @cache[regexpString] ||= new RegExp(regexpString, "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
@@ -382,3 +412,4 @@ root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
+root.RegexpCache = RegexpCache
