@@ -192,8 +192,9 @@ handleSettings = (args, port) ->
 
 refreshCompleter = (request) -> completers[request.name].refresh()
 
+whitespaceRegexp = /\s+/
 filterCompleter = (args, port) ->
-  queryTerms = if (args.query == "") then [] else args.query.split(" ")
+  queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
   completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
 
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
@@ -278,7 +279,16 @@ selectTab = (callback, direction) ->
       chrome.tabs.update(toSelect.id, { selected: true })))
 
 updateOpenTabs = (tab) ->
-  tabInfoMap[tab.id] = { url: tab.url, positionIndex: tab.index, windowId: tab.windowId }
+  # Chrome might reuse the tab ID of a recently removed tab.
+  if tabInfoMap[tab.id]?.deletor
+    clearTimeout tabInfoMap[tab.id].deletor
+  tabInfoMap[tab.id] =
+    url: tab.url
+    positionIndex: tab.index
+    windowId: tab.windowId
+    scrollX: null
+    scrollY: null
+    deletor: null
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
@@ -354,7 +364,8 @@ chrome.tabs.onRemoved.addListener (tabId) ->
 
   # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
   # scroll position)
-  setTimeout (-> delete tabInfoMap[tabId]), 1000
+  tabInfoMap.deletor = -> delete tabInfoMap[tabId]
+  setTimeout tabInfoMap.deletor, 1000
   delete framesForTab[tabId]
 
 chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)

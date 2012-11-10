@@ -14,8 +14,7 @@ git checkout-index --prefix=$TDIR/ -af
 cp -r ./tests/shoulda.js/ $TDIR/tests/shoulda.js/
 
 pushd $TDIR > /dev/null
-  cake build
-  cake test
+  cake build && cake test
   TEST_RESULT=$?
 popd > /dev/null
 
