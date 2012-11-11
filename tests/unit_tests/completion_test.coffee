@@ -80,7 +80,7 @@ context "HistoryCache",
       HistoryCache.use (@results) =>
       assert.arrayEqual [newSite, @history1], @results
 
-    should "remove pages from the history, when page is not in history", ->
+    should "(not) remove page from the history, when page is not in history (it should be a no-op)", ->
       HistoryCache.use (@results) =>
       assert.arrayEqual [@history2, @history1], @results
       toRemove = { urls: [ "x.com" ], allHistory: false }
@@ -130,20 +130,17 @@ context "domain completer",
   setup ->
     @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) }
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
-    @history3 = { title: "history2", url: "http://history2.com/something", lastVisitTime: hours(0) }
 
-    stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2, @history3]))
-    @onVisitedListener = null
-    @onVisitRemovedListener = null
+    stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
     global.chrome.history =
-      onVisited: { addListener: (@onVisitedListener) => }
-      onVisitRemoved: { addListener: (@onVisitRemovedListener) => }
+      onVisited: { addListener: -> }
+      onVisitRemoved: { addListener: -> }
     stub(Date, "now", returns(hours(24)))
 
     @completer = new DomainCompleter()
 
   should "return only a single matching domain", ->
-    results = filterCompleter(@completer, ["story1"])
+    results = filterCompleter(@completer, ["story"])
     assert.arrayEqual ["history1.com"], results.map (result) -> result.url
 
   should "pick domains which are more recent", ->
@@ -155,32 +152,43 @@ context "domain completer",
   should "returns no results when there's more than one query term, because clearly it's not a domain", ->
     assert.arrayEqual [], filterCompleter(@completer, ["his", "tory"])
 
-  should "remove 1 matching domain entry", ->
-    # Force installation of `@onVisitRemovedListener`
+context "domain completer (removing entries)",
+  setup ->
+    @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) }
+    @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
+    @history3 = { title: "history2", url: "http://history2.com/something", lastVisitTime: hours(0) }
+
+    stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2, @history3]))
+    @onVisitedListener = null
+    @onVisitRemovedListener = null
+    global.chrome.history =
+      onVisited: { addListener: (@onVisitedListener) => }
+      onVisitRemoved: { addListener: (@onVisitRemovedListener) => }
+    stub(Date, "now", returns(hours(24)))
+
+    @completer = new DomainCompleter()
     filterCompleter(@completer, ["story"])
-    @onVisitRemovedListener { allHistory: false, urls: [ @history2.url ] }
+
+  should "remove 1 matching domain entry", ->
+    @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
     assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
 
   should "remove all entries from one domain", ->
-    filterCompleter(@completer, ["story"]) # Force installation of `@onVisitRemovedListener`.
-    @onVisitRemovedListener { allHistory: false, urls: [ @history2.url ] }
-    @onVisitRemovedListener { allHistory: false, urls: [ @history3.url ] }
+    @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
+    @onVisitRemovedListener { allHistory: false, urls: [@history3.url] }
     assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
 
   should "remove 3 (all) matching domain entries", ->
-    filterCompleter(@completer, ["story"]) # Force installation of `@onVisitRemovedListener`.
-    @onVisitRemovedListener { allHistory: false, urls: [ @history2.url ] }
-    @onVisitRemovedListener { allHistory: false, urls: [ @history1.url ] }
-    @onVisitRemovedListener { allHistory: false, urls: [ @history3.url ] }
+    @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
+    @onVisitRemovedListener { allHistory: false, urls: [@history1.url] }
+    @onVisitRemovedListener { allHistory: false, urls: [@history3.url] }
     assert.isTrue filterCompleter(@completer, ["story"]).length == 0
 
   should "remove 3 (all) matching domain entries, and do it all at once", ->
-    filterCompleter(@completer, ["story"]) # Force installation of `@onVisitRemovedListener`.
     @onVisitRemovedListener { allHistory: false, urls: [ @history2.url, @history1.url, @history3.url ] }
     assert.isTrue filterCompleter(@completer, ["story"]).length == 0
 
   should "remove *all* domain entries", ->
-    filterCompleter(@completer, ["story"]) # Force installation of `@onVisitRemovedListener`.
     @onVisitRemovedListener { allHistory: true }
     assert.isTrue filterCompleter(@completer, ["story"]).length == 0
 

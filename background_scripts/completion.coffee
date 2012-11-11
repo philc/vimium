@@ -169,7 +169,11 @@ class HistoryCompleter
 # The domain completer is designed to match a single-word query which looks like it is a domain. This supports
 # the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
 class DomainCompleter
-  domains: null # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
+  # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
+  #  - `entry` is the most recently accessed page in the History within this domain.
+  #  - `referenceCount` is a count of the number of History entries within this domain.
+  #     If `referenceCount` goes to zero, the domain entry can and should be deleted.
+  domains: null
 
   filter: (queryTerms, onComplete) ->
     return onComplete([]) if queryTerms.length > 1
