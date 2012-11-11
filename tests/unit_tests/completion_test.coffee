@@ -41,6 +41,14 @@ context "HistoryCache",
       should "return length - 1 if it should be at the end of the list", ->
         assert.equal 0, HistoryCache.binarySearch(3, [3, 5, 8], @compare)
 
+      # FIXME (smblott)
+      #       The following should pass, but fails.
+      #       I think it's what the test above intends (but misses because of a typo).
+      #       Bottom line: binarySearch can currently return an index beyond the end of the array.
+      #
+      # should "return end of list if greater than last element in list", ->
+      #   assert.equal 2, HistoryCache.binarySearch(10, [3, 5, 8], @compare)
+
       should "found return the position if it's between two elements", ->
         assert.equal 1, HistoryCache.binarySearch(4, [3, 5, 8], @compare)
         assert.equal 2, HistoryCache.binarySearch(7, [3, 5, 8], @compare)
@@ -51,9 +59,11 @@ context "HistoryCache",
       @history2 = { url: "a.com", lastVisitTime: 10 }
       history = [@history1, @history2]
       @onVisitedListener = null
+      @onVisitRemovedListerner = null
       global.chrome.history =
         search: (options, callback) -> callback(history)
         onVisited: { addListener: (@onVisitedListener) => }
+        onVisitRemoved: { addListener: (@onVisitRemovedListerner) => }
       HistoryCache.reset()
 
     should "store visits sorted by url ascending", ->
@@ -75,6 +85,30 @@ context "HistoryCache",
       HistoryCache.use (@results) =>
       assert.arrayEqual [newSite, @history1], @results
 
+    should "remove pages from the history, when page is not in history", ->
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, @history1], @results
+      toRemove = { urls: [ "x.com" ], allHistory: false }
+      @onVisitRemovedListerner(toRemove)
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, @history1], @results
+
+    should "remove pages from the history", ->
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, @history1], @results
+      toRemove = { urls: [ "a.com" ], allHistory: false }
+      @onVisitRemovedListerner(toRemove)
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history1], @results
+
+    should "remove all pages from the history", ->
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [@history2, @history1], @results
+      toRemove = { allHistory: true }
+      @onVisitRemovedListerner(toRemove)
+      HistoryCache.use (@results) =>
+      assert.arrayEqual [], @results
+
 context "history completer",
   setup ->
     @history1 = { title: "history1", url: "history1.com", lastVisitTime: hours(1) }
@@ -83,6 +117,7 @@ context "history completer",
     global.chrome.history =
       search: (options, callback) => callback([@history1, @history2])
       onVisited: { addListener: -> }
+      onVisitRemoved: { addListener: -> }
 
     @completer = new HistoryCompleter()
 
@@ -102,7 +137,7 @@ context "domain completer",
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
 
     stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
-    global.chrome.history = { onVisited: { addListener: -> } }
+    global.chrome.history = { onVisited: { addListener: -> }, onVisitRemoved: -> }
     stub(Date, "now", returns(hours(24)))
 
     @completer = new DomainCompleter()

@@ -365,6 +365,7 @@ HistoryCache =
       history.sort @compareHistoryByUrl
       @history = history
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
+      chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       callback(@history) for callback in @callbacks
       @callbacks = null
 
@@ -382,6 +383,18 @@ HistoryCache =
       @history[i] = newPage
     else
       @history.splice(i, 0, newPage)
+
+  # When a page is removed from the chrome history, remove it from the vimium history too.
+  onVisitRemoved: (toRemove) ->
+    if toRemove.allHistory
+      @history = []
+    else
+      toRemove.urls.map (url) =>
+        i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
+        # TODO (smblott)
+        #      The `i < @history.length` condition below should not be necessary.  It can be removed when `binarySearch` is fixed.
+        if i < @history.length and @history[i].url == url
+          @history.splice(i, 1)
 
 # Returns the matching index or the closest matching index if the element is not found. That means you
 # must check the element at the returned index to know whether the element was actually found.
