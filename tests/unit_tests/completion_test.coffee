@@ -137,7 +137,7 @@ context "domain completer",
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
 
     stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
-    global.chrome.history = { onVisited: { addListener: -> }, onVisitRemoved: -> }
+    global.chrome.history = { onVisited: { addListener: -> }, onVisitRemoved: { addListener: -> } }
     stub(Date, "now", returns(hours(24)))
 
     @completer = new DomainCompleter()
@@ -147,7 +147,7 @@ context "domain completer",
     assert.arrayEqual ["history1.com"], results.map (result) -> result.url
 
   should "pick domains which are more recent", ->
-    # This domains are the same except for their last visited time.
+    # These domains are the same except for their last visited time.
     assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
     @history2.lastVisitTime = hours(3)
     assert.equal "history2.com", filterCompleter(@completer, ["story"])[0].url

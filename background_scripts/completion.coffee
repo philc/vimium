@@ -169,7 +169,7 @@ class HistoryCompleter
 # The domain completer is designed to match a single-word query which looks like it is a domain. This supports
 # the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
 class DomainCompleter
-  domains: null # A map of domain -> history
+  domains: null # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
 
   filter: (queryTerms, onComplete) ->
     return onComplete([]) if queryTerms.length > 1
@@ -190,7 +190,7 @@ class DomainCompleter
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
     results = []
     for domain in domainCandidates
-      recencyScore = RankingUtils.recencyScore(@domains[domain].lastVisitTime || 0)
+      recencyScore = RankingUtils.recencyScore(@domains[domain].entry.lastVisitTime || 0)
       wordRelevancy = RankingUtils.wordRelevancy(queryTerms, domain, null)
       score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
       results.push([domain, score])
@@ -205,13 +205,37 @@ class DomainCompleter
         domain = @parseDomain(entry.url)
         if domain
           previousEntry = @domains[domain]
-          @domains[domain] = entry if !previousEntry || (previousEntry.lastVisitTime < entry.lastVisitTime)
+          if previousEntry
+            previousEntry.entry = entry if previousEntry.lastVisitTime < entry.lastVisitTime
+            previousEntry.referenceCount +=1
+          else
+            @domains[domain] = { entry: entry, referenceCount: 1 }
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
+      chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       onComplete()
 
   onPageVisited: (newPage) ->
     domain = @parseDomain(newPage.url)
-    @domains[domain] = newPage if domain
+    if domain
+      previousEntry = @domains[domain]
+      if previousEntry
+        previousEntry.entry = newPage
+        previousEntry.referenceCount += 1
+      else
+        @domains[domain] = { entry: newPage, referenceCount: 1 }
+
+  onVisitRemoved: (toRemove) ->
+    if toRemove.allHistory
+      @domains = {}
+    else
+      toRemove.urls.forEach (url) =>
+        domain = @parseDomain(url)
+        if domain
+          previousEntry = @domains[domain]
+          if previousEntry
+            previousEntry.referenceCount -= 1
+            if previousEntry.referenceCount == 0
+              delete @domains[domain]
 
   parseDomain: (url) -> url.split("/")[2] || ""
 
@@ -389,7 +413,7 @@ HistoryCache =
     if toRemove.allHistory
       @history = []
     else
-      toRemove.urls.map (url) =>
+      toRemove.urls.forEach (url) =>
         i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
         # TODO (smblott)
         #      The `i < @history.length` condition below should not be necessary.  It can be removed when `binarySearch` is fixed.
