@@ -415,8 +415,6 @@ HistoryCache =
     else
       toRemove.urls.forEach (url) =>
         i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
-        # TODO (smblott)
-        #      The `i < @history.length` condition below should not be necessary.  It can be removed when `binarySearch` is fixed.
         if i < @history.length and @history[i].url == url
           @history.splice(i, 1)
 

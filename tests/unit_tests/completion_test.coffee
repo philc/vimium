@@ -41,13 +41,8 @@ context "HistoryCache",
       should "return length - 1 if it should be at the end of the list", ->
         assert.equal 0, HistoryCache.binarySearch(3, [3, 5, 8], @compare)
 
-      # FIXME (smblott)
-      #       The following should pass, but fails.
-      #       I think it's what the test above intends (but misses because of a typo).
-      #       Bottom line: binarySearch can currently return an index beyond the end of the array.
-      #
-      # should "return end of list if greater than last element in list", ->
-      #   assert.equal 2, HistoryCache.binarySearch(10, [3, 5, 8], @compare)
+      should "return one passed end of list (so: list.length) if greater than last element in list", ->
+        assert.equal 3, HistoryCache.binarySearch(10, [3, 5, 8], @compare)
 
       should "found return the position if it's between two elements", ->
         assert.equal 1, HistoryCache.binarySearch(4, [3, 5, 8], @compare)
