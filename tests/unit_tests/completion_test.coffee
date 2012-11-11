@@ -54,11 +54,11 @@ context "HistoryCache",
       @history2 = { url: "a.com", lastVisitTime: 10 }
       history = [@history1, @history2]
       @onVisitedListener = null
-      @onVisitRemovedListerner = null
+      @onVisitRemovedListener = null
       global.chrome.history =
         search: (options, callback) -> callback(history)
         onVisited: { addListener: (@onVisitedListener) => }
-        onVisitRemoved: { addListener: (@onVisitRemovedListerner) => }
+        onVisitRemoved: { addListener: (@onVisitRemovedListener) => }
       HistoryCache.reset()
 
     should "store visits sorted by url ascending", ->
@@ -84,7 +84,7 @@ context "HistoryCache",
       HistoryCache.use (@results) =>
       assert.arrayEqual [@history2, @history1], @results
       toRemove = { urls: [ "x.com" ], allHistory: false }
-      @onVisitRemovedListerner(toRemove)
+      @onVisitRemovedListener(toRemove)
       HistoryCache.use (@results) =>
       assert.arrayEqual [@history2, @history1], @results
 
@@ -92,7 +92,7 @@ context "HistoryCache",
       HistoryCache.use (@results) =>
       assert.arrayEqual [@history2, @history1], @results
       toRemove = { urls: [ "a.com" ], allHistory: false }
-      @onVisitRemovedListerner(toRemove)
+      @onVisitRemovedListener(toRemove)
       HistoryCache.use (@results) =>
       assert.arrayEqual [@history1], @results
 
@@ -100,7 +100,7 @@ context "HistoryCache",
       HistoryCache.use (@results) =>
       assert.arrayEqual [@history2, @history1], @results
       toRemove = { allHistory: true }
-      @onVisitRemovedListerner(toRemove)
+      @onVisitRemovedListener(toRemove)
       HistoryCache.use (@results) =>
       assert.arrayEqual [], @results
 
@@ -132,7 +132,11 @@ context "domain completer",
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
 
     stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
-    global.chrome.history = { onVisited: { addListener: -> }, onVisitRemoved: { addListener: -> } }
+    @onVisitedListener = null
+    @onVisitRemovedListener = null
+    global.chrome.history =
+      onVisited: { addListener: (@onVisitedListener) => }
+      onVisitRemoved: { addListener: (@onVisitRemovedListener) => }
     stub(Date, "now", returns(hours(24)))
 
     @completer = new DomainCompleter()
@@ -149,6 +153,25 @@ context "domain completer",
 
   should "returns no results when there's more than one query term, because clearly it's not a domain", ->
     assert.arrayEqual [], filterCompleter(@completer, ["his", "tory"])
+
+  should "remove 1 matching domain entry", ->
+    # Force installation of `@onVisitRemovedListener`
+    @history2.lastVisitTime = hours(3) and filterCompleter(@completer, ["story"])
+    @onVisitRemovedListener { allHistory: false, urls: [ @history2.url ] }
+    assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
+
+  should "remove 2 (both) matching domain entries", ->
+    # Force installation of `@onVisitRemovedListener`
+    @history2.lastVisitTime = hours(3) and filterCompleter(@completer, ["story"])
+    @onVisitRemovedListener { allHistory: false, urls: [ @history2.url ] }
+    @onVisitRemovedListener { allHistory: false, urls: [ @history1.url ] }
+    assert.isTrue filterCompleter(@completer, ["story"]).length == 0
+
+  should "remove *all* domain entries", ->
+    # Force installation of `@onVisitRemovedListener`
+    @history2.lastVisitTime = hours(3) and filterCompleter(@completer, ["story"])
+    @onVisitRemovedListener { allHistory: true }
+    assert.isTrue filterCompleter(@completer, ["story"]).length == 0
 
 context "tab completer",
   setup ->
