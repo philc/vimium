@@ -200,29 +200,19 @@ class DomainCompleter
   populateDomains: (onComplete) ->
     HistoryCache.use (history) =>
       @domains = {}
-      history.forEach (entry) =>
-        # We want each key in our domains hash to point to the most recent History entry for that domain.
-        domain = @parseDomain(entry.url)
-        if domain
-          previousEntry = @domains[domain]
-          if previousEntry
-            previousEntry.entry = entry if previousEntry.lastVisitTime < entry.lastVisitTime
-            previousEntry.referenceCount +=1
-          else
-            @domains[domain] = { entry: entry, referenceCount: 1 }
+      history.forEach (entry) => @onPageVisited entry
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
       chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       onComplete()
 
+  # We want each key in our domains hash to point to the most recent History entry for that domain.
   onPageVisited: (newPage) ->
     domain = @parseDomain(newPage.url)
     if domain
-      previousEntry = @domains[domain]
-      if previousEntry
-        previousEntry.entry = newPage
-        previousEntry.referenceCount += 1
-      else
-        @domains[domain] = { entry: newPage, referenceCount: 1 }
+      @domains[domain] ||= { entry: newPage, referenceCount: 0 }
+      slot = @domains[domain]
+      slot.entry = newPage if slot.entry.lastVisitTime < newPage.lastVisitTime
+      slot.referenceCount += 1
 
   onVisitRemoved: (toRemove) ->
     if toRemove.allHistory
