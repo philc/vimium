@@ -62,9 +62,6 @@ root.Settings = Settings =
     # default/fall back search engine
     searchUrl: "http://www.google.com/search?q="
 
-    # Include parent folder names in bookmark suggestions?
-    includeBookmarkFolders: false
-
     settingsVersion: Utils.getCurrentVersion()
 
 # We use settingsVersion to coordinate any necessary schema changes.
