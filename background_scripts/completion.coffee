@@ -205,12 +205,12 @@ class DomainCompleter
       chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       onComplete()
 
-  # We want each key in our domains hash to point to the most recent History entry for that domain.
   onPageVisited: (newPage) ->
     domain = @parseDomain(newPage.url)
     if domain
       @domains[domain] ||= { entry: newPage, referenceCount: 0 }
       slot = @domains[domain]
+      # We want each entry in our domains hash to point to the most recent History entry for that domain.
       slot.entry = newPage if slot.entry.lastVisitTime < newPage.lastVisitTime
       slot.referenceCount += 1
 
@@ -220,12 +220,8 @@ class DomainCompleter
     else
       toRemove.urls.forEach (url) =>
         domain = @parseDomain(url)
-        if domain
-          previousEntry = @domains[domain]
-          if previousEntry
-            previousEntry.referenceCount -= 1
-            if previousEntry.referenceCount == 0
-              delete @domains[domain]
+        if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
+          delete @domains[domain]
 
   parseDomain: (url) -> url.split("/")[2] || ""
 
