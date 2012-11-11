@@ -140,12 +140,12 @@ class BookmarkCompleter
   traverseBookmarks: (bookmarks) ->
     results = []
     for folder in bookmarks
-      @traverseBookmarksRecursive(folder, results)
+      @traverseBookmarksRecursive folder, results
     results
 
   # Recursive helper for `traverseBookmarks`.
-  traverseBookmarksRecursive: (bookmark, results, parent=null) ->
-    bookmark.pathAndTitle = if parent then parent.pathAndTitle + "/" + bookmark.title else ""
+  traverseBookmarksRecursive: (bookmark, results, parent={pathAndTitle:""}) ->
+    bookmark.pathAndTitle = if bookmark.title then parent.pathAndTitle + @folderSeparator + bookmark.title else parent.pathAndTitle
     results.push bookmark
     bookmark.children.map((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 

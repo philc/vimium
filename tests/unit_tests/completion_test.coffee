@@ -23,6 +23,26 @@ context "bookmark completer",
     results = filterCompleter(@completer, ["mark2"])
     assert.arrayEqual [@bookmark2.url], results.map (suggestion) -> suggestion.url
 
+  should "return *no* matching bookmarks when there is no match", ->
+    @completer.refresh()
+    results = filterCompleter(@completer, ["does-not-match"])
+    assert.arrayEqual [], results.map (suggestion) -> suggestion.url
+
+  should "construct bookmark paths correctly", ->
+    @completer.refresh()
+    results = filterCompleter(@completer, ["mark2"])
+    assert.equal "/bookmark1/bookmark2", @bookmark2.pathAndTitle
+
+  should "return matching bookmark *titles* when searching *without* the folder separator character", ->
+    @completer.refresh()
+    results = filterCompleter(@completer, ["mark2"])
+    assert.arrayEqual ["bookmark2"], results.map (suggestion) -> suggestion.title
+
+  should "return matching bookmark *paths* when searching with the folder separator character", ->
+    @completer.refresh()
+    results = filterCompleter(@completer, ["/bookmark1", "mark2"])
+    assert.arrayEqual ["/bookmark1/bookmark2"], results.map (suggestion) -> suggestion.title
+
 context "HistoryCache",
   context "binary search",
     setup ->
