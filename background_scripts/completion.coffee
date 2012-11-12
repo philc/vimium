@@ -139,14 +139,14 @@ class BookmarkCompleter
   # Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
   traverseBookmarks: (bookmarks) ->
     results = []
-    bookmarks.map (folder) => @traverseBookmarksRecursive folder, results
+    bookmarks.forEach (folder) => @traverseBookmarksRecursive folder, results
     results
 
   # Recursive helper for `traverseBookmarks`.
   traverseBookmarksRecursive: (bookmark, results, parent={pathAndTitle:""}) ->
     bookmark.pathAndTitle = if bookmark.title then parent.pathAndTitle + @folderSeparator + bookmark.title else parent.pathAndTitle
     results.push bookmark
-    bookmark.children.map((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
+    bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
