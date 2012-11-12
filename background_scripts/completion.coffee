@@ -169,7 +169,11 @@ class HistoryCompleter
 # The domain completer is designed to match a single-word query which looks like it is a domain. This supports
 # the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
 class DomainCompleter
-  domains: null # A map of domain -> history
+  # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
+  #  - `entry` is the most recently accessed page in the History within this domain.
+  #  - `referenceCount` is a count of the number of History entries within this domain.
+  #     If `referenceCount` goes to zero, the domain entry can and should be deleted.
+  domains: null
 
   filter: (queryTerms, onComplete) ->
     return onComplete([]) if queryTerms.length > 1
@@ -190,7 +194,7 @@ class DomainCompleter
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
     results = []
     for domain in domainCandidates
-      recencyScore = RankingUtils.recencyScore(@domains[domain].lastVisitTime || 0)
+      recencyScore = RankingUtils.recencyScore(@domains[domain].entry.lastVisitTime || 0)
       wordRelevancy = RankingUtils.wordRelevancy(queryTerms, domain, null)
       score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
       results.push([domain, score])
@@ -200,18 +204,27 @@ class DomainCompleter
   populateDomains: (onComplete) ->
     HistoryCache.use (history) =>
       @domains = {}
-      history.forEach (entry) =>
-        # We want each key in our domains hash to point to the most recent History entry for that domain.
-        domain = @parseDomain(entry.url)
-        if domain
-          previousEntry = @domains[domain]
-          @domains[domain] = entry if !previousEntry || (previousEntry.lastVisitTime < entry.lastVisitTime)
+      history.forEach (entry) => @onPageVisited entry
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
+      chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       onComplete()
 
   onPageVisited: (newPage) ->
     domain = @parseDomain(newPage.url)
-    @domains[domain] = newPage if domain
+    if domain
+      slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
+      # We want each entry in our domains hash to point to the most recent History entry for that domain.
+      slot.entry = newPage if slot.entry.lastVisitTime < newPage.lastVisitTime
+      slot.referenceCount += 1
+
+  onVisitRemoved: (toRemove) ->
+    if toRemove.allHistory
+      @domains = {}
+    else
+      toRemove.urls.forEach (url) =>
+        domain = @parseDomain(url)
+        if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
+          delete @domains[domain]
 
   parseDomain: (url) -> url.split("/")[2] || ""
 
@@ -365,6 +378,7 @@ HistoryCache =
       history.sort @compareHistoryByUrl
       @history = history
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
+      chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       callback(@history) for callback in @callbacks
       @callbacks = null
 
@@ -382,6 +396,16 @@ HistoryCache =
       @history[i] = newPage
     else
       @history.splice(i, 0, newPage)
+
+  # When a page is removed from the chrome history, remove it from the vimium history too.
+  onVisitRemoved: (toRemove) ->
+    if toRemove.allHistory
+      @history = []
+    else
+      toRemove.urls.forEach (url) =>
+        i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
+        if i < @history.length and @history[i].url == url
+          @history.splice(i, 1)
 
 # Returns the matching index or the closest matching index if the element is not found. That means you
 # must check the element at the returned index to know whether the element was actually found.
