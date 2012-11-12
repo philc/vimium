@@ -41,7 +41,7 @@ context "HistoryCache",
       should "return length - 1 if it should be at the end of the list", ->
         assert.equal 0, HistoryCache.binarySearch(3, [3, 5, 8], @compare)
 
-      should "return one passed end of list (so: list.length) if greater than last element in list", ->
+      should "return one passed end of array (so: array.length) if greater than last element in array", ->
         assert.equal 3, HistoryCache.binarySearch(10, [3, 5, 8], @compare)
 
       should "found return the position if it's between two elements", ->
@@ -154,9 +154,9 @@ context "domain completer",
 
 context "domain completer (removing entries)",
   setup ->
-    @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) }
+    @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(2) }
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
-    @history3 = { title: "history2", url: "http://history2.com/something", lastVisitTime: hours(0) }
+    @history3 = { title: "history2something", url: "http://history2.com/something", lastVisitTime: hours(0) }
 
     stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2, @history3]))
     @onVisitedListener = null
@@ -167,30 +167,34 @@ context "domain completer (removing entries)",
     stub(Date, "now", returns(hours(24)))
 
     @completer = new DomainCompleter()
+    # Force installation of listeners.
     filterCompleter(@completer, ["story"])
 
-  should "remove 1 matching domain entry", ->
-    @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
-    assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
+  should "remove 1 entry for domain with reference count of 1", ->
+    @onVisitRemovedListener { allHistory: false, urls: [@history1.url] }
+    assert.equal "history2.com", filterCompleter(@completer, ["story"])[0].url
+    assert.equal 0, filterCompleter(@completer, ["story1"]).length
 
-  should "remove all entries from one domain", ->
+  should "remove 2 entries for domain with reference count of 2", ->
     @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
+    assert.equal "history2.com", filterCompleter(@completer, ["story2"])[0].url
     @onVisitRemovedListener { allHistory: false, urls: [@history3.url] }
+    assert.equal 0, filterCompleter(@completer, ["story2"]).length
     assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
 
   should "remove 3 (all) matching domain entries", ->
     @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
     @onVisitRemovedListener { allHistory: false, urls: [@history1.url] }
     @onVisitRemovedListener { allHistory: false, urls: [@history3.url] }
-    assert.isTrue filterCompleter(@completer, ["story"]).length == 0
+    assert.equal 0, filterCompleter(@completer, ["story"]).length
 
   should "remove 3 (all) matching domain entries, and do it all at once", ->
     @onVisitRemovedListener { allHistory: false, urls: [ @history2.url, @history1.url, @history3.url ] }
-    assert.isTrue filterCompleter(@completer, ["story"]).length == 0
+    assert.equal 0, filterCompleter(@completer, ["story"]).length
 
   should "remove *all* domain entries", ->
     @onVisitRemovedListener { allHistory: true }
-    assert.isTrue filterCompleter(@completer, ["story"]).length == 0
+    assert.equal 0, filterCompleter(@completer, ["story"]).length
 
 context "tab completer",
   setup ->
