@@ -258,16 +258,24 @@ context "suggestions",
 
 context "RankingUtils",
   should "do a case insensitive match", ->
-    assert.isTrue RankingUtils.matches(["aRi"], "MARIO", "MARio")
+    assert.isTrue RankingUtils.matches(["ari"], "maRio", "mario")
 
   should "do a case insensitive match on full term", ->
-    assert.isTrue RankingUtils.matches(["MaRiO"], "MARIO", "MARio")
+    assert.isTrue RankingUtils.matches(["mario"], "MARIO", "MARio")
 
   should "do a case insensitive match on more than just two terms", ->
-    assert.isTrue RankingUtils.matches(["aRi"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio")
+    assert.isTrue RankingUtils.matches(["ari"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio")
+
+  should "do a smartcase match", ->
+    assert.isTrue RankingUtils.matches(["Mar"], "Mario", "mario")
+    assert.isFalse RankingUtils.matches(["Mar"], "mario", "mario")
+
+  should "do a smartcase match on full term", ->
+    assert.isTrue RankingUtils.matches(["Mario"], "Mario")
+    assert.isFalse RankingUtils.matches(["Mario"], "mario")
 
   should "do case insensitive word relevancy (matching)", ->
-    assert.isTrue RankingUtils.wordRelevancy(["aRi"], "MARIO", "MARio") > 0.0
+    assert.isTrue RankingUtils.wordRelevancy(["ari"], "MARIO", "MARio") > 0.0
 
   should "do case insensitive word relevancy (not matching)", ->
     assert.isTrue RankingUtils.wordRelevancy(["DOES_NOT_MATCH"], "MARIO", "MARio") == 0.0
