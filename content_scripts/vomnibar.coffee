@@ -94,7 +94,8 @@ class VomnibarUI
     action = @actionFromKeyEvent(event)
     return true unless action # pass through
 
-    openInNewTab = @forceNewTab || (event.shiftKey || KeyboardUtils.isPrimaryModifierKey(event))
+    openInNewTab = @forceNewTab ||
+      (event.shiftKey || event.ctrlKey || KeyboardUtils.isPrimaryModifierKey(event))
     if (action == "dismiss")
       @hide()
     else if (action == "up")
