@@ -30,7 +30,7 @@ Utils =
     -> id += 1
 
   hasChromePrefix: (url) ->
-    chromePrefixes = [ 'about', 'view-source' ]
+    chromePrefixes = [ 'about', 'view-source', "chrome-extension" ]
     for prefix in chromePrefixes
       return true if url.startsWith prefix
     false
