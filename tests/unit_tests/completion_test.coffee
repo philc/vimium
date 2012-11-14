@@ -258,17 +258,17 @@ context "suggestions",
 
 context "RankingUtils",
   should "do a case insensitive match", ->
-    assert.isTrue RankingUtils.matches(["ari"], "maRio", "mario")
+    assert.isTrue RankingUtils.matches(["ari"], "maRio")
 
   should "do a case insensitive match on full term", ->
-    assert.isTrue RankingUtils.matches(["mario"], "MARIO", "MARio")
+    assert.isTrue RankingUtils.matches(["mario"], "MARio")
 
-  should "do a case insensitive match on more than just two terms", ->
+  should "do a case insensitive match on several terms", ->
     assert.isTrue RankingUtils.matches(["ari"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio")
 
   should "do a smartcase match", ->
-    assert.isTrue RankingUtils.matches(["Mar"], "Mario", "mario")
-    assert.isFalse RankingUtils.matches(["Mar"], "mario", "mario")
+    assert.isTrue RankingUtils.matches(["Mar"], "Mario")
+    assert.isFalse RankingUtils.matches(["Mar"], "mario")
 
   should "do a smartcase match on full term", ->
     assert.isTrue RankingUtils.matches(["Mario"], "Mario")
@@ -280,10 +280,10 @@ context "RankingUtils",
   should "do case insensitive word relevancy (not matching)", ->
     assert.isTrue RankingUtils.wordRelevancy(["DOES_NOT_MATCH"], "MARIO", "MARio") == 0.0
 
-  should "every term must match at least one thing (matching)", ->
+  should "every query term must match at least one thing (matching)", ->
     assert.isTrue RankingUtils.matches(["cat", "dog"], "catapult", "hound dog")
 
-  should "every term must match at least one thing (not matching)", ->
+  should "every query term must match at least one thing (not matching)", ->
     assert.isTrue not RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog")
 
 context "RegexpCache",
