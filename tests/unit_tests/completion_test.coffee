@@ -266,9 +266,17 @@ context "RankingUtils",
   should "do a case insensitive match on several terms", ->
     assert.isTrue RankingUtils.matches(["ari"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio")
 
-  should "do a smartcase match", ->
+  should "do a smartcase match (positive)", ->
     assert.isTrue RankingUtils.matches(["Mar"], "Mario")
+
+  should "do a smartcase match (negative)", ->
     assert.isFalse RankingUtils.matches(["Mar"], "mario")
+
+  should "do a match with regexp meta-characters (positive)", ->
+    assert.isTrue RankingUtils.matches(["ma.io"], "ma.io")
+
+  should "do a match with regexp meta-characters (negative)", ->
+    assert.isFalse RankingUtils.matches(["ma.io"], "mario")
 
   should "do a smartcase match on full term", ->
     assert.isTrue RankingUtils.matches(["Mario"], "Mario")
