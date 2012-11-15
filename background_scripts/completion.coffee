@@ -118,11 +118,14 @@ class BookmarkCompleter
           RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, bookmark.title)
       else
         []
-    suggestions = results.map (bookmark) =>
-      new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, @computeRelevancy)
-    onComplete = @currentSearch.onComplete
-    @currentSearch = null
-    onComplete(suggestions)
+    HistoryCache.use (history) =>
+      suggestions = results.map (bookmark) =>
+        i = HistoryCache.binarySearch { url: bookmark.url }, history, HistoryCache.compareHistoryByUrl
+        historyEntry = if history[i]?.url == bookmark.url then history[i] else null
+        new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, @computeRelevancy, historyEntry)
+      onComplete = @currentSearch.onComplete
+      @currentSearch = null
+      onComplete(suggestions)
 
   refresh: ->
     @bookmarks = null
@@ -141,7 +144,10 @@ class BookmarkCompleter
     results
 
   computeRelevancy: (suggestion) ->
-    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    lastVisitTime = suggestion?.extraRelevancyData?.lastVisitTime || 0.0
+    recencyScore = RankingUtils.recencyScore(lastVisitTime)
+    wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
 
 class HistoryCompleter
   filter: (queryTerms, onComplete) ->
@@ -374,6 +380,15 @@ HistoryCache =
   fetchHistory: (callback) ->
     return @callbacks.push(callback) if @callbacks
     @callbacks = [callback]
+    # FIXME: (smblott)
+    #        `startTime` being set to `0`, below, is a potential problem.
+    #        If there are more than `@size` entries in the chrome history, then
+    #        we don't really know what will be returned.  The API doesn't say.
+    #        And there may well be more than `@size` entries, that's just 200
+    #        days of browsing at 100 new history entries per day.
+    #        Suggest setting `startTime` to something more reasonable.
+    #        Perhaps "one month ago"?  Then it would match how recency scores are calculated.
+    #        Even "six month ago" may at least be a bit safer.
     chrome.history.search { text: "", maxResults: @size, startTime: 0 }, (history) =>
       history.sort @compareHistoryByUrl
       @history = history
