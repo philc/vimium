@@ -231,6 +231,7 @@ extend window,
   scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
 
 extend window,
+  stopLoading: -> window.stop()
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
@@ -835,7 +836,7 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-  
+
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")

@@ -93,7 +93,7 @@ Commands =
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
        "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
        "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
-       "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+       "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode", "stopLoading"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -146,6 +146,8 @@ defaultKeyMappings =
 
   "[[": "goPrevious"
   "]]": "goNext"
+
+  "c": "stopLoading"
 
   "yy": "copyCurrentUrl"
   "yf": "LinkHints.activateModeToCopyLinkUrl"
@@ -222,6 +224,8 @@ commandDescriptions =
   # Navigating your history
   goBack: ["Go back in history", { passCountToFunction: true }]
   goForward: ["Go forward in history", { passCountToFunction: true }]
+
+  stopLoading: ["Stop loading the page"]
 
   # Navigating the URL hierarchy
   goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
