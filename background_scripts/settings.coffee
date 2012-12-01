@@ -22,7 +22,7 @@ root.Settings = Settings =
   # all defaults must be booleans or strings
   defaults:
     scrollStepSize: 60
-    linkHintCharacters: "sadfjklewcmpgh"
+    linkHintCharacters: "sadfewc" # for left hand
     linkHintNumbers: "0123456789"
     filterLinkHints: false
     hideHud: false
@@ -56,11 +56,11 @@ root.Settings = Settings =
     # for first.
 
     # "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
-    previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<"
+    previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<,上一页"
     # "\bnext\b,\bmore\b,>,→,»,≫,>>"
-    nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
+    nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>,下一页"
     # default/fall back search engine
-    searchUrl: "http://www.google.com/search?q="
+    searchUrl: "https://www.google.com.hk/search?q="
 
     settingsVersion: Utils.getCurrentVersion()
 

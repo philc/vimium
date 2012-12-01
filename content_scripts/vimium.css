@@ -144,8 +144,8 @@ div.vimiumColumn tr {
 
 div.vimiumColumn td {
     display: table-cell;
-    font-size: 11px;
-    line-height: 130%;
+    font-size: 14px;
+    line-height: 150%;
 }
 div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr { padding:0; margin:0; }
 div.vimiumColumn table { width:100%; table-layout:auto; }
