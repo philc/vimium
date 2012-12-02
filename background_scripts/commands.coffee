@@ -200,7 +200,7 @@ commandDescriptions =
   toggleViewSource: ["查看源代码"]
 
   copyCurrentUrl: ["复制当前网址到剪贴板"]
-  'LinkHints.activateModeToCopyLinkUrl': ["复制当前链接到剪贴板"]
+  'LinkHints.activateModeToCopyLinkUrl': ["复制指定链接到剪贴板..."]
   openCopiedUrlInCurrentTab: ["在当前标签打开剪贴板中的链接", { background: true }]
   openCopiedUrlInNewTab: ["在新标签中打开剪贴板中的链接", { background: true }]
 
