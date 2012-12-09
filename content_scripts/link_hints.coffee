@@ -77,9 +77,9 @@ LinkHints =
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_TAB
-        HUD.show("Open link in new tab")
+        HUD.show("在新标签中打开")
       else
-        HUD.show("Open multiple links in a new tab")
+        HUD.show("在新标签中打开多个链接")
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -87,11 +87,11 @@ LinkHints =
           metaKey: KeyboardUtils.platform == "Mac",
           ctrlKey: KeyboardUtils.platform != "Mac" })
     else if @mode is COPY_LINK_URL
-      HUD.show("Copy link URL to Clipboard")
+      HUD.show("复制当前链接到剪贴板")
       @linkActivator = (link) ->
         chrome.extension.sendRequest({handler: "copyToClipboard", data: link.href})
     else # OPEN_IN_CURRENT_TAB
-      HUD.show("Open link in current tab")
+      HUD.show("在当前标签打开链接")
       # When we're opening the link in the current tab, don't navigate to the selected link immediately
       # we want to give the user some time to notice which link has received focus.
       @linkActivator = (link) -> setTimeout(DomUtils.simulateClick.bind(DomUtils, link), 400)

@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Vimium",
-  "version": "1.42",
-  "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
+  "name": "Vimium 中文版",
+  "version": "1.42.1",
+  "description": "像黑客一样使用浏览器！受到伟大的 Vim 编辑器的启示，Vimium 向浏览器提供了一系列用于快速浏览网页的快捷键。",
   "icons": {  "16": "icons/icon16.png",
               "48": "icons/icon48.png",
              "128": "icons/icon128.png" },

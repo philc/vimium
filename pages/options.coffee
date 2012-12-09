@@ -101,9 +101,9 @@ setFieldValue = (field, value) ->
 toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
   if advancedMode
     $("advancedOptions").style.display = "none"
-    $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
+    $("advancedOptionsLink").innerHTML = "显示高级设置&hellip;"
   else
     $("advancedOptions").style.display = "table-row-group"
-    $("advancedOptionsLink").innerHTML = "Hide advanced options"
+    $("advancedOptionsLink").innerHTML = "隐藏高级设置"
   advancedMode = !advancedMode
   event.preventDefault()

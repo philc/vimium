@@ -4,3 +4,7 @@
 *.crx
 *.js
 node_modules/*
+
+.DS_Store
+
+vimium.zip

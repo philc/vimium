@@ -261,7 +261,7 @@ extend window,
     chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
       chrome.extension.sendRequest { handler: "copyToClipboard", data: url }
 
-    HUD.showForDuration("Yanked URL", 1000)
+    HUD.showForDuration("已复制当前网页地址", 1000)
 
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
@@ -494,7 +494,7 @@ isEditable = (target) ->
 #
 window.enterInsertMode = (target) ->
   enterInsertModeWithoutShowingIndicator(target)
-  HUD.show("Insert mode")
+  HUD.show("进入打字模式")
 
 #
 # We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
@@ -683,7 +683,7 @@ findAndFocus = (backwards) ->
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
 
   if (!findModeQueryHasResults)
-    HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
+    HUD.showForDuration("找不到'" + findModeQuery.rawQuery + "'", 1000)
     return
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
@@ -813,7 +813,7 @@ showFindModeHUDForQuery = ->
   if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
     HUD.show("/" + findModeQuery.rawQuery)
   else
-    HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
+    HUD.show("/" + findModeQuery.rawQuery + " (没有找到)")
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
@@ -858,7 +858,7 @@ window.showHelpDialog = (html, fid) ->
 
     showAdvancedCommands: (visible) ->
       VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
-        if visible then "Hide advanced commands" else "Show advanced commands"
+        if visible then "隐藏高级命令" else "显示高级命令"
       advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
       for el in advancedEls
         el.style.display = if visible then "table-row" else "none"

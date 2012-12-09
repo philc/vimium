@@ -120,8 +120,8 @@ defaultKeyMappings =
   "G": "scrollToBottom"
   "zH": "scrollToLeft"
   "zL": "scrollToRight"
-  "<c-e>": "scrollDown"
-  "<c-y>": "scrollUp"
+  "<ctrl-e>": "scrollDown"
+  "<ctrl-y>": "scrollUp"
 
   "d": "scrollPageDown"
   "u": "scrollPageUp"
@@ -138,7 +138,7 @@ defaultKeyMappings =
 
   "f":     "LinkHints.activateMode"
   "F":     "LinkHints.activateModeToOpenInNewTab"
-  "<a-f>": "LinkHints.activateModeWithQueue"
+  "<alt-f>": "LinkHints.activateModeWithQueue"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -181,70 +181,70 @@ defaultKeyMappings =
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
   # Navigating the current page
-  showHelp: ["Show help", { background: true }]
-  scrollDown: ["Scroll down"]
-  scrollUp: ["Scroll up"]
-  scrollLeft: ["Scroll left"]
-  scrollRight: ["Scroll right"]
-  scrollToTop: ["Scroll to the top of the page"]
-  scrollToBottom: ["Scroll to the bottom of the page"]
-  scrollToLeft: ["Scroll all the way to the left"]
+  showHelp: ["显示帮助", { background: true }]
+  scrollDown: ["向下"]
+  scrollUp: ["向上"]
+  scrollLeft: ["向左"]
+  scrollRight: ["向右"]
+  scrollToTop: ["跳到页面顶端"]
+  scrollToBottom: ["跳到页面底部"]
+  scrollToLeft: ["跳到页面最左边"]
 
-  scrollToRight: ["Scroll all the way to the right"]
-  scrollPageDown: ["Scroll a page down"]
-  scrollPageUp: ["Scroll a page up"]
-  scrollFullPageDown: ["Scroll a full page down"]
-  scrollFullPageUp: ["Scroll a full page up"]
+  scrollToRight: ["跳到页面最右边"]
+  scrollPageDown: ["往下滚屏"]
+  scrollPageUp: ["往上滚屏"]
+  scrollFullPageDown: ["往下翻页"]
+  scrollFullPageUp: ["往上翻页"]
 
-  reload: ["Reload the page"]
-  toggleViewSource: ["View page source"]
+  reload: ["刷新页面"]
+  toggleViewSource: ["查看源代码"]
 
-  copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
+  copyCurrentUrl: ["复制当前网址到剪贴板"]
+  'LinkHints.activateModeToCopyLinkUrl': ["复制指定链接到剪贴板..."]
+  openCopiedUrlInCurrentTab: ["在当前标签打开剪贴板中的链接", { background: true }]
+  openCopiedUrlInNewTab: ["在新标签中打开剪贴板中的链接", { background: true }]
 
-  enterInsertMode: ["Enter insert mode"]
+  enterInsertMode: ["进入打字模式"]
 
-  focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }]
+  focusInput: ["指向页面中的第n个文本框", { passCountToFunction: true }]
 
-  'LinkHints.activateMode': ["Open a link in the current tab"]
-  'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
-  'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
+  'LinkHints.activateMode': ["在当前标签打开指定链接"]
+  'LinkHints.activateModeToOpenInNewTab': ["在新标签中打开指定链接"]
+  'LinkHints.activateModeWithQueue': ["在新标签中打开指定的多个链接"]
 
-  enterFindMode: ["Enter find mode"]
-  performFind: ["Cycle forward to the next find match"]
-  performBackwardsFind: ["Cycle backward to the previous find match"]
+  enterFindMode: ["进入查找模式"]
+  performFind: ["向前查找下一项"]
+  performBackwardsFind: ["向前查找下一项"]
 
-  goPrevious: ["Follow the link labeled previous or <"]
-  goNext: ["Follow the link labeled next or >"]
+  goPrevious: ["上一页"]
+  goNext: ["下一页"]
 
   # Navigating your history
-  goBack: ["Go back in history", { passCountToFunction: true }]
-  goForward: ["Go forward in history", { passCountToFunction: true }]
+  goBack: ["后退", { passCountToFunction: true }]
+  goForward: ["前进", { passCountToFunction: true }]
 
   # Navigating the URL hierarchy
-  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
+  goUp: ["打开父目录", { passCountToFunction: true }]
 
   # Manipulating tabs
-  nextTab: ["Go one tab right", { background: true }]
-  previousTab: ["Go one tab left", { background: true }]
-  firstTab: ["Go to the first tab", { background: true }]
-  lastTab: ["Go to the last tab", { background: true }]
-  createTab: ["Create new tab", { background: true }]
-  removeTab: ["Close current tab", { background: true }]
-  restoreTab: ["Restore closed tab", { background: true }]
+  nextTab: ["打开到右标签", { background: true }]
+  previousTab: ["打开左标签", { background: true }]
+  firstTab: ["打开第一个标签", { background: true }]
+  lastTab: ["打开最后一个标签", { background: true }]
+  createTab: ["打开新标签", { background: true }]
+  removeTab: ["关闭当前标签", { background: true }]
+  restoreTab: ["重新打开关闭的标签", { background: true }]
 
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs"]
-  "Vomnibar.activateBookmarks": ["Open a bookmark"]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
+  "Vomnibar.activate": ["在当前标签打开..."]
+  "Vomnibar.activateInNewTab": ["在新标签中打开..."]
+  "Vomnibar.activateTabSelection": ["搜索打开的标签..."]
+  "Vomnibar.activateBookmarks": ["在当前标签打开收藏夹..."]
+  "Vomnibar.activateBookmarksInNewTab": ["在新标签中打开收藏夹..."]
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
+  nextFrame: ["跳转到下一个框架页", { background: true, passCountToFunction: true }]
 
-  "Marks.activateCreateMode": ["Create a new mark"]
-  "Marks.activateGotoMode": ["Go to a mark"]
+  "Marks.activateCreateMode": ["在当前位置设定一个标记"]
+  "Marks.activateGotoMode": ["跳转到指定标记"]
 
 Commands.init()
 
