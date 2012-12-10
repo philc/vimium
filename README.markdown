@@ -11,14 +11,9 @@ __Installation instructions:__
 You can install the stable version of Vimium from the
 [Chrome Extensions Gallery](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb).
 
-Alternatively, you can install it from source:
-
-1. Install [Coffeescript](http://coffeescript.org/#installation) (needed to build vimium).
-2. Run `cake build` in the Vimium directory.
-3. Navigate to `chrome://extensions`
-4. Toggle into Developer Mode
-5. Click on "Load Unpacked Extension..."
-6. Select the Vimium directory.
+Please see
+[CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md#installing-from-source)
+for instructions on how you can install Vimium from source.
 
 The Options page can be reached via a link on the help dialog (hit `?`) or via the button next to Vimium on
 the Chrome Extensions page (`chrome://extensions`).
