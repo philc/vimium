@@ -178,7 +178,10 @@ copyToClipboard = (request) -> Clipboard.copy(request.data)
 #
 # Selects the tab with the ID specified in request.id
 #
-selectSpecificTab = (request) -> chrome.tabs.update(request.id, { selected: true })
+selectSpecificTab = (request) ->
+  chrome.tabs.get(request.id, (tab) ->
+    chrome.windows.update(tab.windowId, { focused: true })
+    chrome.tabs.update(request.id, { selected: true }))
 
 #
 # Used by the content scripts to get settings from the local storage.
