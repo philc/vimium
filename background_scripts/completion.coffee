@@ -355,7 +355,8 @@ RegexpCache =
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
-    @cache[regexpString] ||= new RegExp(regexpString, "i")
+    # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
+    @cache[regexpString] ||= new RegExp regexpString, (if /[A-Z]/.test string then "" else "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
