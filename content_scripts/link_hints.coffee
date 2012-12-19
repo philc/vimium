@@ -352,6 +352,8 @@ filterHints =
         showLinkText = true
       else if (element.type != "password")
         linkText = element.value
+        if not linkText and 'placeholder' of element
+          linkText = element.placeholder
       # check if there is an image embedded in the <a> tag
     else if (nodeName == "a" && !element.textContent.trim() &&
         element.firstElementChild &&
