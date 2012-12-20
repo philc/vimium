@@ -386,7 +386,6 @@ onKeydown = (event) ->
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       exitInsertMode()
-      DomUtils.suppressEvent(event)
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
