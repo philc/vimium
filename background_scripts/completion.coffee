@@ -356,7 +356,7 @@ RegexpCache =
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
     # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
-    @cache[regexpString] ||= new RegExp regexpString, (if /[A-Z]/.test string then "" else "i")
+    @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
