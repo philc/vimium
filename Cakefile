@@ -21,10 +21,11 @@ optArrayFromDict = (opts) ->
 
 existsSync = fs.existsSync || path.existsSync
 
+# remove the -pack-extension-key option from opts if the file is missing
 checkExtensionKey = (opts) ->
   for key, value of opts
     if key == 'pack-extension-key' && not existsSync value 
-        delete opts[key]
+      delete opts[key]
   opts
 
 # visitor will get passed the file path as a parameter
