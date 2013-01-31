@@ -297,6 +297,8 @@ body.vimiumFindMode ::selection {
 
 #vomnibar input {
   font-size: 20px;
+  height: 34px;
+  margin-bottom: 0;
   padding: 4px;
   background-color: white;
   border-radius: 3px;
