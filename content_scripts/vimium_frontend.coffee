@@ -246,6 +246,16 @@ extend window,
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
+  goRoot: (count) ->
+      host = window.location.hostname
+      port = window.location.port
+      protocol = window.location.protocol
+
+      url = protocol + "//" + host
+      if port
+        url += ":" + port
+      window.location.href = url
+
   toggleViewSource: ->
     chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
       if (url.substr(0, 12) == "view-source:")

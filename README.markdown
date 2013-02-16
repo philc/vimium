@@ -81,6 +81,7 @@ Additional advanced browsing commands:
     <a-f>   open multiple links in a new tab
     gi      focus the first (or n-th) text input box on the page
     gu      go up one level in the URL hierarchy
+    gU      go up to root of the URL hierarchy
     zH      scroll all the way left
     zL      scroll all the way right
 
