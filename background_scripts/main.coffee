@@ -218,7 +218,10 @@ repeatFunction = (func, totalCount, currentCount, frameId) ->
 # mapped in commands.coffee.
 BackgroundCommands =
   createTab: (callback) -> chrome.tabs.create({ url: "chrome://newtab" }, (tab) -> callback())
-  duplicateTab: (callback) -> chrome.tabs.duplicate(chrome.tabs.getCurrent(), (tab) -> callback())
+  duplicateTab: (callback) ->
+    chrome.tabs.getSelected(null, (tab) ->
+      chrome.tabs.duplicate(tab.id)
+      selectionChangedHandlers.push(callback))
   nextTab: (callback) -> selectTab(callback, "next")
   previousTab: (callback) -> selectTab(callback, "previous")
   firstTab: (callback) -> selectTab(callback, "first")

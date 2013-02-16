@@ -70,6 +70,7 @@ Manipulating tabs:
     g0         go to the first tab
     g$         go to the last tab
     t          create tab
+    yt         duplicate current tab
     x          close current tab
     X          restore closed tab (i.e. unwind the 'x' command)
     T          search through your open tabs
