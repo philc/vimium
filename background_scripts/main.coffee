@@ -162,6 +162,9 @@ openUrlInNewTab = (request) ->
   chrome.tabs.getSelected(null, (tab) ->
     chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true }))
 
+openUrlInIncognitoWindow = (request) ->
+  chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
+
 #
 # Called when the user has clicked the close icon on the "Vimium has been updated" message.
 # We should now dismiss that message in all tabs.
@@ -398,6 +401,7 @@ getActualKeyStrokeLength = (key) ->
     key.length
 
 populateValidFirstKeys = ->
+  console.log 'Command registry:', Commands.keyToCommandRegistry
   for key of Commands.keyToCommandRegistry
     if (getActualKeyStrokeLength(key) == 2)
       validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
@@ -455,6 +459,8 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   splitHash = splitKeyQueue(keysToCheck)
   command = splitHash.command
   count = splitHash.count
+
+  console.log 'Command:', command
 
   return keysToCheck if command.length == 0
   count = 1 if isNaN(count)
@@ -546,6 +552,7 @@ sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
   getCurrentTabUrl: getCurrentTabUrl,
   openUrlInNewTab: openUrlInNewTab,
+  openUrlInIncognitoWindow: openUrlInIncognitoWindow,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
   registerFrame: registerFrame,
