@@ -60,6 +60,12 @@ chrome.extension.onRequest.addListener((request, sender, sendResponse) ->
   # Ensure the sendResponse callback is freed.
   return false)
 
+chrome.extension.onMessage.addListener((request, sender, sendResponse) ->
+  if (sendRequestHandlers[request.handler])
+    sendResponse(sendRequestHandlers[request.handler](request, sender))
+  # Ensure the sendResponse callback is freed.
+  return false)
+
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
 # because window.location doesn't know anything about the Chrome-specific "view-source:".
@@ -459,8 +465,6 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   splitHash = splitKeyQueue(keysToCheck)
   command = splitHash.command
   count = splitHash.count
-
-  console.log 'Command:', command
 
   return keysToCheck if command.length == 0
   count = 1 if isNaN(count)

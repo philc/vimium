@@ -96,8 +96,9 @@ LinkHints =
       HUD.show("Open link in incognito window")
 
       @linkActivator = (link) ->
-        console.log 'Incognito:', link
-        openUrlInIncognitoWindow({ url: link.href})
+        chrome.extension.sendMessage(
+          handler: 'openUrlInIncognitoWindow'
+          url: link.href)
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
       # When we're opening the link in the current tab, don't navigate to the selected link immediately
