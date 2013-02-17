@@ -110,7 +110,7 @@ Commands =
   # from Vimium will uncover these gems.
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
-    "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
+    "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue", "LinkHints.activateModeToDownloadLink",
     "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
     "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
     "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
@@ -145,6 +145,8 @@ defaultKeyMappings =
   "f":     "LinkHints.activateMode"
   "F":     "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
+
+  "af": "LinkHints.activateModeToDownloadLink"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -228,6 +230,7 @@ commandDescriptions =
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
 
+  "LinkHints.activateModeToDownloadLink": ["Download link url"]
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]
   performBackwardsFind: ["Cycle backward to the previous find match"]
