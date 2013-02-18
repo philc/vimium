@@ -407,7 +407,6 @@ getActualKeyStrokeLength = (key) ->
     key.length
 
 populateValidFirstKeys = ->
-  console.log 'Command registry:', Commands.keyToCommandRegistry
   for key of Commands.keyToCommandRegistry
     if (getActualKeyStrokeLength(key) == 2)
       validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
