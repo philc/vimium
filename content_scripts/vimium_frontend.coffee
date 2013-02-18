@@ -246,6 +246,9 @@ extend window,
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
+  goToRoot: () ->
+    window.location.href = window.location.origin
+
   toggleViewSource: ->
     chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
       if (url.substr(0, 12) == "view-source:")
