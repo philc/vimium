@@ -60,6 +60,12 @@ chrome.extension.onRequest.addListener((request, sender, sendResponse) ->
   # Ensure the sendResponse callback is freed.
   return false)
 
+chrome.extension.onMessageExternal.addListener((request, sender, sendResponse) ->
+  if (externalSendRequestHandlers[request.handler])
+    sendResponse(externalSendRequestHandlers[request.handler](request, sender))
+  # Ensure the sendResponse callback is freed.
+  return false)
+
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
 # because window.location doesn't know anything about the Chrome-specific "view-source:".
@@ -78,6 +84,21 @@ isEnabledForUrl = (request) ->
     regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
     isEnabled = false if request.url.match(regexp)
   { isEnabledForUrl: isEnabled }
+
+removeExcludeUrlReq = (request) ->
+  removeExcludeUrl(request.url)
+
+removeExcludeUrl = (url) ->
+  return unless url = url.trim()
+  excludedUrls = Settings.get("excludedUrls")
+  excludedUrls = excludedUrls.split("\n" + url).join('')
+  Settings.set("excludedUrls", excludedUrls)
+
+  chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
+    (tabs) -> updateActiveState(tabs[0].id))
+
+addExcludedUrlReq = (request) ->
+  root.addExcludedUrlReq(request.url)
 
 # Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
 root.addExcludedUrl = (url) ->
@@ -560,9 +581,14 @@ sendRequestHandlers =
   isEnabledForUrl: isEnabledForUrl,
   saveHelpDialogSettings: saveHelpDialogSettings,
   selectSpecificTab: selectSpecificTab,
-  refreshCompleter: refreshCompleter
+  refreshCompleter: refreshCompleter,
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
+
+
+externalSendRequestHandlers =
+  disableVimium: addExcludedUrlReq,
+  enableVimium: removeExcludeUrlReq
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.extension.getURL('tests/dom_tests/dom_tests.html'))
