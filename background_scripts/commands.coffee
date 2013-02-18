@@ -98,7 +98,7 @@ Commands =
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "removeTab", "restoreTab"]
+      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab"]
     misc:
       ["showHelp"]
 
@@ -161,6 +161,7 @@ defaultKeyMappings =
   "g$": "lastTab"
 
   "t": "createTab"
+  "yt": "duplicateTab"
   "x": "removeTab"
   "X": "restoreTab"
 
@@ -232,6 +233,7 @@ commandDescriptions =
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
   createTab: ["Create new tab", { background: true }]
+  duplicateTab: ["Duplicate current tab", { background: true }]
   removeTab: ["Close current tab", { background: true }]
   restoreTab: ["Restore closed tab", { background: true }]
 
