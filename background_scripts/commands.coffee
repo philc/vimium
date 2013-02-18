@@ -98,7 +98,7 @@ Commands =
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "openTabInNewWindow", "removeTab", "restoreTab"]
+      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "removeTab", "restoreTab"]
     misc:
       ["showHelp"]
 
@@ -106,7 +106,7 @@ Commands =
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
   # from Vimium will uncover these gems.
   advancedCommands: [
-    "scrollToLeft", "scrollToRight",
+    "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "focusInput", "LinkHints.activateModeWithQueue",
     "goPrevious", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
 
@@ -160,7 +160,7 @@ defaultKeyMappings =
   "g0": "firstTab"
   "g$": "lastTab"
 
-  "w": "openTabInNewWindow"
+  "w": "moveTabToNewWindow"
   "t": "createTab"
   "x": "removeTab"
   "X": "restoreTab"
@@ -233,9 +233,9 @@ commandDescriptions =
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
   createTab: ["Create new tab", { background: true }]
-  openTabInNewWindow: ["Open tab in new window", { background: true }]
   removeTab: ["Close current tab", { background: true }]
   restoreTab: ["Restore closed tab", { background: true }]
+  moveTabToNewWindow: ["Move tab to new window", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
