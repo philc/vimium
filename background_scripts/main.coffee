@@ -238,6 +238,7 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id))
   restoreTab: (callback) ->
+    # TODO: remove if-else -block when adopted into stable
     if chrome.sessionRestore
       chrome.sessionRestore.getRecentlyClosed((closed) ->
         chrome.sessionRestore.restore(closed[0]))
