@@ -163,7 +163,7 @@ defaultKeyMappings =
   "g0": "firstTab"
   "g$": "lastTab"
 
-  "w": "moveTabToNewWindow"
+  "W": "moveTabToNewWindow"
   "t": "createTab"
   "yt": "duplicateTab"
   "x": "removeTab"
