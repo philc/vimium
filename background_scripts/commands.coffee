@@ -21,6 +21,7 @@ Commands =
       description: description
       isBackgroundCommand: options.background
       passCountToFunction: options.passCountToFunction
+      noRepeat: options.noRepeat
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
@@ -31,6 +32,7 @@ Commands =
       command: command
       isBackgroundCommand: @availableCommands[command].isBackgroundCommand
       passCountToFunction: @availableCommands[command].passCountToFunction
+      noRepeat: @availableCommands[command].noRepeat
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
@@ -63,7 +65,7 @@ Commands =
 
         continue unless @availableCommands[vimiumCommand]
 
-        console.log("Mapping", key, "to", vimiumCommand)
+        konsole.log("Mapping", key, "to", vimiumCommand)
         @mapKeyToCommand(key, vimiumCommand)
       else if (lineCommand == "unmap")
         continue if (splitLine.length != 2)
@@ -236,7 +238,7 @@ commandDescriptions =
   lastTab: ["Go to the last tab", { background: true }]
   createTab: ["Create new tab", { background: true }]
   duplicateTab: ["Duplicate current tab", { background: true }]
-  removeTab: ["Close current tab", { background: true }]
+  removeTab: ["Close current tab", { background: true, noRepeat: true }]
   restoreTab: ["Restore closed tab", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]

@@ -478,6 +478,8 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
     else
       if registryEntry.passCountToFunction
         BackgroundCommands[registryEntry.command](count)
+      else if registryEntry.noRepeat
+        BackgroundCommands[registryEntry.command]()
       else
         repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
