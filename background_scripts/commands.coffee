@@ -108,7 +108,7 @@ Commands =
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
   # from Vimium will uncover these gems.
   advancedCommands: [
-    "scrollToLeft", "scrollToRight",
+    "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
     "goPrevious", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
 
@@ -163,6 +163,7 @@ defaultKeyMappings =
   "g0": "firstTab"
   "g$": "lastTab"
 
+  "w": "moveTabToNewWindow"
   "t": "createTab"
   "yt": "duplicateTab"
   "x": "removeTab"
@@ -240,6 +241,7 @@ commandDescriptions =
   duplicateTab: ["Duplicate current tab", { background: true }]
   removeTab: ["Close current tab", { background: true, noRepeat: true }]
   restoreTab: ["Restore closed tab", { background: true }]
+  moveTabToNewWindow: ["Move tab to new window", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]

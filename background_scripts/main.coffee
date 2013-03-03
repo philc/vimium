@@ -222,6 +222,9 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
       selectionChangedHandlers.push(callback))
+  moveTabToNewWindow: (callback) ->
+    chrome.tabs.getSelected(null, (tab) ->
+      chrome.windows.create({tabId: tab.id}))
   nextTab: (callback) -> selectTab(callback, "next")
   previousTab: (callback) -> selectTab(callback, "previous")
   firstTab: (callback) -> selectTab(callback, "first")
