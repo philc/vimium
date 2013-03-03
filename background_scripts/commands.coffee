@@ -65,7 +65,7 @@ Commands =
 
         continue unless @availableCommands[vimiumCommand]
 
-        konsole.log("Mapping", key, "to", vimiumCommand)
+        console.log("Mapping", key, "to", vimiumCommand)
         @mapKeyToCommand(key, vimiumCommand)
       else if (lineCommand == "unmap")
         continue if (splitLine.length != 2)
