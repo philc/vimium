@@ -12,7 +12,7 @@ OPEN_IN_CURRENT_TAB = {}
 OPEN_IN_NEW_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
-OPEN_INCOGNITO_WINDOW = {}
+OPEN_INCOGNITO = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -49,7 +49,7 @@ LinkHints =
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_TAB)
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
-  activateModeToOpenIncognitoWindow: -> @activateMode(OPEN_INCOGNITO_WINDOW)
+  activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -92,12 +92,12 @@ LinkHints =
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
         chrome.extension.sendRequest({handler: "copyToClipboard", data: link.href})
-    else if @mode is OPEN_INCOGNITO_WINDOW
+    else if @mode is OPEN_INCOGNITO
       HUD.show("Open link in incognito window")
 
       @linkActivator = (link) ->
         chrome.extension.sendMessage(
-          handler: 'openUrlInIncognitoWindow'
+          handler: 'openUrlInIncognito'
           url: link.href)
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")

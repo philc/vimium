@@ -110,7 +110,7 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognitoWindow", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+    "LinkHints.activateModeToOpenIncognito", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -217,7 +217,7 @@ commandDescriptions =
   'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
   'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
 
-  "LinkHints.activateModeToOpenIncognitoWindow": ["Open a link in incognito window"]
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
 
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]
