@@ -353,7 +353,7 @@ handleSingleKeyPress = (event) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-    return res
+  return res
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
