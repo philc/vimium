@@ -226,14 +226,17 @@ repeatFunction = (func, totalCount, currentCount, frameId) ->
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  moveNextTab: (callback) ->
+  moveToNextTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.move(tab.id, {index: tab.index+1}, (tab) -> callback()))
-  movePreviousTab: (callback) ->
+  moveToPreviousTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.move(tab.id, {index: tab.index-1}, (tab) -> callback()))
-
   createTab: (callback) -> chrome.tabs.create({ url: "chrome://newtab" }, (tab) -> callback())
+  duplicateTab: (callback) ->
+    chrome.tabs.getSelected(null, (tab) ->
+      chrome.tabs.duplicate(tab.id)
+      selectionChangedHandlers.push(callback))
   moveTabToNewWindow: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.windows.create({tabId: tab.id}))
