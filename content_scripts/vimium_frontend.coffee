@@ -121,7 +121,7 @@ initializePreDomReady = ->
   chrome.extension.onMessage.addListener (request, sender, sendResponse) ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    return unless sender.tab?.url.startsWith 'chrome-extension://'
+    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState'
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
