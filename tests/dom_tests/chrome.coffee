@@ -12,9 +12,9 @@ root.chrome = {
       }
       postMessage: ->
     }
-    onRequest: {
+    onMessage: {
       addListener: ->
     }
-    sendRequest: ->
+    sendMessage: ->
   }
 }
