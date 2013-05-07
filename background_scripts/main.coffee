@@ -84,6 +84,8 @@ root.addExcludedUrl = (url) ->
   return unless url = url.trim()
 
   excludedUrls = Settings.get("excludedUrls")
+  return unless excludedUrls.indexOf(url) < 0
+
   excludedUrls += "\n" + url
   Settings.set("excludedUrls", excludedUrls)
 
