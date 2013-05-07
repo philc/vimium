@@ -91,7 +91,7 @@ LinkHints =
     else if @mode is COPY_LINK_URL
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
-        chrome.extension.sendRequest({handler: "copyToClipboard", data: link.href})
+        chrome.extension.sendMessage({handler: "copyToClipboard", data: link.href})
     else if @mode is OPEN_INCOGNITO
       HUD.show("Open link in incognito window")
 
