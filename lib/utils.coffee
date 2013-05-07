@@ -1,10 +1,8 @@
 Utils =
   getCurrentVersion: ->
-    # Chromium #15242 will make this XHR request to access the manifest unnecessary
-    manifestRequest = new XMLHttpRequest()
-    manifestRequest.open("GET", chrome.extension.getURL("manifest.json"), false)
-    manifestRequest.send(null)
-    JSON.parse(manifestRequest.responseText).version
+    chrome.management.get(chrome.i18n.getMessage('@@extension_id'), (info) ->
+      info.version
+    )
 
   # Takes a dot-notation object string and call the function
   # that it points to with the correct value for 'this'.
