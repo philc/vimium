@@ -19,6 +19,15 @@ optArrayFromDict = (opts) ->
       result.push "--#{key}=#{value}"
   result
 
+existsSync = fs.existsSync || path.existsSync
+
+# remove the -pack-extension-key option from opts if the file is missing
+checkExtensionKey = (opts) ->
+  for key, value of opts
+    if key == 'pack-extension-key' && not existsSync value 
+      delete opts[key]
+  opts
+
 # visitor will get passed the file path as a parameter
 visitDirectory = (directory, visitor) ->
   fs.readdirSync(directory).forEach (filename) ->
@@ -59,7 +68,7 @@ task "package", "build .crx file", ->
   manifest.update_url = "http://philc.github.com/vimium/updates.xml"
   fs.writeFileSync "manifest.json", JSON.stringify manifest
 
-  crxmake = spawn "crxmake", optArrayFromDict
+  crxmake = spawn "crxmake", optArrayFromDict checkExtensionKey
     "pack-extension": "."
     "pack-extension-key": "vimium.pem"
     "extension-output": "vimium-latest.crx"
