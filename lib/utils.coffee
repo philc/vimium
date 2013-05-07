@@ -136,7 +136,7 @@ Utils =
 
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
-    
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
