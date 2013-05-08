@@ -1,8 +1,6 @@
 Utils =
   getCurrentVersion: ->
-    chrome.management.get(chrome.i18n.getMessage('@@extension_id'), (info) ->
-      info.version
-    )
+    chrome.runtime.getManifest().version
 
   # Takes a dot-notation object string and call the function
   # that it points to with the correct value for 'this'.
