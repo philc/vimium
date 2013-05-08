@@ -17,4 +17,7 @@ root.chrome = {
     }
     sendMessage: ->
   }
+  runtime: {
+    getManifest: ->
+  }
 }
