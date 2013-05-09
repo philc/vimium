@@ -52,5 +52,6 @@ CREDITS file with your patch.
 
 ## Coding Style
 
-  * Follow the style already present in the file.
-  * Ensure your lines don't exceed 110 characters.
+  * We follow the recommendations from
+    [this style guide](https://github.com/polarmobile/coffeescript-style-guide).
+  * The one major difference is that we wrap our lines at 110 characters instead of 80.
