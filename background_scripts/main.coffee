@@ -234,12 +234,9 @@ BackgroundCommands =
   previousTab: (callback) -> selectTab(callback, "previous")
   firstTab: (callback) -> selectTab(callback, "first")
   lastTab: (callback) -> selectTab(callback, "last")
-  removeTab: (callback) ->
+  removeTab: ->
     chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.remove(tab.id)
-      # We can't just call the callback here because we need to wait
-      # for the selection to change to consider this action done.
-      selectionChangedHandlers.push(callback))
+      chrome.tabs.remove(tab.id))
   restoreTab: (callback) ->
     # TODO(ilya): Should this be getLastFocused instead?
     chrome.windows.getCurrent((window) ->
