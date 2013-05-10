@@ -50,10 +50,11 @@ Commands =
           "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
 
   parseCustomKeyMappings: (customKeyMappings) ->
-    lines = customKeyMappings.split("\n")
+    lines = customKeyMappings.split(/\n+/)
 
     for line in lines
-      continue if (line[0] == "\"" || line[0] == "#")
+      line = line.trimLeft()
+      continue if line.search(/[#"]/) is 0
       splitLine = line.split(/\s+/)
 
       lineCommand = splitLine[0]
