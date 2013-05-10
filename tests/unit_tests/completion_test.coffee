@@ -226,7 +226,8 @@ context "suggestions",
 
   should "shorten urls", ->
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
-    assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
+    firstMatch = suggestion.generateHtml().indexOf("http://ninjawords.com")
+    assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com",firstMatch + 1)
 
   should "extract ranges matching term (simple case, two matches)", ->
     ranges = []
