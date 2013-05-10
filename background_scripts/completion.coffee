@@ -30,14 +30,16 @@ class Suggestion
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       """
-      <div class="vimiumReset vomnibarTopHalf">
-         <span class="vimiumReset vomnibarSource">#{@type}</span>
-         <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
-       </div>
-       <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml @url))}</span>
-        #{relevancyHtml}
-      </div>
+      <a class="vimiumReset" href="#{encodeURI @url}">
+          <div class="vimiumReset vomnibarTopHalf">
+             <span class="vimiumReset vomnibarSource">#{@type}</span>
+             <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
+           </div>
+           <div class="vimiumReset vomnibarBottomHalf">
+            <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml @url))}</span>
+            #{relevancyHtml}
+          </div>
+      </a>
       """
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
