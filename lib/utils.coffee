@@ -34,7 +34,7 @@ Utils =
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
     unless /^[a-z]{3,}:\/\//.test partialUrl
-      "http://" + partialUrl
+      "http://#{partialUrl}"
     else
       partialUrl
 

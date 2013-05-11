@@ -13,7 +13,7 @@ Commands =
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options = {}) ->
     if command of @availableCommands
-      console.log(command, "is already defined! Check commands.coffee for duplicates.")
+      console.log("#{command} is already defined! Check commands.coffee for duplicates.")
       return
 
     @availableCommands[command] =
@@ -24,7 +24,7 @@ Commands =
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
-      console.log(command, "doesn't exist!")
+      console.log("#{command} doesn't exist!")
       return
 
     @keyToCommandRegistry[key] =
@@ -64,13 +64,13 @@ Commands =
 
         continue unless @availableCommands[vimiumCommand]
 
-        console.log("Mapping", key, "to", vimiumCommand)
+        console.log("Mapping #{key} to #{vimiumCommand}")
         @mapKeyToCommand(key, vimiumCommand)
       else if lineCommand is "unmap"
         continue unless splitLine.length is 2
 
         key = @normalizeKey(splitLine[1])
-        console.log("Unmapping", key)
+        console.log("Unmapping #{key}")
         @unmapKey(key)
       else if lineCommand is "unmapAll"
         @keyToCommandRegistry = {}

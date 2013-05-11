@@ -35,7 +35,7 @@ KeyboardUtils =
       return @keyNames[event.keyCode] if @keyNames[event.keyCode]
       # F-key
       if event.keyCode >= @keyCodes.f1 and event.keyCode <= @keyCodes.f12
-        return "f" + (1 + event.keyCode - keyCodes.f1)
+        return "f#{event.keyCode - keyCodes.f1 + 1}"
       return ""
 
     keyIdentifier = event.keyIdentifier
@@ -44,7 +44,7 @@ KeyboardUtils =
     if (@platform is "Windows" or @platform is "Linux") and @keyIdentifierCorrectionMap[keyIdentifier]
       correctedIdentifiers = @keyIdentifierCorrectionMap[keyIdentifier]
       keyIdentifier = if event.shiftKey then correctedIdentifiers[1] else correctedIdentifiers[0]
-    unicodeKeyInHex = "0x" + keyIdentifier.substring(2)
+    unicodeKeyInHex = "0x#{keyIdentifier.substring(2)}"
     character = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase()
     if event.shiftKey then character.toUpperCase() else character
 

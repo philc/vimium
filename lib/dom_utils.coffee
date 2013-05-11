@@ -33,7 +33,7 @@ DomUtils =
   makeXPath: (elementArray) ->
     xpath = []
     for i of elementArray
-      xpath.push("//" + elementArray[i], "//xhtml:" + elementArray[i])
+      xpath.push("//#{elementArray[i]}", "//xhtml:#{elementArray[i]}")
     xpath.join(" | ")
 
   evaluateXPath: (xpath, resultType) ->
@@ -108,10 +108,10 @@ DomUtils =
     flashEl = document.createElement("div")
     flashEl.id = "vimiumFlash"
     flashEl.className = "vimiumReset"
-    flashEl.style.left = rect.left + window.scrollX + "px"
-    flashEl.style.top = rect.top  + window.scrollY  + "px"
-    flashEl.style.width = rect.width + "px"
-    flashEl.style.height = rect.height + "px"
+    flashEl.style.left = "#{rect.left + window.scrollX}px"
+    flashEl.style.top = "#{rect.top + window.scrollY}px"
+    flashEl.style.width = "#{rect.width}px"
+    flashEl.style.height = "#{rect.height}px"
     document.documentElement.appendChild(flashEl)
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 

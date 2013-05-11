@@ -254,7 +254,7 @@ extend window,
       if url.substr(0, 12) is "view-source:"
         url = url.substr(12, url.length - 12)
       else
-        url = "view-source:" + url
+        url = "view-source:#{url}"
       chrome.extension.sendMessage({ handler: "openUrlInNewTab", url: url, selected: true })
 
   copyCurrentUrl: ->
@@ -291,10 +291,10 @@ extend window,
       hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
       # minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-      hint.style.width = tuple.rect.width + "px"
-      hint.style.height = tuple.rect.height + "px"
+      hint.style.left = "#{tuple.rect.left - 1 + window.scrollX}px"
+      hint.style.top = "#{tuple.rect.top - 1 + window.scrollY}px"
+      hint.style.width = "#{tuple.rect.width}px"
+      hint.style.height = "#{tuple.rect.height}px"
 
       hint
 
@@ -376,10 +376,10 @@ onKeydown = (event) ->
         modifiers.push("a")
 
       for i of modifiers
-        keyChar = modifiers[i] + "-" + keyChar
+        keyChar = "#{modifiers[i]}-#{keyChar}"
 
       if modifiers.length > 0 or keyChar.length > 1
-        keyChar = "<" + keyChar + ">"
+        keyChar = "<#{keyChar}>"
 
   if isInsertMode() and KeyboardUtils.isEscape(event)
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
@@ -684,7 +684,7 @@ findAndFocus = (backwards) ->
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
 
   unless findModeQueryHasResults
-    HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
+    HUD.showForDuration("No matches for '#{findModeQuery.rawQuery}'", 1000)
     return
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
@@ -782,7 +782,7 @@ findAndFollowLink = (linkStrings) ->
   for linkString in linkStrings
     exactWordRegex =
       if /\b/.test(linkString[0]) or /\b/.test(linkString[linkString.length - 1])
-        new RegExp "\\b" + linkString + "\\b", "i"
+        new RegExp "\\b#{linkString}\\b", "i"
       else
         new RegExp linkString, "i"
     for candidateLink in candidateLinks
@@ -812,9 +812,9 @@ window.goNext = ->
 
 showFindModeHUDForQuery = ->
   if findModeQueryHasResults or findModeQuery.parsedQuery.length is 0
-    HUD.show("/" + findModeQuery.rawQuery)
+    HUD.show("/#{findModeQuery.rawQuery}")
   else
-    HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
+    HUD.show("/#{findModeQuery.rawQuery} (No Matches)")
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }

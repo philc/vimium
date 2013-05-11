@@ -114,8 +114,8 @@ LinkHints =
     marker.clickableItem = link.element
 
     clientRect = link.rect
-    marker.style.left = clientRect.left + window.scrollX + "px"
-    marker.style.top = clientRect.top  + window.scrollY  + "px"
+    marker.style.left = "#{clientRect.left + window.scrollX}px"
+    marker.style.top = "#{clientRect.top + window.scrollY}px"
 
     marker.rect = link.rect
 
@@ -376,7 +376,7 @@ filterHints =
 
   renderMarker: (marker) ->
     marker.innerHTML = spanWrap(marker.hintString +
-        (if marker.showLinkText then ": " + marker.linkText else ""))
+        (if marker.showLinkText then ": #{marker.linkText}" else ""))
 
   fillInMarkers: (hintMarkers) ->
     @generateLabelMap()
@@ -462,7 +462,7 @@ filterHints =
 spanWrap = (hintString) ->
   innerHTML = []
   for char in hintString
-    innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
+    innerHTML.push("<span class='vimiumReset'>#{char}</span>")
   innerHTML.join("")
 
 #

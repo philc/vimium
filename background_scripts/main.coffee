@@ -86,7 +86,7 @@ root.addExcludedUrl = (url) ->
   excludedUrls = Settings.get("excludedUrls")
   return if excludedUrls.indexOf(url) >= 0
 
-  excludedUrls += "\n" + url
+  excludedUrls += "\n#{url}"
   Settings.set("excludedUrls", excludedUrls)
 
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
@@ -455,9 +455,9 @@ handleKeyDown = (request, port) ->
     console.log("clearing keyQueue")
     keyQueue = ""
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
+    console.log("checking keyQueue: [#{keyQueue}#{key}]")
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
+    console.log("new KeyQueue: #{keyQueue}")
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false
