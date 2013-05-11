@@ -414,7 +414,7 @@ HistoryCache.binarySearch = (targetElement, array, compareFunction) ->
   high = array.length - 1
   low = 0
 
-  while (low <= high)
+  while low <= high
     middle = Math.floor((low + high) / 2)
     element = array[middle]
     compareResult = compareFunction(element, targetElement)

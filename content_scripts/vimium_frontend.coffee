@@ -74,7 +74,7 @@ settings =
     if ++settings.loadedValues is settings.valuesToLoad.length
       settings.isLoaded = true
       listener = null
-      while (listener = settings.eventListeners["load"].pop())
+      while listener = settings.eventListeners["load"].pop()
         listener()
 
   addEventListener: (eventName, callback) ->
@@ -640,7 +640,7 @@ focusFoundLink = ->
 
 isDOMDescendant = (parent, child) ->
   node = child
-  while (node isnt null)
+  while node isnt null
     return true if node is parent
     node = node.parentNode
   false
@@ -711,7 +711,7 @@ window.performBackwardsFind = -> findAndFocus(true)
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
-  while (node and node isnt document.body)
+  while node and node isnt document.body
     return node if node.nodeName.toLowerCase() is "a"
     node = node.parentNode
   null
