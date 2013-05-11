@@ -23,7 +23,7 @@ class root.HandlerStack
       # of more than one handler.
       if handler?[type]
         @currentId = handler.id
-        passThrough = handler[type].call(@, event)
+        passThrough = handler[type].call(this, event)
         unless passThrough
           DomUtils.suppressEvent(event)
           return false

@@ -52,7 +52,7 @@ class VomnibarUI
   show: ->
     @box.style.display = "block"
     @input.focus()
-    @handlerId = handlerStack.push keydown: @onKeydown.bind @
+    @handlerId = handlerStack.push keydown: @onKeydown.bind this
 
   hide: ->
     @box.style.display = "none"
