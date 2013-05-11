@@ -42,8 +42,7 @@ class Suggestion
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
 
   stripTrailingSlash: (url) ->
-    url = url.substring(url, url.length - 1) if url[url.length - 1] is "/"
-    url
+    if url[url.length - 1] is "/" then url.substring(url, url.length - 1) else url
 
   # Push the ranges within `string` which match `term` onto `ranges`.
   pushMatchingRanges: (string,term,ranges) ->
@@ -144,13 +143,9 @@ class BookmarkCompleter
 class HistoryCompleter
   filter: (queryTerms, onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
-    results = []
+
     HistoryCache.use (history) =>
-      results =
-        if queryTerms.length > 0
-          history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-        else
-          []
+      results = history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
       suggestions = results.map (entry) =>
         new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
       onComplete(suggestions)

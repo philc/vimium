@@ -132,9 +132,8 @@ class VomnibarUI
   updateCompletions: (callback) ->
     query = @input.value.trim()
 
-    @completer.filter query, (completions) =>
-      @completions = completions
-      @populateUiWithCompletions(completions)
+    @completer.filter query, (@completions) =>
+      @populateUiWithCompletions(@completions)
       callback?()
 
   populateUiWithCompletions: (completions) ->
