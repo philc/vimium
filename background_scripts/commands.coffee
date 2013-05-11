@@ -93,6 +93,7 @@ Commands =
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
+       "LinkHints.activateHoverEffectMode",
        "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
        "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
        "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
@@ -110,7 +111,8 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+    "LinkHints.activateModeToOpenIncognito", "LinkHints.activateHoverEffectMode",
+    "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -218,6 +220,7 @@ commandDescriptions =
   'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateHoverEffectMode": ["Trigger a hover effect on a link"]
 
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]
