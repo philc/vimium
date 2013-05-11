@@ -70,8 +70,7 @@ class Suggestion
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
     ranges = []
-    for term in @queryTerms
-      @pushMatchingRanges string, term, ranges
+    @pushMatchingRanges string, term, ranges for term in @queryTerms
 
     return string if ranges.length is 0
 
@@ -289,8 +288,7 @@ RankingUtils =
     for term in queryTerms
       regexp = RegexpCache.get(term)
       matchedTerm = false
-      for thing in things
-        matchedTerm or= thing.match regexp
+      matchedTerm or= thing.match regexp for thing in things
       return false unless matchedTerm
     true
 

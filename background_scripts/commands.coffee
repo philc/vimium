@@ -77,9 +77,7 @@ Commands =
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
-
-    for key of defaultKeyMappings
-      @mapKeyToCommand(key, defaultKeyMappings[key])
+    @mapKeyToCommand(key, defaultKeyMappings[key]) for key of defaultKeyMappings
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.

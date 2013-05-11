@@ -7,8 +7,7 @@ Utils =
   invokeCommandString: (str, argArray) ->
     components = str.split('.')
     obj = window
-    for component in components[0...-1]
-      obj = obj[component]
+    obj = obj[component] for component in components[0...-1]
     func = obj[components.pop()]
     func.apply(obj, argArray)
 
@@ -27,8 +26,7 @@ Utils =
 
   hasChromePrefix: (url) ->
     chromePrefixes = [ 'about', 'view-source', "chrome-extension" ]
-    for prefix in chromePrefixes
-      return true if url.startsWith prefix
+    (return true if url.startsWith prefix) for prefix in chromePrefixes
     false
 
   # Completes a partial URL (without scheme)
