@@ -50,7 +50,7 @@ DomUtils =
 
     for clientRect in clientRects
       if clientRect.top < -2 or clientRect.top >= window.innerHeight - 4 or
-          clientRect.left < -2 or clientRect.left  >= window.innerWidth - 4
+          clientRect.left < -2 or clientRect.left >= window.innerWidth - 4
         continue
 
       if clientRect.width < 3 or clientRect.height < 3

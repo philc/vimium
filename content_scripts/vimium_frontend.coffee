@@ -836,7 +836,7 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-  
+
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
@@ -989,7 +989,7 @@ Tween =
       clearInterval(state.timerId)
       state.onUpdate(state.to)
     else
-      value = (elapsed / state.duration)  * (state.to - state.from) + state.from
+      value = (elapsed / state.duration) * (state.to - state.from) + state.from
       state.onUpdate(value)
 
 initializePreDomReady()
