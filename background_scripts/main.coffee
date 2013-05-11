@@ -38,8 +38,8 @@ chrome.extension.onConnect.addListener((port, name) ->
   # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
   # the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
   # the scroll position will not be possible.
-  if (port.name == "domReady" && senderTabId != null)
-    if (tabLoadedHandlers[senderTabId])
+  if port.name is "domReady" and senderTabId isnt null
+    if tabLoadedHandlers[senderTabId]
       toCall = tabLoadedHandlers[senderTabId]
       # Delete first to be sure there's no circular events.
       delete tabLoadedHandlers[senderTabId]
@@ -47,15 +47,15 @@ chrome.extension.onConnect.addListener((port, name) ->
 
     # domReady is the appropriate time to show the "vimium has been upgraded" message.
     # TODO: This might be broken on pages with frames.
-    if (shouldShowUpgradeMessage())
+    if shouldShowUpgradeMessage()
       chrome.tabs.sendMessage(senderTabId, { name: "showUpgradeNotification", version: currentVersion })
 
-  if (portHandlers[port.name])
+  if portHandlers[port.name]
     port.onMessage.addListener(portHandlers[port.name])
 )
 
 chrome.extension.onMessage.addListener((request, sender, sendResponse) ->
-  if (sendRequestHandlers[request.handler])
+  if sendRequestHandlers[request.handler]
     sendResponse(sendRequestHandlers[request.handler](request, sender))
   # Ensure the sendResponse callback is freed.
   return false)
@@ -120,14 +120,14 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
   html = []
   for command in Commands.commandGroups[group]
     bindings = (commandsToKey[command] || [""]).join(", ")
-    if (showUnboundCommands || commandsToKey[command])
+    if showUnboundCommands or commandsToKey[command]
       isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
       html.push(
         "<tr class='vimiumReset #{"advanced" if isAdvanced}'>",
         "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
         "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
 
-      if (showCommandNames)
+      if showCommandNames
         html.push("<span class='vimiumReset commandName'>(#{command})</span>")
 
       html.push("</td></tr>")
@@ -192,7 +192,7 @@ selectSpecificTab = (request) ->
 # Used by the content scripts to get settings from the local storage.
 #
 handleSettings = (args, port) ->
-  if (args.operation == "get")
+  if args.operation is "get"
     value = Settings.get(args.key)
     port.postMessage({ key: args.key, value: value })
   else # operation == "set"
@@ -202,17 +202,17 @@ refreshCompleter = (request) -> completers[request.name].refresh()
 
 whitespaceRegexp = /\s+/
 filterCompleter = (args, port) ->
-  queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
+  queryTerms = if args.query is "" then [] else args.query.split(whitespaceRegexp)
   completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
 
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
-  if (selectionChangedHandlers.length > 0)
+  if selectionChangedHandlers.length > 0
     selectionChangedHandlers.pop().call()
 
 repeatFunction = (func, totalCount, currentCount, frameId) ->
-  if (currentCount < totalCount)
+  if currentCount < totalCount
     func(
       -> repeatFunction(func, totalCount, currentCount + 1, frameId),
       frameId)
@@ -240,10 +240,10 @@ BackgroundCommands =
   restoreTab: (callback) ->
     # TODO(ilya): Should this be getLastFocused instead?
     chrome.windows.getCurrent((window) ->
-      return unless (tabQueue[window.id] && tabQueue[window.id].length > 0)
+      return unless tabQueue[window.id] and tabQueue[window.id].length > 0
       tabQueueEntry = tabQueue[window.id].pop()
       # Clean out the tabQueue so we don't have unused windows laying about.
-      delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
+      delete tabQueue[window.id] if tabQueue[window.id].length is 0
 
       # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
       # tab is created because the content script is not available during the "loading" state. We need to
@@ -322,8 +322,8 @@ updateActiveState = (tabId) ->
       isCurrentlyEnabled = (response? && response.enabled)
       shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
 
-      if (isCurrentlyEnabled)
-        if (shouldBeEnabled)
+      if isCurrentlyEnabled
+        if shouldBeEnabled
           chrome.browserAction.setIcon({ path: enabledIcon })
         else
           chrome.browserAction.setIcon({ path: disabledIcon })
@@ -339,7 +339,7 @@ updateScrollPosition = (tab, scrollX, scrollY) ->
   tabInfoMap[tab.id].scrollY = scrollY
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
-  return unless changeInfo.status == "loading" # only do this once per URL change
+  return unless changeInfo.status is "loading" # only do this once per URL change
   chrome.tabs.insertCSS tabId,
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
@@ -363,13 +363,13 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   # If we restore pages that content scripts can't run on, they'll ignore Vimium keystrokes when they
   # reappear. Pretend they never existed and adjust tab indices accordingly. Could possibly expand this into
   # a blacklist in the future.
-  if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
+  if /^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url)
     for i of tabQueue[openTabInfo.windowId]
-      if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
+      if tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex
         tabQueue[openTabInfo.windowId][i].positionIndex--
     return
 
-  if (tabQueue[openTabInfo.windowId])
+  if tabQueue[openTabInfo.windowId]
     tabQueue[openTabInfo.windowId].push(openTabInfo)
   else
     tabQueue[openTabInfo.windowId] = [openTabInfo]
@@ -390,30 +390,30 @@ updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
   chrome.tabs.getAllInWindow(windowId, (tabs) ->
     for tab in tabs
       openTabInfo = tabInfoMap[tab.id]
-      if (openTabInfo)
+      if openTabInfo
         openTabInfo.positionIndex = tab.index
         openTabInfo.windowId = tab.windowId)
 
 splitKeyIntoFirstAndSecond = (key) ->
-  if (key.search(namedKeyRegex) == 0)
+  if key.search(namedKeyRegex) is 0
     { first: RegExp.$1, second: RegExp.$2 }
   else
     { first: key[0], second: key.slice(1) }
 
 getActualKeyStrokeLength = (key) ->
-  if (key.search(namedKeyRegex) == 0)
+  if key.search(namedKeyRegex) is 0
     1 + getActualKeyStrokeLength(RegExp.$2)
   else
     key.length
 
 populateValidFirstKeys = ->
   for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
+    if getActualKeyStrokeLength(key) is 2
       validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
 
 populateSingleKeyCommands = ->
   for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
+    if getActualKeyStrokeLength(key) is 1
       singleKeyCommands.push(key)
 
 # Invoked by options.coffee.
@@ -434,10 +434,10 @@ generateCompletionKeys = (keysToCheck) ->
 
   completionKeys = singleKeyCommands.slice(0)
 
-  if (getActualKeyStrokeLength(command) == 1)
+  if getActualKeyStrokeLength(command) is 1
     for key of Commands.keyToCommandRegistry
       splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
+      if splitKey.first is command
         completionKeys.push(splitKey.second)
 
   completionKeys
@@ -451,7 +451,7 @@ splitKeyQueue = (queue) ->
 
 handleKeyDown = (request, port) ->
   key = request.keyChar
-  if (key == "<ESC>")
+  if key is "<ESC>"
     console.log("clearing keyQueue")
     keyQueue = ""
   else
@@ -465,10 +465,10 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   command = splitHash.command
   count = splitHash.count
 
-  return keysToCheck if command.length == 0
+  return keysToCheck if command.length is 0
   count = 1 if isNaN(count)
 
-  if (Commands.keyToCommandRegistry[command])
+  if Commands.keyToCommandRegistry[command]
     registryEntry = Commands.keyToCommandRegistry[command]
 
     if !registryEntry.isBackgroundCommand
@@ -489,11 +489,11 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
     newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
+  else if getActualKeyStrokeLength(command) > 1
     splitKey = splitKeyIntoFirstAndSecond(command)
 
     # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
+    if Commands.keyToCommandRegistry[splitKey.second]
       newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
     else
       newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
@@ -534,7 +534,7 @@ registerFrame = (request, sender) ->
   unless framesForTab[sender.tab.id]
     framesForTab[sender.tab.id] = { frames: [] }
 
-  if (request.is_top)
+  if request.is_top
     focusedFrame = request.frameId
     framesForTab[sender.tab.id].total = request.total
 
@@ -544,7 +544,7 @@ handleFrameFocused = (request, sender) -> focusedFrame = request.frameId
 
 getCurrFrameIndex = (frames) ->
   for i in [0...frames.length]
-    return i if frames[i].id == focusedFrame
+    return i if frames[i].id is focusedFrame
   frames.length + 1
 
 # Port handler mapping

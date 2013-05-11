@@ -52,13 +52,13 @@ Commands =
     lines = customKeyMappings.split("\n")
 
     for line in lines
-      continue if (line[0] == "\"" || line[0] == "#")
+      continue if line[0] is "\"" or line[0] is "#"
       splitLine = line.split(/\s+/)
 
       lineCommand = splitLine[0]
 
-      if (lineCommand == "map")
-        continue if (splitLine.length != 3)
+      if lineCommand is "map"
+        continue if splitLine.length isnt 3
         key = @normalizeKey(splitLine[1])
         vimiumCommand = splitLine[2]
 
@@ -66,13 +66,13 @@ Commands =
 
         console.log("Mapping", key, "to", vimiumCommand)
         @mapKeyToCommand(key, vimiumCommand)
-      else if (lineCommand == "unmap")
-        continue if (splitLine.length != 2)
+      else if lineCommand is "unmap"
+        continue if splitLine.length isnt 2
 
         key = @normalizeKey(splitLine[1])
         console.log("Unmapping", key)
         @unmapKey(key)
-      else if (lineCommand == "unmapAll")
+      else if lineCommand is "unmapAll"
         @keyToCommandRegistry = {}
 
   clearKeyMappingsAndSetDefaults: ->

@@ -42,7 +42,7 @@ class Suggestion
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
 
   stripTrailingSlash: (url) ->
-    url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
+    url = url.substring(url, url.length - 1) if url[url.length - 1] is "/"
     url
 
   # Push the ranges within `string` which match `term` onto `ranges`.
@@ -73,7 +73,7 @@ class Suggestion
     for term in @queryTerms
       @pushMatchingRanges string, term, ranges
 
-    return string if ranges.length == 0
+    return string if ranges.length is 0
 
     ranges = @mergeRanges(ranges.sort (a, b) -> a[0] - b[0])
     # Replace portions of the string from right to left.
@@ -136,7 +136,7 @@ class BookmarkCompleter
     while toVisit.length > 0
       bookmark = toVisit.pop()
       results.push(bookmark)
-      toVisit.push.apply(toVisit, bookmark.children.reverse()) if (bookmark.children)
+      toVisit.push.apply(toVisit, bookmark.children.reverse()) if bookmark.children
     results
 
   computeRelevancy: (suggestion) ->
@@ -185,7 +185,7 @@ class DomainCompleter
     query = queryTerms[0]
     domainCandidates = (domain for domain of @domains when domain.indexOf(query) >= 0)
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
-    return onComplete([]) if domains.length == 0
+    return onComplete([]) if domains.length is 0
     topDomain = domains[0][0]
     onComplete([new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)])
 
@@ -222,7 +222,7 @@ class DomainCompleter
     else
       toRemove.urls.forEach (url) =>
         domain = @parseDomain(url)
-        if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
+        if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) is 0
           delete @domains[domain]
 
   parseDomain: (url) -> url.split("/")[2] || ""
@@ -301,8 +301,8 @@ RankingUtils =
     titleScore = 0.0
     for term in queryTerms
       queryLength += term.length
-      urlScore += 1 if url && RankingUtils.matches [term], url
-      titleScore += 1 if title && RankingUtils.matches [term], title
+      urlScore += 1 if url and RankingUtils.matches [term], url
+      titleScore += 1 if title and RankingUtils.matches [term], title
     urlScore = urlScore / queryTerms.length
     urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
     if title
@@ -383,7 +383,7 @@ HistoryCache =
       @callbacks = null
 
   compareHistoryByUrl: (a, b) ->
-    return 0 if a.url == b.url
+    return 0 if a.url is b.url
     return 1 if a.url > b.url
     -1
 
@@ -404,7 +404,7 @@ HistoryCache =
     else
       toRemove.urls.forEach (url) =>
         i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
-        if i < @history.length and @history[i].url == url
+        if i < @history.length and @history[i].url is url
           @history.splice(i, 1)
 
 # Returns the matching index or the closest matching index if the element is not found. That means you
@@ -418,9 +418,9 @@ HistoryCache.binarySearch = (targetElement, array, compareFunction) ->
     middle = Math.floor((low + high) / 2)
     element = array[middle]
     compareResult = compareFunction(element, targetElement)
-    if (compareResult > 0)
+    if compareResult > 0
       high = middle - 1
-    else if (compareResult < 0)
+    else if compareResult < 0
       low = middle + 1
     else
       return middle

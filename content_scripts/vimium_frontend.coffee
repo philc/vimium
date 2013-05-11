@@ -71,14 +71,14 @@ settings =
     settings.values[args.key] = args.value
     # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
     # for equality so initializeOnReady only runs once
-    if (++settings.loadedValues == settings.valuesToLoad.length)
+    if ++settings.loadedValues is settings.valuesToLoad.length
       settings.isLoaded = true
       listener = null
       while (listener = settings.eventListeners["load"].pop())
         listener()
 
   addEventListener: (eventName, callback) ->
-    if (!(eventName of @eventListeners))
+    if not eventName of @eventListeners
       @eventListeners[eventName] = []
     @eventListeners[eventName].push(callback)
 
@@ -110,7 +110,7 @@ initializePreDomReady = ->
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
-    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
+    focusFrame: (request) -> if frameId is request.frameId then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
@@ -122,7 +122,7 @@ initializePreDomReady = ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or request.name == 'getActiveState'
+    return unless isEnabledForUrl or request.name is 'getActiveState'
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
@@ -173,7 +173,7 @@ initializeOnDomReady = ->
 
 # This is a little hacky but sometimes the size wasn't available on domReady?
 registerFrameIfSizeAvailable = (is_top) ->
-  if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
+  if innerWidth isnt undefined and innerWidth isnt 0 and innerHeight isnt undefined and innerHeight isnt 0
     chrome.extension.sendMessage(
       handler: "registerFrame"
       frameId: frameId
@@ -187,15 +187,15 @@ registerFrameIfSizeAvailable = (is_top) ->
 # Enters insert mode if the currently focused element in the DOM is focusable.
 #
 enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
+  if document.activeElement and isEditable(document.activeElement) and not findMode
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
-  return unless frameId == request.frameId
+  return unless frameId is request.frameId
 
-  if (request.passCountToFunction)
+  if request.passCountToFunction
     Utils.invokeCommandString(request.command, [request.count])
   else
     Utils.invokeCommandString(request.command) for i in [0...request.count]
@@ -203,7 +203,7 @@ executePageCommand = (request) ->
   refreshCompletionKeys(request)
 
 setScrollPosition = (scrollX, scrollY) ->
-  if (scrollX > 0 || scrollY > 0)
+  if scrollX > 0 or scrollY > 0
     DomUtils.documentReady(-> window.scrollTo(scrollX, scrollY))
 
 #
@@ -211,7 +211,7 @@ setScrollPosition = (scrollX, scrollY) ->
 #
 window.focusThisFrame = (shouldHighlight) ->
   window.focus()
-  if (document.body && shouldHighlight)
+  if document.body and shouldHighlight
     borderWas = document.body.style.border
     document.body.style.border = '5px solid yellow'
     setTimeout((-> document.body.style.border = borderWas), 200)
@@ -237,12 +237,12 @@ extend window,
 
   goUp: (count) ->
     url = window.location.href
-    if (url[url.length - 1] == "/")
+    if url[url.length - 1] is "/"
       url = url.substring(0, url.length - 1)
 
     urlsplit = url.split("/")
     # make sure we haven't hit the base domain yet
-    if (urlsplit.length > 3)
+    if urlsplit.length > 3
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
@@ -251,7 +251,7 @@ extend window,
 
   toggleViewSource: ->
     chrome.extension.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
-      if (url.substr(0, 12) == "view-source:")
+      if url.substr(0, 12) is "view-source:"
         url = url.substr(12, url.length - 12)
       else
         url = "view-source:" + url
@@ -275,16 +275,16 @@ extend window,
       for i in [0...resultSet.snapshotLength] by 1
         element = resultSet.snapshotItem(i)
         rect = DomUtils.getVisibleClientRect(element)
-        continue if rect == null
+        continue if rect is null
         { element: element, rect: rect }
 
-    return if visibleInputs.length == 0
+    return if visibleInputs.length is 0
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
     visibleInputs[selectedInputIndex].element.focus()
 
-    return if visibleInputs.length == 1
+    return if visibleInputs.length is 1
 
     hints = for tuple in visibleInputs
       hint = document.createElement("div")
@@ -304,17 +304,17 @@ extend window,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
 
     handlerStack.push keydown: (event) ->
-      if event.keyCode == KeyboardUtils.keyCodes.tab
+      if event.keyCode is KeyboardUtils.keyCodes.tab
         hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
         if event.shiftKey
-          if --selectedInputIndex == -1
+          if --selectedInputIndex is -1
             selectedInputIndex = hints.length - 1
         else
-          if ++selectedInputIndex == hints.length
+          if ++selectedInputIndex is hints.length
             selectedInputIndex = 0
         hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
         visibleInputs[selectedInputIndex].element.focus()
-      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+      else unless event.keyCode is KeyboardUtils.keyCodes.shiftKey
         DomUtils.removeElement hintContainingDiv
         @remove()
         return true
@@ -334,20 +334,20 @@ onKeypress = (event) ->
   keyChar = ""
 
   # Ignore modifier keys by themselves.
-  if (event.keyCode > 31)
+  if event.keyCode > 31
     keyChar = String.fromCharCode(event.charCode)
 
     # Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
+    if keyChar is "f" and KeyboardUtils.isPrimaryModifierKey(event)
       enterInsertModeWithoutShowingIndicator()
       return
 
-    if (keyChar)
-      if (findMode)
+    if keyChar
+      if findMode
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
-      else if (!isInsertMode() && !findMode)
-        if (currentCompletionKeys.indexOf(keyChar) != -1)
+      else if not isInsertMode() and not findMode
+        if currentCompletionKeys.indexOf(keyChar) isnt -1
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
@@ -359,65 +359,65 @@ onKeydown = (event) ->
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
   # avoid / being interpreted as ?
-  if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31) ||
-      event.keyIdentifier.slice(0, 2) != "U+")
+  if ((event.metaKey or event.ctrlKey or event.altKey) and event.keyCode > 31) or
+      event.keyIdentifier.slice(0, 2) isnt "U+"
     keyChar = KeyboardUtils.getKeyChar(event)
     # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
-    if (keyChar != "")
+    if keyChar isnt ""
       modifiers = []
 
-      if (event.shiftKey)
+      if event.shiftKey
         keyChar = keyChar.toUpperCase()
-      if (event.metaKey)
+      if event.metaKey
         modifiers.push("m")
-      if (event.ctrlKey)
+      if event.ctrlKey
         modifiers.push("c")
-      if (event.altKey)
+      if event.altKey
         modifiers.push("a")
 
       for i of modifiers
         keyChar = modifiers[i] + "-" + keyChar
 
-      if (modifiers.length > 0 || keyChar.length > 1)
+      if modifiers.length > 0 or keyChar.length > 1
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
+  if isInsertMode() and KeyboardUtils.isEscape(event)
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if (!isEmbed(event.srcElement))
+    if not isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
-      if (isEditable(event.srcElement))
+      if isEditable(event.srcElement)
         event.srcElement.blur()
       exitInsertMode()
       DomUtils.suppressEvent(event)
 
-  else if (findMode)
-    if (KeyboardUtils.isEscape(event))
+  else if findMode
+    if KeyboardUtils.isEscape(event)
       handleEscapeForFindMode()
       DomUtils.suppressEvent(event)
 
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
+    else if event.keyCode is keyCodes.backspace or event.keyCode is keyCodes.deleteKey
       handleDeleteForFindMode()
       DomUtils.suppressEvent(event)
 
-    else if (event.keyCode == keyCodes.enter)
+    else if event.keyCode is keyCodes.enter
       handleEnterForFindMode()
       DomUtils.suppressEvent(event)
 
-    else if (!modifiers)
+    else if not modifiers
       event.stopPropagation()
 
-  else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+  else if isShowingHelpDialog and KeyboardUtils.isEscape(event)
     hideHelpDialog()
 
-  else if (!isInsertMode() && !findMode)
-    if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1)
+  else if not isInsertMode() and not findMode
+    if keyChar
+      if currentCompletionKeys.indexOf(keyChar) isnt -1
         DomUtils.suppressEvent(event)
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-    else if (KeyboardUtils.isEscape(event))
+    else if KeyboardUtils.isEscape(event)
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
@@ -427,9 +427,9 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
-     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
+  if keyChar is "" and not isInsertMode() and
+     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) isnt -1 or
+      isValidFirstKey(KeyboardUtils.getKeyChar(event)))
     event.stopPropagation()
 
 onKeyup = (event) -> return unless handlerStack.bubbleEvent('keyup', event)
@@ -439,17 +439,17 @@ checkIfEnabledForUrl = ->
 
   chrome.extension.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
-    if (isEnabledForUrl)
+    if isEnabledForUrl
       initializeWhenEnabled()
-    else if (HUD.isReady())
+    else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
 
 refreshCompletionKeys = (response) ->
-  if (response)
+  if response
     currentCompletionKeys = response.completionKeys
 
-    if (response.validFirstKeys)
+    if response.validFirstKeys
       validFirstKeys = response.validFirstKeys
   else
     chrome.extension.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
@@ -458,11 +458,11 @@ isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
-  if (isFocusable(event.target) && !findMode)
+  if isFocusable(event.target) and not findMode
     enterInsertModeWithoutShowingIndicator(event.target)
 
 onBlurCapturePhase = (event) ->
-  if (isFocusable(event.target))
+  if isFocusable(event.target)
     exitInsertMode(event.target)
 
 #
@@ -486,7 +486,7 @@ isEditable = (target) ->
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
   noFocus = ["radio", "checkbox"]
-  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
+  if nodeName is "input" and noFocus.indexOf(target.type) is -1
     return true
   focusableElements = ["textarea", "select"]
   focusableElements.indexOf(nodeName) >= 0
@@ -509,7 +509,7 @@ window.enterInsertMode = (target) ->
 enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
 
 exitInsertMode = (target) ->
-  if (target == undefined || insertModeLock == target)
+  if target is undefined or insertModeLock is target
     insertModeLock = null
     HUD.hide()
 
@@ -573,7 +573,7 @@ handleEscapeForFindMode = ->
   focusFoundLink() || selectFoundInputElement()
 
 handleDeleteForFindMode = ->
-  if (findModeQuery.rawQuery.length == 0)
+  if findModeQuery.rawQuery.length is 0
     exitFindMode()
     performFindInPlace()
   else
@@ -634,14 +634,14 @@ executeFind = (query, options = {}) ->
 restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
 
 focusFoundLink = ->
-  if (findModeQueryHasResults)
+  if findModeQueryHasResults
     link = getLinkFromSelection()
     link.focus() if link
 
 isDOMDescendant = (parent, child) ->
   node = child
   while (node != null)
-    return true if (node == parent)
+    return true if node is parent
     node = node.parentNode
   false
 
@@ -650,9 +650,9 @@ selectFoundInputElement = ->
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
   # the current one might be disabled and therefore unable to receive focus), we use the approximate
   # heuristic of checking that the last anchor node is an ancestor of our element.
-  if (findModeQueryHasResults && document.activeElement &&
-      DomUtils.isSelectable(document.activeElement) &&
-      isDOMDescendant(findModeAnchorNode, document.activeElement))
+  if findModeQueryHasResults and document.activeElement and
+      DomUtils.isSelectable(document.activeElement) and
+      isDOMDescendant(findModeAnchorNode, document.activeElement)
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
     enterInsertModeWithoutShowingIndicator(document.activeElement)
@@ -670,7 +670,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
   mostRecentQuery = settings.get("findModeRawQuery") || ""
-  if (mostRecentQuery != findModeQuery.rawQuery)
+  if mostRecentQuery isnt findModeQuery.rawQuery
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
 
@@ -692,11 +692,11 @@ findAndFocus = (backwards) ->
   elementCanTakeInput = document.activeElement &&
     DomUtils.isSelectable(document.activeElement) &&
     isDOMDescendant(findModeAnchorNode, document.activeElement)
-  if (elementCanTakeInput)
+  if elementCanTakeInput
     handlerStack.push({
       keydown: (event) ->
         @remove()
-        if (KeyboardUtils.isEscape(event))
+        if KeyboardUtils.isEscape(event)
           DomUtils.simulateSelect(document.activeElement)
           enterInsertModeWithoutShowingIndicator(document.activeElement)
           return false # we have "consumed" this event, so do not propagate
@@ -712,13 +712,13 @@ window.performBackwardsFind = -> findAndFocus(true)
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
   while (node && node != document.body)
-    return node if (node.nodeName.toLowerCase() == "a")
+    return node if node.nodeName.toLowerCase() is "a"
     node = node.parentNode
   null
 
 # used by the findAndFollow* functions.
 followLink = (linkElement) ->
-  if (linkElement.nodeName.toLowerCase() == "link")
+  if linkElement.nodeName.toLowerCase() is "link"
     window.location.href = linkElement.href
   else
     # if we can click on it, don't simply set location.href: some next/prev links are meant to trigger AJAX
@@ -745,23 +745,23 @@ findAndFollowLink = (linkStrings) ->
 
     # ensure link is visible (we don't mind if it is scrolled offscreen)
     boundingClientRect = link.getBoundingClientRect()
-    if (boundingClientRect.width == 0 || boundingClientRect.height == 0)
+    if boundingClientRect.width is 0 or boundingClientRect.height is 0
       continue
     computedStyle = window.getComputedStyle(link, null)
-    if (computedStyle.getPropertyValue("visibility") != "visible" ||
-        computedStyle.getPropertyValue("display") == "none")
+    if computedStyle.getPropertyValue("visibility") isnt "visible" or
+        computedStyle.getPropertyValue("display") is "none"
       continue
 
     linkMatches = false
     for linkString in linkStrings
-      if (link.innerText.toLowerCase().indexOf(linkString) != -1)
+      if link.innerText.toLowerCase().indexOf(linkString) isnt -1
         linkMatches = true
         break
     continue unless linkMatches
 
     candidateLinks.push(link)
 
-  return if (candidateLinks.length == 0)
+  return if candidateLinks.length is 0
 
   for link in candidateLinks
     link.wordCount = link.innerText.trim().split(/\s+/).length
@@ -775,7 +775,7 @@ findAndFollowLink = (linkStrings) ->
   candidateLinks =
     candidateLinks
       .sort((a, b) ->
-        if (a.wordCount == b.wordCount) then a.originalIndex - b.originalIndex else a.wordCount - b.wordCount
+        if a.wordCount is b.wordCount then a.originalIndex - b.originalIndex else a.wordCount - b.wordCount
       )
       .filter((a) -> a.wordCount <= candidateLinks[0].wordCount + 1)
 
@@ -786,7 +786,7 @@ findAndFollowLink = (linkStrings) ->
       else
         new RegExp linkString, "i"
     for candidateLink in candidateLinks
-      if (exactWordRegex.test(candidateLink.innerText))
+      if exactWordRegex.test(candidateLink.innerText)
         followLink(candidateLink)
         return true
   false
@@ -796,7 +796,7 @@ findAndFollowRel = (value) ->
   for tag in relTags
     elements = document.getElementsByTagName(tag)
     for element in elements
-      if (element.hasAttribute("rel") && element.rel == value)
+      if element.hasAttribute("rel") and element.rel is value
         followLink(element)
         return true
 
@@ -811,7 +811,7 @@ window.goNext = ->
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
-  if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
+  if findModeQueryHasResults or findModeQuery.parsedQuery.length is 0
     HUD.show("/" + findModeQuery.rawQuery)
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
@@ -826,7 +826,7 @@ exitFindMode = ->
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
-  return if (isShowingHelpDialog || !document.body || fid != frameId)
+  return if isShowingHelpDialog or not document.body or fid isnt frameId
   isShowingHelpDialog = true
   container = document.createElement("div")
   container.id = "vimiumHelpDialogContainer"
@@ -874,13 +874,13 @@ window.showHelpDialog = (html, fid) ->
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
   helpDialog = document.getElementById("vimiumHelpDialogContainer")
-  if (helpDialog)
+  if helpDialog
     helpDialog.parentNode.removeChild(helpDialog)
-  if (clickEvent)
+  if clickEvent
     clickEvent.preventDefault()
 
 toggleHelpDialog = (html, fid) ->
-  if (isShowingHelpDialog)
+  if isShowingHelpDialog
     hideHelpDialog()
   else
     showHelpDialog(html, fid)
@@ -934,14 +934,14 @@ HUD =
   # Retrieves the HUD HTML element.
   #
   displayElement: ->
-    if (!HUD._displayElement)
+    if not HUD._displayElement
       HUD._displayElement = HUD.createHudElement()
       # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
       HUD._displayElement.style.right = "150px"
     HUD._displayElement
 
   upgradeNotificationElement: ->
-    if (!HUD._upgradeNotificationElement)
+    if not HUD._upgradeNotificationElement
       HUD._upgradeNotificationElement = HUD.createHudElement()
       # Position this just to the left of our normal HUD.
       HUD._upgradeNotificationElement.style.right = "315px"
@@ -955,7 +955,7 @@ HUD =
 
   hide: (immediate) ->
     clearInterval(HUD._tweenId)
-    if (immediate)
+    if immediate
       HUD.displayElement().style.display = "none"
     else
       HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
@@ -978,14 +978,14 @@ Tween =
     state.to = toAlpha
     state.onUpdate = (value) ->
       element.style.opacity = value
-      if (value == state.to && onComplete)
+      if value is state.to and onComplete
         onComplete()
     state.timerId = setInterval((-> Tween.performTweenStep(state)), 50)
     state.timerId
 
   performTweenStep: (state) ->
     elapsed = (new Date()).getTime() - state.startTime
-    if (elapsed >= state.duration)
+    if elapsed >= state.duration
       clearInterval(state.timerId)
       state.onUpdate(state.to)
     else

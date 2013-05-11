@@ -32,8 +32,8 @@ document.addEventListener "DOMContentLoaded", ->
 window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
 onOptionKeyup = (event) ->
-  if (event.target.getAttribute("type") isnt "checkbox" and
-      event.target.getAttribute("savedValue") isnt event.target.value)
+  if event.target.getAttribute("type") isnt "checkbox" and
+      event.target.getAttribute("savedValue") isnt event.target.value
     enableSaveButton()
 
 onDataLoaded = ->

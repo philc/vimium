@@ -3,7 +3,7 @@ Vomnibar =
   completers: {}
 
   getCompleter: (name) ->
-    if (!(name of @completers))
+    if not name of @completers
       @completers[name] = new BackgroundCompleter(name)
     @completers[name]
 
@@ -19,7 +19,7 @@ Vomnibar =
     @vomnibarUI.setRefreshInterval(refreshInterval)
     @vomnibarUI.setForceNewTab(forceNewTab)
     @vomnibarUI.show()
-    if (initialQueryValue)
+    if initialQueryValue
       @vomnibarUI.setQuery(initialQueryValue)
       @vomnibarUI.update()
 
@@ -69,7 +69,7 @@ class VomnibarUI
 
   updateSelection: ->
     for i in [0...@completionList.children.length]
-      @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
+      @completionList.children[i].className = (if i is @selection then "vomnibarSelected" else "")
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
@@ -77,17 +77,17 @@ class VomnibarUI
   #
   actionFromKeyEvent: (event) ->
     key = KeyboardUtils.getKeyChar(event)
-    if (KeyboardUtils.isEscape(event))
+    if KeyboardUtils.isEscape(event)
       return "dismiss"
-    else if (key == "up" ||
-        (event.shiftKey && event.keyCode == keyCodes.tab) ||
-        (event.ctrlKey && (key == "k" || key == "p")))
+    else if key is "up" or
+        (event.shiftKey and event.keyCode is keyCodes.tab) or
+        (event.ctrlKey and (key is "k" or key is "p"))
       return "up"
-    else if (key == "down" ||
-        (event.keyCode == keyCodes.tab && !event.shiftKey) ||
-        (event.ctrlKey && (key == "j" || key == "n")))
+    else if key is "down" or
+        (event.keyCode is keyCodes.tab and !event.shiftKey) or
+        (event.ctrlKey and (key is "j" or key is "n"))
       return "down"
-    else if (event.keyCode == keyCodes.enter)
+    else if event.keyCode is keyCodes.enter
       return "enter"
 
   onKeydown: (event) ->
@@ -96,21 +96,21 @@ class VomnibarUI
 
     openInNewTab = @forceNewTab ||
       (event.shiftKey || event.ctrlKey || KeyboardUtils.isPrimaryModifierKey(event))
-    if (action == "dismiss")
+    if action is "dismiss"
       @hide()
-    else if (action == "up")
+    else if action is "up"
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
-    else if (action == "down")
+    else if action is "down"
       @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
+      @selection = @initialSelectionValue if @selection is @completions.length
       @updateSelection()
-    else if (action == "enter")
+    else if action is "enter"
       # If they type something and hit enter without selecting a completion from our list of suggestions,
       # try to open their query as a URL directly. If it doesn't look like a URL, we will search using
       # google.
-      if (@selection == -1)
+      if @selection is -1
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
@@ -145,12 +145,12 @@ class VomnibarUI
     @updateSelection()
 
   update: (updateSynchronously, callback) ->
-    if (updateSynchronously)
+    if updateSynchronously
       # cancel scheduled update
-      if (@updateTimer != null)
+      if @updateTimer isnt null
         window.clearTimeout(@updateTimer)
       @updateCompletions(callback)
-    else if (@updateTimer != null)
+    else if @updateTimer isnt null
       # an update is already scheduled, don't do anything
       return
     else
@@ -193,12 +193,12 @@ class BackgroundCompleter
   filter: (query, callback) ->
     id = Utils.createUniqueId()
     @filterPort.onMessage.addListener (msg) ->
-      return if (msg.id != id)
+      return if msg.id isnt id
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
       # type will be one of [tab, bookmark, history, domain].
       results = msg.results.map (result) ->
-        functionToCall = if (result.type == "tab")
+        functionToCall = if result.type is "tab"
           BackgroundCompleter.completionActions.switchToTab.curry(result.tabId)
         else
           BackgroundCompleter.completionActions.navigateToUrl.curry(result.url)

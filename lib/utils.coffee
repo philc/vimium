@@ -116,9 +116,9 @@ Utils =
     for i in [0...(Math.max(versionA.length, versionB.length))]
       a = parseInt(versionA[i] || 0, 10)
       b = parseInt(versionB[i] || 0, 10)
-      if (a < b)
+      if a < b
         return -1
-      else if (a > b)
+      else if a > b
         return 1
     0
 

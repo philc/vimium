@@ -22,33 +22,33 @@ KeyboardUtils =
     "U+00BF": ["U+002F", "U+003F"] # /?
 
   init: ->
-    if (navigator.userAgent.indexOf("Mac") != -1)
+    if navigator.userAgent.indexOf("Mac") isnt -1
       @platform = "Mac"
-    else if (navigator.userAgent.indexOf("Linux") != -1)
+    else if navigator.userAgent.indexOf("Linux") isnt -1
       @platform = "Linux"
     else
       @platform = "Windows"
 
   getKeyChar: (event) ->
     # Not a letter
-    if (event.keyIdentifier.slice(0, 2) != "U+")
-      return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
+    if event.keyIdentifier.slice(0, 2) isnt "U+"
+      return @keyNames[event.keyCode] if @keyNames[event.keyCode]
       # F-key
-      if (event.keyCode >= @keyCodes.f1 && event.keyCode <= @keyCodes.f12)
+      if event.keyCode >= @keyCodes.f1 and event.keyCode <= @keyCodes.f12
         return "f" + (1 + event.keyCode - keyCodes.f1)
       return ""
 
     keyIdentifier = event.keyIdentifier
     # On Windows, the keyIdentifiers for non-letter keys are incorrect. See
     # https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
-    if ((@platform == "Windows" || @platform == "Linux") && @keyIdentifierCorrectionMap[keyIdentifier])
+    if (@platform is "Windows" or @platform is "Linux") and @keyIdentifierCorrectionMap[keyIdentifier]
       correctedIdentifiers = @keyIdentifierCorrectionMap[keyIdentifier]
       keyIdentifier = if event.shiftKey then correctedIdentifiers[1] else correctedIdentifiers[0]
     unicodeKeyInHex = "0x" + keyIdentifier.substring(2)
     character = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase()
     if event.shiftKey then character.toUpperCase() else character
 
-  isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
+  isPrimaryModifierKey: (event) -> if @platform is "Mac" then event.metaKey else event.ctrlKey
 
   isEscape: (event) ->
     # c-[ is mapped to ESC in Vim by default.
