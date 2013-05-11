@@ -13,6 +13,7 @@ OPEN_IN_NEW_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
+HOVER_EFFECT = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -50,6 +51,7 @@ LinkHints =
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
+  activateHoverEffectMode: -> @activateMode(HOVER_EFFECT)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -99,6 +101,10 @@ LinkHints =
         chrome.extension.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
+    else if @mode is HOVER_EFFECT
+      HUD.show("Trigger a hover effect on a link")
+      @linkActivator = (link) ->
+        DomUtils.simulateMouseEnter(link)
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
       # When we're opening the link in the current tab, don't navigate to the selected link immediately
