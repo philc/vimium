@@ -291,8 +291,7 @@ selectTab = (callback, direction) ->
 
 updateOpenTabs = (tab) ->
   # Chrome might reuse the tab ID of a recently removed tab.
-  if tabInfoMap[tab.id]?.deletor
-    clearTimeout tabInfoMap[tab.id].deletor
+  clearTimeout tabInfoMap[tab.id].deletor if tabInfoMap[tab.id]?.deletor
   tabInfoMap[tab.id] =
     url: tab.url
     positionIndex: tab.index

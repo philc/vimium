@@ -49,19 +49,17 @@ DomUtils =
     clientRects = element.getClientRects()
 
     for clientRect in clientRects
-      if clientRect.top < -2 or clientRect.top >= window.innerHeight - 4 or
+      continue if clientRect.top < -2 or clientRect.top >= window.innerHeight - 4 or
           clientRect.left < -2 or clientRect.left >= window.innerWidth - 4
-        continue
 
-      if clientRect.width < 3 or clientRect.height < 3
-        continue
+      continue if clientRect.width < 3 or clientRect.height < 3
 
       # eliminate invisible elements (see test_harnesses/visibility_test.html)
       computedStyle = window.getComputedStyle(element, null)
-      if computedStyle.getPropertyValue('visibility') isnt 'visible' or
+
+      continue if computedStyle.getPropertyValue('visibility') isnt 'visible' or
           computedStyle.getPropertyValue('display') is 'none' or
           computedStyle.getPropertyValue('opacity') is '0'
-        continue
 
       return clientRect
 

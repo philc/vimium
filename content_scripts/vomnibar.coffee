@@ -69,7 +69,7 @@ class VomnibarUI
 
   updateSelection: ->
     for i in [0...@completionList.children.length]
-      @completionList.children[i].className = (if i is @selection then "vomnibarSelected" else "")
+      @completionList.children[i].className = if i is @selection then "vomnibarSelected" else ""
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
@@ -77,18 +77,18 @@ class VomnibarUI
   #
   actionFromKeyEvent: (event) ->
     key = KeyboardUtils.getKeyChar(event)
-    if KeyboardUtils.isEscape(event)
-      return "dismiss"
-    else if key is "up" or
+
+    return "dismiss" if KeyboardUtils.isEscape(event)
+
+    return "up" if key is "up" or
         (event.shiftKey and event.keyCode is keyCodes.tab) or
         (event.ctrlKey and (key is "k" or key is "p"))
-      return "up"
-    else if key is "down" or
+
+    return "down" if key is "down" or
         (event.keyCode is keyCodes.tab and !event.shiftKey) or
         (event.ctrlKey and (key is "j" or key is "n"))
-      return "down"
-    else if event.keyCode is keyCodes.enter
-      return "enter"
+
+    return "enter" if event.keyCode is keyCodes.enter
 
   onKeydown: (event) ->
     action = @actionFromKeyEvent(event)
@@ -147,8 +147,7 @@ class VomnibarUI
   update: (updateSynchronously, callback) ->
     if updateSynchronously
       # cancel scheduled update
-      unless @updateTimer is null
-        window.clearTimeout(@updateTimer)
+      window.clearTimeout(@updateTimer) unless @updateTimer is null
       @updateCompletions(callback)
     else unless @updateTimer is null
       # an update is already scheduled, don't do anything

@@ -237,8 +237,7 @@ extend window,
 
   goUp: (count) ->
     url = window.location.href
-    if url[url.length - 1] is "/"
-      url = url.substring(0, url.length - 1)
+    url = url.substring(0, url.length - 1) if url[url.length - 1] is "/"
 
     urlsplit = url.split("/")
     # make sure we haven't hit the base domain yet
@@ -307,11 +306,9 @@ extend window,
       if event.keyCode is KeyboardUtils.keyCodes.tab
         hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
         if event.shiftKey
-          if --selectedInputIndex is -1
-            selectedInputIndex = hints.length - 1
+          selectedInputIndex = hints.length - 1 if --selectedInputIndex is -1
         else
-          if ++selectedInputIndex is hints.length
-            selectedInputIndex = 0
+          selectedInputIndex = 0 if ++selectedInputIndex is hints.length
         hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
         visibleInputs[selectedInputIndex].element.focus()
       else unless event.keyCode is KeyboardUtils.keyCodes.shiftKey
@@ -347,8 +344,7 @@ onKeypress = (event) ->
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
       else unless isInsertMode() or findMode
-        unless currentCompletionKeys.indexOf(keyChar) is -1
-          DomUtils.suppressEvent(event)
+        DomUtils.suppressEvent(event) unless currentCompletionKeys.indexOf(keyChar) is -1
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -366,28 +362,22 @@ onKeydown = (event) ->
     unless keyChar is ""
       modifiers = []
 
-      if event.shiftKey
-        keyChar = keyChar.toUpperCase()
-      if event.metaKey
-        modifiers.push("m")
-      if event.ctrlKey
-        modifiers.push("c")
-      if event.altKey
-        modifiers.push("a")
+      keyChar = keyChar.toUpperCase() if event.shiftKey
+      modifiers.push("m") if event.metaKey
+      modifiers.push("c") if event.ctrlKey
+      modifiers.push("a") if event.altKey
 
       for i of modifiers
         keyChar = "#{modifiers[i]}-#{keyChar}"
 
-      if modifiers.length > 0 or keyChar.length > 1
-        keyChar = "<#{keyChar}>"
+      keyChar = "<#{keyChar}>" if modifiers.length > 0 or keyChar.length > 1
 
   if isInsertMode() and KeyboardUtils.isEscape(event)
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
     unless isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
-      if isEditable(event.srcElement)
-        event.srcElement.blur()
+      event.srcElement.blur() if isEditable(event.srcElement)
       exitInsertMode()
       DomUtils.suppressEvent(event)
 
@@ -448,9 +438,7 @@ checkIfEnabledForUrl = ->
 refreshCompletionKeys = (response) ->
   if response
     currentCompletionKeys = response.completionKeys
-
-    if response.validFirstKeys
-      validFirstKeys = response.validFirstKeys
+    validFirstKeys = response.validFirstKeys if response.validFirstKeys
   else
     chrome.extension.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
@@ -462,8 +450,7 @@ onFocusCapturePhase = (event) ->
     enterInsertModeWithoutShowingIndicator(event.target)
 
 onBlurCapturePhase = (event) ->
-  if isFocusable(event.target)
-    exitInsertMode(event.target)
+  exitInsertMode(event.target) if isFocusable(event.target)
 
 #
 # Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
@@ -486,8 +473,7 @@ isEditable = (target) ->
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
   noFocus = ["radio", "checkbox"]
-  if nodeName is "input" and noFocus.indexOf(target.type) is -1
-    return true
+  return true if nodeName is "input" and noFocus.indexOf(target.type) is -1
   focusableElements = ["textarea", "select"]
   focusableElements.indexOf(nodeName) >= 0
 
