@@ -93,9 +93,7 @@ DomUtils =
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
     element.setSelectionRange(element.value.length, element.value.length)
 
-  simulateClick: (element, modifiers) ->
-    modifiers ||= {}
-
+  simulateClick: (element, modifiers = {}) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
       mouseEvent = document.createEvent("MouseEvents")

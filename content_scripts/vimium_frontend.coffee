@@ -608,9 +608,7 @@ performFindInPlace = ->
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
-executeFind = (query, options) ->
-  options = options || {}
-
+executeFind = (query, options = {}) ->
   # rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
   # changes that find() induces.
   oldFindMode = findMode

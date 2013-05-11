@@ -98,7 +98,7 @@ setFieldValue = (field, value) ->
   else
     field.checked = value
 
-toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
+toggleAdvancedOptions = do (advancedMode = false) -> (event) ->
   if advancedMode
     $("advancedOptions").style.display = "none"
     $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"

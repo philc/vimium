@@ -19,8 +19,7 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
-    @title ||= ""
+  constructor: (@queryTerms, @type, @url, @title = "", @computeRelevancyFunction, @extraRelevancyData) ->
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
@@ -349,7 +348,7 @@ RegexpCache =
   #   - string="go", prefix="\b", suffix=""
   #   - this returns regexp matching "google", but not "agog" (the "go" must occur at the start of a word)
   # TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
-  get: (string, prefix="", suffix="") ->
+  get: (string, prefix = "", suffix = "") ->
     @init() unless @initialized
     regexpString = string.replace(@escapeRegExp, "\\$&")
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).

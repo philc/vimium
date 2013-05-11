@@ -11,12 +11,11 @@ Commands =
   #  - background: whether this command needs to be run against the background page.
   #  - passCountToFunction: true if this command should have any digits which were typed prior to the
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
-  addCommand: (command, description, options) ->
+  addCommand: (command, description, options = {}) ->
     if command of @availableCommands
       console.log(command, "is already defined! Check commands.coffee for duplicates.")
       return
 
-    options ||= {}
     @availableCommands[command] =
       description: description
       isBackgroundCommand: options.background
