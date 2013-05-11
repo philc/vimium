@@ -118,6 +118,10 @@
         width: 100%;;
         min-height: 100px;
       }
+      input#linkHintDelay {
+        width: 60px;
+        margin-right: 3px;
+      }
       textarea#keyMappings {
         width: 100%;
         min-height: 135px;
@@ -235,6 +239,17 @@ unmapAll
                 </div>
               </div>
               <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Link hint<br/>navigation delay</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                    Having a delay after selecting a link in link hints mode will allow you to see that you have selected the correct link
+                  </div>
+                </div>
+                <input id="linkHintDelay" type="number" />ms
             </td>
           </tr>
           <tr>

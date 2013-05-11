@@ -115,7 +115,7 @@ DomUtils =
     flashEl.style.width = rect.width + "px"
     flashEl.style.height = rect.height + "px"
     document.documentElement.appendChild(flashEl)
-    setTimeout((-> DomUtils.removeElement flashEl), 400)
+    setTimeout((-> DomUtils.removeElement flashEl), settings.get('linkHintDelay'))
 
   suppressEvent: (event) ->
     event.preventDefault()

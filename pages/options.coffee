@@ -4,7 +4,7 @@ bgSettings = chrome.extension.getBackgroundPage().Settings
 
 editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
-  "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
+  "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "linkHintDelay"]
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 
@@ -61,12 +61,13 @@ saveOptions = ->
         fieldValue = field.checked
       when "number"
         fieldValue = parseFloat field.value
+        fieldValue = 0 if fieldValue < 0
       else
         fieldValue = field.value.trim()
         field.value = fieldValue
 
     # If it's empty and not a field that we allow to be empty, restore to the default value
-    if not fieldValue and canBeEmptyFields.indexOf(fieldName) is -1
+    if (fieldValue is '' or isNaN(fieldValue)) and canBeEmptyFields.indexOf(fieldName) is -1
       bgSettings.clear fieldName
       fieldValue = bgSettings.get(fieldName)
     else
@@ -80,7 +81,7 @@ saveOptions = ->
 # Restores select box state to saved value from localStorage.
 populateOptions = ->
   for field in editableFields
-    val = bgSettings.get(field) or ""
+    val = if bgSettings.get(field)? then bgSettings.get(field) else ""
     setFieldValue $(field), val
   onDataLoaded()
 
