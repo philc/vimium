@@ -21,7 +21,7 @@ class root.HandlerStack
       handler = @stack[i]
       # We need to check for existence of handler because the last function call may have caused the release
       # of more than one handler.
-      if handler and handler[type]
+      if handler?[type]
         @currentId = handler.id
         passThrough = handler[type].call(@, event)
         unless passThrough

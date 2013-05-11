@@ -208,8 +208,7 @@ filterCompleter = (args, port) ->
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
-  if selectionChangedHandlers.length > 0
-    selectionChangedHandlers.pop().call()
+  selectionChangedHandlers.pop()?.call()
 
 repeatFunction = (func, totalCount, currentCount, frameId) ->
   if currentCount < totalCount

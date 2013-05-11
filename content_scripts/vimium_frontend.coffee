@@ -636,7 +636,7 @@ restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFind
 focusFoundLink = ->
   if findModeQueryHasResults
     link = getLinkFromSelection()
-    link.focus() if link
+    link?.focus()
 
 isDOMDescendant = (parent, child) ->
   node = child
@@ -874,10 +874,8 @@ window.showHelpDialog = (html, fid) ->
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
   helpDialog = document.getElementById("vimiumHelpDialogContainer")
-  if helpDialog
-    helpDialog.parentNode.removeChild(helpDialog)
-  if clickEvent
-    clickEvent.preventDefault()
+  helpDialog?.parentNode.removeChild(helpDialog)
+  clickEvent?.preventDefault()
 
 toggleHelpDialog = (html, fid) ->
   if isShowingHelpDialog
@@ -978,8 +976,8 @@ Tween =
     state.to = toAlpha
     state.onUpdate = (value) ->
       element.style.opacity = value
-      if value is state.to and onComplete
-        onComplete()
+      if value is state.to
+        onComplete?()
     state.timerId = setInterval((-> Tween.performTweenStep(state)), 50)
     state.timerId
 

@@ -135,7 +135,7 @@ class VomnibarUI
     @completer.filter query, (completions) =>
       @completions = completions
       @populateUiWithCompletions(completions)
-      callback() if callback
+      callback?()
 
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data

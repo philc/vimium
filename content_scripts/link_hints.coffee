@@ -239,8 +239,7 @@ LinkHints =
   #
   deactivateMode: (delay, callback) ->
     deactivate = =>
-      if LinkHints.markerMatcher.deactivate
-        LinkHints.markerMatcher.deactivate()
+      LinkHints.markerMatcher.deactivate?()
       if LinkHints.hintMarkerContainingDiv
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
@@ -253,11 +252,11 @@ LinkHints =
     if delay
       setTimeout(->
         deactivate()
-        callback() if callback
+        callback?()
       delay)
     else
       deactivate()
-      callback() if callback
+      callback?()
 
 alphabetHints =
   hintKeystrokeQueue: []
