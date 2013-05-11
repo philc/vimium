@@ -94,8 +94,8 @@ class VomnibarUI
     action = @actionFromKeyEvent(event)
     return true unless action # pass through
 
-    openInNewTab = @forceNewTab ||
-      (event.shiftKey || event.ctrlKey || KeyboardUtils.isPrimaryModifierKey(event))
+    openInNewTab = @forceNewTab or
+      (event.shiftKey or event.ctrlKey or KeyboardUtils.isPrimaryModifierKey(event))
     if action is "dismiss"
       @hide()
     else if action is "up"
@@ -218,7 +218,7 @@ extend BackgroundCompleter,
       if url.startsWith "javascript:"
         script = document.createElement 'script'
         script.textContent = decodeURIComponent(url["javascript:".length..])
-        (document.head || document.documentElement).appendChild script
+        (document.head or document.documentElement).appendChild script
       else
         chrome.extension.sendMessage(
           handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"

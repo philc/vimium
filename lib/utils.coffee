@@ -105,7 +105,7 @@ Utils =
       Utils.createSearchUrl string
 
   # detects both literals and dynamically created strings
-  isString: (obj) -> typeof obj == 'string' or obj instanceof String
+  isString: (obj) -> typeof obj is 'string' or obj instanceof String
 
 
   # Compares two version strings (e.g. "1.1" and "1.5") and returns
@@ -114,8 +114,8 @@ Utils =
     versionA = versionA.split(".")
     versionB = versionB.split(".")
     for i in [0...(Math.max(versionA.length, versionB.length))]
-      a = parseInt(versionA[i] || 0, 10)
-      b = parseInt(versionB[i] || 0, 10)
+      a = parseInt(versionA[i] or 0, 10)
+      b = parseInt(versionB[i] or 0, 10)
       if a < b
         return -1
       else if a > b
@@ -131,7 +131,7 @@ Utils =
       arrays.map( (array) -> array[i] )
 
   # locale-sensitive uppercase detection
-  hasUpperCase: (s) -> s.toLowerCase() != s
+  hasUpperCase: (s) -> s.toLowerCase() isnt s
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
@@ -142,7 +142,7 @@ Function::curry = ->
 
 Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
-String::startsWith = (str) -> @indexOf(str) == 0
+String::startsWith = (str) -> @indexOf(str) is 0
 
 globalRoot = window ? global
 globalRoot.extend = (hash1, hash2) ->

@@ -211,7 +211,7 @@ class DomainCompleter
   onPageVisited: (newPage) ->
     domain = @parseDomain(newPage.url)
     if domain
-      slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
+      slot = @domains[domain] or= { entry: newPage, referenceCount: 0 }
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
       slot.entry = newPage if slot.entry.lastVisitTime < newPage.lastVisitTime
       slot.referenceCount += 1
@@ -225,7 +225,7 @@ class DomainCompleter
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) is 0
           delete @domains[domain]
 
-  parseDomain: (url) -> url.split("/")[2] || ""
+  parseDomain: (url) -> url.split("/")[2] or ""
 
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
@@ -290,7 +290,7 @@ RankingUtils =
       regexp = RegexpCache.get(term)
       matchedTerm = false
       for thing in things
-        matchedTerm ||= thing.match regexp
+        matchedTerm or= thing.match regexp
       return false unless matchedTerm
     true
 
@@ -316,7 +316,7 @@ RankingUtils =
   # a month old are counted as 0. This range is quadratic, so an item from one day ago has a much stronger
   # score than an item from two days ago.
   recencyScore: (lastAccessedTime) ->
-    @oneMonthAgo ||= 1000 * 60 * 60 * 24 * 30
+    @oneMonthAgo or= 1000 * 60 * 60 * 24 * 30
     recency = Date.now() - lastAccessedTime
     recencyDifference = Math.max(0, @oneMonthAgo - recency) / @oneMonthAgo
 
@@ -336,7 +336,7 @@ RegexpCache =
     @initialized = true
     @clear()
     # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    @escapeRegExp or= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 
   clear: -> @cache = {}
 
@@ -355,7 +355,7 @@ RegexpCache =
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
     # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
-    @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
+    @cache[regexpString] or= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
@@ -391,7 +391,7 @@ HistoryCache =
   # correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
   onPageVisited: (newPage) ->
     i = HistoryCache.binarySearch(newPage, @history, @compareHistoryByUrl)
-    pageWasFound = (@history[i].url == newPage.url)
+    pageWasFound = (@history[i].url is newPage.url)
     if pageWasFound
       @history[i] = newPage
     else

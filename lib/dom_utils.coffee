@@ -85,8 +85,8 @@ DomUtils =
   #
   isSelectable: (element) ->
     selectableTypes = ["search", "text", "password"]
-    (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
-        element.nodeName.toLowerCase() == "textarea"
+    (element.nodeName.toLowerCase() is "input" and selectableTypes.indexOf(element.type) >= 0) or
+        element.nodeName.toLowerCase() is "textarea"
 
   simulateSelect: (element) ->
     element.focus()

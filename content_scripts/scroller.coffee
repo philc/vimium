@@ -41,7 +41,7 @@ ensureScrollChange = (direction, changeFn) ->
     changeFn(element, axisName)
     lastElement = element
     # we may have an orphaned element. if so, just scroll the body element.
-    element = element.parentElement || document.body
+    element = element.parentElement or document.body
     break unless lastElement[axisName] is oldScrollValue and lastElement isnt document.body
 
   # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
@@ -85,5 +85,5 @@ root.scrollTo = (direction, pos) ->
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
   computedStyle = window.getComputedStyle(element, null)
-  return !(computedStyle.getPropertyValue("visibility") != "visible" ||
-      computedStyle.getPropertyValue("display") == "none")
+  return computedStyle.getPropertyValue("visibility") is "visible" or
+      computedStyle.getPropertyValue("display") isnt "none"

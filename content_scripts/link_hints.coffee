@@ -86,8 +86,8 @@ LinkHints =
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick(link, {
-          metaKey: KeyboardUtils.platform == "Mac",
-          ctrlKey: KeyboardUtils.platform != "Mac" })
+          metaKey: KeyboardUtils.platform is "Mac",
+          ctrlKey: KeyboardUtils.platform isnt "Mac" })
     else if @mode is COPY_LINK_URL
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
@@ -322,7 +322,7 @@ alphabetHints =
       @hintKeystrokeQueue.push(keyChar)
 
     matchString = @hintKeystrokeQueue.join("")
-    linksMatched = hintMarkers.filter((linkMarker) -> linkMarker.hintString.indexOf(matchString) == 0)
+    linksMatched = hintMarkers.filter((linkMarker) -> linkMarker.hintString.indexOf(matchString) is 0)
     { linksMatched: linksMatched }
 
   deactivate: -> @hintKeystrokeQueue = []
@@ -367,10 +367,10 @@ filterHints =
     else if nodeName is "a" and not element.textContent.trim() and
         element.firstElementChild and
         element.firstElementChild.nodeName.toLowerCase() is "img"
-      linkText = element.firstElementChild.alt || element.firstElementChild.title
+      linkText = element.firstElementChild.alt or element.firstElementChild.title
       showLinkText = true if linkText
     else
-      linkText = element.textContent || element.innerHTML
+      linkText = element.textContent or element.innerHTML
 
     { text: linkText, show: showLinkText }
 
@@ -419,7 +419,7 @@ filterHints =
     linksMatched = @filterLinkHints(hintMarkers)
     matchString = @hintKeystrokeQueue.join("")
     linksMatched = linksMatched.filter((linkMarker) ->
-      !linkMarker.filtered && linkMarker.hintString.indexOf(matchString) == 0)
+      not linkMarker.filtered and linkMarker.hintString.indexOf(matchString) is 0)
 
     if linksMatched.length is 1 and userIsTypingLinkText
       # In filter mode, people tend to type out words past the point

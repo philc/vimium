@@ -101,7 +101,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   commandsToKey = {}
   for key of Commands.keyToCommandRegistry
     command = Commands.keyToCommandRegistry[key].command
-    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
+    commandsToKey[command] = (commandsToKey[command] or []).concat(key)
 
   dialogHtml = fetchFileContents("pages/help_dialog.html")
   for group of Commands.commandGroups
@@ -109,7 +109,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
-  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
+  dialogHtml = dialogHtml.replace("{{title}}", customTitle or "Help")
   dialogHtml
 
 #
@@ -119,7 +119,7 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
     showUnboundCommands, showCommandNames) ->
   html = []
   for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
+    bindings = (commandsToKey[command] or [""]).join(", ")
     if showUnboundCommands or commandsToKey[command]
       isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
       html.push(
@@ -319,7 +319,7 @@ updateActiveState = (tabId) ->
     # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
     chrome.browserAction.setIcon({ path: disabledIcon })
     chrome.tabs.sendMessage(tabId, { name: "getActiveState" }, (response) ->
-      isCurrentlyEnabled = (response? && response.enabled)
+      isCurrentlyEnabled = response? and response.enabled
       shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
 
       if isCurrentlyEnabled
@@ -428,7 +428,7 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
 # Generates a list of keys that can complete a valid command given the current key queue or the one passed in
 generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueue)
+  splitHash = splitKeyQueue(keysToCheck or keyQueue)
   command = splitHash.command
   count = splitHash.count
 
@@ -524,7 +524,7 @@ shouldShowUpgradeMessage = ->
   # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
   # installs.
   Settings.set("previousVersion", currentVersion) unless Settings.get("previousVersion")
-  Utils.compareVersions(currentVersion, Settings.get("previousVersion")) == 1
+  Utils.compareVersions(currentVersion, Settings.get("previousVersion")) is 1
 
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->

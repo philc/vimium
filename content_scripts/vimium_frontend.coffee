@@ -164,7 +164,7 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrameIfSizeAvailable(window.top == window.self)
+  registerFrameIfSizeAvailable(window.top is window.self)
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
@@ -455,7 +455,7 @@ refreshCompletionKeys = (response) ->
     chrome.extension.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
 isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
+  validFirstKeys[keyChar] or /[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
   if isFocusable(event.target) and not findMode
@@ -468,7 +468,7 @@ onBlurCapturePhase = (event) ->
 #
 # Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
 #
-isFocusable = (element) -> isEditable(element) || isEmbed(element)
+isFocusable = (element) -> isEditable(element) or isEmbed(element)
 
 #
 # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
@@ -513,7 +513,7 @@ exitInsertMode = (target) ->
     insertModeLock = null
     HUD.hide()
 
-isInsertMode = -> insertModeLock != null
+isInsertMode = -> insertModeLock isnt null
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -539,7 +539,7 @@ updateFindModeQuery = ->
         return match
 
   # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
-  findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
+  findModeQuery.ignoreCase = not (hasNoIgnoreCaseFlag or Utils.hasUpperCase(findModeQuery.parsedQuery))
 
   # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
   # sequentially so the browser handles the scrolling / text selection.
@@ -570,7 +570,7 @@ handleEscapeForFindMode = ->
     range = window.getSelection().getRangeAt(0)
     window.getSelection().removeAllRanges()
     window.getSelection().addRange(range)
-  focusFoundLink() || selectFoundInputElement()
+  focusFoundLink() or selectFoundInputElement()
 
 handleDeleteForFindMode = ->
   if findModeQuery.rawQuery.length is 0
@@ -640,7 +640,7 @@ focusFoundLink = ->
 
 isDOMDescendant = (parent, child) ->
   node = child
-  while (node != null)
+  while (node isnt null)
     return true if node is parent
     node = node.parentNode
   false
@@ -669,7 +669,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
-  mostRecentQuery = settings.get("findModeRawQuery") || ""
+  mostRecentQuery = settings.get("findModeRawQuery") or ""
   unless mostRecentQuery is findModeQuery.rawQuery
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
@@ -689,8 +689,8 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  elementCanTakeInput = document.activeElement &&
-    DomUtils.isSelectable(document.activeElement) &&
+  elementCanTakeInput = document.activeElement and
+    DomUtils.isSelectable(document.activeElement) and
     isDOMDescendant(findModeAnchorNode, document.activeElement)
   if elementCanTakeInput
     handlerStack.push({
@@ -711,7 +711,7 @@ window.performBackwardsFind = -> findAndFocus(true)
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
-  while (node && node != document.body)
+  while (node and node isnt document.body)
     return node if node.nodeName.toLowerCase() is "a"
     node = node.parentNode
   null
@@ -801,14 +801,14 @@ findAndFollowRel = (value) ->
         return true
 
 window.goPrevious = ->
-  previousPatterns = settings.get("previousPatterns") || ""
+  previousPatterns = settings.get("previousPatterns") or ""
   previousStrings = previousPatterns.split(",").filter((s) -> s.length)
-  findAndFollowRel("prev") || findAndFollowLink(previousStrings)
+  findAndFollowRel("prev") or findAndFollowLink(previousStrings)
 
 window.goNext = ->
-  nextPatterns = settings.get("nextPatterns") || ""
+  nextPatterns = settings.get("nextPatterns") or ""
   nextStrings = nextPatterns.split(",").filter((s) -> s.length)
-  findAndFollowRel("next") || findAndFollowLink(nextStrings)
+  findAndFollowRel("next") or findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
   if findModeQueryHasResults or findModeQuery.parsedQuery.length is 0
@@ -961,7 +961,7 @@ HUD =
       HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
         -> HUD.displayElement().style.display = "none")
 
-  isReady: -> document.body != null
+  isReady: -> document.body isnt null
 
   # A preference which can be toggled in the Options page. */
   enabled: -> !settings.get("hideHud")
@@ -974,7 +974,7 @@ Tween =
     state = {}
     state.duration = duration
     state.startTime = (new Date()).getTime()
-    state.from = parseInt(element.style.opacity) || 0
+    state.from = parseInt(element.style.opacity) or 0
     state.to = toAlpha
     state.onUpdate = (value) ->
       element.style.opacity = value
