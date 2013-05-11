@@ -31,7 +31,7 @@ KeyboardUtils =
 
   getKeyChar: (event) ->
     # Not a letter
-    if event.keyIdentifier.slice(0, 2) isnt "U+"
+    unless event.keyIdentifier.slice(0, 2) is "U+"
       return @keyNames[event.keyCode] if @keyNames[event.keyCode]
       # F-key
       if event.keyCode >= @keyCodes.f1 and event.keyCode <= @keyCodes.f12

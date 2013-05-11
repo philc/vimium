@@ -62,20 +62,20 @@ root.scrollBy = (direction, amount, factor = 1) ->
       window.scrollBy(0, amount)
     return
 
-  if not activatedElement or not isRendered(activatedElement)
+  unless activatedElement and isRendered(activatedElement)
     activatedElement = document.body
 
   amount = getDimension activatedElement, direction, amount if Utils.isString amount
 
   amount *= factor
 
-  if amount isnt 0
+  unless amount is 0
     ensureScrollChange direction, (element, axisName) -> element[axisName] += amount
 
 root.scrollTo = (direction, pos) ->
   return unless document.body
 
-  if not activatedElement or not isRendered(activatedElement)
+  unless activatedElement and isRendered(activatedElement)
     activatedElement = document.body
 
   pos = getDimension activatedElement, direction, pos if Utils.isString pos

@@ -174,7 +174,7 @@ LinkHints =
 
       handlerStack.push({
         keyup: (event) =>
-          return if event.keyCode isnt keyCodes.shiftKey
+          return unless event.keyCode is keyCodes.shiftKey
           @setOpenLinkMode(prev_mode) if @isActive
           @remove()
       })
@@ -250,14 +250,14 @@ LinkHints =
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
     # deactivateMode can be tested synchronously
-    if not delay
-      deactivate()
-      callback() if (callback)
-    else
+    if delay
       setTimeout(->
         deactivate()
         callback() if callback
       delay)
+    else
+      deactivate()
+      callback() if callback
 
 alphabetHints =
   hintKeystrokeQueue: []
@@ -316,7 +316,7 @@ alphabetHints =
     keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     if event.keyCode is keyCodes.backspace or event.keyCode is keyCodes.deleteKey
-      if not @hintKeystrokeQueue.pop()
+      unless @hintKeystrokeQueue.pop()
         return { linksMatched: [] }
     else if keyChar
       @hintKeystrokeQueue.push(keyChar)
@@ -397,12 +397,12 @@ filterHints =
     if event.keyCode is keyCodes.enter
       # activate the lowest-numbered link hint that is visible
       for marker in hintMarkers
-        if marker.style.display isnt "none"
+        unless marker.style.display is "none"
           return { linksMatched: [ marker ] }
     else if event.keyCode is keyCodes.backspace or event.keyCode is keyCodes.deleteKey
       # backspace clears hint key queue first, then acts on link text key queue.
       # if both queues are empty. exit hinting mode
-      if not @hintKeystrokeQueue.pop() and not @linkTextKeystrokeQueue.pop()
+      unless @hintKeystrokeQueue.pop() or @linkTextKeystrokeQueue.pop()
         return { linksMatched: [] }
     else if keyChar
       if settings.get("linkHintNumbers").indexOf(keyChar) >= 0
@@ -440,14 +440,14 @@ filterHints =
     for linkMarker in hintMarkers
       matchedLink = linkMarker.linkText.toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0
 
-      if not matchedLinke
-        linkMarker.filtered = true
-      else
+      if matchedLink
         linkMarker.filtered = false
         oldHintString = linkMarker.hintString
         linkMarker.hintString = @generateHintString(linksMatched.length)
-        @renderMarker(linkMarker) if linkMarker.hintString isnt oldHintString
+        @renderMarker(linkMarker) unless linkMarker.hintString is oldHintString
         linksMatched.push(linkMarker)
+      else
+        linkMarker.filtered = true
 
     linksMatched
 

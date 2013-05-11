@@ -24,7 +24,7 @@ class root.HandlerStack
       if handler and handler[type]
         @currentId = handler.id
         passThrough = handler[type].call(@, event)
-        if not passThrough
+        unless passThrough
           DomUtils.suppressEvent(event)
           return false
     true

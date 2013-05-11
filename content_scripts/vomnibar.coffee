@@ -3,7 +3,7 @@ Vomnibar =
   completers: {}
 
   getCompleter: (name) ->
-    if not name of @completers
+    unless name of @completers
       @completers[name] = new BackgroundCompleter(name)
     @completers[name]
 
@@ -147,10 +147,10 @@ class VomnibarUI
   update: (updateSynchronously, callback) ->
     if updateSynchronously
       # cancel scheduled update
-      if @updateTimer isnt null
+      unless @updateTimer is null
         window.clearTimeout(@updateTimer)
       @updateCompletions(callback)
-    else if @updateTimer isnt null
+    else unless @updateTimer is null
       # an update is already scheduled, don't do anything
       return
     else
@@ -193,7 +193,7 @@ class BackgroundCompleter
   filter: (query, callback) ->
     id = Utils.createUniqueId()
     @filterPort.onMessage.addListener (msg) ->
-      return if msg.id isnt id
+      return unless msg.id is id
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
       # type will be one of [tab, bookmark, history, domain].

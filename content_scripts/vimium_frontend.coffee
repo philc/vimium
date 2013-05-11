@@ -78,7 +78,7 @@ settings =
         listener()
 
   addEventListener: (eventName, callback) ->
-    if not eventName of @eventListeners
+    unless eventName of @eventListeners
       @eventListeners[eventName] = []
     @eventListeners[eventName].push(callback)
 
@@ -173,15 +173,15 @@ initializeOnDomReady = ->
 
 # This is a little hacky but sometimes the size wasn't available on domReady?
 registerFrameIfSizeAvailable = (is_top) ->
-  if innerWidth isnt undefined and innerWidth isnt 0 and innerHeight isnt undefined and innerHeight isnt 0
+  if innerWidth is undefined or innerWidth is 0 or innerHeight is undefined or innerHeight is 0
+    setTimeout((-> registerFrameIfSizeAvailable(is_top)), 100)
+  else
     chrome.extension.sendMessage(
       handler: "registerFrame"
       frameId: frameId
       area: innerWidth * innerHeight
       is_top: is_top
       total: frames.length + 1)
-  else
-    setTimeout((-> registerFrameIfSizeAvailable(is_top)), 100)
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -346,8 +346,8 @@ onKeypress = (event) ->
       if findMode
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
-      else if not isInsertMode() and not findMode
-        if currentCompletionKeys.indexOf(keyChar) isnt -1
+      else unless isInsertMode() or findMode
+        unless currentCompletionKeys.indexOf(keyChar) is -1
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
@@ -363,7 +363,7 @@ onKeydown = (event) ->
       event.keyIdentifier.slice(0, 2) isnt "U+"
     keyChar = KeyboardUtils.getKeyChar(event)
     # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
-    if keyChar isnt ""
+    unless keyChar is ""
       modifiers = []
 
       if event.shiftKey
@@ -383,7 +383,7 @@ onKeydown = (event) ->
 
   if isInsertMode() and KeyboardUtils.isEscape(event)
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if not isEmbed(event.srcElement)
+    unless isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if isEditable(event.srcElement)
@@ -404,15 +404,15 @@ onKeydown = (event) ->
       handleEnterForFindMode()
       DomUtils.suppressEvent(event)
 
-    else if not modifiers
+    else unless modifiers
       event.stopPropagation()
 
   else if isShowingHelpDialog and KeyboardUtils.isEscape(event)
     hideHelpDialog()
 
-  else if not isInsertMode() and not findMode
+  else unless isInsertMode() or findMode
     if keyChar
-      if currentCompletionKeys.indexOf(keyChar) isnt -1
+      unless currentCompletionKeys.indexOf(keyChar) is -1
         DomUtils.suppressEvent(event)
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
@@ -670,7 +670,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
   mostRecentQuery = settings.get("findModeRawQuery") || ""
-  if mostRecentQuery isnt findModeQuery.rawQuery
+  unless mostRecentQuery is findModeQuery.rawQuery
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
 
@@ -683,7 +683,7 @@ findAndFocus = (backwards) ->
   findModeQueryHasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
 
-  if (!findModeQueryHasResults)
+  unless findModeQueryHasResults
     HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
     return
 
@@ -754,7 +754,7 @@ findAndFollowLink = (linkStrings) ->
 
     linkMatches = false
     for linkString in linkStrings
-      if link.innerText.toLowerCase().indexOf(linkString) isnt -1
+      unless link.innerText.toLowerCase().indexOf(linkString) is -1
         linkMatches = true
         break
     continue unless linkMatches
@@ -934,14 +934,14 @@ HUD =
   # Retrieves the HUD HTML element.
   #
   displayElement: ->
-    if not HUD._displayElement
+    unless HUD._displayElement
       HUD._displayElement = HUD.createHudElement()
       # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
       HUD._displayElement.style.right = "150px"
     HUD._displayElement
 
   upgradeNotificationElement: ->
-    if not HUD._upgradeNotificationElement
+    unless HUD._upgradeNotificationElement
       HUD._upgradeNotificationElement = HUD.createHudElement()
       # Position this just to the left of our normal HUD.
       HUD._upgradeNotificationElement.style.right = "315px"

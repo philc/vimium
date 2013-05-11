@@ -58,7 +58,7 @@ Commands =
       lineCommand = splitLine[0]
 
       if lineCommand is "map"
-        continue if splitLine.length isnt 3
+        continue unless splitLine.length is 3
         key = @normalizeKey(splitLine[1])
         vimiumCommand = splitLine[2]
 
@@ -67,7 +67,7 @@ Commands =
         console.log("Mapping", key, "to", vimiumCommand)
         @mapKeyToCommand(key, vimiumCommand)
       else if lineCommand is "unmap"
-        continue if splitLine.length isnt 2
+        continue unless splitLine.length is 2
 
         key = @normalizeKey(splitLine[1])
         console.log("Unmapping", key)
