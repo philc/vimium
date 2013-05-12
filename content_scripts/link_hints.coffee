@@ -97,7 +97,7 @@ LinkHints =
 
       @linkActivator = (link) ->
         chrome.extension.sendMessage(
-          handler: 'openUrlInIncognito'
+          handler: "openUrlInIncognito"
           url: link.href)
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
@@ -360,7 +360,7 @@ filterHints =
         showLinkText = true
       else if element.type isnt "password"
         linkText = element.value
-        if not linkText and 'placeholder' of element
+        if not linkText and "placeholder" of element
           linkText = element.placeholder
       # check if there is an image embedded in the <a> tag
     else if nodeName is "a" and not element.textContent.trim() and

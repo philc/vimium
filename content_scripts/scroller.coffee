@@ -11,21 +11,21 @@ root.init = ->
 
 scrollProperties =
   x: {
-    axisName: 'scrollLeft'
-    max: 'scrollWidth'
-    viewSize: 'clientHeight'
+    axisName: "scrollLeft"
+    max: "scrollWidth"
+    viewSize: "clientHeight"
   }
   y: {
-    axisName: 'scrollTop'
-    max: 'scrollHeight'
-    viewSize: 'clientWidth'
+    axisName: "scrollTop"
+    max: "scrollHeight"
+    viewSize: "clientWidth"
   }
 
 getDimension = (el, direction, name) ->
   # the clientSizes of the body are the dimensions of the entire page, but the viewport should only be the
   # part visible through the window
-  if name is 'viewSize' and el is document.body
-    if direction is 'x' then window.innerWidth else window.innerHeight
+  if name is "viewSize" and el is document.body
+    if direction is "x" then window.innerWidth else window.innerHeight
   else
     el[scrollProperties[direction][name]]
 

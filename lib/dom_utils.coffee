@@ -57,9 +57,9 @@ DomUtils =
       # eliminate invisible elements (see test_harnesses/visibility_test.html)
       computedStyle = window.getComputedStyle(element, null)
 
-      continue if computedStyle.getPropertyValue('visibility') isnt 'visible' or
-          computedStyle.getPropertyValue('display') is 'none' or
-          computedStyle.getPropertyValue('opacity') is '0'
+      continue if computedStyle.getPropertyValue("visibility") isnt "visible" or
+          computedStyle.getPropertyValue("display") is "none" or
+          computedStyle.getPropertyValue("opacity") is "0"
 
       return clientRect
 
@@ -71,8 +71,8 @@ DomUtils =
           computedStyle = window.getComputedStyle(child, null)
           # Ignore child elements which are not floated and not absolutely positioned for parent elements with
           # zero width/height
-          continue if computedStyle.getPropertyValue('float') is 'none' and
-            computedStyle.getPropertyValue('position') isnt 'absolute'
+          continue if computedStyle.getPropertyValue("float") is "none" and
+            computedStyle.getPropertyValue("position") isnt "absolute"
           childClientRect = @getVisibleClientRect(child)
           continue if childClientRect is null
           return childClientRect

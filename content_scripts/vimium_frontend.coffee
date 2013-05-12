@@ -28,7 +28,7 @@ validFirstKeys = null
 textInputXPath = (->
   textInputTypes = ["text", "search", "email", "url", "number", "password"]
   inputElements = ["input[" +
-    "(" + textInputTypes.map((type) -> '@type="' + type + '"').join(" or ") + "or not(@type))" +
+    "(" + textInputTypes.map((type) -> "@type='" + type + "'").join(" or ") + "or not(@type))" +
     " and not(@disabled or @readonly)]",
     "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]
   DomUtils.makeXPath(inputElements)
@@ -121,8 +121,8 @@ initializePreDomReady = ->
   chrome.extension.onMessage.addListener (request, sender, sendResponse) ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or request.name is 'getActiveState'
+    return if sender.tab and not sender.tab.url.startsWith "chrome-extension://"
+    return unless isEnabledForUrl or request.name is "getActiveState"
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
@@ -190,7 +190,7 @@ enterInsertModeIfElementIsFocused = ->
   if document.activeElement and isEditable(document.activeElement) and not findMode
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
-onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+onDOMActivate = (event) -> handlerStack.bubbleEvent "DOMActivate", event
 
 executePageCommand = (request) ->
   return unless frameId is request.frameId
@@ -213,7 +213,7 @@ window.focusThisFrame = (shouldHighlight) ->
   window.focus()
   if document.body and shouldHighlight
     borderWas = document.body.style.border
-    document.body.style.border = '5px solid yellow'
+    document.body.style.border = "5px solid yellow"
     setTimeout((-> document.body.style.border = borderWas), 200)
 
 extend window,
@@ -243,7 +243,7 @@ extend window,
     # make sure we haven't hit the base domain yet
     if urlsplit.length > 3
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
-      window.location.href = urlsplit.join('/')
+      window.location.href = urlsplit.join("/")
 
   goToRoot: () ->
     window.location.href = window.location.origin
@@ -297,19 +297,19 @@ extend window,
 
       hint
 
-    hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+    hints[selectedInputIndex].classList.add "internalVimiumSelectedInputHint"
 
     hintContainingDiv = DomUtils.addElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
 
     handlerStack.push keydown: (event) ->
       if event.keyCode is KeyboardUtils.keyCodes.tab
-        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+        hints[selectedInputIndex].classList.remove "internalVimiumSelectedInputHint"
         if event.shiftKey
           selectedInputIndex = hints.length - 1 if --selectedInputIndex is -1
         else
           selectedInputIndex = 0 if ++selectedInputIndex is hints.length
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        hints[selectedInputIndex].classList.add "internalVimiumSelectedInputHint"
         visibleInputs[selectedInputIndex].element.focus()
       else unless event.keyCode is KeyboardUtils.keyCodes.shiftKey
         DomUtils.removeElement hintContainingDiv
@@ -326,7 +326,7 @@ extend window,
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
 onKeypress = (event) ->
-  return unless handlerStack.bubbleEvent('keypress', event)
+  return unless handlerStack.bubbleEvent("keypress", event)
 
   keyChar = ""
 
@@ -349,7 +349,7 @@ onKeypress = (event) ->
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
 onKeydown = (event) ->
-  return unless handlerStack.bubbleEvent('keydown', event)
+  return unless handlerStack.bubbleEvent("keydown", event)
 
   keyChar = ""
 
@@ -422,7 +422,7 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event)))
     event.stopPropagation()
 
-onKeyup = (event) -> return unless handlerStack.bubbleEvent('keyup', event)
+onKeyup = (event) -> return unless handlerStack.bubbleEvent("keyup", event)
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -506,7 +506,7 @@ updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
-  findModeQuery.isRegex = settings.get 'regexFindMode'
+  findModeQuery.isRegex = settings.get "regexFindMode"
   hasNoIgnoreCaseFlag = false
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /\\./g, (match) ->
     switch (match)

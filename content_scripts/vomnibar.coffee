@@ -214,7 +214,7 @@ extend BackgroundCompleter,
     navigateToUrl: (url, openInNewTab) ->
       # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
       if url.startsWith "javascript:"
-        script = document.createElement 'script'
+        script = document.createElement "script"
         script.textContent = decodeURIComponent(url["javascript:".length..])
         (document.head or document.documentElement).appendChild script
       else

@@ -5,7 +5,7 @@ Utils =
   # Takes a dot-notation object string and call the function
   # that it points to with the correct value for 'this'.
   invokeCommandString: (str, argArray) ->
-    components = str.split('.')
+    components = str.split(".")
     obj = window
     obj = obj[component] for component in components[0...-1]
     func = obj[components.pop()]
@@ -25,7 +25,7 @@ Utils =
     -> id += 1
 
   hasChromePrefix: (url) ->
-    chromePrefixes = [ 'about', 'view-source', "chrome-extension" ]
+    chromePrefixes = [ "about", "view-source", "chrome-extension" ]
     (return true if url.startsWith prefix) for prefix in chromePrefixes
     false
 
@@ -42,23 +42,23 @@ Utils =
     return true if /^[a-z]{3,}:\/\//.test str
 
     # Must not contain spaces
-    return false if ' ' in str
+    return false if " " in str
 
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
-      '^(?:([^:]+)(?::([^:]+))?@)?' + # user:password (optional) => \1, \2
-      '([^:]+|\\[[^\\]]+\\])'       + # host name (IPv6 addresses in square brackets allowed) => \3
-      '(?::(\\d+))?$'                 # port number (optional) => \4
+      "^(?:([^:]+)(?::([^:]+))?@)?" + # user:password (optional) => \1, \2
+      "([^:]+|\\[[^\\]]+\\])"       + # host name (IPv6 addresses in square brackets allowed) => \3
+      "(?::(\\d+))?$"                 # port number (optional) => \4
       )
 
     # Official ASCII TLDs that are longer than 3 characters + inofficial .onion TLD used by TOR
-    longTlds = ['arpa', 'asia', 'coop', 'info', 'jobs', 'local', 'mobi', 'museum', 'name', 'onion']
+    longTlds = ["arpa", "asia", "coop", "info", "jobs", "local", "mobi", "museum", "name", "onion"]
 
-    specialHostNames = ['localhost']
+    specialHostNames = ["localhost"]
 
     # Try to parse the URL into its meaningful parts. If matching fails we're pretty sure that we don't have
     # some kind of URL here.
-    match = urlRegex.exec (str.split '/')[0]
+    match = urlRegex.exec (str.split "/")[0]
     return false unless match
     hostName = match[3]
 
@@ -67,11 +67,11 @@ Utils =
 
     # Allow IPv6 addresses (need to be wrapped in brackets as required by RFC). It is sufficient to check for
     # a colon, as the regex wouldn't match colons in the host name unless it's an v6 address
-    return true if ':' in hostName
+    return true if ":" in hostName
 
     # At this point we have to make a decision. As a heuristic, we check if the input has dots in it. If yes,
     # and if the last part could be a TLD, treat it as an URL
-    dottedParts = hostName.split '.'
+    dottedParts = hostName.split "."
 
     if dottedParts.length > 1
       lastPart = dottedParts.pop()
@@ -103,7 +103,7 @@ Utils =
       Utils.createSearchUrl string
 
   # detects both literals and dynamically created strings
-  isString: (obj) -> typeof obj is 'string' or obj instanceof String
+  isString: (obj) -> typeof obj is "string" or obj instanceof String
 
 
   # Compares two version strings (e.g. "1.1" and "1.5") and returns

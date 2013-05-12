@@ -571,7 +571,7 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
 
 # Convenience function for development use.
-window.runTests = -> open(chrome.extension.getURL('tests/dom_tests/dom_tests.html'))
+window.runTests = -> open(chrome.extension.getURL("tests/dom_tests/dom_tests.html"))
 
 #
 # Begin initialization.

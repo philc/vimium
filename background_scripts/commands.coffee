@@ -203,7 +203,7 @@ commandDescriptions =
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
@@ -211,9 +211,9 @@ commandDescriptions =
 
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }]
 
-  'LinkHints.activateMode': ["Open a link in the current tab"]
-  'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
-  'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
+  "LinkHints.activateMode": ["Open a link in the current tab"]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
+  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
 
