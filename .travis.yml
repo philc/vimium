@@ -9,5 +9,5 @@ notifications:
 branches:
   except:
     - experimental
-    - 1.42
+    - 1.43
     - commands
