@@ -54,4 +54,6 @@ CREDITS file with your patch.
 
   * We follow the recommendations from
     [this style guide](https://github.com/polarmobile/coffeescript-style-guide).
-  * The one major difference is that we wrap our lines at 110 characters instead of 80.
+  * We follow two major differences from this style guide:
+    * Wrap lines at 110 characters instead of 80.
+    * Use double-quoted strings by default.
