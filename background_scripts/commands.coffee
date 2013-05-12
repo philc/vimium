@@ -110,7 +110,8 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+    "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
+    "Marks.activateGotoMode"]
 
 defaultKeyMappings =
   "?": "showHelp"
