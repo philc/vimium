@@ -50,7 +50,9 @@ task "clean", "removes any js files which were compiled from coffeescript", ->
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw", __dirname]
 
-task "package", "build .crx file", ->
+# This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
+# Vimium and want to distribute their fork?
+task "package-custom-crx", "build .crx file", ->
   invoke "build"
 
   # ugly hack to modify our manifest file on-the-fly
