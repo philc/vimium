@@ -50,7 +50,7 @@ task "clean", "removes any js files which were compiled from coffeescript", ->
 task "autobuild", "continually rebuild coffeescript files using coffee --watch", ->
   coffee = spawn "coffee", ["-cw", __dirname]
 
-task "package", "Builds a zip file in preparation submission to the chrome store. Output is in dist/", ->
+task "package", "Builds a zip file for submission to the Chrome store. The output is in dist/", ->
   # To get exec-sync, `npm install exec-sync`. We use this for synchronously executing shell commands.
   execSync = require("exec-sync")
 
