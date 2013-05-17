@@ -390,6 +390,10 @@ onKeydown = (event) ->
         event.srcElement.blur()
       exitInsertMode()
       DomUtils.suppressEvent(event)
+    else if isEmbed(event.srcElement) and KeyboardUtils.isEscape(event)
+      # this can blur flash player, i didn't test other player
+      # and the code may stay at here is not best, but it work well
+      document.activeElement.blur()
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
@@ -409,6 +413,7 @@ onKeydown = (event) ->
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
+
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
@@ -474,7 +479,8 @@ isFocusable = (element) -> isEditable(element) || isEmbed(element)
 # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
 # unfocused.
 #
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > 0
+# :) not zero!!!!!
+isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > -1
 
 #
 # Input or text elements are considered focusable and able to receieve their own keyboard events,
@@ -838,7 +844,7 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-  
+
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
