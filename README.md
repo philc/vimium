@@ -131,7 +131,7 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-1.43 (unreleased)
+1.43 (05/18/2013)
 
 - Relevancy improvements to the Vomnibar's domain & history search.
 - Added gU, which goes to the root of the current URL.
