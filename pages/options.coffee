@@ -32,9 +32,8 @@ document.addEventListener "DOMContentLoaded", ->
 window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
 onOptionKeyup = (event) ->
-  if (event.target.getAttribute("type") isnt "checkbox" and
-      event.target.getAttribute("savedValue") isnt event.target.value)
-    enableSaveButton()
+  enableSaveButton() if event.target.getAttribute("type") isnt "checkbox" and
+      event.target.getAttribute("savedValue") isnt event.target.value
 
 onDataLoaded = ->
   hide = (el) -> el.parentNode.parentNode.style.display = "none"
@@ -98,7 +97,7 @@ setFieldValue = (field, value) ->
   else
     field.checked = value
 
-toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
+toggleAdvancedOptions = do (advancedMode = false) -> (event) ->
   if advancedMode
     $("advancedOptions").style.display = "none"
     $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"

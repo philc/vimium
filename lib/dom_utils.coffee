@@ -33,12 +33,12 @@ DomUtils =
   makeXPath: (elementArray) ->
     xpath = []
     for i of elementArray
-      xpath.push("//" + elementArray[i], "//xhtml:" + elementArray[i])
+      xpath.push("//#{elementArray[i]}", "//xhtml:#{elementArray[i]}")
     xpath.join(" | ")
 
   evaluateXPath: (xpath, resultType) ->
     namespaceResolver = (namespace) ->
-      if (namespace == "xhtml") then "http://www.w3.org/1999/xhtml" else null
+      if namespace is "xhtml" then "http://www.w3.org/1999/xhtml" else null
     document.evaluate(xpath, document.documentElement, namespaceResolver, resultType, null)
 
   #
@@ -49,34 +49,32 @@ DomUtils =
     clientRects = element.getClientRects()
 
     for clientRect in clientRects
-      if (clientRect.top < -2 || clientRect.top >= window.innerHeight - 4 ||
-          clientRect.left < -2 || clientRect.left  >= window.innerWidth - 4)
-        continue
+      continue if clientRect.top < -2 or clientRect.top >= window.innerHeight - 4 or
+          clientRect.left < -2 or clientRect.left >= window.innerWidth - 4
 
-      if (clientRect.width < 3 || clientRect.height < 3)
-        continue
+      continue if clientRect.width < 3 or clientRect.height < 3
 
       # eliminate invisible elements (see test_harnesses/visibility_test.html)
       computedStyle = window.getComputedStyle(element, null)
-      if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-          computedStyle.getPropertyValue('display') == 'none' ||
-          computedStyle.getPropertyValue('opacity') == '0')
-        continue
+
+      continue if computedStyle.getPropertyValue("visibility") isnt "visible" or
+          computedStyle.getPropertyValue("display") is "none" or
+          computedStyle.getPropertyValue("opacity") is "0"
 
       return clientRect
 
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible
       # but floated elements. Check for this.
-      if (clientRect.width == 0 || clientRect.height == 0)
+      if clientRect.width is 0 or clientRect.height is 0
         for child in element.children
           computedStyle = window.getComputedStyle(child, null)
           # Ignore child elements which are not floated and not absolutely positioned for parent elements with
           # zero width/height
-          continue if (computedStyle.getPropertyValue('float') == 'none' &&
-            computedStyle.getPropertyValue('position') != 'absolute')
+          continue if computedStyle.getPropertyValue("float") is "none" and
+            computedStyle.getPropertyValue("position") isnt "absolute"
           childClientRect = @getVisibleClientRect(child)
-          continue if (childClientRect == null)
+          continue if childClientRect is null
           return childClientRect
     null
 
@@ -85,17 +83,15 @@ DomUtils =
   #
   isSelectable: (element) ->
     selectableTypes = ["search", "text", "password"]
-    (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
-        element.nodeName.toLowerCase() == "textarea"
+    (element.nodeName.toLowerCase() is "input" and selectableTypes.indexOf(element.type) >= 0) or
+        element.nodeName.toLowerCase() is "textarea"
 
   simulateSelect: (element) ->
     element.focus()
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
     element.setSelectionRange(element.value.length, element.value.length)
 
-  simulateClick: (element, modifiers) ->
-    modifiers ||= {}
-
+  simulateClick: (element, modifiers = {}) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
       mouseEvent = document.createEvent("MouseEvents")
@@ -110,10 +106,10 @@ DomUtils =
     flashEl = document.createElement("div")
     flashEl.id = "vimiumFlash"
     flashEl.className = "vimiumReset"
-    flashEl.style.left = rect.left + window.scrollX + "px"
-    flashEl.style.top = rect.top  + window.scrollY  + "px"
-    flashEl.style.width = rect.width + "px"
-    flashEl.style.height = rect.height + "px"
+    flashEl.style.left = "#{rect.left + window.scrollX}px"
+    flashEl.style.top = "#{rect.top + window.scrollY}px"
+    flashEl.style.width = "#{rect.width}px"
+    flashEl.style.height = "#{rect.height}px"
     document.documentElement.appendChild(flashEl)
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 

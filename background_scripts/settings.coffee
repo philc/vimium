@@ -5,11 +5,11 @@
 root = exports ? window
 root.Settings = Settings =
   get: (key) ->
-    if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
+    if key of localStorage then JSON.parse(localStorage[key]) else @defaults[key]
 
   set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
-    if (value == @defaults[key])
+    if value is @defaults[key]
       @clear(key)
     else
       localStorage[key] = JSON.stringify(value)
@@ -65,6 +65,6 @@ root.Settings = Settings =
     settingsVersion: Utils.getCurrentVersion()
 
 # We use settingsVersion to coordinate any necessary schema changes.
-if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
+if Utils.compareVersions("1.42", Settings.get("settingsVersion")) isnt -1
   Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
 Settings.set("settingsVersion", Utils.getCurrentVersion())

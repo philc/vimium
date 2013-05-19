@@ -19,8 +19,7 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
-    @title ||= ""
+  constructor: (@queryTerms, @type, @url, @title = "", @computeRelevancyFunction, @extraRelevancyData) ->
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
@@ -43,8 +42,7 @@ class Suggestion
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
 
   stripTrailingSlash: (url) ->
-    url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
-    url
+    if url[url.length - 1] is "/" then url.substring(url, url.length - 1) else url
 
   # Push the ranges within `string` which match `term` onto `ranges`.
   pushMatchingRanges: (string,term,ranges) ->
@@ -71,10 +69,9 @@ class Suggestion
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
     ranges = []
-    for term in @queryTerms
-      @pushMatchingRanges string, term, ranges
+    @pushMatchingRanges string, term, ranges for term in @queryTerms
 
-    return string if ranges.length == 0
+    return string if ranges.length is 0
 
     ranges = @mergeRanges(ranges.sort (a, b) -> a[0] - b[0])
     # Replace portions of the string from right to left.
@@ -137,7 +134,7 @@ class BookmarkCompleter
     while toVisit.length > 0
       bookmark = toVisit.pop()
       results.push(bookmark)
-      toVisit.push.apply(toVisit, bookmark.children.reverse()) if (bookmark.children)
+      toVisit.push.apply(toVisit, bookmark.children.reverse()) if bookmark.children
     results
 
   computeRelevancy: (suggestion) ->
@@ -146,13 +143,9 @@ class BookmarkCompleter
 class HistoryCompleter
   filter: (queryTerms, onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
-    results = []
+
     HistoryCache.use (history) =>
-      results =
-        if queryTerms.length > 0
-          history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-        else
-          []
+      results = history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
       suggestions = results.map (entry) =>
         new Suggestion(queryTerms, "history", entry.url, entry.title, @computeRelevancy, entry)
       onComplete(suggestions)
@@ -186,7 +179,7 @@ class DomainCompleter
     query = queryTerms[0]
     domainCandidates = (domain for domain of @domains when domain.indexOf(query) >= 0)
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
-    return onComplete([]) if domains.length == 0
+    return onComplete([]) if domains.length is 0
     topDomain = domains[0][0]
     onComplete([new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)])
 
@@ -212,7 +205,7 @@ class DomainCompleter
   onPageVisited: (newPage) ->
     domain = @parseDomain(newPage.url)
     if domain
-      slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
+      slot = @domains[domain] or= { entry: newPage, referenceCount: 0 }
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
       slot.entry = newPage if slot.entry.lastVisitTime < newPage.lastVisitTime
       slot.referenceCount += 1
@@ -223,10 +216,10 @@ class DomainCompleter
     else
       toRemove.urls.forEach (url) =>
         domain = @parseDomain(url)
-        if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
+        if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) is 0
           delete @domains[domain]
 
-  parseDomain: (url) -> url.split("/")[2] || ""
+  parseDomain: (url) -> url.split("/")[2] or ""
 
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
@@ -290,8 +283,7 @@ RankingUtils =
     for term in queryTerms
       regexp = RegexpCache.get(term)
       matchedTerm = false
-      for thing in things
-        matchedTerm ||= thing.match regexp
+      matchedTerm or= thing.match regexp for thing in things
       return false unless matchedTerm
     true
 
@@ -302,8 +294,8 @@ RankingUtils =
     titleScore = 0.0
     for term in queryTerms
       queryLength += term.length
-      urlScore += 1 if url && RankingUtils.matches [term], url
-      titleScore += 1 if title && RankingUtils.matches [term], title
+      urlScore += 1 if url and RankingUtils.matches [term], url
+      titleScore += 1 if title and RankingUtils.matches [term], title
     urlScore = urlScore / queryTerms.length
     urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
     if title
@@ -317,7 +309,7 @@ RankingUtils =
   # a month old are counted as 0. This range is quadratic, so an item from one day ago has a much stronger
   # score than an item from two days ago.
   recencyScore: (lastAccessedTime) ->
-    @oneMonthAgo ||= 1000 * 60 * 60 * 24 * 30
+    @oneMonthAgo or= 1000 * 60 * 60 * 24 * 30
     recency = Date.now() - lastAccessedTime
     recencyDifference = Math.max(0, @oneMonthAgo - recency) / @oneMonthAgo
 
@@ -337,7 +329,7 @@ RegexpCache =
     @initialized = true
     @clear()
     # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    @escapeRegExp or= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 
   clear: -> @cache = {}
 
@@ -349,14 +341,14 @@ RegexpCache =
   #   - string="go", prefix="\b", suffix=""
   #   - this returns regexp matching "google", but not "agog" (the "go" must occur at the start of a word)
   # TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
-  get: (string, prefix="", suffix="") ->
+  get: (string, prefix = "", suffix = "") ->
     @init() unless @initialized
     regexpString = string.replace(@escapeRegExp, "\\$&")
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
     # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
-    @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
+    @cache[regexpString] or= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
@@ -384,7 +376,7 @@ HistoryCache =
       @callbacks = null
 
   compareHistoryByUrl: (a, b) ->
-    return 0 if a.url == b.url
+    return 0 if a.url is b.url
     return 1 if a.url > b.url
     -1
 
@@ -392,7 +384,7 @@ HistoryCache =
   # correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
   onPageVisited: (newPage) ->
     i = HistoryCache.binarySearch(newPage, @history, @compareHistoryByUrl)
-    pageWasFound = (@history[i].url == newPage.url)
+    pageWasFound = (@history[i].url is newPage.url)
     if pageWasFound
       @history[i] = newPage
     else
@@ -405,7 +397,7 @@ HistoryCache =
     else
       toRemove.urls.forEach (url) =>
         i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
-        if i < @history.length and @history[i].url == url
+        if i < @history.length and @history[i].url is url
           @history.splice(i, 1)
 
 # Returns the matching index or the closest matching index if the element is not found. That means you
@@ -415,13 +407,13 @@ HistoryCache.binarySearch = (targetElement, array, compareFunction) ->
   high = array.length - 1
   low = 0
 
-  while (low <= high)
+  while low <= high
     middle = Math.floor((low + high) / 2)
     element = array[middle]
     compareResult = compareFunction(element, targetElement)
-    if (compareResult > 0)
+    if compareResult > 0
       high = middle - 1
-    else if (compareResult < 0)
+    else if compareResult < 0
       low = middle + 1
     else
       return middle

@@ -11,12 +11,11 @@ Commands =
   #  - background: whether this command needs to be run against the background page.
   #  - passCountToFunction: true if this command should have any digits which were typed prior to the
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
-  addCommand: (command, description, options) ->
+  addCommand: (command, description, options = {}) ->
     if command of @availableCommands
-      console.log(command, "is already defined! Check commands.coffee for duplicates.")
+      console.log("#{command} is already defined! Check commands.coffee for duplicates.")
       return
 
-    options ||= {}
     @availableCommands[command] =
       description: description
       isBackgroundCommand: options.background
@@ -25,7 +24,7 @@ Commands =
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
-      console.log(command, "doesn't exist!")
+      console.log("#{command} doesn't exist!")
       return
 
     @keyToCommandRegistry[key] =
@@ -53,34 +52,32 @@ Commands =
     lines = customKeyMappings.split("\n")
 
     for line in lines
-      continue if (line[0] == "\"" || line[0] == "#")
+      continue if line[0] is "\"" or line[0] is "#"
       splitLine = line.split(/\s+/)
 
       lineCommand = splitLine[0]
 
-      if (lineCommand == "map")
-        continue if (splitLine.length != 3)
+      if lineCommand is "map"
+        continue unless splitLine.length is 3
         key = @normalizeKey(splitLine[1])
         vimiumCommand = splitLine[2]
 
         continue unless @availableCommands[vimiumCommand]
 
-        console.log("Mapping", key, "to", vimiumCommand)
+        console.log("Mapping #{key} to #{vimiumCommand}")
         @mapKeyToCommand(key, vimiumCommand)
-      else if (lineCommand == "unmap")
-        continue if (splitLine.length != 2)
+      else if lineCommand is "unmap"
+        continue unless splitLine.length is 2
 
         key = @normalizeKey(splitLine[1])
-        console.log("Unmapping", key)
+        console.log("Unmapping #{key}")
         @unmapKey(key)
-      else if (lineCommand == "unmapAll")
+      else if lineCommand is "unmapAll"
         @keyToCommandRegistry = {}
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
-
-    for key of defaultKeyMappings
-      @mapKeyToCommand(key, defaultKeyMappings[key])
+    @mapKeyToCommand(key, defaultKeyMappings[key]) for key of defaultKeyMappings
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -206,7 +203,7 @@ commandDescriptions =
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
@@ -214,9 +211,9 @@ commandDescriptions =
 
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }]
 
-  'LinkHints.activateMode': ["Open a link in the current tab"]
-  'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
-  'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
+  "LinkHints.activateMode": ["Open a link in the current tab"]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
+  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
 

@@ -11,21 +11,21 @@ root.init = ->
 
 scrollProperties =
   x: {
-    axisName: 'scrollLeft'
-    max: 'scrollWidth'
-    viewSize: 'clientHeight'
+    axisName: "scrollLeft"
+    max: "scrollWidth"
+    viewSize: "clientHeight"
   }
   y: {
-    axisName: 'scrollTop'
-    max: 'scrollHeight'
-    viewSize: 'clientWidth'
+    axisName: "scrollTop"
+    max: "scrollHeight"
+    viewSize: "clientWidth"
   }
 
 getDimension = (el, direction, name) ->
   # the clientSizes of the body are the dimensions of the entire page, but the viewport should only be the
   # part visible through the window
-  if name is 'viewSize' and el is document.body
-    if direction is 'x' then window.innerWidth else window.innerHeight
+  if name is "viewSize" and el is document.body
+    if direction is "x" then window.innerWidth else window.innerHeight
   else
     el[scrollProperties[direction][name]]
 
@@ -41,41 +41,41 @@ ensureScrollChange = (direction, changeFn) ->
     changeFn(element, axisName)
     lastElement = element
     # we may have an orphaned element. if so, just scroll the body element.
-    element = element.parentElement || document.body
-    break unless (lastElement[axisName] == oldScrollValue && lastElement != document.body)
+    element = element.parentElement or document.body
+    break unless lastElement[axisName] is oldScrollValue and lastElement isnt document.body
 
   # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
   # position will not provide any more visual feedback to the user. therefore we deactivate it so that
   # subsequent scrolls only move the parent element.
   rect = activatedElement.getBoundingClientRect()
-  if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
+  if rect.bottom < 0 or rect.top > window.innerHeight or rect.right < 0 or rect.left > window.innerWidth
     activatedElement = lastElement
 
 # scroll the active element in :direction by :amount * :factor.
 # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
 root.scrollBy = (direction, amount, factor = 1) ->
   # if this is called before domReady, just use the window scroll function
-  if (!document.body and amount instanceof Number)
-    if (direction == "x")
+  if not document.body and amount instanceof Number
+    if direction is "x"
       window.scrollBy(amount, 0)
     else
       window.scrollBy(0, amount)
     return
 
-  if (!activatedElement || !isRendered(activatedElement))
+  unless activatedElement and isRendered(activatedElement)
     activatedElement = document.body
 
   amount = getDimension activatedElement, direction, amount if Utils.isString amount
 
   amount *= factor
 
-  if (amount != 0)
+  unless amount is 0
     ensureScrollChange direction, (element, axisName) -> element[axisName] += amount
 
 root.scrollTo = (direction, pos) ->
   return unless document.body
 
-  if (!activatedElement || !isRendered(activatedElement))
+  unless activatedElement and isRendered(activatedElement)
     activatedElement = document.body
 
   pos = getDimension activatedElement, direction, pos if Utils.isString pos
@@ -85,5 +85,5 @@ root.scrollTo = (direction, pos) ->
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
   computedStyle = window.getComputedStyle(element, null)
-  return !(computedStyle.getPropertyValue("visibility") != "visible" ||
-      computedStyle.getPropertyValue("display") == "none")
+  return computedStyle.getPropertyValue("visibility") is "visible" or
+      computedStyle.getPropertyValue("display") isnt "none"

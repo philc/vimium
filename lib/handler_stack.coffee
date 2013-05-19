@@ -21,10 +21,10 @@ class root.HandlerStack
       handler = @stack[i]
       # We need to check for existence of handler because the last function call may have caused the release
       # of more than one handler.
-      if handler && handler[type]
+      if handler?[type]
         @currentId = handler.id
-        passThrough = handler[type].call(@, event)
-        if not passThrough
+        passThrough = handler[type].call(this, event)
+        unless passThrough
           DomUtils.suppressEvent(event)
           return false
     true
@@ -32,6 +32,6 @@ class root.HandlerStack
   remove: (id = @currentId) ->
     for i in [(@stack.length - 1)..0] by -1
       handler = @stack[i]
-      if handler.id == id
+      if handler.id is id
         @stack.splice(i, 1)
         break

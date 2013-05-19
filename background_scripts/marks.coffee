@@ -9,17 +9,14 @@ root.create = (req, sender) ->
     scrollY: req.scrollY
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
-  if changeInfo.url?
-    removeMarksForTab tabId
+  removeMarksForTab tabId if changeInfo.url?
 
 chrome.tabs.onRemoved.addListener (tabId, removeInfo) ->
   # XXX(jez): what about restored tabs?
   removeMarksForTab tabId
 
 removeMarksForTab = (id) ->
-  for markName, mark of marks
-    if mark.tabId is id
-      delete marks[markName]
+  (delete marks[markName] if mark.tabId is id) for markName, mark of marks
 
 root.goto = (req, sender) ->
   mark = marks[req.markName]
