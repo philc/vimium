@@ -24,11 +24,11 @@ removeMarksForTab = (id) ->
 root.goto = (req, sender) ->
   mark = marks[req.markName]
   chrome.tabs.update mark.tabId, selected: true
-  chrome.tabs.sendRequest mark.tabId,
+  chrome.tabs.sendMessage mark.tabId,
     name: "setScrollPosition"
     scrollX: mark.scrollX
     scrollY: mark.scrollY
-  chrome.tabs.sendRequest mark.tabId,
+  chrome.tabs.sendMessage mark.tabId,
     name: "showHUDforDuration",
     text: "Jumped to global mark '#{req.markName}'"
     duration: 1000
