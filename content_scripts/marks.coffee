@@ -6,7 +6,7 @@ root.activateCreateMode = ->
     return unless keyChar isnt ""
 
     if /[A-Z]/.test keyChar
-      chrome.extension.sendRequest {
+      chrome.extension.sendMessage {
         handler: 'createMark',
         markName: keyChar
         scrollX: window.scrollX,
@@ -29,7 +29,7 @@ root.activateGotoMode = ->
     return unless keyChar isnt ""
 
     if /[A-Z]/.test keyChar
-      chrome.extension.sendRequest
+      chrome.extension.sendMessage
         handler: 'gotoMark'
         markName: keyChar
     else if /[a-z]/.test keyChar
