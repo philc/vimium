@@ -145,7 +145,7 @@ fetchFileContents = (extensionFileName) ->
 #
 # Returns the keys that can complete a valid command given the current key queue.
 #
-getCompletionKeysRequest = (request, keysToCheck = "") ->
+getCompletionKeysRequest = (request, keysToCheck) ->
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
@@ -374,7 +374,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   else
     tabQueue[openTabInfo.windowId] = [openTabInfo]
 
-  # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
+  # Keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
   # scroll position)
   tabInfoMap.deletor = -> delete tabInfoMap[tabId]
   setTimeout tabInfoMap.deletor, 1000
@@ -408,7 +408,7 @@ getActualKeyStrokeLength = (key) ->
 
 populateValidFirstKeys = ->
   for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
+    if (getActualKeyStrokeLength(key) >= 2)
       validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
 
 populateSingleKeyCommands = ->
@@ -428,17 +428,19 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
 # Generates a list of keys that can complete a valid command given the current key queue or the one passed in
 generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueue)
+  splitHash = splitKeyQueue(keysToCheck ? keyQueue)
   command = splitHash.command
   count = splitHash.count
 
-  completionKeys = singleKeyCommands.slice(0)
+  completionKeys = singleKeyCommands
 
-  if (getActualKeyStrokeLength(command) == 1)
+  if getActualKeyStrokeLength(command) > 0
     for key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
+      continue unless key.startsWith command
+      suffix = key[command.length..]
+      continue unless suffix
+      console.log("matched {" + key + "} for keys {" + command + "}, suf = {" + suffix + "}")
+      completionKeys.push(splitKeyIntoFirstAndSecond(suffix).first)
 
   completionKeys
 
@@ -455,9 +457,15 @@ handleKeyDown = (request, port) ->
     console.log("clearing keyQueue")
     keyQueue = ""
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
-    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
+    keyQueue += key
+    console.log("checking keyQueue: [" +  keyQueue + "]")
+    keyQueue = checkKeyQueue(keyQueue, port.sender.tab.id, request.frameId)
+    console.log("new keyQueue: [" + keyQueue + "]")
+
+isValidCompletion = (keysToCheck) ->
+  for key of Commands.keyToCommandRegistry
+    return true if key.startsWith keysToCheck
+  false
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false
@@ -466,39 +474,48 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   count = splitHash.count
 
   return keysToCheck if command.length == 0
+
   count = 1 if isNaN(count)
+  newKeyQueue = ""
+  maybeCommand = command
 
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
+  # Initial command may be multi-character. We go through every suffix (starting from initial, full command)
+  # and check if the suffix is a valid command, or a valid command completion.
+  #
+  # Example: 
+  #
+  # Current key queue is "xabc", valid commands are { "xabd", "bcd" }. First we check "xabc", it doesn't match
+  # anything, then we check "abc", it doesn't match anything, then we check "bc", and it's a valid completion
+  # for "bcd" command.
+  while maybeCommand
+    console.log("checking command {" + maybeCommand + "}")
 
-    if !registryEntry.isBackgroundCommand
-      chrome.tabs.sendMessage(tabId,
-        name: "executePageCommand",
-        command: registryEntry.command,
-        frameId: frameId,
-        count: count,
-        passCountToFunction: registryEntry.passCountToFunction,
-        completionKeys: generateCompletionKeys(""))
-      refreshedCompletionKeys = true
-    else
-      if registryEntry.passCountToFunction
-        BackgroundCommands[registryEntry.command](count)
-      else if registryEntry.noRepeat
-        BackgroundCommands[registryEntry.command]()
+    if registryEntry = Commands.keyToCommandRegistry[maybeCommand]
+      if not registryEntry.isBackgroundCommand
+        chrome.tabs.sendMessage(tabId,
+          name: "executePageCommand",
+          command: registryEntry.command,
+          frameId: frameId,
+          count: count,
+          passCountToFunction: registryEntry.passCountToFunction,
+          completionKeys: generateCompletionKeys(""))
+        refreshedCompletionKeys = true
       else
-        repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
+        if registryEntry.passCountToFunction
+          BackgroundCommands[registryEntry.command](count)
+        else if registryEntry.noRepeat
+          BackgroundCommands[registryEntry.command]()
+        else
+          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
-    newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
-    splitKey = splitKeyIntoFirstAndSecond(command)
+      newKeyQueue = ""
+      break
+    else if isValidCompletion maybeCommand
+      newKeyQueue = if maybeCommand == command then count.toString() + maybeCommand else maybeCommand
+      break
 
-    # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
-    else
-      newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
-  else
-    newKeyQueue = (if validFirstKeys[command] then count.toString() + command else "")
+    console.log("no matches for {" + maybeCommand + "} command")
+    maybeCommand = splitKeyIntoFirstAndSecond(maybeCommand).second
 
   # If we haven't sent the completion keys piggybacked on executePageCommand,
   # send them by themselves.
@@ -543,7 +560,7 @@ registerFrame = (request, sender) ->
 handleFrameFocused = (request, sender) -> focusedFrame = request.frameId
 
 getCurrFrameIndex = (frames) ->
-  for i in [0...frames.length]
+  for i in [0..frames.length]
     return i if frames[i].id == focusedFrame
   frames.length + 1
 
