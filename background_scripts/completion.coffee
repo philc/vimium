@@ -290,7 +290,7 @@ RankingUtils =
     for term in queryTerms
       regexp = RegexpCache.get(term)
       matchedTerm = false
-      for thing in things
+      for thing in @removeAccents(things)
         matchedTerm ||= thing.match regexp
       return false unless matchedTerm
     true
