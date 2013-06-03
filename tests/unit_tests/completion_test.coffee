@@ -278,6 +278,12 @@ context "RankingUtils",
   should "do a match with regexp meta-characters (negative)", ->
     assert.isFalse RankingUtils.matches(["ma.io"], "mario")
 
+  should "be able to remove accented letters", ->
+    assert.equal ['rericha', 'ceska'].toString(), RankingUtils.removeAccents(['řeřicha', 'čéška']).toString()
+
+  should "ignore accented leters", ->
+    assert.isTrue RankingUtils.matches(["rericha"], "řeřicha")
+
   should "do a smartcase match on full term", ->
     assert.isTrue RankingUtils.matches(["Mario"], "Mario")
     assert.isFalse RankingUtils.matches(["Mario"], "mario")
