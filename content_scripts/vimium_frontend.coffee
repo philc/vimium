@@ -804,12 +804,12 @@ findAndFollowRel = (value) ->
 
 window.goPrevious = ->
   previousPatterns = settings.get("previousPatterns") || ""
-  previousStrings = previousPatterns.split(",").filter((s) -> s.length)
+  previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
 window.goNext = ->
   nextPatterns = settings.get("nextPatterns") || ""
-  nextStrings = nextPatterns.split(",").filter((s) -> s.length)
+  nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
