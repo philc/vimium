@@ -131,6 +131,17 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+1.43 (05/18/2013)
+
+- Relevancy improvements to the Vomnibar's domain & history search.
+- Added gU, which goes to the root of the current URL.
+- Added yt, which duplicates the current tab.
+- Added W, which moves the current tab to a new window.
+- Added marks for saving and jumping to sections of a page. mX to set a mark and `X to return to it.
+- Added "LinkHints.activateModeToOpenIncognito", currently an advanced, unbound command.
+- Disallowed repeat tab closings, since this causes trouble for many people.
+- Update our Chrome APIs so Vimium works on Chrome 28+.
+- Bugfixes.
 
 1.42 (11/03/2012)
 

@@ -118,10 +118,10 @@ initializePreDomReady = ->
     getActiveState: -> { enabled: isEnabledForUrl }
     disableVimium: disableVimium
 
-  chrome.extension.onRequest.addListener (request, sender, sendResponse) ->
+  chrome.extension.onMessage.addListener (request, sender, sendResponse) ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    return unless sender.tab?.url.startsWith 'chrome-extension://'
+    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState'
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
@@ -158,7 +158,7 @@ disableVimium = ->
 window.addEventListener "focus", ->
   # settings may have changed since the frame last had focus
   settings.load()
-  chrome.extension.sendRequest({ handler: "frameFocused", frameId: frameId })
+  chrome.extension.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
 # Initialization tasks that must wait for the document to be ready.
@@ -174,7 +174,7 @@ initializeOnDomReady = ->
 # This is a little hacky but sometimes the size wasn't available on domReady?
 registerFrameIfSizeAvailable = (is_top) ->
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.extension.sendRequest(
+    chrome.extension.sendMessage(
       handler: "registerFrame"
       frameId: frameId
       area: innerWidth * innerHeight
@@ -250,19 +250,19 @@ extend window,
     window.location.href = window.location.origin
 
   toggleViewSource: ->
-    chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
+    chrome.extension.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
       if (url.substr(0, 12) == "view-source:")
         url = url.substr(12, url.length - 12)
       else
         url = "view-source:" + url
-      chrome.extension.sendRequest({ handler: "openUrlInNewTab", url: url, selected: true })
+      chrome.extension.sendMessage({ handler: "openUrlInNewTab", url: url, selected: true })
 
   copyCurrentUrl: ->
     # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
     # page to copy.
     # http://code.google.com/p/chromium/issues/detail?id=55188
-    chrome.extension.sendRequest { handler: "getCurrentTabUrl" }, (url) ->
-      chrome.extension.sendRequest { handler: "copyToClipboard", data: url }
+    chrome.extension.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
+      chrome.extension.sendMessage { handler: "copyToClipboard", data: url }
 
     HUD.showForDuration("Yanked URL", 1000)
 
@@ -437,7 +437,7 @@ onKeyup = (event) -> return unless handlerStack.bubbleEvent('keyup', event)
 checkIfEnabledForUrl = ->
   url = window.location.toString()
 
-  chrome.extension.sendRequest { handler: "isEnabledForUrl", url: url }, (response) ->
+  chrome.extension.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
       initializeWhenEnabled()
@@ -452,7 +452,7 @@ refreshCompletionKeys = (response) ->
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
   else
-    chrome.extension.sendRequest({ handler: "getCompletionKeys" }, refreshCompletionKeys)
+    chrome.extension.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
@@ -804,12 +804,12 @@ findAndFollowRel = (value) ->
 
 window.goPrevious = ->
   previousPatterns = settings.get("previousPatterns") || ""
-  previousStrings = previousPatterns.split(",").filter((s) -> s.length)
+  previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
 window.goNext = ->
   nextPatterns = settings.get("nextPatterns") || ""
-  nextStrings = nextPatterns.split(",").filter((s) -> s.length)
+  nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
@@ -869,7 +869,7 @@ window.showHelpDialog = (html, fid) ->
   VimiumHelpDialog.init()
 
   container.getElementsByClassName("optionsPage")[0].addEventListener("click",
-    -> chrome.extension.sendRequest({ handler: "openOptionsPageInNewTab" })
+    -> chrome.extension.sendMessage({ handler: "openOptionsPageInNewTab" })
     false)
 
 
@@ -926,7 +926,7 @@ HUD =
 
   onUpdateLinkClicked: (event) ->
     HUD.hideUpgradeNotification()
-    chrome.extension.sendRequest({ handler: "upgradeNotificationClosed" })
+    chrome.extension.sendMessage({ handler: "upgradeNotificationClosed" })
 
   hideUpgradeNotification: (clickEvent) ->
     Tween.fade(HUD.upgradeNotificationElement(), 0, 150,
@@ -998,7 +998,7 @@ initializePreDomReady()
 window.addEventListener("DOMContentLoaded", initializeOnDomReady)
 
 window.onbeforeunload = ->
-  chrome.extension.sendRequest(
+  chrome.extension.sendMessage(
     handler: "updateScrollPosition"
     scrollX: window.scrollX
     scrollY: window.scrollY)

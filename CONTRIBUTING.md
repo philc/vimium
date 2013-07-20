@@ -6,9 +6,9 @@ discussion on the issues tracker or on the [mailing list](http://groups.google.c
 it mirrors a similar feature in another browser or in Vim itself, let us know! Once you've picked something to
 work on, add a comment to the respective issue so others don't duplicate your effort.
 
-## Reporting Issues 
+## Reporting Issues
 
-Please include the following when reporting an issue: 
+Please include the following when reporting an issue:
 
  1. Chrome and OS Version: `chrome://version`
  1. Vimium Version: `chrome://extensions`
@@ -31,6 +31,7 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
 
  1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. [Install PhantomJS.](http://phantomjs.org/download.html)
+ 1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
 
 ## Code Coverage
@@ -51,5 +52,8 @@ CREDITS file with your patch.
 
 ## Coding Style
 
-  * Follow the style already present in the file.
-  * Ensure your lines don't exceed 110 characters.
+  * We follow the recommendations from
+    [this style guide](https://github.com/polarmobile/coffeescript-style-guide).
+  * We follow two major differences from this style guide:
+    * Wrap lines at 110 characters instead of 80.
+    * Use double-quoted strings by default.
