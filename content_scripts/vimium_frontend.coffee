@@ -266,6 +266,12 @@ extend window,
 
     HUD.showForDuration("Yanked URL", 1000)
 
+  copyCurrentTitle: ->
+    chrome.extension.sendMessage { handler: "getCurrentTabTitle" }, (title) ->
+      chrome.extension.sendMessage { handler: "copyToClipboard", data: title }
+
+    HUD.showForDuration("Yanked title", 1000)
+
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.

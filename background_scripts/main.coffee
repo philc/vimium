@@ -67,6 +67,11 @@ chrome.extension.onMessage.addListener((request, sender, sendResponse) ->
 getCurrentTabUrl = (request, sender) -> sender.tab.url
 
 #
+# Get the current tab's title (might be an empty string)
+#
+getCurrentTabTitle = (request, sender) -> sender.tab.title
+
+#
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL.
 #
 isEnabledForUrl = (request) ->
@@ -556,6 +561,7 @@ portHandlers =
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
   getCurrentTabUrl: getCurrentTabUrl,
+  getCurrentTabTitle: getCurrentTabTitle,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInIncognito: openUrlInIncognito,
   openUrlInCurrentTab: openUrlInCurrentTab,

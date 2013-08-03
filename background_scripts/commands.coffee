@@ -89,7 +89,7 @@ Commands =
       ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
        "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
        "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-       "reload", "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
+       "reload", "toggleViewSource", "copyCurrentUrl", "copyCurrentTitle", "LinkHints.activateModeToCopyLinkUrl",
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
@@ -152,6 +152,7 @@ defaultKeyMappings =
   "]]": "goNext"
 
   "yy": "copyCurrentUrl"
+  "yY": "copyCurrentTitle"
   "yf": "LinkHints.activateModeToCopyLinkUrl"
 
   "p": "openCopiedUrlInCurrentTab"
@@ -206,6 +207,7 @@ commandDescriptions =
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
+  copyCurrentTitle: ["Copy the current title to the clipboard"]
   'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
