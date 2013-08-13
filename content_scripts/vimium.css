@@ -265,7 +265,8 @@ div.vimiumHUD a.close-button:hover {
   -webkit-user-select:none;
 }
 
-body.vimiumFindMode ::selection {
+body.vimiumFindMode ::selection,
+body.vimiumVisualMode ::selection {
   background: #ff9632;
 };
 

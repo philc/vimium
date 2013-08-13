@@ -101,6 +101,8 @@ Commands =
       ["goBack", "goForward"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab", "moveTabToNewWindow"]
+    visualMode:
+      ["VisualMode.toggleVisualMode"]
     misc:
       ["showHelp"]
 
@@ -129,6 +131,7 @@ defaultKeyMappings =
   "d": "scrollPageDown"
   "u": "scrollPageUp"
   "r": "reload"
+  "v": "VisualMode.toggleVisualMode"
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
@@ -203,6 +206,7 @@ commandDescriptions =
   scrollFullPageUp: ["Scroll a full page up"]
 
   reload: ["Reload the page"]
+  'VisualMode.toggleVisualMode': ["Toggle Visual Mode"]
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
