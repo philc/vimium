@@ -38,6 +38,7 @@ Navigating the current page:
     f       open a link in the current tab
     F       open a link in a new tab
     r       reload
+    R       reload force get -- no cache
     gs      view source
     i       enter insert mode -- all commands will be ignored until you hit esc to exit
     yy      copy the current url to the clipboard

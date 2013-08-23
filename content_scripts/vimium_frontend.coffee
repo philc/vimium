@@ -232,6 +232,7 @@ extend window,
 
 extend window,
   reload: -> window.location.reload()
+  reloadForceGet: -> window.location.reload(true)
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
 

@@ -89,7 +89,7 @@ Commands =
       ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
        "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
        "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-       "reload", "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
+       "reload", "reloadForceGet", "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
        "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot",
        "enterInsertMode", "focusInput",
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
@@ -129,6 +129,7 @@ defaultKeyMappings =
   "d": "scrollPageDown"
   "u": "scrollPageUp"
   "r": "reload"
+  "R": "reloadForceGet"
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
@@ -203,6 +204,7 @@ commandDescriptions =
   scrollFullPageUp: ["Scroll a full page up"]
 
   reload: ["Reload the page"]
+  reloadForceGet: ["Reload the page force get - no cache"]
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
