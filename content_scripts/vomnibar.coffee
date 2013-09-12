@@ -115,7 +115,7 @@ class VomnibarUI
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
         @hide()
-        chrome.extension.sendMessage({
+        chrome.runtime.sendMessage({
           handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
           url: query })
       else
@@ -186,9 +186,9 @@ class BackgroundCompleter
   # - name: The background page completer that you want to interface with. Either "omni", "tabs", or
   # "bookmarks". */
   constructor: (@name) ->
-    @filterPort = chrome.extension.connect({ name: "filterCompleter" })
+    @filterPort = chrome.runtime.connect({ name: "filterCompleter" })
 
-  refresh: -> chrome.extension.sendMessage({ handler: "refreshCompleter", name: @name })
+  refresh: -> chrome.runtime.sendMessage({ handler: "refreshCompleter", name: @name })
 
   filter: (query, callback) ->
     id = Utils.createUniqueId()
@@ -220,12 +220,12 @@ extend BackgroundCompleter,
         script.textContent = decodeURIComponent(url["javascript:".length..])
         (document.head || document.documentElement).appendChild script
       else
-        chrome.extension.sendMessage(
+        chrome.runtime.sendMessage(
           handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
           url: url,
           selected: openInNewTab)
 
-    switchToTab: (tabId) -> chrome.extension.sendMessage({ handler: "selectSpecificTab", id: tabId })
+    switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
 root = exports ? window
 root.Vomnibar = Vomnibar
