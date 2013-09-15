@@ -839,7 +839,7 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-  
+
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
@@ -908,7 +908,7 @@ HUD =
   show: (text) ->
     return unless HUD.enabled()
     clearTimeout(HUD._showForDurationTimerId)
-    HUD.displayElement().innerHTML = text
+    HUD.displayElement().innerText = text
     clearInterval(HUD._tweenId)
     HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150)
     HUD.displayElement().style.display = ""
