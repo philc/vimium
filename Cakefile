@@ -1,9 +1,15 @@
+util = require "util"
 fs = require "fs"
 path = require "path"
 child_process = require "child_process"
 {Utils} = require './lib/utils'
 
 spawn = (procName, optArray, silent=false) ->
+  if process.platform is "win32"
+    # if win32, prefix arguments with "/c {original command}"
+    # e.g. "coffee -c c:\git\vimium" becomes "cmd.exe /c coffee -c c:\git\vimium"
+    optArray.unshift "/c", procName
+    procName = "cmd.exe"
   proc = child_process.spawn procName, optArray
   unless silent
     proc.stdout.on 'data', (data) -> process.stdout.write data
