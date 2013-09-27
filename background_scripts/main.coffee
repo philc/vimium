@@ -237,6 +237,11 @@ BackgroundCommands =
   removeTab: ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id))
+  removeTabAndGoLeft: ->
+    chrome.tabs.getSelected(null, (tab) ->
+      tabToBeClosed = tab.id
+      @previousTab =>
+        chrome.tabs.remove(tabToBeClosed))
   restoreTab: (callback) ->
     # TODO(ilya): Should this be getLastFocused instead?
     chrome.windows.getCurrent((window) ->

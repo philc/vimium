@@ -101,7 +101,7 @@ Commands =
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab", "moveTabToNewWindow"]
+      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "removeTabAndGoLeft", "restoreTab", "moveTabToNewWindow"]
     misc:
       ["showHelp"]
 
@@ -244,6 +244,7 @@ commandDescriptions =
   createTab: ["Create new tab", { background: true }]
   duplicateTab: ["Duplicate current tab", { background: true }]
   removeTab: ["Close current tab", { background: true, noRepeat: true }]
+  removeTabAndGoLeft: ["Close current tab, and end up at the previous tab", { background: true, noRepeat: true }]
   restoreTab: ["Restore closed tab", { background: true }]
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
 
