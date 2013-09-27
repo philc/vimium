@@ -95,6 +95,7 @@ Commands =
        "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
        "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
        "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
+       "Vomnibar.activateWithCurrentUrl", "Vomnibar.activateWithCurrentUrlInNewTab",
        "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -165,15 +166,15 @@ defaultKeyMappings =
   "g$": "lastTab"
 
   "W": "moveTabToNewWindow"
-  "t": "createTab"
   "yt": "duplicateTab"
   "x": "removeTab"
   "X": "restoreTab"
 
   "o": "Vomnibar.activate"
-  "O": "Vomnibar.activateInNewTab"
+  "O": "Vomnibar.activateWithCurrentUrl"
 
-  "T": "Vomnibar.activateTabSelection"
+  "t": "Vomnibar.activateTabSelection"
+  "T": "Vomnibar.activateWithCurrentUrlInNewTab"
 
   "b": "Vomnibar.activateBookmarks"
   "B": "Vomnibar.activateBookmarksInNewTab"
@@ -247,6 +248,8 @@ commandDescriptions =
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
+  "Vomnibar.activateWithCurrentUrl": ["Prompt Vomnibar with current URL"]
+  "Vomnibar.activateWithCurrentUrlInNewTab": ["Prompt Vomnibar with current URL, in a new tab"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
   "Vomnibar.activateTabSelection": ["Search through your open tabs"]
   "Vomnibar.activateBookmarks": ["Open a bookmark"]

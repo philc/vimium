@@ -28,6 +28,12 @@ Vomnibar =
   activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
   activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
   activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, true)
+  activateWithCurrentUrl: -> 
+    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) =>
+      @activateWithCompleter("omni", 100, url)
+  activateWithCurrentUrlInNewTab: -> 
+    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) =>
+      @activateWithCompleter("omni", 100, url, false, true)
   getUI: -> @vomnibarUI
 
 
