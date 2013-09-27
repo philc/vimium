@@ -166,15 +166,15 @@ defaultKeyMappings =
   "g$": "lastTab"
 
   "W": "moveTabToNewWindow"
+  "t": "createTab"
   "yt": "duplicateTab"
   "x": "removeTab"
   "X": "restoreTab"
 
   "o": "Vomnibar.activate"
-  "O": "Vomnibar.activateWithCurrentUrl"
+  "O": "Vomnibar.activateInNewTab"
 
-  "t": "Vomnibar.activateTabSelection"
-  "T": "Vomnibar.activateWithCurrentUrlInNewTab"
+  "T": "Vomnibar.activateTabSelection"
 
   "b": "Vomnibar.activateBookmarks"
   "B": "Vomnibar.activateBookmarksInNewTab"
