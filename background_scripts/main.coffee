@@ -257,6 +257,9 @@ BackgroundCommands =
         callback()))
   openCopiedUrlInCurrentTab: (request) -> openUrlInCurrentTab({ url: Clipboard.paste() })
   openCopiedUrlInNewTab: (request) -> openUrlInNewTab({ url: Clipboard.paste() })
+  togglePinTab: (request) ->
+    chrome.tabs.getSelected(null, (tab) ->
+      chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
   showHelp: (callback, frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.sendMessage(tab.id,

@@ -74,6 +74,7 @@ Manipulating tabs:
     x          close current tab
     X          restore closed tab (i.e. unwind the 'x' command)
     T          search through your open tabs
+    .          pin/unpin current tab
 
 Additional advanced browsing commands:
 

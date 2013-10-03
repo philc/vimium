@@ -100,7 +100,7 @@ Commands =
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab", "moveTabToNewWindow"]
+      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab", "moveTabToNewWindow", "togglePinTab"]
     misc:
       ["showHelp"]
 
@@ -169,6 +169,8 @@ defaultKeyMappings =
   "yt": "duplicateTab"
   "x": "removeTab"
   "X": "restoreTab"
+
+  ".": "togglePinTab"
 
   "o": "Vomnibar.activate"
   "O": "Vomnibar.activateInNewTab"
@@ -245,6 +247,7 @@ commandDescriptions =
   removeTab: ["Close current tab", { background: true, noRepeat: true }]
   restoreTab: ["Restore closed tab", { background: true }]
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
+  togglePinTab: ["Pin/unpin current tab", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
