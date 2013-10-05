@@ -79,7 +79,7 @@ Additional advanced browsing commands:
 
     ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
     [[      Follow the link labeled 'previous' or '<'. Helpful for browsing paginated sites.
-    <a-f>   open multiple links in a new tab
+    <alt>-f open multiple links in a new tab
     gi      focus the first (or n-th) text input box on the page
     gu      go up one level in the URL hierarchy
     gU      go up to root of the URL hierarchy
