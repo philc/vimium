@@ -1,5 +1,7 @@
 require "./test_helper.js"
 extend(global, require "../../lib/utils.js")
+Utils.getCurrentVersion = -> '1.43'
+global.localStorage = {}
 extend(global, require "../../background_scripts/settings.js")
 
 context "isUrl",
