@@ -77,12 +77,11 @@ LinkHints =
     })
 
   setOpenLinkMode: (@mode) ->
-    i18n = chrome.i18n.getMessage
     if @mode is OPEN_IN_NEW_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_TAB
-        HUD.show(i18n("open_in_new_tab"))
+        HUD.show(chrome.i18n.getMessage("open_in_new_tab"))
       else
-        HUD.show(i18n("open_with_queue"))
+        HUD.show(chrome.i18n.getMessage("open_with_queue"))
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -90,18 +89,18 @@ LinkHints =
           metaKey: KeyboardUtils.platform == "Mac",
           ctrlKey: KeyboardUtils.platform != "Mac" })
     else if @mode is COPY_LINK_URL
-      HUD.show(i18n("copy_link_url"))
+      HUD.show(chrome.i18n.getMessage("copy_link_url"))
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
     else if @mode is OPEN_INCOGNITO
-      HUD.show(i18n("open_incognito"))
+      HUD.show(chrome.i18n.getMessage("open_incognito"))
 
       @linkActivator = (link) ->
         chrome.runtime.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
     else # OPEN_IN_CURRENT_TAB
-      HUD.show(i18n("open_in_current_tab"))
+      HUD.show(chrome.i18n.getMessage("open_in_current_tab"))
       # When we're opening the link in the current tab, don't navigate to the selected link immediately
       # we want to give the user some time to notice which link has received focus.
       @linkActivator = (link) -> setTimeout(DomUtils.simulateClick.bind(DomUtils, link), 400)

@@ -17,5 +17,8 @@ root.chrome = {
     }
     sendMessage: ->
     getManifest: ->
+  },
+  i18n: {
+    getMessage: ->
   }
 }
