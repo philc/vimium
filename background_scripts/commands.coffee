@@ -183,79 +183,80 @@ defaultKeyMappings =
   "m": "Marks.activateCreateMode"
   "`": "Marks.activateGotoMode"
 
+i18n = chrome.i18n.getMessage
 
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
   # Navigating the current page
-  showHelp: ["Show help", { background: true }]
-  scrollDown: ["Scroll down"]
-  scrollUp: ["Scroll up"]
-  scrollLeft: ["Scroll left"]
-  scrollRight: ["Scroll right"]
-  scrollToTop: ["Scroll to the top of the page"]
-  scrollToBottom: ["Scroll to the bottom of the page"]
-  scrollToLeft: ["Scroll all the way to the left"]
+  showHelp: [i18n("show_help"), { background: true }]
+  scrollDown: [i18n("scroll_down")]
+  scrollUp: [i18n("scroll_up")]
+  scrollLeft: [i18n("scroll_left")]
+  scrollRight: [i18n("scroll_right")]
+  scrollToTop: [i18n("scroll_to_top")]
+  scrollToBottom: [i18n("scroll_to_bottom")]
+  scrollToLeft: [i18n("scroll_to_left")]
 
-  scrollToRight: ["Scroll all the way to the right"]
-  scrollPageDown: ["Scroll a page down"]
-  scrollPageUp: ["Scroll a page up"]
-  scrollFullPageDown: ["Scroll a full page down"]
-  scrollFullPageUp: ["Scroll a full page up"]
+  scrollToRight: [i18n("scroll_to_right")]
+  scrollPageDown: [i18n("scroll_page_down")]
+  scrollPageUp: [i18n("scroll_page_up")]
+  scrollFullPageDown: [i18n("scroll_full_page_down")]
+  scrollFullPageUp: [i18n("scroll_full_page_up")]
 
-  reload: ["Reload the page"]
-  toggleViewSource: ["View page source"]
+  reload: [i18n("reload")]
+  toggleViewSource: [i18n("toggle_view_source")]
 
-  copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
+  copyCurrentUrl: [i18n("copy_current_url")]
+  'LinkHints.activateModeToCopyLinkUrl': [i18n("link_hints_activate_mode_to_copy_link_url")]
+  openCopiedUrlInCurrentTab: [i18n("open_copied_url_in_current_tab"), { background: true }]
+  openCopiedUrlInNewTab: [i18n("open_copied_url_in_new_tab"), { background: true }]
 
-  enterInsertMode: ["Enter insert mode"]
+  enterInsertMode: [i18n("enter_insert_mode")]
 
-  focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }]
+  focusInput: [i18n("focus_input"), { passCountToFunction: true }]
 
-  'LinkHints.activateMode': ["Open a link in the current tab"]
-  'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
-  'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
+  'LinkHints.activateMode': [i18n("link_hints_activate_mode")]
+  'LinkHints.activateModeToOpenInNewTab': [i18n("link_hints_activate_mode_to_open_in_new_tab")]
+  'LinkHints.activateModeWithQueue': [i18n("link_hints_activate_mode_with_queue")]
 
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateModeToOpenIncognito": [i18n("link_hints_activate_mode_to_open_incognito")]
 
-  enterFindMode: ["Enter find mode"]
-  performFind: ["Cycle forward to the next find match"]
-  performBackwardsFind: ["Cycle backward to the previous find match"]
+  enterFindMode: [i18n("enter_find_mode")]
+  performFind: [i18n("perform_find")]
+  performBackwardsFind: [i18n("perform_backwards_find")]
 
-  goPrevious: ["Follow the link labeled previous or <"]
-  goNext: ["Follow the link labeled next or >"]
+  goPrevious: [i18n("go_previous")]
+  goNext: [i18n("go_next")]
 
   # Navigating your history
-  goBack: ["Go back in history", { passCountToFunction: true }]
-  goForward: ["Go forward in history", { passCountToFunction: true }]
+  goBack: [i18n("go_back"), { passCountToFunction: true }]
+  goForward: [i18n("go_forward"), { passCountToFunction: true }]
 
   # Navigating the URL hierarchy
-  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
-  goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
+  goUp: [i18n("go_up"), { passCountToFunction: true }]
+  goToRoot: [i18n("go_to_root"), { passCountToFunction: true }]
 
   # Manipulating tabs
-  nextTab: ["Go one tab right", { background: true }]
-  previousTab: ["Go one tab left", { background: true }]
-  firstTab: ["Go to the first tab", { background: true }]
-  lastTab: ["Go to the last tab", { background: true }]
-  createTab: ["Create new tab", { background: true }]
-  duplicateTab: ["Duplicate current tab", { background: true }]
-  removeTab: ["Close current tab", { background: true, noRepeat: true }]
-  restoreTab: ["Restore closed tab", { background: true }]
-  moveTabToNewWindow: ["Move tab to new window", { background: true }]
+  nextTab: [i18n("next_tab"), { background: true }]
+  previousTab: [i18n("previous_tab"), { background: true }]
+  firstTab: [i18n("first_tab"), { background: true }]
+  lastTab: [i18n("last_tab"), { background: true }]
+  createTab: [i18n("create_tab"), { background: true }]
+  duplicateTab: [i18n("duplicate_tab"), { background: true }]
+  removeTab: [i18n("remove_tab"), { background: true, noRepeat: true }]
+  restoreTab: [i18n("restore_tab"), { background: true }]
+  moveTabToNewWindow: [i18n("move_tab_to_new_window"), { background: true }]
 
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs"]
-  "Vomnibar.activateBookmarks": ["Open a bookmark"]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
+  "Vomnibar.activate": [i18n("vomnibar_activate")]
+  "Vomnibar.activateInNewTab": [i18n("vomnibar_activate_in_new_tab")]
+  "Vomnibar.activateTabSelection": [i18n("vomnibar_activate_tab_selection")]
+  "Vomnibar.activateBookmarks": [i18n("vomnibar_activate_bookmarks")]
+  "Vomnibar.activateBookmarksInNewTab": [i18n("vomnibar_activate_bookmarks_in_new_tab")]
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
+  nextFrame: [i18n("next_frame"), { background: true, passCountToFunction: true }]
 
-  "Marks.activateCreateMode": ["Create a new mark"]
-  "Marks.activateGotoMode": ["Go to a mark"]
+  "Marks.activateCreateMode": [i18n("marks_activate_create_mode")]
+  "Marks.activateGotoMode": [i18n("marks_activate_goto_mode")]
 
 Commands.init()
 

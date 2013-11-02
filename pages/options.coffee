@@ -101,9 +101,9 @@ setFieldValue = (field, value) ->
 toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
   if advancedMode
     $("advancedOptions").style.display = "none"
-    $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
+    $("advancedOptionsLink").innerHTML = chrome.i18n.getMessage("show_advanced_options")
   else
     $("advancedOptions").style.display = "table-row-group"
-    $("advancedOptionsLink").innerHTML = "Hide advanced options"
+    $("advancedOptionsLink").innerHTML = chrome.i18n.getMessage("hide_advanced_options")
   advancedMode = !advancedMode
   event.preventDefault()

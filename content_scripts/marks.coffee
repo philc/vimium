@@ -11,13 +11,13 @@ root.activateCreateMode = ->
         markName: keyChar
         scrollX: window.scrollX,
         scrollY: window.scrollY
-      }, -> HUD.showForDuration "Created global mark '#{keyChar}'", 1000
+      }, -> HUD.showForDuration chrome.i18n.getMessage("created_global_mark")+" #{keyChar}", 1000
     else if /[a-z]/.test keyChar
       [baseLocation, sep, hash] = window.location.href.split '#'
       localStorage["vimiumMark|#{baseLocation}|#{keyChar}"] = JSON.stringify
         scrollX: window.scrollX,
         scrollY: window.scrollY
-      HUD.showForDuration "Created local mark '#{keyChar}'", 1000
+      HUD.showForDuration chrome.i18n.getMessage("created_local_mark")+" #{keyChar}", 1000
 
     @remove()
 
@@ -38,7 +38,7 @@ root.activateGotoMode = ->
       if markString?
         mark = JSON.parse markString
         window.scrollTo mark.scrollX, mark.scrollY
-        HUD.showForDuration "Jumped to local mark '#{keyChar}'", 1000
+        HUD.showForDuration chrome.i18n.getMessage("jumped_to_local_mark")+" #{keyChar}", 1000
 
     @remove()
 
