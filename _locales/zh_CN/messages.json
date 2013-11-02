@@ -1,0 +1,188 @@
+{
+	"manifest_description": {
+		"message": "像黑客一样使用浏览器！受到伟大的 Vim 编辑器的启示，Vimium 向浏览器提供了一系列用于快速浏览网页的快捷键。"
+	},
+	"show_help": {
+		"message": "查看帮助"
+	},
+	"scroll_down": {
+		"message": "向下"
+	},
+	"scroll_up": {
+		"message": "向上"
+	},
+	"scroll_left": {
+		"message": "向左"
+	},
+	"scroll_right": {
+		"message": "向右"
+	},
+	"scroll_to_top": {
+		"message": "顶部"
+	},
+	"scroll_to_bottom": {
+		"message": "底部"
+	},
+	"scroll_to_left": {
+		"message": "最左"
+	},
+	"scroll_to_right": {
+		"message": "最右"
+	},
+	"scroll_page_down": {
+		"message": "向下滚屏"
+	},
+	"scroll_page_up": {
+		"message": "向上滚屏"
+	},
+	"scroll_full_page_down": {
+		"message": "向下翻页"
+	},
+	"scroll_full_page_up": {
+		"message": "向上翻页"
+	},
+	"reload": {
+		"message": "刷新页面"
+	},
+	"toggle_view_source": {
+		"message": "查看网页源码"
+	},
+	"copy_current_url": {
+		"message": "复制当前网址到剪贴板"
+	},
+	"link_hints_activate_mode_to_copy_link_url": {
+		"message": "复制所指链接到剪贴板"
+	},
+	"open_copied_url_in_current_tab": {
+		"message": "在当前标签打开剪贴板中的链接"
+	},
+	"open_copied_url_in_new_tab": {
+		"message": "在新标签打开剪贴板中的链接"
+	},
+	"enter_insert_mode": {
+		"message": "进入打字模式"
+	},
+	"focus_input": {
+		"message": "指向页面中的第n个文本框"
+	},
+	"link_hints_activate_mode": {
+		"message": "在当前标签打开指定链接"
+	},
+	"link_hints_activate_mode_to_open_in_new_tab": {
+		"message": "在新标签打开指定链接"
+	},
+	"link_hints_activate_mode_with_queue": {
+		"message": "在新标签打开指定的多个链接"
+	},
+	"link_hints_activate_mode_to_open_incognito": {
+		"message": "在隐身窗口打开指定链接"
+	},
+	"enter_find_mode": {
+		"message": "进入查找模式"
+	},
+	"perform_find": {
+		"message": "向前查找下一项"
+	},
+	"perform_backwards_find": {
+		"message": "向后查找下一项"
+	},
+	"go_previous": {
+		"message": "跳转到上一页 <<"
+	},
+	"go_next": {
+		"message": "跳转到下一页 >>"
+	},
+	"go_back": {
+		"message": "后退"
+	},
+	"go_forward": {
+		"message": "前进"
+	},
+	"go_up": {
+		"message": "打开/../页面"
+	},
+	"go_to_root": {
+		"message": "打开/页面"
+	},
+	"next_tab": {
+		"message": "切换到右标签"
+	},
+	"previous_tab": {
+		"message": "切换到左标签"
+	},
+	"first_tab": {
+		"message": "切换到第一个标签"
+	},
+	"last_tab": {
+		"message": "切换到最后一个标签"
+	},
+	"create_tab": {
+		"message": "打开新标签"
+	},
+	"duplicate_tab": {
+		"message": "复制当前标签"
+	},
+	"remove_tab": {
+		"message": "关闭当前标签"
+	},
+	"restore_tab": {
+		"message": "重新打开被关闭的标签"
+	},
+	"move_tab_to_new_window": {
+		"message": "移动到新窗口"
+	},
+	"vomnibar_activate": {
+		"message": "在当前标签打开..."
+	},
+	"vomnibar_activate_in_new_tab": {
+		"message": "在新标签中打开..."
+	},
+	"vomnibar_activate_tab_selection": {
+		"message": "搜索打开的标签..."
+	},
+	"vomnibar_activate_bookmarks": {
+		"message": "在当前标签打开收藏夹..."
+	},
+	"vomnibar_activate_bookmarks_in_new_tab": {
+		"message": "在新标签中打开收藏夹..."
+	},
+	"next_frame": {
+		"message": "跳转到下一个框架页"
+	},
+	"marks_activate_create_mode": {
+		"message": "在当前位置设定一个标记"
+	},
+	"marks_activate_goto_mode": {
+		"message": "跳转到指定标记"
+	},
+	"open_in_new_tab": {
+		"message": "在新标签中打开"
+	},
+	"open_with_queue": {
+		"message": "在新标签打开指定的多个链接"
+	},
+	"copy_link_url": {
+		"message": "复制当前网址到剪贴板"
+	},
+	"open_incognito": {
+		"message": "在隐身窗口打开指定链接"
+	},
+	"open_in_current_tab": {
+		"message": "在当前标签打开指定链接"
+	},
+	"created_global_mark": {
+		"message": "已创建全局标记"
+	},
+	"created_local_mark": {
+		"message": "已在当前页创建标记"
+	},
+	"jumped_to_local_mark":{
+		"message": "跳转到标记"
+	},
+	"show_advanced_options":{
+		"message": "显示高级设置&hellip;"
+	},
+	"hide_advanced_options":{
+		"message":"隐藏高级设置"
+	}
+}
