@@ -171,18 +171,96 @@
 		"message": "在当前标签打开指定链接"
 	},
 	"created_global_mark": {
-		"message": "已创建全局标记"
+		"message": "已创建全局标记 '$KEYCHAR$'",
+		"placeholders": {
+			"keychar": {
+				"content": "$1"
+			}
+		}
 	},
 	"created_local_mark": {
-		"message": "已在当前页创建标记"
+		"message": "已在当前页创建标记 '$KEYCHAR$'",
+		"placeholders": {
+			"keychar": {
+				"content": "$1"
+			}
+		}
 	},
 	"jumped_to_local_mark":{
-		"message": "跳转到标记"
+		"message": "跳转到 '$KEYCHAR$' 标记处",
+		"placeholders": {
+			"keychar": {
+				"content": "$1"
+			}
+		}
 	},
-	"show_advanced_options":{
+	/*frontend page*/
+	"help": {
+		"message": "帮助"
+	},
+	"command_listing": {
+		"message": "命令列表"
+	},
+	/*options page*/
+	"options_header": {
+		"message": "Vimium 设置"
+	},
+	"options_scroll_step_size": {
+		"message": "滚屏距离"
+	},
+	"options_excluded_urls": {
+		"message": "不在以下网页中使用 Vimium"
+	},
+	"options_custom_key_mappings": {
+		"message": "自定义快捷键"
+	},
+	"options_show_available_command": {
+		"message": "查看所有命令"
+	},
+	"options_css_for_link_hints": {
+		"message": "链接提示符样式"
+	},
+	"options_characters_used_for_link_hints": {
+		"message": "用于链接提示的字符"
+	},
+	"options_numbers_used_for_filtered_link_hints": {
+		"message": "用于过滤链接的数字"
+	},
+	"options_filter_link_hint": {
+		"message": "使用链接的名字或数字来过滤链接"
+	},
+	"options_hide_hud": {
+		"message": "隐藏HUD"
+	},
+	"options_regex_find_mode": {
+		"message": "允许使用正则表达式搜索"
+	},
+	"options_previous_patterns": {
+		"message": "上一页关键字"
+	},
+	"options_next_patterns": {
+		"message": "下一页关键字"
+	},
+	"options_search": {
+		"message": "搜索引擎"
+	},
+	"options_advanced_options_link": {
 		"message": "显示高级设置&hellip;"
 	},
-	"hide_advanced_options":{
+	"options_advanced_options_link_hide": {
 		"message":"隐藏高级设置"
+	},
+	"options_restore_settings": {
+		"message": "恢复默认设置"
+	},
+	"options_save_options": {
+		"message": "保存设置"
+	},
+	"options_show_help_dialog_message": {
+		"message": "在浏览网页时输入 <strong>?</strong> 可以查看所有命令。"
+	},
+	/*popup page*/
+	"exclude_url": {
+		"message": "移除该网址"
 	}
 }

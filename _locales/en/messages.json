@@ -171,18 +171,96 @@
 		"message": "Open link in current tab"
 	},
 	"created_global_mark": {
-		"message": "Created global mark"
+		"message": "Created global mark '$KEYCHAR$'",
+		"placeholders": {
+			"keychar": {
+				"content": "$1"
+			}
+		}
 	},
 	"created_local_mark": {
-		"message": "Created local mark"
+		"message": "Created local mark '$KEYCHAR$'",
+		"placeholders": {
+			"keychar": {
+				"content": "$1"
+			}
+		}
 	},
-	"jumped_to_local_mark":{
-		"message": "Jumped to local mark"
+	"jumped_to_local_mark": {
+		"message": "Jumped to local mark '$KEYCHAR$'",
+		"placeholders": {
+			"keychar": {
+				"content": "$1"
+			}
+		}
 	},
-	"show_advanced_options":{
+	/*frontend page*/
+	"help": {
+		"message": "Help"
+	},
+	"command_listing": {
+		"message": "Command Listing"
+	},
+	/*options page*/
+	"options_header": {
+		"message": "Vimium options"
+	},
+	"options_scroll_step_size": {
+		"message": "Scroll step size"
+	},
+	"options_excluded_urls": {
+		"message": "Excluded URLs"
+	},
+	"options_custom_key_mappings": {
+		"message": "Custom key<br/>mappings"
+	},
+	"options_show_available_command": {
+		"message": "Show available commands."
+	},
+	"options_css_for_link_hints": {
+		"message": "CSS for link hints"
+	},
+	"options_characters_used_for_link_hints": {
+		"message": "Characters used<br/> for link hints"
+	},
+	"options_numbers_used_for_filtered_link_hints": {
+		"message": "Numbers used<br/> for filtered link hints"
+	},
+	"options_filter_link_hint": {
+		"message": "Use the link's name and numbers for link hint filtering"
+	},
+	"options_hide_hud": {
+		"message": "Hide the Heads Up Display (HUD)"
+	},
+	"options_regex_find_mode": {
+		"message": "Treat find queries as regular expressions."
+	},
+	"options_previous_patterns": {
+		"message": "Previous Patterns"
+	},
+	"options_next_patterns": {
+		"message": "Next Patterns"
+	},
+	"options_search": {
+		"message": "Search"
+	},
+	"options_advanced_options_link": {
 		"message": "Show advanced options&hellip;"
 	},
-	"hide_advanced_options":{
-		"message":"Hide advanced options"
+	"options_advanced_options_link_hide": {
+		"message": "Hide advanced options"
+	},
+	"options_restore_settings": {
+		"message": "Restore to Defaults"
+	},
+	"options_save_options": {
+		"message": "Save Options"
+	},
+	"options_show_help_dialog_message": {
+		"message": "To view all available shortcuts, type <strong>?</strong> to show the Vimium help dialog."
+	},
+	/*popup page*/
+	"exclude_url": {
+		"message": "Exclude URL"
 	}
 }

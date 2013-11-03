@@ -15,7 +15,8 @@
       "background_scripts/settings.js",
       "background_scripts/completion.js",
       "background_scripts/marks.js",
-      "background_scripts/main.js"
+      "background_scripts/main.js",
+      "lib/i18n.js"
     ]
   },
   "options_page": "pages/options.html",

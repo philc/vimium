@@ -14,3 +14,4 @@ onExcludeUrl = (e) ->
 document.addEventListener "DOMContentLoaded", ->
   document.getElementById("popupButton").addEventListener "click", onExcludeUrl, false
   onLoad()
+  chrome.extension.getBackgroundPage().i18n.process(document, chrome.i18n.getMessage)

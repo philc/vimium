@@ -16,6 +16,7 @@ postSaveHooks = keyMappings: (value) ->
 
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
+  chrome.extension.getBackgroundPage().i18n.process(document, chrome.i18n.getMessage)
 
   for field in editableFields
     $(field).addEventListener "keyup", onOptionKeyup, false
@@ -24,7 +25,7 @@ document.addEventListener "DOMContentLoaded", ->
 
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions, false
   $("showCommands").addEventListener "click", (->
-    showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+    showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, chrome.i18.getMessage("command_listing")), frameId
   ), false
   document.getElementById("restoreSettings").addEventListener "click", restoreToDefaults
   document.getElementById("saveOptions").addEventListener "click", saveOptions
@@ -101,9 +102,9 @@ setFieldValue = (field, value) ->
 toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
   if advancedMode
     $("advancedOptions").style.display = "none"
-    $("advancedOptionsLink").innerHTML = chrome.i18n.getMessage("show_advanced_options")
+    $("advancedOptionsLink").innerHTML = chrome.i18n.getMessage("options_advanced_options_link")
   else
     $("advancedOptions").style.display = "table-row-group"
-    $("advancedOptionsLink").innerHTML = chrome.i18n.getMessage("hide_advanced_options")
+    $("advancedOptionsLink").innerHTML = chrome.i18n.getMessage("options_advanced_options_link_hide")
   advancedMode = !advancedMode
   event.preventDefault()
