@@ -186,7 +186,7 @@
 			}
 		}
 	},
-	"jumped_to_local_mark":{
+	"jumped_to_local_mark": {
 		"message": "跳转到 '$KEYCHAR$' 标记处",
 		"placeholders": {
 			"keychar": {
@@ -195,11 +195,44 @@
 		}
 	},
 	/*frontend page*/
+	"options": {
+		"message": "设置"
+	},
 	"help": {
 		"message": "帮助"
 	},
 	"command_listing": {
 		"message": "命令列表"
+	},
+	"navigating_the_page": {
+		"message": "导航"
+	},
+	"using_find": {
+		"message": "查找"
+	},
+	"navigating_history": {
+		"message": "历史"
+	},
+	"manipulating_tabs": {
+		"message": "标签"
+	},
+	"miscellaneous": {
+		"message": "其它"
+	},
+	"show_advanced_commands": {
+		"message": "显示高级命名"
+	},
+	"enjoying_vimium": {
+		"message": "喜欢 Vimium 吗？"
+	},
+	"feedback": {
+		"message": "给我们反馈信息吧"
+	},
+	"found_a_bug": {
+		"message": "发现BUG？"
+	},
+	"report": {
+		"message": "在这里提交 :)"
 	},
 	/*options page*/
 	"options_header": {
@@ -248,7 +281,7 @@
 		"message": "显示高级设置&hellip;"
 	},
 	"options_advanced_options_link_hide": {
-		"message":"隐藏高级设置"
+		"message": "隐藏高级设置"
 	},
 	"options_restore_settings": {
 		"message": "恢复默认设置"

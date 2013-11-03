@@ -195,11 +195,45 @@
 		}
 	},
 	/*frontend page*/
+	"options": {
+		"message": "Options"
+	},
 	"help": {
 		"message": "Help"
 	},
 	"command_listing": {
 		"message": "Command Listing"
+	},
+	"navigating_the_page": {
+		"message": "Navigating the page"
+	},
+	"using_find": {
+		"message": "Using find"
+	},
+	"navigating_history": {
+		"message": "Navigating history"
+	},
+	"manipulating_tabs": {
+		"message": "Manipulating tabs"
+	},
+	"miscellaneous": {
+		"message": "Miscellaneous"
+	},
+	"show_advanced_commands": {
+		"message": "Show advanced commands"
+	},
+	"enjoying_vimium": {
+		"message": "Enjoying Vimium?"
+	},
+	"feedback": {
+		"message": "Leave us
+          feedback"
+	},
+	"found_a_bug": {
+		"message": "Found a bug?"
+	},
+	"report": {
+		"message": "Report it here"
 	},
 	/*options page*/
 	"options_header": {

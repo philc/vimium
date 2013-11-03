@@ -6,13 +6,13 @@
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
        page with the up-to-date key bindings when the dialog is shown. -->
   <div id="vimiumHelpDialog" class="vimiumReset">
-  <a class="vimiumReset optionsPage" href="#">Options</a>
+  <a class="vimiumReset optionsPage" href="#" data-i18n-content="options">Options</a>
   <a class="vimiumReset closeButton" href="#">x</a>
   <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium {{title}}</div>
   <div class="vimiumReset vimiumColumn">
     <table class="vimiumReset">
       <tbody class="vimiumReset">
-      <tr class="vimiumReset" ><td class="vimiumReset"></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating the page</td></tr>
+      <tr class="vimiumReset" ><td class="vimiumReset"></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle" data-i18n-content="navigating_the_page">Navigating the page</td></tr>
       {{pageNavigation}}
       </tbody>
     </table>
@@ -20,13 +20,13 @@
   <div class="vimiumReset vimiumColumn">
     <table class="vimiumReset" >
       <tbody class="vimiumReset">
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using find</td></tr>
+      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle" data-i18n-content="using_find">Using find</td></tr>
       {{findCommands}}
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating history</td></tr>
+      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle" data-i18n-content="navigating_history">Navigating history</td></tr>
       {{historyNavigation}}
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Manipulating tabs</td></tr>
+      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle" data-i18n-content="manipulating_tabs">Manipulating tabs</td></tr>
       {{tabManipulation}}
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Miscellaneous</td></tr>
+      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle" data-i18n-content="miscellaneous">Miscellaneous</td></tr>
       {{misc}}
       </tbody>
     </table>
@@ -36,13 +36,13 @@
   <div class="vimiumReset vimiumDivider"></div>
 
   <div id="vimiumHelpDialogFooter" class="vimiumReset">
-    <a href="#" class="vimiumReset toggleAdvancedCommands">Show advanced commands</a>
+    <a href="#" class="vimiumReset toggleAdvancedCommands" data-i18n-content="show_advanced_commands">Show advanced commands</a>
 
     <div class="vimiumReset vimiumColumn">
-      Enjoying Vimium?
-      <a class="vimiumReset" href="https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb">Leave us
+      <span data-i18n-content="enjoying_vimium">Enjoying Vimium?</span>
+      <a class="vimiumReset" href="https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb" data-i18n-content="feedback">Leave us
           feedback</a>.<br/>
-      Found a bug? <a class="vimiumReset" href="http://github.com/philc/vimium/issues">Report it here</a>.
+      <span data-i18n-content="found_a_bug">Found a bug?</span> <a class="vimiumReset" href="http://github.com/philc/vimium/issues" data-i18n-content="report">Report it here</a>.
     </div>
     <div class="vimiumReset vimiumColumn" style="text-align:right">
       <span class="vimiumReset">Version {{version}}</span><br/>
