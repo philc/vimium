@@ -30,7 +30,6 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
-    (return window.location = "http://reload.extensions") if event.keyCode==82
     # Not a letter
     if (event.keyIdentifier.slice(0, 2) != "U+")
       return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
