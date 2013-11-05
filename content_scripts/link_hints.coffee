@@ -227,7 +227,7 @@ LinkHints =
   #
   showMarker: (linkMarker, match) ->
     linkMarker.style.display = ""
-    start = linkMarker.innerText.toLowerCase().search(match.toLowerCase())
+    start = linkMarker.innerText.toLowerCase().search(match)
     end = start + match.length
     node.classList.remove("matchingCharacter") for node in linkMarker.childNodes
     node.classList.add("matchingCharacter") for node, i in linkMarker.childNodes when i >= start and i < end
@@ -264,7 +264,7 @@ alphabetHints =
   hintKeystrokeQueue: []
 
   addKeyChar: (keyChar) ->
-    @hintKeystrokeQueue.push(keyChar)
+    @hintKeystrokeQueue.push(keyChar.toLocaleLowerCase())
 
   deleteLastKeyChar: -> @hintKeystrokeQueue.pop()
 
@@ -317,7 +317,6 @@ alphabetHints =
       result = result.concat(bucket)
     result
 
-
   matchHintsByKey: (hintMarkers) ->
     matchString = @hintKeystrokeQueue.join("")
     linksMatched = hintMarkers.filter((linkMarker) -> linkMarker.hintString.indexOf(matchString) == 0)
@@ -340,7 +339,7 @@ filterHints =
       # since we might renumber the hints, the current hintKeyStrokeQueue
       # should be rendered invalid (i.e. reset).
       @hintKeystrokeQueue = []
-      @linkTextKeystrokeQueue.push(keyChar)
+      @linkTextKeystrokeQueue.push(keyChar.toLocaleLowerCase())
 
   deleteLastKeyChar: ->
     @hintKeystrokeQueue.pop()
@@ -401,7 +400,6 @@ filterHints =
       marker.linkText = linkTextObject.text
       marker.showLinkText = linkTextObject.show
       @renderMarker(marker)
-
     hintMarkers
 
 
@@ -428,10 +426,9 @@ filterHints =
   #
   filterLinkHints: (hintMarkers) ->
     linksMatched = []
-    linkSearchString = @linkTextKeystrokeQueue.join("")
 
     for linkMarker in hintMarkers
-      matchedLink = linkMarker.linkText.toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0
+      matchedLink = linkMarker.linkText.toLowerCase().indexOf(@linkTextKeystrokeQueue.join("")) >= 0
 
       if (!matchedLink)
         linkMarker.filtered = true
