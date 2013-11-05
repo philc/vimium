@@ -131,6 +131,11 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+1.44 Unreleased
+
+- Add support for recent versions of Chromium.
+- Bugfixes.
+
 1.43 (05/18/2013)
 
 - Relevancy improvements to the Vomnibar's domain & history search.
