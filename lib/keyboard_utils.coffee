@@ -30,7 +30,6 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
-    (return window.location = "http://reload.extensions") if event.keyCode==82
     # Not a letter
     if (event.keyIdentifier.slice(0, 2) != "U+")
       return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
@@ -50,6 +49,12 @@ KeyboardUtils =
     if event.shiftKey then character.toUpperCase() else character
 
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
+
+  isEnter: (event) ->
+    (event.keyCode == @keyCodes.enter)
+
+  isDeleteOrBackspace: (event) ->
+    (event.keyCode == @keyCodes.backspace || event.keyCode == @keyCodes.deleteKey)
 
   isEscape: (event) ->
     # c-[ is mapped to ESC in Vim by default.

@@ -62,7 +62,7 @@ LinkHints =
     @setOpenLinkMode(mode)
     hintMarkers = @markerMatcher.fillInMarkers(@createMarkerFor(el) for el in @getVisibleClickableElements())
 
-    # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
+  # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
     # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
     @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
@@ -70,11 +70,50 @@ LinkHints =
 
     # handlerStack is declared by vimiumFrontend.js
     @handlerId = handlerStack.push({
-      keydown: @onKeyDownInMode.bind(this, hintMarkers),
-      # trap all key events
-      keypress: -> false
+      keydown: @keydown.bind(this, hintMarkers)
+      keypress: @keypress.bind(this, hintMarkers)
       keyup: -> false
     })
+
+  keydown: (hintMarkers, event) ->
+    return if @delayMode
+    if (KeyboardUtils.isEscape(event))
+      return @deactivateMode()
+    if KeyboardUtils.isEnter(event)
+      # activate the lowest-numbered link hint that is visible
+      return @activateLink(marker) for marker in hintMarkers when marker.style.display isnt 'none'
+    else if KeyboardUtils.isDeleteOrBackspace(event)
+      @markerMatcher.deleteLastKeyChar()
+      @matchHints hintMarkers
+    else
+      event #propagate for keypress
+
+  keypress: (hintMarkers, event) ->
+    keyChar = String.fromCharCode(event.charCode)
+    shifted = (keyChar != keyChar.toLocaleLowerCase())
+    @markerMatcher.addKeyChar(keyChar)
+
+    if (shifted && @mode != COPY_LINK_URL)
+      @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_TAB else OPEN_IN_CURRENT_TAB)
+
+    @matchHints hintMarkers
+    false # We've handled this key, so prevent propagation.
+
+
+  matchHints: (hintMarkers) ->
+    {linksMatched: linksMatched, delay: delay} = @markerMatcher.matchHintsByKey(hintMarkers)
+
+    if (linksMatched.length == 0)
+      @deactivateMode()
+    else if (linksMatched.length == 1)
+      @activateLink(linksMatched[0], delay)
+    else
+      for marker in hintMarkers
+        @hideMarker(marker)
+      for matched in linksMatched
+        match = @markerMatcher.hintKeystrokeQueue.join("")
+        match = @markerMatcher.linkTextKeystrokeQueue.join("") if match is ""
+        @showMarker(matched, match)
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_TAB or @mode is OPEN_WITH_QUEUE
@@ -160,44 +199,6 @@ LinkHints =
 
     visibleElements
 
-  #
-  # Handles shift and esc keys. The other keys are passed to markerMatcher.matchHintsByKey.
-  #
-  onKeyDownInMode: (hintMarkers, event) ->
-    return if @delayMode
-
-    if (event.keyCode == keyCodes.shiftKey && @mode != COPY_LINK_URL)
-      # Toggle whether to open link in a new or current tab.
-      prev_mode = @mode
-
-      @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_TAB else OPEN_IN_CURRENT_TAB)
-
-      handlerStack.push({
-        keyup: (event) =>
-          return if (event.keyCode != keyCodes.shiftKey)
-          @setOpenLinkMode(prev_mode) if @isActive
-          @remove()
-      })
-
-    # TODO(philc): Ignore keys that have modifiers.
-    if (KeyboardUtils.isEscape(event))
-      @deactivateMode()
-    else if (event.keyCode != keyCodes.shiftKey)
-      keyResult = @markerMatcher.matchHintsByKey(hintMarkers, event)
-      linksMatched = keyResult.linksMatched
-      delay = keyResult.delay ? 0
-      if (linksMatched.length == 0)
-        @deactivateMode()
-      else if (linksMatched.length == 1)
-        @activateLink(linksMatched[0], delay)
-      else
-        for marker in hintMarkers
-          @hideMarker(marker)
-        for matched in linksMatched
-          match = @markerMatcher.hintKeystrokeQueue.join("")
-          match = @markerMatcher.linkTextKeystrokeQueue.join("") if match is ""
-          @showMarker(matched, match)
-    false # We've handled this key, so prevent propagation.
 
   #
   # When only one link hint remains, this function activates it in the appropriate way.
@@ -261,6 +262,12 @@ LinkHints =
 
 alphabetHints =
   hintKeystrokeQueue: []
+
+  addKeyChar: (keyChar) ->
+    @hintKeystrokeQueue.push(keyChar)
+
+  deleteLastKeyChar: -> @hintKeystrokeQueue.pop()
+
   logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
 
   fillInMarkers: (hintMarkers) ->
@@ -310,16 +317,8 @@ alphabetHints =
       result = result.concat(bucket)
     result
 
-  matchHintsByKey: (hintMarkers, event) ->
-    # If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
-    keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
-    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      if (!@hintKeystrokeQueue.pop())
-        return { linksMatched: [] }
-    else if keyChar
-      @hintKeystrokeQueue.push(keyChar)
-
+  matchHintsByKey: (hintMarkers) ->
     matchString = @hintKeystrokeQueue.join("")
     linksMatched = hintMarkers.filter((linkMarker) -> linkMarker.hintString.indexOf(matchString) == 0)
     { linksMatched: linksMatched }
@@ -330,7 +329,22 @@ filterHints =
   hintKeystrokeQueue: []
   linkTextKeystrokeQueue: []
   labelMap: {}
+  userIsTypingText: false
 
+  addKeyChar: (keyChar) ->
+    @userIsTypingLinkText = settings.get("linkHintNumbers").indexOf(keyChar) >= 0
+
+    if (@userIsTypingLinkText)
+      @hintKeystrokeQueue.push(keyChar)
+    else
+      # since we might renumber the hints, the current hintKeyStrokeQueue
+      # should be rendered invalid (i.e. reset).
+      @hintKeystrokeQueue = []
+      @linkTextKeystrokeQueue.push(keyChar)
+
+  deleteLastKeyChar: ->
+    @hintKeystrokeQueue.pop()
+    @linkTextKeystrokeQueue.pop()
   #
   # Generate a map of input element => label
   #
@@ -390,31 +404,9 @@ filterHints =
 
     hintMarkers
 
-  matchHintsByKey: (hintMarkers, event) ->
-    keyChar = KeyboardUtils.getKeyChar(event)
-    delay = 0
-    userIsTypingLinkText = false
 
-    if (event.keyCode == keyCodes.enter)
-      # activate the lowest-numbered link hint that is visible
-      for marker in hintMarkers
-        if (marker.style.display != "none")
-          return { linksMatched: [ marker ] }
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      # backspace clears hint key queue first, then acts on link text key queue.
-      # if both queues are empty. exit hinting mode
-      if (!@hintKeystrokeQueue.pop() && !@linkTextKeystrokeQueue.pop())
-        return { linksMatched: [] }
-    else if (keyChar)
-      if (settings.get("linkHintNumbers").indexOf(keyChar) >= 0)
-        @hintKeystrokeQueue.push(keyChar)
-      else
-        # since we might renumber the hints, the current hintKeyStrokeQueue
-        # should be rendered invalid (i.e. reset).
-        @hintKeystrokeQueue = []
-        @linkTextKeystrokeQueue.push(keyChar)
-        userIsTypingLinkText = true
 
+  matchHintsByKey: (hintMarkers) ->
     # at this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
     # input. use them to filter the link hints accordingly.
     linksMatched = @filterLinkHints(hintMarkers)
@@ -422,13 +414,13 @@ filterHints =
     linksMatched = linksMatched.filter((linkMarker) ->
       !linkMarker.filtered && linkMarker.hintString.indexOf(matchString) == 0)
 
-    if (linksMatched.length == 1 && userIsTypingLinkText)
+    if (linksMatched.length == 1 && @userIsTypingLinkText)
       # In filter mode, people tend to type out words past the point
       # needed for a unique match. Hence we should avoid passing
       # control back to command mode immediately after a match is found.
-      delay = 200
+      return { linksMatched: linksMatched, delay: 200 }
 
-    { linksMatched: linksMatched, delay: delay }
+    { linksMatched: linksMatched, delay: 0 }
 
   #
   # Marks the links that do not match the linkText search string with the 'filtered' DOM property. Renumbers
