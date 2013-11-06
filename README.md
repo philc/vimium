@@ -131,7 +131,7 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-1.44 Unreleased
+1.44 (11/06/2013)
 
 - Add support for recent versions of Chromium.
 - Bugfixes.
