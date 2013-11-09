@@ -389,6 +389,7 @@ filterHints =
 
   renderMarker: (marker) ->
     linkText = marker.linkText.replace(/<.*>/, '').trim()
+    linkText = linkText.substr(0, 20)+'…' if linkText.length > 20
     marker.innerHTML = spanWrap(marker.hintString +
         (if marker.showLinkText && linkText!=""  then ": " + linkText else ""))
 
