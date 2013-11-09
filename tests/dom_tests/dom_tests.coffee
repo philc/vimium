@@ -95,6 +95,7 @@ context "Filtered link hints",
   setup ->
     stub settings.values, "filterLinkHints", true
     stub settings.values, "linkHintNumbers", "0123456789"
+    stub settings.values, "alwaysShowTextInFilterHint", true
 
   context "Text hints",
 
@@ -111,7 +112,7 @@ context "Filtered link hints",
     should "label the hints", ->
       hintMarkers = getHintMarkers()
       for i in [0...4]
-        assert.equal (i + 1).toString(), hintMarkers[i].textContent.toLowerCase()
+        assert.equal 0, hintMarkers[i].textContent.toLowerCase().indexOf(i+1)
 
     should "narrow the hints", ->
       hintMarkers = getHintMarkers()
@@ -126,7 +127,6 @@ context "Filtered link hints",
   context "Unicode hints",
 
     setup ->
-      stub settings.values, "alwaysShowTextInFilterHint", true
       testContent = "<a>абыр</a><a>абыр</a><a>абырвалг</a><a>おちんちん</a>"
       document.getElementById("test-div").innerHTML = testContent
       LinkHints.init()
@@ -136,21 +136,21 @@ context "Filtered link hints",
         document.getElementById('test-div').innerHTML = ""
         LinkHints.deactivateMode()
 
-    should "narrow the hints1", ->
+    should "narrow the hints 1", ->
       hintMarkers = getHintMarkers()
       LinkHints.keypress hintMarkers, mockKeyboardEvent("а")
       LinkHints.keypress hintMarkers, mockKeyboardEvent("б")
       LinkHints.keypress hintMarkers, mockKeyboardEvent("ы")
       LinkHints.keypress hintMarkers, mockKeyboardEvent("р")
       assert.equal "none", hintMarkers[3].style.display
-      for h in hintMarkers when h.style.display is "none"
-        assert.equal -1, "абыр".indexOf(h.hintString)
+      for h in hintMarkers when h.style.display isnt "none"
+        assert.equal 3, h.textContent.indexOf('абыр')
 
     should "narrow the hints 2", ->
       hintMarkers = getHintMarkers()
       LinkHints.keypress hintMarkers, mockKeyboardEvent("お")
-      for h in hintMarkers when h.style.display is "none"
-        assert.equal 0, "абыр".indexOf(h.hintString)
+      for h in hintMarkers when h.style.display isnt "none"
+        assert.equal -1, h.textContent.indexOf('a')
 
 
   context "Image hints",
@@ -188,9 +188,9 @@ context "Filtered link hints",
 
     should "label the input elements", ->
       hintMarkers = getHintMarkers()
-      assert.equal "1", hintMarkers[0].textContent.toLowerCase()
+      assert.equal "1: some value", hintMarkers[0].textContent.toLowerCase()
       assert.equal "2", hintMarkers[1].textContent.toLowerCase()
-      assert.equal "3", hintMarkers[2].textContent.toLowerCase()
+      assert.equal "3: some text", hintMarkers[2].textContent.toLowerCase()
       assert.equal "4: a label", hintMarkers[3].textContent.toLowerCase()
       assert.equal "5: a label", hintMarkers[4].textContent.toLowerCase()
 
