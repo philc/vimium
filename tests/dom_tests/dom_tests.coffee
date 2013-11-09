@@ -86,7 +86,7 @@ context "Alphabetical link hints",
 
   should "narrow the hints", ->
     hintMarkers = getHintMarkers()
-    LinkHints.keydown hintMarkers, mockKeyboardEvent("A")
+    LinkHints.keypress hintMarkers, mockKeyboardEvent("A")
     assert.equal "none", hintMarkers[1].style.display
     assert.equal "", hintMarkers[0].style.display
 
@@ -115,12 +115,12 @@ context "Filtered link hints",
 
     should "narrow the hints", ->
       hintMarkers = getHintMarkers()
-      LinkHints.keydown hintMarkers, mockKeyboardEvent("T")
-      LinkHints.keydown hintMarkers, mockKeyboardEvent("R")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("T")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("R")
       assert.equal "none", hintMarkers[0].style.display
       assert.equal "1", hintMarkers[1].hintString
       assert.equal "", hintMarkers[1].style.display
-      LinkHints.keydown hintMarkers, mockKeyboardEvent("A")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("A")
       assert.equal "2", hintMarkers[3].hintString
 
   context "Image hints",
