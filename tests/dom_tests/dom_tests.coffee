@@ -123,6 +123,36 @@ context "Filtered link hints",
       LinkHints.keypress hintMarkers, mockKeyboardEvent("A")
       assert.equal "2", hintMarkers[3].hintString
 
+  context "Unicode hints",
+
+    setup ->
+      stub settings.values, "alwaysShowTextInFilterHint", true
+      testContent = "<a>абыр</a><a>абыр</a><a>абырвалг</a><a>おちんちん</a>"
+      document.getElementById("test-div").innerHTML = testContent
+      LinkHints.init()
+      LinkHints.activateMode()
+
+    tearDown ->
+        document.getElementById('test-div').innerHTML = ""
+        LinkHints.deactivateMode()
+
+    should "narrow the hints1", ->
+      hintMarkers = getHintMarkers()
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("а")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("б")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("ы")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("р")
+      assert.equal "none", hintMarkers[3].style.display
+      for h in hintMarkers when h.style.display is "none"
+        assert.equal -1, "абыр".indexOf(h.hintString)
+
+    should "narrow the hints 2", ->
+      hintMarkers = getHintMarkers()
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("お")
+      for h in hintMarkers when h.style.display is "none"
+        assert.equal 0, "абыр".indexOf(h.hintString)
+
+
   context "Image hints",
 
     setup ->
