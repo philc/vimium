@@ -6,4 +6,3 @@
 *.js
 node_modules/*
 dist
-.gitignore
