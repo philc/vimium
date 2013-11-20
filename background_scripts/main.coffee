@@ -214,7 +214,7 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
 repeatFunction = (func, totalCount, currentCount, frameId) ->
   if (currentCount < totalCount)
     func(
-      -> repeatFunction(func, totalCount, currentCount + 1, frameId),
+      -> repeatFunction(func, totalCount, currentCount + 1, frameId)
       frameId)
 
 # Start action functions
@@ -450,6 +450,12 @@ splitKeyQueue = (queue) ->
   { count: count, command: command }
 
 handleKeyDown = (request, port) ->
+
+  console.log(request)
+  console.log(port)
+  chrome.tabs.sendMessage port.sender.tab.id,name:"getActiveState", (response) ->
+    console.log(response)
+
   key = request.keyChar
   if (key == "<ESC>")
     console.log("clearing keyQueue")
