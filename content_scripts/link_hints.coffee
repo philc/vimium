@@ -367,12 +367,9 @@ filterHints =
     nodeName = element.nodeName.toLowerCase()
 
     if (nodeName == "input")
-      console.table @labelMap
-
       if (@labelMap[element.id])
         linkText = @labelMap[element.id]
         showLinkText = true
-
       else if (element.type != "password")
         linkText = element.value
         if not linkText and 'placeholder' of element
