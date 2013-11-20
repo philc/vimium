@@ -367,6 +367,8 @@ filterHints =
     nodeName = element.nodeName.toLowerCase()
 
     if (nodeName == "input")
+      console.table @labelMap
+
       if (@labelMap[element.id])
         linkText = @labelMap[element.id]
         showLinkText = true
