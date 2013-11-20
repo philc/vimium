@@ -354,8 +354,7 @@ filterHints =
       if (forElement)
         labelText = label.textContent.trim()
         # remove trailing : commonly found in labels
-        if (labelText[labelText.length-1] == ":")
-          labelText = labelText.substr(0, labelText.length-1)
+        labelText = labelText.replace(/:$/,'')
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
@@ -368,9 +367,12 @@ filterHints =
     nodeName = element.nodeName.toLowerCase()
 
     if (nodeName == "input")
+      console.table @labelMap
+
       if (@labelMap[element.id])
         linkText = @labelMap[element.id]
         showLinkText = true
+
       else if (element.type != "password")
         linkText = element.value
         if not linkText and 'placeholder' of element
@@ -384,7 +386,6 @@ filterHints =
     else
       linkText = element.textContent || element.innerHTML
 
-    showLinkText = showLinkText || settings.get "alwaysShowTextInFilterHint" unless linkText is ""
     { text: linkText, show: showLinkText }
 
   renderMarker: (marker) ->

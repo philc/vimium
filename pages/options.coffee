@@ -4,7 +4,7 @@ bgSettings = chrome.extension.getBackgroundPage().Settings
 
 editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
-  "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "alwaysShowTextInFilterHint"]
+  "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
 
 canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
 
@@ -42,11 +42,9 @@ onDataLoaded = ->
   if $("filterLinkHints").checked
     hide $("linkHintCharacters")
     show $("linkHintNumbers")
-    show $("alwaysShowTextInFilterHint")
   else
     show $("linkHintCharacters")
     hide $("linkHintNumbers")
-    hide $("alwaysShowTextInFilterHint")
 
 enableSaveButton = ->
   $("saveOptions").removeAttribute "disabled"

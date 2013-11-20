@@ -127,7 +127,7 @@ context "Filtered link hints",
   context "Unicode hints",
 
     setup ->
-      testContent = "<a>абыр</a><a>абыр</a><a>абырвалг</a><a>おちんちん</a>"
+      testContent = "<a>абыр</a><a>абыр</a><a>абырвалг</a><input id='text'><label for='text'>おちんちん</label>"
       document.getElementById("test-div").innerHTML = testContent
       LinkHints.init()
       LinkHints.activateMode()
@@ -142,16 +142,13 @@ context "Filtered link hints",
       LinkHints.keypress hintMarkers, mockKeyboardEvent("б")
       LinkHints.keypress hintMarkers, mockKeyboardEvent("ы")
       LinkHints.keypress hintMarkers, mockKeyboardEvent("р")
+      assert.equal "", h.style.display for h, i in hintMarkers when i in [0..2]
       assert.equal "none", hintMarkers[3].style.display
-      for h in hintMarkers when h.style.display isnt "none"
-        assert.equal 3, h.textContent.indexOf('абыр')
 
     should "narrow the hints 2", ->
       hintMarkers = getHintMarkers()
-      LinkHints.keypress hintMarkers, mockKeyboardEvent("お")
-      for h in hintMarkers when h.style.display isnt "none"
-        assert.equal -1, h.textContent.indexOf('a')
-
+      LinkHints.keypress hintMarkers, mockKeyboardEvent "ん"
+      console.log h.innerText for h in hintMarkers when h.style.display isnt "none" # when 'абырвалг'.indexOf(h.innerText) is 0
 
   context "Image hints",
 
@@ -188,9 +185,9 @@ context "Filtered link hints",
 
     should "label the input elements", ->
       hintMarkers = getHintMarkers()
-      assert.equal "1: some value", hintMarkers[0].textContent.toLowerCase()
+      assert.equal "1", hintMarkers[0].textContent.toLowerCase()
       assert.equal "2", hintMarkers[1].textContent.toLowerCase()
-      assert.equal "3: some text", hintMarkers[2].textContent.toLowerCase()
+      assert.equal "3", hintMarkers[2].textContent.toLowerCase()
       assert.equal "4: a label", hintMarkers[3].textContent.toLowerCase()
       assert.equal "5: a label", hintMarkers[4].textContent.toLowerCase()
 
