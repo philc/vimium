@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "alwaysShowTextInFilterHint"]
+    "helpDialog_showAdvancedCommands"]
   isLoaded: false
   eventListeners: {}
 
