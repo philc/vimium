@@ -6,9 +6,7 @@ Commands =
   availableCommands: {}
   keyToCommandRegistry: {}
 
-
-
-# Registers a command, making it available to be optionally bound to a key.
+  # Registers a command, making it available to be optionally bound to a key.
   # options:
   #  - background: whether this command needs to be run against the background page.
   #  - passCountToFunction: true if this command should have any digits which were typed prior to the
