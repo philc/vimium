@@ -93,7 +93,6 @@ hasModifiersRegex = /^<([amc]-)+.>/
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 

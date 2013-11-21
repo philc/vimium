@@ -223,7 +223,7 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
 repeatFunction = (func, totalCount, currentCount, frameId) ->
   if (currentCount < totalCount)
     func(
-      -> repeatFunction(func, totalCount, currentCount + 1, frameId)
+      -> repeatFunction(func, totalCount, currentCount + 1, frameId),
       frameId)
 
 # Start action functions
@@ -562,7 +562,7 @@ getCurrFrameIndex = (frames) ->
 portHandlers =
   keyDown: handleKeyDown,
   settings: handleSettings,
-  filterCompleter: filterCompleter,
+  filterCompleter: filterCompleter
 
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
