@@ -40,7 +40,7 @@ LinkHints =
   # We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
   #
   clickableElementsXPath: DomUtils.makeXPath(
-    ["a", "area[@href]", "textarea", "button", "select",
+    ["a[@href]", "area[@href]", "textarea", "button", "select",
      "input[not(@type='hidden' or @disabled or @readonly)]",
      "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
      "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
