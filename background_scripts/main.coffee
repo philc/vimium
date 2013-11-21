@@ -211,7 +211,6 @@ filterCompleter = (args, port) ->
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
 
 iconToggler = (args, port) ->
-  console.log(enabledIcon, disabledIcon)
   if (args.enabled)
     chrome.browserAction.setIcon({ path: enabledIcon})
   else
