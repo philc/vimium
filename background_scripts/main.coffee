@@ -329,6 +329,10 @@ updateActiveState = (tabId) ->
       isCurrentlyEnabled = (response? && response.enabled)
       shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
 
+      # check if vimium is currently swithced in the tab, and switch souldBeEnabled accordingly
+      isSwitched = (response? && response.switched)
+      shouldBeEnabled = !shouldBeEnabled if (isSwitched)
+
       if (isCurrentlyEnabled)
         if (shouldBeEnabled)
           chrome.browserAction.setIcon({ path: enabledIcon })

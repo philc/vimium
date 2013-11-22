@@ -15,6 +15,7 @@ isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.
 isEnabledForUrl = true
+isSwitched = false
 # The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
@@ -115,7 +116,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl }
+    getActiveState: -> { enabled: isEnabledForUrl, switched: isSwitched }
     disableVimium: disableVimium
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
@@ -364,7 +365,8 @@ onKeypress = (event) ->
 # The switch is *temporary*, and the configured enabled or disabled Vimium state is restored on page reload.
 #
 onSwitchKeyDown = (event) ->
-  if (event.metaKey && KeyboardUtils.getKeyChar(event))
+  if (event.metaKey && KeyboardUtils.isEscape(event))
+    isSwitched = !isSwitched
     if (isEnabledForUrl)
       disableVimium()
       chrome.runtime.sendMessage({enabled: false, handler: 'iconToggler'})
