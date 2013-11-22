@@ -2,9 +2,11 @@ VisualMode =
 
   keyMap: ""
   isActive: false
-  
+  freeEndToggled: false
+
   toggleVisualMode: ->
-    if (@isActive) 
+    @freeEndToggled = false
+    if (@isActive)
       @deactivateMode()
       return
     
@@ -30,6 +32,7 @@ VisualMode =
       when "h" then sel.modify("extend", "backward", "character")
       when "l" then sel.modify("extend", "forward", "character")
       
+      when "o" then @toggleFreeEndOfSelection()
       when "k" then sel.modify("extend", "backward", "line")
       when "j" then sel.modify("extend", "forward", "line")
       when "b" then sel.modify("extend", "backward", "word")
@@ -39,6 +42,27 @@ VisualMode =
       when "$" then sel.modify("extend", "forward", "lineboundary")
       when "y" then @yankSelection()
       when "r" then chrome.runtime.reload()
+
+  toggleFreeEndOfSelection: ->
+    sel = window.getSelection()
+    range = sel.getRangeAt(0)
+    startOffset = range.startOffset
+    startContainer = range.startContainer
+    endOffset = range.endOffset
+    endContainer = range.endContainer
+
+    if (@freeEndToggled)
+      range.setStart(startContainer, startOffset)
+      sel.removeAllRanges()
+      sel.addRange(range)
+      sel.extend(endContainer, endOffset)
+    else
+      range.setStart(endContainer, endOffset)
+      sel.removeAllRanges()
+      sel.addRange(range)
+      sel.extend(startContainer, startOffset)
+
+    @freeEndToggled = !@freeEndToggled
 
   deactivateMode: (delay, callback) ->
     deactivate = =>
