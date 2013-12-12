@@ -1,6 +1,6 @@
 {
 	"manifest_description": {
-		"message": "<flag> The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim."
+		"message": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim."
 	},
 	"show_help": {
 		"message": "Show help"
