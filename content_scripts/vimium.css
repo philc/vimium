@@ -296,6 +296,8 @@ body.vimiumFindMode ::selection {
 }
 
 #vomnibar input {
+  color: #000;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 20px;
   height: 34px;
   margin-bottom: 0;
