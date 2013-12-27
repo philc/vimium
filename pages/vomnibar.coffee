@@ -224,9 +224,8 @@ extend BackgroundCompleter,
   #
   completionActions:
     navigateToUrl: (url, openInNewTab) ->
-      # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open it in a new tab.
-      if url.startsWith "javascript:"
-        openInNewTab = false
+      # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
+      openInNewTab = false if url.startsWith("javascript:")
       chrome.runtime.sendMessage(
         handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
         url: url,
