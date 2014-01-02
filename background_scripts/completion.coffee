@@ -35,12 +35,20 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(@url))}</span>
+        <span class="vimiumReset vomnibarUrl">#{@highlightTerms(@shortenUrl(@url))}</span>
         #{relevancyHtml}
       </div>
       """
 
-  shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
+  shortenUrl: (url) ->
+    if url.startsWith 'javascript'
+        return @stripJavascript(url)
+    @stripTrailingSlash(url).replace(/^https?:\/\//, "")
+
+  stripJavascript: (url) ->
+    url = decodeURIComponent(url)
+    urlRegex = /\/\/((www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*))/
+    url = url.match(urlRegex)[1]
 
   stripTrailingSlash: (url) ->
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
@@ -119,7 +127,11 @@ class BookmarkCompleter
       else
         []
     suggestions = results.map (bookmark) =>
-      new Suggestion(@currentSearch.queryTerms, "bookmark", bookmark.url, bookmark.title, @computeRelevancy)
+      if bookmark.url.startsWith 'javascript'
+        type = 'bookmarklet'
+      else
+        type = 'bookmark'
+      new Suggestion(@currentSearch.queryTerms, type, bookmark.url, bookmark.title, @computeRelevancy)
     onComplete = @currentSearch.onComplete
     @currentSearch = null
     onComplete(suggestions)
