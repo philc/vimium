@@ -35,12 +35,16 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(@url))}</span>
+        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(@htmlEntities @url))}</span>
         #{relevancyHtml}
       </div>
       """
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
+
+  # Adapted version of http://css-tricks.com/snippets/javascript/htmlentities-for-javascript
+  htmlEntities: (text) ->
+    text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
   stripTrailingSlash: (url) ->
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
