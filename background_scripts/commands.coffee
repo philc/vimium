@@ -100,7 +100,7 @@ Commands =
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab", "moveTabToNewWindow"]
+      ["moveToNextTab", "moveToPreviousTab", "nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab", "restoreTab"]
     misc:
       ["showHelp"]
 
@@ -114,6 +114,8 @@ Commands =
     "Marks.activateGotoMode"]
 
 defaultKeyMappings =
+  "<a-k>": "moveToNextTab"
+  "<a-j>": "moveToPreviousTab"
   "?": "showHelp"
   "j": "scrollDown"
   "k": "scrollUp"
@@ -241,6 +243,8 @@ commandDescriptions =
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
   createTab: ["Create new tab", { background: true }]
+  moveToNextTab : ["Move current tab right", { background: true }]
+  moveToPreviousTab : ["Move current tab left", { background: true }]
   duplicateTab: ["Duplicate current tab", { background: true }]
   removeTab: ["Close current tab", { background: true, noRepeat: true }]
   restoreTab: ["Restore closed tab", { background: true }]
