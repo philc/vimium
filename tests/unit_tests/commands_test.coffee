@@ -1,3 +1,9 @@
+global.chrome = {
+	i18n: {
+		getMessage: ->
+	}
+}
+
 require "./test_helper.js"
 {Commands} = require "../../background_scripts/commands.js"
 

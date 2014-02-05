@@ -873,6 +873,9 @@ window.showHelpDialog = (html, fid) ->
     -> chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" })
     false)
 
+  i18n.process(container, chrome.i18n.getMessage)
+  null
+
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false

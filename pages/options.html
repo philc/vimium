@@ -6,6 +6,7 @@
     <script src="../lib/dom_utils.js"></script>
     <script src="../lib/handler_stack.js"></script>
     <script src="../lib/clipboard.js"></script>
+    <script src="../lib/i18n.js"></script>
     <script src="../content_scripts/link_hints.js"></script>
     <script src="../content_scripts/vomnibar.js"></script>
     <script src="../content_scripts/scroller.js"></script>
@@ -183,17 +184,17 @@
 
   <body>
     <div id="wrapper">
-      <header>Vimium options</header>
+      <header data-i18n-content="options_header">Vimium options</header>
       <table id="options">
         <tr>
-          <td class="caption">Scroll step size</td>
+          <td class="caption" data-i18n-content="options_scroll_step_size">Scroll step size</td>
           <td>
             <input id="scrollStepSize" type="number" />px
           </td>
         </tr>
         <tr>
           <td colspan="3">
-              Excluded URLs<br/>
+              <span data-i18n-content="options_excluded_urls">Excluded URLs</span><br/>
               <div class="help">
                 <div class="example">
                   e.g. http*://mail.google.com/*<br/>
@@ -206,7 +207,7 @@
         </tr>
         <tbody id='advancedOptions'>
           <tr>
-            <td class="caption">Custom key<br/>mappings</td>
+            <td class="caption" data-i18n-content="options_custom_key_mappings">Custom key<br/>mappings</td>
             <td id="mappingsHelp" verticalAlign="top">
               <div class="help">
                 <div class="example">
@@ -218,14 +219,14 @@ unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-                  <a href="#" id="showCommands">Show available commands.</a>
+                  <a href="#" id="showCommands" data-i18n-content="options_show_available_command">Show available commands.</a>
                 </div>
               </div>
               <textarea id="keyMappings" type="text"></textarea>
             </td>
           </tr>
           <tr>
-            <td class="caption">CSS for link hints</td>
+            <td class="caption" data-i18n-content="options_css_for_link_hints">CSS for link hints</td>
             <td verticalAlign="top">
               <div class="help">
                 <div class="example">
@@ -238,7 +239,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Characters used<br/> for link hints</td>
+            <td class="caption" data-i18n-content="options_characters_used_for_link_hints">Characters used<br/> for link hints</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -249,7 +250,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Numbers used<br/> for filtered link hints</td>
+            <td class="caption" data-i18n-content="options_numbers_used_for_filtered_link_hints">Numbers used<br/> for filtered link hints</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -270,7 +271,7 @@ unmapAll
               </div>
               <label>
                 <input id="filterLinkHints" type="checkbox"/>
-                Use the link's name and numbers for link hint filtering
+                <span data-i18n-content="options_filter_link_hint">Use the link's name and numbers for link hint filtering</span>
               </label>
             </td>
           </tr>
@@ -284,7 +285,7 @@ unmapAll
               </div>
               <label>
                 <input id="hideHud" type="checkbox"/>
-                Hide the Heads Up Display (HUD)
+                <span data-i18n-content="options_hide_hud">Hide the Heads Up Display (HUD)</span>
               </label>
             </td>
           </tr>
@@ -298,12 +299,12 @@ unmapAll
               </div>
               <label>
                 <input id="regexFindMode" type="checkbox"/>
-                Treat find queries as regular expressions.
+                <span data-i18n-content="options_regex_find_mode">Treat find queries as regular expressions.</span>
               </label>
             </td>
           </tr>
           <tr>
-            <td class="caption">Previous Patterns</td>
+            <td class="caption" data-i18n-content="options_previous_patterns">Previous Patterns</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -315,7 +316,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Next Patterns</td>
+            <td class="caption" data-i18n-content="options_next_patterns">Next Patterns</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -326,7 +327,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Search</td>
+            <td class="caption" data-i18n-content="options_search">Search</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -340,16 +341,16 @@ unmapAll
       </table>
 
       <div id="buttonsPanel">
-        <a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a>
+        <a href="#" id="advancedOptionsLink" data-i18n-content="options_advanced_options_link">Show advanced options&hellip;</a>
         <div id="buttonContainer">
-          <button id="restoreSettings">Restore to Defaults</button>
-          <button id="saveOptions" disabled="true">Save Options</button>
+          <button id="restoreSettings" data-i18n-content="options_restore_settings">Restore to Defaults</button>
+          <button id="saveOptions" disabled="true" data-i18n-content="options_save_options">Save Options</button>
         </div>
       </div>
 
       <br/>
 
-      <footer id="showHelpDialogMessage">
+      <footer id="showHelpDialogMessage" data-i18n-content="options_show_help_dialog_message">
         To view all available shortcuts, type <strong>?</strong> to show the Vimium help dialog.
       </footer>
     </div>

@@ -109,7 +109,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
-  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
+  dialogHtml = dialogHtml.replace("{{title}}", customTitle || chrome.i18n.getMessage("help"))
   dialogHtml
 
 #
