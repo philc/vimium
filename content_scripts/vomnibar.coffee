@@ -68,6 +68,7 @@ class VomnibarUI
     @update(true)
 
   updateSelection: ->
+    if @completionList.children.length != 0 && @selection < 0 then @selection = 0
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 

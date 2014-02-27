@@ -11,7 +11,7 @@ context "Keep selection within bounds",
   tearDown ->
     Vomnibar.vomnibarUI.hide()
 
-  should "set selection to position -1 for omni completion by default", ->
+  should "set selection to position 0 for omni completion if possible", ->
     Vomnibar.activate()
     ui = Vomnibar.vomnibarUI
 
@@ -19,9 +19,9 @@ context "Keep selection within bounds",
     ui.update(true)
     assert.equal -1, ui.selection
 
-    @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
+    @completions = [{html:'foo',type:'bookmark',url:'http://example.com'}]
     ui.update(true)
-    assert.equal -1, ui.selection
+    assert.equal 0, ui.selection
 
     @completions = []
     ui.update(true)
