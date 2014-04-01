@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands"]
+    "helpDialog_showAdvancedCommands", "keyToVisualModeCommandRegistry"]
   isLoaded: false
   eventListeners: {}
 
@@ -101,6 +101,9 @@ initializePreDomReady = ->
   checkIfEnabledForUrl()
 
   refreshCompletionKeys()
+
+  VisualMode.keyToCommandRegistry = settings.get(
+    "keyToVisualModeCommandRegistry")
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })

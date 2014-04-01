@@ -583,6 +583,11 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
+# make visual mode keys available to visual mode on page via settings
+Settings.set(
+  "keyToVisualModeCommandRegistry",
+  Commands.keyToVisualModeCommandRegistry)
+
 populateValidFirstKeys()
 populateSingleKeyCommands()
 if shouldShowUpgradeMessage()

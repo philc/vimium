@@ -1,8 +1,31 @@
 VisualMode = 
 
-  keyMap: ""
+  #keyToCommandRegistry will be populated on pageload by vimium_frontend, which
+  #retrieves keyToVisualModeCommandRegistry from settings
+  keyToCommandRegistry: {}
+
   isActive: false
   freeEndToggled: false
+
+  backwardCharacter: (sel) -> sel.modify("extend", "backward", "character")
+  forwardCharacter: (sel) -> sel.modify("extend", "forward", "character")
+
+  backwardWord: (sel) -> sel.modify("extend", "backward", "word")
+  forwardWord: (sel) -> sel.modify("extend", "forward", "word")
+  
+  backwardLine: (sel) -> sel.modify("extend", "backward", "line")
+  forwardLine: (sel) -> sel.modify("extend", "forward", "line")
+  
+  backwardLineBoundary: (sel) -> sel.modify(
+    "extend", "backward", "lineboundary")
+  forwardLineBoundary: (sel) -> sel.modify(
+    "extend", "forward", "lineboundary")
+  
+  reload: (sel) -> chrome.runtime.reload()
+
+  #wrap deactivateMode so that we can use the (sel) -> call signature without
+  #the selection being mistaken for the delay
+  deactivateModeNow: (sel) -> @deactivateMode()
 
   toggleVisualMode: ->
     @freeEndToggled = false
@@ -27,24 +50,18 @@ VisualMode =
     if (KeyboardUtils.isEscape(event) || keyCode == "v") 
       @deactivateMode()
 
-    sel = window.getSelection()
-    switch keyCode
-      when "h" then sel.modify("extend", "backward", "character")
-      when "l" then sel.modify("extend", "forward", "character")
-      
-      when "o" then @toggleFreeEndOfSelection()
-      when "k" then sel.modify("extend", "backward", "line")
-      when "j" then sel.modify("extend", "forward", "line")
-      when "b" then sel.modify("extend", "backward", "word")
-      when "0" then sel.modify("extend", "backward", "lineboundary")
-      when "e" then sel.modify("extend", "forward", "word")
-      when "w" then sel.modify("extend", "forward", "word")
-      when "$" then sel.modify("extend", "forward", "lineboundary")
-      when "y" then @yankSelection()
-      when "r" then chrome.runtime.reload()
+    #To prevent unexpected behavior, we're going to limit visual mode keybindings
+    #to only triggering functions defined on the VisualMode object
 
-  toggleFreeEndOfSelection: ->
     sel = window.getSelection()
+    commandName = @keyToCommandRegistry[keyCode].command
+    command = this[commandName]
+
+    #find the command we want to run and run it, passing the current selection
+    if typeof(command) == "function"
+      command(sel)
+
+  toggleFreeEndOfSelection: (sel) ->
     range = sel.getRangeAt(0)
     startOffset = range.startOffset
     startContainer = range.startContainer
@@ -82,13 +99,11 @@ VisualMode =
         callback() if callback
       delay)
 
-  yankSelection: ->
-    sel = window.getSelection()
+  yankSelection: (sel) ->
     text = sel.toString()
     @deactivateMode()
     sel.removeAllRanges()
     chrome.extension.sendMessage { handler: "copyToClipboard", data: text}
 
 root = exports ? window
-@keymap = root.settings
 root.VisualMode = VisualMode 

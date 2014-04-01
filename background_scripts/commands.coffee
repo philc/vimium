@@ -2,39 +2,71 @@ Commands =
   init: ->
     for command, description of commandDescriptions
       @addCommand(command, description[0], description[1])
+    for command, description of visualModeCommandDescriptions
+      @addCommand(command, description[0], description[1], visualMode = true)
 
   availableCommands: {}
+  availableVisualModeCommands: {}
   keyToCommandRegistry: {}
+  keyToVisualModeCommandRegistry: {}
 
   # Registers a command, making it available to be optionally bound to a key.
   # options:
   #  - background: whether this command needs to be run against the background page.
   #  - passCountToFunction: true if this command should have any digits which were typed prior to the
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
-  addCommand: (command, description, options) ->
-    if command of @availableCommands
-      console.log(command, "is already defined! Check commands.coffee for duplicates.")
+  # visualMode: if true, registers the command as a visual mode command,
+  #             instead of a normal command. Defaults to false.
+  addCommand: (command, description, options, visualMode = false) ->
+    availableCommands = 
+      if visualMode then @availableVisualModeCommands
+      else @availableCommands
+
+    if command of availableCommands
+      if visualMode
+        console.log(
+          command,
+          "(visual mode) is already defined! Check commands.coffee for " +
+          "duplicates.")
+      else
+        console.log(
+          command,
+          "is already defined! Check commands.coffee for duplicates.")
       return
 
     options ||= {}
-    @availableCommands[command] =
+    availableCommands[command] =
       description: description
       isBackgroundCommand: options.background
       passCountToFunction: options.passCountToFunction
       noRepeat: options.noRepeat
 
-  mapKeyToCommand: (key, command) ->
-    unless @availableCommands[command]
+  # Maps a key to a command
+  #
+  # visualMode: if true, maps key to command in the visual mode context.
+  #             Defaults to false.
+  mapKeyToCommand: (key, command, visualMode = false) ->
+    availableCommands = 
+      if visualMode then @availableVisualModeCommands
+      else @availableCommands
+
+    keyToCommandRegistry = 
+      if visualMode then @keyToVisualModeCommandRegistry
+      else @keyToCommandRegistry
+
+    unless availableCommands[command]
       console.log(command, "doesn't exist!")
       return
 
-    @keyToCommandRegistry[key] =
+    keyToCommandRegistry[key] =
       command: command
-      isBackgroundCommand: @availableCommands[command].isBackgroundCommand
-      passCountToFunction: @availableCommands[command].passCountToFunction
-      noRepeat: @availableCommands[command].noRepeat
+      isBackgroundCommand: availableCommands[command].isBackgroundCommand
+      passCountToFunction: availableCommands[command].passCountToFunction
+      noRepeat: availableCommands[command].noRepeat
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
+
+  unmapVisualModeKey: (key) -> delete @keyToVisualModeCommandRegistry[key]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -67,12 +99,31 @@ Commands =
 
         console.log("Mapping", key, "to", vimiumCommand)
         @mapKeyToCommand(key, vimiumCommand)
+
+      #visual mode needs separate key bindings (since they'll likely collide
+      #with non-visual mode bindings, so we save them to a different map
+      else if (lineCommand == "mapVisualMode")
+        continue if (splitLine.length != 3)
+        key = @normalizeKey(splitLine[1])
+        visualModeCommand = splitLine[2]
+
+        continue unless @availableVisualModeCommands[visualModeCommand]
+
+        console.log("Mapping (visual mode):", key, "to", visualModeCommand)
+        @mapKeyToCommand(key, visualModeCommand, visualMode=true)
+
       else if (lineCommand == "unmap")
         continue if (splitLine.length != 2)
 
         key = @normalizeKey(splitLine[1])
         console.log("Unmapping", key)
         @unmapKey(key)
+      else if (lineCommand == "unmapVisualMode")
+        continue if (splitLine.length != 2)
+
+        key = @normalizeKey(splitLine[1])
+        console.log("Unmapping (visual mode)", key)
+        @unmapVisualModeKey(key)
       else if (lineCommand == "unmapAll")
         @keyToCommandRegistry = {}
 
@@ -81,6 +132,11 @@ Commands =
 
     for key of defaultKeyMappings
       @mapKeyToCommand(key, defaultKeyMappings[key])
+
+    @keyToVisualModeCommandRegistry = {}
+
+    for key of defaultVisualModeKeyMappings
+      @mapKeyToCommand(key, defaultVisualModeKeyMappings[key], visualMode=true)
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -186,6 +242,22 @@ defaultKeyMappings =
   "m": "Marks.activateCreateMode"
   "`": "Marks.activateGotoMode"
 
+defaultVisualModeKeyMappings =
+  "h": "backwardCharacter"
+  "l": "forwardCharacter"
+
+  "o": "toggleFreeEndOfSelection"
+  "k": "backwardLine"
+  "j": "forwardLine"
+  "b": "backwardWord"
+  "e": "forwardWord"
+  "w": "forwardWord"
+  "0": "backwardLineBoundary"
+  "$": "forwardLineBoundary"
+  "y": "yankSelection"
+
+  "r": "reload"
+  "v": "deactivateModeNow"
 
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
@@ -260,6 +332,26 @@ commandDescriptions =
 
   "Marks.activateCreateMode": ["Create a new mark"]
   "Marks.activateGotoMode": ["Go to a mark"]
+
+visualModeCommandDescriptions =
+  backwardCharacter: ["extend the current selection backward by one character"]
+  forwardCharacter: ["extend the current selection forward by one character"]
+
+  backwardWord: ["extend the current selection backward by one word"]
+  forwardWord: ["extend the current selection forward by one word"]  
+
+  backwardLine: ["extend the current selection backward by one line"]
+  forwardLine: ["extend the current selection forward by one line"]
+
+  backwardLineBoundary: [
+    "extend the current selection back to the beginning of the line"]
+  forwardLineBoundary: [
+    "extend the current selection forward to the end of the line"]
+
+  toggleFreeEndOfSelection: [
+    "switch between controlling the beginning or end of the selected area"]
+  reload: ["reload the page"]
+  deactivateModeNow: ["deactivate Visual Mode"]
 
 Commands.init()
 
