@@ -1,11 +1,17 @@
 VisualMode = 
 
-  #keyToCommandRegistry will be populated on pageload by vimium_frontend, which
-  #retrieves keyToVisualModeCommandRegistry from settings
+  #keyToCommandRegistry will be populated on mode activation, when we can
+  #retrieve keyToVisualModeCommandRegistry from settings
   keyToCommandRegistry: {}
 
   isActive: false
   freeEndToggled: false
+
+  #
+  # To be called once settings hsa been loaded, so we can get the keybindings
+  #
+  init: ->
+    @keyToCommandRegistry = settings.get("keyToVisualModeCommandRegistry")
 
   backwardCharacter: (sel) -> sel.modify("extend", "backward", "character")
   forwardCharacter: (sel) -> sel.modify("extend", "forward", "character")

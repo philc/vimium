@@ -94,6 +94,7 @@ hasModifiersRegex = /^<([amc]-)+.>/
 #
 initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
+  settings.addEventListener("load", VisualMode.init.bind(VisualMode))
   settings.load()
 
   Scroller.init()
@@ -101,9 +102,6 @@ initializePreDomReady = ->
   checkIfEnabledForUrl()
 
   refreshCompletionKeys()
-
-  VisualMode.keyToCommandRegistry = settings.get(
-    "keyToVisualModeCommandRegistry")
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
