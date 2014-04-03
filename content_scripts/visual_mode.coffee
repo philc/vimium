@@ -29,10 +29,6 @@ VisualMode =
   
   reload: (sel) -> chrome.runtime.reload()
 
-  #wrap deactivateMode so that we can use the (sel) -> call signature without
-  #the selection being mistaken for the delay
-  deactivateModeNow: (sel) -> @deactivateMode()
-
   toggleVisualMode: ->
     @freeEndToggled = false
     if (@isActive)
@@ -53,19 +49,18 @@ VisualMode =
   onKeyDownInMode: (event) ->
     keyCode = KeyboardUtils.getKeyChar(event)
 
-    if (KeyboardUtils.isEscape(event) || keyCode == "v") 
-      @deactivateMode()
+    if (KeyboardUtils.isEscape(event)) 
+      @deactivateModeNow()
 
     #To prevent unexpected behavior, we're going to limit visual mode keybindings
     #to only triggering functions defined on the VisualMode object
 
     sel = window.getSelection()
     commandName = @keyToCommandRegistry[keyCode].command
-    command = this[commandName]
 
     #find the command we want to run and run it, passing the current selection
-    if typeof(command) == "function"
-      command(sel)
+    if typeof(this[commandName]) == "function"
+      this[commandName](sel)
 
   toggleFreeEndOfSelection: (sel) ->
     range = sel.getRangeAt(0)
@@ -104,6 +99,10 @@ VisualMode =
         deactivate()
         callback() if callback
       delay)
+
+  # wrap deactivateMode so that we can use the (sel) -> call signature without
+  # the selection being mistaken for the delay
+  deactivateModeNow: (sel) -> @deactivateMode()
 
   yankSelection: (sel) ->
     text = sel.toString()

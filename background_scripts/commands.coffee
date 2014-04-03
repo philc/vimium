@@ -54,6 +54,13 @@ Commands =
       if visualMode then @keyToVisualModeCommandRegistry
       else @keyToCommandRegistry
 
+    # the toggleVisualMode command is a special case: if a key is bound to it,
+    # it must ALSO be bound to "deactivateModeNow" in visual mode to ensure
+    # consistent behavior (because visual mode captures keys without sending
+    # them to the global key handler)
+    if not visualMode and command == "VisualMode.toggleVisualMode"
+      @mapKeyToCommand(key, "deactivateModeNow", visualMode = true)
+
     unless availableCommands[command]
       console.log(command, "doesn't exist!")
       return
@@ -129,14 +136,13 @@ Commands =
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
-
-    for key of defaultKeyMappings
-      @mapKeyToCommand(key, defaultKeyMappings[key])
-
     @keyToVisualModeCommandRegistry = {}
 
-    for key of defaultVisualModeKeyMappings
-      @mapKeyToCommand(key, defaultVisualModeKeyMappings[key], visualMode=true)
+    for key, command of defaultKeyMappings
+      @mapKeyToCommand(key, command)
+
+    for key, command of defaultVisualModeKeyMappings
+      @mapKeyToCommand(key, command, visualMode=true)
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -255,9 +261,7 @@ defaultVisualModeKeyMappings =
   "0": "backwardLineBoundary"
   "$": "forwardLineBoundary"
   "y": "yankSelection"
-
   "r": "reload"
-  "v": "deactivateModeNow"
 
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
@@ -352,6 +356,9 @@ visualModeCommandDescriptions =
     "switch between controlling the beginning or end of the selected area"]
   reload: ["reload the page"]
   deactivateModeNow: ["deactivate Visual Mode"]
+
+  yankSelection: [
+    "copy the selected text to the clipboard and deactivate visual mode"]
 
 Commands.init()
 
