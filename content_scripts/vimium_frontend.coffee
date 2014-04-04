@@ -42,7 +42,7 @@ settings =
   port: null
   values: {}
   loadedValues: 0
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
+  valuesToLoad: ["scrollStepSize", "smoothScrollEnabled", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
     "helpDialog_showAdvancedCommands"]
   isLoaded: false
@@ -71,6 +71,10 @@ settings =
     settings.values[args.key] = args.value
     # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
     # for equality so initializeOnReady only runs once
+
+    # initialize scroll functions as soon as setting gets recieved
+    addScrollFunctions(settings.values["smoothScrollEnabled"])
+
     if (++settings.loadedValues == settings.valuesToLoad.length)
       settings.isLoaded = true
       listener = null
@@ -216,19 +220,36 @@ window.focusThisFrame = (shouldHighlight) ->
     document.body.style.border = '5px solid yellow'
     setTimeout((-> document.body.style.border = borderWas), 200)
 
-extend window,
-  scrollToBottom: -> Scroller.scrollTo "y", "max"
-  scrollToTop: -> Scroller.scrollTo "y", 0
-  scrollToLeft: -> Scroller.scrollTo "x", 0
-  scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
-  scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
-  scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
-  scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
-  scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
-  scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
-  scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
-  scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
+addScrollFunctions = (smoothScroll) ->
+  if (smoothScroll)
+    extend window,
+      scrollToBottom: -> Scroller.smoothScrollBy "y", document.body.scrollHeight - document.body.scrollTop - window.innerHeight + 10
+      scrollToTop: -> Scroller.smoothScrollBy "y", -1 * document.body.scrollTop - 10
+      scrollToLeft: -> Scroller.scrollTo "x", 0
+      scrollToRight: -> Scroller.scrollTo "x", "max"
+      scrollUp: -> Scroller.smoothScrollBy("y", -1 * settings.get("scrollStepSize"))
+      scrollDown: -> Scroller.smoothScrollBy "y", settings.get("scrollStepSize")
+      scrollPageUp: -> Scroller.smoothScrollBy "y", "viewSize", -1/2
+      scrollPageDown: -> Scroller.smoothScrollBy "y", "viewSize", 1/2
+      scrollFullPageUp: -> Scroller.smoothScrollBy "y", "viewSize", -1
+      scrollFullPageDown: -> Scroller.smoothScrollBy "y", "viewSize"
+      scrollLeft: -> Scroller.smoothScrollBy "x", -1 * settings.get("scrollStepSize")
+      scrollRight: -> Scroller.smoothScrollBy "x", settings.get("scrollStepSize")
+  else
+    extend window,
+      scrollToBottom: -> Scroller.scrollTo "y", "max"
+      scrollToTop: -> Scroller.scrollTo "y", 0
+      scrollToLeft: -> Scroller.scrollTo "x", 0
+      scrollToRight: -> Scroller.scrollTo "x", "max"
+      scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
+      scrollUp: -> Scroller.scrollBy("y", -1 * settings.get("scrollStepSize"))
+      scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
+      scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
+      scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
+      scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
+      scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
+      scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
+      scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
 
 extend window,
   reload: -> window.location.reload()

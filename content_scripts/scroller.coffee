@@ -82,6 +82,41 @@ root.scrollTo = (direction, pos) ->
 
   ensureScrollChange direction, (element, axisName) -> element[axisName] = pos
 
+# Smooth scrolling
+root.smoothScrollBy = (direction, amount, factor = 1) ->
+  return unless document.body
+
+  delta = 0
+  interval = 0
+  duration = 40
+
+  if (!activatedElement || !isRendered(activatedElement))
+    activatedElement = document.body
+
+  if (typeof amount == "string")
+    amount = getDimension activatedElement, direction, amount if Utils.isString amount
+    amount *= factor
+
+  easeOutExpo = (t, b, c, d) ->
+    return c * (-Math.pow(2, -10 * t / d) + 1)
+
+  if (direction == "x")
+    animationLoop = () ->
+      window.scrollBy(easeOutExpo(interval, 0, amount, duration) - delta, 0)
+      delta = easeOutExpo(interval, 0, amount, duration)
+      interval += 1
+      if (interval < duration)
+        window.requestAnimationFrame(animationLoop)
+    animationLoop()
+  else
+    animationLoop = () ->
+      window.scrollBy(0, Math.round(easeOutExpo(interval, 0, amount, duration) - delta))
+      delta = easeOutExpo(interval, 0, amount, duration)
+      interval += 1
+      if (interval < duration)
+        window.requestAnimationFrame(animationLoop)
+    animationLoop()
+
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
   computedStyle = window.getComputedStyle(element, null)

@@ -25,6 +25,7 @@ root.Settings = Settings =
     linkHintCharacters: "sadfjklewcmpgh"
     linkHintNumbers: "0123456789"
     filterLinkHints: false
+    smoothScrollEnabled: false
     hideHud: false
     userDefinedLinkHintCss:
       """
