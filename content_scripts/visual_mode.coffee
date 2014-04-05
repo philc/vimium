@@ -58,7 +58,8 @@ VisualMode =
       this[commandName](sel)
 
   toggleFreeEndOfSelection: ->
-    range = window.getSelection().getRangeAt(0)
+    sel = window.getSelection()
+    range = sel.getRangeAt(0)
     startOffset = range.startOffset
     startContainer = range.startContainer
     endOffset = range.endOffset
@@ -96,9 +97,10 @@ VisualMode =
       delay)
 
   yankSelection: ->
-    text = window.getSelection().toString()
+    sel = window.getSelection()
+    text = sel.toString()
     @deactivateMode()
-    window.getSelection().removeAllRanges()
+    sel.removeAllRanges()
     chrome.extension.sendMessage { handler: "copyToClipboard", data: text}
 
 root = exports ? window

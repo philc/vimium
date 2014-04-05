@@ -469,11 +469,17 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   return keysToCheck if command.length == 0
   count = 1 if isNaN(count)
 
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
-    visualModeActive = tabInfoMap[tabId].visualMode
+  visualModeActive = tabInfoMap[tabId].visualMode
+  
 
-    if registryEntry.command == "VisualMode.toggleVisualMode"
+  if (!visualModeActive && Commands.keyToCommandRegistry[command] ||
+      visualModeActive && Commands.keyToVisualModeCommandRegistry[command])
+    #look up the command
+    #we start by looking in the main registry even if we're in visual mode, so
+    #we have a chance to find the toggleVisualMode command
+    registryEntry = Commands.keyToCommandRegistry[command]
+
+    if registryEntry && registryEntry.command == "VisualMode.toggleVisualMode"
       tabInfoMap[tabId].visualMode = not visualModeActive
     else if visualModeActive
       # if we're in visual mode and the command *isn't* toggleVisualMode, look up
