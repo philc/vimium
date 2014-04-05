@@ -249,19 +249,19 @@ defaultKeyMappings =
   "`": "Marks.activateGotoMode"
 
 defaultVisualModeKeyMappings =
-  "h": "backwardCharacter"
-  "l": "forwardCharacter"
+  "h": "VisualMode.backwardCharacter"
+  "l": "VisualMode.forwardCharacter"
 
-  "o": "toggleFreeEndOfSelection"
-  "k": "backwardLine"
-  "j": "forwardLine"
-  "b": "backwardWord"
-  "e": "forwardWord"
-  "w": "forwardWord"
-  "0": "backwardLineBoundary"
-  "$": "forwardLineBoundary"
-  "y": "yankSelection"
-  "r": "reload"
+  "o": "VisualMode.toggleFreeEndOfSelection"
+  "k": "VisualMode.backwardLine"
+  "j": "VisualMode.forwardLine"
+  "b": "VisualMode.backwardWord"
+  "e": "VisualMode.forwardWord"
+  "w": "VisualMode.forwardWord"
+  "0": "VisualMode.backwardLineBoundary"
+  "$": "VisualMode.forwardLineBoundary"
+  "y": "VisualMode.yankSelection"
+  "r": "VisualMode.reload"
 
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
@@ -338,26 +338,32 @@ commandDescriptions =
   "Marks.activateGotoMode": ["Go to a mark"]
 
 visualModeCommandDescriptions =
-  backwardCharacter: ["extend the current selection backward by one character"]
-  forwardCharacter: ["extend the current selection forward by one character"]
+  "VisualMode.backwardCharacter": [
+    "extend the current selection backward by one character"]
+  "VisualMode.forwardCharacter": [
+    "extend the current selection forward by one character"]
 
-  backwardWord: ["extend the current selection backward by one word"]
-  forwardWord: ["extend the current selection forward by one word"]  
+  "VisualMode.backwardWord": [
+    "extend the current selection backward by one word"]
+  "VisualMode.forwardWord": [
+    "extend the current selection forward by one word"]
 
-  backwardLine: ["extend the current selection backward by one line"]
-  forwardLine: ["extend the current selection forward by one line"]
+  "VisualMode.backwardLine": [
+    "extend the current selection backward by one line"]
+  "VisualMode.forwardLine": [
+    "extend the current selection forward by one line"]
 
-  backwardLineBoundary: [
+  "VisualMode.backwardLineBoundary": [
     "extend the current selection back to the beginning of the line"]
-  forwardLineBoundary: [
+  "VisualMode.forwardLineBoundary": [
     "extend the current selection forward to the end of the line"]
 
-  toggleFreeEndOfSelection: [
+  "VisualMode.toggleFreeEndOfSelection": [
     "switch between controlling the beginning or end of the selected area"]
-  reload: ["reload the page"]
-  deactivateModeNow: ["deactivate Visual Mode"]
+  "VisualMode.reload": ["reload the page"]
+  "VisualMode.deactivateModeNow": ["deactivate Visual Mode"]
 
-  yankSelection: [
+  "VisualMode.yankSelection": [
     "copy the selected text to the clipboard and deactivate visual mode"]
 
 Commands.init()

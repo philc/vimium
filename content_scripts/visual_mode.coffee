@@ -13,21 +13,23 @@ VisualMode =
   init: ->
     @keyToCommandRegistry = settings.get("keyToVisualModeCommandRegistry")
 
-  backwardCharacter: (sel) -> sel.modify("extend", "backward", "character")
-  forwardCharacter: (sel) -> sel.modify("extend", "forward", "character")
+  backwardCharacter: ->
+    window.getSelection().modify("extend", "backward", "character")
+  forwardCharacter: ->
+    window.getSelection().modify("extend", "forward", "character")
 
-  backwardWord: (sel) -> sel.modify("extend", "backward", "word")
-  forwardWord: (sel) -> sel.modify("extend", "forward", "word")
+  backwardWord: -> window.getSelection().modify("extend", "backward", "word")
+  forwardWord: -> window.getSelection().modify("extend", "forward", "word")
   
-  backwardLine: (sel) -> sel.modify("extend", "backward", "line")
-  forwardLine: (sel) -> sel.modify("extend", "forward", "line")
+  backwardLine: -> window.getSelection().modify("extend", "backward", "line")
+  forwardLine: -> window.getSelection().modify("extend", "forward", "line")
   
-  backwardLineBoundary: (sel) -> sel.modify(
+  backwardLineBoundary: -> window.getSelection().modify(
     "extend", "backward", "lineboundary")
-  forwardLineBoundary: (sel) -> sel.modify(
+  forwardLineBoundary: -> window.getSelection().modify(
     "extend", "forward", "lineboundary")
   
-  reload: (sel) -> chrome.runtime.reload()
+  reload: -> chrome.runtime.reload()
 
   toggleVisualMode: ->
     @freeEndToggled = false
@@ -38,13 +40,6 @@ VisualMode =
     @isActive = true
     HUD.show("Visual Mode")
     document.body.classList.add("vimiumVisualMode")
-
-    @handlerId = handlerStack.push({
-      keydown: @onKeyDownInMode.bind(this),
-      # trap all key events
-      keypress: -> false
-      keyup: -> false
-    })
   
   onKeyDownInMode: (event) ->
     keyCode = KeyboardUtils.getKeyChar(event)
@@ -62,8 +57,8 @@ VisualMode =
     if typeof(this[commandName]) == "function"
       this[commandName](sel)
 
-  toggleFreeEndOfSelection: (sel) ->
-    range = sel.getRangeAt(0)
+  toggleFreeEndOfSelection: ->
+    range = window.getSelection().getRangeAt(0)
     startOffset = range.startOffset
     startContainer = range.startContainer
     endOffset = range.endOffset
@@ -100,14 +95,10 @@ VisualMode =
         callback() if callback
       delay)
 
-  # wrap deactivateMode so that we can use the (sel) -> call signature without
-  # the selection being mistaken for the delay
-  deactivateModeNow: (sel) -> @deactivateMode()
-
-  yankSelection: (sel) ->
-    text = sel.toString()
+  yankSelection: ->
+    text = window.getSelection().toString()
     @deactivateMode()
-    sel.removeAllRanges()
+    window.getSelection().removeAllRanges()
     chrome.extension.sendMessage { handler: "copyToClipboard", data: text}
 
 root = exports ? window

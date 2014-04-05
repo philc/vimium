@@ -301,6 +301,7 @@ updateOpenTabs = (tab) ->
     scrollX: null
     scrollY: null
     deletor: null
+    visualMode: false
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
@@ -470,8 +471,17 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   if (Commands.keyToCommandRegistry[command])
     registryEntry = Commands.keyToCommandRegistry[command]
+    visualModeActive = tabInfoMap[tabId].visualMode
+
+    if registryEntry.command == "VisualMode.toggleVisualMode"
+      tabInfoMap[tabId].visualMode = not visualModeActive
+    else if visualModeActive
+      # if we're in visual mode and the command *isn't* toggleVisualMode, look up
+      # the command again in the visual mode registry
+      registryEntry = Commands.keyToVisualModeCommandRegistry[command]
 
     if !registryEntry.isBackgroundCommand
+
       chrome.tabs.sendMessage(tabId,
         name: "executePageCommand",
         command: registryEntry.command,
