@@ -40,22 +40,31 @@ VisualMode =
     @isActive = true
     HUD.show("Visual Mode")
     document.body.classList.add("vimiumVisualMode")
+
+    @handlerId = handlerStack.push({
+      keydown: @onKeyDownInMode.bind(this),
+    })
+
+    #clicking anywhere deactivates visual mode
+    document.addEventListener("click",
+      @deactivateMode.bind(this))
+
+    chrome.runtime.sendMessage(
+      handler: "changeTabVisualMode"
+      visualMode: true)
   
   onKeyDownInMode: (event) ->
-    keyCode = KeyboardUtils.getKeyChar(event)
-
+    # the escape key always deactivates visual mode
+    # other keys are passed on to vimium_frontend for dispatch to the
+    # background key handler
     if (KeyboardUtils.isEscape(event)) 
-      @deactivateModeNow()
+      @deactivateMode()
+      chrome.runtime.sendMessage(
+        handler: "changeTabVisualMode"
+        visualMode: false)
+      return false
 
-    #To prevent unexpected behavior, we're going to limit visual mode keybindings
-    #to only triggering functions defined on the VisualMode object
-
-    sel = window.getSelection()
-    commandName = @keyToCommandRegistry[keyCode].command
-
-    #find the command we want to run and run it, passing the current selection
-    if typeof(this[commandName]) == "function"
-      this[commandName](sel)
+    return true
 
   toggleFreeEndOfSelection: ->
     sel = window.getSelection()
@@ -84,6 +93,12 @@ VisualMode =
       HUD.hide()
       @isActive = false
       document.body.classList.remove("vimiumVisualMode")
+      document.removeEventListener("click",
+        @deactivateMode.bind(this))
+      chrome.runtime.sendMessage(
+        handler: "changeTabVisualMode"
+        visualMode: false)
+
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
     # deactivateMode can be tested synchronously
@@ -102,6 +117,9 @@ VisualMode =
     @deactivateMode()
     sel.removeAllRanges()
     chrome.extension.sendMessage { handler: "copyToClipboard", data: text}
+    chrome.runtime.sendMessage(
+      handler: "changeTabVisualMode"
+      visualMode: false)
 
 root = exports ? window
 root.VisualMode = VisualMode 

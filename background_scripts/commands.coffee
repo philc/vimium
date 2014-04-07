@@ -54,13 +54,6 @@ Commands =
       if visualMode then @keyToVisualModeCommandRegistry
       else @keyToCommandRegistry
 
-    # the toggleVisualMode command is a special case: if a key is bound to it,
-    # it must ALSO be bound to "deactivateModeNow" in visual mode to ensure
-    # consistent behavior (because visual mode captures keys without sending
-    # them to the global key handler)
-    if not visualMode and command == "VisualMode.toggleVisualMode"
-      @mapKeyToCommand(key, "deactivateModeNow", visualMode = true)
-
     unless availableCommands[command]
       console.log(command, "doesn't exist!")
       return
@@ -361,7 +354,7 @@ visualModeCommandDescriptions =
   "VisualMode.toggleFreeEndOfSelection": [
     "switch between controlling the beginning or end of the selected area"]
   "VisualMode.reload": ["reload the page"]
-  "VisualMode.deactivateModeNow": ["deactivate Visual Mode"]
+  "VisualMode.deactivateMode": ["deactivate Visual Mode"]
 
   "VisualMode.yankSelection": [
     "copy the selected text to the clipboard and deactivate visual mode"]
