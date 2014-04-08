@@ -64,9 +64,11 @@ Commands =
       passCountToFunction: availableCommands[command].passCountToFunction
       noRepeat: availableCommands[command].noRepeat
 
-  unmapKey: (key) -> delete @keyToCommandRegistry[key]
-
-  unmapVisualModeKey: (key) -> delete @keyToVisualModeCommandRegistry[key]
+  unmapKey: (key, visualMode = false) ->
+    if visualMode
+      delete @keyToVisualModeCommandRegistry[key]
+    else
+      delete @keyToCommandRegistry[key]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -123,7 +125,7 @@ Commands =
 
         key = @normalizeKey(splitLine[1])
         console.log("Unmapping (visual mode)", key)
-        @unmapVisualModeKey(key)
+        @unmapKey(key, visualMode = true)
       else if (lineCommand == "unmapAll")
         @keyToCommandRegistry = {}
 
