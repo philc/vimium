@@ -5,7 +5,7 @@
 root = exports ? window
 
 root.chrome = {
-  extension: {
+  runtime: {
     connect: -> {
       onMessage: {
         addListener: ->
@@ -16,8 +16,6 @@ root.chrome = {
       addListener: ->
     }
     sendMessage: ->
-  }
-  runtime: {
     getManifest: ->
   }
 }

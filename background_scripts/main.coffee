@@ -33,7 +33,7 @@ completers =
   bookmarks: new MultiCompleter([completionSources.bookmarks])
   tabs: new MultiCompleter([completionSources.tabs])
 
-chrome.extension.onConnect.addListener((port, name) ->
+chrome.runtime.onConnect.addListener((port, name) ->
   senderTabId = if port.sender.tab then port.sender.tab.id else null
   # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
   # the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
@@ -54,7 +54,7 @@ chrome.extension.onConnect.addListener((port, name) ->
     port.onMessage.addListener(portHandlers[port.name])
 )
 
-chrome.extension.onMessage.addListener((request, sender, sendResponse) ->
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
   # Ensure the sendResponse callback is freed.
@@ -138,7 +138,7 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
 #
 fetchFileContents = (extensionFileName) ->
   req = new XMLHttpRequest()
-  req.open("GET", chrome.extension.getURL(extensionFileName), false) # false => synchronous
+  req.open("GET", chrome.runtime.getURL(extensionFileName), false) # false => synchronous
   req.send()
   req.responseText
 
@@ -528,7 +528,7 @@ shouldShowUpgradeMessage = ->
 
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: chrome.extension.getURL("pages/options.html"), index: tab.index + 1 }))
+    chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
   unless framesForTab[sender.tab.id]
@@ -573,7 +573,7 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
 
 # Convenience function for development use.
-window.runTests = -> open(chrome.extension.getURL('tests/dom_tests/dom_tests.html'))
+window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
 
 #
 # Begin initialization.

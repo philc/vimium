@@ -1,7 +1,7 @@
 require "./test_helper.js"
 
 extend(global, require "../../lib/utils.js")
-Utils.getCurrentVersion = -> '1.43'
+Utils.getCurrentVersion = -> '1.44'
 global.localStorage = {}
 {Settings} = require "../../background_scripts/settings.js"
 

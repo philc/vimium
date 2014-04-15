@@ -40,7 +40,7 @@ class Suggestion
       </div>
       """
 
-  shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^http:\/\//, "")
+  shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
 
   stripTrailingSlash: (url) ->
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"

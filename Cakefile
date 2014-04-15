@@ -1,7 +1,6 @@
 fs = require "fs"
 path = require "path"
 child_process = require "child_process"
-{Utils} = require './lib/utils'
 
 spawn = (procName, optArray, silent=false) ->
   proc = child_process.spawn procName, optArray
@@ -112,6 +111,7 @@ task "test", "run all tests", (options) ->
       process.exit 0
 
 task "coverage", "generate coverage report", ->
+  {Utils} = require './lib/utils'
   temp = require 'temp'
   tmpDir = temp.mkdirSync null
   jscoverage = spawn "jscoverage", [".", tmpDir].concat optArrayFromDict
