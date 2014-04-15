@@ -96,7 +96,7 @@ DomUtils =
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
 
-    eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
+    eventSequence = ["mouseover", "mousedown", "mouseup", "click", "mouseout"]
     for event in eventSequence
       mouseEvent = document.createEvent("MouseEvents")
       mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, false, false,
