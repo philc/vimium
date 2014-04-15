@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands"]
+    "helpDialog_showAdvancedCommands", "keyToVisualModeCommandRegistry"]
   isLoaded: false
   eventListeners: {}
 
@@ -94,6 +94,7 @@ hasModifiersRegex = /^<([amc]-)+.>/
 #
 initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
+  settings.addEventListener("load", VisualMode.init.bind(VisualMode))
   settings.load()
 
   Scroller.init()

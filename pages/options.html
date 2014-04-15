@@ -7,6 +7,7 @@
     <script src="../lib/handler_stack.js"></script>
     <script src="../lib/clipboard.js"></script>
     <script src="../content_scripts/link_hints.js"></script>
+    <script src="../content_scripts/visual_mode.js"></script>
     <script src="../content_scripts/vomnibar.js"></script>
     <script src="../content_scripts/scroller.js"></script>
     <script src="../content_scripts/vimium_frontend.js"></script>
@@ -214,7 +215,9 @@
                   Enter commands to remap your keys. Available commands:<br/>
                   <pre id="exampleKeyMapping">
 map j scrollDown
+mapVisualMode j forwardLine
 unmap j
+unmapVisualMode j
 unmapAll
 " this is a comment
 # this is also a comment</pre>

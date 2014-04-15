@@ -34,6 +34,7 @@
              "lib/handler_stack.js",
              "lib/clipboard.js",
              "content_scripts/link_hints.js",
+             "content_scripts/visual_mode.js",
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
              "content_scripts/marks.js",

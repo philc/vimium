@@ -301,6 +301,7 @@ updateOpenTabs = (tab) ->
     scrollX: null
     scrollY: null
     deletor: null
+    visualMode: false
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
@@ -330,6 +331,10 @@ updateActiveState = (tabId) ->
           chrome.tabs.sendMessage(tabId, { name: "disableVimium" })
       else
         chrome.browserAction.setIcon({ path: disabledIcon })))
+
+changeTabVisualMode = (request, sender) ->
+  # this lets tabs turn visual mode on or off *without* using a keybind
+  tabInfoMap[sender.tab.id].visualMode = request.visualMode
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
@@ -468,10 +473,31 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   return keysToCheck if command.length == 0
   count = 1 if isNaN(count)
 
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
+  visualModeActive = tabInfoMap[tabId].visualMode
+  normalRegistryEntry = Commands.keyToCommandRegistry[command]
+  visualRegistryEntry = Commands.keyToVisualModeCommandRegistry[command]
+  
+  isToggle = if normalRegistryEntry then normalRegistryEntry.command == "VisualMode.toggleVisualMode" else false
+
+  if (isToggle ||
+      !visualModeActive && normalRegistryEntry ||
+      visualModeActive && visualRegistryEntry)
+
+    # if the command is toggleVisualMode in the normal registry, we always use
+    # that command (i.e., if a button is toggleVisualMode in normal mode, it
+    # has to do the same thing in visual mode to preserve expected behavior)
+    if isToggle
+      registryEntry = normalRegistryEntry
+    else if visualModeActive
+      # if we're in visual mode and the command *isn't* toggleVisualMode, use
+      # the command from the visual mode registry
+      registryEntry = visualRegistryEntry
+    else
+      # if we're not, use the command from the normal registry
+      registryEntry = normalRegistryEntry
 
     if !registryEntry.isBackgroundCommand
+
       chrome.tabs.sendMessage(tabId,
         name: "executePageCommand",
         command: registryEntry.command,
@@ -571,6 +597,7 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
+  changeTabVisualMode: changeTabVisualMode
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
@@ -582,6 +609,11 @@ Commands.clearKeyMappingsAndSetDefaults()
 
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
+
+# make visual mode keys available to visual mode on page via settings
+Settings.set(
+  "keyToVisualModeCommandRegistry",
+  Commands.keyToVisualModeCommandRegistry)
 
 populateValidFirstKeys()
 populateSingleKeyCommands()
