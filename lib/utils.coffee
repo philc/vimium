@@ -1,6 +1,7 @@
 Utils =
   getCurrentVersion: ->
-    chrome.runtime.getManifest().version
+    chrome.runtime.getManifest().version if chrome.runtime
+    ""
 
   # Takes a dot-notation object string and call the function
   # that it points to with the correct value for 'this'.
