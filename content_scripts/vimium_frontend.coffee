@@ -218,7 +218,7 @@ window.focusThisFrame = (shouldHighlight) ->
 
 extend window,
   scrollToBottom: -> Scroller.scrollTo "y", "max"
-  scrollToTop: -> Scroller.scrollTo "y", 0
+  scrollToTop: (count) -> Scroller.scrollTo "y", (count - 1) * settings.get("scrollStepSize")
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
@@ -839,7 +839,7 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-  
+
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
