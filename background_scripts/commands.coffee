@@ -258,7 +258,7 @@ commandDescriptions =
   scrollLeft: ["Scroll left"]
   scrollRight: ["Scroll right"]
 
-  scrollToTop: ["Scroll to the top of the page", { noRepeat: true }]
+  scrollToTop: ["Scroll to the top of the page", { passCountToFunction: true }]
   scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
   scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
   scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
