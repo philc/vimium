@@ -7,47 +7,36 @@ root.Settings = Settings =
   get: (key) ->
     if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
-  # The doNotSync argument suppresses calls to chrome.storage.sync.* while running unit tests
   set: (key, value, doNotSync) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
-    # warning: this test is always false for settings with numeric default values (such as scrollStepSize)
-    if ( value == @defaults[key] )
-      return @clear(key,doNotSync)
-    # don't update the key/value if it's unchanged; thereby suppressing unnecessary calls to chrome.storage
-    valueJSON = JSON.stringify value
-    if localStorage[key] == valueJSON
-      return localStorage[key]
-    # we have a new value: so update chrome.storage and localStorage
-    root.Sync.set key, valueJSON if root?.Sync?.set
-    localStorage[key] = valueJSON
+    if (value == @defaults[key])
+      @clear(key)
+    else
+      jsonified = JSON.stringify value
+      localStorage[key] = jsonified
+      root.Sync.set key, jsonified
 
-  # The doNotSync argument suppresses calls to chrome.storage.sync.* while running unit tests
-  clear: (key, doNotSync) ->
+  clear: (key) ->
     if @has key
-      root.Sync.clear key if root?.Sync?.clear
       delete localStorage[key]
+    root.Sync.clear key
 
   has: (key) -> key of localStorage
 
-  # the postUpdateHooks handler below is called each time an option changes:
-  #    either from options/options.coffee          (when the options page is saved)
-  #        or from background_scripts/sync.coffee  (when an update propagates from chrome.storage)
-  # 
-  # NOTE:
-  # this has been refactored and renamed from options.coffee(postSaveHooks):
-  #   - refactored because it is now also called from sync.coffee
-  #   - renamed because it is no longer associated only with "Save" operations
+  # postUpdateHooks are called each time an option changes:
+  #   either from options/options.coffee          (when the options page is saved)
+  #       or from background_scripts/sync.coffee  (when an update propagates from chrome.storage)
   #
   postUpdateHooks:
     keyMappings: (value) ->
       root.Commands.clearKeyMappingsAndSetDefaults()
       root.Commands.parseCustomKeyMappings value
       root.refreshCompletionKeysAfterMappingSave()
-  
+
   # postUpdateHooks convenience wrapper
   doPostUpdateHook: (key, value) ->
     if @postUpdateHooks[key]
-      @postUpdateHooks[key] value 
+      @postUpdateHooks[key] value
 
 
   # options/options.(coffee|html) only handle booleans and strings; therefore
