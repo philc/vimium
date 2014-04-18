@@ -7,14 +7,14 @@ root.Settings = Settings =
   get: (key) ->
     if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
-  set: (key, value, doNotSync) ->
+  set: (key, value) ->
     # don't store the value if it is equal to the default, so we can change the defaults in the future
     if (value == @defaults[key])
       @clear(key)
     else
-      jsonified = JSON.stringify value
-      localStorage[key] = jsonified
-      root.Sync.set key, jsonified
+      jsonValue = JSON.stringify value
+      localStorage[key] = jsonValue
+      root.Sync.set key, jsonValue
 
   clear: (key) ->
     if @has key
