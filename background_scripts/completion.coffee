@@ -71,8 +71,7 @@ class Suggestion
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
     ranges = []
-    # Escape the terms before highlighting
-    escapedTerms = @queryTerms.map (oldTerm) -> Utils.escapeHtml(oldTerm)
+    escapedTerms = @queryTerms.map (term) -> Utils.escapeHtml(term)
     for term in escapedTerms
       @pushMatchingRanges string, term, ranges
 
