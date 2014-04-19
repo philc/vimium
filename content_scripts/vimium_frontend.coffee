@@ -560,19 +560,9 @@ updateFindModeQuery = ->
   # from the internal representation used by window.find.
   else
     # escape all special characters, so RegExp just parses the string 'as is'.
-    parsedNonRegexQuery = findModeQuery.parsedQuery.replace("\\", "\\\\")
-                                                   .replace("^", "\\^")
-                                                   .replace("$", "\\$")
-                                                   .replace("*", "\\*")
-                                                   .replace("+", "\\+")
-                                                   .replace("?", "\\?")
-                                                   .replace("(", "\\(")
-                                                   .replace(")", "\\)")
-                                                   .replace("|", "\\|")
-                                                   .replace("{", "\\{")
-                                                   .replace("}", "\\}")
-                                                   .replace("[", "\\[")
-                                                   .replace("]", "\\]")
+    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
     pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
