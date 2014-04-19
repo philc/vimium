@@ -56,7 +56,7 @@ root.Sync = Sync =
        @log "ignoring: #{key}"
        return
     # Ignore, it's unchanged
-    if localStorage[key] is value
+    if key of localStorage and localStorage[key] is value
        @log "unchanged: #{key}"
        return
 
@@ -64,7 +64,7 @@ root.Sync = Sync =
     defaultValue = Settings.defaults[key]
     defaultValueJSON = JSON.stringify(defaultValue)
 
-    if value && value != defaultValueJSON
+    if value and value != defaultValueJSON
       # Key/value has been changed to non-default value at remote instance.
       @log "update: #{key}=#{value}"
       localStorage[key] = value
@@ -72,7 +72,8 @@ root.Sync = Sync =
     else
       # Key has been reset to default value at remote instance.
       @log "clear: #{key}"
-      delete localStorage[key]
+      if key of localStorage
+        delete localStorage[key]
       Settings.doPostUpdateHook key, defaultValue
 
   # Only called synchronously from within vimium, never on a callback.

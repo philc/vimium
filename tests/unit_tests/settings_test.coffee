@@ -64,3 +64,12 @@ context "settings",
     # Pull Sync's version of scrollStepSize, this should delete scrollStepSize in localStorage, because it's a default value.
     Sync.pull()
     assert.isFalse Settings.has 'scrollStepSize'
+
+  should "remote setting cleared", ->
+    # Prime localStorage.
+    Settings.set 'scrollStepSize', 20
+    assert.equal Settings.get('scrollStepSize'), 20
+    # Prime Sync with a non-default value.
+    chrome.storage.sync.set { scrollStepSize: JSON.stringify(40) }
+    chrome.storage.sync.remove 'scrollStepSize'
+    assert.isFalse Settings.has 'scrollStepSize'

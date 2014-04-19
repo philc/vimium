@@ -16,6 +16,13 @@ global.chrome.storage.onChanged ||=
     if @func
       @func( @mkKeyValue(key,value), 'synced storage stub' )
 
+  callEmpty: (key) ->
+    chrome.runtime = { lastError: undefined }
+    if @func
+      items = {}
+      items[key] = {}
+      @func( items, 'synced storage stub' )
+
   mkKeyValue: (key, value) ->
     obj = {}
     obj[key] = { newValue: value }
@@ -53,4 +60,6 @@ global.chrome.storage.sync ||=
       delete @store[key]
     if callback
       callback()
+    # Now, generate (supposedly asynchronous) notification for listeners.
+    global.chrome.storage.onChanged.callEmpty(key)
 
