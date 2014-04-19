@@ -25,9 +25,11 @@ root.Sync = Sync =
   storage: chrome.storage.sync
   doNotSync: [ "settingsVersion", "previousVersion" ]
 
+  register: ->
+    chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
+
   init: ->
     chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
-    @pull()
 
   # Asynchronous fetch from synced storage, called only at startup.
   pull: ->
@@ -126,5 +128,5 @@ root.Sync = Sync =
       return false
     return true
 
-Sync.init()
+Sync.register()
 

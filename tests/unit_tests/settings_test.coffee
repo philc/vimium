@@ -6,6 +6,7 @@ Utils.getCurrentVersion = -> '1.44'
 global.localStorage = {}
 extend(global,require "../../background_scripts/sync.js")
 extend(global,require "../../background_scripts/settings.js")
+Sync.init()
 
 context "settings",
 
