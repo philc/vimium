@@ -78,3 +78,16 @@ context "settings",
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(40) }
     chrome.storage.sync.remove 'scrollStepSize'
     assert.isFalse Settings.has 'scrollStepSize'
+
+  should "trigger a postUpdateHook", ->
+    message = "Hello World"
+    # Install a bogus update hook for an existing setting.
+    Settings.postUpdateHooks['scrollStepSize'] = (value) -> Sync.message = value
+    chrome.storage.sync.set { scrollStepSize: JSON.stringify(message) }
+    # Was the update hook triggered?
+    assert.equal message, Sync.message
+
+  should "sync a key which is not a setting", ->
+    # There is nothing to test, here.  It's purpose is just to ensure that, should additional settings be
+    # added in future, then the Sync won't cause unexpected crashes.
+    chrome.storage.sync.set { notASetting: JSON.stringify("notAUsefullValue") }
