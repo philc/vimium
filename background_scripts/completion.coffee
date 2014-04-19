@@ -33,7 +33,7 @@ class Suggestion
     faviconClass = ""
     hostname = /^https?:\/\/([^\/]+)/.exec @url
     if hostname
-      faviconUrl = "http://www.google.com/s2/u/0/favicons?domain=#{hostname[1]}"
+      faviconUrl = "#{hostname[0]}/favicon.ico"
       # base64 encode hostname to generate a unique clas name
       base64Hostname = (btoa hostname[1]).replace(/\+/g, "_")
                                          .replace(/\//g, "_")
@@ -43,7 +43,8 @@ class Suggestion
         """
         .vomnibarTitle.#{faviconClass} {
           background: url(#{faviconUrl}) left center no-repeat;
-          padding-left: 20px
+          background-size: 16px 16px;
+          padding-left: 20px;
         }
         """
     else
