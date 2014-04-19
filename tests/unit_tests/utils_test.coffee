@@ -1,4 +1,7 @@
 require "./test_helper.js"
+require "./test_chrome_stubs.js"
+
+extend(global, require "../../background_scripts/sync.js")
 extend(global, require "../../lib/utils.js")
 extend(global, require "../../background_scripts/settings.js")
 

@@ -14,12 +14,12 @@ root.Settings = Settings =
     else
       jsonValue = JSON.stringify value
       localStorage[key] = jsonValue
-      root.Sync.set key, jsonValue
+      Sync.set key, jsonValue
 
   clear: (key) ->
     if @has key
       delete localStorage[key]
-    root.Sync.clear key
+    Sync.clear key
 
   has: (key) -> key of localStorage
 

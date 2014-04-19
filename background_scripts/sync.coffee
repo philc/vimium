@@ -59,19 +59,19 @@ root.Sync = Sync =
        return
 
     # Ok: accept, store and propagate this update.
-    defaultValue = root.Settings.defaults[key]
+    defaultValue = Settings.defaults[key]
     defaultValueJSON = JSON.stringify(defaultValue)
 
     if value && value != defaultValueJSON
       # Key/value has been changed to non-default value at remote instance.
       @log "update: #{key}=#{value}"
       localStorage[key] = value
-      root.Settings.doPostUpdateHook key, JSON.parse(value)
+      Settings.doPostUpdateHook key, JSON.parse(value)
     else
       # Key has been reset to default value at remote instance.
       @log "clear: #{key}"
       delete localStorage[key]
-      root.Settings.doPostUpdateHook key, defaultValue
+      Settings.doPostUpdateHook key, defaultValue
 
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates into the rest of vimium.
