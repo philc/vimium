@@ -46,11 +46,21 @@ DomUtils =
   #
   getVisibleClientRect: (element) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
-    clientRects = element.getClientRects()
+    clientRects = ({
+      top: clientRect.top, right: clientRect.right, bottom: clientRect.bottom, left: clientRect.left,
+      width: clientRect.width, height: clientRect.height
+    } for clientRect in element.getClientRects())
 
     for clientRect in clientRects
-      if (clientRect.top < -2 || clientRect.top >= window.innerHeight - 4 ||
-          clientRect.left < -2 || clientRect.left  >= window.innerWidth - 4)
+      if (clientRect.top < 0)
+        clientRect.height += clientRect.top
+        clientRect.top = 0
+
+      if (clientRect.left < 0)
+        clientRect.width += clientRect.left
+        clientRect.left = 0
+
+      if (clientRect.top >= window.innerHeight - 4 || clientRect.left  >= window.innerWidth - 4)
         continue
 
       if (clientRect.width < 3 || clientRect.height < 3)

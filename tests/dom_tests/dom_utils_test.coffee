@@ -42,6 +42,14 @@ context "Check visibility",
     assert.equal null, DomUtils.getVisibleClientRect document.getElementById 'foo'
     assert.equal null, DomUtils.getVisibleClientRect document.getElementById 'bar'
 
+  should "detect links only partially outside viewport as visible", ->
+    document.getElementById("test-div").innerHTML = """
+    <a id='foo' style='position:absolute;top:-10px'>test</a>
+    <a id='bar' style='position:absolute;left:-10px'>test</a>
+    """
+    assert.isTrue (DomUtils.getVisibleClientRect document.getElementById 'foo') != null
+    assert.isTrue (DomUtils.getVisibleClientRect document.getElementById 'bar') != null
+
   should "detect opacity:0 links as hidden", ->
     document.getElementById("test-div").innerHTML = """
     <a id='foo' style='opacity:0'>test</a>
