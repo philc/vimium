@@ -1,4 +1,3 @@
-
 #
 # * Sync.set() and Sync.clear() propagate local changes to chrome.storage.sync.
 # * Sync.listener() listens for changes to chrome.storage.sync and propagates those
@@ -21,6 +20,12 @@
 root = exports ? window
 root.Sync = Sync =
 
+  # 19/4/14:
+  # Leave logging statements in, but disable debugging.
+  # We may need to come back to this, so removing logging now would be premature.
+  # However, if users have problems, they are unlikely to notice and make sense of console logs on
+  # background pages.  So disable it, by default.
+  # For genuine errors, we call console.log directly.
   debug: false
   storage: chrome.storage.sync
   doNotSync: [ "settingsVersion", "previousVersion" ]
@@ -34,13 +39,14 @@ root.Sync = Sync =
   # Asynchronous fetch from synced storage, called only at startup.
   pull: ->
     @storage.get null, (items) =>
+      # Chrome sets chrome.runtime.lastError if there is an error.
       if chrome.runtime.lastError is undefined
         for own key, value of items
           @log "pull: #{key} <- #{value}"
           @storeAndPropagate key, value
       else
-        @log "chrome sync callback for Sync.pull() indicates error"
-        @log chrome.runtime.lastError
+        console.log "chrome sync callback for Sync.pull() indicates error"
+        console.log chrome.runtime.lastError
 
   # Asynchronous message from synced storage.
   listener: (changes, area) ->
@@ -87,18 +93,20 @@ root.Sync = Sync =
     #
     if @isSyncKey key
       @storage.set @mkKeyValue(key,value), =>
+        # Chrome sets chrome.runtime.lastError if there is an error.
         if chrome.runtime.lastError
-          @log "chrome sync callback for Sync.set() indicates error: " + key
-          @log chrome.runtime.lastError
+          console.log "chrome sync callback for Sync.set() indicates error: " + key
+          console.log chrome.runtime.lastError
       @log "set scheduled: #{key}=#{value}"
 
   # Only called synchronously from within vimium, never on a callback.
   clear: (key) ->
     if @isSyncKey key
-      @storage.remove key, ->
+      @storage.remove key, =>
+        # Chrome sets chrome.runtime.lastError if there is an error.
         if chrome.runtime.lastError
-          @log "chrome sync callback for Sync.clear() indicates error: " + key
-          @log chrome.runtime.lastError
+          console.log "chrome sync callback for Sync.clear() indicates error: " + key
+          console.log chrome.runtime.lastError
 
   # Should we synchronize this key?
   isSyncKey: (key) ->
@@ -129,4 +137,3 @@ root.Sync = Sync =
     return true
 
 Sync.register()
-
