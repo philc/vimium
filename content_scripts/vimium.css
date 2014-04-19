@@ -387,6 +387,10 @@ body.vimiumFindMode ::selection {
   color: #333;
   text-decoration: underline;
 }
+.vomnibarTitle.vomnibarNoFavicon {
+  background: url(https://plus.google.com/s2/u/0/favicons) left center no-repeat;
+  padding-left: 20px
+}
 
 #vomnibar li.vomnibarSelected {
   background-color: #BBCEE9;

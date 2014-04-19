@@ -31,11 +31,14 @@ class Suggestion
     # parse @url to get hostname for favicon. Favicon code from
     # http://css-tricks.com/favicons-next-to-external-links/
     faviconClass = ""
-    hostname = /^(https?:\/\/)?([^\/]+)/.exec @url
+    hostname = /^https?:\/\/([^\/]+)/.exec @url
     if hostname
-      faviconUrl = "http://www.google.com/s2/u/0/favicons?domain=#{hostname[2]}"
+      faviconUrl = "http://www.google.com/s2/u/0/favicons?domain=#{hostname[1]}"
       # base64 encode hostname to generate a unique clas name
-      faviconClass = "vomnibarFavicon#{btoa hostname[2]}"
+      base64Hostname = (btoa hostname[1]).replace(/\+/g, "_")
+                                         .replace(/\//g, "_")
+                                         .replace(/\=/g, "")
+      faviconClass = "vomnibarFavicon#{base64Hostname}"
       @css =
         """
         .vomnibarTitle.#{faviconClass} {
@@ -43,6 +46,8 @@ class Suggestion
           padding-left: 20px
         }
         """
+    else
+      faviconClass = "vomnibarNoFavicon"
 
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
