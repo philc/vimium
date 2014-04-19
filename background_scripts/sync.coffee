@@ -21,7 +21,7 @@
 root = exports ? window
 root.Sync = Sync =
 
-  debug: true
+  debug: false
   storage: chrome.storage.sync
   doNotSync: [ "settingsVersion", "previousVersion" ]
 
@@ -124,6 +124,6 @@ root.Sync = Sync =
       @log "Sync: Yikes! this should be a non-empty string or undefined: #{typeof(thing)} #{thing}"
       return false
     return true
-  
+
 Sync.init()
 
