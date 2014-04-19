@@ -13,6 +13,10 @@ context "settings",
   setup ->
     stub global, 'localStorage', {}
 
+  should "all settings stored in localStorage must be JSONified strings", ->
+    Settings.set 'dummy', ""
+    assert.equal localStorage.dummy, '""'
+
   should "obtain defaults if no key is stored", ->
     assert.isFalse Settings.has 'scrollStepSize'
     assert.equal Settings.get('scrollStepSize'), 60
