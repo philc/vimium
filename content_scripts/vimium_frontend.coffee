@@ -8,7 +8,7 @@ window.handlerStack = new HandlerStack
 
 insertModeLock = null
 findMode = false
-findModeQuery = { rawQuery: "" }
+findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
@@ -554,6 +554,25 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.regexMatches = text.match(pattern)
     findModeQuery.activeRegexIndex = 0
+    findModeQuery.matchCount = findModeQuery.regexMatches?.length
+  else
+    # escape all special characters, so RegExp just parses the string
+    parsedNonRegexQuery = findModeQuery.parsedQuery.replace("\\", "\\\\")
+                                                   .replace("^", "\\^")
+                                                   .replace("$", "\\$")
+                                                   .replace("*", "\\*")
+                                                   .replace("+", "\\+")
+                                                   .replace("?", "\\?")
+                                                   .replace("(", "\\(")
+                                                   .replace(")", "\\)")
+                                                   .replace("|", "\\|")
+                                                   .replace("{", "\\{")
+                                                   .replace("}", "\\}")
+                                                   .replace("[", "\\[")
+                                                   .replace("]", "\\]")
+    pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+    text = document.body.innerText
+    findModeQuery.matchCount = text.match(pattern)?.length
 
 handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
@@ -815,7 +834,7 @@ window.goNext = ->
 
 showFindModeHUDForQuery = ->
   if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    HUD.show("/" + findModeQuery.rawQuery)
+    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Matches)")
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
@@ -839,7 +858,7 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-  
+
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
