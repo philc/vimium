@@ -388,7 +388,7 @@ body.vimiumFindMode ::selection {
   text-decoration: underline;
 }
 .vomnibarTitle.vomnibarNoFavicon {
-  background: url(https://plus.google.com/s2/u/0/favicons) left center no-repeat;
+  background: none left center no-repeat;
   padding-left: 20px
 }
 
