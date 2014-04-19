@@ -30,3 +30,15 @@ context "settings",
     Settings.set 'scrollStepSize', 20
     Settings.clear 'scrollStepSize'
     assert.equal Settings.get('scrollStepSize'), 60
+
+  should "remote changes take effect locally, non-default value", ->
+    Settings.set 'scrollStepSize', 20
+    assert.equal Settings.get('scrollStepSize'), 20
+    Sync.listener { scrollStepSize: { newValue: "40" } }
+    assert.equal Settings.get('scrollStepSize'), 40
+
+  should "remote changes take effect locally, default value", ->
+    Settings.set 'scrollStepSize', 20
+    assert.equal Settings.get('scrollStepSize'), 20
+    Sync.listener { scrollStepSize: { newValue: "60" } }
+    assert.isFalse Settings.has 'scrollStepSize'
