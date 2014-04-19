@@ -83,7 +83,7 @@ root.Sync = Sync =
       return
     #
     if @isSyncKey key
-      @storage.set @mkKeyValue(key,value), ->
+      @storage.set @mkKeyValue(key,value), =>
         if chrome.runtime.lastError
           @log "chrome sync callback for Sync.set() indicates error: " + key
           @log chrome.runtime.lastError

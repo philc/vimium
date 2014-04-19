@@ -42,3 +42,25 @@ context "settings",
     assert.equal Settings.get('scrollStepSize'), 20
     Sync.listener { scrollStepSize: { newValue: "60" } }
     assert.isFalse Settings.has 'scrollStepSize'
+
+  should "remote changes are propagated, non-default value", ->
+    # Prime Sync.
+    Settings.set 'scrollStepSize', 20
+    assert.equal Settings.get('scrollStepSize'), 20
+    # Set a bogus value in localStorage, bypassing Settings and Sync.
+    localStorage['scrollStepSize'] = JSON.stringify(10)
+    assert.equal Settings.get('scrollStepSize'), 10
+    # Pull Sync's version of scrollStepSize, this should reset it to the correct value (20).
+    Sync.pull()
+    assert.equal Settings.get('scrollStepSize'), 20
+
+  should "remote changes are propagated, default value", ->
+    # Prime Sync with a default value.
+    chrome.storage.sync.set { scrollStepSize: JSON.stringify(60) }
+    assert.isFalse Settings.has 'scrollStepSize'
+    # Set a bogus value in localStorage, bypassing Settings and Sync.
+    localStorage['scrollStepSize'] = JSON.stringify(10)
+    assert.equal Settings.get('scrollStepSize'), 10
+    # Pull Sync's version of scrollStepSize, this should delete scrollStepSize in localStorage, because it's a default value.
+    Sync.pull()
+    assert.isFalse Settings.has 'scrollStepSize'
