@@ -45,67 +45,56 @@ root.Sync = Sync =
           @log "pull: #{key} <- #{value}"
           @storeAndPropagate key, value
       else
-        console.log "chrome sync callback for Sync.pull() indicates error"
+        console.log "callback for Sync.pull() indicates error"
         console.log chrome.runtime.lastError
 
   # Asynchronous message from synced storage.
   listener: (changes, area) ->
     for own key, change of changes
       @log "listener: #{key} <- #{change.newValue}"
-      @storeAndPropagate key, change.newValue
+      @storeAndPropagate key, change?.newValue
   
   # Only ever called from asynchronous synced-storage callbacks (pull and listener).
   storeAndPropagate: (key, value) ->
-    # Value must be JSON.stringifed or undefined.
-    if not @checkHaveStringOrUndefined value
-      return
-    # Ignore, we're not accepting this key.
-    if not @isSyncKey key
-       @log "ignoring: #{key}"
-       return
-    # Ignore, it's unchanged
-    if key of localStorage and localStorage[key] is value
-       @log "unchanged: #{key}"
-       return
+    return if not key of Settings.defaults
+    return if not @isSyncKey key
+    return if value and key of localStorage and localStorage[key] is value
 
-    # Ok: accept, store and propagate this update.
+    # Ok: store and propagate this update.
     defaultValue = Settings.defaults[key]
     defaultValueJSON = JSON.stringify(defaultValue)
 
     if value and value != defaultValueJSON
       # Key/value has been changed to non-default value at remote instance.
-      @log "update: #{key}=#{value}"
+      @log "storeAndPropagate update: #{key}=#{value}"
       localStorage[key] = value
       Settings.doPostUpdateHook key, JSON.parse(value)
     else
       # Key has been reset to default value at remote instance.
-      @log "clear: #{key}"
+      @log "storeAndPropagate clear: #{key}"
       if key of localStorage
         delete localStorage[key]
       Settings.doPostUpdateHook key, defaultValue
 
   # Only called synchronously from within vimium, never on a callback.
-  # No need to propagate updates into the rest of vimium.
+  # No need to propagate updates to the rest of vimium, that's already been done.
   set: (key, value) ->
-    # value has already been JSON.stringifed
-    if not @checkHaveString value
-      return
-    #
     if @isSyncKey key
+      @log "set scheduled: #{key}=#{value}"
       @storage.set @mkKeyValue(key,value), =>
         # Chrome sets chrome.runtime.lastError if there is an error.
         if chrome.runtime.lastError
-          console.log "chrome sync callback for Sync.set() indicates error: " + key
+          console.log "callback for Sync.set() indicates error: #{key} <- #{value}"
           console.log chrome.runtime.lastError
-      @log "set scheduled: #{key}=#{value}"
 
   # Only called synchronously from within vimium, never on a callback.
   clear: (key) ->
     if @isSyncKey key
+      @log "clear scheduled: #{key}"
       @storage.remove key, =>
         # Chrome sets chrome.runtime.lastError if there is an error.
         if chrome.runtime.lastError
-          console.log "chrome sync callback for Sync.clear() indicates error: " + key
+          console.log "for Sync.clear() indicates error: #{key}"
           console.log chrome.runtime.lastError
 
   # Should we synchronize this key?
@@ -118,22 +107,7 @@ root.Sync = Sync =
     obj[key] = value
     obj
 
-  # Debugging messages.
-  # Disable debugginf by setting root.Sync.debug to anything falsy.
-  # Enabled for the time being (18/4/14) -- smblott.
   log: (msg) ->
     console.log "Sync: #{msg}" if @debug
-
-  checkHaveString: (thing) ->
-    if typeof(thing) != "string" or not thing
-      @log "Sync: Yikes! this should be a non-empty string: #{typeof(thing)} #{thing}"
-      return false
-    return true
-
-  checkHaveStringOrUndefined: (thing) ->
-    if ( typeof(thing) != "string" and typeof(thing) != "undefined" ) or ( typeof(thing) == "string" and not thing )
-      @log "Sync: Yikes! this should be a non-empty string or undefined: #{typeof(thing)} #{thing}"
-      return false
-    return true
 
 Sync.register()
