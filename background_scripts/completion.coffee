@@ -27,12 +27,29 @@ class Suggestion
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
+
+    # parse @url to get hostname for favicon. Favicon code from
+    # http://css-tricks.com/favicons-next-to-external-links/
+    faviconClass = ""
+    hostname = /^(https?:\/\/)?([^\/]+)/.exec @url
+    if hostname
+      faviconUrl = "http://www.google.com/s2/u/0/favicons?domain=#{hostname[2]}"
+      # strip illegal characters from class name
+      faviconClass = hostname[2].replace(/^[^_a-zA-Z]+|[^_a-zA-Z0-9-]/g, "")
+      @css =
+        """
+        .vomnibarTitle.#{faviconClass} {
+          background: url(#{faviconUrl}) left center no-repeat;
+          padding-left: 20px
+        }
+        """
+
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
          <span class="vimiumReset vomnibarSource">#{@type}</span>
-         <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
+         <span class="vimiumReset vomnibarTitle #{faviconClass}">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
         <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
