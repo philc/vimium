@@ -194,7 +194,9 @@ LinkHints =
         for marker in hintMarkers
           @hideMarker(marker)
         for matched in linksMatched
-          @showMarker(matched, @markerMatcher.hintKeystrokeQueue.length)
+          match = @markerMatcher.hintKeystrokeQueue.join("")
+          match = @markerMatcher.linkTextKeystrokeQueue.join("") if match is ""
+          @showMarker(matched, match)
     false # We've handled this key, so prevent propagation.
 
   #
@@ -222,14 +224,12 @@ LinkHints =
   #
   # Shows the marker, highlighting matchingCharCount characters.
   #
-  showMarker: (linkMarker, matchingCharCount) ->
+  showMarker: (linkMarker, match) ->
     linkMarker.style.display = ""
-    # TODO(philc):
-    for j in [0...linkMarker.childNodes.length]
-      if (j < matchingCharCount)
-        linkMarker.childNodes[j].classList.add("matchingCharacter")
-      else
-        linkMarker.childNodes[j].classList.remove("matchingCharacter")
+    start = linkMarker.innerText.toLowerCase().search(match.toLowerCase())
+    end = start + match.length
+    node.classList.remove("matchingCharacter") for node in linkMarker.childNodes
+    node.classList.add("matchingCharacter") for node, i in linkMarker.childNodes when i >= start and i < end
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
@@ -282,8 +282,7 @@ alphabetHints =
     digitsNeeded = Math.ceil(@logXOfBase(linkCount, linkHintCharacters.length))
     # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
     shortHintCount = Math.floor(
-      (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) /
-      linkHintCharacters.length)
+      (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) / linkHintCharacters.length)
     longHintCount = linkCount - shortHintCount
 
     hintStrings = []
@@ -372,11 +371,13 @@ filterHints =
     else
       linkText = element.textContent || element.innerHTML
 
+    showLinkText = showLinkText || settings.get "alwaysShowTextInFilterHint" unless linkText is ""
     { text: linkText, show: showLinkText }
 
   renderMarker: (marker) ->
+    linkText = marker.linkText.replace(/<.*>/, '').trim()
     marker.innerHTML = spanWrap(marker.hintString +
-        (if marker.showLinkText then ": " + marker.linkText else ""))
+        (if marker.showLinkText && linkText!=""  then ": " + linkText else ""))
 
   fillInMarkers: (hintMarkers) ->
     @generateLabelMap()
