@@ -34,8 +34,8 @@ class Suggestion
     hostname = /^(https?:\/\/)?([^\/]+)/.exec @url
     if hostname
       faviconUrl = "http://www.google.com/s2/u/0/favicons?domain=#{hostname[2]}"
-      # strip illegal characters from class name
-      faviconClass = hostname[2].replace(/^[^_a-zA-Z]+|[^_a-zA-Z0-9-]/g, "")
+      # base64 encode hostname to generate a unique clas name
+      faviconClass = "vomnibarFavicon#{btoa hostname[2]}"
       @css =
         """
         .vomnibarTitle.#{faviconClass} {
