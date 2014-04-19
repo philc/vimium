@@ -555,8 +555,11 @@ updateFindModeQuery = ->
     findModeQuery.regexMatches = text.match(pattern)
     findModeQuery.activeRegexIndex = 0
     findModeQuery.matchCount = findModeQuery.regexMatches?.length
+  # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
+  # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
+  # from the internal representation used by window.find.
   else
-    # escape all special characters, so RegExp just parses the string
+    # escape all special characters, so RegExp just parses the string 'as is'.
     parsedNonRegexQuery = findModeQuery.parsedQuery.replace("\\", "\\\\")
                                                    .replace("^", "\\^")
                                                    .replace("$", "\\$")
