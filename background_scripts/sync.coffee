@@ -34,7 +34,7 @@ root.Sync = Sync =
     chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
 
   init: ->
-    chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
+    @pull()
 
   # Asynchronous fetch from synced storage, called only at startup.
   pull: ->
