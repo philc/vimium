@@ -86,7 +86,7 @@ context "Alphabetical link hints",
 
   should "narrow the hints", ->
     hintMarkers = getHintMarkers()
-    LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("A")
+    LinkHints.keypress hintMarkers, mockKeyboardEvent("A")
     assert.equal "none", hintMarkers[1].style.display
     assert.equal "", hintMarkers[0].style.display
 
@@ -95,6 +95,7 @@ context "Filtered link hints",
   setup ->
     stub settings.values, "filterLinkHints", true
     stub settings.values, "linkHintNumbers", "0123456789"
+    stub settings.values, "alwaysShowTextInFilterHint", true
 
   context "Text hints",
 
@@ -111,17 +112,43 @@ context "Filtered link hints",
     should "label the hints", ->
       hintMarkers = getHintMarkers()
       for i in [0...4]
-        assert.equal (i + 1).toString(), hintMarkers[i].textContent.toLowerCase()
+        assert.equal 0, hintMarkers[i].textContent.toLowerCase().indexOf(i+1)
 
     should "narrow the hints", ->
       hintMarkers = getHintMarkers()
-      LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("T")
-      LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("R")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("T")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("R")
       assert.equal "none", hintMarkers[0].style.display
       assert.equal "1", hintMarkers[1].hintString
       assert.equal "", hintMarkers[1].style.display
-      LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("A")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("A")
       assert.equal "2", hintMarkers[3].hintString
+
+  context "Unicode hints",
+
+    setup ->
+      testContent = "<a>абыр</a><a>абыр</a><a>абырвалг</a><input id='text'><label for='text'>おちんちん</label>"
+      document.getElementById("test-div").innerHTML = testContent
+      LinkHints.init()
+      LinkHints.activateMode()
+
+    tearDown ->
+        document.getElementById('test-div').innerHTML = ""
+        LinkHints.deactivateMode()
+
+    should "narrow the hints 1", ->
+      hintMarkers = getHintMarkers()
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("а")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("б")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("ы")
+      LinkHints.keypress hintMarkers, mockKeyboardEvent("р")
+      assert.equal "", h.style.display for h, i in hintMarkers when i in [0..2]
+      assert.equal "none", hintMarkers[3].style.display
+
+    should "narrow the hints 2", ->
+      hintMarkers = getHintMarkers()
+      LinkHints.keypress hintMarkers, mockKeyboardEvent "ん"
+      assert.equal h.innerText.indexOf("абыр") for h in hintMarkers when h.style.display is "none"
 
   context "Image hints",
 

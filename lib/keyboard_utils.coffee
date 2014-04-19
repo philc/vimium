@@ -50,6 +50,12 @@ KeyboardUtils =
 
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
 
+  isEnter: (event) ->
+    (event.keyCode == @keyCodes.enter)
+
+  isDeleteOrBackspace: (event) ->
+    (event.keyCode == @keyCodes.backspace || event.keyCode == @keyCodes.deleteKey)
+
   isEscape: (event) ->
     # c-[ is mapped to ESC in Vim by default.
     (event.keyCode == @keyCodes.ESC) || (event.ctrlKey && @getKeyChar(event) == '[')
