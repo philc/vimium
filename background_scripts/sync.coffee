@@ -30,10 +30,9 @@ root.Sync = Sync =
   storage: chrome.storage.sync
   doNotSync: [ "settingsVersion", "previousVersion" ]
 
-  register: ->
-    chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
-
+  # This is called in main().
   init: ->
+    chrome.storage.onChanged.addListener (changes, area) -> Sync.listener changes, area
     @pull()
 
   # Asynchronous fetch from synced storage, called only at startup.
@@ -110,4 +109,3 @@ root.Sync = Sync =
   log: (msg) ->
     console.log "Sync: #{msg}" if @debug
 
-Sync.register()
