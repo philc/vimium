@@ -31,9 +31,10 @@ root.Sync = Sync =
 
   # Asynchronous fetch from synced storage, called only at startup.
   pull: ->
-    @storage.get null, (items) ->
+    @storage.get null, (items) =>
       if chrome.runtime.lastError is undefined
         for own key, value of items
+          @log "pull: #{key} <- #{value}"
           @storeAndPropagate key, value
       else
         @log "chrome sync callback for Sync.pull() indicates error"
@@ -42,6 +43,7 @@ root.Sync = Sync =
   # Asynchronous message from synced storage.
   listener: (changes, area) ->
     for own key, change of changes
+      @log "listener: #{key} <- #{change.newValue}"
       @storeAndPropagate key, change.newValue
   
   # Only ever called from asynchronous synced-storage callbacks (pull and listener).
