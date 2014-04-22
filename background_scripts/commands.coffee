@@ -91,10 +91,11 @@ Commands =
       "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
       "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
       "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue",
+      "LinkHints.activateModeToOpenIncognito", "LinkHints.activateModeToHover", "LinkHints.unhoverLast",
+      "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
+      "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame",
+      "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -110,8 +111,9 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight"]
+    "LinkHints.activateModeToOpenIncognito", "LinkHints.activateModeToHover", "LinkHints.unhoverLast",
+    "goNext", "goNext", "goPrevious", "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft",
+    "moveTabRight"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -223,6 +225,8 @@ commandDescriptions =
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateModeToHover": ["Hover over a link"]
+  "LinkHints.unhoverLast": ["Stop hovering at last location"]
 
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]

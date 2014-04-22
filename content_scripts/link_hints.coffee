@@ -14,6 +14,7 @@ OPEN_IN_NEW_FG_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
+HOVER = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -52,6 +53,7 @@ LinkHints =
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
+  activateModeToHover: -> @activateMode(HOVER)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -88,6 +90,7 @@ LinkHints =
       else
         HUD.show("Open multiple links in a new tab")
       @linkActivator = (link) ->
+        @unhoverLast(link)
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick(link, {
@@ -105,9 +108,15 @@ LinkHints =
         chrome.runtime.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
+    else if @mode is HOVER
+      @linkActivator = (link) ->
+        @unhoverLast(link)
+        DomUtils.simulateHover(link)
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+      @linkActivator = (link) ->
+        @unhoverLast(link)
+        DomUtils.simulateClick link
 
   #
   # Creates a link marker for the given link.
@@ -262,6 +271,13 @@ LinkHints =
         deactivate()
         callback() if callback
       delay)
+  #
+  # Sends a "mouseout" event to the last "mouseover"-ed element.
+  #
+  unhoverLast: (element) ->
+    DomUtils.simulateUnhover(@_lastHoveredElement) if @_lastHoveredElement
+    @_lastHoveredElement = element
+  _lastHoveredElement: null
 
 alphabetHints =
   hintKeystrokeQueue: []
@@ -459,6 +475,7 @@ filterHints =
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
     @labelMap = {}
+
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
