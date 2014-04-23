@@ -187,7 +187,7 @@ LinkHints =
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
       @deactivateMode()
-    else if (event.keyCode != keyCodes.shiftKey)
+    else if (event.keyCode != keyCodes.shiftKey or event.keyCode != keyCodes.ctrlKey)
       keyResult = @markerMatcher.matchHintsByKey(hintMarkers, event)
       linksMatched = keyResult.linksMatched
       delay = keyResult.delay ? 0
