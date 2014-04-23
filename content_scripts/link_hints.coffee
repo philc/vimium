@@ -176,7 +176,7 @@ LinkHints =
         keyup: (event) =>
           return if (event.keyCode != keyCodes.shiftKey)
           @setOpenLinkMode(prev_mode) if @isActive
-          @remove()
+          handlerStack.remove()
       })
 
     # TODO(philc): Ignore keys that have modifiers.
