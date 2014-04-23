@@ -334,6 +334,8 @@ body.vimiumFindMode ::selection {
   font-size: 16px;
   color: black;
   position: relative;
+  display: list-item;
+  margin: auto;
 }
 
 #vomnibar li:last-of-type {
