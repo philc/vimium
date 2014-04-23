@@ -188,7 +188,7 @@ LinkHints =
             handlerStack.remove()
         })
       else # event.keyCode == keyCodes.ctrlKey
-        @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_TAB else OPEN_IN_NEW_FG_TAB_TAB)
+        @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_TAB else OPEN_IN_NEW_FG_TAB)
 
         handlerStack.push({
           keyup: (event) =>
