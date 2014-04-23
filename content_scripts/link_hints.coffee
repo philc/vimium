@@ -181,21 +181,8 @@ LinkHints =
       if event.keyCode == keyCodes.shiftKey
         @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_TAB else OPEN_IN_CURRENT_TAB)
 
-        handlerStack.push({
-          keyup: (event) =>
-            return if (event.keyCode != keyCodes.shiftKey)
-            @setOpenLinkMode(prev_mode) if @isActive
-            handlerStack.remove()
-        })
       else # event.keyCode == keyCodes.ctrlKey
         @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_TAB else OPEN_IN_NEW_FG_TAB)
-
-        handlerStack.push({
-          keyup: (event) =>
-            return if (event.keyCode != keyCodes.ctrlKey)
-            @setOpenLinkMode(prev_mode) if @isActive
-            handlerStack.remove()
-        })
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
