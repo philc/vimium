@@ -109,8 +109,9 @@ DomUtils =
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
       mouseEvent = document.createEvent("MouseEvents")
-      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, false, false,
-          modifiers.metaKey, 0, null)
+      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0,
+      modifiers.ctrlKey == true, modifiers.altKey == true,
+      modifiers.shiftKey == true, modifiers.metaKey == true, 0, null)
       # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
       # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
       element.dispatchEvent(mouseEvent)

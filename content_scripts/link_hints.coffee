@@ -10,6 +10,7 @@
 #
 OPEN_IN_CURRENT_TAB = {}
 OPEN_IN_NEW_TAB = {}
+OPEN_IN_NEW_FG_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
@@ -47,6 +48,7 @@ LinkHints =
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_TAB)
+  activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
@@ -77,15 +79,18 @@ LinkHints =
     })
 
   setOpenLinkMode: (@mode) ->
-    if @mode is OPEN_IN_NEW_TAB or @mode is OPEN_WITH_QUEUE
+    if @mode is OPEN_IN_NEW_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_TAB
         HUD.show("Open link in new tab")
+      else if @mode is OPEN_IN_NEW_FG_TAB
+        HUD.show("Open link in new foreground tab")
       else
         HUD.show("Open multiple links in a new tab")
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick(link, {
+          shiftKey: @mode is OPEN_IN_NEW_FG_TAB,
           metaKey: KeyboardUtils.platform == "Mac",
           ctrlKey: KeyboardUtils.platform != "Mac" })
     else if @mode is COPY_LINK_URL
@@ -166,18 +171,31 @@ LinkHints =
   onKeyDownInMode: (hintMarkers, event) ->
     return if @delayMode
 
-    if (event.keyCode == keyCodes.shiftKey && @mode != COPY_LINK_URL)
+    if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
+        (@mode == OPEN_IN_CURRENT_TAB or
+         @mode == OPEN_IN_NEW_TAB or
+         @mode == OPEN_IN_NEW_FG_TAB))
       # Toggle whether to open link in a new or current tab.
       prev_mode = @mode
 
-      @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_TAB else OPEN_IN_CURRENT_TAB)
+      if event.keyCode == keyCodes.shiftKey
+        @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_TAB else OPEN_IN_CURRENT_TAB)
 
-      handlerStack.push({
-        keyup: (event) =>
-          return if (event.keyCode != keyCodes.shiftKey)
-          @setOpenLinkMode(prev_mode) if @isActive
-          handlerStack.remove()
-      })
+        handlerStack.push({
+          keyup: (event) =>
+            return if (event.keyCode != keyCodes.shiftKey)
+            @setOpenLinkMode(prev_mode) if @isActive
+            handlerStack.remove()
+        })
+      else # event.keyCode == keyCodes.ctrlKey
+        @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_TAB else OPEN_IN_NEW_FG_TAB_TAB)
+
+        handlerStack.push({
+          keyup: (event) =>
+            return if (event.keyCode != keyCodes.ctrlKey)
+            @setOpenLinkMode(prev_mode) if @isActive
+            handlerStack.remove()
+        })
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
