@@ -8,6 +8,7 @@
              "128": "icons/icon128.png" },
   "background": {
     "scripts": [
+      "background_scripts/installActions.js",
       "lib/utils.js",
       "background_scripts/commands.js",
       "lib/clipboard.js",
