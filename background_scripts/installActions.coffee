@@ -7,7 +7,7 @@ injectContentScriptsIntoOpenTabs = ->
       chrome.tabs.getAllInWindow(win.id, (tabs) ->
         for tab in tabs
            for script in contentScripts.js
-             chrome.tabs.executeScript(tab.id, {file: script})
+             chrome.tabs.executeScript(tab.id, {file: script, allFrames: true})
       )
   )
 
