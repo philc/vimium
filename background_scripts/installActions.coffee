@@ -12,5 +12,4 @@ injectContentScriptsIntoOpenTabs = ->
   )
 
 chrome.runtime.onInstalled.addListener (details) ->
-  console.log "Installed new version"
   injectContentScriptsIntoOpenTabs()
