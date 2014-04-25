@@ -179,6 +179,8 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
+  if window.top == window.self
+    focusThisFrame(false)
   registerFrame(window.top == window.self)
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
