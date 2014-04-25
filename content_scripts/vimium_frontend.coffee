@@ -56,6 +56,8 @@ settings =
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
+    # Typically, the extension is shutting down if the ports disconnect. Act accordingly.
+    @port.onDisconnect.addListener -> isEnabledForUrl = false
 
   get: (key) -> @values[key]
 
@@ -109,6 +111,8 @@ initializePreDomReady = ->
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # Typically, the extension is shutting down if the ports disconnect. Act accordingly.
+  keyPort.onDisconnect.addListener -> isEnabledForUrl = false
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -157,6 +161,7 @@ initializeWhenEnabled = (newPassKeys) ->
     installListener window, "keypress", onKeypress
     installListener window, "keyup", onKeyup
     installListener document, "focus", onFocusCapturePhase
+    installListener document, "focus", detectFrameFocused
     installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
     enterInsertModeIfElementIsFocused()
@@ -170,7 +175,7 @@ setState = (request) ->
 #
 # The backend needs to know which frame has focus.
 #
-window.addEventListener "focus", ->
+detectFrameFocused = ->
   # settings may have changed since the frame last had focus
   settings.load()
   chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
