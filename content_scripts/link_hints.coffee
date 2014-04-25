@@ -103,7 +103,7 @@ LinkHints =
       HUD.show("Open link in current tab")
       # When we're opening the link in the current tab, don't navigate to the selected link immediately
       # we want to give the user some time to notice which link has received focus.
-      @linkActivator = (link) -> setTimeout(DomUtils.simulateClick.bind(DomUtils, link), 400)
+      @linkActivator = (link) -> setTimeout(DomUtils.simulateClick.bind(DomUtils, link), settings.get('linkHintDelay'))
 
   #
   # Creates a link marker for the given link.
