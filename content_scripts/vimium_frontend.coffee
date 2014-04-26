@@ -54,9 +54,12 @@ settings =
   eventListeners: {}
 
   init: ->
+    # Connect to background page to recieve up-to-date settings
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
-    # Typically, the extension is shutting down if the ports disconnect. Act accordingly.
+    # The onDisconnect event fires only when the extension's background page is closing, since we have no
+    # code that closes it ourselves. When this happens we stop responding to events, to allow a replacement
+    # content script to take over, or for Vimium to deactivate if it has been disabled.
     @port.onDisconnect.addListener -> isEnabledForUrl = false
 
   get: (key) -> @values[key]
@@ -111,7 +114,9 @@ initializePreDomReady = ->
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
-  # Typically, the extension is shutting down if the ports disconnect. Act accordingly.
+  # The onDisconnect event fires only when the extension's background page is closing, since we have no
+  # code that closes it ourselves. When this happens we stop responding to events, to allow a replacement
+  # content script to take over, or for Vimium to deactivate if it has been disabled.
   keyPort.onDisconnect.addListener -> isEnabledForUrl = false
 
   requestHandlers =
