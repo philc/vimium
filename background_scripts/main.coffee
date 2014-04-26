@@ -2,6 +2,7 @@ root = exports ? window
 
 currentVersion = Utils.getCurrentVersion()
 
+# Iterate over tabs and inject the necessary javascript/css into each of them
 injectContentScriptsIntoOpenTabs = ->
   manifest = chrome.runtime.getManifest()
   # All content scripts loaded on every page should go in the same group, assume it is the first
