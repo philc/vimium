@@ -101,7 +101,7 @@ LinkHints =
           url: link.href)
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)
+      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
 
   #
   # Creates a link marker for the given link.
