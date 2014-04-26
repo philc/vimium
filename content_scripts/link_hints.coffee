@@ -24,7 +24,7 @@ LinkHints =
   delayMode: false
   # Handle the link hinting marker generation and matching. Must be initialized after settings have been
   # loaded, so that we can retrieve the option setting.
-  markerMatcher: ->
+  getMarkerMatcher: ->
     if settings.get("filterLinkHints") then filterHints else alphabetHints
   # lock to ensure only one instance runs at a time
   isActive: false
@@ -60,7 +60,8 @@ LinkHints =
     @isActive = true
 
     @setOpenLinkMode(mode)
-    hintMarkers = @markerMatcher().fillInMarkers(@createMarkerFor(el) for el in @getVisibleClickableElements())
+    hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
+    @getMarkerMatcher().fillInMarkers(hintMarkers)
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
@@ -159,7 +160,7 @@ LinkHints =
     visibleElements
 
   #
-  # Handles shift and esc keys. The other keys are passed to markerMatcher().matchHintsByKey.
+  # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
   #
   onKeyDownInMode: (hintMarkers, event) ->
     return if @delayMode
@@ -181,7 +182,7 @@ LinkHints =
     if (KeyboardUtils.isEscape(event))
       @deactivateMode()
     else if (event.keyCode != keyCodes.shiftKey)
-      keyResult = @markerMatcher().matchHintsByKey(hintMarkers, event)
+      keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
       linksMatched = keyResult.linksMatched
       delay = keyResult.delay ? 0
       if (linksMatched.length == 0)
@@ -192,7 +193,7 @@ LinkHints =
         for marker in hintMarkers
           @hideMarker(marker)
         for matched in linksMatched
-          @showMarker(matched, @markerMatcher().hintKeystrokeQueue.length)
+          @showMarker(matched, @getMarkerMatcher().hintKeystrokeQueue.length)
     false # We've handled this key, so prevent propagation.
 
   #
@@ -237,8 +238,8 @@ LinkHints =
   #
   deactivateMode: (delay, callback) ->
     deactivate = =>
-      if (LinkHints.markerMatcher().deactivate)
-        LinkHints.markerMatcher().deactivate()
+      if (LinkHints.getMarkerMatcher().deactivate)
+        LinkHints.getMarkerMatcher().deactivate()
       if (LinkHints.hintMarkerContainingDiv)
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
