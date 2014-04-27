@@ -67,7 +67,7 @@ saveOptions = ->
       bgSettings.set fieldName, fieldValue
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
-    bgSettings.doPostUpdateHook fieldName, fieldValue
+    bgSettings.performPostUpdateHook fieldName, fieldValue
 
   $("saveOptions").disabled = true
 

@@ -13,7 +13,7 @@ context "settings",
   setup ->
     stub global, 'localStorage', {}
 
-  should "all settings stored in localStorage must be JSONified strings", ->
+  should "save settings in localStorage as JSONified strings", ->
     Settings.set 'dummy', ""
     assert.equal localStorage.dummy, '""'
 
@@ -36,58 +36,39 @@ context "settings",
     Settings.clear 'scrollStepSize'
     assert.equal Settings.get('scrollStepSize'), 60
 
-  should "remote changes take effect locally, non-default value", ->
+  should "propagate non-default value via synced storage listener", ->
     Settings.set 'scrollStepSize', 20
     assert.equal Settings.get('scrollStepSize'), 20
-    Sync.listener { scrollStepSize: { newValue: "40" } }
+    Sync.handleStorageUpdate { scrollStepSize: { newValue: "40" } }
     assert.equal Settings.get('scrollStepSize'), 40
 
-  should "remote changes take effect locally, default value", ->
+  should "propagate default value via synced storage listener", ->
     Settings.set 'scrollStepSize', 20
     assert.equal Settings.get('scrollStepSize'), 20
-    Sync.listener { scrollStepSize: { newValue: "60" } }
+    Sync.handleStorageUpdate { scrollStepSize: { newValue: "60" } }
     assert.isFalse Settings.has 'scrollStepSize'
 
-  should "remote changes are propagated, non-default value", ->
-    # Prime Sync.
-    Settings.set 'scrollStepSize', 20
-    assert.equal Settings.get('scrollStepSize'), 20
-    # Set a bogus value in localStorage, bypassing Settings and Sync.
-    localStorage['scrollStepSize'] = JSON.stringify(10)
-    assert.equal Settings.get('scrollStepSize'), 10
-    # Pull Sync's version of scrollStepSize, this should reset it to the correct value (20).
-    Sync.pull()
+  should "propagate non-default values from synced storage", ->
+    chrome.storage.sync.set { scrollStepSize: JSON.stringify(20) }
+    Sync.fetchAsync()
     assert.equal Settings.get('scrollStepSize'), 20
 
-  should "remote changes are propagated, default value", ->
-    # Prime Sync with a default value.
+  should "propagate default values from synced storage", ->
+    Settings.set 'scrollStepSize', 20
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(60) }
-    assert.isFalse Settings.has 'scrollStepSize'
-    # Set a bogus value in localStorage, bypassing Settings and Sync.
-    localStorage['scrollStepSize'] = JSON.stringify(10)
-    assert.equal Settings.get('scrollStepSize'), 10
-    # Pull Sync's version of scrollStepSize, this should delete scrollStepSize in localStorage, because it's a default value.
-    Sync.pull()
+    Sync.fetchAsync()
     assert.isFalse Settings.has 'scrollStepSize'
 
-  should "remote setting cleared", ->
-    # Prime localStorage.
+  should "clear a setting from synced storage", ->
     Settings.set 'scrollStepSize', 20
-    assert.equal Settings.get('scrollStepSize'), 20
-    # Prime Sync with a non-default value.
-    chrome.storage.sync.set { scrollStepSize: JSON.stringify(40) }
     chrome.storage.sync.remove 'scrollStepSize'
     assert.isFalse Settings.has 'scrollStepSize'
 
   should "trigger a postUpdateHook", ->
     message = "Hello World"
-    # Install a bogus update hook for an existing setting.
     Settings.postUpdateHooks['scrollStepSize'] = (value) -> Sync.message = value
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(message) }
-    # Was the update hook triggered?
     assert.equal message, Sync.message
 
-  should "sync a key which is not a setting", ->
-    # There is nothing to test, here.  It's purpose is just to ensure that, should additional settings be
-    # added in future, then the Sync won't cause unexpected crashes.
+  should "sync a key which is not a known setting (without crashing)", ->
     chrome.storage.sync.set { notASetting: JSON.stringify("notAUsefullValue") }

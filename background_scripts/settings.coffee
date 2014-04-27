@@ -23,10 +23,9 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
-  # postUpdateHooks are called each time an option changes:
-  #   either from options/options.coffee          (when the options page is saved)
-  #       or from background_scripts/sync.coffee  (when an update propagates from chrome.storage)
-  #
+  # for settings which require action when their value changes, add hooks here
+  # called from options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when
+  # an update propagates from chrome.storage.sync).
   postUpdateHooks:
     keyMappings: (value) ->
       root.Commands.clearKeyMappingsAndSetDefaults()
@@ -34,10 +33,8 @@ root.Settings = Settings =
       root.refreshCompletionKeysAfterMappingSave()
 
   # postUpdateHooks convenience wrapper
-  doPostUpdateHook: (key, value) ->
-    if @postUpdateHooks[key]
-      @postUpdateHooks[key] value
-
+  performPostUpdateHook: (key, value) ->
+    @postUpdateHooks[key] value if @postUpdateHooks[key]
 
   # options/options.(coffee|html) only handle booleans and strings; therefore
   # all defaults must be booleans or strings
