@@ -20,15 +20,13 @@
 root = exports ? window
 root.Sync = Sync =
 
-  # 19/4/14:
-  # Leave logging statements in, but disable debugging.
-  # We may need to come back to this, so removing logging now would be premature.
-  # However, if users have problems, they are unlikely to notice and make sense of console logs on
-  # background pages.  So disable it, by default.
-  # For genuine errors, we call console.log directly.
+  # April 19 2014: Leave logging statements in, but disable debugging. We may need to come back to this, so
+  # removing logging now would be premature. However, if users report problems, they are unlikely to notice
+  # and make sense of console logs on background pages. So disable it, by default. For genuine errors, we
+  # call console.log directly.
   debug: false
   storage: chrome.storage.sync
-  doNotSync: [ "settingsVersion", "previousVersion" ]
+  doNotSync: ["settingsVersion", "previousVersion"]
 
   # This is called in main.coffee.
   init: ->

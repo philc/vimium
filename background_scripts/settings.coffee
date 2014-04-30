@@ -1,5 +1,5 @@
 #
-# Used by everyone to manipulate localStorage.
+# Used by all parts of Vimium to manipulate localStorage.
 #
 
 root = exports ? window
@@ -8,7 +8,7 @@ root.Settings = Settings =
     if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
   set: (key, value) ->
-    # don't store the value if it is equal to the default, so we can change the defaults in the future
+    # Don't store the value if it is equal to the default, so we can change the defaults in the future
     if (value == @defaults[key])
       @clear(key)
     else
@@ -23,9 +23,9 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
-  # for settings which require action when their value changes, add hooks here
-  # called from options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when
-  # an update propagates from chrome.storage.sync).
+  # For settings which require action when their value changes, add hooks here called from
+  # options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when an
+  # update propagates from chrome.storage.sync).
   postUpdateHooks:
     keyMappings: (value) ->
       root.Commands.clearKeyMappingsAndSetDefaults()
@@ -36,8 +36,8 @@ root.Settings = Settings =
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key] value if @postUpdateHooks[key]
 
-  # options/options.(coffee|html) only handle booleans and strings; therefore
-  # all defaults must be booleans or strings
+  # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
+  # or strings
   defaults:
     scrollStepSize: 60
     linkHintCharacters: "sadfjklewcmpgh"
@@ -67,7 +67,7 @@ root.Settings = Settings =
       """
       http*://mail.google.com/*
       """
-    # NOTE : If a page contains both a single angle-bracket link and a double angle-bracket link, then in
+    # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in
     # most cases the single bracket link will be "prev/next page" and the double bracket link will be
     # "first/last page", so we put the single bracket first in the pattern string so that it gets searched
     # for first.
