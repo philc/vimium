@@ -599,3 +599,6 @@ chrome.windows.getAll { populate: true }, (windows) ->
       createScrollPositionHandler = ->
         (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
       chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
+
+# Start pulling changes from synchronized storage.
+Sync.init()

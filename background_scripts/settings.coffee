@@ -12,11 +12,29 @@ root.Settings = Settings =
     if (value == @defaults[key])
       @clear(key)
     else
-      localStorage[key] = JSON.stringify(value)
+      jsonValue = JSON.stringify value
+      localStorage[key] = jsonValue
+      Sync.set key, jsonValue
 
-  clear: (key) -> delete localStorage[key]
+  clear: (key) ->
+    if @has key
+      delete localStorage[key]
+    Sync.clear key
 
   has: (key) -> key of localStorage
+
+  # for settings which require action when their value changes, add hooks here
+  # called from options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when
+  # an update propagates from chrome.storage.sync).
+  postUpdateHooks:
+    keyMappings: (value) ->
+      root.Commands.clearKeyMappingsAndSetDefaults()
+      root.Commands.parseCustomKeyMappings value
+      root.refreshCompletionKeysAfterMappingSave()
+
+  # postUpdateHooks convenience wrapper
+  performPostUpdateHook: (key, value) ->
+    @postUpdateHooks[key] value if @postUpdateHooks[key]
 
   # options/options.(coffee|html) only handle booleans and strings; therefore
   # all defaults must be booleans or strings
