@@ -143,7 +143,6 @@ defaultKeyMappings =
   "f":     "LinkHints.activateMode"
   "F":     "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
-  "<c-F>": "LinkHints.activateModeToOpenInNewForegroundTab"
 
   "/": "enterFindMode"
   "n": "performFind"
