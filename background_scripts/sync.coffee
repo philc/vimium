@@ -26,7 +26,7 @@ root.Sync = Sync =
   # However, if users have problems, they are unlikely to notice and make sense of console logs on
   # background pages.  So disable it, by default.
   # For genuine errors, we call console.log directly.
-  debug: true
+  debug: false
   storage: chrome.storage.sync
   doNotSync: [ "settingsVersion", "previousVersion" ]
 
@@ -52,7 +52,7 @@ root.Sync = Sync =
     for own key, change of changes
       @log "handleStorageUpdate: #{key} <- #{change.newValue}"
       @storeAndPropagate key, change?.newValue
-  
+
   # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value) ->
     return if not key of Settings.defaults
@@ -102,4 +102,3 @@ root.Sync = Sync =
 
   log: (msg) ->
     console.log "Sync: #{msg}" if @debug
-
