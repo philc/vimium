@@ -14,6 +14,8 @@ injectContentScriptsIntoOpenTabs = ->
 
       for style in contentScripts.css
         chrome.tabs.insertCSS(tab.id, {file: style, allFrames: contentScripts.allFrames})
+
+      tabUpdated tab.id, {status: "loading"}, tab
   )
 
 # If this is a new install, the browser may have tabs already open, and so we should inject the content
