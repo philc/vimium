@@ -44,6 +44,11 @@
       "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
       "all_frames": true
+    },
+    {
+      "matches": ["file://*"],
+      "css": ["content_scripts/file_urls.css"],
+      "run_at": "document_start"
     }
   ],
   "browser_action": {

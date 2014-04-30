@@ -1,0 +1,6 @@
+/* Chrome file:// URLs set draggable=true for links to files (CSS selector .icon.file). This automatically
+ * sets -webkit-user-select: none, which disables selecting the file names and so prevents Vimium's search
+ * from working as expected. Here, we reset the value back to default. */
+.icon.file {
+  -webkit-user-select: auto !important;
+}
