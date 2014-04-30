@@ -138,6 +138,12 @@ class VomnibarUI
       callback() if callback
 
   populateUiWithCompletions: (completions) ->
+    # load new CSS
+    @styles.parentElement?.removeChild @styles
+    styleText = completions.map((completion) -> completion.css).join("\n")
+    @styles.innerHTML = styleText
+    document.head.appendChild(@styles)
+
     # update completion list with the new data
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else "none"
@@ -173,6 +179,9 @@ class VomnibarUI
       """)
     @box.style.display = "none"
     document.body.appendChild(@box)
+
+    @styles = document.createElement("style")
+    @styles.type = "text/css"
 
     @input = document.querySelector("#vomnibar input")
     @input.addEventListener "input", => @update()
