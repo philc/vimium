@@ -86,16 +86,15 @@ Commands =
   # be shown in the help page.
   commandGroups:
     pageNavigation:
-      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight",
-       "scrollToTop", "scrollToBottom", "scrollToLeft", "scrollToRight", "scrollPageDown",
-       "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown",
-       "reload", "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-       "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot",
-       "enterInsertMode", "focusInput",
-       "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeWithQueue",
-       "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
-       "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
-       "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
+      "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
+      "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
+      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
+      "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
+      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
+      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
+      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
+      "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -144,6 +143,7 @@ defaultKeyMappings =
   "f":     "LinkHints.activateMode"
   "F":     "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
+  "<c-F>": "LinkHints.activateModeToOpenInNewForegroundTab"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -217,9 +217,10 @@ commandDescriptions =
 
   focusInput: ["Focus the first (or n-th) text box on the page", { passCountToFunction: true }]
 
-  'LinkHints.activateMode': ["Open a link in the current tab"]
-  'LinkHints.activateModeToOpenInNewTab': ["Open a link in a new tab"]
-  'LinkHints.activateModeWithQueue': ["Open multiple links in a new tab"]
+  "LinkHints.activateMode": ["Open a link in the current tab"]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
+  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab, switch to it"]
+  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
 
