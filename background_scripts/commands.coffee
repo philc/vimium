@@ -91,10 +91,11 @@ Commands =
       "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
       "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
       "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue",
+      "LinkHints.activateModeToOpenInNewWindow", "LinkHints.activateModeToOpenInNewFullscreenWindow",
+      "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
+      "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame",
+      "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -109,10 +110,10 @@ Commands =
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
   # from Vimium will uncover these gems.
   advancedCommands: [
-    "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
-    "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
+    "scrollToLeft", "scrollToRight", "moveTabToNewWindow", "goUp", "goToRoot", "focusInput",
+    "LinkHints.activateModeWithQueue", "LinkHints.activateModeToOpenIncognito",
+    "LinkHints.activateModeToOpenInNewWindow", "LinkHints.activateModeToOpenInNewFullscreenWindow", "goNext",
+    "goPrevious", "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
     "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
 
 defaultKeyMappings =
@@ -226,7 +227,9 @@ commandDescriptions =
   "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"]
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
 
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateModeToOpenInNewWindow": ["Open a link in a new window"]
+  "LinkHints.activateModeToOpenInNewFullscreenWindow": ["Open a link in a fullscreen window"]
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in an incognito window"]
 
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]

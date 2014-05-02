@@ -14,6 +14,8 @@ OPEN_IN_NEW_FG_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
+OPEN_IN_NEW_WINDOW = {}
+OPEN_IN_NEW_FULLSCREEN_WINDOW = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -52,6 +54,8 @@ LinkHints =
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
+  activateModeToOpenInNewWindow: -> @activateMode(OPEN_IN_NEW_WINDOW)
+  activateModeToOpenInNewFullscreenWindow: -> @activateMode(OPEN_IN_NEW_FULLSCREEN_WINDOW)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -105,6 +109,18 @@ LinkHints =
         chrome.runtime.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
+    else if @mode is OPEN_IN_NEW_FULLSCREEN_WINDOW
+      HUD.show("Open link in fullscreen window")
+
+      @linkActivator = (link) ->
+        chrome.runtime.sendMessage(
+          handler: 'openUrlInFullscreen'
+          url: link.href)
+    else if @mode is OPEN_IN_NEW_WINDOW
+      HUD.show("Open link in new window")
+
+      @linkActivator = (link) ->
+        DomUtils.simulateClick(link, {shiftKey: true})
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
