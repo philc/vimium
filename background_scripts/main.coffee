@@ -24,9 +24,11 @@ completionSources =
   history: new HistoryCompleter()
   domains: new DomainCompleter()
   tabs: new TabCompleter()
+  seachEngines: new SearchEngineCompleter()
 
 completers =
   omni: new MultiCompleter([
+    completionSources.seachEngines,
     completionSources.bookmarks,
     completionSources.history,
     completionSources.domains])
