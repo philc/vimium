@@ -238,23 +238,28 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id))
   restoreTab: (callback) ->
-    # TODO(ilya): Should this be getLastFocused instead?
-    chrome.windows.getCurrent((window) ->
-      return unless (tabQueue[window.id] && tabQueue[window.id].length > 0)
-      tabQueueEntry = tabQueue[window.id].pop()
-      # Clean out the tabQueue so we don't have unused windows laying about.
-      delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
+    # TODO: remove if-else -block when adopted into stable
+    if chrome.sessionRestore
+      chrome.sessionRestore.getRecentlyClosed((closed) ->
+        chrome.sessionRestore.restore(closed[0]))
+    else
+      # TODO(ilya): Should this be getLastFocused instead?
+      chrome.windows.getCurrent((window) ->
+        return unless (tabQueue[window.id] && tabQueue[window.id].length > 0)
+        tabQueueEntry = tabQueue[window.id].pop()
+        # Clean out the tabQueue so we don't have unused windows laying about.
+        delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
 
-      # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-      # tab is created because the content script is not available during the "loading" state. We need to
-      # wait until that's over before we can call setScrollPosition.
-      chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
-        tabLoadedHandlers[tab.id] = ->
-          chrome.tabs.sendMessage(tab.id,
-            name: "setScrollPosition",
-            scrollX: tabQueueEntry.scrollX,
-            scrollY: tabQueueEntry.scrollY)
-        callback()))
+        # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
+        # tab is created because the content script is not available during the "loading" state. We need to
+        # wait until that's over before we can call setScrollPosition.
+        chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
+          tabLoadedHandlers[tab.id] = ->
+            chrome.tabs.sendRequest(tab.id,
+              name: "setScrollPosition",
+              scrollX: tabQueueEntry.scrollX,
+              scrollY: tabQueueEntry.scrollY)
+          callback()))
   openCopiedUrlInCurrentTab: (request) -> openUrlInCurrentTab({ url: Clipboard.paste() })
   openCopiedUrlInNewTab: (request) -> openUrlInNewTab({ url: Clipboard.paste() })
   togglePinTab: (request) ->
