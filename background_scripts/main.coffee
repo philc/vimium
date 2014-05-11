@@ -217,6 +217,10 @@ repeatFunction = (func, totalCount, currentCount, frameId) ->
       -> repeatFunction(func, totalCount, currentCount + 1, frameId),
       frameId)
 
+moveTab = (callback, direction) ->
+  chrome.tabs.getSelected(null, (tab) ->
+    chrome.tabs.move(tab.id, {index: tab.index + direction }, callback))
+
 # Start action functions
 
 # These are commands which are bound to keystroke which must be handled by the background page. They are
@@ -234,6 +238,8 @@ BackgroundCommands =
   previousTab: (callback) -> selectTab(callback, "previous")
   firstTab: (callback) -> selectTab(callback, "first")
   lastTab: (callback) -> selectTab(callback, "last")
+  moveTabLeft: (callback) -> moveTab(callback, -1)
+  moveTabRight: (callback) -> moveTab(callback, 1)
   removeTab: ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id))
