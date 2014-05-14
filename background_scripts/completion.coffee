@@ -13,7 +13,7 @@
 # It also has an attached "computeRelevancyFunction" which determines how well this item matches the given
 # query terms.
 class Suggestion
-  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
 
   # - type: one of [bookmark, history, tab].
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
@@ -296,8 +296,137 @@ RankingUtils =
       return false unless matchedTerm
     true
 
+  # TODO: Remove this long explanatory comment.
+  #
+  # The differences between the following version of `wordRelevancy` and the old one are:
+  #
+  #   1. Word relevancy scores:
+  #      - Reduced by a factor of 3/1 for matches which are not at the start of a word.
+  #      - Reduced by a factor of 3/2 for matches which are at the start of a word but not a whole word.
+  #      - Unchangd for matches which are whole words.
+  #        (These values come from the fudge factors in `matchWeights`, below)
+  #
+  #   2. Recency scores:
+  #      - Reduced by a factor of 3/2.
+  #      - This retains the existing balance between relevancy and recency for partial matches at the start of a word.
+  #      - In the other two cases:
+  #          The relative contribution of relevancy is reduced for partial matches.
+  #          The relative contribution of relevancy is increased for whole-word matches.
+  #
+  #   3. `wordRelevancy()` now does not allow a poor `urlScore` to pull down a good `titleScore`
+  #      (But see, also, the comments regarding three possible endings, below.)
+
+  # Weights used for scoring matches.
+  # TODO: These are fudge factors, they can be tuned.
+  matchWeights:
+    {
+      matchAnywhere:     1
+      matchStartOfWord:  1
+      matchWholeWord:    1
+      # The following must be the sum of the weights above; it is used for normalization.
+      # TODO: This can be calculated at runtime.
+      maximumScore:      3
+      #
+      # Calibration factor for balancing word relevancy and recency.
+      recencyCalibrator: 2.0/3.0
+      # The current value of 2.0/3.0 has the effect of:
+      #   - favoring the contribution of recency when matches are not on word boundaries ( because 2.0/3.0 > (1)/3     )
+      #   - retaining the existing balance when matches are at the starts of words       ( because 2.0/3.0 = (1+1)/3   )
+      #   - favoring the contribution of word relevance when matches are on whole words  ( because 2.0/3.0 < (1+1+1)/3 )
+    }
+
+  # Calculate a score for matching `term` against `string`.
+  # The score is in the range [0, `matchWeights.maximumScore`], see above.
+  scoreTerm: (term, string) ->
+    score = 0
+    if RegexpCache.get(term).test string
+      # Have match.
+      score += RankingUtils.matchWeights.matchAnywhere
+      if RegexpCache.get(term, "\\b").test string
+        # Have match at start of word.
+        score += RankingUtils.matchWeights.matchStartOfWord
+        if RegexpCache.get(term, "\\b", "\\b").test string
+          # Have match of whole word.
+          score += RankingUtils.matchWeights.matchWholeWord
+    score
+
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
   wordRelevancy: (queryTerms, url, title) ->
+    queryLength = 0
+    urlScore = 0.0
+    titleScore = 0.0
+
+    # Calculate initial scores.
+    for term in queryTerms
+      queryLength += term.length
+      urlScore += RankingUtils.scoreTerm term, url
+      titleScore += RankingUtils.scoreTerm term, title if title
+
+    maximumPossibleScore = RankingUtils.matchWeights.maximumScore * queryTerms.length
+
+    # Normalize urlScore.
+    urlScore /= maximumPossibleScore
+    urlScore *= RankingUtils.normalizeDifference queryLength, url.length
+
+    if title
+      # Normalize titleScore (same as for urlScore, above).
+      # TODO: (smblott)
+      #       The code here is basically the same as that just above. Refactor?
+      titleScore /= maximumPossibleScore
+      # TODO: (smblott)
+      #     - The intuition behind the following is (I think) to award higher
+      #       scores when there's good coverage of the title by the query
+      #       terms.  So matches against longer titles are pushed down the
+      #       ranking.
+      #     - Suggest:  A query term may match in multiple places. So the
+      #       calculation should account for the *number of characters
+      #       matched*, not just the `queryLength`.
+      #     - Example: Query is "BBC", title of a bookmark is "BBC (BBCr4)".
+      #       The coverage of the match should be 6/11, rather than 3/11.
+      #     - Obviously, the same applies to urlScore, above.
+      titleScore *= RankingUtils.normalizeDifference queryLength, title.length
+    else
+      titleScore = urlScore
+
+    # ######################################################
+    # Up to this point, some weightings have changed, but the structure of
+    # calculation is pretty much as it was before.
+    #
+    # However, there are three possible endings to this story ...
+
+    # ######################################################
+    # Ending #1: The old ending ...
+    #
+    # return (urlScore + titleScore) / 2
+    #
+    # It's difficult to argue with that.
+
+    # ######################################################
+    # Ending #2: An ending favoring `titleScore` ...
+    #
+    # Prefer matches in the title over matches in the URL.
+    # Here, this means "don't let a poor urlScore pull down the titleScore".
+    # For example, urlScore can be unreasonably poor if the URL is very long.
+    urlScore = titleScore if urlScore < titleScore
+
+    # Return the average.
+    (urlScore + titleScore) / 2
+
+    # ######################################################
+    # Ending #3: An alternative (better?) ending ...
+    #
+    # return Math.max(urlScore, titleScore)
+    #
+    # Why?
+    #   - Don't let a poor urlScore pull down a good titleScore, as in Ending #2.
+    #   - But also don't let a poor titleScore pull down a good urlScore.
+    #   - The query may be targeting one or the other, so let the best one win.
+
+    # Pick one of these three endings.
+    # ######################################################
+
+  # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
+  oldWordRelevancy: (queryTerms, url, title) ->
     queryLength = 0
     urlScore = 0.0
     titleScore = 0.0
@@ -325,6 +454,11 @@ RankingUtils =
     # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This quadratic equation will
     # incresingly discount older history entries.
     recencyScore = recencyDifference * recencyDifference * recencyDifference
+
+    # Calibrate recencyScore vis-a-vis word-relevancy scores.
+    # This does not change the relative order of recency scores.
+    # See also comment in the definition of `matchWeights`, above.
+    recencyScore *= RankingUtils.matchWeights.recencyCalibrator
 
   # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
   normalizeDifference: (a, b) ->
