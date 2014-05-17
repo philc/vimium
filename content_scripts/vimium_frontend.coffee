@@ -869,8 +869,10 @@ window.showHelpDialog = (html, fid) ->
 
   VimiumHelpDialog.init()
 
-  container.getElementsByClassName("optionsPage")[0].addEventListener("click",
-    -> chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" })
+  container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
+      chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
+      if clickEvent
+        clickEvent.preventDefault()
     false)
 
 
