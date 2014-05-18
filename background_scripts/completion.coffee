@@ -137,25 +137,25 @@ class BookmarkCompleter
       @bookmarks = @traverseBookmarks(bookmarks).filter((bookmark) -> bookmark.url?)
       @onBookmarksLoaded()
 
+  ignoreTopLevel:
+    'Other Bookmarks': true
+    'Mobile Bookmarks': true
+    'Bookmarks Bar': true
+
   # Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
   traverseBookmarks: (bookmarks) ->
     results = []
     bookmarks.forEach (folder) =>
-      # folder is a chrome virtual root folder.
-      folder.children.forEach((folder) =>
-        # folder is one of the chrome, built-in folders ("Other Bookmarks", "Mobile Bookmarks", ...).
-        folder.children.forEach((bookmark) =>
-          # bookmark is a user-defined folder, or itself a bookmark.
-          @traverseBookmarksRecursive bookmark, results))
-          #
-          # We do not add the (possible) bookmark itself.  The user has used the "/" key to begin searching
-          # within bookmark folders.  It's not clear what that even means for top-level bookmarks.
-          # results.push bookmark
+      @traverseBookmarksRecursive folder, results
     results
 
   # Recursive helper for `traverseBookmarks`.
   traverseBookmarksRecursive: (bookmark, results, parent={pathAndTitle:""}) ->
-    bookmark.pathAndTitle = if bookmark.title then parent.pathAndTitle + @folderSeparator + bookmark.title else parent.pathAndTitle
+    bookmark.pathAndTitle =
+      if bookmark.title and not (parent.pathAndTitle == "" and @ignoreTopLevel[bookmark.title])
+        parent.pathAndTitle + @folderSeparator + bookmark.title
+      else
+        parent.pathAndTitle
     results.push bookmark
     bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 
