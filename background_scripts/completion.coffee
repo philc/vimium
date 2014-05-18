@@ -114,9 +114,9 @@ class BookmarkCompleter
   onBookmarksLoaded: -> @performSearch() if @currentSearch
 
   performSearch: ->
-    # If the folder separator character is in the query, then we'll use the bookmark's full path as its title.
+    # If the folder separator character the first character in any query term, then we'll use the bookmark's full path as its title.
     # Otherwise, we'll just use the its regular title.
-    usePathAndTitle = @currentSearch.queryTerms.reduce ((prev,term) => prev || term.indexOf(@folderSeparator) != -1), false
+    usePathAndTitle = @currentSearch.queryTerms.reduce ((prev,term) => prev || term.indexOf(@folderSeparator) == 0), false
     results =
       if @currentSearch.queryTerms.length > 0
         @bookmarks.filter (bookmark) =>
