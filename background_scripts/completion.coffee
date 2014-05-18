@@ -296,23 +296,78 @@ RankingUtils =
       return false unless matchedTerm
     true
 
+  # Weights used for scoring matches.
+  matchWeights:
+    matchAnywhere:     1
+    matchStartOfWord:  1
+    matchWholeWord:    1
+    # The following must be the sum of the three weights above; it is used for normalization.
+    maximumScore:      3
+    #
+    # Calibration factor for balancing word relevancy and recency.
+    recencyCalibrator: 2.0/3.0
+    # The current value of 2.0/3.0 has the effect of:
+    #   - favoring the contribution of recency when matches are not on word boundaries ( because 2.0/3.0 > (1)/3     )
+    #   - favoring the contribution of word relevance when matches are on whole words  ( because 2.0/3.0 < (1+1+1)/3 )
+
+  # Calculate a score for matching term against string.
+  # The score is in the range [0, matchWeights.maximumScore], see above.
+  # Returns: [ score, count ], where count is the number of matched characters in string.
+  scoreTerm: (term, string) ->
+    score = 0
+    count = 0
+    nonMatching = string.split(RegexpCache.get term)
+    if nonMatching.length > 1
+      # Have match.
+      score = RankingUtils.matchWeights.matchAnywhere
+      count = nonMatching.reduce(((p,c) -> p - c.length), string.length)
+      if RegexpCache.get(term, "\\b").test string
+        # Have match at start of word.
+        score += RankingUtils.matchWeights.matchStartOfWord
+        if RegexpCache.get(term, "\\b", "\\b").test string
+          # Have match of whole word.
+          score += RankingUtils.matchWeights.matchWholeWord
+    [ score, if count < string.length then count else string.length ]
+
   # Returns a number between [0, 1] indicating how often the query terms appear in the url and title.
   wordRelevancy: (queryTerms, url, title) ->
-    queryLength = 0
-    urlScore = 0.0
-    titleScore = 0.0
+    urlScore = titleScore = 0.0
+    urlCount = titleCount = 0
+    # Calculate initial scores.
     for term in queryTerms
-      queryLength += term.length
-      urlScore += 1 if url && RankingUtils.matches [term], url
-      titleScore += 1 if title && RankingUtils.matches [term], title
-    urlScore = urlScore / queryTerms.length
-    urlScore = urlScore * RankingUtils.normalizeDifference(queryLength, url.length)
+      [ s, c ] = RankingUtils.scoreTerm term, url
+      urlScore += s
+      urlCount += c
+      if title
+        [ s, c ] = RankingUtils.scoreTerm term, title
+        titleScore += s
+        titleCount += c
+
+    maximumPossibleScore = RankingUtils.matchWeights.maximumScore * queryTerms.length
+
+    # Normalize scores.
+    urlScore /= maximumPossibleScore
+    urlScore *= RankingUtils.normalizeDifference urlCount, url.length
+
     if title
-      titleScore = titleScore / queryTerms.length
-      titleScore = titleScore * RankingUtils.normalizeDifference(queryLength, title.length)
+      titleScore /= maximumPossibleScore
+      titleScore *= RankingUtils.normalizeDifference titleCount, title.length
     else
       titleScore = urlScore
+
+    # Prefer matches in the title over matches in the URL.
+    # In other words, don't let a poor urlScore pull down the titleScore.
+    # For example, urlScore can be unreasonably poor if the URL is very long.
+    urlScore = titleScore if urlScore < titleScore
+
+    # Return the average.
     (urlScore + titleScore) / 2
+
+    # Untested alternative to the above:
+    #   - Don't let a poor urlScore pull down a good titleScore, and don't let a poor titleScore pull down a
+    #     good urlScore.
+    #
+    # return Math.max(urlScore, titleScore)
 
   # Returns a score between [0, 1] which indicates how recent the given timestamp is. Items which are over
   # a month old are counted as 0. This range is quadratic, so an item from one day ago has a much stronger
@@ -325,6 +380,9 @@ RankingUtils =
     # recencyScore is between [0, 1]. It is 1 when recenyDifference is 0. This quadratic equation will
     # incresingly discount older history entries.
     recencyScore = recencyDifference * recencyDifference * recencyDifference
+
+    # Calibrate recencyScore vis-a-vis word-relevancy scores.
+    recencyScore *= RankingUtils.matchWeights.recencyCalibrator
 
   # Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
   normalizeDifference: (a, b) ->

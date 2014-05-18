@@ -228,6 +228,50 @@ context "suggestions",
     suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
+context "RankingUtils.wordRelevancy",
+  should "score higher in shorter URLs", ->
+    highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/short",  "a-title")
+    lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/longer", "a-title")
+    assert.isTrue highScore > lowScore
+
+  should "score higher in shorter titles", ->
+    highScore = RankingUtils.wordRelevancy(["coffee"], "a-url", "Coffeescript")
+    lowScore  = RankingUtils.wordRelevancy(["coffee"], "a-url", "Coffeescript rocks")
+    assert.isTrue highScore > lowScore
+
+  should "score higher for matching the start of a word (in a URL)", ->
+    lowScore  = RankingUtils.wordRelevancy(["stack"], "http://Xstackoverflow.com/same", "a-title")
+    highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflowX.com/same", "a-title")
+    assert.isTrue highScore > lowScore
+
+  should "score higher for matching the start of a word (in a title)", ->
+    lowScore  = RankingUtils.wordRelevancy(["te"], "a-url", "Dist racted")
+    highScore = RankingUtils.wordRelevancy(["te"], "a-url", "Distrac ted")
+    assert.isTrue highScore > lowScore
+
+  should "score higher for matching a whole word (in a URL)", ->
+    lowScore  = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.comX/same", "a-title")
+    highScore = RankingUtils.wordRelevancy(["com"], "http://stackoverflowX.com/same", "a-title")
+    assert.isTrue highScore > lowScore
+
+  should "score higher for matching a whole word (in a title)", ->
+    lowScore  = RankingUtils.wordRelevancy(["com"], "a-url", "abc comX")
+    highScore = RankingUtils.wordRelevancy(["com"], "a-url", "abcX com")
+    assert.isTrue highScore > lowScore
+
+  # # TODO: (smblott)
+  # #       Word relevancy should take into account the number of matches (it doesn't currently).
+  # should "score higher for multiple matches (in a URL)", ->
+  #   lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xxxxxx", "a-title")
+  #   highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xstack", "a-title")
+  #   assert.isTrue highScore > lowScore
+
+  # should "score higher for multiple matches (in a title)", ->
+  #   lowScore  = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (XBCr4)")
+  #   highScore = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
+  #   assert.isTrue highScore > lowScore
+
+context "Suggestion.pushMatchingRanges",
   should "extract ranges matching term (simple case, two matches)", ->
     ranges = []
     [ one, two, three ] = [ "one", "two", "three" ]
