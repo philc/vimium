@@ -137,6 +137,7 @@ class BookmarkCompleter
       @bookmarks = @traverseBookmarks(bookmarks).filter((bookmark) -> bookmark.url?)
       @onBookmarksLoaded()
 
+  # If these names occur as top-level bookmark names, then they are not included in the names of bookmark folders.
   ignoreTopLevel:
     'Other Bookmarks': true
     'Mobile Bookmarks': true
