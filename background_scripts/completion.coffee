@@ -140,7 +140,17 @@ class BookmarkCompleter
   # Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
   traverseBookmarks: (bookmarks) ->
     results = []
-    bookmarks.forEach (folder) => @traverseBookmarksRecursive folder, results
+    bookmarks.forEach (folder) =>
+      # folder is a chrome virtual root folder.
+      folder.children.forEach((folder) =>
+        # folder is one of the chrome, built-in folders ("Other Bookmarks", "Mobile Bookmarks", ...).
+        folder.children.forEach((bookmark) =>
+          # bookmark is a user-defined folder, or itself a bookmark.
+          @traverseBookmarksRecursive bookmark, results))
+          #
+          # We do not add the (possible) bookmark itself.  The user has used the "/" key to begin searching
+          # within bookmark folders.  It's not clear what that even means for top-level bookmarks.
+          # results.push bookmark
     results
 
   # Recursive helper for `traverseBookmarks`.
