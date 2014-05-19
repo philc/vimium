@@ -183,6 +183,7 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+  CursorHider.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -1066,6 +1067,59 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+CursorHider =
+  #
+  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
+  #
+  cursorHidden: false
+  hoverBlockElement: undefined
+
+  hideCursor: ->
+    unless @cursorHidden
+      @hoverBlockElement.style.display =  "block"
+      @cursorHidden = true
+
+  showCursor: ->
+    if @cursorHidden
+      @hoverBlockElement.style.display = "none"
+      @cursorHidden = false
+
+  onMouseMove: (event) ->
+    CursorHider.showCursor()
+
+  onScroll: ->
+    CursorHider.hideCursor()
+
+    # Ignore next mousemove, caused by the scrolling, so the mouse doesn't re-show straight away.
+    window.removeEventListener "mousemove", CursorHider.onMouseMove
+    window.addEventListener "mousemove", ->
+      window.addEventListener "mousemove", CursorHider.onMouseMove
+      window.removeEventListener "mousemove", arguments.callee
+
+  init: ->
+    # cover the <body> element entirely by a div with cursor: none
+    @hoverBlockElement = document.createElement("div")
+    @hoverBlockElement.style.position = "fixed"
+    @hoverBlockElement.style.width = "104%"
+    @hoverBlockElement.style.height = "104%"
+    @hoverBlockElement.style.zIndex = "2147483647" # Maximum value of z-index
+    @hoverBlockElement.style.left = "0px"
+    @hoverBlockElement.style.top =  "0px"
+    @hoverBlockElement.style.opacity = "0.0"
+    @hoverBlockElement.style.display = "none"
+    @hoverBlockElement.style.cursor = "none"
+    @hoverBlockElement.style.border = "none"
+    @hoverBlockElement.style.margin = "-2% -2% -2% -2%"
+    document.body.appendChild(@hoverBlockElement)
+
+    window.addEventListener "mousemove", @onMouseMove
+    window.addEventListener "scroll", @onScroll
+
+  deinit: ->
+    window.removeEventListener "mousemove", @onMouseMove
+    window.removeEventListener "scroll", @onScroll
+    @showCursor()
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
