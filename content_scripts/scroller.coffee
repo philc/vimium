@@ -39,17 +39,17 @@ ensureScrollChange = (direction, changeFn) ->
   loop
     oldScrollValue = element[axisName]
     changeFn(element, axisName)
+    break unless (element[axisName] == oldScrollValue && element != document.body)
     lastElement = element
     # we may have an orphaned element. if so, just scroll the body element.
     element = element.parentElement || document.body
-    break unless (lastElement[axisName] == oldScrollValue && lastElement != document.body)
 
   # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
   # position will not provide any more visual feedback to the user. therefore we deactivate it so that
   # subsequent scrolls only move the parent element.
   rect = activatedElement.getBoundingClientRect()
   if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
-    activatedElement = lastElement
+    activatedElement = element
 
 # scroll the active element in :direction by :amount * :factor.
 # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -65,12 +65,13 @@ root.scrollBy = (direction, amount, factor = 1) ->
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  amount = getDimension activatedElement, direction, amount if Utils.isString amount
-
-  amount *= factor
-
-  if (amount != 0)
-    ensureScrollChange direction, (element, axisName) -> element[axisName] += amount
+  ensureScrollChange direction, (element, axisName) ->
+    if Utils.isString amount
+      elementAmount = getDimension element, direction, amount
+    else
+      elementAmount = amount
+    elementAmount *= factor
+    element[axisName] += elementAmount
 
 root.scrollTo = (direction, pos) ->
   return unless document.body
@@ -78,9 +79,12 @@ root.scrollTo = (direction, pos) ->
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  pos = getDimension activatedElement, direction, pos if Utils.isString pos
-
-  ensureScrollChange direction, (element, axisName) -> element[axisName] = pos
+  ensureScrollChange direction, (element, axisName) ->
+    if Utils.isString pos
+      elementPos = getDimension element, direction, pos
+    else
+      elementPos = pos
+    element[axisName] = elementPos
 
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
