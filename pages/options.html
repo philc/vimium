@@ -122,6 +122,10 @@
         width: 100%;
         min-height: 135px;
       }
+      textarea#searchEngines {
+        width: 100%;
+        min-height: 135px;
+      }
       input#previousPatterns, input#nextPatterns {
         width: 100%;
       }
@@ -330,10 +334,31 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    Set which search engine is used when searching from the Vomnibar (examples: "http://duckduckgo.com/?q=", "http://www.google.com/search?q=").
+                    Set which search engine is used when searching from the Vomnibar (examples: "http://duckduckgo.com/?q=").
                   </div>
                 </div>
                 <input id="searchUrl" type="text" />
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Search Engines</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                      Allow customised search engines the format is `token: http://address.com/q?=%s`
+                      <br/>
+                      token must not contain a colon.
+                      <br/>
+                      comments are allowed and start with '#'
+                      <br/>
+                      all `%s` will be replaced with the query string
+                      <br/>
+                      for a list of default and extra search engines please see <a href="https://gist.github.com/mhauserr/1918ecd63393a9cb23c4">here</a>
+                      <br/>
+                      to subsequently search for something just type token follewed by your search terms
+                  </div>
+                </div>
+                <textarea id="searchEngines"></textarea>
             </td>
           </tr>
         </tbody>

@@ -267,6 +267,27 @@ class TabCompleter
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
 
+# A completer which will return your search engines
+class SearchEngineCompleter
+  searchEngines: {}
+
+  filter: (queryTerms, onComplete) ->
+    searchEngineMatch = this.getSearchEngineMatches(queryTerms[0])
+    suggestions = []
+    if searchEngineMatch
+      searchEngineMatch = searchEngineMatch.replace(/%s/g, queryTerms[1..].join(" "))
+      suggestion = new Suggestion(queryTerms, "search", searchEngineMatch, queryTerms[0] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
+      suggestions.push(suggestion)
+    onComplete(suggestions)
+
+  computeRelevancy: -> 1
+
+  refresh: ->
+    this.searchEngines = root.Settings.getSearchEngines()
+
+  getSearchEngineMatches: (queryTerm) ->
+    this.searchEngines[queryTerm]
+
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
@@ -513,6 +534,7 @@ root.MultiCompleter = MultiCompleter
 root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
+root.SearchEngineCompleter = SearchEngineCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache

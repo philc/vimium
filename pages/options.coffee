@@ -4,9 +4,9 @@ bgSettings = chrome.extension.getBackgroundPage().Settings
 
 editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
-  "nextPatterns", "hideHud", "regexFindMode", "searchUrl"]
+  "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "searchEngines"]
 
-canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss"]
+canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss", "searchEngines"]
 
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()

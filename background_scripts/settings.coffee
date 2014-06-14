@@ -32,9 +32,27 @@ root.Settings = Settings =
       root.Commands.parseCustomKeyMappings value
       root.refreshCompletionKeysAfterMappingSave()
 
+    searchEngines: (value) ->
+      root.Settings.parseSearchEngines value
+
   # postUpdateHooks convenience wrapper
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key] value if @postUpdateHooks[key]
+
+  # Here we have our functions that parse the search engines
+  # this is a map that we use to store our search engines for use.
+  searchEnginesMap: {}
+
+  # this parses the search engines settings and clears the old searchEngines and sets the new one
+  parseSearchEngines: (searchEnginesText) ->
+    @searchEnginesMap = {}
+    # find the split pairs by first splitting by line then splitting on the first `: `
+    split_pairs = ( pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#" )
+    @searchEnginesMap[a[0]] = a[1] for a in split_pairs
+    @searchEnginesMap
+  getSearchEngines: ->
+    this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
+    @searchEnginesMap
 
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
   # or strings
@@ -78,8 +96,11 @@ root.Settings = Settings =
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
     # default/fall back search engine
     searchUrl: "http://www.google.com/search?q="
+    # put in an example search engine
+    searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
 
     settingsVersion: Utils.getCurrentVersion()
+
 
 # We use settingsVersion to coordinate any necessary schema changes.
 if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
