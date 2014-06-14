@@ -334,7 +334,8 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    Set which search engine is used when searching from the Vomnibar (examples: "http://duckduckgo.com/?q=").
+                    The search engine which is used when searching from the Vomnibar
+                    (e.g.: "http://duckduckgo.com/?q=").
                   </div>
                 </div>
                 <input id="searchUrl" type="text" />
@@ -345,17 +346,11 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                      Allow customised search engines the format is `token: http://address.com/q?=%s`
-                      <br/>
-                      token must not contain a colon.
-                      <br/>
-                      comments are allowed and start with '#'
-                      <br/>
-                      all `%s` will be replaced with the query string
-                      <br/>
-                      for a list of default and extra search engines please see <a href="https://gist.github.com/mhauserr/1918ecd63393a9cb23c4">here</a>
-                      <br/>
-                      to subsequently search for something just type token follewed by your search terms
+                    Use this to add shortcuts for your common search engines when using the Vomnibar.<br/><br/>
+                    The format is:<br/>
+                    <pre>your-keyword: http://the-site.com/?q=%s</pre>
+                    %s will be replcaed with your search term.<br/>
+                    Lines which start with "#" are comments.
                   </div>
                 </div>
                 <textarea id="searchEngines"></textarea>
