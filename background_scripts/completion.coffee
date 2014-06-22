@@ -71,7 +71,7 @@ class Suggestion
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
     ranges = []
-    escapedTerms = @queryTerms.map (term) -> Utils.escapeHtml(term)
+    escapedTerms = @queryTerms.map (term) -> Utils.escapeHtml term
     for term in escapedTerms
       @pushMatchingRanges string, term, ranges
 
@@ -329,9 +329,9 @@ RankingUtils =
   # Every term must match at least one thing.
   matches: (queryTerms, things...) ->
     for term in queryTerms
-      regexp = RegexpCache.get(term)
+      regexp = RegexpCache.get term
       matchedTerm = false
-      for thing in @removeAccents(things)
+      for thing in things
         matchedTerm ||= thing.match regexp
       return false unless matchedTerm
     true
@@ -429,18 +429,6 @@ RankingUtils =
     max = Math.max(a, b)
     (max - Math.abs(a - b)) / max
 
-  # Removes accents from an array of things - č->c, ř->r, etc.
-  # used this SO answer - http://stackoverflow.com/a/16877175/910868
-  removeAccents: (things) ->
-    @accentsMap ||= { "À": "A", "Á": "A", "Â": "A", "Ã": "A", "Ä": "A", "Å": "A", "Æ": "AE", "Ç": "C", "È": "E", "É": "E", "Ê": "E", "Ë": "E", "Ì": "I", "Í": "I", "Î": "I", "Ï": "I", "Ð": "D", "Ñ": "N", "Ò": "O", "Ó": "O", "Ô": "O", "Õ": "O", "Ö": "O", "Ø": "O", "Ù": "U", "Ú": "U", "Û": "U", "Ü": "U", "Ý": "Y", "ß": "s", "à": "a", "á": "a", "â": "a", "ã": "a", "ä": "a", "å": "a", "æ": "ae", "ç": "c", "è": "e", "é": "e", "ê": "e", "ë": "e", "ì": "i", "í": "i", "î": "i", "ï": "i", "ñ": "n", "ò": "o", "ó": "o", "ô": "o", "õ": "o", "ö": "o", "ø": "o", "ù": "u", "ú": "u", "û": "u", "ü": "u", "ý": "y", "ÿ": "y", "Ā": "A", "ā": "a", "Ă": "A", "ă": "a", "Ą": "A", "ą": "a", "Ć": "C", "ć": "c", "Ĉ": "C", "ĉ": "c", "Ċ": "C", "ċ": "c", "Č": "C", "č": "c", "Ď": "D", "ď": "d", "Đ": "D", "đ": "d", "Ē": "E", "ē": "e", "Ĕ": "E", "ĕ": "e", "Ė": "E", "ė": "e", "Ę": "E", "ę": "e", "Ě": "E", "ě": "e", "Ĝ": "G", "ĝ": "g", "Ğ": "G", "ğ": "g", "Ġ": "G", "ġ": "g", "Ģ": "G", "ģ": "g", "Ĥ": "H", "ĥ": "h", "Ħ": "H", "ħ": "h", "Ĩ": "I", "ĩ": "i", "Ī": "I", "ī": "i", "Ĭ": "I", "ĭ": "i", "Į": "I", "į": "i", "İ": "I", "ı": "i", "Ĳ": "IJ", "ĳ": "ij", "Ĵ": "J", "ĵ": "j", "Ķ": "K", "ķ": "k", "Ĺ": "L", "ĺ": "l", "Ļ": "L", "ļ": "l", "Ľ": "L", "ľ": "l", "Ŀ": "L", "ŀ": "l", "Ł": "l", "ł": "l", "Ń": "N", "ń": "n", "Ņ": "N", "ņ": "n", "Ň": "N", "ň": "n", "ŉ": "n", "Ō": "O", "ō": "o", "Ŏ": "O", "ŏ": "o", "Ő": "O", "ő": "o", "Œ": "OE", "œ": "oe", "Ŕ": "R", "ŕ": "r", "Ŗ": "R", "ŗ": "r", "Ř": "R", "ř": "r", "Ś": "S", "ś": "s", "Ŝ": "S", "ŝ": "s", "Ş": "S", "ş": "s", "Š": "S", "š": "s", "Ţ": "T", "ţ": "t", "Ť": "T", "ť": "t", "Ŧ": "T", "ŧ": "t", "Ũ": "U", "ũ": "u", "Ū": "U", "ū": "u", "Ŭ": "U", "ŭ": "u", "Ů": "U", "ů": "u", "Ű": "U", "ű": "u", "Ų": "U", "ų": "u", "Ŵ": "W", "ŵ": "w", "Ŷ": "Y", "ŷ": "y", "Ÿ": "Y", "Ź": "Z", "ź": "z", "Ż": "Z", "ż": "z", "Ž": "Z", "ž": "z", "ſ": "s", "ƒ": "f", "Ơ": "O", "ơ": "o", "Ư": "U", "ư": "u", "Ǎ": "A", "ǎ": "a", "Ǐ": "I", "ǐ": "i", "Ǒ": "O", "ǒ": "o", "Ǔ": "U", "ǔ": "u", "Ǖ": "U", "ǖ": "u", "Ǘ": "U", "ǘ": "u", "Ǚ": "U", "ǚ": "u", "Ǜ": "U", "ǜ": "u", "Ǻ": "A", "ǻ": "a", "Ǽ": "AE", "ǽ": "ae", "Ǿ": "O", "ǿ": "o" }
-    @accentsMatch ||= /[ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïñòóôõöøùúûüýÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĹĺĻļĽľĿŀŁłŃńŅņŇňŉŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒƠơƯưǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǺǻǼǽǾǿ]/g
-    escaped_things = []
-    for thing in things
-      escaped_things.push thing.replace(@accentsMatch, (match) =>
-        @accentsMap[match]
-      )
-    return escaped_things
-
 # We cache regexps because we use them frequently when comparing a query to history entries and bookmarks,
 # and we don't want to create fresh objects for every comparison.
 RegexpCache =
@@ -448,7 +436,7 @@ RegexpCache =
     @initialized = true
     @clear()
     # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    @escapeRegExp ||= /[\(\)\|\?\-\[\]\/\{\}\*\+\.\\\^\$]/g
 
   clear: -> @cache = {}
 
@@ -463,11 +451,66 @@ RegexpCache =
   get: (string, prefix="", suffix="") ->
     @init() unless @initialized
     regexpString = string.replace(@escapeRegExp, "\\$&")
+    regexpString = @accentRegExp regexpString
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
+
     # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
     @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
+
+  # Add accented letters to RegExp
+  accentRegExp: (term) ->
+    regexps = [
+      "(?:A|À|Á|Â|Ã|Ä|Å|Ā|Ă|Ą|Ǎ|Ǻ)",
+      "(?:AE|Æ|Ǽ)",
+      "(?:C|Ç|Ć|Ĉ|Ċ|Č)",
+      "(?:E|È|É|Ê|Ë|Ē|Ĕ|Ė|Ę|Ě)",
+      "(?:I|Ì|Í|Î|Ï|Ĩ|Ī|Ĭ|Į|İ|Ǐ)",
+      "(?:D|Ð|Ď|Đ)",
+      "(?:N|Ñ|Ń|Ņ|Ň)",
+      "(?:O|Ò|Ó|Ô|Õ|Ö|Ø|Ō|Ŏ|Ő|Ơ|Ǒ|Ǿ)",
+      "(?:U|Ù|Ú|Û|Ü|Ũ|Ū|Ŭ|Ů|Ű|Ų|Ư|Ǔ|Ǖ|Ǘ|Ǚ|Ǜ)",
+      "(?:Y|Ý|Ŷ|Ÿ)",
+      "(?:s|ß|ś|ŝ|ş|š|ſ)",
+      "(?:a|à|á|â|ã|ä|å|ā|ă|ą|ǎ|ǻ)",
+      "(?:ae|æ|ǽ)",
+      "(?:c|ç|ć|ĉ|ċ|č)",
+      "(?:e|è|é|ê|ë|ē|ĕ|ė|ę|ě)",
+      "(?:i|ì|í|î|ï|ĩ|ī|ĭ|į|ı|ǐ)",
+      "(?:n|ñ|ń|ņ|ň|ŉ)",
+      "(?:o|ò|ó|ô|õ|ö|ø|ō|ŏ|ő|ơ|ǒ|ǿ)",
+      "(?:u|ù|ú|û|ü|ũ|ū|ŭ|ů|ű|ų|ư|ǔ|ǖ|ǘ|ǚ|ǜ)",
+      "(?:y|ý|ÿ|ŷ)",
+      "(?:d|ď|đ)",
+      "(?:G|Ĝ|Ğ|Ġ|Ģ)",
+      "(?:g|ĝ|ğ|ġ|ģ)",
+      "(?:H|Ĥ|Ħ)",
+      "(?:h|ĥ|ħ)",
+      "(?:IJ|Ĳ)",
+      "(?:ij|ĳ)",
+      "(?:J|Ĵ)",
+      "(?:j|ĵ)",
+      "(?:K|Ķ)",
+      "(?:k|ķ)",
+      "(?:L|Ĺ|Ļ|Ľ|Ŀ)",
+      "(?:l|ĺ|ļ|ľ|ŀ|Ł|ł)",
+      "(?:OE|Œ)",
+      "(?:oe|œ)",
+      "(?:R|Ŕ|Ŗ|Ř)",
+      "(?:r|ŕ|ŗ|ř)",
+      "(?:S|Ś|Ŝ|Ş|Š)",
+      "(?:T|Ţ|Ť|Ŧ)",
+      "(?:t|ţ|ť|ŧ)",
+      "(?:W|Ŵ)",
+      "(?:w|ŵ)",
+      "(?:Z|Ź|Ż|Ž)",
+      "(?:z|ź|ż|ž)",
+      "(?:f|ƒ)"
+    ]
+    for regexp in regexps
+      term = term.replace (new RegExp regexp, "g"), regexp
+    term
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
