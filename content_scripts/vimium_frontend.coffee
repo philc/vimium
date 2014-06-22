@@ -7,6 +7,7 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
+keysPressed = false
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -154,6 +155,11 @@ initializeWhenEnabled = (newPassKeys) ->
     installListener "focus", (event) -> if isEnabledForUrl then onFocusCapturePhase(event) else true
     installListener "blur", (event) -> if isEnabledForUrl then onBlurCapturePhase(event)
     installListener "DOMActivate", (event) -> if isEnabledForUrl then onDOMActivate(event)
+    handlerStack.push {
+      keydown: updatekeyspressed
+      click: updatekeyspressed
+      mousedown: updatekeyspressed
+    }
     enterInsertModeIfElementIsFocused()
     installedListeners = true
 
@@ -476,6 +482,11 @@ onKeyup = (event) ->
       event.stopPropagation()
       break
 
+updatekeyspressed = (event) ->
+  handlerStack.remove() # Remove this from handlerStack, it should be a one-time thing.
+  keyspressed = true
+  return true # Don't block other event handlers.
+
 checkIfEnabledForUrl = ->
   url = window.location.toString()
 
@@ -548,12 +559,15 @@ window.enterInsertMode = (target) ->
 # If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
 # leave insert mode when the user presses <ESC>.
 #
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
+enterInsertModeWithoutShowingIndicator = (target) ->
+  HUD.show("Insert mode") unless keysPressed
+  insertModeLock = target
 
 exitInsertMode = (target) ->
   if (target == undefined || insertModeLock == target)
     insertModeLock = null
     HUD.hide()
+    keysPressed = true
 
 isInsertMode = -> insertModeLock != null
 
