@@ -51,6 +51,9 @@
       "run_at": "document_start"
     }
   ],
+  "web_accessible_resources": [
+    "content_scripts/searchWorker.js"
+  ],
   "browser_action": {
     "default_icon": "icons/browser_action_disabled.png",
     "default_popup": "pages/popup.html"

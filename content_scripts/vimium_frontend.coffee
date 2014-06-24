@@ -171,6 +171,8 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
+  RegexWorker.init()
+
 # This is a little hacky but sometimes the size wasn't available on domReady?
 registerFrameIfSizeAvailable = (is_top) ->
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
@@ -516,8 +518,84 @@ exitInsertMode = (target) ->
 
 isInsertMode = -> insertModeLock != null
 
+# set up a web worker to asynchronously peform regexp searches
+RegexWorker =
+  initialised: false
+  searchWorker: undefined
+  callback: undefined
+  workerDataUrl: undefined
+
+  init: ->
+    # content scripts cannot create web workers from chrome-extension: URLs (chromium bug 357664).
+    # Based on the advice from http://stackoverflow.com/a/22719772, we can load the script via xmlhttprequest
+    # and create a data: URI from it, which we can load.
+    workerUrl = chrome.extension.getURL "content_scripts/searchWorker.js"
+    try
+      xmlhttp = new XMLHttpRequest()
+      xmlhttp.responseType = "blob"
+      xmlhttp.onload = (->
+        @workerDataUrl = URL.createObjectURL xmlhttp.response
+      ).bind RegexWorker
+      xmlhttp.open "GET", workerUrl
+      xmlhttp.send()
+    catch
+      @workerDataUrl = workerUrl
+    @initialised = true
+  deinit: ->
+    @deinitWorker()
+    @initialised = false
+
+  initWorker: ->
+    try
+      @searchWorker = new Worker @workerDataUrl
+      @searchWorker.onmessage = @searchWorkerHandler
+    catch # Loading the worker has failed for some reason, still perform the search
+      @searchWorker = # Make an imitation Worker
+        onMessage: @searchWorkerHandler
+        terminate: ->
+
+        postMessage: (postData) -> # Do the Worker's job, but synchronously
+          _event =
+            data:
+              text: postData.text
+              regex: postData.regex
+              regexMatches: postData.text.match postData.regex
+          @onMessage _event
+
+  deinitWorker: ->
+    return unless @searchWorker
+    delete @searchWorker.onmessage
+    @searchWorker.terminate()
+    @searchWorker = undefined
+
+  searchWorkerHandler: (event) ->
+    text = event.data.text
+    regex = event.data.regex
+    regexMatches = event.data.regexMatches
+
+    findModeQuery.regexMatches = regexMatches
+    findModeQuery.activeRegexIndex = 0
+
+    RegexWorker.callback regexMatches
+
+  matchAsync: (text, regex, callback) ->
+    # Reset worker, stop any currently running searches
+    @deinitWorker()
+    @initWorker()
+
+    if callback
+      @callback = (regexMatches) ->
+        callback regexMatches, text, regex
+    else
+      @callback = undefined
+    postData =
+      text: text
+      regex: regex
+    @searchWorker.postMessage postData
+
+
 # should be called whenever rawQuery is modified.
-updateFindModeQuery = ->
+updateFindModeQueryAsync = (callback) ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
@@ -552,14 +630,17 @@ updateFindModeQuery = ->
       return
     # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
     text = document.body.innerText
-    findModeQuery.regexMatches = text.match(pattern)
-    findModeQuery.activeRegexIndex = 0
+    RegexWorker.matchAsync text, pattern, callback
+
+  else # Normal string, we can fall straight through to callback
+    callback()
 
 handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
-  updateFindModeQuery()
-  performFindInPlace()
-  showFindModeHUDForQuery()
+  showFindModeHUDForQuery true
+  updateFindModeQueryAsync ->
+    performFindInPlace()
+    showFindModeHUDForQuery false
 
 handleEscapeForFindMode = ->
   exitFindMode()
@@ -579,9 +660,10 @@ handleDeleteForFindMode = ->
     performFindInPlace()
   else
     findModeQuery.rawQuery = findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
-    updateFindModeQuery()
-    performFindInPlace()
-    showFindModeHUDForQuery()
+    showFindModeHUDForQuery true
+    updateFindModeQueryAsync ->
+      performFindInPlace()
+      showFindModeHUDForQuery false
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
@@ -675,8 +757,12 @@ findAndFocus = (backwards) ->
   mostRecentQuery = settings.get("findModeRawQuery") || ""
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
-    updateFindModeQuery()
+    updateFindModeQueryAsync ->
+      jumpToMatch backwards
+  else
+    jumpToMatch backwards
 
+jumpToMatch = (backwards) ->
   query =
     if findModeQuery.isRegex
       getNextQueryFromRegexMatches(if backwards then -1 else 1)
@@ -813,8 +899,8 @@ window.goNext = ->
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-showFindModeHUDForQuery = ->
-  if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
+showFindModeHUDForQuery = (searchOngoing) ->
+  if (searchOngoing || findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
     HUD.show("/" + findModeQuery.rawQuery)
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
