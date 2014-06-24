@@ -18,4 +18,7 @@ root.chrome = {
     sendMessage: ->
     getManifest: ->
   }
+  extension: {
+    getURL: (relativeUrl) -> relativeUrl
+  }
 }
