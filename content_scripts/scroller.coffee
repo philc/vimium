@@ -15,14 +15,14 @@ setActivatedElement = (el) ->
   jumpHistory = []
   jumpPosition = 0
 
-addToJumpHistory = (direction, pos) ->
+addToJumpHistory = (direction, val) ->
   point = {}
   if direction == 'x'
-    point.x = pos
+    point.x = val
     point.y = activatedElement[scrollProperties.y.axisName]
   else
     point.x = activatedElement[scrollProperties.x.axisName]
-    point.y = pos
+    point.y = val
   jumpHistory.push(point)
 
 
@@ -96,31 +96,35 @@ root.scrollBy = (direction, amount, factor = 1) ->
     elementAmount *= factor
     element[axisName] += elementAmount
 
-root.scrollTo = (direction, pos, history) ->
+root.scrollTo = (direction, pos, history, lastPosition) ->
   return unless document.body
 
   if (!activatedElement || !isRendered(activatedElement))
     setActivatedElement(document.body)
 
-  [oldPos, newPos] = ensureScrollChange direction, (element, axisName) ->
+  [oldVal, newVal] = ensureScrollChange direction, (element, axisName) ->
     if Utils.isString pos
       elementPos = getDimension element, direction, pos
     else
       elementPos = pos
     element[axisName] = elementPos
 
-  if !history && oldPos != newPos
+  if history
+    if lastPosition
+      lastPosition[direction] = oldVal
+
+  else if oldVal != newVal
     jumpHistory.length = jumpPosition
     lastPos = jumpHistory[jumpPosition] - 1
     if lastPos
-      if lastPos[direction] != oldPos
-        addToJumpHistory(direction, oldPos)
-      else if lastPos[direction] != newPos
-        addToJumpHistory(direction, newPos)
+      if lastPos[direction] != oldVal
+        addToJumpHistory(direction, oldVal)
+      else if lastPos[direction] != newVal
+        addToJumpHistory(direction, newVal)
       jumpPosition++
     else
-      addToJumpHistory(direction, oldPos)
-      addToJumpHistory(direction, newPos)
+      addToJumpHistory(direction, oldVal)
+      addToJumpHistory(direction, newVal)
       jumpPosition++
 
 
@@ -134,10 +138,11 @@ root.scrollBack = ->
   return unless document.body
   return unless activatedElement && isRendered(activatedElement)
 
-  position = jumpHistory[--jumpPosition]
-  if position
-    root.scrollTo "x", position.x, true
-    root.scrollTo "y", position.y, true
+  lastPosition = jumpHistory[jumpPosition]
+  newPosition = jumpHistory[--jumpPosition]
+  if newPosition
+    root.scrollTo "x", newPosition.x, true, lastPosition
+    root.scrollTo "y", newPosition.y, true, lastPosition
   else
     jumpPosition = 0
 
@@ -145,9 +150,10 @@ root.scrollForward = ->
   return unless document.body
   return unless activatedElement && isRendered(activatedElement)
 
-  position = jumpHistory[++jumpPosition]
-  if position
-    root.scrollTo "x", position.x, true
-    root.scrollTo "y", position.y, true
+  lastPosition = jumpHistory[jumpPosition]
+  newPosition = jumpHistory[++jumpPosition]
+  if newPosition
+    root.scrollTo "x", newPosition.x, true, lastPosition
+    root.scrollTo "y", newPosition.y, true, lastPosition
   else
     jumpPosition = jumpHistory.length - 1
