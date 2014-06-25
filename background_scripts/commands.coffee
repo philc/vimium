@@ -88,6 +88,7 @@ Commands =
     pageNavigation:
       ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
       "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
+      "scrollBack", "scrollForward",
       "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
       "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
       "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
@@ -125,6 +126,8 @@ defaultKeyMappings =
   "zL": "scrollToRight"
   "<c-e>": "scrollDown"
   "<c-y>": "scrollUp"
+  "<c-o>": "scrollBack"
+  "<c-i>": "scrollForward"
 
   "d": "scrollPageDown"
   "u": "scrollPageUp"
@@ -203,6 +206,9 @@ commandDescriptions =
   scrollPageUp: ["Scroll a page up"]
   scrollFullPageDown: ["Scroll a full page down"]
   scrollFullPageUp: ["Scroll a full page up"]
+
+  scrollBack: ["Go to older position in scroll jump history"]
+  scrollForward: ["Go to newer position in scroll jump history"]
 
   reload: ["Reload the page"]
   toggleViewSource: ["View page source"]
