@@ -436,7 +436,7 @@ RegexpCache =
     @initialized = true
     @clear()
     # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    @escapeRegExp ||= /[\(\)\|\?\-\[\]\/\{\}\*\+\.\\\^\$]/g
+    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 
   clear: -> @cache = {}
 
@@ -451,7 +451,7 @@ RegexpCache =
   get: (string, prefix="", suffix="") ->
     @init() unless @initialized
     regexpString = string.replace(@escapeRegExp, "\\$&")
-    regexpString = @accentRegExp regexpString
+    regexpString = @addAccentDetection regexpString
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
@@ -459,58 +459,64 @@ RegexpCache =
     # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
     @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
 
-  # Add accented letters to RegExp
-  accentRegExp: (term) ->
+  # Modify regexpString to detect accents amoung the regexp results, whether or not the accents are typed
+  addAccentDetection: (regexpString) ->
+    # Use non-capturing groups `(?:)` to allow nesting (eg. matching "áe", "aé" and "æ" when typing "ae").
+    # This is preferable to the other obvious potential alternatives:
+    #  - use lookaheads (harder to undertstand, slower)
+    #  - give all possibilities for accents on double letter pairs (longer, harder to understand, and slower)
     regexps = [
-      "(?:A|À|Á|Â|Ã|Ä|Å|Ā|Ă|Ą|Ǎ|Ǻ)",
+      # multi-letter groups come first, so they can contain appropriate single letter groups
       "(?:AE|Æ|Ǽ)",
-      "(?:C|Ç|Ć|Ĉ|Ċ|Č)",
-      "(?:E|È|É|Ê|Ë|Ē|Ĕ|Ė|Ę|Ě)",
-      "(?:I|Ì|Í|Î|Ï|Ĩ|Ī|Ĭ|Į|İ|Ǐ)",
-      "(?:D|Ð|Ď|Đ)",
-      "(?:N|Ñ|Ń|Ņ|Ň)",
-      "(?:O|Ò|Ó|Ô|Õ|Ö|Ø|Ō|Ŏ|Ő|Ơ|Ǒ|Ǿ)",
-      "(?:U|Ù|Ú|Û|Ü|Ũ|Ū|Ŭ|Ů|Ű|Ų|Ư|Ǔ|Ǖ|Ǘ|Ǚ|Ǜ)",
-      "(?:Y|Ý|Ŷ|Ÿ)",
-      "(?:s|ß|ś|ŝ|ş|š|ſ)",
-      "(?:a|à|á|â|ã|ä|å|ā|ă|ą|ǎ|ǻ)",
+      "(?:OE|Œ)",
       "(?:ae|æ|ǽ)",
-      "(?:c|ç|ć|ĉ|ċ|č)",
-      "(?:e|è|é|ê|ë|ē|ĕ|ė|ę|ě)",
-      "(?:i|ì|í|î|ï|ĩ|ī|ĭ|į|ı|ǐ)",
-      "(?:n|ñ|ń|ņ|ň|ŉ)",
-      "(?:o|ò|ó|ô|õ|ö|ø|ō|ŏ|ő|ơ|ǒ|ǿ)",
-      "(?:u|ù|ú|û|ü|ũ|ū|ŭ|ů|ű|ų|ư|ǔ|ǖ|ǘ|ǚ|ǜ)",
-      "(?:y|ý|ÿ|ŷ)",
-      "(?:d|ď|đ)",
-      "(?:G|Ĝ|Ğ|Ġ|Ģ)",
-      "(?:g|ĝ|ğ|ġ|ģ)",
-      "(?:H|Ĥ|Ħ)",
-      "(?:h|ĥ|ħ)",
       "(?:IJ|Ĳ)",
       "(?:ij|ĳ)",
-      "(?:J|Ĵ)",
-      "(?:j|ĵ)",
-      "(?:K|Ķ)",
-      "(?:k|ķ)",
-      "(?:L|Ĺ|Ļ|Ľ|Ŀ)",
-      "(?:l|ĺ|ļ|ľ|ŀ|Ł|ł)",
-      "(?:OE|Œ)",
       "(?:oe|œ)",
+      # single letters
+      "(?:A|À|Á|Â|Ã|Ä|Å|Ā|Ă|Ą|Ǎ|Ǻ)",
+      "(?:C|Ç|Ć|Ĉ|Ċ|Č)",
+      "(?:D|Ð|Ď|Đ)",
+      "(?:E|È|É|Ê|Ë|Ē|Ĕ|Ė|Ę|Ě)",
+      "(?:G|Ĝ|Ğ|Ġ|Ģ)",
+      "(?:H|Ĥ|Ħ)",
+      "(?:I|Ì|Í|Î|Ï|Ĩ|Ī|Ĭ|Į|İ|Ǐ)",
+      "(?:J|Ĵ)",
+      "(?:K|Ķ)",
+      "(?:L|Ĺ|Ļ|Ľ|Ŀ)",
+      "(?:N|Ñ|Ń|Ņ|Ň)",
+      "(?:O|Ò|Ó|Ô|Õ|Ö|Ø|Ō|Ŏ|Ő|Ơ|Ǒ|Ǿ)",
       "(?:R|Ŕ|Ŗ|Ř)",
-      "(?:r|ŕ|ŗ|ř)",
       "(?:S|Ś|Ŝ|Ş|Š)",
       "(?:T|Ţ|Ť|Ŧ)",
-      "(?:t|ţ|ť|ŧ)",
+      "(?:U|Ù|Ú|Û|Ü|Ũ|Ū|Ŭ|Ů|Ű|Ų|Ư|Ǔ|Ǖ|Ǘ|Ǚ|Ǜ)",
       "(?:W|Ŵ)",
-      "(?:w|ŵ)",
+      "(?:Y|Ý|Ŷ|Ÿ)",
       "(?:Z|Ź|Ż|Ž)",
-      "(?:z|ź|ż|ž)",
+      "(?:a|à|á|â|ã|ä|å|ā|ă|ą|ǎ|ǻ)",
+      "(?:c|ç|ć|ĉ|ċ|č)",
+      "(?:d|ď|đ)",
+      "(?:e|è|é|ê|ë|ē|ĕ|ė|ę|ě)",
       "(?:f|ƒ)"
+      "(?:g|ĝ|ğ|ġ|ģ)",
+      "(?:h|ĥ|ħ)",
+      "(?:i|ì|í|î|ï|ĩ|ī|ĭ|į|ı|ǐ)",
+      "(?:j|ĵ)",
+      "(?:k|ķ)",
+      "(?:l|ĺ|ļ|ľ|ŀ|Ł|ł)",
+      "(?:n|ñ|ń|ņ|ň|ŉ)",
+      "(?:o|ò|ó|ô|õ|ö|ø|ō|ŏ|ő|ơ|ǒ|ǿ)",
+      "(?:r|ŕ|ŗ|ř)",
+      "(?:s|ß|ś|ŝ|ş|š|ſ)",
+      "(?:t|ţ|ť|ŧ)",
+      "(?:u|ù|ú|û|ü|ũ|ū|ŭ|ů|ű|ų|ư|ǔ|ǖ|ǘ|ǚ|ǜ)",
+      "(?:w|ŵ)",
+      "(?:y|ý|ÿ|ŷ)",
+      "(?:z|ź|ż|ž)",
     ]
     for regexp in regexps
-      term = term.replace (new RegExp regexp, "g"), regexp
-    term
+      regexpString = regexpString.replace(new RegExp(regexp, "g"), regexp)
+    regexpString
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
