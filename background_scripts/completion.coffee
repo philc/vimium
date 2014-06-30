@@ -435,8 +435,6 @@ RegexpCache =
   init: ->
     @initialized = true
     @clear()
-    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 
   clear: -> @cache = {}
 
@@ -450,7 +448,7 @@ RegexpCache =
   # TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
   get: (string, prefix="", suffix="") ->
     @init() unless @initialized
-    regexpString = string.replace(@escapeRegExp, "\\$&")
+    regexpString = Utils.escapeRegexSpecialChars string
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
