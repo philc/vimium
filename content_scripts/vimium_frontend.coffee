@@ -8,7 +8,7 @@ window.handlerStack = new HandlerStack
 
 insertModeLock = null
 findMode = false
-findModeQuery = { rawQuery: "" }
+findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
@@ -554,6 +554,18 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.regexMatches = text.match(pattern)
     findModeQuery.activeRegexIndex = 0
+    findModeQuery.matchCount = findModeQuery.regexMatches?.length
+  # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
+  # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
+  # from the internal representation used by window.find.
+  else
+    # escape all special characters, so RegExp just parses the string 'as is'.
+    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
+    pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+    text = document.body.innerText
+    findModeQuery.matchCount = text.match(pattern)?.length
 
 handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
@@ -815,7 +827,7 @@ window.goNext = ->
 
 showFindModeHUDForQuery = ->
   if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    HUD.show("/" + findModeQuery.rawQuery)
+    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Matches)")
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
