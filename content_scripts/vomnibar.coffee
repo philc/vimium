@@ -68,8 +68,18 @@ class VomnibarUI
     @update(true)
 
   updateSelection: ->
+    # We have taken the option to add some global state here (previousCompletionType) to tell if a search
+    # item has just appeared or disappeared, if that happens we either set the initialSelectionValue to 0 or 1
+    # I feel that this approach is cleaner than bubbling the state up from the suggestion level
+    # so we just inspect it afterwards
+    if @completions[0]
+      if @previousCompletionType != "search" && @completions[0].type == "search"
+        @selection = 0
+      else if @previousCompletionType == "search" && @completions[0].type != "search"
+        @selection = -1
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
+    @previousCompletionType = @completions[0].type if @completions[0]
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
