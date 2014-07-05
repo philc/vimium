@@ -234,6 +234,14 @@ extend window,
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
+  goBackInNewTab: (count) ->
+    count = Math.min(count, history.length-1)
+    if count != 0
+      chrome.runtime.sendMessage {handler: "duplicateTabAndForward", count: -count}
+  goForwardInNewTab: (count) ->
+    count = Math.min(count, history.length-1)
+    if count != 0
+      chrome.runtime.sendMessage {handler: "duplicateTabAndForward", count: count}
 
   goUp: (count) ->
     url = window.location.href

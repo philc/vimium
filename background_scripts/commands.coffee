@@ -97,7 +97,7 @@ Commands =
       "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
-      ["goBack", "goForward"]
+      ["goBack", "goForward", "goBackInNewTab", "goForwardInNewTab"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
        "restoreTab", "moveTabToNewWindow", "togglePinTab", "moveTabLeft", "moveTabRight"]
@@ -135,6 +135,8 @@ defaultKeyMappings =
 
   "H": "goBack"
   "L": "goForward"
+  "<c-H>": "goBackInNewTab"
+  "<c-L>": "goForwardInNewTab"
   "gu": "goUp"
   "gU": "goToRoot"
 
@@ -169,8 +171,6 @@ defaultKeyMappings =
   "yt": "duplicateTab"
   "x": "removeTab"
   "X": "restoreTab"
-
-  ".": "togglePinTab"
 
   "o": "Vomnibar.activate"
   "O": "Vomnibar.activateInNewTab"
@@ -234,6 +234,8 @@ commandDescriptions =
   # Navigating your history
   goBack: ["Go back in history", { passCountToFunction: true }]
   goForward: ["Go forward in history", { passCountToFunction: true }]
+  goBackInNewTab: ["Go back in history, open in new tab", { passCountToFunction: true }]
+  goForwardInNewTab: ["Go forward in history, open in new tab", { passCountToFunction: true }]
 
   # Navigating the URL hierarchy
   goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]

@@ -153,6 +153,15 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
   validFirstKeys: validFirstKeys
 
 #
+# Opens the next page in the tab history in a new tab
+#
+duplicateTabAndForward = (request, sender) ->
+  chrome.tabs.duplicate sender.tab.id,
+    (tab) ->
+      chrome.tabs.executeScript tab.tabId,
+        code: "history.go(" + request.count + ")"
+
+#
 # Opens the url in the current tab.
 #
 openUrlInCurrentTab = (request) ->
@@ -574,6 +583,7 @@ portHandlers =
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
   getCurrentTabUrl: getCurrentTabUrl,
+  duplicateTabAndForward: duplicateTabAndForward,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInIncognito: openUrlInIncognito,
   openUrlInCurrentTab: openUrlInCurrentTab,
