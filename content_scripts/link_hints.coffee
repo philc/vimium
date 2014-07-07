@@ -13,6 +13,7 @@ OPEN_IN_NEW_BG_TAB = {}
 OPEN_IN_NEW_FG_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
+SHOW_LINK_URL = {}
 OPEN_INCOGNITO = {}
 
 LinkHints =
@@ -50,6 +51,7 @@ LinkHints =
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
   activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
+  activateModeToShowLinkUrl: -> @activateMode(SHOW_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
 
@@ -98,6 +100,10 @@ LinkHints =
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
+    else if @mode is SHOW_LINK_URL
+      HUD.show("Show link URL")
+      @linkActivator = (link) ->
+        HUD.showForDuration(link.href, 2500)
     else if @mode is OPEN_INCOGNITO
       HUD.show("Open link in incognito window")
 
@@ -220,6 +226,8 @@ LinkHints =
         @deactivateMode delay, ->
           LinkHints.delayMode = false
           LinkHints.activateModeWithQueue()
+      else if @mode is SHOW_LINK_URL
+        @deactivateMode(delay, (-> LinkHints.delayMode = false), true)
       else
         @deactivateMode(delay, -> LinkHints.delayMode = false)
 
@@ -241,7 +249,7 @@ LinkHints =
   # If called without arguments, it executes immediately.  Othewise, it
   # executes after 'delay' and invokes 'callback' when it is finished.
   #
-  deactivateMode: (delay, callback) ->
+  deactivateMode: (delay, callback, keepHUD) ->
     deactivate = =>
       if (LinkHints.getMarkerMatcher().deactivate)
         LinkHints.getMarkerMatcher().deactivate()
@@ -249,7 +257,8 @@ LinkHints =
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
       handlerStack.remove @handlerId
-      HUD.hide()
+      if (!keepHUD)
+        HUD.hide()
       @isActive = false
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that

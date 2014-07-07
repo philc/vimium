@@ -89,12 +89,12 @@ Commands =
       ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
       "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
       "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
-      "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      "LinkHints.activateModeToShowLinkUrl", "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
+      "goToRoot", "enterInsertMode", "focusInput", "LinkHints.activateMode",
+      "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeToOpenInNewForegroundTab",
+      "LinkHints.activateModeWithQueue", "Vomnibar.activate", "Vomnibar.activateInNewTab",
+      "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
+      "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -157,6 +157,8 @@ defaultKeyMappings =
   "p": "openCopiedUrlInCurrentTab"
   "P": "openCopiedUrlInNewTab"
 
+  "sf": "LinkHints.activateModeToShowLinkUrl"
+
   "K": "nextTab"
   "J": "previousTab"
   "gt": "nextTab"
@@ -209,6 +211,7 @@ commandDescriptions =
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
   'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  'LinkHints.activateModeToShowLinkUrl': ["Show a link URL, without opening it"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
