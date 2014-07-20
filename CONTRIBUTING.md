@@ -26,7 +26,12 @@ install Vimium from source:
  1. Click on "Load Unpacked Extension..."
  1. Select the Vimium directory.
 
-## Tests
+## Development tips
+
+ 1. Run `cake autobuild` to watch for changes to coffee files, and have the .js files automatically
+    regenerated
+
+## Running the tests
 
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run the tests:
 
@@ -35,26 +40,16 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
 
-## Development tips
-
- 1. Run `cake autobuild` to watch for changes to coffee files, and have the .js files automatically
-    regenerated
-
 ## Code Coverage
 
-Bugs and features are not the only way to contribute -- more tests are always welcome. You can find out which
-portions of code need them by looking at our coverage reports. To generate these reports:
+You can find out which portions of code need them by looking at our coverage reports. To generate these
+reports:
 
  1. Download [JSCoverage](http://siliconforks.com/jscoverage/download.html) or `brew install jscoverage`
  1. `npm install temp`
  1. `cake coverage` will generate a coverage report in the form of a JSON file (`jscoverage.json`), which can
     then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).  See
     jscoverage-report's [README](https://github.com/int3/jscoverage-report#jscoverage-report) for more details.
-
-## Pull Requests
-
-When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
-CREDITS file with your patch.
 
 ## Coding Style
 
@@ -63,3 +58,8 @@ CREDITS file with your patch.
   * We follow two major differences from this style guide:
     * Wrap lines at 110 characters instead of 80.
     * Use double-quoted strings by default.
+
+## Pull Requests
+
+When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
+CREDITS file with your patch.
