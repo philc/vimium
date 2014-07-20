@@ -105,12 +105,13 @@ DomUtils =
 
   focusContentEditable: (element) ->
     range = document.createRange()
-    range.setStartAfter(element.lastChild)
-    range.setEndAfter(element.lastChild)
+    if element.lastChild
+      range.setStartAfter element.lastChild
+      range.setEndAfter element.lastChild
 
     sel= window.getSelection()
     sel.removeAllRanges()
-    sel.addRange(range)
+    sel.addRange range
 
     element.focus()
 
