@@ -1,10 +1,11 @@
 # Contributing to Vimium
 
 You'd like to fix a bug or implement a feature? Great! Check out the bugs on our issues tracker, or implement
-one of the suggestions there that have been tagged 'todo'. If you have a suggestion of your own, start a
-discussion on the issues tracker or on the [mailing list](http://groups.google.com/group/vimium-dev?hl=en). If
-it mirrors a similar feature in another browser or in Vim itself, let us know! Once you've picked something to
-work on, add a comment to the respective issue so others don't duplicate your effort.
+one of the suggestions there that have been tagged "help wanted". If you have a suggestion of your own, start
+a discussion on the issues tracker or on the
+[mailing list](http://groups.google.com/group/vimium-dev?hl=en). If it mirrors a similar feature in another
+browser or in Vim itself, let us know. Once you've picked something to work on, add a comment to the
+respective issue so others don't duplicate your effort.
 
 ## Reporting Issues
 
@@ -33,6 +34,11 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
  1. [Install PhantomJS.](http://phantomjs.org/download.html)
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
+
+## Development tips
+
+ 1. Run `cake autobuild` to watch for changes to coffee files, and have the .js files automatically
+    regenerated
 
 ## Code Coverage
 
