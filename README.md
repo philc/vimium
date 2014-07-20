@@ -74,7 +74,7 @@ Manipulating tabs:
     x          close current tab
     X          restore closed tab (i.e. unwind the 'x' command)
     T          search through your open tabs
-    .          pin/unpin current tab
+    <a-p>      pin/unpin current tab
 
 Additional advanced browsing commands:
 
@@ -336,4 +336,4 @@ does not support command repetition.
 
 License
 -------
-Copyright (c) 2010 Phil Crosby, Ilya Sukhar. See MIT-LICENSE.txt for details.
+Copyright (c) Phil Crosby, Ilya Sukhar. See MIT-LICENSE.txt for details.
