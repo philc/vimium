@@ -170,7 +170,7 @@ defaultKeyMappings =
   "x": "removeTab"
   "X": "restoreTab"
 
-  ".": "togglePinTab"
+  "<a-p>": "togglePinTab"
 
   "o": "Vomnibar.activate"
   "O": "Vomnibar.activateInNewTab"
