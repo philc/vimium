@@ -126,6 +126,10 @@ The following special keys are available for mapping:
 
 Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+shift+7 on an English keyboard.
 
+More documentation
+------------------
+Many of the more advanced or involved features are documented on [Vimium's github wiki](https://github.com/philc/vimium/wiki).
+
 Contributing
 ------------
 Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md) for details.
