@@ -22,7 +22,7 @@ Keyboard Bindings
 -----------------
 
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x
-respectively. See the next section for instructions on modifying these bindings.
+respectively. See the next section for instructions on customizing these bindings.
 
 Navigating the current page:
 
@@ -90,6 +90,8 @@ Additional advanced browsing commands:
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. `<ESC>` (or
 `<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
+There are some advanced commands which aren't documented here. Refer to the help dialog (type `?`) for a full
+list.
 
 Custom Key Mappings
 -------------------
