@@ -132,6 +132,15 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+1.45 (7/20/2014)
+
+- Vimium's settings are now synced across computers.
+- New commands: "open link in new tab and focus", "move tab left", "move tab right", "pin/unpin tab".
+- Vomnibar can now use [search engine shortcuts](https://github.com/philc/vimium/wiki/Search-Engines), similar to Chrome's Omnibar.
+- Due to significant ranking improvements, Vomnibar's search results are now even more helpful.
+- When reopening a closed tab, its history is now preserved.
+- Bugfixes.
+
 1.44 (11/06/2013)
 
 - Add support for recent versions of Chromium.
