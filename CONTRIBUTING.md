@@ -63,3 +63,23 @@ reports:
 
 When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
 CREDITS file with your patch.
+
+## How to release Vimium to the Chrome Store
+
+This process is currently only done by Phil or Ilya.
+
+1. Increment the version number in manifest.json
+2. Update the Changelog in README.md
+
+    You can see a summary of commits since the last version: `git log --oneline v1.45..`
+
+3. Push your commits
+4. Create a git tag for this newly released version
+
+        git tag -a v1.45 -m "v1.45 release"
+
+5. Run `cake package`
+6. Take the distributable found in `dist` and upload it
+   [here](https://chrome.google.com/webstore/developer/dashboard)
+7. Update the description in the Chrome store to include the latest version's release notes
+8. Celebrate
