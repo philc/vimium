@@ -161,6 +161,8 @@ defaultKeyMappings =
   "J": "previousTab"
   "gt": "nextTab"
   "gT": "previousTab"
+  "<<": "moveTabLeft"
+  ">>": "moveTabRight"
   "g0": "firstTab"
   "g$": "lastTab"
 
