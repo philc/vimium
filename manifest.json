@@ -46,7 +46,7 @@
       "all_frames": true
     },
     {
-      "matches": ["file://*"],
+      "matches": ["file:///", "file:///*/"],
       "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start"
     }
