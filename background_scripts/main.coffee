@@ -115,7 +115,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   dialogHtml
 
 #
-# Generates HTML for a given set of commands. commandGroups are defined in commands.js
+# Generates HTML for a given set of commands. commandGroups are defined in commands.coffee
 #
 helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
     showUnboundCommands, showCommandNames) ->
