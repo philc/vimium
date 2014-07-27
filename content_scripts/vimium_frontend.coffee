@@ -90,6 +90,30 @@ frameId = Math.floor(Math.random()*999999999)
 hasModifiersRegex = /^<([amc]-)+.>/
 
 #
+# Create a port to message the top frame
+#
+connectToTopFrame = ->
+  messageChannel = new MessageChannel()
+  messageChannel.port1.onmessage = (event) ->
+    messageChannel.port1.postMessage "hi"
+    messageChannel.port1.onmessage = (->)
+
+  # NOTE: The spec and all available documentation defines the function signature for postMessage as
+  #   otherWindow.postMessage(message, targetOrigin, [transfer]);
+  # However, PhantomJS uses a version of WebKit that only accepts the signatures
+  #   otherWindow.postMessage(message, [transfer], targetOrigin);
+  # and
+  #   otherWindow.postMessage(message, targetOrigin);
+  # Since Chrome also supports these signatures, it made most sense to use them and avoid errors. This could
+  # change at any time.
+
+  #window.top.postMessage {name: "vimiumKeyDown"}, "*", [messageChannel.port2]
+  window.top.postMessage {name: "vimiumKeyDown"}, [messageChannel.port2], "*"
+
+
+  messageChannel.port1
+
+#
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
@@ -102,8 +126,8 @@ initializePreDomReady = ->
 
   refreshCompletionKeys()
 
-  # Send the key to the key handler in the background page.
-  keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # Send the key to the key handler in the top frame.
+  keyPort = connectToTopFrame()
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
