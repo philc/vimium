@@ -191,7 +191,7 @@ defaultKeyMappings =
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
   # Navigating the current page
-  showHelp: ["Show help", { background: true }]
+  showHelp: ["Show help"]
   scrollDown: ["Scroll down"]
   scrollUp: ["Scroll up"]
   scrollLeft: ["Scroll left"]

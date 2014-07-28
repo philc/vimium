@@ -19,6 +19,8 @@ isEnabledForUrl = true
 currentCompletionKeys = null
 validFirstKeys = null
 
+currentVersion = Utils.getCurrentVersion()
+
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
 # fetch it each time.
@@ -44,7 +46,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands"]
+    "helpDialog_showAdvancedCommands", "keyMappings"]
   isLoaded: false
   eventListeners: {}
 
@@ -95,8 +97,7 @@ hasModifiersRegex = /^<([amc]-)+.>/
 connectToTopFrame = ->
   messageChannel = new MessageChannel()
   messageChannel.port1.onmessage = (event) ->
-    messageChannel.port1.postMessage "hi"
-    messageChannel.port1.onmessage = (->)
+    executePageCommand event.data
 
   # NOTE: The spec and all available documentation defines the function signature for postMessage as
   #   otherWindow.postMessage(message, targetOrigin, [transfer]);
@@ -124,23 +125,25 @@ initializePreDomReady = ->
 
   checkIfEnabledForUrl()
 
-  refreshCompletionKeys()
-
   # Send the key to the key handler in the top frame.
   keyPort = connectToTopFrame()
+
+  refreshCompletionKeys()
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
-    toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
-    refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
-    executePageCommand: executePageCommand
     getActiveState: -> { enabled: isEnabledForUrl }
     disableVimium: disableVimium
+    updateKeyMappings: (request) ->
+      if window == window.top # Key handling done on the top frame only
+        Commands.clearKeyMappingsAndSetDefaults()
+        Commands.parseCustomKeyMappings value
+        refreshCompletionKeysAfterMappingSave()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
@@ -217,12 +220,11 @@ enterInsertModeIfElementIsFocused = ->
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
-  return unless frameId == request.frameId
-
-  if (request.passCountToFunction)
-    Utils.invokeCommandString(request.command, [request.count])
-  else
-    Utils.invokeCommandString(request.command) for i in [0...request.count]
+  if request.command
+    if (request.passCountToFunction)
+      Utils.invokeCommandString(request.command, [request.count])
+    else
+      Utils.invokeCommandString(request.command) for i in [0...request.count]
 
   refreshCompletionKeys(request)
 
@@ -270,8 +272,11 @@ extend window,
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
-  goToRoot: () ->
+  goToRoot: ->
     window.location.href = window.location.origin
+
+  showHelp: ->
+    toggleHelpDialog helpDialogHtml(), frameId
 
   toggleViewSource: ->
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
@@ -476,8 +481,8 @@ refreshCompletionKeys = (response) ->
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
-  else
-    chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
+  else # send a message with no key to get the completion keys
+    keyPort.postMessage({ keyChar:"", frameId:frameId })
 
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
@@ -863,6 +868,53 @@ window.enterFindMode = ->
 exitFindMode = ->
   findMode = false
   HUD.hide()
+
+# Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
+# This is called by options.coffee.
+window.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
+  commandsToKey = {}
+  for key of Commands.keyToCommandRegistry
+    command = Commands.keyToCommandRegistry[key].command
+    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
+
+  dialogHtml = fetchFileContents("pages/help_dialog.html")
+  for group of Commands.commandGroups
+    dialogHtml = dialogHtml.replace("{{#{group}}}",
+        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
+                                      showUnboundCommands, showCommandNames))
+  dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
+  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
+  dialogHtml
+
+#
+# Generates HTML for a given set of commands. commandGroups are defined in commands.coffee
+#
+helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
+    showUnboundCommands, showCommandNames) ->
+  html = []
+  for command in Commands.commandGroups[group]
+    bindings = (commandsToKey[command] || [""]).join(", ")
+    if (showUnboundCommands || commandsToKey[command])
+      isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
+      html.push(
+        "<tr class='vimiumReset #{"advanced" if isAdvanced}'>",
+        "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
+        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
+
+      if (showCommandNames)
+        html.push("<span class='vimiumReset commandName'>(#{command})</span>")
+
+      html.push("</td></tr>")
+  html.join("\n")
+
+#
+# Fetches the contents of a file bundled with this extension.
+#
+fetchFileContents = (extensionFileName) ->
+  req = new XMLHttpRequest()
+  req.open("GET", chrome.runtime.getURL(extensionFileName), false) # false => synchronous
+  req.send()
+  req.responseText
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)

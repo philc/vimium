@@ -18,7 +18,7 @@ document.addEventListener "DOMContentLoaded", ->
 
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions, false
   $("showCommands").addEventListener "click", (->
-    showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+    showHelpDialog helpDialogHtml(true, true, "Command Listing"), frameId
   ), false
   document.getElementById("restoreSettings").addEventListener "click", restoreToDefaults
   document.getElementById("saveOptions").addEventListener "click", saveOptions

@@ -17,5 +17,6 @@ root.chrome = {
     }
     sendMessage: ->
     getManifest: ->
+      version: 1.45
   }
 }
