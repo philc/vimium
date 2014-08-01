@@ -1,3 +1,5 @@
+enableDebugLogging = false
+
 window.addEventListener "message", (event) ->
   return unless event.data?.name == "vimiumKeyDown" # This message isn't intended for us
 
@@ -53,12 +55,12 @@ handleKeyDown = (request, port) ->
   if key == "" # Request for completion keys
     port.postMessage getCompletionKeysRequest()
   else if key == "<ESC>"
-    console.log("clearing keyQueue")
+    console.log("clearing keyQueue") if enableDebugLogging
     keyQueue = ""
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
+    console.log("checking keyQueue: [", keyQueue + key, "]") if enableDebugLogging
     keyQueue = checkKeyQueue(keyQueue + key, port)
-    console.log("new KeyQueue: " + keyQueue)
+    console.log("new KeyQueue: " + keyQueue) if enableDebugLogging
 
 checkKeyQueue = (keysToCheck, port) ->
   refreshedCompletionKeys = false

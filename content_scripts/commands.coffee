@@ -1,3 +1,5 @@
+enableDebugLogging = false
+
 Commands =
   init: ->
     for command, description of commandDescriptions
@@ -13,7 +15,7 @@ Commands =
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options) ->
     if command of @availableCommands
-      console.log(command, "is already defined! Check commands.coffee for duplicates.")
+      console.log(command, "is already defined! Check commands.coffee for duplicates.") if enableDebugLogging
       return
 
     options ||= {}
@@ -25,7 +27,7 @@ Commands =
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
-      console.log(command, "doesn't exist!")
+      console.log(command, "doesn't exist!") if enableDebugLogging
       return
 
     @keyToCommandRegistry[key] =
@@ -65,13 +67,13 @@ Commands =
 
         continue unless @availableCommands[vimiumCommand]
 
-        console.log("Mapping", key, "to", vimiumCommand)
+        console.log("Mapping", key, "to", vimiumCommand) if enableDebugLogging
         @mapKeyToCommand(key, vimiumCommand)
       else if (lineCommand == "unmap")
         continue if (splitLine.length != 2)
 
         key = @normalizeKey(splitLine[1])
-        console.log("Unmapping", key)
+        console.log("Unmapping", key) if enableDebugLogging
         @unmapKey(key)
       else if (lineCommand == "unmapAll")
         @keyToCommandRegistry = {}
