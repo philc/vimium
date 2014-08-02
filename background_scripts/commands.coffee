@@ -100,8 +100,8 @@ Commands =
       ["goBack", "goForward"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
-       "restoreTab", "moveTabToNewWindow", "togglePinTab", "moveTabLeft", "moveTabRight",
-       "moveTabToLeft", "moveTabToRight"]
+       "restoreTab", "togglePinTab", "moveTabLeft", "moveTabRight", "moveTabToLeft", "moveTabToRight",
+       "moveTabToNewWindow"]
     misc:
       ["showHelp"]
 
