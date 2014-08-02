@@ -12,7 +12,6 @@ findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
-keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.
 isEnabledForUrl = true
 # The user's operating system.
@@ -84,34 +83,35 @@ settings =
       @eventListeners[eventName] = []
     @eventListeners[eventName].push(callback)
 
+keyPort =
+  port: null
+  init: ->
+    messageChannel = new MessageChannel()
+    messageChannel.port1.onmessage = (event) ->
+      executePageCommand event.data
+
+    # NOTE: The spec and all available documentation defines the function signature for postMessage as
+    #   otherWindow.postMessage(message, targetOrigin, [transfer]);
+    # However, PhantomJS uses a version of WebKit that only accepts the signatures
+    #   otherWindow.postMessage(message, [transfer], targetOrigin);
+    # and
+    #   otherWindow.postMessage(message, targetOrigin);
+    # Since Chrome also supports these signatures, it made most sense to use them and avoid errors. This could
+    # change at any time.
+
+    #window.top.postMessage {name: "vimiumKeyDown"}, "*", [messageChannel.port2]
+    window.top.postMessage {name: "vimiumKeyDown"}, [messageChannel.port2], "*"
+
+    @port = messageChannel.port1
+  sendKey: (keyChar) ->
+    @port.postMessage {keyChar: keyChar, frameId: frameId, secretKey: window.top.secretKey}
+
 #
 # Give this frame a unique id.
 #
 frameId = Math.floor(Math.random()*999999999)
 
 hasModifiersRegex = /^<([amc]-)+.>/
-
-#
-# Create a port to message the top frame
-#
-connectToTopFrame = ->
-  messageChannel = new MessageChannel()
-  messageChannel.port1.onmessage = (event) ->
-    executePageCommand event.data
-
-  # NOTE: The spec and all available documentation defines the function signature for postMessage as
-  #   otherWindow.postMessage(message, targetOrigin, [transfer]);
-  # However, PhantomJS uses a version of WebKit that only accepts the signatures
-  #   otherWindow.postMessage(message, [transfer], targetOrigin);
-  # and
-  #   otherWindow.postMessage(message, targetOrigin);
-  # Since Chrome also supports these signatures, it made most sense to use them and avoid errors. This could
-  # change at any time.
-
-  #window.top.postMessage {name: "vimiumKeyDown"}, "*", [messageChannel.port2]
-  window.top.postMessage {name: "vimiumKeyDown"}, [messageChannel.port2], "*"
-
-  messageChannel.port1
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
@@ -124,8 +124,7 @@ initializePreDomReady = ->
 
   checkIfEnabledForUrl()
 
-  # Send the key to the key handler in the top frame.
-  keyPort = connectToTopFrame()
+  keyPort.init()
 
   refreshCompletionKeys()
 
@@ -378,7 +377,7 @@ onKeypress = (event) ->
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
 
-        keyPort.postMessage({keyChar: keyChar, frameId: frameId, secretKey: window.top.secretKey})
+        keyPort.sendKey keyChar
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
@@ -444,10 +443,10 @@ onKeydown = (event) ->
       if (currentCompletionKeys.indexOf(keyChar) != -1)
         DomUtils.suppressEvent(event)
 
-      keyPort.postMessage({keyChar: keyChar, frameId: frameId, secretKey: window.top.secretKey})
+      keyPort.sendKey keyChar
 
     else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({keyChar: "<ESC>", frameId: frameId, secretKey: window.top.secretKey})
+      keyPort.sendKey "<ESC>"
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -481,7 +480,7 @@ refreshCompletionKeys = (response) ->
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
   else # send a message with no key to get the completion keys
-    keyPort.postMessage({keyChar: "", frameId: frameId})
+    keyPort.sendKey ""
 
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
