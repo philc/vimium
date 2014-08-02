@@ -1,5 +1,14 @@
 enableDebugLogging = false
 
+# Only other content scripts from this extension on this page can read properties of the window object set
+# here. We can use this to ensure that no other sources can inject keystrokes.
+checkSecretKey = (compareKey) ->
+  keyMatched = compareKey == window.secretKey
+  window.secretKey = Math.random()
+  keyMatched
+
+checkSecretKey() # Generate new secret key
+
 window.addEventListener "message", (event) ->
   return unless event.data?.name == "vimiumKeyDown" # This message isn't intended for us
 
@@ -7,7 +16,12 @@ window.addEventListener "message", (event) ->
   windowPort = event.ports[0]
 
   windowPort.onmessage = (event) ->
-    handleKeyDown event.data, windowPort
+    data = event.data
+    if data.keyChar == "" # Request for completion keys
+      windowPort.postMessage getCompletionKeysRequest()
+    else
+      return unless checkSecretKey data.secretKey # Security check failed. Exit without doing anything.
+      handleKeyDown data, windowPort
 
 , false
 
@@ -52,9 +66,7 @@ splitKeyQueue = (queue) ->
 
 handleKeyDown = (request, port) ->
   key = request.keyChar
-  if key == "" # Request for completion keys
-    port.postMessage getCompletionKeysRequest()
-  else if key == "<ESC>"
+  if key == "<ESC>"
     console.log("clearing keyQueue") if enableDebugLogging
     keyQueue = ""
   else
@@ -75,14 +87,13 @@ checkKeyQueue = (keysToCheck, port) ->
     registryEntry = Commands.keyToCommandRegistry[command]
 
     if registryEntry.isBackgroundCommand
-      messageObject =
+      chrome.runtime.sendMessage
         handler: "executeBackgroundCommand"
         command: registryEntry.command
         count: count
         passCountToFunction: registryEntry.passCountToFunction == true
         noRepeat: registryEntry.noRepeat == true
         completionKeys: generateCompletionKeys("")
-      chrome.runtime.sendMessage(messageObject)
     else
       port.postMessage
         command: registryEntry.command

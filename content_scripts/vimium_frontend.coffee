@@ -111,7 +111,6 @@ connectToTopFrame = ->
   #window.top.postMessage {name: "vimiumKeyDown"}, "*", [messageChannel.port2]
   window.top.postMessage {name: "vimiumKeyDown"}, [messageChannel.port2], "*"
 
-
   messageChannel.port1
 
 #
@@ -379,7 +378,7 @@ onKeypress = (event) ->
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
 
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        keyPort.postMessage({keyChar: keyChar, frameId: frameId, secretKey: window.top.secretKey})
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
@@ -445,10 +444,10 @@ onKeydown = (event) ->
       if (currentCompletionKeys.indexOf(keyChar) != -1)
         DomUtils.suppressEvent(event)
 
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+      keyPort.postMessage({keyChar: keyChar, frameId: frameId, secretKey: window.top.secretKey})
 
     else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
+      keyPort.postMessage({keyChar: "<ESC>", frameId: frameId, secretKey: window.top.secretKey})
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -482,7 +481,7 @@ refreshCompletionKeys = (response) ->
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
   else # send a message with no key to get the completion keys
-    keyPort.postMessage({ keyChar:"", frameId:frameId })
+    keyPort.postMessage({keyChar: "", frameId: frameId})
 
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
