@@ -219,9 +219,20 @@ repeatFunction = (func, totalCount, currentCount, frameId) ->
       -> repeatFunction(func, totalCount, currentCount + 1, frameId),
       frameId)
 
-moveTab = (callback, direction) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.move(tab.id, { index: (tab.index + direction + tabs.length) % tabs.length }, callback))
+moveTab = (direction, count) ->
+  chrome.tabs.getAllInWindow(null, (tabs) ->
+    return unless tabs.length > 1
+    chrome.tabs.getSelected(null, (currentTab) ->
+      switch direction
+        when "previous"
+          toMove = (currentTab.index - count + tabs.length) % tabs.length
+        when "next"
+          toMove = (currentTab.index + count + tabs.length) % tabs.length
+        when "first"
+          toMove = 0
+        when "last"
+          toMove = -1
+      chrome.tabs.move(currentTab.id, { index: toMove })))
 
 # Start action functions
 
@@ -275,8 +286,10 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.sendMessage(tab.id,
         { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
-  moveTabLeft: (count) -> moveTab(null, -count)
-  moveTabRight: (count) -> moveTab(null, count)
+  moveTabLeft: (count) -> moveTab("previous", count)
+  moveTabRight: (count) -> moveTab("next", count)
+  moveTabToLeft: -> moveTab("first")
+  moveTabToRight: -> moveTab("last")
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
       frames = framesForTab[tab.id].frames
