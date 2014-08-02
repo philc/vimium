@@ -254,6 +254,7 @@ LinkHints =
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
         (@mode == OPEN_IN_CURRENT_TAB or
+         @mode == OPEN_WITH_QUEUE or
          @mode == OPEN_IN_NEW_BG_TAB or
          @mode == OPEN_IN_NEW_FG_TAB))
       # Toggle whether to open link in a new or current tab.
