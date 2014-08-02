@@ -100,7 +100,8 @@ Commands =
       ["goBack", "goForward"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
-       "restoreTab", "moveTabToNewWindow", "togglePinTab", "moveTabLeft", "moveTabRight"]
+       "restoreTab", "moveTabToNewWindow", "togglePinTab", "moveTabLeft", "moveTabRight",
+       "moveTabToLeft", "moveTabToRight"]
     misc:
       ["showHelp"]
 
@@ -111,7 +112,7 @@ Commands =
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
     "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight"]
+    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight", "moveTabToLeft", "moveTabToRight"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -254,7 +255,9 @@ commandDescriptions =
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
-  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
+  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true }]
+  moveTabToLeft: ["Move tab all the way to the left", { background: true }]
+  moveTabToRight: ["Move tab all the way to the right", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
