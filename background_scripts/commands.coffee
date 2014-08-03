@@ -256,8 +256,8 @@ commandDescriptions =
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
   moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true }]
-  moveTabToLeft: ["Move tab all the way to the left", { background: true }]
-  moveTabToRight: ["Move tab all the way to the right", { background: true }]
+  moveTabToLeft: ["Move tab all the way to the left", { background: true, passCountToFunction: true }]
+  moveTabToRight: ["Move tab all the way to the right", { background: true, passCountToFunction: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
