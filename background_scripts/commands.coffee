@@ -93,7 +93,7 @@ Commands =
       "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
       "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
       "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext",
+      "Vomnibar.activateBookmarksInNewTab", "goIncrement", "goDecrement", "goPrevious", "goNext",
       "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -111,7 +111,7 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "goUp", "goToRoot", "focusInput",
     "LinkHints.activateModeWithQueue", "LinkHints.activateModeToOpenIncognito",
-    "goPrevious", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode",
+    "goIncrement", "goDecrement", "goPrevious", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode",
     "moveTabLeft", "moveTabRight", "moveTabToLeft", "moveTabToRight", "moveTabToNewWindow"]
 
 defaultKeyMappings =
@@ -230,6 +230,9 @@ commandDescriptions =
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]
   performBackwardsFind: ["Cycle backward to the previous find match"]
+
+  goIncrement: ["Increment the current URL", { passCountToFunction: true }]
+  goDecrement: ["Decrement the current URL", { passCountToFunction: true }]
 
   goPrevious: ["Follow the link labeled previous or <"]
   goNext: ["Follow the link labeled next or >"]
