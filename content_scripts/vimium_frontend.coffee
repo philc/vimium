@@ -815,6 +815,16 @@ findAndFollowRel = (value) ->
         followLink(element)
         return true
 
+window.goIncrement = (count) ->
+  # Operate on the last number in the URL.
+  match = "#{ /\d+(?!.*\d+)/.exec(window.location.href) }"
+  replace = "#{ Math.max(1, Number(match) + count) }"
+  # If there were leading zeroes, add enough to maintain the original number length.
+  replace = "000000000#{ replace }".slice(Math.min(-match.length, -replace.length)) if /^0+/.test(match)
+  window.location.href = window.location.href.replace(/\d+(?!.*\d+)/, replace)
+
+window.goDecrement = (count) -> goIncrement(-count)
+
 window.goPrevious = ->
   previousPatterns = settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
