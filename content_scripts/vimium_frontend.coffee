@@ -249,6 +249,16 @@ extend window,
   goToRoot: () ->
     window.location.href = window.location.origin
 
+  goIncrement: (count) ->
+    # Operate on the last number in the URL.
+    match = "#{ /\d+(?!.*\d+)/.exec(window.location.href) }"
+    replace = "#{ Math.max(1, Number(match) + count) }"
+    # If there were leading zeroes, add enough to maintain the original number length.
+    replace = "000000000#{ replace }".slice(Math.min(-match.length, -replace.length)) if /^0+/.test(match)
+    window.location.href = window.location.href.replace(/\d+(?!.*\d+)/, replace)
+
+  goDecrement: (count) -> goIncrement(-count)
+
   toggleViewSource: ->
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
       if (url.substr(0, 12) == "view-source:")
