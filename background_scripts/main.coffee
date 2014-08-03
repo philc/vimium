@@ -225,13 +225,13 @@ moveTab = (direction, count) ->
     chrome.tabs.getSelected(null, (currentTab) ->
       switch direction
         when "previous"
-          toMove = (currentTab.index - count + tabs.length) % tabs.length
+          toMove = (currentTab.index - count + tabs.length * Math.abs(count)) % tabs.length
         when "next"
-          toMove = (currentTab.index + count + tabs.length) % tabs.length
+          toMove = (currentTab.index + count + tabs.length * Math.abs(count)) % tabs.length
         when "first"
-          toMove = 0
+          toMove = Math.max(0, count - 1)
         when "last"
-          toMove = -1
+          toMove = Math.max(0, tabs.length - count)
       chrome.tabs.move(currentTab.id, { index: toMove })))
 
 # Start action functions
@@ -288,8 +288,8 @@ BackgroundCommands =
         { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
   moveTabLeft: (count) -> moveTab("previous", count)
   moveTabRight: (count) -> moveTab("next", count)
-  moveTabToLeft: -> moveTab("first")
-  moveTabToRight: -> moveTab("last")
+  moveTabToLeft: (count) -> moveTab("first", count)
+  moveTabToRight: (count) -> moveTab("last", count)
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
       frames = framesForTab[tab.id].frames
