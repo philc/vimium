@@ -27,7 +27,7 @@ tr.vimiumReset {
   cursor: auto;
   display: inline;
   float: none;
-  font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family: "Helvetica Neue", Calibri, "DejaVu Sans", Arial, sans-serif;
   font-size: inherit;
   font-style: normal;
   font-variant: normal;
@@ -76,14 +76,14 @@ div.internalVimiumHintMarker {
 
 div.internalVimiumHintMarker span {
   color: #302505;
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Calibri, "DejaVu Sans", Arial, sans-serif;
   font-weight: bold;
   font-size: 11px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 div.internalVimiumHintMarker > .matchingCharacter {
-  color: #D4AC3A;
+  color: #F40C0A;
 }
 
 /* Input hints CSS */
@@ -169,7 +169,9 @@ div#vimiumHelpDialog td.vimiumHelpSectionTitle {
   font-weight:bold;
   padding-top:3px;
 }
-div#vimiumHelpDialog div.commandName { font-family:"courier new"; }
+div#vimiumHelpDialog div.commandName {
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", "Courier New", monospace;
+}
 /* Advanced commands are hidden by default until you show them. */
 div#vimiumHelpDialog div.advanced { display: none; }
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) { color: #555; }
@@ -177,7 +179,7 @@ div#vimiumHelpDialog a.closeButton {
   position:absolute;
   right:7px;
   top:5px;
-  font-family:"courier new";
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", "Courier New", monospace;
   font-weight:bold;
   color:#555;
   text-decoration:none;
@@ -231,7 +233,7 @@ div.vimiumHUD {
   margin: 0;
   border: 1px solid #b3b3b3;
   border-radius: 4px 4px 0 0;
-  font-family: "Lucida Grande", "Arial", "Sans";
+  font-family: "Helvetica Neue", Calibri, "DejaVu Sans", Arial, sans-serif;
   font-size: 12px;
   /* One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button. */
   z-index: 99999997;
@@ -250,7 +252,7 @@ div.vimiumHUD a:link, div.vimiumHUD a:hover {
 }
 div.vimiumHUD a:link.close-button {
   float:right;
-  font-family:courier new;
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", "Courier New", monospace;
   font-weight:bold;
   color:#9C9A9A;
   text-decoration:none;
@@ -283,7 +285,7 @@ body.vimiumFindMode ::selection {
   top: 70px;
   left: 50%;
   margin: 0 0 0 -40%;
-  font-family: sans-serif;
+  font-family: "Helvetica Neue", Calibri, "DejaVu Sans", Arial, sans-serif;
 
   background: #F1F1F1;
   text-align: left;
@@ -296,7 +298,7 @@ body.vimiumFindMode ::selection {
 
 #vomnibar input {
   color: #000;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Calibri, "DejaVu Sans", Arial, sans-serif;
   font-size: 20px;
   height: 34px;
   margin-bottom: 0;
@@ -363,7 +365,7 @@ body.vimiumFindMode ::selection {
   padding: 5px;
   background-color: white;
   color: black;
-  font-family: monospace;
+  font-family: Menlo, Consolas, "DejaVu Sans Mono", "Courier New", monospace;
   width: 100px;
   overflow: hidden;
 }
