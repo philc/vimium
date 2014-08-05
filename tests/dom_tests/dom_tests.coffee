@@ -230,6 +230,14 @@ context "Find prev / next links",
     goNext()
     assert.equal '#first', window.location.hash
 
+  should "match mixed case link relation", ->
+    document.getElementById("test-div").innerHTML = """
+    <link rel='Next' href='#first'>
+    """
+    goNext()
+    assert.equal '#first', window.location.hash
+
+
 createLinks = (n) ->
   for i in [0...n] by 1
     link = document.createElement("a")
