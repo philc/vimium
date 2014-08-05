@@ -215,6 +215,21 @@ context "Find prev / next links",
     goNext()
     assert.equal '#second', window.location.hash
 
+  should "find link relation in header", ->
+    document.getElementById("test-div").innerHTML = """
+    <link rel='next' href='#first'>
+    """
+    goNext()
+    assert.equal '#first', window.location.hash
+
+  should "favor link relation to text matching", ->
+    document.getElementById("test-div").innerHTML = """
+    <link rel='next' href='#first'>
+    <a href='#second'>next</a>
+    """
+    goNext()
+    assert.equal '#first', window.location.hash
+
 createLinks = (n) ->
   for i in [0...n] by 1
     link = document.createElement("a")
