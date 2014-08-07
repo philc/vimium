@@ -196,6 +196,9 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
+  # Use the window.top.Commands for help dialog command list
+  root.Commands = window.top.Commands
+
 # This is a little hacky but sometimes the size wasn't available on domReady?
 registerFrameIfSizeAvailable = (is_top) ->
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
