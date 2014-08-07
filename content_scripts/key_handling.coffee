@@ -86,21 +86,21 @@ checkKeyQueue = (keysToCheck, port) ->
   if (Commands.keyToCommandRegistry[command])
     registryEntry = Commands.keyToCommandRegistry[command]
 
+    commandData =
+      command: registryEntry.command
+      count: count
+      passCountToFunction: registryEntry.passCountToFunction == true
+      noRepeat: registryEntry.noRepeat == true
+      completionKeys: generateCompletionKeys("")
+
     if registryEntry.isBackgroundCommand
-      chrome.runtime.sendMessage
-        handler: "executeBackgroundCommand"
-        command: registryEntry.command
-        count: count
-        passCountToFunction: registryEntry.passCountToFunction == true
-        noRepeat: registryEntry.noRepeat == true
-        completionKeys: generateCompletionKeys("")
+      commandData.handler = "executeBackgroundCommand"
+      chrome.runtime.sendMessage commandData
+    else if registryEntry.isTopWindowCommand and window.top.document.body.tagName != "FRAMESET"
+      focusThisFrame false
+      executePageCommand commandData
     else
-      port.postMessage
-        command: registryEntry.command
-        count: count
-        passCountToFunction: registryEntry.passCountToFunction == true
-        noRepeat: registryEntry.noRepeat == true
-        completionKeys: generateCompletionKeys("")
+      port.postMessage commandData
       refreshedCompletionKeys = true
 
     newKeyQueue = ""

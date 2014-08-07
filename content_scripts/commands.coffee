@@ -22,6 +22,7 @@ Commands =
     @availableCommands[command] =
       description: description
       isBackgroundCommand: options.background
+      isTopWindowCommand: options.topFrame
       passCountToFunction: options.passCountToFunction
       noRepeat: options.noRepeat
 
@@ -33,6 +34,7 @@ Commands =
     @keyToCommandRegistry[key] =
       command: command
       isBackgroundCommand: @availableCommands[command].isBackgroundCommand
+      isTopWindowCommand: @availableCommands[command].isTopWindowCommand
       passCountToFunction: @availableCommands[command].passCountToFunction
       noRepeat: @availableCommands[command].noRepeat
 
@@ -193,7 +195,7 @@ defaultKeyMappings =
 # This is a mapping of: commandIdentifier => [description, options].
 commandDescriptions =
   # Navigating the current page
-  showHelp: ["Show help"]
+  showHelp: ["Show help", {topFrame: true}]
   scrollDown: ["Scroll down"]
   scrollUp: ["Scroll up"]
   scrollLeft: ["Scroll left"]
@@ -213,13 +215,13 @@ commandDescriptions =
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
   'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
+  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", {background: true}]
+  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", {background: true}]
 
   enterInsertMode: ["Enter insert mode"]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
-    { passCountToFunction: true }]
+    {passCountToFunction: true}]
 
   "LinkHints.activateMode": ["Open a link in the current tab"]
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
@@ -236,35 +238,35 @@ commandDescriptions =
   goNext: ["Follow the link labeled next or >"]
 
   # Navigating your history
-  goBack: ["Go back in history", { passCountToFunction: true }]
-  goForward: ["Go forward in history", { passCountToFunction: true }]
+  goBack: ["Go back in history", {topFrame: true, passCountToFunction: true}]
+  goForward: ["Go forward in history", {topFrame: true, passCountToFunction: true}]
 
   # Navigating the URL hierarchy
-  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
-  goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
+  goUp: ["Go up the URL hierarchy", {topFrame: true, passCountToFunction: true}]
+  goToRoot: ["Go to root of current URL hierarchy", {topFrame: true, passCountToFunction: true}]
 
   # Manipulating tabs
-  nextTab: ["Go one tab right", { background: true }]
-  previousTab: ["Go one tab left", { background: true }]
-  firstTab: ["Go to the first tab", { background: true }]
-  lastTab: ["Go to the last tab", { background: true }]
-  createTab: ["Create new tab", { background: true }]
-  duplicateTab: ["Duplicate current tab", { background: true }]
-  removeTab: ["Close current tab", { background: true, noRepeat: true }]
-  restoreTab: ["Restore closed tab", { background: true }]
-  moveTabToNewWindow: ["Move tab to new window", { background: true }]
-  togglePinTab: ["Pin/unpin current tab", { background: true }]
+  nextTab: ["Go one tab right", {background: true}]
+  previousTab: ["Go one tab left", {background: true}]
+  firstTab: ["Go to the first tab", {background: true}]
+  lastTab: ["Go to the last tab", {background: true}]
+  createTab: ["Create new tab", {background: true}]
+  duplicateTab: ["Duplicate current tab", {background: true}]
+  removeTab: ["Close current tab", {background: true, noRepeat: true}]
+  restoreTab: ["Restore closed tab", {background: true}]
+  moveTabToNewWindow: ["Move tab to new window", {background: true}]
+  togglePinTab: ["Pin/unpin current tab", {background: true}]
 
-  moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
-  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
+  moveTabLeft: ["Move tab to the left", {background: true, passCountToFunction: true}]
+  moveTabRight: ["Move tab to the right", {background: true, passCountToFunction: true}]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs"]
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", {topFrame: true}]
+  "Vomnibar.activateTabSelection": ["Search through your open tabs", {topFrame: true}]
   "Vomnibar.activateBookmarks": ["Open a bookmark"]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
+  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", {topFrame: true}]
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
+  nextFrame: ["Cycle forward to the next frame on the page", {background: true, passCountToFunction: true}]
 
   "Marks.activateCreateMode": ["Create a new mark"]
   "Marks.activateGotoMode": ["Go to a mark"]

@@ -1092,6 +1092,7 @@ window.onbeforeunload = ->
     scrollY: window.scrollY)
 
 root = exports ? window
+root.executePageCommand = executePageCommand
 root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack
