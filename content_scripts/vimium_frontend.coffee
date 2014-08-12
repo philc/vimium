@@ -811,7 +811,7 @@ findAndFollowRel = (value) ->
   for tag in relTags
     elements = document.getElementsByTagName(tag)
     for element in elements
-      if (element.hasAttribute("rel") && element.rel == value)
+      if (element.hasAttribute("rel") && element.rel.toLowerCase() == value)
         followLink(element)
         return true
 
