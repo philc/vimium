@@ -184,6 +184,12 @@ context "Input focus",
     assert.equal "third", document.activeElement.id
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
+# TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
+# a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
+# don't need to construct external state many times over just to test that.
+# i.e. these tests should look something like:
+# assert.equal(findLink(html("<a href=...">))[0].href, "first")
+# These could then move outside of the dom_tests file.
 context "Find prev / next links",
 
   setup ->
