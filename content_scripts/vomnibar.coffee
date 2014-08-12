@@ -202,8 +202,8 @@ class BackgroundCompleter
 
   filter: (query, callback) ->
     id = Utils.createUniqueId()
-    @filterPort.onMessage.addListener (msg) ->
-      return if (msg.id != id)
+    @filterPort.onMessage.addListener (msg) =>
+      @filterPort.onMessage.removeListener(arguments.callee)
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
       # type will be one of [tab, bookmark, history, domain].
