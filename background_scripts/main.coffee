@@ -247,9 +247,8 @@ BackgroundCommands =
       chrome.tabs.remove(tab.id))
   restoreTab: (callback) ->
     # TODO: remove if-else -block when adopted into stable
-    if chrome.sessionRestore
-      chrome.sessionRestore.getRecentlyClosed((closed) ->
-        chrome.sessionRestore.restore(closed[0]))
+    if chrome.sessions
+      chrome.sessions.restore(null, (restoredSession) -> callback())
     else
       # TODO(ilya): Should this be getLastFocused instead?
       chrome.windows.getCurrent((window) ->
