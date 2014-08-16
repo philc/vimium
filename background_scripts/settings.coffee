@@ -28,9 +28,7 @@ root.Settings = Settings =
   # update propagates from chrome.storage.sync).
   postUpdateHooks:
     keyMappings: (value) ->
-      root.Commands.clearKeyMappingsAndSetDefaults()
-      root.Commands.parseCustomKeyMappings value
-      root.refreshCompletionKeysAfterMappingSave()
+      sendRequestToAllTabs {name: "updateKeyMappings", value: value}
 
     searchEngines: (value) ->
       root.Settings.parseSearchEngines value

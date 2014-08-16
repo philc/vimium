@@ -4,16 +4,8 @@ currentVersion = Utils.getCurrentVersion()
 
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
-keyQueue = "" # Queue of keys typed
-validFirstKeys = {}
-singleKeyCommands = []
 focusedFrame = null
 framesForTab = {}
-
-# Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
-# This regular expression captures two groups: the first is a named key, the second is the remainder of
-# the string.
-namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
 selectionChangedHandlers = []
@@ -97,61 +89,6 @@ root.addExcludedUrl = (url) ->
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
 
-# Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-# This is called by options.coffee.
-root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
-  commandsToKey = {}
-  for key of Commands.keyToCommandRegistry
-    command = Commands.keyToCommandRegistry[key].command
-    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
-
-  dialogHtml = fetchFileContents("pages/help_dialog.html")
-  for group of Commands.commandGroups
-    dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
-                                      showUnboundCommands, showCommandNames))
-  dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
-  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
-  dialogHtml
-
-#
-# Generates HTML for a given set of commands. commandGroups are defined in commands.js
-#
-helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
-    showUnboundCommands, showCommandNames) ->
-  html = []
-  for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
-    if (showUnboundCommands || commandsToKey[command])
-      isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
-      html.push(
-        "<tr class='vimiumReset #{"advanced" if isAdvanced}'>",
-        "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
-        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
-
-      if (showCommandNames)
-        html.push("<span class='vimiumReset commandName'>(#{command})</span>")
-
-      html.push("</td></tr>")
-  html.join("\n")
-
-#
-# Fetches the contents of a file bundled with this extension.
-#
-fetchFileContents = (extensionFileName) ->
-  req = new XMLHttpRequest()
-  req.open("GET", chrome.runtime.getURL(extensionFileName), false) # false => synchronous
-  req.send()
-  req.responseText
-
-#
-# Returns the keys that can complete a valid command given the current key queue.
-#
-getCompletionKeysRequest = (request, keysToCheck = "") ->
-  name: "refreshCompletionKeys"
-  completionKeys: generateCompletionKeys(keysToCheck)
-  validFirstKeys: validFirstKeys
-
 #
 # Opens the url in the current tab.
 #
@@ -200,6 +137,19 @@ handleSettings = (args, port) ->
   else # operation == "set"
     Settings.set(args.key, args.value)
 
+#
+# Execute background commands from the content scripts
+#
+
+executeBackgroundCommand = (response) ->
+  if response.passCountToFunction
+    BackgroundCommands[response.command](response.count)
+  else if response.noRepeat
+    BackgroundCommands[response.command]()
+  else
+    repeatFunction(BackgroundCommands[response.command], response.count, 0)
+
+
 refreshCompleter = (request) -> completers[request.name].refresh()
 
 whitespaceRegexp = /\s+/
@@ -213,11 +163,9 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
     selectionChangedHandlers.pop().call()
 
-repeatFunction = (func, totalCount, currentCount, frameId) ->
+repeatFunction = (func, totalCount, currentCount) ->
   if (currentCount < totalCount)
-    func(
-      -> repeatFunction(func, totalCount, currentCount + 1, frameId),
-      frameId)
+    func(-> repeatFunction(func, totalCount, currentCount + 1))
 
 moveTab = (callback, direction) ->
   chrome.tabs.getSelected(null, (tab) ->
@@ -272,10 +220,6 @@ BackgroundCommands =
   togglePinTab: (request) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
-  showHelp: (callback, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
@@ -411,123 +355,10 @@ updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
         openTabInfo.positionIndex = tab.index
         openTabInfo.windowId = tab.windowId)
 
-splitKeyIntoFirstAndSecond = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    { first: RegExp.$1, second: RegExp.$2 }
-  else
-    { first: key[0], second: key.slice(1) }
-
-getActualKeyStrokeLength = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    1 + getActualKeyStrokeLength(RegExp.$2)
-  else
-    key.length
-
-populateValidFirstKeys = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
-      validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
-
-populateSingleKeyCommands = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
-      singleKeyCommands.push(key)
-
-# Invoked by options.coffee.
-root.refreshCompletionKeysAfterMappingSave = ->
-  validFirstKeys = {}
-  singleKeyCommands = []
-
-  populateValidFirstKeys()
-  populateSingleKeyCommands()
-
-  sendRequestToAllTabs(getCompletionKeysRequest())
-
-# Generates a list of keys that can complete a valid command given the current key queue or the one passed in
-generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueue)
-  command = splitHash.command
-  count = splitHash.count
-
-  completionKeys = singleKeyCommands.slice(0)
-
-  if (getActualKeyStrokeLength(command) == 1)
-    for key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
-
-  completionKeys
-
-splitKeyQueue = (queue) ->
-  match = /([1-9][0-9]*)?(.*)/.exec(queue)
-  count = parseInt(match[1], 10)
-  command = match[2]
-
-  { count: count, command: command }
-
-handleKeyDown = (request, port) ->
-  key = request.keyChar
-  if (key == "<ESC>")
-    console.log("clearing keyQueue")
-    keyQueue = ""
-  else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
-    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
-
-checkKeyQueue = (keysToCheck, tabId, frameId) ->
-  refreshedCompletionKeys = false
-  splitHash = splitKeyQueue(keysToCheck)
-  command = splitHash.command
-  count = splitHash.count
-
-  return keysToCheck if command.length == 0
-  count = 1 if isNaN(count)
-
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
-
-    if !registryEntry.isBackgroundCommand
-      chrome.tabs.sendMessage(tabId,
-        name: "executePageCommand",
-        command: registryEntry.command,
-        frameId: frameId,
-        count: count,
-        passCountToFunction: registryEntry.passCountToFunction,
-        completionKeys: generateCompletionKeys(""))
-      refreshedCompletionKeys = true
-    else
-      if registryEntry.passCountToFunction
-        BackgroundCommands[registryEntry.command](count)
-      else if registryEntry.noRepeat
-        BackgroundCommands[registryEntry.command]()
-      else
-        repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
-
-    newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
-    splitKey = splitKeyIntoFirstAndSecond(command)
-
-    # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
-    else
-      newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
-  else
-    newKeyQueue = (if validFirstKeys[command] then count.toString() + command else "")
-
-  # If we haven't sent the completion keys piggybacked on executePageCommand,
-  # send them by themselves.
-  unless refreshedCompletionKeys
-    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
-
-  newKeyQueue
-
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
 #
-sendRequestToAllTabs = (args) ->
+root.sendRequestToAllTabs = (args) ->
   chrome.windows.getAll({ populate: true }, (windows) ->
     for window in windows
       for tab in window.tabs
@@ -566,42 +397,31 @@ getCurrFrameIndex = (frames) ->
 
 # Port handler mapping
 portHandlers =
-  keyDown: handleKeyDown,
   settings: handleSettings,
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
-  getCompletionKeys: getCompletionKeysRequest,
-  getCurrentTabUrl: getCurrentTabUrl,
-  openUrlInNewTab: openUrlInNewTab,
-  openUrlInIncognito: openUrlInIncognito,
-  openUrlInCurrentTab: openUrlInCurrentTab,
-  openOptionsPageInNewTab: openOptionsPageInNewTab,
-  registerFrame: registerFrame,
-  frameFocused: handleFrameFocused,
-  upgradeNotificationClosed: upgradeNotificationClosed,
-  updateScrollPosition: handleUpdateScrollPosition,
-  copyToClipboard: copyToClipboard,
-  isEnabledForUrl: isEnabledForUrl,
-  saveHelpDialogSettings: saveHelpDialogSettings,
-  selectSpecificTab: selectSpecificTab,
+  getCurrentTabUrl: getCurrentTabUrl
+  openUrlInNewTab: openUrlInNewTab
+  openUrlInIncognito: openUrlInIncognito
+  openUrlInCurrentTab: openUrlInCurrentTab
+  openOptionsPageInNewTab: openOptionsPageInNewTab
+  registerFrame: registerFrame
+  frameFocused: handleFrameFocused
+  upgradeNotificationClosed: upgradeNotificationClosed
+  updateScrollPosition: handleUpdateScrollPosition
+  copyToClipboard: copyToClipboard
+  isEnabledForUrl: isEnabledForUrl
+  saveHelpDialogSettings: saveHelpDialogSettings
+  selectSpecificTab: selectSpecificTab
   refreshCompleter: refreshCompleter
-  createMark: Marks.create.bind(Marks),
+  createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
+  executeBackgroundCommand: executeBackgroundCommand
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
 
-#
-# Begin initialization.
-#
-Commands.clearKeyMappingsAndSetDefaults()
-
-if Settings.has("keyMappings")
-  Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
-
-populateValidFirstKeys()
-populateSingleKeyCommands()
 if shouldShowUpgradeMessage()
   sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 

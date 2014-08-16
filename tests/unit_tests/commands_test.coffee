@@ -1,5 +1,5 @@
 require "./test_helper.js"
-{Commands} = require "../../background_scripts/commands.js"
+{Commands} = require "../../content_scripts/commands.js"
 
 context "Key mappings",
   should "lowercase keys correctly", ->

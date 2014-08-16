@@ -9,7 +9,6 @@
   "background": {
     "scripts": [
       "lib/utils.js",
-      "background_scripts/commands.js",
       "lib/clipboard.js",
       "background_scripts/sync.js",
       "background_scripts/settings.js",
@@ -46,6 +45,12 @@
       "all_frames": true
     },
     {
+      "matches": ["<all_urls>"],
+      "js": ["content_scripts/commands.js",
+             "content_scripts/key_handling.js"],
+      "run_at": "document_start"
+    },
+    {
       "matches": ["file://*"],
       "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start"
@@ -54,5 +59,6 @@
   "browser_action": {
     "default_icon": "icons/browser_action_disabled.png",
     "default_popup": "pages/popup.html"
-  }
+  },
+  "web_accessible_resources": ["pages/help_dialog.html"]
 }
