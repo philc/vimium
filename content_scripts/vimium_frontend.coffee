@@ -433,10 +433,10 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     event.stopPropagation()
 
-onKeyup = (event) -> 
-  return unless handlerStack.bubbleEvent('keyup', event)
-  if (!isInsertMode())
-    event.stopPropagation();
+onKeyup = (event) ->
+  return unless handlerStack.bubbleEvent("keyup", event)
+  # Don't propagate the keyup to the underlying page, since Vimium has handled it. See #733.
+  event.stopPropagation() unless isInsertMode()
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
