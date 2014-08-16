@@ -205,43 +205,43 @@ commandDescriptions =
   scrollUp: ["Scroll up"]
   scrollLeft: ["Scroll left"]
   scrollRight: ["Scroll right"]
-  scrollToTop: ["Scroll to the top of the page"]
-  scrollToBottom: ["Scroll to the bottom of the page"]
-  scrollToLeft: ["Scroll all the way to the left"]
 
-  scrollToRight: ["Scroll all the way to the right"]
+  scrollToTop: ["Scroll to the top of the page", { noRepeat: true }]
+  scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
+  scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
+  scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
+
   scrollPageDown: ["Scroll a page down"]
   scrollPageUp: ["Scroll a page up"]
   scrollFullPageDown: ["Scroll a full page down"]
   scrollFullPageUp: ["Scroll a full page up"]
 
-  reload: ["Reload the page"]
-  toggleViewSource: ["View page source"]
+  reload: ["Reload the page", { noRepeat: true }]
+  toggleViewSource: ["View page source", { noRepeat: true }]
 
-  copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
+  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { noRepeat: true }]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
-  enterInsertMode: ["Enter insert mode"]
+  enterInsertMode: ["Enter insert mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
 
-  "LinkHints.activateMode": ["Open a link in the current tab"]
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
-  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"]
-  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
+  "LinkHints.activateMode": ["Open a link in the current tab", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", { noRepeat: true }]
+  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { noRepeat: true }]
+  "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
 
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
-
-  "LinkHints.activateModeToDownloadLink": ["Download link url"]
-  enterFindMode: ["Enter find mode"]
+  enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]
   performBackwardsFind: ["Cycle backward to the previous find match"]
 
-  goPrevious: ["Follow the link labeled previous or <"]
-  goNext: ["Follow the link labeled next or >"]
+  goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }]
+  goNext: ["Follow the link labeled next or >", { noRepeat: true }]
 
   # Navigating your history
   goBack: ["Go back in history", { passCountToFunction: true }]
@@ -270,18 +270,18 @@ commandDescriptions =
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
   moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
 
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs"]
-  "Vomnibar.activateBookmarks": ["Open a bookmark"]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
-  "Vomnibar.activateEditUrl": ["Edit the current URL"]
-  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab"]
+  "Vomnibar.activate": ["Open URL, bookmark, or history entry", { noRepeat: true }]
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { noRepeat: true }]
+  "Vomnibar.activateTabSelection": ["Search through your open tabs", { noRepeat: true }]
+  "Vomnibar.activateBookmarks": ["Open a bookmark", { noRepeat: true }]
+  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { noRepeat: true }]
+  "Vomnibar.activateEditUrl": ["Edit the current URL", { noRepeat: true }]
+  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { noRepeat: true }]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 
-  "Marks.activateCreateMode": ["Create a new mark"]
-  "Marks.activateGotoMode": ["Go to a mark"]
+  "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
+  "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
 Commands.init()
 
