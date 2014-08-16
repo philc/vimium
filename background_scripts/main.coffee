@@ -513,7 +513,10 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   if (Commands.keyToCommandRegistry[command])
     registryEntry = Commands.keyToCommandRegistry[command]
 
-    if !registryEntry.isBackgroundCommand
+    if registryEntry.noRepeat
+      count = 1
+
+    if not registryEntry.isBackgroundCommand
       chrome.tabs.sendMessage(tabId,
         name: "executePageCommand",
         command: registryEntry.command,
