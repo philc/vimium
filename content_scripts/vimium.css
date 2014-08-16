@@ -198,7 +198,6 @@ div#vimiumHelpDialog .optionsPage {
 }
 div#vimiumHelpDialog a.closeButton:hover {
   color:black;
-  cursor:default;
   -webkit-user-select:none;
 }
 div#vimiumHelpDialogFooter {
