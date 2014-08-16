@@ -433,7 +433,10 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     event.stopPropagation()
 
-onKeyup = (event) -> return unless handlerStack.bubbleEvent('keyup', event)
+onKeyup = (event) -> 
+  return unless handlerStack.bubbleEvent('keyup', event)
+  if (!isInsertMode())
+    event.stopPropagation();
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
