@@ -22,17 +22,21 @@ Commands =
       isBackgroundCommand: options.background
       passCountToFunction: options.passCountToFunction
       noRepeat: options.noRepeat
+      repeatLimit: options.repeatLimit
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
       console.log(command, "doesn't exist!")
       return
 
+    commandDetails = @availableCommands[command]
+
     @keyToCommandRegistry[key] =
       command: command
-      isBackgroundCommand: @availableCommands[command].isBackgroundCommand
-      passCountToFunction: @availableCommands[command].passCountToFunction
-      noRepeat: @availableCommands[command].noRepeat
+      isBackgroundCommand: commandDetails.isBackgroundCommand
+      passCountToFunction: commandDetails.passCountToFunction
+      noRepeat: commandDetails.noRepeat
+      repeatLimit: commandDetails.repeatLimit
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
@@ -214,7 +218,7 @@ commandDescriptions =
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
   'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard", { noRepeat: true }]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
+  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 3 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
 
@@ -247,10 +251,12 @@ commandDescriptions =
   previousTab: ["Go one tab left", { background: true }]
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
-  createTab: ["Create new tab", { background: true }]
-  duplicateTab: ["Duplicate current tab", { background: true }]
-  removeTab: ["Close current tab", { background: true, noRepeat: true }]
-  restoreTab: ["Restore closed tab", { background: true }]
+
+  createTab: ["Create new tab", { background: true, repeatLimit: 2 }]
+  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 2 }]
+  removeTab: ["Close current tab", { background: true, repeatLimit: 3 }]
+  restoreTab: ["Restore closed tab", { background: true, repeatLimit: 3 }]
+
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
