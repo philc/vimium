@@ -321,6 +321,8 @@ extend window,
 
       false
 
+handledKeydownEvents = []
+
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
 # insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -390,31 +392,39 @@ onKeydown = (event) ->
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       exitInsertMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
     else if (!modifiers)
       event.stopPropagation()
+      handledKeydownEvents.push event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
+    DomUtils.suppressEvent event
+    handledKeydownEvents.push event
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1)
-        DomUtils.suppressEvent(event)
+        DomUtils.suppressEvent event
+        handledKeydownEvents.push event
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -432,11 +442,23 @@ onKeydown = (event) ->
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     event.stopPropagation()
+    handledKeydownEvents.push event
 
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
-  # Don't propagate the keyup to the underlying page, since Vimium has handled it. See #733.
-  event.stopPropagation() unless isInsertMode()
+  return if isInsertMode()
+
+  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
+  for keydown, i in handledKeydownEvents
+    if event.metaKey == keydown.metaKey and
+       event.altKey == keydown.altKey and
+       event.ctrlKey == keydown.ctrlKey and
+       event.keyIdentifier == keydown.keyIdentifier and
+       event.keyCode == keydown.keyCode
+
+      handledKeydownEvents.splice i, 1
+      event.stopPropagation()
+      break
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
