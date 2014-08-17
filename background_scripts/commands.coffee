@@ -93,14 +93,15 @@ Commands =
       "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
       "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
       "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext",
+      "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
-       "restoreTab", "moveTabToNewWindow", "togglePinTab", "moveTabLeft", "moveTabRight"]
+       "restoreTab", "togglePinTab", "moveTabLeft", "moveTabRight", "moveTabToLeft", "moveTabToRight",
+       "moveTabToNewWindow"]
     misc:
       ["showHelp"]
 
@@ -108,10 +109,10 @@ Commands =
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
   # from Vimium will uncover these gems.
   advancedCommands: [
-    "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
-    "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight"]
+    "scrollToLeft", "scrollToRight", "goUp", "goToRoot", "focusInput",
+    "LinkHints.activateModeWithQueue", "LinkHints.activateModeToOpenIncognito",
+    "goPrevious", "goNext", "Marks.activateCreateMode", "Marks.activateGotoMode",
+    "moveTabLeft", "moveTabRight", "moveTabToLeft", "moveTabToRight", "moveTabToNewWindow"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -254,7 +255,9 @@ commandDescriptions =
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
-  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
+  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true }]
+  moveTabToLeft: ["Move tab all the way to the left", { background: true, passCountToFunction: true }]
+  moveTabToRight: ["Move tab all the way to the right", { background: true, passCountToFunction: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
