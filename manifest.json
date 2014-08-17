@@ -26,7 +26,8 @@
     "history",
     "clipboardRead",
     "storage",
-    "<all_urls>"
+    "<all_urls>",
+    "downloads"
   ],
   "content_scripts": [
     {

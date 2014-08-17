@@ -54,6 +54,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
   activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
+  activateModeToSaveLinkAs: -> @activateMode(DOWNLOAD_LINK_URL)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -101,6 +102,10 @@ LinkHints =
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
+    else if @mode is DOWNLOAD_LINK_URL
+      HUD.show("Download link URL")
+      @linkActivator = (link) ->
+        chrome.runtime.sendMessage {handler: "downloadUrl", data: link.href}
     else if @mode is OPEN_INCOGNITO
       HUD.show("Open link in incognito window")
 
