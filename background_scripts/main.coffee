@@ -297,8 +297,8 @@ BackgroundCommands =
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
-    chrome.tabs.query {currentWindow: true, active: true}, (activeTabArr) ->
-      activeTabIndex = activeTabArr[0].index
+    chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
+      activeTabIndex = activeTabs[0].index
 
       switch direction
         when "before"
