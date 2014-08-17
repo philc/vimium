@@ -112,7 +112,8 @@ Commands =
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
     "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight"]
+    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
+    "closeTabsToLeft","closeTabsToRight", "closeOtherTabs"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -256,7 +257,7 @@ commandDescriptions =
 
   closeTabsToLeft: ["Close tabs to the left", {background: true, noRepeat: true}]
   closeTabsToRight: ["Close tabs to the right", {background: true, noRepeat: true}]
-  closeOtherTabs: ["Close other tabs", {background: true, noRepeat: true}]
+  closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
   moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
