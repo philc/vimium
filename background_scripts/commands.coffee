@@ -100,7 +100,8 @@ Commands =
       ["goBack", "goForward"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
-       "restoreTab", "moveTabToNewWindow", "togglePinTab", "moveTabLeft", "moveTabRight"]
+      "restoreTab", "moveTabToNewWindow", "togglePinTab", "closeTabsToLeft","closeTabsToRight",
+      "closeOtherTabs", "moveTabLeft", "moveTabRight"]
     misc:
       ["showHelp"]
 
@@ -252,6 +253,10 @@ commandDescriptions =
   restoreTab: ["Restore closed tab", { background: true }]
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
+
+  closeTabsToLeft: ["Close tabs to the left", {background: true, noRepeat: true}]
+  closeTabsToRight: ["Close tabs to the right", {background: true, noRepeat: true}]
+  closeOtherTabs: ["Close other tabs", {background: true, noRepeat: true}]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
   moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
