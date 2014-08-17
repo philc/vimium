@@ -297,22 +297,22 @@ BackgroundCommands =
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
-    chrome.tabs.query {currentWindow: true, active: true}, (activeTabArr) ->
-      activeTabIndex = activeTabArr[0].index
+    chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
+      activeTabIndex = activeTabs[0].index
 
-      switch direction
+      shouldDelete = switch direction
         when "before"
-          shouldDelete = (index) -> index < activeTabIndex
+          (index) -> index < activeTabIndex
         when "after"
-          shouldDelete = (index) -> index > activeTabIndex
+          (index) -> index > activeTabIndex
         when "both"
-          shouldDelete = (index) -> index != activeTabIndex
+          (index) -> index != activeTabIndex
 
-      removeTabIds = []
+      toRemove = []
       for tab in tabs
         if not tab.pinned and shouldDelete tab.index
-          removeTabIds.push tab.id
-      chrome.tabs.remove removeTabIds
+          toRemove.push tab.id
+      chrome.tabs.remove toRemove
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
