@@ -290,8 +290,8 @@ BackgroundCommands =
 
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
 
-  closeTabsToLeft: -> removeTabsRelative "before"
-  closeTabsToRight: -> removeTabsRelative "after"
+  closeTabsOnLeft: -> removeTabsRelative "before"
+  closeTabsOnRight: -> removeTabsRelative "after"
   closeOtherTabs: -> removeTabsRelative "both"
 
 # Remove tabs before, after, or either side of the currently active tab

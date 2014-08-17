@@ -100,7 +100,7 @@ Commands =
       ["goBack", "goForward"]
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
-      "restoreTab", "moveTabToNewWindow", "togglePinTab", "closeTabsToLeft","closeTabsToRight",
+      "restoreTab", "moveTabToNewWindow", "togglePinTab", "closeTabsOnLeft","closeTabsOnRight",
       "closeOtherTabs", "moveTabLeft", "moveTabRight"]
     misc:
       ["showHelp"]
@@ -113,7 +113,7 @@ Commands =
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
     "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
     "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
-    "closeTabsToLeft","closeTabsToRight", "closeOtherTabs"]
+    "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -255,8 +255,8 @@ commandDescriptions =
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
-  closeTabsToLeft: ["Close tabs to the left", {background: true, noRepeat: true}]
-  closeTabsToRight: ["Close tabs to the right", {background: true, noRepeat: true}]
+  closeTabsToLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
+  closeTabsToRight: ["Close tabs on the right", {background: true, noRepeat: true}]
   closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
