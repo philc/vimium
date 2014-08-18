@@ -3,16 +3,20 @@ fs = require "fs"
 path = require "path"
 child_process = require "child_process"
 
-spawn = (procName, optArray, silent=false) ->
+spawn = (procName, optArray, silent = false, stdoutFilter, stderrFilter) ->
   if process.platform is "win32"
     # if win32, prefix arguments with "/c {original command}"
     # e.g. "coffee -c c:\git\vimium" becomes "cmd.exe /c coffee -c c:\git\vimium"
     optArray.unshift "/c", procName
     procName = "cmd.exe"
   proc = child_process.spawn procName, optArray
+
+  stdoutFilter ?= (data) -> data
+  stderrFilter ?= (data) -> data
   unless silent
-    proc.stdout.on 'data', (data) -> process.stdout.write data
-    proc.stderr.on 'data', (data) -> process.stderr.write data
+    proc.stdout.on 'data', (data) -> process.stdout.write stdoutFilter data
+    proc.stderr.on 'data', (data) -> process.stderr.write stderrFilter data
+
   proc
 
 optArrayFromDict = (opts) ->
@@ -143,3 +147,20 @@ task "coverage", "generate coverage report", ->
           source: (Utils.escapeHtml fs.readFileSync fname, 'utf-8').split '\n'
 
       fs.writeFileSync 'jscoverage.json', JSON.stringify(result)
+
+# This filter ignores lines which include "✓", since we are only interested in errors/warnings from
+# coffeelint
+filterTickLines = (data) ->
+  lines = data.toString().split "\n"
+  outputLines = []
+
+  for line in lines
+    if line.indexOf("✓") == -1
+      outputLines.push line
+
+  new Buffer outputLines.join("\n")
+
+task "lint", "run coffeelint", (options) ->
+  coffeelintArgs = ["--color=always", "-f", "coffeelint.json", "."]
+  coffeelint = spawn "coffeelint", coffeelintArgs, false, filterTickLines
+  coffeelint.on "exit", (returnCode) -> process.exit returnCode

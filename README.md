@@ -12,7 +12,7 @@ You can install the stable version of Vimium from the
 [Chrome Extensions Gallery](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb).
 
 Please see
-[CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md#installing-from-source)
+[CONTRIBUTING.md](CONTRIBUTING.md#installing-from-source)
 for instructions on how you can install Vimium from source.
 
 The Options page can be reached via a link on the help dialog (hit `?`) or via the button next to Vimium on
@@ -134,7 +134,7 @@ Many of the more advanced or involved features are documented on [Vimium's githu
 
 Contributing
 ------------
-Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 Release Notes
 -------------
