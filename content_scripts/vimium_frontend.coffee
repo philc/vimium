@@ -85,7 +85,7 @@ settings =
 #
 # Give this frame a unique id.
 #
-frameId = Math.floor(Math.random()*999999999)
+frameId = Math.floor(Math.random() * 999999999)
 
 hasModifiersRegex = /^<([amc]-)+.>/
 
@@ -223,8 +223,8 @@ extend window,
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
   scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
-  scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
-  scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
+  scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1 / 2
+  scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1 / 2
   scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
   scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
@@ -246,7 +246,7 @@ extend window,
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
-  goToRoot: () ->
+  goToRoot: ->
     window.location.href = window.location.origin
 
   toggleViewSource: ->
@@ -267,9 +267,9 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   focusInput: (count) ->
-    # Focus the first input element on the page, and create overlays to highlight all the input elements, with
-    # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
-    # Pressing any other key will remove the overlays and the special tab behavior.
+    # Focus the first input element on the page, and create overlays to highlight all the input elements,
+    # with the currently-focused element highlighted specially. Tabbing will shift focus to the next input
+    # element.  Pressing any other key will remove the overlays and the special tab behavior.
     resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
     visibleInputs =
       for i in [0...resultSet.snapshotLength] by 1
@@ -350,7 +350,7 @@ onKeypress = (event) ->
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
 
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        keyPort.postMessage({ keyChar: keyChar, frameId: frameId })
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
@@ -416,10 +416,10 @@ onKeydown = (event) ->
       if (currentCompletionKeys.indexOf(keyChar) != -1)
         DomUtils.suppressEvent(event)
 
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+      keyPort.postMessage({ keyChar: keyChar, frameId: frameId })
 
     else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
+      keyPort.postMessage({ keyChar: "<ESC>", frameId: frameId })
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -859,7 +859,7 @@ window.showHelpDialog = (html, fid) ->
     # This setting is pulled out of local storage. It's false by default.
     getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
 
-    init: () ->
+    init: ->
       this.dialogElement = document.getElementById("vimiumHelpDialog")
       this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
         VimiumHelpDialog.toggleAdvancedCommands, false)

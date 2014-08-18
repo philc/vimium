@@ -14,7 +14,7 @@ page.onConsoleMessage = (msg) ->
   console.log msg
 
 page.onError = (msg, trace) ->
-  console.log(msg);
+  console.log(msg)
   trace.forEach (item) ->
     console.log('  ', item.file, ':', item.line)
 

@@ -86,7 +86,7 @@ context "HistoryCache",
       assert.arrayEqual [@history2, @history1], @results
 
     should "add new visits to the history", ->
-      HistoryCache.use () ->
+      HistoryCache.use ->
       newSite = { url: "ab.com" }
       @onVisitedListener(newSite)
       HistoryCache.use (@results) =>
@@ -234,8 +234,9 @@ context "search engines",
     searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s"
     Settings.set 'searchEngines', searchEngines
     @completer = new SearchEngineCompleter()
-    # note, I couldn't just call @completer.refresh() here as I couldn't set root.Settings without errors
-    # workaround is below, would be good for someone that understands the testing system better than me to improve
+    # I couldn't just call @completer.refresh() here as I couldn't set root.Settings without errors.
+    # Workaround is below.
+    # TODO: Would be good for someone who understands the testing system better than me to improve
     @completer.searchEngines = Settings.getSearchEngines()
 
   should "return search engine suggestion", ->
@@ -305,27 +306,36 @@ context "RankingUtils.wordRelevancy",
   #   highScore = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
   #   assert.isTrue highScore > lowScore
 
+equalPairs = (pair1, pair2) ->
+    pair1[0] == pair2[0] and pair1[1] == pair2[1]
+
 context "Suggestion.pushMatchingRanges",
   should "extract ranges matching term (simple case, two matches)", ->
     ranges = []
     [ one, two, three ] = [ "one", "two", "three" ]
     suggestion = new Suggestion([], "", "", "", returns(1))
     suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}#{one}", two, ranges)
-    assert.equal 2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+    assert.equal 2, (Utils.zip([ ranges, [ [3,6], [11,14] ] ])
+                          .filter((pair) -> equalPairs pair[0], pair[1])
+                          .length)
 
   should "extract ranges matching term (two matches, one at start of string)", ->
     ranges = []
     [ one, two, three ] = [ "one", "two", "three" ]
     suggestion = new Suggestion([], "", "", "", returns(1))
     suggestion.pushMatchingRanges("#{two}#{three}#{two}#{one}", two, ranges)
-    assert.equal 2, Utils.zip([ ranges, [ [0,3], [8,11] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+    assert.equal 2, (Utils.zip([ ranges, [ [0,3], [8,11] ] ])
+                          .filter((pair) -> equalPairs pair[0], pair[1])
+                          .length)
 
   should "extract ranges matching term (two matches, one at end of string)", ->
     ranges = []
     [ one, two, three ] = [ "one", "two", "three" ]
     suggestion = new Suggestion([], "", "", "", returns(1))
     suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}", two, ranges)
-    assert.equal 2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter((pair) -> pair[0][0] == pair[1][0] and pair[0][1] == pair[1][1]).length
+    assert.equal 2, (Utils.zip([ ranges, [ [3,6], [11,14] ] ])
+                          .filter((pair) -> equalPairs pair[0], pair[1])
+                          .length)
 
   should "extract ranges matching term (no matches)", ->
     ranges = []

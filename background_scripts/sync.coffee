@@ -78,7 +78,7 @@ root.Sync = Sync =
       @log "set scheduled: #{key}=#{value}"
       key_value = {}
       key_value[key] = value
-      @storage.set key_value, =>
+      @storage.set key_value, ->
         # Chrome sets chrome.runtime.lastError if there is an error.
         if chrome.runtime.lastError
           console.log "callback for Sync.set() indicates error: #{key} <- #{value}"
@@ -88,7 +88,7 @@ root.Sync = Sync =
   clear: (key) ->
     if @shouldSyncKey key
       @log "clear scheduled: #{key}"
-      @storage.remove key, =>
+      @storage.remove key, ->
         # Chrome sets chrome.runtime.lastError if there is an error.
         if chrome.runtime.lastError
           console.log "for Sync.clear() indicates error: #{key}"

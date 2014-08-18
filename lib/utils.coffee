@@ -125,7 +125,8 @@ Utils =
   # Zip two (or more) arrays:
   #   - Utils.zip([ [a,b], [1,2] ]) returns [ [a,1], [b,2] ]
   #   - Length of result is `arrays[0].length`.
-  #   - Adapted from: http://stackoverflow.com/questions/4856717/javascript-equivalent-of-pythons-zip-function
+  #   - Adapted from:
+  #     http://stackoverflow.com/questions/4856717/javascript-equivalent-of-pythons-zip-function
   zip: (arrays) ->
     arrays[0].map (_,i) ->
       arrays.map( (array) -> array[i] )

@@ -81,8 +81,8 @@ DomUtils =
       if (clientRect.width == 0 || clientRect.height == 0)
         for child in element.children
           computedStyle = window.getComputedStyle(child, null)
-          # Ignore child elements which are not floated and not absolutely positioned for parent elements with
-          # zero width/height
+          # Ignore child elements which are not floated and not absolutely positioned for parent elements
+          # with zero width/height
           continue if (computedStyle.getPropertyValue('float') == 'none' &&
             computedStyle.getPropertyValue('position') != 'absolute')
           childClientRect = @getVisibleClientRect(child)
@@ -109,10 +109,11 @@ DomUtils =
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
       mouseEvent = document.createEvent("MouseEvents")
-      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
-      modifiers.shiftKey, modifiers.metaKey, 0, null)
-      # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
-      # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
+      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey,
+      modifiers.altKey, modifiers.shiftKey, modifiers.metaKey, 0, null)
+      # Debugging note: Firefox will not execute the element's default action if we dispatch this click
+      # event, but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that
+      # separately
       element.dispatchEvent(mouseEvent)
 
   # momentarily flash a rectangular border to give user some visual feedback

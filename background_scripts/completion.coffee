@@ -60,9 +60,9 @@ class Suggestion
     #   - splits = [ "", "A",    "b", "a",    "c", "a",    b" ]
     #                UM   M       UM   M       UM   M      UM      (M=Matched, UM=Unmatched)
     splits = string.split(RegexpCache.get(term, "(", ")"))
-    for index in [0..splits.length-2] by 2
+    for index in [0..splits.length - 2] by 2
       unmatchedText = splits[index]
-      matchedText = splits[index+1]
+      matchedText = splits[index + 1]
       # Add the indices spanning `matchedText` to `ranges`.
       textPosition += unmatchedText.length
       ranges.push([textPosition, textPosition + matchedText.length])
@@ -114,9 +114,11 @@ class BookmarkCompleter
   onBookmarksLoaded: -> @performSearch() if @currentSearch
 
   performSearch: ->
-    # If the folder separator character the first character in any query term, then we'll use the bookmark's full path as its title.
-    # Otherwise, we'll just use the its regular title.
-    usePathAndTitle = @currentSearch.queryTerms.reduce ((prev,term) => prev || term.indexOf(@folderSeparator) == 0), false
+    # If the folder separator character the first character in any query term, then we'll use the bookmark's
+    # full path as its title.  Otherwise, we'll just use the its regular title.
+    usePathAndTitle = @currentSearch.queryTerms.reduce (prev,term) =>
+      prev || term.indexOf(@folderSeparator) == 0
+    , false
     results =
       if @currentSearch.queryTerms.length > 0
         @bookmarks.filter (bookmark) =>
@@ -137,7 +139,8 @@ class BookmarkCompleter
       @bookmarks = @traverseBookmarks(bookmarks).filter((bookmark) -> bookmark.url?)
       @onBookmarksLoaded()
 
-  # If these names occur as top-level bookmark names, then they are not included in the names of bookmark folders.
+  # If these names occur as top-level bookmark names, then they are not included in the names of bookmark
+  # folders.
   ignoreTopLevel:
     'Other Bookmarks': true
     'Mobile Bookmarks': true
@@ -151,14 +154,15 @@ class BookmarkCompleter
     results
 
   # Recursive helper for `traverseBookmarks`.
-  traverseBookmarksRecursive: (bookmark, results, parent={pathAndTitle:""}) ->
+  traverseBookmarksRecursive: (bookmark, results, parent = {pathAndTitle: ""}) ->
     bookmark.pathAndTitle =
       if bookmark.title and not (parent.pathAndTitle == "" and @ignoreTopLevel[bookmark.title])
         parent.pathAndTitle + @folderSeparator + bookmark.title
       else
         parent.pathAndTitle
     results.push bookmark
-    bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
+    if bookmark.children
+      bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark)
 
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
@@ -186,8 +190,9 @@ class HistoryCompleter
 
   refresh: ->
 
-# The domain completer is designed to match a single-word query which looks like it is a domain. This supports
-# the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
+# The domain completer is designed to match a single-word query which looks like it is a domain. This
+# supports the user experience where they quickly type a partial domain, hit tab -> enter, and expect to
+# arrive there.
 class DomainCompleter
   # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
   #  - `entry` is the most recently accessed page in the History within this domain.
@@ -275,8 +280,10 @@ class SearchEngineCompleter
     searchEngineMatch = this.getSearchEngineMatches(queryTerms[0])
     suggestions = []
     if searchEngineMatch
-      searchEngineMatch = searchEngineMatch.replace(/%s/g, queryTerms[1..].join(" "))
-      suggestion = new Suggestion(queryTerms, "search", searchEngineMatch, queryTerms[0] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
+      searchUrl = searchEngineMatch.replace(/%s/g, queryTerms[1..].join(" "))
+      queryTerms[0] += ":"
+      queryStr = queryTerms.join(" ")
+      suggestion = new Suggestion(queryTerms, "search", searchUrl, queryStr, @computeRelevancy)
       suggestions.push(suggestion)
     onComplete(suggestions)
 
@@ -288,8 +295,8 @@ class SearchEngineCompleter
   getSearchEngineMatches: (queryTerm) ->
     this.searchEngines[queryTerm]
 
-# A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
-# 10. Queries from the vomnibar frontend script come through a multi completer.
+# A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the
+# top 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
   constructor: (@completers) -> @maxResults = 10
 
@@ -325,7 +332,7 @@ class MultiCompleter
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
   # Whether the given things (usually URLs or titles) match any one of the query terms.
-  # This is used to prune out irrelevant suggestions before we try to rank them, and for calculating word relevancy.
+  # This is used to prune out irrelevant suggestions before ranking them, and for calculating word relevancy.
   # Every term must match at least one thing.
   matches: (queryTerms, things...) ->
     for term in queryTerms
@@ -338,17 +345,19 @@ RankingUtils =
 
   # Weights used for scoring matches.
   matchWeights:
-    matchAnywhere:     1
-    matchStartOfWord:  1
-    matchWholeWord:    1
+    matchAnywhere: 1
+    matchStartOfWord: 1
+    matchWholeWord: 1
     # The following must be the sum of the three weights above; it is used for normalization.
-    maximumScore:      3
+    maximumScore: 3
     #
     # Calibration factor for balancing word relevancy and recency.
-    recencyCalibrator: 2.0/3.0
+    recencyCalibrator: 2.0 / 3.0
     # The current value of 2.0/3.0 has the effect of:
-    #   - favoring the contribution of recency when matches are not on word boundaries ( because 2.0/3.0 > (1)/3     )
-    #   - favoring the contribution of word relevance when matches are on whole words  ( because 2.0/3.0 < (1+1+1)/3 )
+    #   - favoring the contribution of recency when matches are not on word boundaries
+    #   ( because 2.0/3.0 > (1)/3 )
+    #   - favoring the contribution of word relevance when matches are on whole words
+    #   ( because 2.0/3.0 < (1+1+1)/3 )
 
   # Calculate a score for matching term against string.
   # The score is in the range [0, matchWeights.maximumScore], see above.
@@ -448,13 +457,14 @@ RegexpCache =
   #   - string="go", prefix="\b", suffix=""
   #   - this returns regexp matching "google", but not "agog" (the "go" must occur at the start of a word)
   # TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
-  get: (string, prefix="", suffix="") ->
+  get: (string, prefix = "", suffix = "") ->
     @init() unless @initialized
     regexpString = string.replace(@escapeRegExp, "\\$&")
-    # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
+    # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be common).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
-    # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
+    # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not
+    # `regexpString`).
     @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
@@ -503,7 +513,7 @@ HistoryCache =
       @history = []
     else
       toRemove.urls.forEach (url) =>
-        i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
+        i = HistoryCache.binarySearch({url: url}, @history, @compareHistoryByUrl)
         if i < @history.length and @history[i].url == url
           @history.splice(i, 1)
 

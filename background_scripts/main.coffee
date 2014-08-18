@@ -258,9 +258,9 @@ BackgroundCommands =
         # Clean out the tabQueue so we don't have unused windows laying about.
         delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
 
-        # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-        # tab is created because the content script is not available during the "loading" state. We need to
-        # wait until that's over before we can call setScrollPosition.
+        # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until
+        # the tab is created because the content script is not available during the "loading" state. We need
+        # to wait until that's over before we can call setScrollPosition.
         chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
           tabLoadedHandlers[tab.id] = ->
             chrome.tabs.sendRequest(tab.id,
@@ -276,7 +276,7 @@ BackgroundCommands =
   showHelp: (callback, frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
+        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId: frameId }))
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
@@ -416,8 +416,8 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   else
     tabQueue[openTabInfo.windowId] = [openTabInfo]
 
-  # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
-  # scroll position)
+  # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for
+  # updating scroll position)
   tabInfoMap.deletor = -> delete tabInfoMap[tabId]
   setTimeout tabInfoMap.deletor, 1000
   delete framesForTab[tabId]
