@@ -121,6 +121,8 @@ initializePreDomReady = ->
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    vomnibarShow: -> Vomnibar.show()
+    vomnibarClose: -> Vomnibar.close()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
