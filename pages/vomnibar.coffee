@@ -24,6 +24,25 @@ Vomnibar =
       @vomnibarUI.setQuery(options.query)
       @vomnibarUI.update()
 
+  activate: -> @activateWithCompleter {completer:"omni"}
+  activateInNewTab: -> @activateWithCompleter {
+    completer: "omni"
+    selectFirst: false
+    newTab: true
+  }
+  activateTabSelection: -> @activateWithCompleter {
+    completer: "tabs"
+    selectFirst: true
+  }
+  activateBookmarks: -> @activateWithCompleter {
+    completer: "bookmarks"
+    selectFirst: true
+  }
+  activateBookmarksInNewTab: -> @activateWithCompleter {
+    completer: "bookmarks"
+    selectFirst: true
+    newTab: true
+  }
   getUI: -> @vomnibarUI
 
 
