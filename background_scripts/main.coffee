@@ -152,6 +152,7 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
+  insertExitKeys: Commands.getInsertExitKeys()
 
 #
 # Opens the url in the current tab.
@@ -548,7 +549,8 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
           frameId: frameId,
           count: count,
           passCountToFunction: registryEntry.passCountToFunction,
-          completionKeys: generateCompletionKeys(""))
+          completionKeys: generateCompletionKeys("")
+          insertExitKeys: Commands.getInsertExitKeys())
         refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction

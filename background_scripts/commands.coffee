@@ -40,6 +40,8 @@ Commands =
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
+  insertExitKeys: null
+
   # Lower-case the appropriate portions of named keys.
   #
   # A key name is one of three forms exemplified by <c-a> <left> or <c-f12>
@@ -81,10 +83,18 @@ Commands =
         @keyToCommandRegistry = {}
 
   clearKeyMappingsAndSetDefaults: ->
+    @insertExitKeys = null
     @keyToCommandRegistry = {}
 
     for key of defaultKeyMappings
       @mapKeyToCommand(key, defaultKeyMappings[key])
+
+  getInsertExitKeys: ->
+    return @insertExitKeys unless @insertExitKeys == null
+
+    @insertExitKeys = []
+    for keys, {command} of @keyToCommandRegistry
+      @insertExitKeys.push(keys) if command == "exitInsertMode"
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -111,6 +121,7 @@ Commands =
       "goUp",
       "goToRoot",
       "enterInsertMode",
+      "exitInsertMode",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
@@ -126,9 +137,9 @@ Commands =
       "goPrevious",
       "goNext",
       "nextFrame",
-      "Marks.activateCreateMode",
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab",
+      "Marks.activateCreateMode",
       "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -195,6 +206,8 @@ defaultKeyMappings =
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
+  "<esc>": "exitInsertMode"
+  "<c-[>": "exitInsertMode"
 
   "H": "goBack"
   "L": "goForward"
@@ -283,6 +296,7 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+  exitInsertMode: ["Exit insert mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
