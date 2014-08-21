@@ -15,6 +15,9 @@ framesForTab = {}
 # the string.
 namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
+enabledIcon = "icons/browser_action_enabled.png"
+disabledIcon = "icons/browser_action_disabled.png"
+
 # Event handlers
 selectionChangedHandlers = []
 tabLoadedHandlers = {} # tabId -> function()
@@ -209,6 +212,12 @@ filterCompleter = (args, port) ->
 
 getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
 
+iconToggler = (args, port) ->
+  if (args.enabled)
+    chrome.browserAction.setIcon({ path: enabledIcon})
+  else
+    chrome.browserAction.setIcon({ path: disabledIcon})
+
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
     selectionChangedHandlers.pop().call()
@@ -355,14 +364,16 @@ updateOpenTabs = (tab) ->
 # 2. Active tab is enabled and should be enabled -> enable icon
 # 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
 updateActiveState = (tabId) ->
-  enabledIcon = "icons/browser_action_enabled.png"
-  disabledIcon = "icons/browser_action_disabled.png"
   chrome.tabs.get(tabId, (tab) ->
     # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
     chrome.browserAction.setIcon({ path: disabledIcon })
     chrome.tabs.sendMessage(tabId, { name: "getActiveState" }, (response) ->
       isCurrentlyEnabled = (response? && response.enabled)
       shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
+
+      # check if vimium is currently swithced in the tab, and switch souldBeEnabled accordingly
+      isSwitched = (response? && response.switched)
+      shouldBeEnabled = !shouldBeEnabled if (isSwitched)
 
       if (isCurrentlyEnabled)
         if (shouldBeEnabled)
@@ -372,6 +383,10 @@ updateActiveState = (tabId) ->
           chrome.tabs.sendMessage(tabId, { name: "disableVimium" })
       else
         chrome.browserAction.setIcon({ path: disabledIcon })))
+
+# icon toggle handler
+setIcon = (enabled) ->
+  chrome.browserAction.setIcon({ path: enabled ? enabledIcon : disabledIcon })
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
@@ -612,7 +627,8 @@ sendRequestHandlers =
   selectSpecificTab: selectSpecificTab,
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks),
-  gotoMark: Marks.goto.bind(Marks)
+  gotoMark: Marks.goto.bind(Marks),
+  iconToggler: iconToggler
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))

@@ -15,6 +15,7 @@ isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.
 isEnabledForUrl = true
+isSwitched = false
 # The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
@@ -115,7 +116,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl }
+    getActiveState: -> { enabled: isEnabledForUrl, switched: isSwitched }
     disableVimium: disableVimium
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
@@ -138,6 +139,7 @@ initializeWhenEnabled = ->
   document.addEventListener("blur", onBlurCapturePhase, true)
   document.addEventListener("DOMActivate", onDOMActivate, true)
   enterInsertModeIfElementIsFocused()
+  isEnabledForUrl = true
 
 #
 # Used to disable Vimium without needing to reload the page.
@@ -170,6 +172,9 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+
+  # register switch handler independently of vimium being enabled or not
+  document.addEventListener("keydown", onSwitchKeyDown, true)
 
 # This is a little hacky but sometimes the size wasn't available on domReady?
 registerFrameIfSizeAvailable = (is_top) ->
@@ -353,6 +358,23 @@ onKeypress = (event) ->
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+
+#
+# Dedicated handler to control Vimium switch On and Off. It's set up regardless of Vimium being enabled
+# or disabled
+# switches the _isEnabledForUrl_ variable, calls initialize or disable methods and notifies the background
+# app to update the icon.
+# The switch is *temporary*, and the configured enabled or disabled Vimium state is restored on page reload.
+#
+onSwitchKeyDown = (event) ->
+  if (event.metaKey && KeyboardUtils.isEscape(event))
+    isSwitched = !isSwitched
+    if (isEnabledForUrl)
+      disableVimium()
+      chrome.runtime.sendMessage({enabled: false, handler: 'iconToggler'})
+    else
+      initializeWhenEnabled()
+      chrome.runtime.sendMessage({enabled: true, handler: 'iconToggler'})
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
