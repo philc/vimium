@@ -112,7 +112,7 @@ LinkHints =
       HUD.show("Download link URL")
       @linkActivator = (link) ->
         DomUtils.simulateClick(link, {
-          altKey: KeyboardUtils.platform == "Mac",
+          altKey: true,
           ctrlKey: false,
           metaKey: false })
     else # OPEN_IN_CURRENT_TAB
