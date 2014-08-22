@@ -8,14 +8,16 @@ injectContentScriptsIntoOpenTabs = ->
   # All content scripts loaded on every page should go in the same group, assume it is the first
   contentScripts = manifest.content_scripts[0]
   chrome.tabs.query({status: "complete"}, (tabs) ->
-    for tab in tabs
+    tabs.forEach (tab) -> # Use a function to have a seperate `stylesNotInjectedYet` for each tab
       for script in contentScripts.js
         chrome.tabs.executeScript(tab.id, {file: script, allFrames: contentScripts.allFrames})
 
-      for style in contentScripts.css
-        chrome.tabs.insertCSS(tab.id, {file: style, allFrames: contentScripts.allFrames})
+      stylesNotInjectedYet = contentScripts.css.length
 
-      tabUpdated tab.id, {status: "loading"}, tab
+      for style in contentScripts.css
+        chrome.tabs.insertCSS(tab.id, {file: style, allFrames: contentScripts.allFrames}, ->
+          if --stylesNotInjectedYet == 0 # Don't run tabUpdated until all styles have been injected
+            tabUpdated tab.id, {status: "loading"}, tab)
   )
 
 # If this is a new install, the browser may have tabs already open, and so we should inject the content
