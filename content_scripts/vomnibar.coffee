@@ -90,15 +90,19 @@ class VomnibarUI
     if (KeyboardUtils.isEscape(event))
       return "dismiss"
     else if (key == "up" ||
+        (event.shiftKey && event.keyCode == keyCodes.tab) ||
         (event.ctrlKey && (key == "k" || key == "p")))
       return "up"
     else if (key == "down" ||
+        (event.keyCode == keyCodes.tab && !event.shiftKey) ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
     else if (event.keyCode == keyCodes.enter)
       return "enter"
-    else if (event.keyCode == keyCodes.tab)
+    else if (key == "right")
       return "complete"
+    else if (key == "left")
+      return "current"
 
   onKeydown: (event) ->
     action = @actionFromKeyEvent(event)
@@ -138,6 +142,8 @@ class VomnibarUI
         @input.value = window.location
       else
         @input.value = @completions[@selection].url
+    else if (action == "current")
+      @input.value = window.location
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopPropagation()
