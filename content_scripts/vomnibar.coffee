@@ -90,15 +90,15 @@ class VomnibarUI
     if (KeyboardUtils.isEscape(event))
       return "dismiss"
     else if (key == "up" ||
-        (event.shiftKey && event.keyCode == keyCodes.tab) ||
         (event.ctrlKey && (key == "k" || key == "p")))
       return "up"
     else if (key == "down" ||
-        (event.keyCode == keyCodes.tab && !event.shiftKey) ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
     else if (event.keyCode == keyCodes.enter)
       return "enter"
+    else if (event.keyCode == keyCodes.tab)
+      return "complete"
 
   onKeydown: (event) ->
     action = @actionFromKeyEvent(event)
@@ -133,6 +133,11 @@ class VomnibarUI
           # Shift+Enter will open the result in a new tab instead of the current tab.
           @completions[@selection].performAction(openInNewTab)
           @hide()
+    else if (action == "complete")
+      if (@selection == -1)
+        @input.value = window.location
+      else
+        @input.value = @completions[@selection].url
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopPropagation()
