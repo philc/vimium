@@ -132,7 +132,6 @@ initializePreDomReady = ->
 #
 initializeWhenEnabled = ->
   document.addEventListener("keydown", onKeydown, true)
-  document.addEventListener("keypress", onKeypress, true)
   document.addEventListener("keyup", onKeyup, true)
   document.addEventListener("focus", onFocusCapturePhase, true)
   document.addEventListener("blur", onBlurCapturePhase, true)
@@ -145,7 +144,6 @@ initializeWhenEnabled = ->
 #
 disableVimium = ->
   document.removeEventListener("keydown", onKeydown, true)
-  document.removeEventListener("keypress", onKeypress, true)
   document.removeEventListener("keyup", onKeyup, true)
   document.removeEventListener("focus", onFocusCapturePhase, true)
   document.removeEventListener("blur", onBlurCapturePhase, true)
@@ -330,34 +328,41 @@ handledKeydownEvents = []
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
-onKeypress = (event) ->
+handleSingleKeyPress = (event) ->
   return unless handlerStack.bubbleEvent('keypress', event)
 
   keyChar = ""
+  res = false
 
   # Ignore modifier keys by themselves.
   if (event.keyCode > 31)
-    keyChar = String.fromCharCode(event.charCode)
+    keyChar = KeyboardUtils.getKeyChar(event)
 
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return
+      return res
 
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
+        res = true
       else if (!isInsertMode() && !findMode)
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
+          res = true
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+
+  return res
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
 
   keyChar = ""
+  if (handleSingleKeyPress(event))
+    return
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
   # avoid / being interpreted as ?
