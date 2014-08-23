@@ -512,10 +512,10 @@ handleKeyDown = (request, port) ->
     console.log("checking keyQueue: [", keyQueue + key, "]")
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
     console.log("new KeyQueue: " + keyQueue)
-  # Tell the front end whether there are keys in the queue.  If there are, then subsequent keys in passKeys will be
+  # Tell the content script whether there are keys in the queue.  If there are, then subsequent keys in passKeys will be
   # handled by vimium.
   # FIXME: There is a race condition here.  The behaviour depends upon whether this message gets back
-  # to the front end before the next keystroke or not.
+  # to the content script before the next keystroke or not.
   chrome.tabs.sendMessage(port.sender.tab.id,
     name: "currentKeyQueue",
     keyQueue: keyQueue)
