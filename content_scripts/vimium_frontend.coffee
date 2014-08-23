@@ -117,6 +117,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
+    # FIXME: currentKeyQueue(), below, does not respect the frameId.  Should it?
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
     getActiveState: -> { enabled: isEnabledForUrl }
     disableVimium: disableVimium
@@ -329,7 +330,7 @@ extend window,
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
 # TODO: This currently only works for unmodified keys (so not for '<c-a>', or the like).  It's not clear if
 # this is a problem or not.  I don't recall coming across a web page with modifier key bindings.  Such
-# bindings might be too likely to conflict with browser bindings.
+# bindings might be too likely to conflict with browsers' native bindings.
 isPassKey = ( keyChar ) ->
   !keyQueue and passKeys and 0 <= passKeys.indexOf keyChar
 

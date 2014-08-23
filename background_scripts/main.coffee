@@ -76,20 +76,18 @@ isEnabledForUrl = (request) ->
   # Excluded URLs are stored as a series of URL expressions and optional passKeys, separated by newlines.
   # Lines for which the first non-blank character is "#" are comments.
   excludedLines = (line.trim() for line in Settings.get("excludedUrls").split("\n"))
-  excludedUrls = (line for line in excludedLines when line and line.indexOf("#") != 0)
-  for spec in excludedUrls
-    parse = spec.split(/\s+/)
-    if parse.length
-      url = parse[0]
-      # The user can add "*" to the URL which means ".*"
-      regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
-      if request.url.match(regexp)
-        passKeys = parse[1..].join("")
-        if passKeys
-          # Enabled, but only for these keys.
-          return { isEnabledForUrl: true, passKeys: passKeys }
-        # Disabled.
-        return { isEnabledForUrl: false }
+  excludedSpecs = (line.split(/\s+/) for line in excludedLines when line and line.indexOf("#") != 0)
+  for spec in excludedSpecs
+    url = spec[0]
+    # The user can add "*" to the URL which means ".*"
+    regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
+    if request.url.match(regexp)
+      passKeys = spec[1..].join("")
+      if passKeys
+        # Enabled, but not for these keys.
+        return { isEnabledForUrl: true, passKeys: passKeys }
+      # Wholly disabled.
+      return { isEnabledForUrl: false }
   # Enabled (the default).
   { isEnabledForUrl: true }
 
@@ -513,9 +511,11 @@ handleKeyDown = (request, port) ->
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
     console.log("new KeyQueue: " + keyQueue)
   # Tell the content script whether there are keys in the queue.  If there are, then subsequent keys in passKeys will be
-  # handled by vimium.
-  # FIXME: There is a race condition here.  The behaviour depends upon whether this message gets back
-  # to the content script before the next keystroke or not.
+  # handled by vimium. So, if 't' is a passKey, then 'gt' and '99t' will nevertheless be handled by Vimium.
+  # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
+  # back there before or after the next keystroke.
+  # That being said, I suspect there are other similar race conditions here, for example in checkKeyQueue().
+  # Steve (23 Aug, 14).
   chrome.tabs.sendMessage(port.sender.tab.id,
     name: "currentKeyQueue",
     keyQueue: keyQueue)
