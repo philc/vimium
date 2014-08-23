@@ -74,9 +74,9 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 #
 root.isEnabledForUrl = isEnabledForUrl = (request) ->
   # Excluded URLs are stored as a series of URL expressions and optional passKeys, separated by newlines.
-  # Lines for which the first non-blank character is "#" are comments.
+  # Lines for which the first non-blank character is "#" or '"' are comments.
   excludedLines = (line.trim() for line in Settings.get("excludedUrls").split("\n"))
-  excludedSpecs = (line.split(/\s+/) for line in excludedLines when line and line.indexOf("#") != 0)
+  excludedSpecs = (line.split(/\s+/) for line in excludedLines when line and line.indexOf("#") != 0 and line.indexOf('"') != 0)
   for spec in excludedSpecs
     url = spec[0]
     # The user can add "*" to the URL which means ".*"
