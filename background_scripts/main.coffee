@@ -91,33 +91,35 @@ root.isEnabledForUrl = isEnabledForUrl = (request) ->
   # Enabled (the default).
   { isEnabledForUrl: true, passKeys: undefined, matchingUrl: undefined }
 
-# Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
-# Also eliminates duplicates based on same URL/regexp.  Of duplicates, the last is kept.
-# Excluded URL specifications are kept in the same order as they were originally, with the new exclusion at
-# the end.  Passkeys, if any, are simply compied through within spec.
+# Called by the popup UI. Strips leading/trailing whitespace and ignores new empty strings.
 root.addExcludedUrl = (url) ->
   return unless url = url.trim()
 
-  excludedUrls = Settings.get("excludedUrls").split("\n")
-  excludedUrls.push(url)
+  parse = url.split(/\s+/)
+  url = parse[0]
+  passKeys = parse[1..].join(" ")
+  newSpec = (if passKeys then url + " " + passKeys else url)
 
-  # Eliminate duplicates: reverse list, filter out duplicates based only on the URL/regexp, then reverse again
-  # and install the new excludedUrls.  parse[0] is the URL/regexp.
-  seen = {}
+  excludedUrls = Settings.get("excludedUrls").split("\n")
+  excludedUrls.push(newSpec)
+
+  # Update excludedUrls.
+  # Try to keep the list as unchanged as possible: same order, same comments, same blank lines.
+  seenNew = false
   newExcludedUrls = []
-  for spec in excludedUrls.reverse()
+  for spec in excludedUrls
     spec = spec.trim()
     parse = spec.split(/\s+/)
-    if parse.length == 0 or spec.indexOf("#") == 0
-      # Keep comments and empty lines.
-      newExcludedUrls.push(spec)
-    else if !seen[parse[0]]
-      seen[parse[0]] = true
-      newExcludedUrls.push(spec)
-    else
-      console.log "addExcludedUrl: removing " + spec
+    # Keep just one copy of the new exclusion rule.
+    if parse.length and parse[0] == url
+      if !seenNew
+        newExcludedUrls.push(newSpec)
+        seenNew = true
+      continue
+    # And just keep everything else.
+    newExcludedUrls.push(spec)
     
-  Settings.set("excludedUrls", newExcludedUrls.reverse().join("\n"))
+  Settings.set("excludedUrls", newExcludedUrls.join("\n"))
 
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
     (tabs) -> updateActiveState(tabs[0].id))
@@ -528,8 +530,7 @@ handleKeyDown = (request, port) ->
     console.log("checking keyQueue: [", keyQueue + key, "]")
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
     console.log("new KeyQueue: " + keyQueue)
-  # Tell the content script whether there are keys in the queue.  If there are, then subsequent keys in passKeys will be
-  # handled by vimium. So, if 't' is a passKey, then 'gt' and '99t' will nevertheless be handled by Vimium.
+  # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
   # That being said, I suspect there are other similar race conditions here, for example in checkKeyQueue().

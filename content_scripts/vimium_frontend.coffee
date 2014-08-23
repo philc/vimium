@@ -117,10 +117,9 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    # FIXME: currentKeyQueue(), below, does not respect the frameId.  Should it?
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
     getActiveState: -> { enabled: isEnabledForUrl }
     disableVimium: disableVimium
+    currentKeyQueue: (request) -> keyQueue = request.keyQueue
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # in the options page, we will receive requests from both content and background scripts. ignore those
