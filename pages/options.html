@@ -197,15 +197,30 @@
         </tr>
         <tr>
           <td colspan="3">
-              Excluded URLs<br/>
+              Excluded URLs and keys<br/>
               <div class="help">
                 <div class="example">
-                  e.g. http*://mail.google.com/*<br/>
-                  This will disable Vimium on Gmail.<br/><br/>
-                  Enter one URL per line.<br/>
+                  <p>
+                    To disable Vimium on a site, use:<br/>
+                    <tt>http*://mail.google.com/*</tt><br/>
+                    This will <i>wholly disable</i> Vimium on Gmail.<br/><br/>
+                    To use Vimium together with a website's own<br/>
+                    key bindings, use:<br/>
+                    <tt>http*://mail.google.com/* jknpc</tt><br/>
+                    This will <i>enable</i> Vimium on Gmail, but pass<br/>
+                    the five listed keys through to Gmail itself.<br/><br/>
+                    One entry per line.<br/>
+                  </p>
                 </div>
               </div>
-              <textarea id="excludedUrls"></textarea>
+              <!-- Hack: fix a minimum size for the text area (below) so that it is
+                   not too much smaller than its help text (above). -->
+              <!-- FIXME:
+                   This text area should really be broken out into an array
+                   separate inputs.  However, the whole options page really
+                   needs a workover, so I'm leaving it like this, for now
+                   (Steve, 23 Aug, 14). -->
+              <textarea id="excludedUrls" style="min-height:180px"></textarea>
           </td>
         </tr>
         <tbody id='advancedOptions'>

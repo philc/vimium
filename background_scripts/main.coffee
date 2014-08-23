@@ -69,17 +69,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
 getCurrentTabUrl = (request, sender) -> sender.tab.url
 
 #
-# Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL.
+# Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
+# whether any keys should be passed through to the underlying page.
 #
 isEnabledForUrl = (request) ->
-  # excludedUrls are stored as a series of URL expressions separated by newlines.
-  excludedUrls = Settings.get("excludedUrls").split("\n")
-  isEnabled = true
-  for url in excludedUrls
-    # The user can add "*" to the URL which means ".*"
-    regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
-    isEnabled = false if request.url.match(regexp)
-  { isEnabledForUrl: isEnabled }
+  # Excluded URLs are stored as a series of URL expressions and optional passKeys, separated by newlines.
+  # Lines for which the first non-blank character is "#" are comments.
+  excludedLines = (line.trim() for line in Settings.get("excludedUrls").split("\n"))
+  excludedUrls = (line for line in excludedLines when line and line.indexOf("#") != 0)
+  for spec in excludedUrls
+    parse = spec.split(/\s+/)
+    if parse.length
+      url = parse[0]
+      # The user can add "*" to the URL which means ".*"
+      regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
+      if request.url.match(regexp)
+        passKeys = parse[1..].join("")
+        if passKeys
+          # Enabled, but only for these keys.
+          return { isEnabledForUrl: true, passKeys: passKeys }
+        # Disabled.
+        return { isEnabledForUrl: false }
+  # Enabled (the default).
+  { isEnabledForUrl: true }
 
 # Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
 root.addExcludedUrl = (url) ->
@@ -500,6 +512,13 @@ handleKeyDown = (request, port) ->
     console.log("checking keyQueue: [", keyQueue + key, "]")
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
     console.log("new KeyQueue: " + keyQueue)
+  # Tell the front end whether there are keys in the queue.  If there are, then subsequent keys in passKeys will be
+  # handled by vimium.
+  # FIXME: There is a race condition here.  The behaviour depends upon whether this message gets back
+  # to the front end before the next keystroke or not.
+  chrome.tabs.sendMessage(port.sender.tab.id,
+    name: "currentKeyQueue",
+    keyQueue: keyQueue)
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false

@@ -15,6 +15,8 @@ isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.
 isEnabledForUrl = true
+passKeys = null
+keyQueue = null
 # The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
@@ -115,6 +117,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
+    currentKeyQueue: (request) -> keyQueue = request.keyQueue
     getActiveState: -> { enabled: isEnabledForUrl }
     disableVimium: disableVimium
 
@@ -321,6 +324,15 @@ extend window,
 
       false
 
+# Should this keyChar be passed to the underlying page?
+# Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
+# passKey, then 'gt' and '99t' will neverthless be handled by vimium.
+# TODO: This currently only works for unmodified keys (so not for '<c-a>', or the like).  It's not clear if
+# this is a problem or not.  I don't recall coming across a web page with modifier key bindings.  Such
+# bindings might be too likely to conflict with browser bindings.
+isPassKey = ( keyChar ) ->
+  !keyQueue and passKeys and 0 <= passKeys.indexOf keyChar
+
 handledKeydownEvents = []
 
 #
@@ -349,6 +361,9 @@ onKeypress = (event) ->
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
+        # Is this keyChar is to be passed to the underlying page?
+        if (isPassKey keyChar)
+          return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
 
@@ -431,6 +446,9 @@ onKeydown = (event) ->
     else if (KeyboardUtils.isEscape(event))
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
+    else if isPassKey KeyboardUtils.getKeyChar(event)
+      return undefined
+
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
   # back into the search box. As a side effect, this should also prevent overriding by other sites.
@@ -467,6 +485,7 @@ checkIfEnabledForUrl = ->
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
       initializeWhenEnabled()
+      passKeys = response.passKeys
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
