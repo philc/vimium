@@ -72,7 +72,7 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
 # whether any keys should be passed through to the underlying page.
 #
-isEnabledForUrl = (request) ->
+root.isEnabledForUrl = isEnabledForUrl = (request) ->
   # Excluded URLs are stored as a series of URL expressions and optional passKeys, separated by newlines.
   # Lines for which the first non-blank character is "#" are comments.
   excludedLines = (line.trim() for line in Settings.get("excludedUrls").split("\n"))
@@ -85,21 +85,39 @@ isEnabledForUrl = (request) ->
       passKeys = spec[1..].join("")
       if passKeys
         # Enabled, but not for these keys.
-        return { isEnabledForUrl: true, passKeys: passKeys }
+        return { isEnabledForUrl: true, passKeys: passKeys, matchingUrl: url }
       # Wholly disabled.
-      return { isEnabledForUrl: false }
+      return { isEnabledForUrl: false, passKeys: "", matchingUrl: url }
   # Enabled (the default).
-  { isEnabledForUrl: true }
+  { isEnabledForUrl: true, passKeys: undefined, matchingUrl: undefined }
 
 # Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
+# Also eliminates duplicates based on same URL/regexp.  Of duplicates, the last is kept.
+# Excluded URL specifications are kept in the same order as they were originally, with the new exclusion at
+# the end.  Passkeys, if any, are simply compied through within spec.
 root.addExcludedUrl = (url) ->
   return unless url = url.trim()
 
-  excludedUrls = Settings.get("excludedUrls")
-  return if excludedUrls.indexOf(url) >= 0
+  excludedUrls = Settings.get("excludedUrls").split("\n")
+  excludedUrls.push(url)
 
-  excludedUrls += "\n" + url
-  Settings.set("excludedUrls", excludedUrls)
+  # Eliminate duplicates: reverse list, filter out duplicates based only on the URL/regexp, then reverse again
+  # and install the new excludedUrls.  parse[0] is the URL/regexp.
+  seen = {}
+  newExcludedUrls = []
+  for spec in excludedUrls.reverse()
+    spec = spec.trim()
+    parse = spec.split(/\s+/)
+    if parse.length == 0 or spec.indexOf("#") == 0
+      # Keep comments and empty lines.
+      newExcludedUrls.push(spec)
+    else if !seen[parse[0]]
+      seen[parse[0]] = true
+      newExcludedUrls.push(spec)
+    else
+      console.log "addExcludedUrl: removing " + spec
+    
+  Settings.set("excludedUrls", newExcludedUrls.reverse().join("\n"))
 
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
     (tabs) -> updateActiveState(tabs[0].id))
