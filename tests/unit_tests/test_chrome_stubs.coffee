@@ -2,26 +2,55 @@
 #
 # This is a stub for chrome.strorage.sync for testing.
 # It does what chrome.storage.sync should do (roughly), but does so synchronously.
+# It also provides stubs for a number of other chrome APIs.
 #
 
+global.window = {}
+global.localStorage = {}
+
 global.chrome =
-  runtime: {}
+  runtime:
+    getManifest: () ->
+      version: "1.2.3"
+    onConnect:
+      addListener: () -> true
+    onMessage:
+      addListener: () -> true
+
+  tabs:
+    onSelectionChanged:
+      addListener: () -> true
+    onUpdated:
+      addListener: () -> true
+    onAttached:
+      addListener: () -> true
+    onMoved:
+      addListener: () -> true
+    onRemoved:
+      addListener: () -> true
+    onActiveChanged:
+      addListener: () -> true
+    query: () -> true
+
+  windows:
+    onRemoved:
+      addListener: () -> true
+    getAll: () -> true
 
   storage:
-
     # chrome.storage.onChanged
     onChanged:
       addListener: (func) -> @func = func
 
       # Fake a callback from chrome.storage.sync.
       call: (key, value) ->
-        chrome.runtime = { lastError: undefined }
+        chrome.runtime.lastError = undefined
         key_value = {}
         key_value[key] = { newValue: value }
         @func(key_value,'synced storage stub') if @func
 
       callEmpty: (key) ->
-        chrome.runtime = { lastError: undefined }
+        chrome.runtime.lastError = undefined
         if @func
           items = {}
           items[key] = {}
@@ -32,7 +61,7 @@ global.chrome =
       store: {}
 
       set: (items, callback) ->
-        chrome.runtime = { lastError: undefined }
+        chrome.runtime.lastError = undefined
         for own key, value of items
           @store[key] = value
         callback() if callback
@@ -41,7 +70,7 @@ global.chrome =
           global.chrome.storage.onChanged.call(key,value)
 
       get: (keys, callback) ->
-        chrome.runtime = { lastError: undefined }
+        chrome.runtime.lastError = undefined
         if keys == null
           keys = []
           for own key, value of @store
@@ -53,7 +82,7 @@ global.chrome =
         callback items if callback
 
       remove: (key, callback) ->
-        chrome. runtime = { lastError: undefined }
+        chrome.runtime.lastError = undefined
         if key of @store
           delete @store[key]
         callback() if callback
