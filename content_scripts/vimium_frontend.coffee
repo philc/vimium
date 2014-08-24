@@ -125,12 +125,11 @@ initializePreDomReady = ->
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    console.log request.name, request
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler == "registerFrame" or request.handler == "frameFocused"
-    requestHandlers[request.name](request, sender)
+    sendResponse requestHandlers[request.name](request, sender)
     false
 
 # Wrapper to install event listeners.  Syntactic sugar.

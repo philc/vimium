@@ -389,6 +389,7 @@ updateActiveState = (tabId) ->
   partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get tabId, (tab) ->
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
+      console.log response
       if response
         isCurrentlyEnabled = response.enabled
         currentPasskeys = response.passKeys
