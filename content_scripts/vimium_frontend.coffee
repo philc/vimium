@@ -123,12 +123,13 @@ initializePreDomReady = ->
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
-    # in the options page, we will receive requests from both content and background scripts. ignore those
+    # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
+    console.log request.name, request
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
-    # registerFrame requests are delivered here, but there's no handler.
-    return if request.handler == "registerFrame"
+    # These requests are delivered to the options page, but there are no handlers there.
+    return if request.handler == "registerFrame" or request.handler == "frameFocused"
     requestHandlers[request.name](request, sender)
     false
 
