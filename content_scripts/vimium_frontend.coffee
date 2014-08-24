@@ -127,7 +127,7 @@ initializePreDomReady = ->
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
-    sendResponse requestHandlers[request.name](request, sender)
+    sendResponse(if requestHandlers[request.name] then requestHandlers[request.name](request, sender) else undefined)
     # Ensure the sendResponse callback is freed.
     false
 
