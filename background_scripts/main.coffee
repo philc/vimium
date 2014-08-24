@@ -377,37 +377,38 @@ updateOpenTabs = (tab) ->
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
-# Updates the browserAction icon to indicated whether Vimium is enabled or disabled on the current page.
-# Also disables Vimium if it is currently enabled but should be disabled according to the url blacklist.
+setBrowserActionIcon = (tabId,path) ->
+  chrome.browserAction.setIcon({ tabId: tabId, path: path })
+
+# Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
+# Also propagates new enabled/disabled/passkeys state to active window, if necessary.
 # This lets you disable Vimium on a page without needing to reload.
-#
-# Three situations are considered:
-# 1. Active tab is disabled -> disable icon
-# 2. Active tab is enabled and should be enabled -> enable icon
-# 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
 updateActiveState = (tabId) ->
   enabledIcon = "icons/browser_action_enabled.png"
   disabledIcon = "icons/browser_action_disabled.png"
   partialIcon = "icons/browser_action_partial.png"
-  chrome.tabs.get(tabId, (tab) ->
-    # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
-    chrome.browserAction.setIcon({ path: disabledIcon })
-    chrome.tabs.sendMessage(tabId, { name: "getActiveState" }, (response) ->
-      isCurrentlyEnabled = (response? && response.enabled)
-      enabledConfig = isEnabledForUrl({url: tab.url})
-      shouldBeEnabled = enabledConfig.isEnabledForUrl
-      shouldHavePassKeys = enabledConfig.passKeys
-
-      if (isCurrentlyEnabled)
+  chrome.tabs.get tabId, (tab) ->
+    chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
+      if response
+        isCurrentlyEnabled = response.enabled
+        currentPasskeys = response.passKeys
+        # TODO:
+        # isEnabledForUrl is quite expensive to run each time we change tab.  Perhaps memoize it?
+        shouldHaveConfig = isEnabledForUrl({url: tab.url})
+        shouldBeEnabled = shouldHaveConfig.isEnabledForUrl
+        shouldHavePassKeys = shouldHaveConfig.passKeys
         if (shouldBeEnabled and shouldHavePassKeys)
-          chrome.browserAction.setIcon({ path: partialIcon })
+          setBrowserActionIcon(tabId,partialIcon)
         else if (shouldBeEnabled)
-          chrome.browserAction.setIcon({ path: enabledIcon })
+          setBrowserActionIcon(tabId,enabledIcon)
         else
-          chrome.browserAction.setIcon({ path: disabledIcon })
-          chrome.tabs.sendMessage(tabId, { name: "disableVimium" })
+          setBrowserActionIcon(tabId,disabledIcon)
+        # Propagate the new state only if it has changed.
+        if (isCurrentlyEnabled != shouldBeEnabled || currentPasskeys != shouldHavePassKeys)
+          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: shouldBeEnabled, passKeys: shouldHavePassKeys })
       else
-        chrome.browserAction.setIcon({ path: disabledIcon })))
+        # We didn't get a response from the front end, so Vimium isn't running.
+        setBrowserActionIcon(tabId,disabledIcon)
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)

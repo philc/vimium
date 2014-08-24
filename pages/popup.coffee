@@ -4,9 +4,11 @@ onLoad = ->
     # Check if we have an existing exclusing rule for this page.
     isEnabled = chrome.extension.getBackgroundPage().isEnabledForUrl(url: tab.url)
     if isEnabled.matchingUrl
+      console.log isEnabled
       # There is an existing rule for this page.
       pattern = isEnabled.matchingUrl
-      pattern += " " + isEnabled.passKeys if isEnabled.passKeys
+      if isEnabled.passKeys
+        pattern += " " + isEnabled.passKeys
       document.getElementById("popupInput").value = pattern
     else
       # No existing exclusion rule.
