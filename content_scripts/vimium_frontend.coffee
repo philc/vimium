@@ -127,8 +127,9 @@ initializePreDomReady = ->
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
-    sendResponse(if requestHandlers[request.name] then requestHandlers[request.name](request, sender) else undefined)
-    # Ensure the sendResponse callback is freed.
+    # registerFrame requests are delivered here, but there's no handler.
+    return if request.handler == "registerFrame"
+    requestHandlers[request.name](request, sender)
     false
 
 # Wrapper to install event listeners.  Syntactic sugar.
