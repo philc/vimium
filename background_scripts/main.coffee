@@ -91,7 +91,8 @@ root.isEnabledForUrl = isEnabledForUrl = (request) ->
   # Enabled (the default).
   { isEnabledForUrl: true, passKeys: undefined, matchingUrl: undefined }
 
-# Called by the popup UI. Strips leading/trailing whitespace and ignores new empty strings.
+# Called by the popup UI. Strips leading/trailing whitespace and ignores new empty strings.  If an existing
+# exclusion rule has been changed, then the existing rule is updated.  Otherwise, the new rule is added.
 root.addExcludedUrl = (url) ->
   return unless url = url.trim()
 
@@ -387,15 +388,20 @@ updateOpenTabs = (tab) ->
 updateActiveState = (tabId) ->
   enabledIcon = "icons/browser_action_enabled.png"
   disabledIcon = "icons/browser_action_disabled.png"
+  partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get(tabId, (tab) ->
     # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
     chrome.browserAction.setIcon({ path: disabledIcon })
     chrome.tabs.sendMessage(tabId, { name: "getActiveState" }, (response) ->
       isCurrentlyEnabled = (response? && response.enabled)
-      shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
+      enabledConfig = isEnabledForUrl({url: tab.url})
+      shouldBeEnabled = enabledConfig.isEnabledForUrl
+      shouldHavePassKeys = enabledConfig.passKeys
 
       if (isCurrentlyEnabled)
-        if (shouldBeEnabled)
+        if (shouldBeEnabled and shouldHavePassKeys)
+          chrome.browserAction.setIcon({ path: partialIcon })
+        else if (shouldBeEnabled)
           chrome.browserAction.setIcon({ path: enabledIcon })
         else
           chrome.browserAction.setIcon({ path: disabledIcon })
