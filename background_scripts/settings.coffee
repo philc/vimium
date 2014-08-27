@@ -83,7 +83,11 @@ root.Settings = Settings =
       """
     excludedUrls:
       """
+      # Disable Vimium on Gmail:
       http*://mail.google.com/*
+
+      # Use Facebook's own j/k bindings:
+      http*://www.facebook.com/* jk
       """
     # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in
     # most cases the single bracket link will be "prev/next page" and the double bracket link will be

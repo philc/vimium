@@ -69,27 +69,58 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
 getCurrentTabUrl = (request, sender) -> sender.tab.url
 
 #
-# Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL.
+# Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
+# whether any keys should be passed through to the underlying page.
 #
-isEnabledForUrl = (request) ->
-  # excludedUrls are stored as a series of URL expressions separated by newlines.
-  excludedUrls = Settings.get("excludedUrls").split("\n")
-  isEnabled = true
-  for url in excludedUrls
+root.isEnabledForUrl = isEnabledForUrl = (request) ->
+  # Excluded URLs are stored as a series of URL expressions and optional passKeys, separated by newlines.
+  # Lines for which the first non-blank character is "#" or '"' are comments.
+  excludedLines = (line.trim() for line in Settings.get("excludedUrls").split("\n"))
+  excludedSpecs = (line.split(/\s+/) for line in excludedLines when line and line.indexOf("#") != 0 and line.indexOf('"') != 0)
+  for spec in excludedSpecs
+    url = spec[0]
     # The user can add "*" to the URL which means ".*"
     regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
-    isEnabled = false if request.url.match(regexp)
-  { isEnabledForUrl: isEnabled }
+    if request.url.match(regexp)
+      passKeys = spec[1..].join("")
+      if passKeys
+        # Enabled, but not for these keys.
+        return { isEnabledForUrl: true, passKeys: passKeys, matchingUrl: url }
+      # Wholly disabled.
+      return { isEnabledForUrl: false, passKeys: "", matchingUrl: url }
+  # Enabled (the default).
+  { isEnabledForUrl: true, passKeys: undefined, matchingUrl: undefined }
 
-# Called by the popup UI. Strips leading/trailing whitespace and ignores empty strings.
+# Called by the popup UI. Strips leading/trailing whitespace and ignores new empty strings.  If an existing
+# exclusion rule has been changed, then the existing rule is updated.  Otherwise, the new rule is added.
 root.addExcludedUrl = (url) ->
   return unless url = url.trim()
 
-  excludedUrls = Settings.get("excludedUrls")
-  return if excludedUrls.indexOf(url) >= 0
+  parse = url.split(/\s+/)
+  url = parse[0]
+  passKeys = parse[1..].join(" ")
+  newSpec = (if passKeys then url + " " + passKeys else url)
 
-  excludedUrls += "\n" + url
-  Settings.set("excludedUrls", excludedUrls)
+  excludedUrls = Settings.get("excludedUrls").split("\n")
+  excludedUrls.push(newSpec)
+
+  # Update excludedUrls.
+  # Try to keep the list as unchanged as possible: same order, same comments, same blank lines.
+  seenNew = false
+  newExcludedUrls = []
+  for spec in excludedUrls
+    spec = spec.trim()
+    parse = spec.split(/\s+/)
+    # Keep just one copy of the new exclusion rule.
+    if parse.length and parse[0] == url
+      if !seenNew
+        newExcludedUrls.push(newSpec)
+        seenNew = true
+      continue
+    # And just keep everything else.
+    newExcludedUrls.push(spec)
+    
+  Settings.set("excludedUrls", newExcludedUrls.join("\n"))
 
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
     (tabs) -> updateActiveState(tabs[0].id))
@@ -346,32 +377,39 @@ updateOpenTabs = (tab) ->
   # Frames are recreated on refresh
   delete framesForTab[tab.id]
 
-# Updates the browserAction icon to indicated whether Vimium is enabled or disabled on the current page.
-# Also disables Vimium if it is currently enabled but should be disabled according to the url blacklist.
+setBrowserActionIcon = (tabId,path) ->
+  chrome.browserAction.setIcon({ tabId: tabId, path: path })
+
+# Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
+# Also propagates new enabled/disabled/passkeys state to active window, if necessary.
 # This lets you disable Vimium on a page without needing to reload.
-#
-# Three situations are considered:
-# 1. Active tab is disabled -> disable icon
-# 2. Active tab is enabled and should be enabled -> enable icon
-# 3. Active tab is enabled but should be disabled -> disable icon and disable vimium
 updateActiveState = (tabId) ->
   enabledIcon = "icons/browser_action_enabled.png"
   disabledIcon = "icons/browser_action_disabled.png"
-  chrome.tabs.get(tabId, (tab) ->
-    # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
-    chrome.browserAction.setIcon({ path: disabledIcon })
-    chrome.tabs.sendMessage(tabId, { name: "getActiveState" }, (response) ->
-      isCurrentlyEnabled = (response? && response.enabled)
-      shouldBeEnabled = isEnabledForUrl({url: tab.url}).isEnabledForUrl
-
-      if (isCurrentlyEnabled)
-        if (shouldBeEnabled)
-          chrome.browserAction.setIcon({ path: enabledIcon })
+  partialIcon = "icons/browser_action_partial.png"
+  chrome.tabs.get tabId, (tab) ->
+    chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
+      console.log response
+      if response
+        isCurrentlyEnabled = response.enabled
+        currentPasskeys = response.passKeys
+        # TODO:
+        # isEnabledForUrl is quite expensive to run each time we change tab.  Perhaps memoize it?
+        shouldHaveConfig = isEnabledForUrl({url: tab.url})
+        shouldBeEnabled = shouldHaveConfig.isEnabledForUrl
+        shouldHavePassKeys = shouldHaveConfig.passKeys
+        if (shouldBeEnabled and shouldHavePassKeys)
+          setBrowserActionIcon(tabId,partialIcon)
+        else if (shouldBeEnabled)
+          setBrowserActionIcon(tabId,enabledIcon)
         else
-          chrome.browserAction.setIcon({ path: disabledIcon })
-          chrome.tabs.sendMessage(tabId, { name: "disableVimium" })
+          setBrowserActionIcon(tabId,disabledIcon)
+        # Propagate the new state only if it has changed.
+        if (isCurrentlyEnabled != shouldBeEnabled || currentPasskeys != shouldHavePassKeys)
+          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: shouldBeEnabled, passKeys: shouldHavePassKeys })
       else
-        chrome.browserAction.setIcon({ path: disabledIcon })))
+        # We didn't get a response from the front end, so Vimium isn't running.
+        setBrowserActionIcon(tabId,disabledIcon)
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
@@ -500,6 +538,14 @@ handleKeyDown = (request, port) ->
     console.log("checking keyQueue: [", keyQueue + key, "]")
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
     console.log("new KeyQueue: " + keyQueue)
+  # Tell the content script whether there are keys in the queue.
+  # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
+  # back there before or after the next keystroke.
+  # That being said, I suspect there are other similar race conditions here, for example in checkKeyQueue().
+  # Steve (23 Aug, 14).
+  chrome.tabs.sendMessage(port.sender.tab.id,
+    name: "currentKeyQueue",
+    keyQueue: keyQueue)
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false
