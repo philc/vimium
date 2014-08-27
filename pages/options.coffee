@@ -79,6 +79,8 @@ populateOptions = ->
   onDataLoaded()
 
 restoreToDefaults = ->
+  return unless confirm "Are you sure you want to return Vimium's settings to their defaults?"
+
   for field in editableFields
     val = bgSettings.defaults[field] or ""
     setFieldValue $(field), val
