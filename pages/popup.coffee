@@ -8,6 +8,7 @@ onLoad = ->
       document.getElementById("popupPattern").value  = isEnabled.rule.pattern
       document.getElementById("popupPassKeys").value = isEnabled.rule.passKeys
       document.getElementById("popupRemove").disabled = false
+      document.getElementById("popupExclude").value = "Update Rule"
     else
       # No existing exclusion rule.
       # The common use case is to disable Vimium at the domain level.
@@ -15,6 +16,7 @@ onLoad = ->
       domain = tab.url.match(/[^\/]*\/\/[^\/]*\//) or tab.url
       document.getElementById("popupPattern").value = domain + "*"
       document.getElementById("popupRemove").disabled = true
+      document.getElementById("popupExclude").value = "Add Rule"
 
 confirmTimer = null
 

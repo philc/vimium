@@ -2,11 +2,17 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = [ "scrollStepSize", "exclusionRules", "linkHintCharacters", "linkHintNumbers",
+editableFields = [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
   "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "searchEngines"]
 
-canBeEmptyFields = ["exclusionRules", "keyMappings", "userDefinedLinkHintCss", "searchEngines"]
+canBeEmptyFields = ["keyMappings", "userDefinedLinkHintCss", "searchEngines"]
+
+# Settings which handle their own presentation style and updating.
+# The corresponding object returned from bgSettings.get() must have a method addSelfToOptions() which builds the DOM representation of
+# the setting for the options page, and returns suitable callbacks.
+selfHandlingFields = ["exclusionRules"]
+selfHandlingCallbacks = {}
 
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
@@ -64,14 +70,14 @@ saveOptions = ->
       bgSettings.clear fieldName
       fieldValue = bgSettings.get(fieldName)
     else
-      switch fieldName
-        when "exclusionRules"
-          bgSettings.get("exclusionRules").updateFromOptions fieldValue
-        else
-          bgSettings.set fieldName, fieldValue
+      bgSettings.set fieldName, fieldValue
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
     bgSettings.performPostUpdateHook fieldName, fieldValue
+ 
+  # Self-handling options know how to save themselves.
+  for field in selfHandlingFields
+    selfHandlingCallbacks[field].saveOption($(field))
 
   $("saveOptions").disabled = true
 
@@ -80,12 +86,16 @@ populateOptions = ->
   for field in editableFields
     val = bgSettings.get(field) or ""
     setFieldValue $(field), val
+  for field in selfHandlingFields
+    selfHandlingCallbacks[field] = bgSettings.get(field).addSelfToOptions($(field),enableSaveButton)
   onDataLoaded()
 
 restoreToDefaults = ->
   for field in editableFields
     val = bgSettings.defaults[field] or ""
     setFieldValue $(field), val
+  for field in selfHandlingFields
+    selfHandlingCallbacks[field].restoreToDefault($(field))
   onDataLoaded()
   enableSaveButton()
 

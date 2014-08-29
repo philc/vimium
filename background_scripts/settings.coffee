@@ -87,19 +87,11 @@ root.Settings = Settings =
       div > .vimiumHintMarker > .matchingCharacter {
       }
       """
-    # Legacy definition.
-    # NOTE (smblott): We need to keep this.  The migration code for exclusionRules (see ../lib/exclusions.coffee)
-    # uses this settings.  And if the user hasn't changed the setting, then this default value needs to be available.
-    excludedUrls:
-      """
-      # Disable Vimium on Gmail:
-      http*://mail.google.com/*
-      """
     # Default exclusion rules.
     exclusionRules:
       [
-        # Disable Vimium on Google Calendar:
-        new ExclusionRule("http*://www.google.com/calendar/*"),
+        # Disable Vimium on Google Reader:
+        new ExclusionRule("http*://www.google.com/reader/*")
         # Use Gmail's own j/k bindings:
         new ExclusionRule("http*://mail.google.com/*","jk")
       ]

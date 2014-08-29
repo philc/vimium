@@ -77,7 +77,7 @@ root.isEnabledForUrl = isEnabledForUrl = (request) ->
   rule = exclusions.get(request.url)
   return { rule: rule, isEnabledForUrl: true,  passKeys: rule.passKeys } if rule and rule.passKeys
   return { rule: rule, isEnabledForUrl: false, passKeys: "" } if rule
-  return { rule: rule, isEnabledForUrl: true }
+  return { rule: rule, isEnabledForUrl: true,  passKeys: "" }
 
 # Called by the popup UI.  If an existing exclusion rule has been changed, then the existing rule is updated.
 # Otherwise, the new rule is added.

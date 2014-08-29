@@ -1,9 +1,8 @@
 root = exports ? window
 
-# An ExclusionRule represents a single exclusion rule.  Each such exclusion rule is composed of a pattern
-# (against which URLs are matched), and a set keys which should be passed through to be handled by the
-# underlying web page.  Such "passKeys" are represented as a sting of characters.. If passKeys is falsy (the
-# empty string), then Vimium is wholly disabled.
+# An ExclusionRule represents a single exclusion rule, composed of a pattern (against which URLs are matched),
+# and a set keys which should be passed through to the underlying web page.  Such "passKeys" are represented
+# as strings of characters. If passKeys is falsy (the empty string), then Vimium is wholly disabled.
 class root.ExclusionRule
 
   constructor: (pattern,passKeys="") ->
@@ -20,7 +19,6 @@ class root.ExclusionRule
   getPassKeys: -> @passKeys
 
   # Static method.
-  # Only used in content scripts.  But defined here to keep all of the exclusion logic together.
   # TODO (smblott): This currently only works for unmodified keys (so not for '<c-a>', or the like).
   @isPassKey: (passKeys,keyChar) ->
     passKeys and 0 <= passKeys.indexOf keyChar
@@ -35,7 +33,46 @@ class root.ExclusionRule
     return null if parse[0].indexOf("#") == 0 or parse[0].indexOf('"') == 0
     return new ExclusionRule(parse[0],parse[1..].join(""))
 
-  # Return the flat, legacy representation of this rule.
-  toString: ->
-    if @passKeys then @pattern + " " + @passKeys else @pattern
+  #
+  # DOM handling for the options page...
+  #
+  buildInputContainer: (enableSaveButton,value,placeholder,cls) ->
+    input = document.createElement("input")
+    input.setAttribute("placeholder",placeholder)
+    input.type = "text"
+    input.value = value
+    input.className = cls
+    input.addEventListener "keyup", enableSaveButton, false
+    input.addEventListener "change", enableSaveButton, false
+    container = document.createElement("td")
+    container.appendChild(input)
+    container
+
+  buildRuleRow: (enableSaveButton) ->
+    pattern = @buildInputContainer(enableSaveButton,@pattern,"Pattern","pattern")
+    passKeys = @buildInputContainer(enableSaveButton,@passKeys,"Disabled","passKeys")
+    row = document.createElement("tr")
+    remove = document.createElement("input")
+    remove.type = "button"
+    remove.value = "\u2716" # A cross.
+    remove.className = "exclusionRemoveButton"
+    remove.addEventListener "click", ->
+      row.parentNode.removeChild(row)
+      enableSaveButton()
+    row.appendChild(pattern)
+    row.appendChild(passKeys)
+    row.appendChild(remove)
+    row.className = "exclusionRow"
+    # NOTE: Since the order of exclusions matters, it would be nice to have "Move Up" and "Move Down" buttons,
+    # too.  But the options page is getting pretty cramped already.
+    row
+
+  # Static method.
+  # Returns new ExclusionRule. Or null, if the pattern is empty.
+  @mkRuleFromRow: (element) ->
+    patternElement = element.firstChild
+    passKeysElement = patternElement.nextSibling
+    pattern = patternElement.firstChild.value
+    passKeys = passKeysElement.firstChild.value
+    if patternElement then new ExclusionRule(pattern,passKeys) else null
 

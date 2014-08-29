@@ -6,6 +6,7 @@
     <script src="../lib/dom_utils.js"></script>
     <script src="../lib/handler_stack.js"></script>
     <script src="../lib/clipboard.js"></script>
+    <script src="../lib/exclusion_rule.js"></script>
     <script src="../content_scripts/link_hints.js"></script>
     <script src="../content_scripts/vomnibar.js"></script>
     <script src="../content_scripts/scroller.js"></script>
@@ -109,11 +110,6 @@
         width: 40px;
         margin-right: 3px;
       }
-      textarea#exclusionRules {
-        margin-top: 5px;
-        width: 100%;
-        min-height: 100px;
-      }
       textarea#userDefinedLinkHintCss {
         width: 100%;;
         min-height: 100px;
@@ -178,6 +174,30 @@
         padding: 15px 0;
         border-top: 1px solid #eee;
       }
+      /* Ids and classes for rendering exclusionRules */
+      #exclusionScroll {
+        overflow: scroll;
+        overflow-x: hidden;
+        height: 225px;
+        border: 1px solid #bfbfbf;
+        border-radius: 2px;
+        color: #444;
+      }
+      .exclusionRemoveButton {
+        /* cursor: pointer; */
+        /* border: none; */
+        /* background: none; */
+      }
+      input.pattern, input.passKeys {
+        font-family: Consolas, "Liberation Mono", Courier, monospace;
+        font-size: 14px;
+      }
+      .pattern {
+        width: 250px;
+      }
+      .passKeys {
+        width: 120px;
+      }
     </style>
   <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
@@ -196,30 +216,21 @@
           </td>
         </tr>
         <tr>
-          <td colspan="3">
-              Excluded URLs and keys<br/>
-              <div class="help">
-                <div class="example">
-                  <p>
-                    To disable Vimium on a site, use:<br/>
-                    <tt>http*://mail.google.com/*</tt><br/><br/>
-                    To use Vimium together with a website's own<br/>
-                    key bindings, use:<br/>
-                    <tt>http*://mail.google.com/* jknpc</tt><br/>
-                    This <i>enables</i> Vimium on Gmail, but passes<br/>
-                    the five listed keys through to Gmail itself.<br/><br/>
-                    One entry per line.<br/>
-                  </p>
-                </div>
+          <td>Excluded URLs<br/>and keys</td>
+          <td>
+            <div class="help">
+              <div class="example">
+                <p>
+                   The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the symbox "*" matches any zero or more characters.
+                </p>
+                <p>
+                   The right column contains keys which Vimium would would normally handle, but should instead be passed through to the underlying web page (for pages matching the corresponding pattern).  If empty, then Vimium is wholly disabled.
+                </p>
               </div>
-              <!-- Hack: fix a minimum size for the text area (below) so that it is
-                   not too much smaller than its help text (above). -->
-              <!-- FIXME:
-                   This text area should really be broken out into an array
-                   of separate inputs.  However, the whole options page really
-                   needs a workover, so I'm leaving it like this, for now
-                   (Steve, 23 Aug, 14). -->
-              <textarea id="exclusionRules" style="min-height:180px"></textarea>
+            </div>
+            <div id="exclusionScroll">
+               <table id="exclusionRules"></table>
+            </div>
           </td>
         </tr>
         <tbody id='advancedOptions'>

@@ -146,7 +146,7 @@ installListener = (event, callback) -> document.addEventListener(event, callback
 installedListeners = false
 initializeWhenEnabled = (newPassKeys) ->
   isEnabledForUrl = true
-  passKeys = passKeys if typeof(newPassKeys) != 'undefined'
+  passKeys = newPassKeys
   if (!installedListeners)
     installListener "keydown", (event) -> if isEnabledForUrl then onKeydown(event) else true
     installListener "keypress", (event) -> if isEnabledForUrl then onKeypress(event) else true
