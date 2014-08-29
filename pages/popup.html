@@ -6,17 +6,23 @@
         padding: 0px;
       }
 
-      #vimiumPopup { width: 500px; }
+      #vimiumPopup { width: 400px; }
 
       #excludeControls {
         padding: 10px;
       }
 
-      #popupInput {
+      #popupPattern {
         width: 330px;
+        margin: 5px;
       }
 
-      #excludeConfirm {
+      #popupPassKeys {
+        width: 330px;
+        margin: 5px;
+      }
+
+      #confirmationMessage {
         display: inline-block;
         width: 18px;
         height: 13px;
@@ -24,7 +30,8 @@
         display: none;
       }
 
-      #popupButton { margin-left: 10px; }
+      #popupRemove { margin: 5px; }
+      #popupExclude { margin: 5px; }
 
       #popupMenu ul {
         list-style: none;
@@ -52,9 +59,11 @@
   <body>
     <div id="vimiumPopup">
       <div id="excludeControls">
-        <input id="popupInput" type="text" />
-        <input id="popupButton" type="button" value="Exclude URL" />
-        <span id="excludeConfirm">Saved.</span>
+        <input id="popupPattern" placeholder="Pattern against which to match URLs..." type="text" /><br/>
+        <input id="popupPassKeys" placeholder="Only exclude these keys..." type="text" /><br/>
+        <input id="popupRemove" type="button" value="Remove Rule" />
+        <input id="popupExclude" type="button" value="Add or Update Rule" />
+        <span id="confirmationMessage">Text is added in popup.coffee.</span>
       </div>
 
       <div id="popupMenu">

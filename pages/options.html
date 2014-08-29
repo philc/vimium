@@ -109,7 +109,7 @@
         width: 40px;
         margin-right: 3px;
       }
-      textarea#excludedUrls {
+      textarea#exclusionRules {
         margin-top: 5px;
         width: 100%;
         min-height: 100px;
@@ -202,12 +202,11 @@
                 <div class="example">
                   <p>
                     To disable Vimium on a site, use:<br/>
-                    <tt>http*://mail.google.com/*</tt><br/>
-                    This will <i>wholly disable</i> Vimium on Gmail.<br/><br/>
+                    <tt>http*://mail.google.com/*</tt><br/><br/>
                     To use Vimium together with a website's own<br/>
                     key bindings, use:<br/>
                     <tt>http*://mail.google.com/* jknpc</tt><br/>
-                    This will <i>enable</i> Vimium on Gmail, but pass<br/>
+                    This <i>enables</i> Vimium on Gmail, but passes<br/>
                     the five listed keys through to Gmail itself.<br/><br/>
                     One entry per line.<br/>
                   </p>
@@ -220,7 +219,7 @@
                    of separate inputs.  However, the whole options page really
                    needs a workover, so I'm leaving it like this, for now
                    (Steve, 23 Aug, 14). -->
-              <textarea id="excludedUrls" style="min-height:180px"></textarea>
+              <textarea id="exclusionRules" style="min-height:180px"></textarea>
           </td>
         </tr>
         <tbody id='advancedOptions'>

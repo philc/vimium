@@ -2,11 +2,11 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
+editableFields = [ "scrollStepSize", "exclusionRules", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
   "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "searchEngines"]
 
-canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss", "searchEngines"]
+canBeEmptyFields = ["exclusionRules", "keyMappings", "userDefinedLinkHintCss", "searchEngines"]
 
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
@@ -64,7 +64,11 @@ saveOptions = ->
       bgSettings.clear fieldName
       fieldValue = bgSettings.get(fieldName)
     else
-      bgSettings.set fieldName, fieldValue
+      switch fieldName
+        when "exclusionRules"
+          bgSettings.get("exclusionRules").updateFromOptions fieldValue
+        else
+          bgSettings.set fieldName, fieldValue
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
     bgSettings.performPostUpdateHook fieldName, fieldValue
