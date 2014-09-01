@@ -8,11 +8,10 @@ class root.ExclusionRule
   constructor: (pattern,passKeys="") ->
     @pattern = pattern.trim()   # type string
     @passKeys = passKeys.trim() # type string
-    @regexp = null              # type RegExp
+    # The user can add "*" to the URL which means ".*".
+    @regexp = new RegExp("^" + @pattern.replace(/\*/g, ".*") + "$")
 
   matchUrl: (url) ->
-    # The user can add "*" to the URL which means ".*".
-    @regexp = new RegExp("^" + @pattern.replace(/\*/g, ".*") + "$") unless @regexp
     return url.match(@regexp)
 
   getPattern: -> @pattern
