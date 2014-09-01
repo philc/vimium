@@ -28,10 +28,11 @@ class root.ExclusionRule
   # Return either a new ExclusionRule or null (if rule is empty, or a comment).
   @parseLegacy: (rule) ->
     rule = rule.trim()
-    return null if rule.length == 0
-    parse = rule.split(/\s+/)
-    return null if parse[0].indexOf("#") == 0 or parse[0].indexOf('"') == 0
-    return new ExclusionRule(parse[0],parse[1..].join(""))
+    if rule
+      parse = rule.split(/\s+/)
+      if parse[0].indexOf("#") != 0 and parse[0].indexOf('"') != 0
+        return new ExclusionRule(parse[0],parse[1..].join(""))
+    return null
 
   #
   # DOM handling for the options page...
