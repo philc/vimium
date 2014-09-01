@@ -4,8 +4,14 @@
 
 root = exports ? window
 root.Settings = Settings =
+  # Some settings involve non-JSON objects which cannot be stored in localStorage (e.g. exclusionRules).
+  # Hooks can be added to reconstruct the JavaScript objects as they are fetched.
+  readHooks: {}
+  addReadHook: (key,hook) -> @readHooks[key] = hook
+
   get: (key) ->
-    if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
+    value = (if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key])
+    if @readHooks[key] then @readHooks[key](value) else value
 
   set: (key, value) ->
     # Don't store the value if it is equal to the default, so we can change the defaults in the future
@@ -81,14 +87,15 @@ root.Settings = Settings =
       div > .vimiumHintMarker > .matchingCharacter {
       }
       """
-    excludedUrls:
-      """
-      # Disable Vimium on Gmail:
-      http*://mail.google.com/*
+    # Default exclusion rules.
+    exclusionRules:
+      [
+        # Disable Vimium on Google Reader:
+        new ExclusionRule("http*://www.google.com/reader/*")
+        # Use Gmail's own j/k bindings:
+        new ExclusionRule("http*://mail.google.com/*","jk")
+      ]
 
-      # Use Facebook's own j/k bindings:
-      http*://www.facebook.com/* jk
-      """
     # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in
     # most cases the single bracket link will be "prev/next page" and the double bracket link will be
     # "first/last page", so we put the single bracket first in the pattern string so that it gets searched
