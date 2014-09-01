@@ -2,11 +2,17 @@ $ = (id) -> document.getElementById id
 
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
+editableFields = [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers",
   "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
   "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "searchEngines"]
 
-canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss", "searchEngines"]
+canBeEmptyFields = ["keyMappings", "userDefinedLinkHintCss", "searchEngines"]
+
+# Settings which handle their own DOM and callbacks for the options page.
+# See populateOption in ../background_scripts/exclusions.coffee for an example.
+selfHandlingFields =
+  exclusionRules: (args...) -> chrome.extension.getBackgroundPage().Exclusions.populateOption(args...)
+selfHandlingCallbacks = {}
 
 document.addEventListener "DOMContentLoaded", ->
   populateOptions()
@@ -68,6 +74,10 @@ saveOptions = ->
     $(fieldName).value = fieldValue
     $(fieldName).setAttribute "savedValue", fieldValue
     bgSettings.performPostUpdateHook fieldName, fieldValue
+ 
+  # Self-handling options save themselves.
+  for field of selfHandlingFields
+    selfHandlingCallbacks[field].saveOption() if selfHandlingCallbacks[field].saveOption
 
   $("saveOptions").disabled = true
 
@@ -76,14 +86,17 @@ populateOptions = ->
   for field in editableFields
     val = bgSettings.get(field) or ""
     setFieldValue $(field), val
-  onDataLoaded()
+  # Self-handling options build their own DOM, and provide callbacks for saveOptions and restoreToDefaults.
+  for field of selfHandlingFields
+    selfHandlingCallbacks[field] = selfHandlingFields[field]($(field),enableSaveButton)
 
 restoreToDefaults = ->
-  return unless confirm "Are you sure you want to return Vimium's settings to their defaults?"
-
   for field in editableFields
     val = bgSettings.defaults[field] or ""
     setFieldValue $(field), val
+  # Self-handling options restore their own defaults.
+  for field of selfHandlingFields
+    selfHandlingCallbacks[field].restoreToDefault() if selfHandlingCallbacks[field].restoreToDefault
   onDataLoaded()
   enableSaveButton()
 

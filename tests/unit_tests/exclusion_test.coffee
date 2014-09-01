@@ -15,27 +15,28 @@ root.Marks =
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
 extend(global,require "../../background_scripts/sync.js")
+extend(global, require "../../lib/exclusion_rule.js")
 extend(global,require "../../background_scripts/settings.js")
 Sync.init()
+extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
 
 # These tests cover only the most basic aspects of excluded URLs and passKeys.
 #
 context "Excluded URLs and pass keys",
-  setup ->
-    Settings.set 'excludedUrls', 'http://mail.google.com/*\nhttp://www.facebook.com/* jk'
+
+  # These tests have no setup, they use the default values from settings.coffee.
 
   should "be disabled for excluded sites", ->
-    rule = isEnabledForUrl({ url: 'http://mail.google.com/u/0/inbox' })
+    rule = isEnabledForUrl({ url: 'http://www.google.com/calendar/page' })
     assert.isFalse rule.isEnableForUrl
-    assert.isTrue rule.matchingUrl
+    assert.isFalse rule.passKeys
 
   should "be enabled, but with pass keys", ->
-    rule = isEnabledForUrl({ url: 'http://www.facebook.com/pages' })
+    rule = isEnabledForUrl({ url: 'https://mail.google.com/mail/u/0/#inbox' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal rule.passKeys, 'jk'
-    assert.isTrue rule.matchingUrl
 
   should "be enabled", ->
     rule = isEnabledForUrl({ url: 'http://www.twitter.com/pages' })
@@ -45,27 +46,25 @@ context "Excluded URLs and pass keys",
   should "add a new excluded URL", ->
     rule = isEnabledForUrl({ url: 'http://www.example.com/page' })
     assert.isTrue rule.isEnabledForUrl
-    addExcludedUrl("http://www.example.com*")
+    addExclusionRule("http://www.example.com*")
     rule = isEnabledForUrl({ url: 'http://www.example.com/page' })
     assert.isFalse rule.isEnabledForUrl
     assert.isFalse rule.passKeys
-    assert.isTrue rule.matchingUrl
 
   should "add a new excluded URL with passkeys", ->
-    rule = isEnabledForUrl({ url: 'http://www.example.com/page' })
+    rule = isEnabledForUrl({ url: 'http://www.anotherexample.com/page' })
     assert.isTrue rule.isEnabledForUrl
-    addExcludedUrl("http://www.example.com/* jk")
-    rule = isEnabledForUrl({ url: 'http://www.example.com/page' })
+    addExclusionRule("http://www.anotherexample.com/*","jk")
+    rule = isEnabledForUrl({ url: 'http://www.anotherexample.com/page' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal rule.passKeys, 'jk'
-    assert.isTrue rule.matchingUrl
 
   should "update an existing excluded URL with passkeys", ->
-    rule = isEnabledForUrl({ url: 'http://www.facebook.com/page' })
+    rule = isEnabledForUrl({ url: 'http://mail.google.com/page' })
     assert.isTrue rule.isEnabledForUrl
-    addExcludedUrl("http://www.facebook.com/* jknp")
-    rule = isEnabledForUrl({ url: 'http://www.facebook.com/page' })
+    assert.equal rule.passKeys, 'jk'
+    addExclusionRule("http*://mail.google.com/*","jknp")
+    rule = isEnabledForUrl({ url: 'http://mail.google.com/page' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal rule.passKeys, 'jknp'
-    assert.isTrue rule.matchingUrl
 

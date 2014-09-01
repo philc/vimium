@@ -12,7 +12,9 @@
       "background_scripts/commands.js",
       "lib/clipboard.js",
       "background_scripts/sync.js",
+      "lib/exclusion_rule.js",
       "background_scripts/settings.js",
+      "background_scripts/exclusions.js",
       "background_scripts/completion.js",
       "background_scripts/marks.js",
       "background_scripts/main.js"
@@ -35,6 +37,7 @@
              "lib/dom_utils.js",
              "lib/handler_stack.js",
              "lib/clipboard.js",
+             "lib/exclusion_rule.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",

@@ -73,57 +73,25 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 # whether any keys should be passed through to the underlying page.
 #
 root.isEnabledForUrl = isEnabledForUrl = (request) ->
-  # Excluded URLs are stored as a series of URL expressions and optional passKeys, separated by newlines.
-  # Lines for which the first non-blank character is "#" or '"' are comments.
-  excludedLines = (line.trim() for line in Settings.get("excludedUrls").split("\n"))
-  excludedSpecs = (line.split(/\s+/) for line in excludedLines when line and line.indexOf("#") != 0 and line.indexOf('"') != 0)
-  for spec in excludedSpecs
-    url = spec[0]
-    # The user can add "*" to the URL which means ".*"
-    regexp = new RegExp("^" + url.replace(/\*/g, ".*") + "$")
-    if request.url.match(regexp)
-      passKeys = spec[1..].join("")
-      if passKeys
-        # Enabled, but not for these keys.
-        return { isEnabledForUrl: true, passKeys: passKeys, matchingUrl: url }
-      # Wholly disabled.
-      return { isEnabledForUrl: false, passKeys: "", matchingUrl: url }
-  # Enabled (the default).
-  { isEnabledForUrl: true, passKeys: undefined, matchingUrl: undefined }
+  rule = Exclusions.getRule(request.url)
+  return { rule: rule, isEnabledForUrl: true,  passKeys: rule.passKeys } if rule and rule.passKeys
+  return { rule: rule, isEnabledForUrl: false, passKeys: "" } if rule
+  return { rule: rule, isEnabledForUrl: true,  passKeys: "" }
 
-# Called by the popup UI. Strips leading/trailing whitespace and ignores new empty strings.  If an existing
-# exclusion rule has been changed, then the existing rule is updated.  Otherwise, the new rule is added.
-root.addExcludedUrl = (url) ->
-  return unless url = url.trim()
+# Called by the popup UI.  If an existing exclusion rule has been changed, then the existing rule is updated.
+# Otherwise, the new rule is added.
+root.addExclusionRule = (pattern,passKeys) ->
+  if pattern = pattern.trim()
+    Exclusions.updateOrAdd({ pattern: pattern, passKeys: passKeys })
+    chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
+      (tabs) -> updateActiveState(tabs[0].id))
 
-  parse = url.split(/\s+/)
-  url = parse[0]
-  passKeys = parse[1..].join(" ")
-  newSpec = (if passKeys then url + " " + passKeys else url)
-
-  excludedUrls = Settings.get("excludedUrls").split("\n")
-  excludedUrls.push(newSpec)
-
-  # Update excludedUrls.
-  # Try to keep the list as unchanged as possible: same order, same comments, same blank lines.
-  seenNew = false
-  newExcludedUrls = []
-  for spec in excludedUrls
-    spec = spec.trim()
-    parse = spec.split(/\s+/)
-    # Keep just one copy of the new exclusion rule.
-    if parse.length and parse[0] == url
-      if !seenNew
-        newExcludedUrls.push(newSpec)
-        seenNew = true
-      continue
-    # And just keep everything else.
-    newExcludedUrls.push(spec)
-    
-  Settings.set("excludedUrls", newExcludedUrls.join("\n"))
-
-  chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
-    (tabs) -> updateActiveState(tabs[0].id))
+# Called by the popup UI.  Remove all existing exclusion rules with this pattern.
+root.removeExclusionRule = (pattern) ->
+  if pattern = pattern.trim()
+    Exclusions.remove(pattern)
+    chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
+      (tabs) -> updateActiveState(tabs[0].id))
 
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
@@ -389,24 +357,21 @@ updateActiveState = (tabId) ->
   partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get tabId, (tab) ->
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
-      console.log response
       if response
         isCurrentlyEnabled = response.enabled
         currentPasskeys = response.passKeys
-        # TODO:
-        # isEnabledForUrl is quite expensive to run each time we change tab.  Perhaps memoize it?
-        shouldHaveConfig = isEnabledForUrl({url: tab.url})
-        shouldBeEnabled = shouldHaveConfig.isEnabledForUrl
-        shouldHavePassKeys = shouldHaveConfig.passKeys
-        if (shouldBeEnabled and shouldHavePassKeys)
+        config = isEnabledForUrl({url: tab.url})
+        enabled = config.isEnabledForUrl
+        passKeys = config.passKeys
+        if (enabled and passKeys)
           setBrowserActionIcon(tabId,partialIcon)
-        else if (shouldBeEnabled)
+        else if (enabled)
           setBrowserActionIcon(tabId,enabledIcon)
         else
           setBrowserActionIcon(tabId,disabledIcon)
         # Propagate the new state only if it has changed.
-        if (isCurrentlyEnabled != shouldBeEnabled || currentPasskeys != shouldHavePassKeys)
-          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: shouldBeEnabled, passKeys: shouldHavePassKeys })
+        if (isCurrentlyEnabled != enabled || currentPasskeys != passKeys)
+          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys })
       else
         # We didn't get a response from the front end, so Vimium isn't running.
         setBrowserActionIcon(tabId,disabledIcon)
