@@ -255,8 +255,8 @@ commandDescriptions =
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
-  closeTabsToLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
-  closeTabsToRight: ["Close tabs on the right", {background: true, noRepeat: true}]
+  closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
+  closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]
   closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
