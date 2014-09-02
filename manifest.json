@@ -37,7 +37,6 @@
              "lib/dom_utils.js",
              "lib/handler_stack.js",
              "lib/clipboard.js",
-             "lib/exclusion_rule.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",

@@ -89,6 +89,7 @@ populateOptions = ->
   # Self-handling options build their own DOM, and provide callbacks for saveOptions and restoreToDefaults.
   for field of selfHandlingFields
     selfHandlingCallbacks[field] = selfHandlingFields[field]($(field),enableSaveButton)
+  onDataLoaded()
 
 restoreToDefaults = ->
   return unless confirm "Are you sure you want to return Vimium's settings to their defaults?"

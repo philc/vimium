@@ -7,13 +7,12 @@ onLoad = ->
   document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
   chrome.tabs.getSelected null, (tab) ->
     isEnabled = chrome.extension.getBackgroundPage().isEnabledForUrl(url: tab.url)
+    # Check if we have an existing exclusing rule for this page.
     if isEnabled.rule
-      # There is an existing exclusion rule for this page.
       originalRule = isEnabled.rule
       originalPattern = originalRule.pattern
       originalPassKeys = originalRule.passKeys
     else
-      # There is not an existing exclusion rule.
       # The common use case is to disable Vimium at the domain level.
       # This regexp will match "http://www.example.com/" from "http://www.example.com/path/to/page.html".
       domain = (tab.url.match(/[^\/]*\/\/[^\/]*\//) or tab.url) + "*"
