@@ -1,3 +1,6 @@
+#
+# This wraps the vomnibar iframe, which we inject into the page to provide the vomnibar.
+#
 Vomnibar =
   vomnibarElement: null
 
@@ -21,6 +24,11 @@ Vomnibar =
     newTab: true
   }
 
+  # This function opens the vomnibar. It accepts options, a map with the values:
+  #   completer   - The completer to fetch results from.
+  #   query       - Optional. Text to prefill the Vomnibar with.
+  #   selectFirst - Optional, boolean. Whether to select the first entry.
+  #   newTab      - Optional, boolean. Whether to open the result in a new tab.
   open: (options) ->
     unless @vomnibarElement?
       @vomnibarElement = document.createElement "iframe"

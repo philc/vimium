@@ -1,3 +1,8 @@
+#
+# This controls the contents of the Vomnibar iframe. We use an iframe to avoid changing the selection on the
+# page (useful for bookmarklets), ensure that the Vomnibar style is unaffected by the page, and simplify key
+# handling in vimium_frontend.coffee
+#
 Vomnibar =
   vomnibarUI: null # the dialog instance for this window
   completers: {}
