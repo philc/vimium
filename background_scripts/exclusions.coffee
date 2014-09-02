@@ -74,4 +74,6 @@ if not Settings.has("exclusionRules") and Settings.has("excludedUrls")
   Exclusions.setRules(parseLegacyRules(Settings.get("excludedUrls")))
   # We'll keep a backup of the excludedUrls setting, just in case (and for testing).
   Settings.set("excludedUrlsBackup",Settings.get("excludedUrls")) if not Settings.has("excludedUrlsBackup")
-  Settings.clear("excludedUrls")
+  # TODO (smblott): Uncomment the following line.  It's commented for now so that anyone trying out this code
+  # can revert to previous versions.
+  # Settings.clear("excludedUrls")
