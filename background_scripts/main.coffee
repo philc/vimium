@@ -74,9 +74,11 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 #
 root.isEnabledForUrl = isEnabledForUrl = (request) ->
   rule = Exclusions.getRule(request.url)
-  newIsEnabled = !rule or rule.passKeys
-  newPassKeys = if newIsEnabled and rule then rule.passKeys else ""
-  { rule: rule, isEnabledForUrl: newIsEnabled, passKeys: newPassKeys }
+  {
+    rule: rule
+    isEnabledForUrl: not rule or rule.passKeys
+    passKeys: rule?.passKeys or ""
+  }
 
 # Called by the popup UI.  If an existing exclusion rule has been changed, then the existing rule is updated.
 # Otherwise, the new rule is added.
