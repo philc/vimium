@@ -635,8 +635,8 @@ getCurrFrameIndex = (frames) ->
     return i if frames[i].id == focusedFrame
   frames.length + 1
 
-# Send message back to the tab unchanged.
-# Frames in the same tab can use this to communicate securely.
+# Send message back to the tab unchanged. This allows different frames from the same tab to message eachother
+# while avoiding security concerns such as eavesdropping or message spoofing.
 echo = (request, sender) ->
   delete request.handler # No need to send this information
   chrome.tabs.sendMessage(sender.tab.id, request)
