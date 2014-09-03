@@ -97,8 +97,6 @@ class VomnibarUI
         (event.keyCode == keyCodes.tab && !event.shiftKey) ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event.ctrlKey && event.keyCode == keyCodes.enter)
-      return "complete"
     else if (event.keyCode == keyCodes.enter)
       return "enter"
 
@@ -113,10 +111,12 @@ class VomnibarUI
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
+      @input.value = @completions[@selection].url
       @updateSelection()
     else if (action == "down")
       @selection += 1
       @selection = @initialSelectionValue if @selection == @completions.length
+      @input.value = @completions[@selection].url
       @updateSelection()
     else if (action == "enter")
       # If they type something and hit enter without selecting a completion from our list of suggestions,
@@ -135,11 +135,6 @@ class VomnibarUI
           # Shift+Enter will open the result in a new tab instead of the current tab.
           @completions[@selection].performAction(openInNewTab)
           @hide()
-    else if (action == "complete")
-      if (@selection == -1)
-        @input.value = window.location
-      else
-        @input.value = @completions[@selection].url
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopPropagation()
