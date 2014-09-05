@@ -15,7 +15,6 @@ root.Marks =
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
 extend(global,require "../../background_scripts/sync.js")
-extend(global, require "../../lib/exclusion_rule.js")
 extend(global,require "../../background_scripts/settings.js")
 Sync.init()
 extend(global, require "../../background_scripts/exclusions.js")
@@ -34,9 +33,13 @@ context "Excluded URLs and pass keys",
     assert.isFalse rule.passKeys
 
   should "be enabled, but with pass keys", ->
-    rule = isEnabledForUrl({ url: 'https://mail.google.com/mail/u/0/#inbox' })
+    rule = isEnabledForUrl({ url: 'https://www.facebook.com/something' })
     assert.isTrue rule.isEnabledForUrl
-    assert.equal rule.passKeys, 'jk'
+    assert.isFalse rule.passKeys
+    addExclusionRule("http*://www.facebook.com/*","oO")
+    rule = isEnabledForUrl({ url: 'https://www.facebook.com/something' })
+    assert.isTrue rule.isEnabledForUrl
+    assert.equal rule.passKeys, 'oO'
 
   should "be enabled", ->
     rule = isEnabledForUrl({ url: 'http://www.twitter.com/pages' })
@@ -61,8 +64,8 @@ context "Excluded URLs and pass keys",
 
   should "update an existing excluded URL with passkeys", ->
     rule = isEnabledForUrl({ url: 'http://mail.google.com/page' })
-    assert.isTrue rule.isEnabledForUrl
-    assert.equal rule.passKeys, 'jk'
+    assert.isFalse rule.isEnabledForUrl
+    assert.isFalse rule.passKeys
     addExclusionRule("http*://mail.google.com/*","jknp")
     rule = isEnabledForUrl({ url: 'http://mail.google.com/page' })
     assert.isTrue rule.isEnabledForUrl

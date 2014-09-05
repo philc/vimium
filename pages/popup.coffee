@@ -24,31 +24,34 @@ onLoad = ->
     onChange()
 
 onChange = ->
+  # As the text in the popup's input elements is changed, update the the popup's buttons accordingly.
+  # Aditionally, enable and disable those buttons as appropriate.
   pattern = document.getElementById("popupPattern").value.trim()
   passKeys = document.getElementById("popupPassKeys").value.trim()
+  popupExclude = document.getElementById("popupExclude")
 
   document.getElementById("popupRemove").disabled =
     not (originalRule and pattern == originalPattern)
 
   if originalRule and pattern == originalPattern and passKeys == originalPassKeys
-    document.getElementById("popupExclude").disabled = true
-    document.getElementById("popupExclude").value = "Update Rule"
+    popupExclude.disabled = true
+    popupExclude.value = "Update Rule"
 
   else if originalRule and pattern == originalPattern
-    document.getElementById("popupExclude").disabled = false
-    document.getElementById("popupExclude").value = "Update Rule"
+    popupExclude.disabled = false
+    popupExclude.value = "Update Rule"
 
   else if originalRule
-    document.getElementById("popupExclude").disabled = false
-    document.getElementById("popupExclude").value = "Add Rule"
+    popupExclude.disabled = false
+    popupExclude.value = "Add Rule"
 
   else if pattern
-    document.getElementById("popupExclude").disabled = false
-    document.getElementById("popupExclude").value = "Add Rule"
+    popupExclude.disabled = false
+    popupExclude.value = "Add Rule"
 
   else
-    document.getElementById("popupExclude").disabled = true
-    document.getElementById("popupExclude").value = "Add Rule"
+    popupExclude.disabled = true
+    popupExclude.value = "Add Rule"
 
 showMessage = do ->
   timer = null

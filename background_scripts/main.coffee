@@ -80,8 +80,8 @@ root.isEnabledForUrl = isEnabledForUrl = (request) ->
     passKeys: rule?.passKeys or ""
   }
 
-# Called by the popup UI.  If an existing exclusion rule has been changed, then the existing rule is updated.
-# Otherwise, the new rule is added.
+# Called by the popup UI.
+# If the URL pattern matches an existing rule, then the existing rule is updated. Otherwise, a new rule is created.
 root.addExclusionRule = (pattern,passKeys) ->
   if pattern = pattern.trim()
     Exclusions.updateOrAdd({ pattern: pattern, passKeys: passKeys })

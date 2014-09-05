@@ -23,8 +23,9 @@ root.Exclusions = Exclusions =
     return null
 
   setRules: (rules) ->
+    # Callers map a rule to null to have it deleted, and rules without a pattern are useless.
     @rules = rules.filter (rule) -> rule and rule.pattern
-    Settings.set("exclusionRules",@rules)
+    Settings.set("exclusionRules", @rules)
 
   postUpdateHook: (rules) ->
     @rules = rules
@@ -33,37 +34,29 @@ root.Exclusions = Exclusions =
   updateOrAdd: (newRule) ->
     seen = false
     @rules.push(newRule)
-    @setRules(@rules.map (rule) -> if rule.pattern == newRule.pattern then (if seen then null else seen = newRule) else rule)
+    @setRules @rules.map (rule) ->
+      if rule.pattern == newRule.pattern
+        if seen then null else seen = newRule
+      else
+        rule
 
   remove: (pattern) ->
-    @setRules(@rules.filter((rule) -> rule.pattern != pattern))
-
-  # DOM handling for the options page; populate the exclusionRules option.
-  populateOption: (exclusionRulesElement,enableSaveButton) ->
-    populate = =>
-      while exclusionRulesElement.firstChild
-        exclusionRulesElement.removeChild(exclusionRulesElement.firstChild)
-      for rule in @rules
-        exclusionRulesElement.appendChild(ExclusionRule.buildRuleElement(rule,enableSaveButton))
-      exclusionRulesElement.appendChild(ExclusionRule.buildRuleElement({pattern: "", passKeys: ""},enableSaveButton))
-    populate()
-    return {
-      saveOption: =>
-        @setRules(ExclusionRule.extractRule(element) for element in exclusionRulesElement.getElementsByClassName('exclusionRow'))
-        populate()
-      restoreToDefault: =>
-        Settings.clear("exclusionRules")
-        populate()
-    }
+    @setRules(@rules.filter((rule) -> rule and rule.pattern != pattern))
 
 # Development and debug only.
 # Enable this (temporarily) to restore legacy exclusion rules from backup.
 if false and Settings.has("excludedUrlsBackup")
   Settings.clear("exclusionRules")
-  Settings.set("excludedUrls",Settings.get("excludedUrlsBackup"))
+  Settings.set("excludedUrls", Settings.get("excludedUrlsBackup"))
 
 if not Settings.has("exclusionRules") and Settings.has("excludedUrls")
-  # Migration from the legacy exclusion rules (settings: "excludedUrls" -> "exclusionRules").
+  # Migration from the legacy representation of exclusion rules.
+  #
+  # In Vimium 1.45 and in github/master on 27 August, 2014, exclusion rules are represented by the setting:
+  #   excludedUrls: "http*://www.google.com/reader/*\nhttp*://mail.google.com/* jk"
+  #
+  # The new (equivalent) settings is:
+  #   exclusionRules: [ { pattern: "http*://www.google.com/reader/*", passKeys: "" }, { pattern: "http*://mail.google.com/*", passKeys: "jk" } ]
 
   parseLegacyRules = (lines) ->
     for line in lines.trim().split("\n").map((line) -> line.trim())
@@ -72,8 +65,6 @@ if not Settings.has("exclusionRules") and Settings.has("excludedUrls")
         { pattern: parse[0], passKeys: parse[1..].join("") }
 
   Exclusions.setRules(parseLegacyRules(Settings.get("excludedUrls")))
-  # We'll keep a backup of the excludedUrls setting, just in case (and for testing).
-  Settings.set("excludedUrlsBackup",Settings.get("excludedUrls")) if not Settings.has("excludedUrlsBackup")
-  # TODO (smblott): Uncomment the following line.  It's commented for now so that anyone trying out this code
-  # can revert to previous versions.
-  # Settings.clear("excludedUrls")
+  # We'll keep a backup of the "excludedUrls" setting, just in case.
+  Settings.set("excludedUrlsBackup", Settings.get("excludedUrls")) if not Settings.has("excludedUrlsBackup")
+  Settings.clear("excludedUrls")

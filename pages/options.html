@@ -6,7 +6,6 @@
     <script src="../lib/dom_utils.js"></script>
     <script src="../lib/handler_stack.js"></script>
     <script src="../lib/clipboard.js"></script>
-    <script src="../lib/exclusion_rule.js"></script>
     <script src="../content_scripts/link_hints.js"></script>
     <script src="../content_scripts/vomnibar.js"></script>
     <script src="../content_scripts/scroller.js"></script>
@@ -175,9 +174,10 @@
         border-top: 1px solid #eee;
       }
       /* Ids and classes for rendering exclusionRules */
-      #exclusionScroll {
+      #exclusionScrollBox {
         overflow: scroll;
         overflow-x: hidden;
+        overflow-y: auto;
         height: 225px;
         border: 1px solid #bfbfbf;
         border-radius: 2px;
@@ -192,6 +192,11 @@
       }
       .passKeys {
         width: 120px;
+      }
+      #exclusionAddButton {
+        float: right;
+        margin-top: 5px;
+        margin-right: 0px;
       }
     </style>
   <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
@@ -216,15 +221,25 @@
             <div class="help">
               <div class="example">
                 <p>
-                   The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the symbox "*" matches any zero or more characters.
+                   The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the character "*" matches any zero or more characters.
                 </p>
                 <p>
                    The right column contains keys which Vimium would would normally handle, but should instead be passed through to the underlying web page (for pages matching the corresponding pattern).  If empty, then Vimium is wholly disabled.
                 </p>
               </div>
             </div>
-            <div id="exclusionScroll">
-               <table id="exclusionRules"></table>
+            <div>
+               <div id="exclusionScrollBox">
+                  <table id="exclusionRules"></table>
+                  <template id="exclusionRuleTemplate">
+                    <tr>
+                       <td><input/ type="text" class="pattern" placeholder="URL pattern"></td>
+                       <td><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
+                       <td><input/ type="button" class="exclusionRemoveButton" value="&#x2716;"></td>
+                    </tr>
+                  </template>
+               </div>
+               <button id="exclusionAddButton">Add Rule</button>
             </div>
           </td>
         </tr>

@@ -61,6 +61,7 @@ root.Settings = Settings =
   # or strings
   defaults:
     scrollStepSize: 60
+    keyMappings: "# Insert your prefered key mappings here."
     linkHintCharacters: "sadfjklewcmpgh"
     linkHintNumbers: "0123456789"
     filterLinkHints: false
@@ -87,9 +88,8 @@ root.Settings = Settings =
     # Default exclusion rules.
     exclusionRules:
       [
-        # Disable Vimium on Google Reader, and use Gmail's own j/k bindings.
-        { pattern: "http*://www.google.com/reader/*", passKeys: "" }
-        { pattern: "http*://mail.google.com/*", passKeys: "jk" }
+        # Disable Vimium on Gmail.
+        { pattern: "http*://mail.google.com/*", passKeys: "" }
       ]
 
     # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in

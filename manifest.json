@@ -12,7 +12,6 @@
       "background_scripts/commands.js",
       "lib/clipboard.js",
       "background_scripts/sync.js",
-      "lib/exclusion_rule.js",
       "background_scripts/settings.js",
       "background_scripts/exclusions.js",
       "background_scripts/completion.js",
