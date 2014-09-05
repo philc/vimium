@@ -111,10 +111,12 @@ class VomnibarUI
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
+      @input.value = @completions[@selection].url
       @updateSelection()
     else if (action == "down")
       @selection += 1
       @selection = @initialSelectionValue if @selection == @completions.length
+      @input.value = @completions[@selection].url
       @updateSelection()
     else if (action == "enter")
       # If they type something and hit enter without selecting a completion from our list of suggestions,
