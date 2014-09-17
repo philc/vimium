@@ -38,6 +38,7 @@
     <script type="text/javascript" src="../../content_scripts/vomnibar.js"></script>
     <script type="text/javascript" src="../../content_scripts/scroller.js"></script>
     <script type="text/javascript" src="../../content_scripts/vimium_frontend.js"></script>
+    <script type="text/javascript" src="../../pages/vomnibar.js"></script>
 
     <script type="text/javascript" src="../shoulda.js/shoulda.js"></script>
     <script type="text/javascript" src="dom_tests.js"></script>
@@ -52,6 +53,13 @@
     <h1>Vimium Tests</h1>
 
     <div id="output-div"></div>
+
+    <div id="vomnibar" class="vimiumReset">
+      <div class="vimiumReset vomnibarSearchArea">
+        <input type="text" class="vimiumReset">
+      </div>
+      <ul class="vimiumReset"></ul>
+    </div>
 
   </body>
 </html>
