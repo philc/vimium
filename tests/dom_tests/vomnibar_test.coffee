@@ -19,7 +19,7 @@ context "Keep selection within bounds",
     ui.update(true)
     assert.equal -1, ui.selection
 
-    @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
+    @completions = [{html: 'foo',type: 'tab',url: 'http://example.com'}]
     ui.update(true)
     assert.equal -1, ui.selection
 
@@ -35,7 +35,7 @@ context "Keep selection within bounds",
     ui.update(true)
     assert.equal -1, ui.selection
 
-    @completions = [{html:'foo',type:'bookmark',url:'http://example.com'}]
+    @completions = [{html: 'foo',type: 'bookmark',url: 'http://example.com'}]
     ui.update(true)
     assert.equal 0, ui.selection
 
@@ -54,7 +54,7 @@ context "Keep selection within bounds",
       preventDefault: ->
       stopPropagation: ->
 
-    @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
+    @completions = [{html: 'foo',type: 'tab',url: 'http://example.com'}]
     ui.update(true)
     stub ui, "actionFromKeyEvent", -> "down"
     ui.onKeydown eventMock

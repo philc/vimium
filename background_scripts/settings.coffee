@@ -47,7 +47,7 @@ root.Settings = Settings =
   parseSearchEngines: (searchEnginesText) ->
     @searchEnginesMap = {}
     # find the split pairs by first splitting by line then splitting on the first `: `
-    split_pairs = ( pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#" )
+    split_pairs = (pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#")
     @searchEnginesMap[a[0]] = a[1] for a in split_pairs
     @searchEnginesMap
   getSearchEngines: ->

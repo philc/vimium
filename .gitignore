@@ -6,3 +6,5 @@
 *.sublime*
 node_modules/*
 dist
+jscoverage.json
+tags

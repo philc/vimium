@@ -9,8 +9,8 @@ Commands =
   # Registers a command, making it available to be optionally bound to a key.
   # options:
   #  - background: whether this command needs to be run against the background page.
-  #  - passCountToFunction: true if this command should have any digits which were typed prior to the
-  #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
+  #  - passCountToFunction: true if this command should have any digits which were typed prior to the command
+  #      passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options) ->
     if command of @availableCommands
       console.log(command, "is already defined! Check commands.coffee for duplicates.")
@@ -38,12 +38,11 @@ Commands =
 
   # Lower-case the appropriate portions of named keys.
   #
-  # A key name is one of three forms exemplified by <c-a> <left> or <c-f12>
-  # (prefixed normal key, named key, or prefixed named key). Internally, for
-  # simplicity, we would like prefixes and key names to be lowercase, though
-  # humans may prefer other forms <Left> or <C-a>.
-  # On the other hand, <c-a> and <c-A> are different named keys - for one of
-  # them you have to press "shift" as well.
+  # A key name is one of three forms exemplified by <c-a> <left> or <c-f12> (prefixed normal key, named key,
+  # or prefixed named key). Internally, for simplicity, we would like prefixes and key names to be lowercase,
+  # though humans may prefer other forms <Left> or <C-a>.
+  # On the other hand, <c-a> and <c-A> are different named keys - for one of them you have to press "shift"
+  # as well.
   normalizeKey: (key) ->
     key.replace(/<[acm]-/ig, (match) -> match.toLowerCase())
        .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
@@ -82,19 +81,19 @@ Commands =
     for key of defaultKeyMappings
       @mapKeyToCommand(key, defaultKeyMappings[key])
 
-  # An ordered listing of all available commands, grouped by type. This is the order they will
-  # be shown in the help page.
+  # An ordered listing of all available commands, grouped by type. This is the order they will be shown in
+  # the help page.
   commandGroups:
     pageNavigation:
-      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
-      "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
-      "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
-      "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom",
+      "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp",
+      "scrollFullPageDown", "reload", "toggleViewSource", "copyCurrentUrl",
+      "LinkHints.activateModeToCopyLinkUrl", "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
+      "goToRoot", "enterInsertMode", "focusInput", "LinkHints.activateMode",
+      "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeToOpenInNewForegroundTab",
+      "LinkHints.activateModeWithQueue", "Vomnibar.activate", "Vomnibar.activateInNewTab",
+      "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
+      "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -109,10 +108,9 @@ Commands =
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
   # from Vimium will uncover these gems.
   advancedCommands: [
-    "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
-    "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
+    "scrollToLeft", "scrollToRight", "moveTabToNewWindow", "goUp", "goToRoot", "focusInput",
+    "LinkHints.activateModeWithQueue", "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious",
+    "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
     "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
 
 defaultKeyMappings =
@@ -142,8 +140,8 @@ defaultKeyMappings =
 
   "gi": "focusInput"
 
-  "f":     "LinkHints.activateMode"
-  "F":     "LinkHints.activateModeToOpenInNewTab"
+  "f": "LinkHints.activateMode"
+  "F": "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
 
   "/": "enterFindMode"

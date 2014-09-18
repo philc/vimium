@@ -54,11 +54,18 @@ reports:
 
 ## Coding Style
 
-  * We follow the recommendations from
-    [this style guide](https://github.com/polarmobile/coffeescript-style-guide).
-  * We follow two major differences from this style guide:
+  * The recommendations for coding style can be found in our [style guide](CODE_STYLE.md)
+  * These are based on the recommendations from
+    [this style guide](https://github.com/polarmobile/coffeescript-style-guide), with two major differences:
     * Wrap lines at 110 characters instead of 80.
     * Use double-quoted strings by default.
+
+There are tests for a subset of the style guide recommendations. To run the tests:
+
+ 1. `npm install -g git://github.com/clutchski/coffeelint.git` to install [CoffeeLint](http://www.coffeelint.org).
+    This installs the version from the github repo, since we need to ignore files under `node_modules`, but
+    this feature hasn't made it to npm yet.
+ 1. `cake lint` to run the tests.
 
 ## Pull Requests
 

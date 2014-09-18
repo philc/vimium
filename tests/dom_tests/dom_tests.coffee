@@ -146,9 +146,9 @@ context "Filtered link hints",
 
     setup ->
       testContent = "<input type='text' value='some value'/><input type='password' value='some value'/>
-        <textarea>some text</textarea><label for='test-input'/>a label</label>
+        <textarea>some text</textarea><label for='test-input'>a label</label>
         <input type='text' id='test-input' value='some value'/>
-        <label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>"
+        <label for='test-input-2'>a label: </label><input type='text' id='test-input-2' value='some value'/>"
       document.getElementById("test-div").innerHTML = testContent
       LinkHints.activateMode()
 
@@ -185,8 +185,8 @@ context "Input focus",
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
-# a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
-# don't need to construct external state many times over just to test that.
+# a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and
+# we don't need to construct external state many times over just to test that.
 # i.e. these tests should look something like:
 # assert.equal(findLink(html("<a href=...">))[0].href, "first")
 # These could then move outside of the dom_tests file.

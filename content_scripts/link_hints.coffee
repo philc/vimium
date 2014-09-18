@@ -1,6 +1,7 @@
 #
 # This implements link hinting. Typing "F" will enter link-hinting mode, where all clickable items on the
-# page have a hint marker displayed containing a sequence of letters. Typing those letters will select a link.
+# page have a hint marker displayed containing a sequence of letters. Typing those letters will select a
+# link.
 #
 # In our 'default' mode, the characters we use to show link hints are a user-configurable option. By default
 # they're the home row.  The CSS which is used on the link hints is also a configurable option.
@@ -346,8 +347,8 @@ filterHints =
       if (forElement)
         labelText = label.textContent.trim()
         # remove trailing : commonly found in labels
-        if (labelText[labelText.length-1] == ":")
-          labelText = labelText.substr(0, labelText.length-1)
+        if (labelText[labelText.length - 1] == ":")
+          labelText = labelText.substr(0, labelText.length - 1)
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->

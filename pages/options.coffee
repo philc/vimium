@@ -18,7 +18,8 @@ document.addEventListener "DOMContentLoaded", ->
 
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions, false
   $("showCommands").addEventListener "click", (->
-    showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+    dialogHtml = chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing")
+    showHelpDialog dialogHtml, frameId
   ), false
   document.getElementById("restoreSettings").addEventListener "click", restoreToDefaults
   document.getElementById("saveOptions").addEventListener "click", saveOptions
@@ -94,7 +95,7 @@ setFieldValue = (field, value) ->
   else
     field.checked = value
 
-toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
+toggleAdvancedOptions = do (advancedMode = false) -> (event) ->
   if advancedMode
     $("advancedOptions").style.display = "none"
     $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
