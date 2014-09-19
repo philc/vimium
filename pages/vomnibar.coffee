@@ -109,13 +109,27 @@ class VomnibarUI
         @selection = 0
       else if @previousCompletionType == "search" and @completions[0].type != "search"
         @selection = -1
-    for i in [0...@completionList.children.length]
-      completionElement = @completionList.children[i]
+
+    for completionElement, i in @completionList.children
       if i == @selection
         completionElement.className = "vomnibarSelected"
-        DomUtils.scrollParentToMakeVisible(completionElement, completionElement.parentElement)
-      else
+      else if completionElement.className == "vomnibarSelected"
         completionElement.className = ""
+
+      scrollContainer = completionElement.offsetParent
+
+      if i == @selection
+        # Hide preceding elements until the current element is visible
+        for visibleElement in @completionList.children
+          break if visibleElement == completionElement
+          if completionElement.offsetTop + completionElement.offsetHeight > scrollContainer.offsetHeight
+            visibleElement.className = "vomnibarSkipped"
+      else if i > @selection
+        if scrollContainer and completionElement.offsetTop > scrollContainer.offsetHeight
+          break
+        else
+          completionElement.className = ""
+
     @previousCompletionType = @completions[0].type if @completions[0]
 
   #
@@ -217,6 +231,7 @@ class VomnibarUI
     @completionList.style.display = "none"
 
     window.addEventListener "focus", => @input.focus()
+    window.addEventListener "resize", => @updateSelection()
 
 #
 # Sends filter and refresh requests to a Vomnibox completer on the background page.

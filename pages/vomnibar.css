@@ -59,7 +59,7 @@
   list-style: none;
   padding: 10px 0px 0px;
   padding-top: 0;
-  overflow-y: scroll;
+  overflow-y: hidden;
   height: calc(100% - 55px);
 }
 
@@ -133,5 +133,9 @@
 #vomnibar li.vomnibarSelected {
   background-color: #BBCEE9;
   font-weight: normal;
+}
+
+#vomnibar li.vomnibarSkipped {
+  display: none;
 }
 

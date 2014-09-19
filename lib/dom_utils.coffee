@@ -131,30 +131,5 @@ DomUtils =
     event.preventDefault()
     event.stopPropagation()
 
-  scrollParentToMakeVisible: (element, scrollParent = element.offsetParent) ->
-    offsetParent = element.offsetParent
-
-    offset =
-      top: element.offsetTop
-      bottom: element.offsetTop + element.offsetHeight
-
-    scrollPosition =
-      top: offsetParent.scrollTop
-      bottom: offsetParent.scrollTop + offsetParent.clientHeight
-
-    if scrollParent == offsetParent
-      parentOffset =
-        top: 0
-        bottom: 0
-    else
-      parentOffset =
-        top: scrollParent.offsetTop
-        bottom: Math.min(scrollParent.offsetTop + scrollParent.offsetHeight, scrollPosition.bottom)
-
-    if offset.top < parentOffset.top
-      scrollParent.scrollTop += offset.top - parentOffset.top
-    else if offset.bottom > parentOffset.bottom
-      scrollParent.scrollTop += offset.bottom - parentOffset.bottom
-
 root = exports ? window
 root.DomUtils = DomUtils
