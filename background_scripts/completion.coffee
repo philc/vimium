@@ -291,7 +291,7 @@ class SearchEngineCompleter
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
-  constructor: (@completers) -> @maxResults = 10
+  constructor: (@completers, @maxResults = 10) ->
 
   refresh: -> completer.refresh() for completer in @completers when completer.refresh
 
@@ -311,7 +311,10 @@ class MultiCompleter
         suggestions = suggestions.concat(newSuggestions)
         completersFinished += 1
         if completersFinished >= @completers.length
-          results = @sortSuggestions(suggestions)[0...@maxResults]
+          if @maxResults == -1
+            results = @sortSuggestions(suggestions)
+          else
+            results = @sortSuggestions(suggestions)[0...@maxResults]
           result.generateHtml() for result in results
           onComplete(results)
           @filterInProgress = false
