@@ -10,6 +10,7 @@
   display: block;
   position: fixed;
   width: calc(100% - 20px); /* adjusted to keep border radius and box-shadow visible*/
+  max-height: 100%;
   /*min-width: 400px;
   top: 70px;
   left: 50%;*/
@@ -25,6 +26,7 @@
   border: 1px solid #aaa;
   /* One less than hint markers and the help dialog. */
   z-index: 99999996;
+  overflow: visible;
 }
 
 #vomnibar input {
@@ -55,8 +57,14 @@
   background-color: white;
   border-radius: 0 0 4px 4px;
   list-style: none;
-  padding: 10px 0;
+  padding: 10px 0px 0px;
   padding-top: 0;
+  overflow-y: scroll;
+  height: calc(100% - 55px);
+}
+
+#vomnibar ul::-webkit-scrollbar {
+    display: none;
 }
 
 #vomnibar li {

@@ -33,7 +33,7 @@ completers =
     completionSources.history,
     completionSources.domains])
   bookmarks: new MultiCompleter([completionSources.bookmarks])
-  tabs: new MultiCompleter([completionSources.tabs])
+  tabs: new MultiCompleter([completionSources.tabs], -1)
 
 chrome.runtime.onConnect.addListener((port, name) ->
   senderTabId = if port.sender.tab then port.sender.tab.id else null

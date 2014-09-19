@@ -105,12 +105,17 @@ class VomnibarUI
     # I feel that this approach is cleaner than bubbling the state up from the suggestion level
     # so we just inspect it afterwards
     if @completions[0]
-      if @previousCompletionType != "search" && @completions[0].type == "search"
+      if @previousCompletionType != "search" and @completions[0].type == "search"
         @selection = 0
-      else if @previousCompletionType == "search" && @completions[0].type != "search"
+      else if @previousCompletionType == "search" and @completions[0].type != "search"
         @selection = -1
     for i in [0...@completionList.children.length]
-      @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
+      completionElement = @completionList.children[i]
+      if i == @selection
+        completionElement.className = "vomnibarSelected"
+        DomUtils.scrollParentToMakeVisible(completionElement, completionElement.parentElement)
+      else
+        completionElement.className = ""
     @previousCompletionType = @completions[0].type if @completions[0]
 
   #
