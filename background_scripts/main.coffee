@@ -119,7 +119,7 @@ root.addExcludedUrl = (url) ->
       continue
     # And just keep everything else.
     newExcludedUrls.push(spec)
-    
+
   Settings.set("excludedUrls", newExcludedUrls.join("\n"))
 
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
@@ -280,7 +280,8 @@ BackgroundCommands =
   restoreTab: (callback) ->
     # TODO: remove if-else -block when adopted into stable
     if chrome.sessions
-      chrome.sessions.restore(null, (restoredSession) -> callback())
+      chrome.sessions.restore(null, (restoredSession) ->
+          callback() unless chrome.runtime.lastError)
     else
       # TODO(ilya): Should this be getLastFocused instead?
       chrome.windows.getCurrent((window) ->
