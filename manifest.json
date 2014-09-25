@@ -25,6 +25,7 @@
     "history",
     "clipboardRead",
     "storage",
+    "sessions",
     "<all_urls>"
   ],
   "content_scripts": [
