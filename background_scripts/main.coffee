@@ -250,7 +250,8 @@ BackgroundCommands =
   restoreTab: (callback) ->
     # TODO: remove if-else -block when adopted into stable
     if chrome.sessions
-      chrome.sessions.restore(null, (restoredSession) -> callback())
+      chrome.sessions.restore(null, (restoredSession) ->
+          callback() unless chrome.runtime.lastError)
     else
       # TODO(ilya): Should this be getLastFocused instead?
       chrome.windows.getCurrent((window) ->
