@@ -48,8 +48,8 @@ root.Settings = Settings =
     @searchEnginesMap = {}
     # find the split pairs by first splitting by line then splitting on the first `: `
     split_pairs = []
+    comment = null;
     for pair in searchEnginesText.split(/\n/)
-      comment = null;
       final_comment = null;
       if pair[0] == '#' #comment on line before
         comment = pair[1..-1]
@@ -69,6 +69,7 @@ root.Settings = Settings =
 
     @searchEnginesMap[a[0]] = a[1..-1] for a in split_pairs
     @searchEnginesMap
+
   getSearchEngines: ->
     this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
     @searchEnginesMap
