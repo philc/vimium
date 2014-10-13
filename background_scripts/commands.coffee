@@ -102,10 +102,12 @@ Commands =
       "LinkHints.activateModeToCopyLinkUrl", "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
       "goToRoot", "enterInsertMode", "exitInsertMode", "focusInput", "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeToOpenInNewForegroundTab",
-      "LinkHints.activateModeWithQueue", "LinkHints.activateModeToDownloadLink", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
-      "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+      "LinkHints.activateModeWithQueue", "LinkHints.activateModeToOpenIncognito",
+      "LinkHints.activateModeToHover", "LinkHints.unhoverLast", "LinkHints.activateModeToDownloadLink",
+      "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
+      "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab", "Vomnibar.activateEditUrl",
+      "Vomnibar.activateEditUrlInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
+      "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -122,9 +124,10 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow", "goUp", "goToRoot", "focusInput",
     "LinkHints.activateModeWithQueue", "LinkHints.activateModeToDownloadLink",
-    "LinkHints.activateModeToOpenIncognito", "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
-    "goNext", "goPrevious", "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft",
-    "moveTabRight", "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
+    "LinkHints.activateModeToOpenIncognito", "LinkHints.activateModeToHover", "LinkHints.unhoverLast",
+    "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab", "goNext", "goPrevious",
+    "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
+    "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -243,6 +246,8 @@ commandDescriptions =
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
 
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateModeToHover": ["Hover over a link"]
+  "LinkHints.unhoverLast": ["Stop hovering at last location"]
 
   "LinkHints.activateModeToDownloadLink": ["Download link url"]
   enterFindMode: ["Enter find mode"]
