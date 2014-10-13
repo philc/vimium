@@ -280,7 +280,8 @@ BackgroundCommands =
   restoreTab: (callback) ->
     # TODO: remove if-else -block when adopted into stable
     if chrome.sessions
-      chrome.sessions.restore(null, (restoredSession) -> callback())
+      chrome.sessions.restore(null, (restoredSession) ->
+          callback() unless chrome.runtime.lastError)
     else
       # TODO(ilya): Should this be getLastFocused instead?
       chrome.windows.getCurrent((window) ->
@@ -443,16 +444,17 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   # If we restore pages that content scripts can't run on, they'll ignore Vimium keystrokes when they
   # reappear. Pretend they never existed and adjust tab indices accordingly. Could possibly expand this into
   # a blacklist in the future.
-  if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
-    for i of tabQueue[openTabInfo.windowId]
-      if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
-        tabQueue[openTabInfo.windowId][i].positionIndex--
-    return
+  unless chrome.sessions
+    if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
+      for i of tabQueue[openTabInfo.windowId]
+        if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
+          tabQueue[openTabInfo.windowId][i].positionIndex--
+      return
 
-  if (tabQueue[openTabInfo.windowId])
-    tabQueue[openTabInfo.windowId].push(openTabInfo)
-  else
-    tabQueue[openTabInfo.windowId] = [openTabInfo]
+    if (tabQueue[openTabInfo.windowId])
+      tabQueue[openTabInfo.windowId].push(openTabInfo)
+    else
+      tabQueue[openTabInfo.windowId] = [openTabInfo]
 
   # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
   # scroll position)
@@ -462,7 +464,8 @@ chrome.tabs.onRemoved.addListener (tabId) ->
 
 chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
 
-chrome.windows.onRemoved.addListener (windowId) -> delete tabQueue[windowId]
+unless chrome.sessions
+  chrome.windows.onRemoved.addListener (windowId) -> delete tabQueue[windowId]
 
 # End action functions
 
