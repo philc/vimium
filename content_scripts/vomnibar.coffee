@@ -23,6 +23,17 @@ Vomnibar =
     selectFirst: true
     newTab: true
   }
+  activateEditUrl: -> @open {
+    completer: "omni"
+    query: document.location
+    selectFirst: false
+  }
+  activateEditUrlInNewTab: -> @open {
+    completer: "omni"
+    query: document.location
+    selectFirst: false
+    newTab: true
+  }
 
   # This function opens the vomnibar. It accepts options, a map with the values:
   #   completer   - The completer to fetch results from.
