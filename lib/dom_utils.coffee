@@ -103,6 +103,18 @@ DomUtils =
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
     try element.setSelectionRange(element.value.length, element.value.length)
 
+  focusContentEditable: (element) ->
+    range = document.createRange()
+    if element.lastChild
+      range.setStartAfter element.lastChild
+      range.setEndAfter element.lastChild
+
+    sel= window.getSelection()
+    sel.removeAllRanges()
+    sel.addRange range
+
+    element.focus()
+
   simulateHover: (element, modifiers) ->
     @simulateMouseEvent("mouseover", element, modifiers)
 
