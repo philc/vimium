@@ -22,17 +22,21 @@ Commands =
       isBackgroundCommand: options.background
       passCountToFunction: options.passCountToFunction
       noRepeat: options.noRepeat
+      repeatLimit: options.repeatLimit
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
       console.log(command, "doesn't exist!")
       return
 
+    commandDetails = @availableCommands[command]
+
     @keyToCommandRegistry[key] =
       command: command
-      isBackgroundCommand: @availableCommands[command].isBackgroundCommand
-      passCountToFunction: @availableCommands[command].passCountToFunction
-      noRepeat: @availableCommands[command].noRepeat
+      isBackgroundCommand: commandDetails.isBackgroundCommand
+      passCountToFunction: commandDetails.passCountToFunction
+      noRepeat: commandDetails.noRepeat
+      repeatLimit: commandDetails.repeatLimit
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
@@ -224,7 +228,11 @@ commandDescriptions =
   scrollToBottom: ["Scroll to the bottom of the page"]
   scrollToLeft: ["Scroll all the way to the left"]
 
-  scrollToRight: ["Scroll all the way to the right"]
+  scrollToTop: ["Scroll to the top of the page", { noRepeat: true }]
+  scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
+  scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
+  scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
+
   scrollPageDown: ["Scroll a page down"]
   scrollPageUp: ["Scroll a page up"]
   scrollFullPageDown: ["Scroll a full page down"]
@@ -233,39 +241,40 @@ commandDescriptions =
   scrollBack: ["Go to older position in scroll jump history"]
   scrollForward: ["Go to newer position in scroll jump history"]
 
-  reload: ["Reload the page"]
-  toggleViewSource: ["View page source"]
+  reload: ["Reload the page", { noRepeat: true }]
+  toggleViewSource: ["View page source", { noRepeat: true }]
 
-  copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
+  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard", { noRepeat: true }]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
+  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 3 }]
 
-  enterInsertMode: ["Enter insert mode"]
-  exitInsertMode: ["Exit insert mode"]
+  enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+  exitInsertMode: ["Exit insert mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
 
-  "LinkHints.activateMode": ["Open a link in the current tab"]
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
-  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"]
-  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
+  "LinkHints.activateMode": ["Open a link in the current tab", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", { noRepeat: true }]
+  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
 
-  "LinkHints.activateModeToOpenInNewWindow": ["Open a link in a new window"]
-  "LinkHints.activateModeToOpenInNewFullscreenWindow": ["Open a link in a fullscreen window"]
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in an incognito window"]
+  "LinkHints.activateModeToOpenInNewWindow": ["Open a link in a new window", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewFullscreenWindow": ["Open a link in a fullscreen window", { noRepeat: true }]
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in an incognito window", { noRepeat: true }]
 
-  "LinkHints.activateModeToHover": ["Hover over a link"]
-  "LinkHints.unhoverLast": ["Stop hovering at last location"]
+  "LinkHints.activateModeToHover": ["Hover over a link", { noRepeat: true }]
+  "LinkHints.unhoverLast": ["Stop hovering at last location", { noRepeat: true }]
 
-  "LinkHints.activateModeToDownloadLink": ["Download link url"]
-  enterFindMode: ["Enter find mode"]
+  "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
+
+  enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]
   performBackwardsFind: ["Cycle backward to the previous find match"]
 
-  goPrevious: ["Follow the link labeled previous or <"]
-  goNext: ["Follow the link labeled next or >"]
+  goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }]
+  goNext: ["Follow the link labeled next or >", { noRepeat: true }]
 
   # Navigating your history
   goBack: ["Go back in history", { passCountToFunction: true }]
@@ -280,10 +289,12 @@ commandDescriptions =
   previousTab: ["Go one tab left", { background: true }]
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
-  createTab: ["Create new tab", { background: true }]
-  duplicateTab: ["Duplicate current tab", { background: true }]
-  removeTab: ["Close current tab", { background: true, noRepeat: true }]
-  restoreTab: ["Restore closed tab", { background: true }]
+
+  createTab: ["Create new tab", { background: true, repeatLimit: 2 }]
+  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 2 }]
+  removeTab: ["Close current tab", { background: true, repeatLimit: 3 }]
+  restoreTab: ["Restore closed tab", { background: true, repeatLimit: 3 }]
+
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
@@ -296,18 +307,18 @@ commandDescriptions =
   moveTabToLeft: ["Move tab all the way to the left", { background: true, passCountToFunction: true }]
   moveTabToRight: ["Move tab all the way to the right", { background: true, passCountToFunction: true }]
 
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs"]
-  "Vomnibar.activateBookmarks": ["Open a bookmark"]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
-  "Vomnibar.activateEditUrl": ["Edit the current URL"]
-  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab"]
+  "Vomnibar.activate": ["Open URL, bookmark, or history entry", { noRepeat: true }]
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { noRepeat: true }]
+  "Vomnibar.activateTabSelection": ["Search through your open tabs", { noRepeat: true }]
+  "Vomnibar.activateBookmarks": ["Open a bookmark", { noRepeat: true }]
+  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { noRepeat: true }]
+  "Vomnibar.activateEditUrl": ["Edit the current URL", { noRepeat: true }]
+  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { noRepeat: true }]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 
-  "Marks.activateCreateMode": ["Create a new mark"]
-  "Marks.activateGotoMode": ["Go to a mark"]
+  "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
+  "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
 Commands.init()
 

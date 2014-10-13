@@ -295,9 +295,10 @@ BackgroundCommands =
   previousTab: (callback) -> selectTab(callback, "previous")
   firstTab: (callback) -> selectTab(callback, "first")
   lastTab: (callback) -> selectTab(callback, "last")
-  removeTab: ->
+  removeTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.remove(tab.id))
+      chrome.tabs.remove(tab.id)
+      selectionChangedHandlers.push(callback))
   restoreTab: (callback) ->
     # TODO: remove if-else -block when adopted into stable
     if chrome.sessions
@@ -585,7 +586,21 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   if (Commands.keyToCommandRegistry[command])
     registryEntry = Commands.keyToCommandRegistry[command]
 
-    if !registryEntry.isBackgroundCommand
+    runCommand = true
+
+    if registryEntry.noRepeat
+      count = 1
+    else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
+      runCommand = confirm """
+        You have asked Vimium to perform #{count} repeats of the command:
+        #{Commands.availableCommands[registryEntry.command].description}
+
+        Are you sure you want to continue?
+      """
+
+    if not runCommand
+      # Do nothing, use has chosen not to execute the command
+    else if not registryEntry.isBackgroundCommand
       chrome.tabs.sendMessage(tabId,
         name: "executePageCommand",
         command: registryEntry.command,
