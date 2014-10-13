@@ -220,6 +220,16 @@ upgradeNotificationClosed = (request) ->
   sendRequestToAllTabs({ name: "hideUpgradeNotification" })
 
 #
+# Downloads the provided URL (request.data)
+#
+downloadUrl = (request) ->
+  urlParts = request.data.split("/")
+  chrome.downloads.download
+    url: request.data
+    filename: urlParts[urlParts.length - 1]
+    saveAs: true
+
+#
 # Copies some data (request.data) to the clipboard.
 #
 copyToClipboard = (request) -> Clipboard.copy(request.data)
@@ -702,6 +712,7 @@ sendRequestHandlers =
   upgradeNotificationClosed: upgradeNotificationClosed
   updateScrollPosition: handleUpdateScrollPosition
   copyToClipboard: copyToClipboard
+  downloadUrl: downloadUrl,
   isEnabledForUrl: isEnabledForUrl
   saveHelpDialogSettings: saveHelpDialogSettings
   selectSpecificTab: selectSpecificTab

@@ -109,10 +109,10 @@ Commands =
       "LinkHints.activateModeWithQueue", "LinkHints.activateModeToOpenIncognito",
       "LinkHints.activateModeToOpenInNewWindow", "LinkHints.activateModeToOpenInNewFullscreenWindow",
       "LinkHints.activateModeToHover", "LinkHints.unhoverLast", "LinkHints.activateModeToDownloadLink",
-      "Vomnibar.activate", "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection",
-      "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab", "Vomnibar.activateEditUrl",
-      "Vomnibar.activateEditUrlInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      "LinkHints.activateModeToSaveLinkAs", "Vomnibar.activate", "Vomnibar.activateInNewTab",
+      "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
+      "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab", "goPrevious", "goNext", "nextFrame",
+      "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -268,6 +268,7 @@ commandDescriptions =
   "LinkHints.unhoverLast": ["Stop hovering at last location", { noRepeat: true }]
 
   "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
+  "LinkHints.activateModeToSaveLinkAs": ["Download a link's URL using save as", { noRepeat: true }]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]

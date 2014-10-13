@@ -57,6 +57,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
   activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
+  activateModeToSaveLinkAs: -> @activateMode(DOWNLOAD_LINK_URL)
   activateModeToHover: -> @activateMode(HOVER)
   activateModeToOpenInNewWindow: -> @activateMode(OPEN_IN_NEW_WINDOW)
   activateModeToOpenInNewFullscreenWindow: -> @activateMode(OPEN_IN_NEW_FULLSCREEN_WINDOW)
@@ -110,6 +111,10 @@ LinkHints =
 
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
+    else if @mode is DOWNLOAD_LINK_URL
+      HUD.show("Download link URL")
+      @linkActivator = (link) ->
+        chrome.runtime.sendMessage {handler: "downloadUrl", data: link.href}
     else if @mode is OPEN_INCOGNITO
       HUD.show("Open link in incognito window")
 
