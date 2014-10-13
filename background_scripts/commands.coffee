@@ -102,9 +102,10 @@ Commands =
       "LinkHints.activateModeToCopyLinkUrl", "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
       "goToRoot", "enterInsertMode", "exitInsertMode", "focusInput", "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeToOpenInNewForegroundTab",
-      "LinkHints.activateModeWithQueue", "Vomnibar.activate", "Vomnibar.activateInNewTab",
-      "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
-      "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
+      "LinkHints.activateModeWithQueue", "LinkHints.activateModeToDownloadLink", "Vomnibar.activate",
+      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
+      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
+      "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
