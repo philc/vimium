@@ -36,6 +36,8 @@ Commands =
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
+  insertExitKeys: null
+
   # Lower-case the appropriate portions of named keys.
   #
   # A key name is one of three forms exemplified by <c-a> <left> or <c-f12>
@@ -77,24 +79,32 @@ Commands =
         @keyToCommandRegistry = {}
 
   clearKeyMappingsAndSetDefaults: ->
+    @insertExitKeys = null
     @keyToCommandRegistry = {}
 
     for key of defaultKeyMappings
       @mapKeyToCommand(key, defaultKeyMappings[key])
 
+  getInsertExitKeys: ->
+    return @insertExitKeys unless @insertExitKeys == null
+
+    @insertExitKeys = []
+    for keys, {command} of @keyToCommandRegistry
+      @insertExitKeys.push(keys) if command == "exitInsertMode"
+
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
   commandGroups:
     pageNavigation:
-      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
-      "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
-      "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
-      "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom",
+      "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp",
+      "scrollFullPageDown", "reload", "toggleViewSource", "copyCurrentUrl",
+      "LinkHints.activateModeToCopyLinkUrl", "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
+      "goToRoot", "enterInsertMode", "exitInsertMode", "focusInput", "LinkHints.activateMode",
+      "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeToOpenInNewForegroundTab",
+      "LinkHints.activateModeWithQueue", "Vomnibar.activate", "Vomnibar.activateInNewTab",
+      "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks", "Vomnibar.activateBookmarksInNewTab",
+      "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode", "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
@@ -134,6 +144,8 @@ defaultKeyMappings =
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
+  "<esc>": "exitInsertMode"
+  "<c-[>": "exitInsertMode"
 
   "H": "goBack"
   "L": "goForward"
@@ -217,6 +229,7 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
   enterInsertMode: ["Enter insert mode"]
+  exitInsertMode: ["Exit insert mode"]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
