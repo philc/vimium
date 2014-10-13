@@ -14,6 +14,7 @@ OPEN_IN_NEW_FG_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
+DOWNLOAD_LINK_URL = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -52,6 +53,7 @@ LinkHints =
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
+  activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -93,7 +95,8 @@ LinkHints =
         DomUtils.simulateClick(link, {
           shiftKey: @mode is OPEN_IN_NEW_FG_TAB,
           metaKey: KeyboardUtils.platform == "Mac",
-          ctrlKey: KeyboardUtils.platform != "Mac" })
+          ctrlKey: KeyboardUtils.platform != "Mac",
+          altKey: false})
     else if @mode is COPY_LINK_URL
       HUD.show("Copy link URL to Clipboard")
       @linkActivator = (link) ->
@@ -105,6 +108,13 @@ LinkHints =
         chrome.runtime.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
+    else if @mode is DOWNLOAD_LINK_URL
+      HUD.show("Download link URL")
+      @linkActivator = (link) ->
+        DomUtils.simulateClick(link, {
+          altKey: true,
+          ctrlKey: false,
+          metaKey: false })
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
