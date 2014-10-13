@@ -228,7 +228,7 @@ window.focusThisFrame = (shouldHighlight) ->
 
 extend window,
   scrollToBottom: -> Scroller.scrollTo "y", "max"
-  scrollToTop: -> Scroller.scrollTo "y", 0
+  scrollToTop: (count) -> Scroller.scrollTo "y", (count - 1) * settings.get("scrollStepSize")
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
