@@ -115,7 +115,7 @@ Commands =
     tabManipulation:
       ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
       "restoreTab", "moveTabToNewWindow", "togglePinTab", "closeTabsOnLeft","closeTabsOnRight",
-      "closeOtherTabs", "moveTabLeft", "moveTabRight"]
+      "closeOtherTabs", "moveTabLeft", "moveTabRight", "moveTabToLeft", "moveTabToRight"]
     misc:
       ["showHelp"]
 
@@ -128,8 +128,8 @@ Commands =
     "LinkHints.activateModeToOpenInNewWindow", "LinkHints.activateModeToOpenInNewFullscreenWindow",
     "LinkHints.activateModeToOpenIncognito", "LinkHints.activateModeToHover", "LinkHints.unhoverLast",
     "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab", "goNext", "goPrevious",
-    "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
-    "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
+    "Marks.activateCreateMode", "Marks.activateGotoMode", "moveTabLeft", "moveTabRight", "moveTabToLeft",
+    "moveTabToRight", "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -292,7 +292,9 @@ commandDescriptions =
   closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
 
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
-  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
+  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true }]
+  moveTabToLeft: ["Move tab all the way to the left", { background: true, passCountToFunction: true }]
+  moveTabToRight: ["Move tab all the way to the right", { background: true, passCountToFunction: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry"]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab"]
