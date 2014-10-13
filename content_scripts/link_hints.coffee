@@ -16,6 +16,8 @@ COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
 DOWNLOAD_LINK_URL = {}
 HOVER = {}
+OPEN_IN_NEW_WINDOW = {}
+OPEN_IN_NEW_FULLSCREEN_WINDOW = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -56,6 +58,8 @@ LinkHints =
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
   activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
   activateModeToHover: -> @activateMode(HOVER)
+  activateModeToOpenInNewWindow: -> @activateMode(OPEN_IN_NEW_WINDOW)
+  activateModeToOpenInNewFullscreenWindow: -> @activateMode(OPEN_IN_NEW_FULLSCREEN_WINDOW)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -91,6 +95,7 @@ LinkHints =
         HUD.show("Open link in new tab and switch to it")
       else
         HUD.show("Open multiple links in a new tab")
+
       @linkActivator = (link) ->
         @unhoverLast(link)
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
@@ -102,6 +107,7 @@ LinkHints =
           altKey: false})
     else if @mode is COPY_LINK_URL
       HUD.show("Copy link URL to Clipboard")
+
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
     else if @mode is OPEN_INCOGNITO
@@ -113,6 +119,7 @@ LinkHints =
           url: link.href)
     else if @mode is DOWNLOAD_LINK_URL
       HUD.show("Download link URL")
+
       @linkActivator = (link) ->
         @unhoverLast(link)
         DomUtils.simulateClick(link, {
@@ -120,9 +127,23 @@ LinkHints =
           ctrlKey: false,
           metaKey: false })
     else if @mode is HOVER
+      HUD.show("Hover over a link")
+
       @linkActivator = (link) ->
         @unhoverLast(link)
         DomUtils.simulateHover(link)
+    else if @mode is OPEN_IN_NEW_FULLSCREEN_WINDOW
+      HUD.show("Open link in fullscreen window")
+
+      @linkActivator = (link) ->
+        chrome.runtime.sendMessage(
+          handler: 'openUrlInFullscreen'
+          url: link.href)
+    else if @mode is OPEN_IN_NEW_WINDOW
+      HUD.show("Open link in new window")
+
+      @linkActivator = (link) ->
+        DomUtils.simulateClick(link, {shiftKey: true})
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
       @linkActivator = (link) ->
