@@ -12,6 +12,12 @@ Utils =
     func = obj[components.pop()]
     func.apply(obj, argArray)
 
+  # escape all special characters, so RegExp just parses the string 'as is'.
+  # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+  escapeRegexSpecialChars: (str) ->
+    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    str.replace escapeRegExp, "\\$&"
+
   # Creates a single DOM element from :html
   createElementFromHtml: (html) ->
     tmp = document.createElement("div")
