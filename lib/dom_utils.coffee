@@ -91,29 +91,53 @@ DomUtils =
     null
 
   #
-  # Selectable means the element has a text caret; this is not the same as "focusable".
+  # Selectable means the element should be focused rather than clicked, and that there may be a text caret.
   #
   isSelectable: (element) ->
-    selectableTypes = ["search", "text", "password"]
-    (element.nodeName.toLowerCase() == "input" && selectableTypes.indexOf(element.type) >= 0) ||
-        element.nodeName.toLowerCase() == "textarea"
+    unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset"]
+    selectableElements = ["textarea", "select"]
+    nodeName = element.nodeName.toLowerCase()
+
+    (nodeName == "input" and unselectableTypes.indexOf(element.type) == -1) or
+        selectableElements.indexOf(nodeName) != -1
 
   simulateSelect: (element) ->
     element.focus()
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
-    element.setSelectionRange(element.value.length, element.value.length)
+    try element.setSelectionRange(element.value.length, element.value.length)
+
+  focusContentEditable: (element) ->
+    range = document.createRange()
+    if element.lastChild
+      range.setStartAfter element.lastChild
+      range.setEndAfter element.lastChild
+
+    sel= window.getSelection()
+    sel.removeAllRanges()
+    sel.addRange range
+
+    element.focus()
+
+  simulateHover: (element, modifiers) ->
+    @simulateMouseEvent("mouseover", element, modifiers)
+
+  simulateUnhover: (element, modifiers) ->
+    @simulateMouseEvent("mouseout", element, modifiers)
 
   simulateClick: (element, modifiers) ->
-    modifiers ||= {}
-
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
-      mouseEvent = document.createEvent("MouseEvents")
-      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
+      @simulateMouseEvent(event, element, modifiers)
+
+  simulateMouseEvent: (event, element, modifiers) ->
+    modifiers ||= {}
+    mouseEvent = document.createEvent("MouseEvents")
+    mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
       modifiers.shiftKey, modifiers.metaKey, 0, null)
-      # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
-      # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
-      element.dispatchEvent(mouseEvent)
+    # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
+    # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
+    element.dispatchEvent(mouseEvent)
+
 
   # momentarily flash a rectangular border to give user some visual feedback
   flashRect: (rect) ->

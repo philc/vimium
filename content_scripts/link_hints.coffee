@@ -14,6 +14,10 @@ OPEN_IN_NEW_FG_TAB = {}
 OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
+DOWNLOAD_LINK_URL = {}
+HOVER = {}
+OPEN_IN_NEW_WINDOW = {}
+OPEN_IN_NEW_FULLSCREEN_WINDOW = {}
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -52,6 +56,11 @@ LinkHints =
   activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
   activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
+  activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
+  activateModeToSaveLinkAs: -> @activateMode(DOWNLOAD_LINK_URL)
+  activateModeToHover: -> @activateMode(HOVER)
+  activateModeToOpenInNewWindow: -> @activateMode(OPEN_IN_NEW_WINDOW)
+  activateModeToOpenInNewFullscreenWindow: -> @activateMode(OPEN_IN_NEW_FULLSCREEN_WINDOW)
 
   activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
@@ -87,17 +96,25 @@ LinkHints =
         HUD.show("Open link in new tab and switch to it")
       else
         HUD.show("Open multiple links in a new tab")
+
       @linkActivator = (link) ->
+        @unhoverLast(link)
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick(link, {
           shiftKey: @mode is OPEN_IN_NEW_FG_TAB,
           metaKey: KeyboardUtils.platform == "Mac",
-          ctrlKey: KeyboardUtils.platform != "Mac" })
+          ctrlKey: KeyboardUtils.platform != "Mac",
+          altKey: false})
     else if @mode is COPY_LINK_URL
       HUD.show("Copy link URL to Clipboard")
+
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
+    else if @mode is DOWNLOAD_LINK_URL
+      HUD.show("Download link URL")
+      @linkActivator = (link) ->
+        chrome.runtime.sendMessage {handler: "downloadUrl", data: link.href}
     else if @mode is OPEN_INCOGNITO
       HUD.show("Open link in incognito window")
 
@@ -105,9 +122,38 @@ LinkHints =
         chrome.runtime.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
+    else if @mode is DOWNLOAD_LINK_URL
+      HUD.show("Download link URL")
+
+      @linkActivator = (link) ->
+        @unhoverLast(link)
+        DomUtils.simulateClick(link, {
+          altKey: true,
+          ctrlKey: false,
+          metaKey: false })
+    else if @mode is HOVER
+      HUD.show("Hover over a link")
+
+      @linkActivator = (link) ->
+        @unhoverLast(link)
+        DomUtils.simulateHover(link)
+    else if @mode is OPEN_IN_NEW_FULLSCREEN_WINDOW
+      HUD.show("Open link in fullscreen window")
+
+      @linkActivator = (link) ->
+        chrome.runtime.sendMessage(
+          handler: 'openUrlInFullscreen'
+          url: link.href)
+    else if @mode is OPEN_IN_NEW_WINDOW
+      HUD.show("Open link in new window")
+
+      @linkActivator = (link) ->
+        DomUtils.simulateClick(link, {shiftKey: true})
     else # OPEN_IN_CURRENT_TAB
       HUD.show("Open link in current tab")
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+      @linkActivator = (link) ->
+        @unhoverLast(link)
+        DomUtils.simulateClick link
 
   #
   # Creates a link marker for the given link.
@@ -172,6 +218,7 @@ LinkHints =
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
         (@mode == OPEN_IN_CURRENT_TAB or
+         @mode == OPEN_WITH_QUEUE or
          @mode == OPEN_IN_NEW_BG_TAB or
          @mode == OPEN_IN_NEW_FG_TAB))
       # Toggle whether to open link in a new or current tab.
@@ -180,13 +227,25 @@ LinkHints =
       if event.keyCode == keyCodes.shiftKey
         @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
 
+        handlerStack.push
+          keyup: (event) =>
+            return if (event.keyCode != keyCodes.shiftKey)
+            @setOpenLinkMode prev_mode if @isActive
+            handlerStack.remove()
+
       else # event.keyCode == keyCodes.ctrlKey
         @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
+
+        handlerStack.push
+          keyup: (event) =>
+            return if (event.keyCode != keyCodes.ctrlKey)
+            @setOpenLinkMode prev_mode if @isActive
+            handlerStack.remove()
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
       @deactivateMode()
-    else
+    else if (event.keyCode != keyCodes.shiftKey and event.keyCode != keyCodes.ctrlKey)
       keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
       linksMatched = keyResult.linksMatched
       delay = keyResult.delay ? 0
@@ -209,6 +268,9 @@ LinkHints =
     clickEl = matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
+      @deactivateMode(delay, -> LinkHints.delayMode = false)
+    else if clickEl.contentEditable == "true"
+      DomUtils.focusContentEditable(clickEl)
       @deactivateMode(delay, -> LinkHints.delayMode = false)
     else
       # TODO figure out which other input elements should not receive focus
@@ -262,6 +324,13 @@ LinkHints =
         deactivate()
         callback() if callback
       delay)
+  #
+  # Sends a "mouseout" event to the last "mouseover"-ed element.
+  #
+  unhoverLast: (element) ->
+    DomUtils.simulateUnhover(@_lastHoveredElement) if @_lastHoveredElement
+    @_lastHoveredElement = element
+  _lastHoveredElement: null
 
 alphabetHints =
   hintKeystrokeQueue: []
@@ -459,6 +528,7 @@ filterHints =
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
     @labelMap = {}
+
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.

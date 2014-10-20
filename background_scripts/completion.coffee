@@ -275,8 +275,9 @@ class SearchEngineCompleter
     searchEngineMatch = this.getSearchEngineMatches(queryTerms[0])
     suggestions = []
     if searchEngineMatch
-      searchEngineMatch = searchEngineMatch.replace(/%s/g, queryTerms[1..].join(" "))
-      suggestion = new Suggestion(queryTerms, "search", searchEngineMatch, queryTerms[0] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
+      searchEngineMatch[0] = searchEngineMatch[0].replace(/%s/g, queryTerms[1..].join(" "))
+      suggestion = new Suggestion(queryTerms, "search", searchEngineMatch[0],
+       searchEngineMatch[1] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
       suggestions.push(suggestion)
     onComplete(suggestions)
 
@@ -291,7 +292,7 @@ class SearchEngineCompleter
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
-  constructor: (@completers) -> @maxResults = 10
+  constructor: (@completers, @maxResults = 10) ->
 
   refresh: -> completer.refresh() for completer in @completers when completer.refresh
 
@@ -311,7 +312,10 @@ class MultiCompleter
         suggestions = suggestions.concat(newSuggestions)
         completersFinished += 1
         if completersFinished >= @completers.length
-          results = @sortSuggestions(suggestions)[0...@maxResults]
+          if @maxResults == -1
+            results = @sortSuggestions(suggestions)
+          else
+            results = @sortSuggestions(suggestions)[0...@maxResults]
           result.generateHtml() for result in results
           onComplete(results)
           @filterInProgress = false
@@ -435,8 +439,6 @@ RegexpCache =
   init: ->
     @initialized = true
     @clear()
-    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    @escapeRegExp ||= /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 
   clear: -> @cache = {}
 
@@ -450,7 +452,7 @@ RegexpCache =
   # TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
   get: (string, prefix="", suffix="") ->
     @init() unless @initialized
-    regexpString = string.replace(@escapeRegExp, "\\$&")
+    regexpString = Utils.escapeRegexSpecialChars string
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix

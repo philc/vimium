@@ -20,6 +20,7 @@ passKeys = null
 keyQueue = null
 # The user's operating system.
 currentCompletionKeys = null
+insertExitKeys = null
 validFirstKeys = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
@@ -121,6 +122,8 @@ initializePreDomReady = ->
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    vomnibarShow: -> Vomnibar.show()
+    vomnibarClose: -> Vomnibar.close()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -151,6 +154,7 @@ initializeWhenEnabled = (newPassKeys=undefined) ->
     installListener "focus", (event) -> if isEnabledForUrl then onFocusCapturePhase(event) else true
     installListener "blur", (event) -> if isEnabledForUrl then onBlurCapturePhase(event)
     installListener "DOMActivate", (event) -> if isEnabledForUrl then onDOMActivate(event)
+
     enterInsertModeIfElementIsFocused()
     installedListeners = true
 
@@ -171,7 +175,7 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrameIfSizeAvailable(window.top == window.self)
+  registerFrameIfSizeAvailable()
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
@@ -179,16 +183,22 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
 
 # This is a little hacky but sometimes the size wasn't available on domReady?
-registerFrameIfSizeAvailable = (is_top) ->
+registerFrameIfSizeAvailable = ->
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
     chrome.runtime.sendMessage(
       handler: "registerFrame"
       frameId: frameId
       area: innerWidth * innerHeight
-      is_top: is_top
-      total: frames.length + 1)
+      is_top: window.top == window.self)
   else
-    setTimeout((-> registerFrameIfSizeAvailable(is_top)), 100)
+    setTimeout(registerFrameIfSizeAvailable, 100)
+
+# Unregister the frame if we're going to exit.
+unregisterFrame = ->
+  chrome.runtime.sendMessage(
+    handler: "unregisterFrame"
+    frameId: frameId
+    is_top: window.top == window.self)
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -225,7 +235,7 @@ window.focusThisFrame = (shouldHighlight) ->
 
 extend window,
   scrollToBottom: -> Scroller.scrollTo "y", "max"
-  scrollToTop: -> Scroller.scrollTo "y", 0
+  scrollToTop: (count) -> Scroller.scrollTo "y", (count - 1) * settings.get("scrollStepSize")
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
@@ -236,6 +246,8 @@ extend window,
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
   scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
   scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
+  scrollBack: -> Scroller.scrollBack()
+  scrollForward: -> Scroller.scrollForward()
 
 extend window,
   reload: -> window.location.reload()
@@ -403,7 +415,13 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
+  rawKeyChar = keyChar
+  if (KeyboardUtils.isEscape(event))
+    rawKeyChar = "<esc>"
+
+  rawKeyChar ||= KeyboardUtils.getKeyChar(event)
+
+  if (isInsertMode() && insertExitKeys.indexOf(rawKeyChar) != -1)
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
@@ -413,6 +431,10 @@ onKeydown = (event) ->
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
+    else if isEmbed(event.srcElement) and KeyboardUtils.isEscape(event)
+      # this can blur flash player, i didn't test other player
+      # and the code may stay at here is not best, but it work well
+      document.activeElement.blur()
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
@@ -438,6 +460,7 @@ onKeydown = (event) ->
     hideHelpDialog()
     DomUtils.suppressEvent event
     handledKeydownEvents.push event
+
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
@@ -496,6 +519,7 @@ checkIfEnabledForUrl = ->
 refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
+    insertExitKeys = response.insertExitKeys
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
@@ -522,7 +546,7 @@ isFocusable = (element) -> isEditable(element) || isEmbed(element)
 # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
 # unfocused.
 #
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > 0
+isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > -1
 
 #
 # Input or text elements are considered focusable and able to receieve their own keyboard events,
@@ -530,14 +554,7 @@ isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase(
 # any element which makes it a rich text editor, like the notes on jjot.com.
 #
 isEditable = (target) ->
-  return true if target.isContentEditable
-  nodeName = target.nodeName.toLowerCase()
-  # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
-  noFocus = ["radio", "checkbox"]
-  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
-    return true
-  focusableElements = ["textarea", "select"]
-  focusableElements.indexOf(nodeName) >= 0
+  target.isContentEditable or DomUtils.isSelectable(target)
 
 #
 # Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
@@ -592,27 +609,19 @@ updateFindModeQuery = ->
   # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
   # sequentially so the browser handles the scrolling / text selection.
   if findModeQuery.isRegex
-    try
-      pattern = new RegExp(findModeQuery.parsedQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
-    catch error
-      # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
-      return
-    # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
-    text = document.body.innerText
-    findModeQuery.regexMatches = text.match(pattern)
+    parsedEscapedRegex = findModeQuery.parsedQuery
     findModeQuery.activeRegexIndex = 0
-    findModeQuery.matchCount = findModeQuery.regexMatches?.length
-  # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
-  # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
-  # from the internal representation used by window.find.
   else
-    # escape all special characters, so RegExp just parses the string 'as is'.
-    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
-    parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
-    pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
-    text = document.body.innerText
-    findModeQuery.matchCount = text.match(pattern)?.length
+    parsedEscapedRegex = Utils.escapeRegexSpecialChars findModeQuery.parsedQuery
+  try
+    pattern = new RegExp parsedEscapedRegex, "g" + (if findModeQuery.ignoreCase then "i" else "")
+  catch error
+    # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
+    return
+  # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
+  text = document.body.innerText
+  findModeQuery.regexMatches = text.match pattern
+  findModeQuery.matchCount = findModeQuery.regexMatches?.length
 
 handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
@@ -723,7 +732,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
   # find()ing an empty query always returns false
   return "" unless findModeQuery.regexMatches
 
-  totalMatches = findModeQuery.regexMatches.length
+  totalMatches = findModeQuery.matchCount
   findModeQuery.activeRegexIndex += stepSize + totalMatches
   findModeQuery.activeRegexIndex %= totalMatches
 
@@ -1057,6 +1066,7 @@ Tween =
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", initializeOnDomReady)
+window.addEventListener("unload", unregisterFrame)
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(

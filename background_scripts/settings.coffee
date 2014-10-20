@@ -47,9 +47,29 @@ root.Settings = Settings =
   parseSearchEngines: (searchEnginesText) ->
     @searchEnginesMap = {}
     # find the split pairs by first splitting by line then splitting on the first `: `
-    split_pairs = ( pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#" )
-    @searchEnginesMap[a[0]] = a[1] for a in split_pairs
+    split_pairs = []
+    comment = null;
+    for pair in searchEnginesText.split(/\n/)
+      final_comment = null;
+      if pair[0] == '#' #comment on line before
+        comment = pair[1..-1]
+      else
+        split_pair = pair.split(/: (.+)/, 2)
+        command_name = split_pair[0]
+        inline_comment = split_pair[1].split(/\s#/)
+        command_url = inline_comment[0]
+        if comment #comment on previous line
+          final_comment = comment
+          comment = null; #unset main comment
+        else if inline_comment[1] #inline comment
+          final_comment = inline_comment[1]
+        else #no comment
+          final_comment = split_pair[0] #we use the command string
+        split_pairs.push [command_name, command_url, final_comment]
+
+    @searchEnginesMap[a[0]] = a[1..-1] for a in split_pairs
     @searchEnginesMap
+
   getSearchEngines: ->
     this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
     @searchEnginesMap
