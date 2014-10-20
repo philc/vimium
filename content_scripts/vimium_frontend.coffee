@@ -554,14 +554,7 @@ isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase(
 # any element which makes it a rich text editor, like the notes on jjot.com.
 #
 isEditable = (target) ->
-  return true if target.isContentEditable
-  nodeName = target.nodeName.toLowerCase()
-  # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
-  noFocus = ["radio", "checkbox", "button"]
-  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
-    return true
-  focusableElements = ["textarea", "select"]
-  focusableElements.indexOf(nodeName) >= 0
+  target.isContentEditable or DomUtils.isSelectable(target)
 
 #
 # Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert

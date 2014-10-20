@@ -91,12 +91,15 @@ DomUtils =
     null
 
   #
-  # Selectable means the element has a text caret; this is not the same as "focusable".
+  # Selectable means the element should be focused rather than clicked, and that there may be a text caret.
   #
   isSelectable: (element) ->
     unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset"]
-    (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
-        element.nodeName.toLowerCase() == "textarea"
+    selectableElements = ["textarea", "select"]
+    nodeName = element.nodeName.toLowerCase()
+
+    (nodeName == "input" and unselectableTypes.indexOf(element.type) == -1) or
+        selectableElements.indexOf(nodeName) != -1
 
   simulateSelect: (element) ->
     element.focus()
