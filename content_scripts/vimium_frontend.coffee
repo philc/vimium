@@ -154,6 +154,7 @@ initializeWhenEnabled = (newPassKeys=undefined) ->
     installListener "focus", (event) -> if isEnabledForUrl then onFocusCapturePhase(event) else true
     installListener "blur", (event) -> if isEnabledForUrl then onBlurCapturePhase(event)
     installListener "DOMActivate", (event) -> if isEnabledForUrl then onDOMActivate(event)
+
     enterInsertModeIfElementIsFocused()
     installedListeners = true
 
@@ -174,7 +175,7 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrameIfSizeAvailable(window.top == window.self)
+  registerFrameIfSizeAvailable()
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
@@ -182,16 +183,22 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
 
 # This is a little hacky but sometimes the size wasn't available on domReady?
-registerFrameIfSizeAvailable = (is_top) ->
+registerFrameIfSizeAvailable = ->
   if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
     chrome.runtime.sendMessage(
       handler: "registerFrame"
       frameId: frameId
       area: innerWidth * innerHeight
-      is_top: is_top
-      total: frames.length + 1)
+      is_top: window.top == window.self)
   else
-    setTimeout((-> registerFrameIfSizeAvailable(is_top)), 100)
+    setTimeout(registerFrameIfSizeAvailable, 100)
+
+# Unregister the frame if we're going to exit.
+unregisterFrame = ->
+  chrome.runtime.sendMessage(
+    handler: "unregisterFrame"
+    frameId: frameId
+    is_top: window.top == window.self)
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -550,7 +557,7 @@ isEditable = (target) ->
   return true if target.isContentEditable
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
-  noFocus = ["radio", "checkbox"]
+  noFocus = ["radio", "checkbox", "button"]
   if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
     return true
   focusableElements = ["textarea", "select"]
@@ -1066,6 +1073,7 @@ Tween =
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", initializeOnDomReady)
+window.addEventListener("unload", unregisterFrame)
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(
