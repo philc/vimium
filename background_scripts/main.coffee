@@ -119,7 +119,7 @@ root.addExcludedUrl = (url) ->
       continue
     # And just keep everything else.
     newExcludedUrls.push(spec)
-    
+
   Settings.set("excludedUrls", newExcludedUrls.join("\n"))
 
   chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
@@ -313,11 +313,11 @@ BackgroundCommands =
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
       frames = framesForTab[tab.id].frames
-      currIndex = getCurrFrameIndex(frames)
+      currIndex = frames.frameIndex or getCurrFrameIndex(frames)
 
       # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
       # since it exists only to contain the other frames.
-      newIndex = (currIndex + count) % frames.length
+      frames.frameIndex = newIndex = (currIndex + count) % frames.length
 
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
 
@@ -424,7 +424,7 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
-  updateOpenTabs(tab)
+  updateOpenTabs(tab) if "url" in changeInfo
   updateActiveState(tabId)
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
@@ -624,11 +624,31 @@ registerFrame = (request, sender) ->
 
   if (request.is_top)
     focusedFrame = request.frameId
-    framesForTab[sender.tab.id].total = request.total
+    framesForTab[sender.tab.id].frames.frameIndex = framesForTab[sender.tab.id].frames.length
 
   framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area })
 
-handleFrameFocused = (request, sender) -> focusedFrame = request.frameId
+unregisterFrame = (request, sender) ->
+  return unless framesForTab[sender.tab.id]
+
+  if request.is_top # The whole tab is closing, so we can drop the frames list.
+    updateOpenTabs(sender.tab)
+    return
+
+  frames = framesForTab[sender.tab.id].frames
+
+  for index, tabDetails of frames
+    if (tabDetails.id == request.frameId)
+      frames.splice(index, 1)
+
+      frames.frameIndex-- if frames.frameIndex >= index # Adjust index if it is shifted.
+      nextFrame(0) if frames.frameIndex == index # Focus another frame if the closed one was focused.
+      return
+
+handleFrameFocused = (request, sender) ->
+  console.log "Focusing on frame #{request.frameId}"
+  focusedFrame = request.frameId
+  framesForTab[sender.tab.id].frames.frameIndex = getCurrFrameIndex(framesForTab[sender.tab.id])
 
 getCurrFrameIndex = (frames) ->
   for i in [0...frames.length]
@@ -642,22 +662,23 @@ portHandlers =
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
-  getCompletionKeys: getCompletionKeysRequest,
-  getCurrentTabUrl: getCurrentTabUrl,
-  openUrlInNewTab: openUrlInNewTab,
-  openUrlInIncognito: openUrlInIncognito,
-  openUrlInCurrentTab: openUrlInCurrentTab,
-  openOptionsPageInNewTab: openOptionsPageInNewTab,
-  registerFrame: registerFrame,
-  frameFocused: handleFrameFocused,
-  upgradeNotificationClosed: upgradeNotificationClosed,
-  updateScrollPosition: handleUpdateScrollPosition,
-  copyToClipboard: copyToClipboard,
-  isEnabledForUrl: isEnabledForUrl,
-  saveHelpDialogSettings: saveHelpDialogSettings,
-  selectSpecificTab: selectSpecificTab,
+  getCompletionKeys: getCompletionKeysRequest
+  getCurrentTabUrl: getCurrentTabUrl
+  openUrlInNewTab: openUrlInNewTab
+  openUrlInIncognito: openUrlInIncognito
+  openUrlInCurrentTab: openUrlInCurrentTab
+  openOptionsPageInNewTab: openOptionsPageInNewTab
+  registerFrame: registerFrame
+  unregisterFrame: unregisterFrame
+  frameFocused: handleFrameFocused
+  upgradeNotificationClosed: upgradeNotificationClosed
+  updateScrollPosition: handleUpdateScrollPosition
+  copyToClipboard: copyToClipboard
+  isEnabledForUrl: isEnabledForUrl
+  saveHelpDialogSettings: saveHelpDialogSettings
+  selectSpecificTab: selectSpecificTab
   refreshCompleter: refreshCompleter
-  createMark: Marks.create.bind(Marks),
+  createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
 
 # Convenience function for development use.
