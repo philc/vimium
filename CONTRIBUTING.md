@@ -59,6 +59,15 @@ reports:
   * We follow two major differences from this style guide:
     * Wrap lines at 110 characters instead of 80.
     * Use double-quoted strings by default.
+  * When writing comments, uppercase the first letter of your sentence, and put a period at the end.
+  * If you have a short conditional, feel free to put it on one line:
+
+        # No
+        if i < 10
+          return
+
+        # Yes
+        return if i < 10
 
 ## Pull Requests
 
