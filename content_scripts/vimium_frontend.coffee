@@ -179,19 +179,26 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrame(window.top == window.self)
+  registerFrame()
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
-registerFrame = (is_top) ->
+registerFrame = ->
   chrome.runtime.sendMessage(
     handler: "registerFrame"
     frameId: frameId
-    is_top: is_top
+    is_top: window.top == window.self
     total: frames.length + 1)
+
+# Unregister the frame if we're going to exit.
+unregisterFrame = ->
+  chrome.runtime.sendMessage(
+    handler: "unregisterFrame"
+    frameId: frameId
+    is_top: window.top == window.self)
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -1056,6 +1063,7 @@ Tween =
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", initializeOnDomReady)
+window.addEventListener("unload", unregisterFrame)
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(
