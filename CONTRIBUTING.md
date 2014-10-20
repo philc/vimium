@@ -74,6 +74,29 @@ reports:
 When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
 CREDITS file with your patch.
 
+## What makes for a good feature request/contribution to Vimium?
+
+Good features:
+
+* Useful for lots of Vimium users
+* Require no/little documentation
+* Useful without configuration
+* Intuitive or leverage strong convention from Vim
+* Work robustly on most/all sites
+
+Less-good features:
+
+* Are very niche, and so aren't useful for many Vimium users
+* Require explanation
+* Require configuration before it becomes useful
+* Unintuitive, or they don't leverage a strong convention from Vim
+* Might be flaky and don't work in many cases
+
+We use these guidelines, in addition to the code complexity, when deciding whether to merge in a pull request.
+
+If you're worried that a feature you plan to build won't be a good fit for core Vimium, just open a github
+issue for discussion or send an email to the Vimium mailing list.
+
 ## How to release Vimium to the Chrome Store
 
 This process is currently only done by Phil or Ilya.
