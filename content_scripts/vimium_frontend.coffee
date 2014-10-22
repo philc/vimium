@@ -15,6 +15,8 @@ isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
 # (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
+# "passKeys" are keys which would normally be handled by Vimium, but are disabled on this tab, and therefore
+# are passed through to the underlying page.
 isEnabledForUrl = true
 passKeys = null
 keyQueue = null
@@ -130,6 +132,7 @@ initializePreDomReady = ->
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler == "registerFrame" or request.handler == "frameFocused"
     sendResponse requestHandlers[request.name](request, sender)
+    # Ensure the sendResponse callback is freed.
     false
 
 # Wrapper to install event listeners.  Syntactic sugar.
@@ -141,9 +144,9 @@ installListener = (event, callback) -> document.addEventListener(event, callback
 # listeners, is error prone.  It's more difficult to keep track of the state.
 #
 installedListeners = false
-initializeWhenEnabled = (newPassKeys=undefined) ->
+initializeWhenEnabled = (newPassKeys) ->
   isEnabledForUrl = true
-  passKeys = passKeys if typeof(newPassKeys) != 'undefined'
+  passKeys = newPassKeys
   if (!installedListeners)
     installListener "keydown", (event) -> if isEnabledForUrl then onKeydown(event) else true
     installListener "keypress", (event) -> if isEnabledForUrl then onKeypress(event) else true
@@ -328,14 +331,11 @@ extend window,
 
       false
 
-# Should this keyChar be passed to the underlying page?
+# Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
-# TODO: This currently only works for unmodified keys (so not for '<c-a>', or the like).  It's not clear if
-# this is a problem or not.  I don't recall coming across a web page with modifier key bindings.  Such
-# bindings might be too likely to conflict with browsers' native bindings.
 isPassKey = ( keyChar ) ->
-  !keyQueue and passKeys and 0 <= passKeys.indexOf keyChar
+  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
 handledKeydownEvents = []
 
@@ -365,7 +365,6 @@ onKeypress = (event) ->
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
-        # Is this keyChar is to be passed to the underlying page?
         if (isPassKey keyChar)
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1)

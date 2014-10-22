@@ -1,36 +1,148 @@
-$ = (id) -> document.getElementById id
 
+$ = (id) -> document.getElementById id
 bgSettings = chrome.extension.getBackgroundPage().Settings
 
-editableFields = [ "scrollStepSize", "excludedUrls", "linkHintCharacters", "linkHintNumbers",
-  "userDefinedLinkHintCss", "keyMappings", "filterLinkHints", "previousPatterns",
-  "nextPatterns", "hideHud", "regexFindMode", "searchUrl", "searchEngines"]
+#
+# Class hierarchy for various types of option.
+class Option
+  # Base class for all option classes.
+  # Abstract. Option does not define @populateElement or @readValueFromElement.
 
-canBeEmptyFields = ["excludedUrls", "keyMappings", "userDefinedLinkHintCss", "searchEngines"]
+  # Static. Array of all options.
+  @all = []
 
-document.addEventListener "DOMContentLoaded", ->
-  populateOptions()
+  constructor: (field,enableSaveButton) ->
+    @field = field
+    @element = $(@field)
+    @element.addEventListener "change", enableSaveButton
+    @fetch()
+    Option.all.push @
 
-  for field in editableFields
-    $(field).addEventListener "keyup", onOptionKeyup, false
-    $(field).addEventListener "change", enableSaveButton, false
-    $(field).addEventListener "change", onDataLoaded, false
+  # Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
+  # Return the fetched value.
+  fetch: ->
+    @populateElement @previous = bgSettings.get @field
+    @previous
 
-  $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions, false
-  $("showCommands").addEventListener "click", (->
-    showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
-  ), false
-  document.getElementById("restoreSettings").addEventListener "click", restoreToDefaults
-  document.getElementById("saveOptions").addEventListener "click", saveOptions
+  # Write this option's new value back to localStorage, if necessary.
+  save: ->
+    value = @readValueFromElement()
+    if not @areEqual value, @previous
+      bgSettings.set @field, @previous = value
+      bgSettings.performPostUpdateHook @field, value
 
-window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
+  # Compare values; this is overridden by sub-classes.
+  areEqual: (a,b) -> a == b
 
-onOptionKeyup = (event) ->
-  if (event.target.getAttribute("type") isnt "checkbox" and
-      event.target.getAttribute("savedValue") isnt event.target.value)
-    enableSaveButton()
+  restoreToDefault: ->
+    bgSettings.clear @field
+    @fetch()
 
-onDataLoaded = ->
+  # Abstract method; only implemented in sub-classes.
+  # Populate the option's DOM element (@element) with the setting's current value.
+  # populateElement: (value) -> DO_SOMETHING
+
+  # Abstract method; only implemented in sub-classes.
+  # Extract the setting's new value from the option's DOM element (@element).
+  # readValueFromElement: -> RETURN_SOMETHING
+
+class NumberOption extends Option
+  populateElement: (value) -> @element.value = value
+  readValueFromElement: -> parseFloat @element.value
+
+class TextOption extends Option
+  populateElement: (value) -> @element.value = value
+  readValueFromElement: -> @element.value.trim()
+
+class NonEmptyTextOption extends Option
+  populateElement: (value) -> @element.value = value
+  # If the new value is not empty, then return it. Otherwise, restore the default value.
+  readValueFromElement: -> if value = @element.value.trim() then value else @restoreToDefault()
+
+class CheckBoxOption extends Option
+  populateElement: (value) -> @element.checked = value
+  readValueFromElement: -> @element.checked
+
+class ExclusionRulesOption extends Option
+  constructor: (args...) ->
+    super(args...)
+    $("exclusionAddButton").addEventListener "click", (event) =>
+      @appendRule { pattern: "", passKeys: "" }
+      @maintainExclusionMargin()
+      # Focus the pattern element in the new rule.
+      @element.children[@element.children.length-1].children[0].children[0].focus()
+      # Scroll the new rule into view.
+      exclusionScrollBox = $("exclusionScrollBox")
+      exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
+
+  populateElement: (rules) ->
+    while @element.firstChild
+      @element.removeChild @element.firstChild
+    for rule in rules
+      @appendRule rule
+    @maintainExclusionMargin()
+
+  # Append a row for a new rule.
+  appendRule: (rule) ->
+    content = document.querySelector('#exclusionRuleTemplate').content
+    row = document.importNode content, true
+
+    for field in ["pattern", "passKeys"]
+      element = row.querySelector ".#{field}"
+      element.value = rule[field]
+      for event in [ "keyup", "change" ]
+        element.addEventListener event, enableSaveButton
+
+    remove = row.querySelector ".exclusionRemoveButton"
+    remove.addEventListener "click", (event) =>
+      row = event.target.parentNode.parentNode
+      row.parentNode.removeChild row
+      enableSaveButton()
+      @maintainExclusionMargin()
+
+    @element.appendChild row
+
+  readValueFromElement: ->
+    rules =
+      for element in @element.children
+        pattern = element.children[0].firstChild.value.trim()
+        passKeys = element.children[1].firstChild.value.trim()
+        { pattern: pattern, passKeys: passKeys }
+    rules.filter (rule) -> rule.pattern
+
+  areEqual: (a,b) ->
+    # Flatten each list of rules to a newline-separated string representation, and then use string equality.
+    # This is correct because patterns and passKeys cannot themselves contain newlines.
+    flatten = (rule) -> if rule and rule.pattern then rule.pattern + "\n" + rule.passKeys else ""
+    a.map(flatten).join("\n") == b.map(flatten).join("\n")
+
+  # Hack.  There has to be a better way than...
+  # The y-axis scrollbar for "exclusionRules" is only displayed if it is needed.  When visible, it appears on
+  # top of the enclosed content (partially obscuring it).  Here, we adjust the margin of the "Remove" button to
+  # compensate.
+  maintainExclusionMargin: ->
+    scrollBox = $("exclusionScrollBox")
+    margin = if scrollBox.clientHeight < scrollBox.scrollHeight then "16px" else "0px"
+    for element in scrollBox.getElementsByClassName "exclusionRemoveButton"
+      element.style["margin-right"] = margin
+
+#
+# Operations for page elements.
+enableSaveButton = ->
+  $("saveOptions").removeAttribute "disabled"
+
+saveOptions = ->
+  Option.all.map (option) -> option.save()
+  $("saveOptions").disabled = true
+
+restoreToDefaults = ->
+  return unless confirm "Are you sure you want to permanently return all of Vimium's settings to their defaults?"
+  Option.all.map (option) -> option.restoreToDefault()
+  maintainLinkHintsView()
+  $("saveOptions").disabled = true
+
+# Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
+maintainLinkHintsView = ->
   hide = (el) -> el.parentNode.parentNode.style.display = "none"
   show = (el) -> el.parentNode.parentNode.style.display = "table-row"
   if $("filterLinkHints").checked
@@ -40,66 +152,48 @@ onDataLoaded = ->
     show $("linkHintCharacters")
     hide $("linkHintNumbers")
 
-enableSaveButton = ->
-  $("saveOptions").removeAttribute "disabled"
-
-# Saves options to localStorage.
-saveOptions = ->
-
-  # If the value is unchanged from the default, delete the preference from localStorage; this gives us
-  # the freedom to change the defaults in the future.
-  for fieldName in editableFields
-    field = $(fieldName)
-    switch field.getAttribute("type")
-      when "checkbox"
-        fieldValue = field.checked
-      when "number"
-        fieldValue = parseFloat field.value
+toggleAdvancedOptions =
+  do (advancedMode=false) ->
+    (event) ->
+      if advancedMode
+        $("advancedOptions").style.display = "none"
+        $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
       else
-        fieldValue = field.value.trim()
-        field.value = fieldValue
+        $("advancedOptions").style.display = "table-row-group"
+        $("advancedOptionsLink").innerHTML = "Hide advanced options"
+      advancedMode = !advancedMode
+      event.preventDefault()
 
-    # If it's empty and not a field that we allow to be empty, restore to the default value
-    if not fieldValue and canBeEmptyFields.indexOf(fieldName) is -1
-      bgSettings.clear fieldName
-      fieldValue = bgSettings.get(fieldName)
-    else
-      bgSettings.set fieldName, fieldValue
-    $(fieldName).value = fieldValue
-    $(fieldName).setAttribute "savedValue", fieldValue
-    bgSettings.performPostUpdateHook fieldName, fieldValue
+activateHelpDialog = ->
+  showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
 
-  $("saveOptions").disabled = true
+#
+# Initialization.
+document.addEventListener "DOMContentLoaded", ->
 
-# Restores select box state to saved value from localStorage.
-populateOptions = ->
-  for field in editableFields
-    val = bgSettings.get(field) or ""
-    setFieldValue $(field), val
-  onDataLoaded()
+  # Populate options.  The constructor adds each new object to "Option.all".
+  new type(name,enableSaveButton) for name, type of {
+    exclusionRules: ExclusionRulesOption
+    filterLinkHints: CheckBoxOption
+    hideHud: CheckBoxOption
+    keyMappings: TextOption
+    linkHintCharacters: NonEmptyTextOption
+    linkHintNumbers: NonEmptyTextOption
+    nextPatterns: NonEmptyTextOption
+    previousPatterns: NonEmptyTextOption
+    regexFindMode: CheckBoxOption
+    scrollStepSize: NumberOption
+    searchEngines: TextOption
+    searchUrl: NonEmptyTextOption
+    userDefinedLinkHintCss: TextOption
+  }
 
-restoreToDefaults = ->
-  return unless confirm "Are you sure you want to return Vimium's settings to their defaults?"
+  $("saveOptions").addEventListener "click", saveOptions
+  $("restoreSettings").addEventListener "click", restoreToDefaults
+  $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions
+  $("showCommands").addEventListener "click", activateHelpDialog
+  $("filterLinkHints").addEventListener "click", maintainLinkHintsView
 
-  for field in editableFields
-    val = bgSettings.defaults[field] or ""
-    setFieldValue $(field), val
-  onDataLoaded()
-  enableSaveButton()
+  maintainLinkHintsView()
+  window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
-setFieldValue = (field, value) ->
-  unless field.getAttribute("type") is "checkbox"
-    field.value = value
-    field.setAttribute "savedValue", value
-  else
-    field.checked = value
-
-toggleAdvancedOptions = do (advancedMode=false) -> (event) ->
-  if advancedMode
-    $("advancedOptions").style.display = "none"
-    $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
-  else
-    $("advancedOptions").style.display = "table-row-group"
-    $("advancedOptionsLink").innerHTML = "Hide advanced options"
-  advancedMode = !advancedMode
-  event.preventDefault()
