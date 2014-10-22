@@ -18,9 +18,17 @@ root.Exclusions = Exclusions =
 
   # Return the first exclusion rule matching the URL, or null.
   getRule: (url) ->
+    compoundRule = null
     for rule in @rules
-      return rule if url.match(RegexpCache.get(rule.pattern))
-    return null
+      continue unless url.match(RegexpCache.get(rule.pattern))
+
+      if rule.passKeys == "" # Found a disable rule. This overrides all others.
+        return rule
+      else if compoundRule == null
+        compoundRule = {passKeys: rule.passKeys}
+      else
+        compoundRule.passKeys += rule.passKeys
+    return compoundRule
 
   setRules: (rules) ->
     # Callers map a rule to null to have it deleted, and rules without a pattern are useless.
