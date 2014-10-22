@@ -136,7 +136,7 @@ saveOptions = ->
   $("saveOptions").disabled = true
 
 restoreToDefaults = ->
-  return unless confirm "Are you sure you want to return Vimium's settings to their defaults?"
+  return unless confirm "Are you sure you want to permanently return all of Vimium's settings to their defaults?"
   Option.all.map (option) -> option.restoreToDefault()
   maintainLinkHintsView()
   $("saveOptions").disabled = true
