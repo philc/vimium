@@ -63,7 +63,12 @@ LinkHints =
 
     @setOpenLinkMode(mode)
     hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
-    @getMarkerMatcher().fillInMarkers(hintMarkers)
+
+    hintInformation = @getMarkerMatcher().getInformation(hintMarkers)
+    hintInformation.hintKeystrokeQueue = []
+    hintInformation.hintVisibles = (true for marker in hintMarkers)
+    hintStrings = @getMarkerMatcher().generateHintStrings(hintInformation)
+    @getMarkerMatcher().fillInMarkers(hintMarkers, hintStrings)
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
@@ -73,7 +78,7 @@ LinkHints =
 
     # handlerStack is declared by vimiumFrontend.js
     @handlerId = handlerStack.push({
-      keydown: @onKeyDownInMode.bind(this, hintMarkers),
+      keydown: @onKeyDownInMode.bind(this, hintMarkers, hintInformation),
       # trap all key events
       keypress: -> false
       keyup: -> false
@@ -167,7 +172,7 @@ LinkHints =
   #
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
   #
-  onKeyDownInMode: (hintMarkers, event) ->
+  onKeyDownInMode: (hintMarkers, hintInformation, event) ->
     return if @delayMode
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
@@ -187,18 +192,23 @@ LinkHints =
     if (KeyboardUtils.isEscape(event))
       @deactivateMode()
     else
-      keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
-      linksMatched = keyResult.linksMatched
-      delay = keyResult.delay ? 0
-      if (linksMatched.length == 0)
+      keyResult = @getMarkerMatcher().matchHintsByKey(hintInformation, event)
+      {delay, matched, updatedHintStrings} = keyResult
+      delay ||= 0
+      if (matched.length == 0)
         @deactivateMode()
-      else if (linksMatched.length == 1)
-        @activateLink(linksMatched[0], delay)
+      else if (matched.length == 1 and matched.length > 0)
+        @activateLink(hintMarkers[matched[0]], delay)
       else
-        for marker in hintMarkers
+        for marker, idx in hintMarkers
           @hideMarker(marker)
-        for matched in linksMatched
-          @showMarker(matched, @getMarkerMatcher().hintKeystrokeQueue.length)
+          hintInformation.hintVisibles[idx] = false
+        matchedMarkers = matched.map((index) -> hintMarkers[index])
+        @getMarkerMatcher().fillInMarkers(matchedMarkers, updatedHintStrings)
+        for marker, idx in matchedMarkers
+          @showMarker(marker, hintInformation.hintKeystrokeQueue.length)
+          hintInformation.hintVisibles[matched[idx]] = true
+
     false # We've handled this key, so prevent propagation.
 
   #
@@ -267,11 +277,18 @@ alphabetHints =
   hintKeystrokeQueue: []
   logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
 
-  fillInMarkers: (hintMarkers) ->
-    hintStrings = @hintStrings(hintMarkers.length)
+  getInformation: (hintMarkers) ->
+    {
+      count: hintMarkers.length
+    }
+
+  generateHintStrings: (hintInformation) ->
+    hintInformation.hintStrings = @hintStrings(hintInformation.count)
+
+  fillInMarkers: (hintMarkers, hintStrings) ->
     for marker, idx in hintMarkers
-      marker.hintString = hintStrings[idx]
-      marker.innerHTML = spanWrap(marker.hintString.toUpperCase())
+      hintString = hintStrings[idx]
+      marker.innerHTML = spanWrap(hintString.toUpperCase())
 
     hintMarkers
 
@@ -315,19 +332,25 @@ alphabetHints =
       result = result.concat(bucket)
     result
 
-  matchHintsByKey: (hintMarkers, event) ->
+  matchHintsByKey: (hintInformation, event) ->
+    {hintKeystrokeQueue, hintStrings} = hintInformation
+
     # If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
     keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      if (!@hintKeystrokeQueue.pop())
-        return { linksMatched: [] }
+      if (!hintKeystrokeQueue.pop())
+        return { matched: [], updatedHintStrings: []}
     else if keyChar
-      @hintKeystrokeQueue.push(keyChar)
+      hintKeystrokeQueue.push(keyChar)
 
-    matchString = @hintKeystrokeQueue.join("")
-    linksMatched = hintMarkers.filter((linkMarker) -> linkMarker.hintString.indexOf(matchString) == 0)
-    { linksMatched: linksMatched }
+    matchString = hintKeystrokeQueue.join("")
+    matched = (i for i in [0..hintInformation.count-1] by 1 when hintStrings[i].indexOf(matchString) == 0)
+    updatedHintStrings = (hintStrings[i] for i in matched)
+    {
+      matched: matched
+      updatedHintStrings: updatedHintStrings
+    }
 
   deactivate: -> @hintKeystrokeQueue = []
 
@@ -350,7 +373,7 @@ filterHints =
           labelText = labelText.substr(0, labelText.length-1)
         @labelMap[forElement] = labelText
 
-  generateHintString: (linkHintNumber) ->
+  generateHintText: (linkHintNumber) ->
     (numberToHintString linkHintNumber + 1, settings.get "linkHintNumbers").toUpperCase()
 
   generateLinkText: (element) ->
@@ -382,78 +405,117 @@ filterHints =
     marker.innerHTML = spanWrap(marker.hintString +
         (if marker.showLinkText then ": " + marker.linkText else ""))
 
-  fillInMarkers: (hintMarkers) ->
+
+
+  getHintString: (hintText, showLinkText, linkText) ->
+    hintText + (if showLinkText then ": " + linkText else "")
+
+  getInformation: (hintMarkers) ->
     @generateLabelMap()
+
+    hintTexts = []
+    linkTexts = []
+    showLinkTexts = []
+    linkTextKeystrokeQueue = []
+
     for marker, idx in hintMarkers
-      marker.hintString = @generateHintString(idx)
       linkTextObject = @generateLinkText(marker.clickableItem)
-      marker.linkText = linkTextObject.text
-      marker.showLinkText = linkTextObject.show
-      @renderMarker(marker)
+      hintTexts.push(@generateHintText(idx))
+      linkTexts.push(linkTextObject.text)
+      showLinkTexts.push(linkTextObject.show)
+
+    {
+      hintTexts: hintTexts
+      linkTexts: linkTexts
+      showLinkTexts: showLinkTexts
+      linkTextKeystrokeQueue: linkTextKeystrokeQueue
+    }
+
+  generateHintStrings: (hintInformation) ->
+    {hintTexts, linkTexts, showLinkTexts} = hintInformation
+    hintStrings = hintInformation.hintStrings = []
+
+    for hintText, idx in hintTexts
+      linkText = linkTexts[idx]
+      showLinkText = showLinkTexts[idx]
+      hintStrings.push(@getHintString(hintText, showLinkText, linkText))
+
+    hintStrings
+
+  fillInMarkers: (hintMarkers, hintStrings) ->
+    for marker, idx in hintMarkers
+      hintString = hintStrings[idx]
+      marker.innerHTML = spanWrap(hintString)
 
     hintMarkers
 
-  matchHintsByKey: (hintMarkers, event) ->
+
+
+  matchHintsByKey: (hintInformation, event) ->
+    {hintKeystrokeQueue, hintVisibles, hintStrings, linkTextKeystrokeQueue} = hintInformation
+
     keyChar = KeyboardUtils.getKeyChar(event)
     delay = 0
     userIsTypingLinkText = false
 
     if (event.keyCode == keyCodes.enter)
       # activate the lowest-numbered link hint that is visible
-      for marker in hintMarkers
-        if (marker.style.display != "none")
-          return { linksMatched: [ marker ] }
+      for hintVisible, idx in hintVisibles
+        if (hintVisible)
+          return { matched: [ idx ], updatedHintStrings: [ hintStrings[idx] ] }
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       # backspace clears hint key queue first, then acts on link text key queue.
       # if both queues are empty. exit hinting mode
-      if (!@hintKeystrokeQueue.pop() && !@linkTextKeystrokeQueue.pop())
-        return { linksMatched: [] }
+      if (!hintKeystrokeQueue.pop() && !linkTextKeystrokeQueue.pop())
+        return { matched: [], updatedHintStrings: [] }
     else if (keyChar)
       if (settings.get("linkHintNumbers").indexOf(keyChar) >= 0)
-        @hintKeystrokeQueue.push(keyChar)
+        hintKeystrokeQueue.push(keyChar)
       else
-        # since we might renumber the hints, the current hintKeyStrokeQueue
+        # since we might renumber the hints, the current hintKeystrokeQueue
         # should be rendered invalid (i.e. reset).
-        @hintKeystrokeQueue = []
-        @linkTextKeystrokeQueue.push(keyChar)
+        hintKeystrokeQueue = hintInformation.hintKeystrokeQueue = []
+        linkTextKeystrokeQueue.push(keyChar)
         userIsTypingLinkText = true
 
     # at this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
     # input. use them to filter the link hints accordingly.
-    linksMatched = @filterLinkHints(hintMarkers)
-    matchString = @hintKeystrokeQueue.join("")
-    linksMatched = linksMatched.filter((linkMarker) ->
-      !linkMarker.filtered && linkMarker.hintString.indexOf(matchString) == 0)
+    returnObject = @filterLinkHints(hintInformation)
 
-    if (linksMatched.length == 1 && userIsTypingLinkText)
+    if (returnObject.matched.length == 1 && userIsTypingLinkText)
       # In filter mode, people tend to type out words past the point
       # needed for a unique match. Hence we should avoid passing
       # control back to command mode immediately after a match is found.
       delay = 200
 
-    { linksMatched: linksMatched, delay: delay }
+    returnObject.delay = delay
+    returnObject
 
   #
   # Marks the links that do not match the linkText search string with the 'filtered' DOM property. Renumbers
   # the remainder if necessary.
   #
-  filterLinkHints: (hintMarkers) ->
-    linksMatched = []
-    linkSearchString = @linkTextKeystrokeQueue.join("")
+  filterLinkHints: (hintInformation) ->
+    {hintKeystrokeQueue, hintStrings, linkTextKeystrokeQueue, linkTexts, showLinkTexts, hintTexts} =
+      hintInformation
 
-    for linkMarker in hintMarkers
-      matchedLink = linkMarker.linkText.toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0
+    matched = []
+    updatedHintStrings = []
+    linkSearchString = linkTextKeystrokeQueue.join("").toLowerCase()
+    hintSearchString = hintKeystrokeQueue.join("")
+    linkTextMatchCounter = 0
 
-      if (!matchedLink)
-        linkMarker.filtered = true
-      else
-        linkMarker.filtered = false
-        oldHintString = linkMarker.hintString
-        linkMarker.hintString = @generateHintString(linksMatched.length)
-        @renderMarker(linkMarker) if (linkMarker.hintString != oldHintString)
-        linksMatched.push(linkMarker)
+    for linkText, idx in linkTexts
+      continue if (linkText.toLowerCase().indexOf(linkSearchString) == -1)
 
-    linksMatched
+      newHintText = @generateHintText(linkTextMatchCounter)
+      hintTexts[idx] = newHintText
+      linkTextMatchCounter++
+      if (newHintText.indexOf(hintSearchString) == 0)
+        matched.push(idx)
+        updatedHintStrings.push(@getHintString(newHintText, showLinkTexts[idx], linkTexts[idx]))
+
+    { matched: matched, updatedHintStrings: updatedHintStrings }
 
   deactivate: (delay, callback) ->
     @hintKeystrokeQueue = []
