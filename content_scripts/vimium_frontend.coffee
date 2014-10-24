@@ -310,8 +310,9 @@ extend window,
 
     hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
-    hintContainingDiv = DomUtils.addElementList(hints,
+    hintContainingDiv = DomUtils.createContainerForElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
+    document.documentElement.appendChild(hintContainingDiv)
 
     handlerStack.push keydown: (event) ->
       if event.keyCode == KeyboardUtils.keyCodes.tab

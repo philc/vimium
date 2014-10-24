@@ -607,6 +607,7 @@ portHandlers =
   keyDown: handleKeyDown,
   settings: handleSettings,
   filterCompleter: filterCompleter
+  linkHints: LinkHintOracle.manageLinkHints
 
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,

@@ -8,16 +8,15 @@ DomUtils =
     (callback) -> if loaded then callback() else window.addEventListener("DOMContentLoaded", callback)
 
   #
-  # Adds a list of elements to a page.
+  # Adds a list of elements to a div and returns the div.
   # Note that adding these nodes all at once (via the parent div) is significantly faster than one-by-one.
   #
-  addElementList: (els, overlayOptions) ->
+  createContainerForElementList: (els, overlayOptions) ->
     parent = document.createElement("div")
     parent.id = overlayOptions.id if overlayOptions.id?
     parent.className = overlayOptions.className if overlayOptions.className?
     parent.appendChild(el) for el in els
 
-    document.documentElement.appendChild(parent)
     parent
 
   #
@@ -126,6 +125,14 @@ DomUtils =
     flashEl.style.height = rect.height + "px"
     document.documentElement.appendChild(flashEl)
     setTimeout((-> DomUtils.removeElement flashEl), 400)
+
+  jsonableEvent: (event) ->
+    keysToCopy = ["altKey", "charCode", "ctrlKey", "keyCode", "keyIdentifier", "metaKey", "shiftKey", "type", "which"]
+    jsonEvent = {}
+    for key in keysToCopy
+      jsonEvent[key] = event[key]
+    jsonEvent
+
 
   suppressEvent: (event) ->
     event.preventDefault()
