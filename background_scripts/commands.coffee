@@ -22,17 +22,21 @@ Commands =
       isBackgroundCommand: options.background
       passCountToFunction: options.passCountToFunction
       noRepeat: options.noRepeat
+      allFrames: options.allFrames
 
   mapKeyToCommand: (key, command) ->
     unless @availableCommands[command]
       console.log(command, "doesn't exist!")
       return
 
+    commandDetails = @availableCommands[command]
+
     @keyToCommandRegistry[key] =
       command: command
-      isBackgroundCommand: @availableCommands[command].isBackgroundCommand
-      passCountToFunction: @availableCommands[command].passCountToFunction
-      noRepeat: @availableCommands[command].noRepeat
+      isBackgroundCommand: commandDetails.isBackgroundCommand
+      passCountToFunction: commandDetails.passCountToFunction
+      noRepeat: commandDetails.noRepeat
+      allFrames: commandDetails.allFrames
 
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
@@ -212,7 +216,7 @@ commandDescriptions =
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard", {allFrames: true}]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
@@ -221,12 +225,12 @@ commandDescriptions =
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
 
-  "LinkHints.activateMode": ["Open a link in the current tab"]
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
-  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"]
-  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab"]
+  "LinkHints.activateMode": ["Open a link in the current tab", {allFrames: true}]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", {allFrames: true}]
+  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", {allFrames: true}]
+  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", {allFrames: true}]
 
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", {allFrames: true}]
 
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]

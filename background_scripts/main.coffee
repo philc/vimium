@@ -533,6 +533,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         frameId: frameId,
         count: count,
         passCountToFunction: registryEntry.passCountToFunction,
+        allFrames: registryEntry.allFrames
         completionKeys: generateCompletionKeys(""))
       refreshedCompletionKeys = true
     else
@@ -607,6 +608,7 @@ portHandlers =
   keyDown: handleKeyDown,
   settings: handleSettings,
   filterCompleter: filterCompleter
+  linkHints: LinkHintOracle.manageLinkHints
 
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
@@ -651,6 +653,10 @@ chrome.windows.getAll { populate: true }, (windows) ->
       createScrollPositionHandler = ->
         (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
       chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
+
+# Reload a tab's settings cache every time the tab receives focus.
+chrome.tabs.onActivated.addListener((activeInfo) ->
+  chrome.tabs.sendMessage(activeInfo.tabId, "forceSettingsUpdate"))
 
 # Start pulling changes from synchronized storage.
 Sync.init()

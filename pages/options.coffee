@@ -133,6 +133,7 @@ enableSaveButton = ->
 
 saveOptions = ->
   Option.all.map (option) -> option.save()
+  settings.load() # Update settings for this tab
   $("saveOptions").disabled = true
 
 restoreToDefaults = ->

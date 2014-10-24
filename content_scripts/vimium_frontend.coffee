@@ -120,6 +120,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
+    forceSettingsUpdate: -> settings.load()
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
@@ -127,7 +128,7 @@ initializePreDomReady = ->
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
+    return if sender.tab and sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler == "registerFrame" or request.handler == "frameFocused"
@@ -203,7 +204,7 @@ enterInsertModeIfElementIsFocused = ->
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
-  return unless frameId == request.frameId
+  return unless frameId == request.frameId or request.allFrames
 
   if (request.passCountToFunction)
     Utils.invokeCommandString(request.command, [request.count])
@@ -310,8 +311,9 @@ extend window,
 
     hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
-    hintContainingDiv = DomUtils.addElementList(hints,
+    hintContainingDiv = DomUtils.createContainerForElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
+    document.documentElement.appendChild(hintContainingDiv)
 
     handlerStack.push keydown: (event) ->
       if event.keyCode == KeyboardUtils.keyCodes.tab
