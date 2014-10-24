@@ -120,6 +120,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
+    forceSettingsUpdate: -> settings.load()
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue

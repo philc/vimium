@@ -654,5 +654,9 @@ chrome.windows.getAll { populate: true }, (windows) ->
         (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
       chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
 
+# Reload a tab's settings cache every time the tab receives focus.
+chrome.tabs.onActivated.addListener((activeInfo) ->
+  chrome.tabs.sendMessage(activeInfo.tabId, "forceSettingsUpdate"))
+
 # Start pulling changes from synchronized storage.
 Sync.init()
