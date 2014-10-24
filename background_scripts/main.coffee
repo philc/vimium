@@ -533,6 +533,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         frameId: frameId,
         count: count,
         passCountToFunction: registryEntry.passCountToFunction,
+        allFrames: registryEntry.allFrames
         completionKeys: generateCompletionKeys(""))
       refreshedCompletionKeys = true
     else

@@ -203,7 +203,7 @@ enterInsertModeIfElementIsFocused = ->
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
-  return unless frameId == request.frameId
+  return unless frameId == request.frameId or request.allFrames
 
   if (request.passCountToFunction)
     Utils.invokeCommandString(request.command, [request.count])
