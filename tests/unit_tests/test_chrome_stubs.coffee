@@ -30,6 +30,8 @@ global.chrome =
       addListener: () -> true
     onActiveChanged:
       addListener: () -> true
+    onActivated:
+      addListener: () -> true
     query: () -> true
 
   windows:
