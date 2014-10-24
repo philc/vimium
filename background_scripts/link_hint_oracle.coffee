@@ -71,7 +71,12 @@ LinkHintOracle =
         @updateVisibleHints(hintInformation, keyResult)
 
   deactivate: (hintInformation, tabId, delay) ->
-    @activateLink(hintInformation, tabId, -1, delay)
+    for frameId, port of hintInformation.portsFromFrameIds
+      port.postMessage({
+        name: "deactivate"
+        delay: delay
+      })
+    @cleanup(hintInformation, tabId)
 
   activateLink: (hintInformation, tabId, match, delay) ->
     {frameIds, portsFromFrameIds, hintIndexInFrame} = hintInformation

@@ -111,7 +111,7 @@ LinkHints =
       else if @mode is OPEN_IN_NEW_FG_TAB
         @showHUD("Open link in new tab and switch to it")
       else
-        @deactivateModeCallback = (=> @activateModeWithQueue)
+        @deactivateModeCallback = (=> @activateModeWithQueue())
         @showHUD("Open multiple links in a new tab")
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
@@ -204,6 +204,9 @@ LinkHints =
         @updateVisibleHints(response, port)
       when "linkActivate"
         @linkActivate(response, port)
+      when "deactivate"
+        @deactivateModeCallback = null
+        @deactivateMode(response.delay)
 
   setHintStrings: (response, port) ->
     @getMarkerMatcher().fillInMarkers(@hintMarkers, response.hintStrings)
