@@ -34,6 +34,9 @@ LinkHints =
   port: null
   # Callback for deactivateMode. Set in setOpenLinkMode.
   deactivateModeCallback: null
+  # Show HUD if we are the top frame.
+  # TODO(mrmr1993): Fix this for pages with a top-level frameset.
+  showHUD: -> HUD.show.apply(HUD, arguments) if window.top == window
 
   #
   # To be called after linkHints has been generated from linkHintsBase.
@@ -104,12 +107,12 @@ LinkHints =
     @deactivateModeCallback = null
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
-        HUD.show("Open link in new tab")
+        @showHUD("Open link in new tab")
       else if @mode is OPEN_IN_NEW_FG_TAB
-        HUD.show("Open link in new tab and switch to it")
+        @showHUD("Open link in new tab and switch to it")
       else
         @deactivateModeCallback = (=> @activateModeWithQueue)
-        HUD.show("Open multiple links in a new tab")
+        @showHUD("Open multiple links in a new tab")
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -118,18 +121,18 @@ LinkHints =
           metaKey: KeyboardUtils.platform == "Mac",
           ctrlKey: KeyboardUtils.platform != "Mac" })
     else if @mode is COPY_LINK_URL
-      HUD.show("Copy link URL to Clipboard")
+      @showHUD("Copy link URL to Clipboard")
       @linkActivator = (link) ->
         chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
     else if @mode is OPEN_INCOGNITO
-      HUD.show("Open link in incognito window")
+      @showHUD("Open link in incognito window")
 
       @linkActivator = (link) ->
         chrome.runtime.sendMessage(
           handler: 'openUrlInIncognito'
           url: link.href)
     else # OPEN_IN_CURRENT_TAB
-      HUD.show("Open link in current tab")
+      @showHUD("Open link in current tab")
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
 
   #
