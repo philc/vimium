@@ -17,6 +17,11 @@ document.addEventListener "DOMContentLoaded", ->
         if not ele.__vimium_vim_attached and isVimActivationEvent event
           vim = ele.__vimium_vim_attached = new VIM()
           vim.attach_to ele
+
+          HUD.showForDuration "Vim-mode activated", 1500
+          ele.addEventListener "focus", ->
+            HUD.showForDuration "Vim-mode active (#{vim.m_mode})", 1000
+
           event.preventDefault()
           event.stopPropagation()
 
