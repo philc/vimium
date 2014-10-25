@@ -409,10 +409,10 @@ onKeydown = (event) ->
       # box.
       if (isEditable(event.srcElement))
         ele = event.srcElement
-        # if vim-in-textarea is active and not in COMMAND mode, then let it handle the event.
-        # "COMMAND" is a constant in jsvim.js.
-        if ele.__vimium_vim_attached and not ele.__vimium_vim_attached.is_mode "COMMAND"
-          return
+        # If vim-in-textarea is active and not in COMMAND mode, then let it handle the event.
+        # "COMMAND" is a constant in jsvim.js.  See discussion in jsvim.js as to how these two components
+        # interact.
+        return if ele.__vimium_vim_attached and not ele.__vimium_vim_attached.is_mode "COMMAND"
         ele.blur()
       exitInsertMode()
       DomUtils.suppressEvent event
