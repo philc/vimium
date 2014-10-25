@@ -36,11 +36,13 @@
              "lib/dom_utils.js",
              "lib/handler_stack.js",
              "lib/clipboard.js",
+             "upstream/vim-in-textarea/jsvim.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
              "content_scripts/marks.js",
-             "content_scripts/vimium_frontend.js"
+             "content_scripts/vimium_frontend.js",
+             "content_scripts/vim-in-textarea.js"
             ],
       "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
