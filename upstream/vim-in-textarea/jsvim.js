@@ -6,18 +6,12 @@
 // comments below with the new version.  However, note that there is one further change required.
 // Search for the word "Vimium" in this file.
 //
-// Note that the constant COMMAND, defined here, is used as a literal in vimium_frontend.coffee, and that
-// these two must match.
+// The constant COMMAND, defined here, is used as a literal in vimium_frontend.coffee, and these two
+// must match.
 //
 // Both vimium and jsvim.js handle the <ESCAPE> key.
-// If jsvim.js is in COMMAND mode, it passes the key through and it is handled by vimium.
-// If jsvim is active but not in command mode, then vimium passes the key through
-//
-//
-// If jsvim.js is in command mode, then it passes the
-// key through (and vimium handles it, and blurs the active element).  If vimium receives an escape key,
-// it passes it through if jsvim.js is activated and *not* in command mode.  In this way, jsvim.js and
-// vimium (in vimium_frontend.coffee) work together to handle <ESCAPE>.
+// If jsvim.js is not active or in COMMAND mode, then the <ESCAPE> key is handled by vimium.
+// If jsvim,js is active but not in command mode, then vimium passes <ESCAPE> through and it is handled here.
 
 (function() {
 
