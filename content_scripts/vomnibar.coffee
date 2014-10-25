@@ -28,6 +28,8 @@ Vomnibar =
   activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
   activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
   activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, true)
+  activateEditUrl: -> @activateWithCompleter("omni", 100, window.location.href)
+  activateEditUrlInNewTab: -> @activateWithCompleter("omni", 100, window.location.href, false, true)
   getUI: -> @vomnibarUI
 
 

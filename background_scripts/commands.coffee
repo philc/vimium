@@ -94,6 +94,7 @@ Commands =
       "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
       "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
       "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
+      "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
       "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -111,6 +112,7 @@ Commands =
   advancedCommands: [
     "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
     "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue", "LinkHints.activateModeToDownloadLink",
+    "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
     "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
     "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
@@ -185,6 +187,9 @@ defaultKeyMappings =
 
   "b": "Vomnibar.activateBookmarks"
   "B": "Vomnibar.activateBookmarksInNewTab"
+
+  "ge": "Vomnibar.activateEditUrl"
+  "gE": "Vomnibar.activateEditUrlInNewTab"
 
   "gf": "nextFrame"
 
@@ -270,6 +275,8 @@ commandDescriptions =
   "Vomnibar.activateTabSelection": ["Search through your open tabs"]
   "Vomnibar.activateBookmarks": ["Open a bookmark"]
   "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab"]
+  "Vomnibar.activateEditUrl": ["Edit the current URL"]
+  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab"]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 
