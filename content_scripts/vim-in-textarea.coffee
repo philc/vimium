@@ -1,8 +1,9 @@
 
-# TODO(smblott) Delay attaching VIM until the text area is activated.
 document.addEventListener "DOMContentLoaded", ->
-  for textarea in document.getElementsByTagName "textarea"
-    vim = new VIM()
-    console.log textarea
-    vim.attach_to textarea
+  for ele in document.getElementsByTagName "textarea"
+    do (ele) ->
+      ele.addEventListener "focus", ->
+        if not ele.__vimium_vim_attached
+          vim = ele.__vimium_vim_attached = new VIM()
+          vim.attach_to ele
 

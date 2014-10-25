@@ -1,6 +1,23 @@
 
 // This is the original jsvim.js from Jakub Mikians, but wrapped inside a function, so only the VIM
 // object enters the window's name space (see the very bottom of this file).
+//
+// To update jsvim.js to a later version, replace everything bteween the "Start of" and "End of"
+// comments below with the new version.  However, note that there is one further change required.
+// Search for the word "Vimium" in this file.
+//
+// Note that the constant COMMAND, defined here, is used as a literal in vimium_frontend.coffee, and that
+// these two must match.
+//
+// Both vimium and jsvim.js handle the <ESCAPE> key.
+// If jsvim.js is in COMMAND mode, it passes the key through and it is handled by vimium.
+// If jsvim is active but not in command mode, then vimium passes the key through
+//
+//
+// If jsvim.js is in command mode, then it passes the
+// key through (and vimium handles it, and blurs the active element).  If vimium receives an escape key,
+// it passes it through if jsvim.js is activated and *not* in command mode.  In this way, jsvim.js and
+// vimium (in vimium_frontend.coffee) work together to handle <ESCAPE>.
 
 (function() {
 
@@ -138,7 +155,9 @@
       var pass_keys
       if ('<Escape>' === c) {
         this.reset()
-        pass_keys = false
+        // Vimium:  Change this to true (so that vimium sees the key too in comman mode).
+        // pass_keys = false
+        pass_keys = this.is_mode(COMMAND)
       }
       else if ( this.is_mode(INSERT) ) {
         if (c === '<Enter>') {
