@@ -391,6 +391,7 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
+  , -> undefined if chrome.runtime.lastError
   updateOpenTabs(tab)
   updateActiveState(tabId)
 
