@@ -516,7 +516,7 @@ isFocusable = (element) -> isEditable(element) || isEmbed(element)
 # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
 # unfocused.
 #
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > 0
+isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) >= 0
 
 #
 # Input or text elements are considered focusable and able to receieve their own keyboard events,
