@@ -281,7 +281,7 @@ commandDescriptions =
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { noRepeat: true }]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 3 }]
+  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
 
@@ -316,10 +316,10 @@ commandDescriptions =
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
 
-  createTab: ["Create new tab", { background: true, repeatLimit: 2 }]
-  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 2 }]
-  removeTab: ["Close current tab", { background: true, repeatLimit: 3 }]
-  restoreTab: ["Restore closed tab", { background: true, repeatLimit: 3 }]
+  createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
+  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
+  removeTab: ["Close current tab", { background: true, repeatLimit: 50 }]
+  restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
