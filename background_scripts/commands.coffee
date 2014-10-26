@@ -86,12 +86,13 @@ Commands =
   # be shown in the help page.
   commandGroups:
     pageNavigation:
-      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
-      "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
-      "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
-      "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
+      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom",
+      "scrollToLeft", "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp",
+      "scrollFullPageDown", "reload", "toggleViewSource", "copyCurrentUrl",
+      "LinkHints.activateModeToCopyLinkUrl", "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp",
+      "goToRoot", "enterInsertMode", "focusInput", "LinkHints.activateMode",
+      "LinkHints.activateModeToOpenInNewTab", "LinkHints.activateModeToOpenInNewForegroundTab",
+      "LinkHints.activateModeWithQueue", "LinkHints.activateModeToSaveLinkAs", "Vomnibar.activate",
       "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
       "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
       "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
@@ -219,7 +220,7 @@ commandDescriptions =
   toggleViewSource: ["View page source"]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard"]
-  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link URL to the clipboard"]
+  'LinkHints.activateModeToCopyLinkUrl': ["Copy a link's URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true }]
 
@@ -236,6 +237,8 @@ commandDescriptions =
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
 
   "LinkHints.activateModeToDownloadLink": ["Download link url"]
+  "LinkHints.activateModeToSaveLinkAs": ["Download a link's URL using save as"]
+
   enterFindMode: ["Enter find mode"]
   performFind: ["Cycle forward to the next find match"]
   performBackwardsFind: ["Cycle backward to the previous find match"]
