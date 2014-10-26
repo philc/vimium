@@ -174,24 +174,19 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrameIfSizeAvailable(window.top == window.self)
+  registerFrame(window.top == window.self)
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
-# This is a little hacky but sometimes the size wasn't available on domReady?
-registerFrameIfSizeAvailable = (is_top) ->
-  if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.runtime.sendMessage(
-      handler: "registerFrame"
-      frameId: frameId
-      area: innerWidth * innerHeight
-      is_top: is_top
-      total: frames.length + 1)
-  else
-    setTimeout((-> registerFrameIfSizeAvailable(is_top)), 100)
+registerFrame = (is_top) ->
+  chrome.runtime.sendMessage(
+    handler: "registerFrame"
+    frameId: frameId
+    is_top: is_top
+    total: frames.length + 1)
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.

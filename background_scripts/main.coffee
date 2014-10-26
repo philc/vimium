@@ -593,7 +593,7 @@ registerFrame = (request, sender) ->
     focusedFrame = request.frameId
     framesForTab[sender.tab.id].total = request.total
 
-  framesForTab[sender.tab.id].frames.push({ id: request.frameId, area: request.area })
+  framesForTab[sender.tab.id].frames.push({ id: request.frameId })
 
 handleFrameFocused = (request, sender) -> focusedFrame = request.frameId
 
