@@ -202,6 +202,7 @@ defaultKeyMappings =
 
 
 # This is a mapping of: commandIdentifier => [description, options].
+# If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
 commandDescriptions =
   # Navigating the current page
   showHelp: ["Show help", { background: true }]

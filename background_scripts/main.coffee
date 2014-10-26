@@ -531,7 +531,6 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   if (Commands.keyToCommandRegistry[command])
     registryEntry = Commands.keyToCommandRegistry[command]
-
     runCommand = true
 
     if registryEntry.noRepeat
@@ -544,24 +543,23 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         Are you sure you want to continue?
       """
 
-    if not runCommand
-      # Do nothing, use has chosen not to execute the command
-    else if not registryEntry.isBackgroundCommand
-      chrome.tabs.sendMessage(tabId,
-        name: "executePageCommand",
-        command: registryEntry.command,
-        frameId: frameId,
-        count: count,
-        passCountToFunction: registryEntry.passCountToFunction,
-        completionKeys: generateCompletionKeys(""))
-      refreshedCompletionKeys = true
-    else
-      if registryEntry.passCountToFunction
-        BackgroundCommands[registryEntry.command](count)
-      else if registryEntry.noRepeat
-        BackgroundCommands[registryEntry.command]()
+    if runCommand
+      if not registryEntry.isBackgroundCommand
+        chrome.tabs.sendMessage(tabId,
+          name: "executePageCommand",
+          command: registryEntry.command,
+          frameId: frameId,
+          count: count,
+          passCountToFunction: registryEntry.passCountToFunction,
+          completionKeys: generateCompletionKeys(""))
+        refreshedCompletionKeys = true
       else
-        repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
+        if registryEntry.passCountToFunction
+          BackgroundCommands[registryEntry.command](count)
+        else if registryEntry.noRepeat
+          BackgroundCommands[registryEntry.command]()
+        else
+          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
     newKeyQueue = ""
   else if (getActualKeyStrokeLength(command) > 1)
