@@ -23,6 +23,7 @@ keyQueue = null
 # The user's operating system.
 currentCompletionKeys = null
 insertExitKeys = null
+insertExitPassKeys = null
 validFirstKeys = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
@@ -442,7 +443,9 @@ onKeydown = (event) ->
 
   rawKeyChar ||= KeyboardUtils.getKeyChar(event)
 
-  if (isInsertMode() and insertExitKeys.indexOf(rawKeyChar) != -1)
+  isInsertExitPassKey = (rawKeyChar in insertExitPassKeys)
+
+  if (isInsertMode() and (isInsertExitPassKey or rawKeyChar in insertExitKeys))
     # We don't want to programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
@@ -450,8 +453,9 @@ onKeydown = (event) ->
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       exitInsertMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
+      unless isInsertExitPassKey
+        DomUtils.suppressEvent event
+        KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
@@ -527,6 +531,7 @@ refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
     insertExitKeys = response.insertExitKeys
+    insertExitPassKeys = response.insertExitPassKeys
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys

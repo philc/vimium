@@ -41,6 +41,7 @@ Commands =
   unmapKey: (key) -> delete @keyToCommandRegistry[key]
 
   insertExitKeys: null
+  insertExitPassKeys: null
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -84,17 +85,22 @@ Commands =
 
   clearKeyMappingsAndSetDefaults: ->
     @insertExitKeys = null
+    @insertExitPassKeys = null
     @keyToCommandRegistry = {}
 
     for key of defaultKeyMappings
       @mapKeyToCommand(key, defaultKeyMappings[key])
 
   getInsertExitKeys: ->
-    return @insertExitKeys unless @insertExitKeys == null
+    return [@insertExitKeys, @insertExitPassKeys] unless @insertExitKeys == null
 
     @insertExitKeys = []
+    @insertExitPassKeys = []
     for keys, {command} of @keyToCommandRegistry
-      @insertExitKeys.push(keys) if command == "exitInsertMode"
+      if command == "exitInsertMode"
+        @insertExitKeys.push(keys)
+      else if command == "exitInsertModeAndPassKey"
+        @insertExitPassKeys.push(keys)
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -122,6 +128,7 @@ Commands =
       "goToRoot",
       "enterInsertMode",
       "exitInsertMode",
+      "exitInsertModeAndPassKey",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
@@ -297,6 +304,7 @@ commandDescriptions =
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
   exitInsertMode: ["Exit insert mode", { noRepeat: true }]
+  exitInsertModeAndPassKey: ["Exit insert mode, but pass the key to the underlying page", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
