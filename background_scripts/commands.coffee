@@ -86,23 +86,63 @@ Commands =
   # be shown in the help page.
   commandGroups:
     pageNavigation:
-      ["scrollDown", "scrollUp", "scrollLeft", "scrollRight", "scrollToTop", "scrollToBottom", "scrollToLeft",
-      "scrollToRight", "scrollPageDown", "scrollPageUp", "scrollFullPageUp", "scrollFullPageDown", "reload",
-      "toggleViewSource", "copyCurrentUrl", "LinkHints.activateModeToCopyLinkUrl",
-      "openCopiedUrlInCurrentTab", "openCopiedUrlInNewTab", "goUp", "goToRoot", "enterInsertMode",
-      "focusInput", "LinkHints.activateMode", "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab", "LinkHints.activateModeWithQueue", "Vomnibar.activate",
-      "Vomnibar.activateInNewTab", "Vomnibar.activateTabSelection", "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab", "goPrevious", "goNext", "nextFrame", "Marks.activateCreateMode",
-      "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
+      ["scrollDown",
+      "scrollUp",
+      "scrollLeft",
+      "scrollRight",
+      "scrollToTop",
+      "scrollToBottom",
+      "scrollToLeft",
+      "scrollToRight",
+      "scrollPageDown",
+      "scrollPageUp",
+      "scrollFullPageUp",
+      "scrollFullPageDown",
+      "reload",
+      "toggleViewSource",
+      "copyCurrentUrl",
+      "LinkHints.activateModeToCopyLinkUrl",
+      "openCopiedUrlInCurrentTab",
+      "openCopiedUrlInNewTab",
+      "goUp",
+      "goToRoot",
+      "enterInsertMode",
+      "focusInput",
+      "LinkHints.activateMode",
+      "LinkHints.activateModeToOpenInNewTab",
+      "LinkHints.activateModeToOpenInNewForegroundTab",
+      "LinkHints.activateModeWithQueue",
+      "LinkHints.activateModeToDownloadLink",
+      "Vomnibar.activate",
+      "Vomnibar.activateInNewTab",
+      "Vomnibar.activateTabSelection",
+      "Vomnibar.activateBookmarks",
+      "Vomnibar.activateBookmarksInNewTab",
+      "goPrevious",
+      "goNext",
+      "nextFrame",
+      "Marks.activateCreateMode",
+      "Vomnibar.activateEditUrl",
+      "Vomnibar.activateEditUrlInNewTab",
       "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab", "previousTab", "firstTab", "lastTab", "createTab", "duplicateTab", "removeTab",
-      "restoreTab", "moveTabToNewWindow", "togglePinTab", "closeTabsOnLeft","closeTabsOnRight",
-      "closeOtherTabs", "moveTabLeft", "moveTabRight"]
+      ["nextTab",
+      "previousTab",
+      "firstTab",
+      "lastTab",
+      "createTab",
+      "duplicateTab",
+      "removeTab",
+      "restoreTab",
+      "moveTabToNewWindow",
+      "togglePinTab",
+      "closeTabsOnLeft","closeTabsOnRight",
+      "closeOtherTabs",
+      "moveTabLeft",
+      "moveTabRight"]
     misc:
       ["showHelp"]
 
@@ -110,12 +150,26 @@ Commands =
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
   # from Vimium will uncover these gems.
   advancedCommands: [
-    "scrollToLeft", "scrollToRight", "moveTabToNewWindow",
-    "goUp", "goToRoot", "focusInput", "LinkHints.activateModeWithQueue", "LinkHints.activateModeToDownloadLink",
-    "Vomnibar.activateEditUrl", "Vomnibar.activateEditUrlInNewTab",
-    "LinkHints.activateModeToOpenIncognito", "goNext", "goPrevious", "Marks.activateCreateMode",
-    "Marks.activateGotoMode", "moveTabLeft", "moveTabRight",
-    "closeTabsOnLeft","closeTabsOnRight", "closeOtherTabs"]
+    "scrollToLeft",
+    "scrollToRight",
+    "moveTabToNewWindow",
+    "goUp",
+    "goToRoot",
+    "focusInput",
+    "LinkHints.activateModeWithQueue",
+    "LinkHints.activateModeToDownloadLink",
+    "Vomnibar.activateEditUrl",
+    "Vomnibar.activateEditUrlInNewTab",
+    "LinkHints.activateModeToOpenIncognito",
+    "goNext",
+    "goPrevious",
+    "Marks.activateCreateMode",
+    "Marks.activateGotoMode",
+    "moveTabLeft",
+    "moveTabRight",
+    "closeTabsOnLeft",
+    "closeTabsOnRight",
+    "closeOtherTabs"]
 
 defaultKeyMappings =
   "?": "showHelp"
