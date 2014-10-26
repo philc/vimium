@@ -109,11 +109,6 @@
         width: 40px;
         margin-right: 3px;
       }
-      textarea#excludedUrls {
-        margin-top: 5px;
-        width: 100%;
-        min-height: 100px;
-      }
       textarea#userDefinedLinkHintCss {
         width: 100%;;
         min-height: 100px;
@@ -178,6 +173,31 @@
         padding: 15px 0;
         border-top: 1px solid #eee;
       }
+      /* Ids and classes for rendering exclusionRules */
+      #exclusionScrollBox {
+        overflow: scroll;
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: 225px;
+        border: 1px solid #bfbfbf;
+        border-radius: 2px;
+        color: #444;
+      }
+      input.pattern, input.passKeys {
+        font-family: Consolas, "Liberation Mono", Courier, monospace;
+        font-size: 14px;
+      }
+      .pattern {
+        width: 250px;
+      }
+      .passKeys {
+        width: 120px;
+      }
+      #exclusionAddButton {
+        float: right;
+        margin-top: 5px;
+        margin-right: 0px;
+      }
     </style>
   <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
@@ -196,16 +216,31 @@
           </td>
         </tr>
         <tr>
-          <td colspan="3">
-              Excluded URLs<br/>
-              <div class="help">
-                <div class="example">
-                  e.g. http*://mail.google.com/*<br/>
-                  This will disable Vimium on Gmail.<br/><br/>
-                  Enter one URL per line.<br/>
-                </div>
+          <td>Excluded URLs<br/>and keys</td>
+          <td>
+            <div class="help">
+              <div class="example">
+                <p>
+                   The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the character "*" matches any zero or more characters.
+                </p>
+                <p>
+                   The right column contains keys which Vimium would would normally handle, but should instead be passed through to the underlying web page (for pages matching the corresponding pattern).  If empty, then Vimium is wholly disabled.
+                </p>
               </div>
-              <textarea id="excludedUrls"></textarea>
+            </div>
+            <div>
+               <div id="exclusionScrollBox">
+                  <table id="exclusionRules"></table>
+                  <template id="exclusionRuleTemplate">
+                    <tr>
+                       <td><input/ type="text" class="pattern" placeholder="URL pattern"></td>
+                       <td><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
+                       <td><input/ type="button" class="exclusionRemoveButton" value="&#x2716;"></td>
+                    </tr>
+                  </template>
+               </div>
+               <button id="exclusionAddButton">Add Rule</button>
+            </div>
           </td>
         </tr>
         <tbody id='advancedOptions'>
@@ -330,7 +365,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Search</td>
+            <td class="caption">Default Search<br/>Engine</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -342,14 +377,14 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Search Engines</td>
+            <td class="caption">Custom Search<br/>Engines</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
                     Use this to add shortcuts for your common search engines when using the Vomnibar.<br/><br/>
                     The format is:<br/>
                     <pre>your-keyword: http://the-site.com/?q=%s</pre>
-                    %s will be replcaed with your search term.<br/>
+                    %s will be replaced with your search term.<br/>
                     Lines which start with "#" are comments.
                   </div>
                 </div>

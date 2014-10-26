@@ -8,13 +8,18 @@ window.handlerStack = new HandlerStack
 
 insertModeLock = null
 findMode = false
-findModeQuery = { rawQuery: "" }
+findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
 keyPort = null
-# Users can disable Vimium on URL patterns via the settings page.
+# Users can disable Vimium on URL patterns via the settings page.  The following two variables
+# (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
+# "passKeys" are keys which would normally be handled by Vimium, but are disabled on this tab, and therefore
+# are passed through to the underlying page.
 isEnabledForUrl = true
+passKeys = null
+keyQueue = null
 # The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
@@ -115,42 +120,47 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl }
-    disableVimium: disableVimium
+    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
+    setState: setState
+    currentKeyQueue: (request) -> keyQueue = request.keyQueue
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
-    # in the options page, we will receive requests from both content and background scripts. ignore those
+    # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or request.name == 'getActiveState'
+    return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
+    # These requests are delivered to the options page, but there are no handlers there.
+    return if request.handler == "registerFrame" or request.handler == "frameFocused"
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
 
-#
-# This is called once the background page has told us that Vimium should be enabled for the current URL.
-#
-initializeWhenEnabled = ->
-  document.addEventListener("keydown", onKeydown, true)
-  document.addEventListener("keypress", onKeypress, true)
-  document.addEventListener("keyup", onKeyup, true)
-  document.addEventListener("focus", onFocusCapturePhase, true)
-  document.addEventListener("blur", onBlurCapturePhase, true)
-  document.addEventListener("DOMActivate", onDOMActivate, true)
-  enterInsertModeIfElementIsFocused()
+# Wrapper to install event listeners.  Syntactic sugar.
+installListener = (event, callback) -> document.addEventListener(event, callback, true)
 
 #
-# Used to disable Vimium without needing to reload the page.
-# This is called if the current page's url is blacklisted using the popup UI.
+# This is called once the background page has told us that Vimium should be enabled for the current URL.
+# We enable/disable Vimium by toggling isEnabledForUrl.  The alternative, installing or uninstalling
+# listeners, is error prone.  It's more difficult to keep track of the state.
 #
-disableVimium = ->
-  document.removeEventListener("keydown", onKeydown, true)
-  document.removeEventListener("keypress", onKeypress, true)
-  document.removeEventListener("keyup", onKeyup, true)
-  document.removeEventListener("focus", onFocusCapturePhase, true)
-  document.removeEventListener("blur", onBlurCapturePhase, true)
-  document.removeEventListener("DOMActivate", onDOMActivate, true)
-  isEnabledForUrl = false
+installedListeners = false
+initializeWhenEnabled = (newPassKeys) ->
+  isEnabledForUrl = true
+  passKeys = newPassKeys
+  if (!installedListeners)
+    installListener "keydown", (event) -> if isEnabledForUrl then onKeydown(event) else true
+    installListener "keypress", (event) -> if isEnabledForUrl then onKeypress(event) else true
+    installListener "keyup", (event) -> if isEnabledForUrl then onKeyup(event) else true
+    installListener "focus", (event) -> if isEnabledForUrl then onFocusCapturePhase(event) else true
+    installListener "blur", (event) -> if isEnabledForUrl then onBlurCapturePhase(event)
+    installListener "DOMActivate", (event) -> if isEnabledForUrl then onDOMActivate(event)
+    enterInsertModeIfElementIsFocused()
+    installedListeners = true
+
+setState = (request) ->
+  isEnabledForUrl = request.enabled
+  passKeys = request.passKeys
+  initializeWhenEnabled(passKeys) if isEnabledForUrl and !installedListeners
 
 #
 # The backend needs to know which frame has focus.
@@ -164,24 +174,19 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrameIfSizeAvailable(window.top == window.self)
+  registerFrame(window.top == window.self)
 
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
-# This is a little hacky but sometimes the size wasn't available on domReady?
-registerFrameIfSizeAvailable = (is_top) ->
-  if (innerWidth != undefined && innerWidth != 0 && innerHeight != undefined && innerHeight != 0)
-    chrome.runtime.sendMessage(
-      handler: "registerFrame"
-      frameId: frameId
-      area: innerWidth * innerHeight
-      is_top: is_top
-      total: frames.length + 1)
-  else
-    setTimeout((-> registerFrameIfSizeAvailable(is_top)), 100)
+registerFrame = (is_top) ->
+  chrome.runtime.sendMessage(
+    handler: "registerFrame"
+    frameId: frameId
+    is_top: is_top
+    total: frames.length + 1)
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -323,6 +328,14 @@ extend window,
 
       false
 
+# Decide whether this keyChar should be passed to the underlying page.
+# Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
+# passKey, then 'gt' and '99t' will neverthless be handled by vimium.
+isPassKey = ( keyChar ) ->
+  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
+
+handledKeydownEvents = []
+
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
 # insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -349,6 +362,8 @@ onKeypress = (event) ->
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
+        if (isPassKey keyChar)
+          return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1)
           DomUtils.suppressEvent(event)
 
@@ -385,43 +400,52 @@ onKeydown = (event) ->
         keyChar = "<" + keyChar + ">"
 
   if (isInsertMode() && KeyboardUtils.isEscape(event))
-    # Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if (!isEmbed(event.srcElement))
+    if isEditable(event.srcElement) or isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
-      if (isEditable(event.srcElement))
-        event.srcElement.blur()
+      event.srcElement.blur()
       exitInsertMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
-      DomUtils.suppressEvent(event)
+      DomUtils.suppressEvent event
+      handledKeydownEvents.push event
 
     else if (!modifiers)
       event.stopPropagation()
+      handledKeydownEvents.push event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
+    DomUtils.suppressEvent event
+    handledKeydownEvents.push event
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1)
-        DomUtils.suppressEvent(event)
+        DomUtils.suppressEvent event
+        handledKeydownEvents.push event
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
     else if (KeyboardUtils.isEscape(event))
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
+
+    else if isPassKey KeyboardUtils.getKeyChar(event)
+      return undefined
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -434,8 +458,23 @@ onKeydown = (event) ->
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     event.stopPropagation()
+    handledKeydownEvents.push event
 
-onKeyup = (event) -> return unless handlerStack.bubbleEvent('keyup', event)
+onKeyup = (event) ->
+  return unless handlerStack.bubbleEvent("keyup", event)
+  return if isInsertMode()
+
+  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
+  for keydown, i in handledKeydownEvents
+    if event.metaKey == keydown.metaKey and
+       event.altKey == keydown.altKey and
+       event.ctrlKey == keydown.ctrlKey and
+       event.keyIdentifier == keydown.keyIdentifier and
+       event.keyCode == keydown.keyCode
+
+      handledKeydownEvents.splice i, 1
+      event.stopPropagation()
+      break
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -443,7 +482,7 @@ checkIfEnabledForUrl = ->
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
-      initializeWhenEnabled()
+      initializeWhenEnabled(response.passKeys)
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
@@ -477,7 +516,7 @@ isFocusable = (element) -> isEditable(element) || isEmbed(element)
 # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
 # unfocused.
 #
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) > 0
+isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) >= 0
 
 #
 # Input or text elements are considered focusable and able to receieve their own keyboard events,
@@ -556,6 +595,18 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.regexMatches = text.match(pattern)
     findModeQuery.activeRegexIndex = 0
+    findModeQuery.matchCount = findModeQuery.regexMatches?.length
+  # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
+  # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
+  # from the internal representation used by window.find.
+  else
+    # escape all special characters, so RegExp just parses the string 'as is'.
+    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
+    pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+    text = document.body.innerText
+    findModeQuery.matchCount = text.match(pattern)?.length
 
 handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
@@ -801,7 +852,7 @@ findAndFollowRel = (value) ->
   for tag in relTags
     elements = document.getElementsByTagName(tag)
     for element in elements
-      if (element.hasAttribute("rel") && element.rel == value)
+      if (element.hasAttribute("rel") && element.rel.toLowerCase() == value)
         followLink(element)
         return true
 
@@ -817,7 +868,7 @@ window.goNext = ->
 
 showFindModeHUDForQuery = ->
   if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    HUD.show("/" + findModeQuery.rawQuery)
+    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Matches)")
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
@@ -920,7 +971,7 @@ HUD =
     HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to
       <a class='vimiumReset'
       href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>
-      #{version}</a>.<a class='vimiumReset close-button' href='#'>x</a>"
+      #{version}</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
     links = HUD.upgradeNotificationElement().getElementsByTagName("a")
     links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
     links[1].addEventListener "click", (event) ->

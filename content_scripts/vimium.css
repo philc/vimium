@@ -175,14 +175,14 @@ div#vimiumHelpDialog div.advanced { display: none; }
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) { color: #555; }
 div#vimiumHelpDialog a.closeButton {
   position:absolute;
-  right:10px;
+  right:7px;
   top:5px;
   font-family:"courier new";
   font-weight:bold;
   color:#555;
   text-decoration:none;
   padding-left:10px;
-  font-size:16px;
+  font-size:20px;
 }
 div#vimiumHelpDialog a {
   text-decoration: underline;
@@ -198,7 +198,6 @@ div#vimiumHelpDialog .optionsPage {
 }
 div#vimiumHelpDialog a.closeButton:hover {
   color:black;
-  cursor:default;
   -webkit-user-select:none;
 }
 div#vimiumHelpDialogFooter {

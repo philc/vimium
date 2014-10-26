@@ -3,5 +3,8 @@
 *.swp
 *.crx
 *.js
+*.sublime*
 node_modules/*
 dist
+jscoverage.json
+tags

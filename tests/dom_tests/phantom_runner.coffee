@@ -1,5 +1,6 @@
 system = require 'system'
 fs = require 'fs'
+path = require 'path'
 page = require('webpage').create()
 
 page.settings.userAgent = 'phantom'
@@ -12,12 +13,16 @@ page.viewportSize =
 page.onConsoleMessage = (msg) ->
   console.log msg
 
-dirname = do ->
-  pathParts = system.args[0].split(fs.separator)
-  pathParts[pathParts.length - 1] = ''
-  pathParts.join(fs.separator)
+page.onError = (msg, trace) ->
+  console.log(msg);
+  trace.forEach (item) ->
+    console.log('  ', item.file, ':', item.line)
 
-page.open dirname + 'dom_tests.html', (status) ->
+page.onResourceError = (resourceError) ->
+  console.log(resourceError.errorString)
+
+testfile = path.join(path.dirname(system.args[0]), 'dom_tests.html')
+page.open testfile, (status) ->
   if status != 'success'
     console.log 'Unable to load tests.'
     phantom.exit 1

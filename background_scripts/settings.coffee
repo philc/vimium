@@ -35,6 +35,9 @@ root.Settings = Settings =
     searchEngines: (value) ->
       root.Settings.parseSearchEngines value
 
+    exclusionRules: (value) ->
+      root.Exclusions.postUpdateHook value
+
   # postUpdateHooks convenience wrapper
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key] value if @postUpdateHooks[key]
@@ -58,6 +61,7 @@ root.Settings = Settings =
   # or strings
   defaults:
     scrollStepSize: 60
+    keyMappings: "# Insert your prefered key mappings here."
     linkHintCharacters: "sadfjklewcmpgh"
     linkHintNumbers: "0123456789"
     filterLinkHints: false
@@ -81,10 +85,13 @@ root.Settings = Settings =
       div > .vimiumHintMarker > .matchingCharacter {
       }
       """
-    excludedUrls:
-      """
-      http*://mail.google.com/*
-      """
+    # Default exclusion rules.
+    exclusionRules:
+      [
+        # Disable Vimium on Gmail.
+        { pattern: "http*://mail.google.com/*", passKeys: "" }
+      ]
+
     # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in
     # most cases the single bracket link will be "prev/next page" and the double bracket link will be
     # "first/last page", so we put the single bracket first in the pattern string so that it gets searched

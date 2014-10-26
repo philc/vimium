@@ -28,6 +28,8 @@ Vomnibar =
   activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
   activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
   activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, true)
+  activateEditUrl: -> @activateWithCompleter("omni", 100, window.location.href)
+  activateEditUrlInNewTab: -> @activateWithCompleter("omni", 100, window.location.href, false, true)
   getUI: -> @vomnibarUI
 
 
@@ -68,8 +70,18 @@ class VomnibarUI
     @update(true)
 
   updateSelection: ->
+    # We have taken the option to add some global state here (previousCompletionType) to tell if a search
+    # item has just appeared or disappeared, if that happens we either set the initialSelectionValue to 0 or 1
+    # I feel that this approach is cleaner than bubbling the state up from the suggestion level
+    # so we just inspect it afterwards
+    if @completions[0]
+      if @previousCompletionType != "search" && @completions[0].type == "search"
+        @selection = 0
+      else if @previousCompletionType == "search" && @completions[0].type != "search"
+        @selection = -1
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
+    @previousCompletionType = @completions[0].type if @completions[0]
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
@@ -101,10 +113,12 @@ class VomnibarUI
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
+      @input.value = @completions[@selection].url
       @updateSelection()
     else if (action == "down")
       @selection += 1
       @selection = @initialSelectionValue if @selection == @completions.length
+      @input.value = @completions[@selection].url
       @updateSelection()
     else if (action == "enter")
       # If they type something and hit enter without selecting a completion from our list of suggestions,
@@ -192,8 +206,8 @@ class BackgroundCompleter
 
   filter: (query, callback) ->
     id = Utils.createUniqueId()
-    @filterPort.onMessage.addListener (msg) ->
-      return if (msg.id != id)
+    @filterPort.onMessage.addListener (msg) =>
+      @filterPort.onMessage.removeListener(arguments.callee)
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
       # type will be one of [tab, bookmark, history, domain].
