@@ -387,10 +387,13 @@ updateScrollPosition = (tab, scrollX, scrollY) ->
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # only do this once per URL change
-  chrome.tabs.insertCSS tabId,
-    allFrames: true
-    code: Settings.get("userDefinedLinkHintCss")
-    runAt: "document_start"
+  chrome.tabs.get tabId, (tab) ->
+    # Check if tabId can be injected with CSS without errors
+    if !/^chrome(-extension)?:\/\/|https:\/\/chrome\.google\.com\/webstore\//.test(tab.url)
+      chrome.tabs.insertCSS tabId,
+        allFrames: true
+        code: Settings.get("userDefinedLinkHintCss")
+        runAt: "document_start"
   updateOpenTabs(tab)
   updateActiveState(tabId)
 
