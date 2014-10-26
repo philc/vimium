@@ -387,13 +387,14 @@ updateScrollPosition = (tab, scrollX, scrollY) ->
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # only do this once per URL change
-  chrome.tabs.insertCSS tabId,
+  cssConf =
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
-  , -> undefined if chrome.runtime.lastError
-  updateOpenTabs(tab)
-  updateActiveState(tabId)
+  chrome.tabs.insertCSS tabId, cssConf, ->
+    if not chrome.runtime.lastError
+      updateOpenTabs(tab)
+      updateActiveState(tabId)
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
   # We should update all the tabs in the old window and the new window.
