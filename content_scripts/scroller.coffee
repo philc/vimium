@@ -7,6 +7,7 @@ window.Scroller = root = {}
 activatedElement = null
 
 # keep track of jump history, ie whenever `jumpTo()` is called.
+maxHistory = 50
 jumpHistory = []
 jumpPosition = 0
 
@@ -24,6 +25,8 @@ addToJumpHistory = (direction, val) ->
     point.x = activatedElement[scrollProperties.x.axisName]
     point.y = val
   jumpHistory.push(point)
+  jumpHistory = jumpHistory.slice(-maxHistory)
+  console.log('updateing history', jumpHistory.length)
 
 
 root.init = ->
