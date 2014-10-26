@@ -190,6 +190,7 @@ defaultKeyMappings =
   "<c-e>": "scrollDown"
   "<c-y>": "scrollUp"
   "<c-o>": "scrollBack"
+  "g;": "scrollBack"
   "<c-i>": "scrollForward"
 
   "d": "scrollPageDown"
