@@ -26,6 +26,7 @@ class Suggestion
 
   generateHtml: ->
     return @html if @html
+    favIconUrl = @tabFavIconUrl or "#{@getUrlRoot(@url)}/favicon.ico"
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -34,11 +35,20 @@ class Suggestion
          <span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
-       <div class="vimiumReset vomnibarBottomHalf">
+       <div class="vimiumReset vomnibarBottomHalf vomnibarIcon"
+            style="background-image: url(#{favIconUrl});">
         <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
         #{relevancyHtml}
       </div>
       """
+
+  # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
+  # TODO(smblott) Is this really faster than using parseUri?  That's probably what's happening behind the
+  # scenes anyway.
+  getUrlRoot: (url) ->
+    a = document.createElement 'a'
+    a.href = url
+    a.protocol + "//" + a.hostname
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
 
@@ -261,6 +271,7 @@ class TabCompleter
       suggestions = results.map (tab) =>
         suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
         suggestion.tabId = tab.id
+        suggestion.tabFavIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 
