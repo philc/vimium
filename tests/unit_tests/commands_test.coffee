@@ -49,3 +49,7 @@ context "Validate advanced commands",
   should "include each advanced command in a command group", ->
     for command in Commands.advancedCommands
       assert.isTrue 0 <= @allCommands.indexOf command
+
+# TODO (smblott) More tests:
+# - Ensure each background command has an implmentation in BackgroundCommands
+# - Ensure each foreground command has an implmentation in vimium_frontent.coffee
