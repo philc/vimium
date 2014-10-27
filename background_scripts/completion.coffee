@@ -79,7 +79,7 @@ class Suggestion
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
     ranges = []
-    escapedTerms = @queryTerms.map (term) -> Utils.escapeHtml(term)
+    escapedTerms = @queryTerms.map (term) -> Utils.escapeHtml term
     for term in escapedTerms
       @pushMatchingRanges string, term, ranges
 
@@ -338,7 +338,7 @@ RankingUtils =
   # Every term must match at least one thing.
   matches: (queryTerms, things...) ->
     for term in queryTerms
-      regexp = RegexpCache.get(term)
+      regexp = RegexpCache.get term
       matchedTerm = false
       for thing in things
         matchedTerm ||= thing.match regexp
@@ -460,11 +460,72 @@ RegexpCache =
   get: (string, prefix="", suffix="") ->
     @init() unless @initialized
     regexpString = string.replace(@escapeRegExp, "\\$&")
+    regexpString = @addAccentDetection regexpString
     # Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a common case).
     regexpString = prefix + regexpString if prefix
     regexpString = regexpString + suffix if suffix
+
     # Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing `string`, not `regexpString`).
     @cache[regexpString] ||= new RegExp regexpString, (if Utils.hasUpperCase(string) then "" else "i")
+
+  # Modify regexpString to detect accents amoung the regexp results, whether or not the accents are typed
+  addAccentDetection: (regexpString) ->
+    # Use non-capturing groups `(?:)` to allow nesting (eg. matching "áe", "aé" and "æ" when typing "ae").
+    # This is preferable to the other obvious potential alternatives:
+    #  - use lookaheads (harder to undertstand, slower)
+    #  - give all possibilities for accents on double letter pairs (longer, harder to understand, and slower)
+    regexps = [
+      # multi-letter groups come first, so they can contain appropriate single letter groups
+      "(?:AE|Æ|Ǽ)",
+      "(?:OE|Œ)",
+      "(?:ae|æ|ǽ)",
+      "(?:IJ|Ĳ)",
+      "(?:ij|ĳ)",
+      "(?:oe|œ)",
+      # single letters
+      "(?:A|À|Á|Â|Ã|Ä|Å|Ā|Ă|Ą|Ǎ|Ǻ)",
+      "(?:C|Ç|Ć|Ĉ|Ċ|Č)",
+      "(?:D|Ð|Ď|Đ)",
+      "(?:E|È|É|Ê|Ë|Ē|Ĕ|Ė|Ę|Ě)",
+      "(?:G|Ĝ|Ğ|Ġ|Ģ)",
+      "(?:H|Ĥ|Ħ)",
+      "(?:I|Ì|Í|Î|Ï|Ĩ|Ī|Ĭ|Į|İ|Ǐ)",
+      "(?:J|Ĵ)",
+      "(?:K|Ķ)",
+      "(?:L|Ĺ|Ļ|Ľ|Ŀ)",
+      "(?:N|Ñ|Ń|Ņ|Ň)",
+      "(?:O|Ò|Ó|Ô|Õ|Ö|Ø|Ō|Ŏ|Ő|Ơ|Ǒ|Ǿ)",
+      "(?:R|Ŕ|Ŗ|Ř)",
+      "(?:S|Ś|Ŝ|Ş|Š)",
+      "(?:T|Ţ|Ť|Ŧ)",
+      "(?:U|Ù|Ú|Û|Ü|Ũ|Ū|Ŭ|Ů|Ű|Ų|Ư|Ǔ|Ǖ|Ǘ|Ǚ|Ǜ)",
+      "(?:W|Ŵ)",
+      "(?:Y|Ý|Ŷ|Ÿ)",
+      "(?:Z|Ź|Ż|Ž)",
+      "(?:a|à|á|â|ã|ä|å|ā|ă|ą|ǎ|ǻ)",
+      "(?:c|ç|ć|ĉ|ċ|č)",
+      "(?:d|ď|đ)",
+      "(?:e|è|é|ê|ë|ē|ĕ|ė|ę|ě)",
+      "(?:f|ƒ)"
+      "(?:g|ĝ|ğ|ġ|ģ)",
+      "(?:h|ĥ|ħ)",
+      "(?:i|ì|í|î|ï|ĩ|ī|ĭ|į|ı|ǐ)",
+      "(?:j|ĵ)",
+      "(?:k|ķ)",
+      "(?:l|ĺ|ļ|ľ|ŀ|Ł|ł)",
+      "(?:n|ñ|ń|ņ|ň|ŉ)",
+      "(?:o|ò|ó|ô|õ|ö|ø|ō|ŏ|ő|ơ|ǒ|ǿ)",
+      "(?:r|ŕ|ŗ|ř)",
+      "(?:s|ß|ś|ŝ|ş|š|ſ)",
+      "(?:t|ţ|ť|ŧ)",
+      "(?:u|ù|ú|û|ü|ũ|ū|ŭ|ů|ű|ų|ư|ǔ|ǖ|ǘ|ǚ|ǜ)",
+      "(?:w|ŵ)",
+      "(?:y|ý|ÿ|ŷ)",
+      "(?:z|ź|ż|ž)",
+    ]
+    for regexp in regexps
+      regexpString = regexpString.replace(new RegExp(regexp, "g"), regexp)
+    regexpString
 
 # Provides cached access to Chrome's history. As the user browses to new pages, we add those pages to this
 # history cache.
