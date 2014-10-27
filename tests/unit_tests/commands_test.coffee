@@ -33,6 +33,11 @@ context "Validate commands and options",
       assert.equal 'string', typeof command
       assert.isTrue Commands.availableCommands[command]
 
+  should "have each advanced command listed in a command group", ->
+    allCommands = [].concat.apply [], (commands for group, commands of Commands.commandGroups)
+    for command in Commands.advancedCommands
+      assert.isTrue 0 <= allCommands.indexOf command
+
   should "have valid commands for each default key mapping", ->
     count = Object.keys(Commands.keyToCommandRegistry).length
     assert.isTrue (0 < count)
