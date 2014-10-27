@@ -1,3 +1,4 @@
+# Just a no-op to validate tests on Travis.
 root = exports ? window
 
 currentVersion = Utils.getCurrentVersion()
