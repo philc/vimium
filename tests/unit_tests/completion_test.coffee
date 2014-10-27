@@ -3,6 +3,8 @@ extend(global, require "../../lib/utils.js")
 extend(global, require "../../background_scripts/completion.js")
 
 global.chrome = {}
+global.document =
+  createElement: -> {}
 
 context "bookmark completer",
   setup ->

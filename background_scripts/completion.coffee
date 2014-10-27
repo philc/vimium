@@ -43,8 +43,6 @@ class Suggestion
       """
 
   # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
-  # TODO(smblott) Is this really faster than using parseUri?  That's probably what's happening behind the
-  # scenes anyway.
   getUrlRoot: (url) ->
     a = document.createElement 'a'
     a.href = url
