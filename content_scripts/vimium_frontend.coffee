@@ -901,10 +901,18 @@ window.showHelpDialog = (html, fid) ->
         VimiumHelpDialog.toggleAdvancedCommands, false)
       this.dialogElement.style.maxHeight = window.innerHeight - 80
       this.showAdvancedCommands(this.getShowAdvancedCommands())
+      this.activateCommandNames()
 
-    #
+    # Activate click-to-copy on command names.
+    activateCommandNames: () ->
+      for ele in this.dialogElement.getElementsByClassName("commandName")
+        do (ele) ->
+          ele.addEventListener "click", ->
+            commandName = ele.innerHTML
+            chrome.runtime.sendMessage {handler: "copyToClipboard", data: commandName}
+            HUD.showForDuration "Copied #{commandName}", 1000
+
     # Advanced commands are hidden by default so they don't overwhelm new and casual users.
-    #
     toggleAdvancedCommands: (event) ->
       event.preventDefault()
       showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
