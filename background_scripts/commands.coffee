@@ -117,6 +117,7 @@ Commands =
       "LinkHints.activateModeToOpenInNewForegroundTab",
       "LinkHints.activateModeWithQueue",
       "LinkHints.activateModeToDownloadLink",
+      "LinkHints.activateModeToOpenIncognito",
       "Vomnibar.activate",
       "Vomnibar.activateInNewTab",
       "Vomnibar.activateTabSelection",
