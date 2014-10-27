@@ -1,8 +1,5 @@
-root.chrome =
-  session:
-    MAX_SESSION_RESULTS: 25
-
 require "./test_helper.js"
+extend global, require "./test_chrome_stubs.js"
 {Commands} = require "../../background_scripts/commands.js"
 
 context "Key mappings",

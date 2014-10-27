@@ -1,5 +1,5 @@
 require "./test_helper.js"
-require "./test_chrome_stubs.js"
+extend global, require "./test_chrome_stubs.js"
 
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
