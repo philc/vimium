@@ -907,6 +907,8 @@ window.showHelpDialog = (html, fid) ->
     activateCommandNames: () ->
       for ele in this.dialogElement.getElementsByClassName("commandName")
         do (ele) ->
+          # Setting the "onclick" attribute ensures that ele can be selected via link hints.
+          ele.setAttribute "onclick", ""
           ele.addEventListener "click", ->
             commandName = ele.innerHTML
             chrome.runtime.sendMessage {handler: "copyToClipboard", data: commandName}
