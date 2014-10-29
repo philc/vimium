@@ -26,7 +26,7 @@ class Suggestion
 
   generateHtml: ->
     return @html if @html
-    favIconUrl = @tabFavIconUrl or "#{@getUrlRoot(@url)}/favicon.ico"
+    favIconUrl = @favIconUrl or Suggestion.getFavIconURL @url
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -42,11 +42,14 @@ class Suggestion
       </div>
       """
 
-  # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
-  getUrlRoot: (url) ->
-    a = document.createElement 'a'
-    a.href = url
-    a.protocol + "//" + a.hostname
+  # See: https://groups.google.com/a/chromium.org/forum/#!topic/chromium-extensions/DONzstBAJeo
+  # Google serves up a nice little "world" icon for things which aren't really domains, such as chrome
+  # and extension URLs.  Static method.
+  @getFavIconURL: (url) ->
+    "https://www.google.com/profiles/c/favicons?domain=#{Suggestion.parseDomain(url)}"
+
+  # Static method.
+  @parseDomain: (url) -> url.split("/")[2] || ""
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
 
@@ -216,7 +219,9 @@ class DomainCompleter
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
-    onComplete([new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)])
+    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)
+    suggestion.favIconUrl = Suggestion.getFavIconURL "http://#{topDomain}"
+    onComplete([suggestion])
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
@@ -238,7 +243,7 @@ class DomainCompleter
       onComplete()
 
   onPageVisited: (newPage) ->
-    domain = @parseDomain(newPage.url)
+    domain = Suggestion.parseDomain(newPage.url)
     if domain
       slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
@@ -250,7 +255,7 @@ class DomainCompleter
       @domains = {}
     else
       toRemove.urls.forEach (url) =>
-        domain = @parseDomain(url)
+        domain = Suggestion.parseDomain(url)
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
 
@@ -269,7 +274,7 @@ class TabCompleter
       suggestions = results.map (tab) =>
         suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
         suggestion.tabId = tab.id
-        suggestion.tabFavIconUrl = tab.favIconUrl
+        suggestion.favIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 
