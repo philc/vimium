@@ -42,11 +42,10 @@ class Suggestion
       </div>
       """
 
-  # See: https://groups.google.com/a/chromium.org/forum/#!topic/chromium-extensions/DONzstBAJeo
-  # Google serves up a nice little "world" icon for things which aren't really domains, such as chrome
-  # and extension URLs.  Static method.
+  # Guess the favicon URL.
   @getFavIconURL: (url) ->
-    "https://www.google.com/profiles/c/favicons?domain=#{Suggestion.parseDomain(url)}"
+    domain = Suggestion.parseDomain(url)
+    "http://#{domain}/favicon.ico"
 
   # Static method.
   @parseDomain: (url) -> url.split("/")[2] || ""
