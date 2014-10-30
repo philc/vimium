@@ -1,13 +1,13 @@
 
 require "./test_helper.js"
-require "./test_chrome_stubs.js"
+extend global, require "./test_chrome_stubs.js"
 
 # FIXME:
 # Would like to do:
 # extend(global, require "../../background_scripts/marks.js")
 # But it looks like marks.coffee has never been included in a test before!
 # Temporary fix...
-root.Marks = 
+root.Marks =
   create: () -> true
   goto:
     bind: () -> true

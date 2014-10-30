@@ -5,10 +5,10 @@
 # It also provides stubs for a number of other chrome APIs.
 #
 
-global.window = {}
-global.localStorage = {}
+exports.window = {}
+exports.localStorage = {}
 
-global.chrome =
+exports.chrome =
   runtime:
     getManifest: () ->
       version: "1.2.3"
@@ -55,6 +55,9 @@ global.chrome =
           items = {}
           items[key] = {}
           @func(items,'synced storage stub')
+
+    session:
+      MAX_SESSION_RESULTS: 25
 
     # chrome.storage.sync
     sync:
