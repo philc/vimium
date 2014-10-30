@@ -19,7 +19,7 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
+  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData, @favIconUrl) ->
     @title ||= ""
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
@@ -42,10 +42,9 @@ class Suggestion
       </div>
       """
 
-  # Guess the favicon URL.
+  # Guess the favicon URL; static method.
   @getFavIconURL: (url) ->
-    domain = Suggestion.parseDomain(url)
-    "http://#{domain}/favicon.ico"
+    "http://#{Suggestion.parseDomain(url)}/favicon.ico"
 
   # Static method.
   @parseDomain: (url) -> url.split("/")[2] || ""
@@ -218,8 +217,8 @@ class DomainCompleter
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
-    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)
-    suggestion.favIconUrl = Suggestion.getFavIconURL "http://#{topDomain}"
+    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy, undefined,
+      Suggestion.getFavIconURL "http://#{topDomain}")
     onComplete([suggestion])
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -271,9 +270,9 @@ class TabCompleter
     chrome.tabs.query {}, (tabs) =>
       results = tabs.filter (tab) -> RankingUtils.matches(queryTerms, tab.url, tab.title)
       suggestions = results.map (tab) =>
-        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
+        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy, undefined,
+          tab.favIconUrl)
         suggestion.tabId = tab.id
-        suggestion.favIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 
