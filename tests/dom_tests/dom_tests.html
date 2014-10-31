@@ -35,7 +35,10 @@
     <script type="text/javascript" src="../../lib/handler_stack.js"></script>
     <script type="text/javascript" src="../../lib/clipboard.js"></script>
     <script type="text/javascript" src="../../content_scripts/link_hints.js"></script>
-    <script type="text/javascript" src="../../content_scripts/vomnibar.js"></script>
+    <!-- TODO(smblott) The following is being overridden by the inclusion of "../../pages/vomnibar.js", below,
+         because they both define the same Vomnibar class/object.  As a result, there are currently no tests
+         testing the DOM aspects of "../../content_scripts/vomnibar.js".
+    <script type="text/javascript" src="../../content_scripts/vomnibar.js"></script>  -->
     <script type="text/javascript" src="../../content_scripts/scroller.js"></script>
     <script type="text/javascript" src="../../content_scripts/vimium_frontend.js"></script>
     <script type="text/javascript" src="../../pages/vomnibar.js"></script>

@@ -5,6 +5,7 @@
 #
 Vomnibar =
   vomnibarUI: null # the dialog instance for this window
+  getUI: -> @vomnibarUI
   completers: {}
 
   getCompleter: (name) ->
@@ -15,7 +16,31 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activateWithCompleter: (options) ->
+  activate: (params = "") ->
+    options =
+      completer: "omni"
+      query: null
+      frameId: -1
+
+    booleanOptions = ["selectFirst", "newTab"]
+
+    # Convert options/params in URL to options object.
+    params
+      .split(/[\?&]/)
+      .map((option) ->
+        [name, value] = option.split "="
+        options[name] = value
+        options[name] = unescape(value) if value
+      )
+
+    # Set boolean options.
+    for option in booleanOptions
+      options[option] = option of options and options[option] != "false"
+
+    options.refreshInterval = switch options.completer
+      when "omni" then 100
+      else 0
+
     completer = @getCompleter(options.completer)
     @vomnibarUI ?= new VomnibarUI()
     completer.refresh()
@@ -28,28 +53,6 @@ Vomnibar =
     if (options.query)
       @vomnibarUI.setQuery(options.query)
       @vomnibarUI.update()
-
-  activate: -> @activateWithCompleter {completer:"omni"}
-  activateInNewTab: -> @activateWithCompleter {
-    completer: "omni"
-    selectFirst: false
-    newTab: true
-  }
-  activateTabSelection: -> @activateWithCompleter {
-    completer: "tabs"
-    selectFirst: true
-  }
-  activateBookmarks: -> @activateWithCompleter {
-    completer: "bookmarks"
-    selectFirst: true
-  }
-  activateBookmarksInNewTab: -> @activateWithCompleter {
-    completer: "bookmarks"
-    selectFirst: true
-    newTab: true
-  }
-  getUI: -> @vomnibarUI
-
 
 class VomnibarUI
   constructor: ->
@@ -258,31 +261,7 @@ extend BackgroundCompleter,
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
 initializeOnDomReady = ->
-  options =
-    completer: "omni"
-    query: null
-    frameId: -1
-
-  booleanOptions = ["selectFirst", "newTab"]
-
-  # Convert options in URL to options object
-  document.location.search
-    .split(/[\?&]/)
-    .map((option) ->
-      [name, value] = option.split "="
-      options[name] = value
-      options[name] = unescape(value) if value
-    )
-
-  # Set boolean options
-  for option in booleanOptions
-    options[option] = option of options and options[option] != "false"
-
-  options.refreshInterval = switch options.completer
-    when "omni" then 100
-    else 0
-
-  Vomnibar.activateWithCompleter options
+  Vomnibar.activate document.location.search
 
 window.addEventListener "DOMContentLoaded", initializeOnDomReady
 
