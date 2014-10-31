@@ -353,10 +353,8 @@ body.vimiumFindMode ::selection {
 }
 
 #vomnibar li .vomnibarIcon {
-  background-position-y: center;
-  background-size: 16px;
-  background-repeat: no-repeat;
-  padding-left: 20px;
+  height: 16px;
+  width: 16px;
 }
 
 #vomnibar li .vomnibarSource {

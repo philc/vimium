@@ -34,17 +34,21 @@ class Suggestion
       <div class="vimiumReset vomnibarTopHalf">
          <span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
-       </div>
-       <div class="vimiumReset vomnibarBottomHalf vomnibarIcon"
-            style="background-image: url(#{favIconUrl});">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
-        #{relevancyHtml}
+      </div>
+      <div class="vimiumReset vomnibarBottomHalf">
+         <img class="vimiumReset vomnibarIcon" src="#{favIconUrl}"/><nobr>
+         <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
+         #{relevancyHtml}
       </div>
       """
 
   # Guess the favicon URL; static method.
   @getFavIconURL: (url) ->
-    "http://#{Suggestion.parseDomain(url)}/favicon.ico"
+    # Omit the URL scheme, so that we get the scheme from the host page.  If the host page is "https", we
+    # don't want to be generating "http" requests.
+    # TODO(smblott) For some sites (e.g. https://www.bbc.com/favicon.ico) the https request redirects to http,
+    # breaking the host page's security policy.
+    "//#{Suggestion.parseDomain(url)}/favicon.ico"
 
   # Static method.
   @parseDomain: (url) -> url.split("/")[2] || ""
@@ -218,7 +222,7 @@ class DomainCompleter
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
     suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy, undefined,
-      Suggestion.getFavIconURL "http://#{topDomain}")
+      Suggestion.getFavIconURL("http://#{topDomain}"))
     onComplete([suggestion])
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]

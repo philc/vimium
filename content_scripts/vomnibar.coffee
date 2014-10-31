@@ -175,6 +175,17 @@ class VomnibarUI
         @updateTimer = null
       @refreshInterval)
 
+  activateFaviconObserver: (box) ->
+    observer = new MutationObserver (mutations) ->
+      for mutation in mutations
+        for element in mutation.addedNodes
+          for favicon in element.getElementsByClassName "vomnibarIcon"
+            do (favicon) ->
+              favicon.onerror = ->
+                favicon.onerror = null
+                favicon.src = "https://www.google.com/profiles/c/favicons?domain="
+    observer.observe box, {childList: true, subtree:true}
+
   initDom: ->
     @box = Utils.createElementFromHtml(
       """
@@ -186,6 +197,7 @@ class VomnibarUI
       </div>
       """)
     @box.style.display = "none"
+    @activateFaviconObserver(@box)
     document.body.appendChild(@box)
 
     @input = document.querySelector("#vomnibar input")
