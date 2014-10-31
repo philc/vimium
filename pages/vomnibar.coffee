@@ -271,6 +271,7 @@ initializeOnDomReady = ->
     .map((option) ->
       [name, value] = option.split "="
       options[name] = value
+      options[name] = unescape(value) if value
     )
 
   # Set boolean options
