@@ -85,6 +85,13 @@
   padding: 2px 0;
 }
 
+#vomnibar li .vomnibarIcon {
+  background-position-y: center;
+  background-size: 16px;
+  background-repeat: no-repeat;
+  padding-left: 20px;
+}
+
 #vomnibar li .vomnibarSource {
   color: #777;
   margin-right: 4px;
