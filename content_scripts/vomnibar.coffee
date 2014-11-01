@@ -151,6 +151,8 @@ class VomnibarUI
       @populateUiWithCompletions(completions)
       callback() if callback
 
+  # Various ways in which we met get or guess the favicon for a suggestion.  Not all of these are currently
+  # used.
   useKnownFaviconUrl: (favicon) -> favicon.getAttribute "favIconUrl"
   guessChromeFaviconUrl: (favicon) -> "chrome://favicon/http://" + favicon.getAttribute "domain"
   guessHttpFaviconUrl: (favicon) -> "http://" + favicon.getAttribute("domain") + "/favicon.ico"
@@ -164,12 +166,13 @@ class VomnibarUI
   guessFavicon: (favicon, guessers) ->
     if 0 < guessers.length
       url = guessers[0](favicon)
-      return @guessFavicon favicon, guessers[1..] unless url
+      tryNextGuess = => @guessFavicon favicon, guessers[1..]
+      return tryNextGuess() unless url
       chrome.runtime.sendMessage {handler: "fetchViaHttpAsBase64", url: url}, (response) =>
         if response.data and response.type and 0 == response.type.indexOf "image/"
-          favicon.src = response.data
-        else
-          @guessFavicon favicon, guessers[1..]
+          if response.data != @chromeCacheMissFavicon
+            return favicon.src = response.data
+        tryNextGuess()
 
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data
@@ -178,14 +181,11 @@ class VomnibarUI
     @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
     # activate favicon guessers
     for favicon in @completionList.getElementsByClassName "vomnibarIcon"
-      favicon.src = @chromeCacheMissFavicon
-      # @guessHttpsFaviconUrl is currently omitted because it's likely to fail after @guessHttpFaviconUrl has
-      # failed.  @guessGoogleFaviconUrl is currently omitted because @guessChromeFaviconUrl is guaranteed to
-      # return *something*.  The effectiveness of @guessChromeFaviconUrl depends upon the contents of chrome's
-      # cache.  However, @guessGoogleFaviconUrl is more expensive -- particularly for failures (which cannot
-      # be cached).
-      @guessFavicon favicon, [@useKnownFaviconUrl, @guessHttpFaviconUrl, @guessChromeFaviconUrl]
-    # update selection
+      favicon.src = @googleCacheMissFavicon
+      # Strategy.  Use a known favicon URL, if we have one.  Then try chrome's favicon cache (but we only use
+      # this favicon if it's not chrome's default favicon).  Then try guessing over HTTP.  If all of that
+      # fails, we'll be left with Google's default favicon, which is a little globe (@googleCacheMissFavicon).
+      @guessFavicon favicon, [@useKnownFaviconUrl, @guessChromeFaviconUrl, @guessHttpFaviconUrl]
     @updateSelection()
 
   update: (updateSynchronously, callback) ->

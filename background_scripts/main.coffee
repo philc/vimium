@@ -641,7 +641,7 @@ fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
   xhr = new XMLHttpRequest()
   xhr.open('GET', request.url, true)
   xhr.responseType = 'blob'
-  xhr.timeout = 300
+  xhr.timeout = 1000
   xhr.ontimeout = xhr.onerror = sendError
   xhr.onload = ->
     return sendError() unless xhr.status == 200 and xhr.readyState == 4
