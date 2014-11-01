@@ -58,6 +58,9 @@ class TextOption extends Option
   readValueFromElement: -> @element.value.trim()
 
 class NonEmptyTextOption extends Option
+  constructor: (field,enableSaveButton) ->
+    super(field,enableSaveButton)
+    @element.addEventListener "input", enableSaveButton
   populateElement: (value) -> @element.value = value
   # If the new value is not empty, then return it. Otherwise, restore the default value.
   readValueFromElement: -> if value = @element.value.trim() then value else @restoreToDefault()
