@@ -135,12 +135,6 @@ saveOptions = ->
   Option.all.map (option) -> option.save()
   $("saveOptions").disabled = true
 
-restoreToDefaults = ->
-  return unless confirm "Are you sure you want to permanently return all of Vimium's settings to their defaults?"
-  Option.all.map (option) -> option.restoreToDefault()
-  maintainLinkHintsView()
-  $("saveOptions").disabled = true
-
 # Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
 maintainLinkHintsView = ->
   hide = (el) -> el.parentNode.parentNode.style.display = "none"
@@ -189,7 +183,6 @@ document.addEventListener "DOMContentLoaded", ->
   }
 
   $("saveOptions").addEventListener "click", saveOptions
-  $("restoreSettings").addEventListener "click", restoreToDefaults
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions
   $("showCommands").addEventListener "click", activateHelpDialog
   $("filterLinkHints").addEventListener "click", maintainLinkHintsView
