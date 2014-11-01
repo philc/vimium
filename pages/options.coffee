@@ -51,6 +51,9 @@ class NumberOption extends Option
   readValueFromElement: -> parseFloat @element.value
 
 class TextOption extends Option
+  constructor: (field,enableSaveButton) ->
+    super(field,enableSaveButton)
+    @element.addEventListener "input", enableSaveButton
   populateElement: (value) -> @element.value = value
   readValueFromElement: -> @element.value.trim()
 
