@@ -217,6 +217,25 @@
           </td>
         </tr>
         <tr>
+          <td class="caption">Custom key<br/>mappings</td>
+          <td id="mappingsHelp" verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                <!-- TODO(ilya/philc): Expand this and style it better. -->
+                Enter commands to remap your keys. Available commands:<br/>
+                <pre id="exampleKeyMapping">
+map j scrollDown
+unmap j
+unmapAll
+" this is a comment
+# this is also a comment</pre>
+                <a href="#" id="showCommands">Show available commands.</a>
+              </div>
+            </div>
+            <textarea id="keyMappings" type="text"></textarea>
+          </td>
+        </tr>
+        <tr>
           <td>Excluded URLs<br/>and keys</td>
           <td>
             <div class="help">
@@ -245,26 +264,6 @@
           </td>
         </tr>
         <tbody id='advancedOptions'>
-          <tr>
-            <td class="caption">Custom key<br/>mappings</td>
-            <td id="mappingsHelp" verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  <!-- TODO(ilya/philc): Expand this and style it better. -->
-                  Enter commands to remap your keys. Available commands:<br/>
-                  <pre id="exampleKeyMapping">
-map j scrollDown
-unmap j
-unmapAll
-" this is a comment
-# this is also a comment</pre>
-                  <a href="#" id="showCommands">Show available commands.</a>
-                </div>
-              </div>
-              <textarea id="keyMappings" type="text"></textarea>
-              <div class="nonEmptyTextOption">
-            </td>
-          </tr>
           <tr>
             <td class="caption">CSS for link hints</td>
             <td verticalAlign="top">
