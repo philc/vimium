@@ -180,6 +180,7 @@ class VomnibarUI
           cache[url] = response
           for callback in callbacks[url]
             callback response
+          delete callbacks[url]
 
   guessFavicon: (favicon, guessers) ->
     if 0 < guessers.length
