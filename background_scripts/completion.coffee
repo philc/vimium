@@ -19,14 +19,14 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
+  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData, @favIconDomain) ->
     @title ||= ""
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
   generateHtml: ->
     return @html if @html
-    favIconUrl = @favIconUrl or Suggestion.getFavIconURL @url
+    favIconDomain = @favIconDomain or Suggestion.parseDomain @url
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -34,19 +34,13 @@ class Suggestion
       <div class="vimiumReset vomnibarTopHalf">
          <span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
-       </div>
-       <div class="vimiumReset vomnibarBottomHalf vomnibarIcon"
-            style="background-image: url(#{favIconUrl});">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
-        #{relevancyHtml}
+      </div>
+      <div class="vimiumReset vomnibarBottomHalf">
+         <img class="vimiumReset vomnibarIcon" domain="#{favIconDomain}" src=""/><nobr>
+         <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
+         #{relevancyHtml}
       </div>
       """
-
-  # See: https://groups.google.com/a/chromium.org/forum/#!topic/chromium-extensions/DONzstBAJeo
-  # Google serves up a nice little "world" icon for things which aren't really domains, such as chrome
-  # and extension URLs.  Static method.
-  @getFavIconURL: (url) ->
-    "https://www.google.com/profiles/c/favicons?domain=#{Suggestion.parseDomain(url)}"
 
   # Static method.
   @parseDomain: (url) -> url.split("/")[2] || ""
@@ -219,9 +213,10 @@ class DomainCompleter
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
-    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)
-    suggestion.favIconUrl = Suggestion.getFavIconURL "http://#{topDomain}"
+    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy, undefined,
+      topDomain)
     onComplete([suggestion])
+
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
@@ -259,8 +254,6 @@ class DomainCompleter
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
 
-  parseDomain: (url) -> url.split("/")[2] || ""
-
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
@@ -272,9 +265,9 @@ class TabCompleter
     chrome.tabs.query {}, (tabs) =>
       results = tabs.filter (tab) -> RankingUtils.matches(queryTerms, tab.url, tab.title)
       suggestions = results.map (tab) =>
-        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
+        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy, undefined,
+          Suggestion.parseDomain(tab.favIconUrl))
         suggestion.tabId = tab.id
-        suggestion.favIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 

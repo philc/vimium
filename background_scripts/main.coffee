@@ -56,11 +56,26 @@ chrome.runtime.onConnect.addListener((port, name) ->
     port.onMessage.addListener(portHandlers[port.name])
 )
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
+# With asynchronous responses to messages, we *must* call sendResponse (or we'll get a memory leak).
+# We allow two minutes and one second for the response to be sent, after which time we send an error response.
+sendResponseWithTimeout = (sendResponse) ->
+  timer = setTimeout ( ->
+    timer = null
+    sendResponse { error: "timed out"}), 121000
+  (response) ->
+    if timer
+      sendResponse response
+      clearTimeout timer
+      timer = null
+
+chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
+  if (sendRequestAsyncHandlers[request.handler])
+    sendRequestAsyncHandlers[request.handler](request, sender, sendResponseWithTimeout(sendResponse))
+    return true # Ensure The sendResponse callback is not freed.
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
   # Ensure the sendResponse callback is freed.
-  return false)
+  return false
 
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
@@ -620,6 +635,23 @@ getCurrFrameIndex = (frames) ->
     return i if frames[i].id == focusedFrame
   frames.length + 1
 
+# Launch an asynchronous HTTP request and send the response as a base64-encoded data: URI.
+fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
+  sendError = -> sendResponse { error: "XMLHttpRequest error" }
+  xhr = new XMLHttpRequest()
+  xhr.open('GET', request.url, true)
+  xhr.responseType = 'blob'
+  xhr.timeout = 300
+  xhr.ontimeout = xhr.onerror = sendError
+  xhr.onload = ->
+    return sendError() unless xhr.status == 200 and xhr.readyState == 4
+    reader = new window.FileReader()
+    reader.readAsDataURL xhr.response
+    reader.onerror = sendError
+    reader.onloadend = ->
+      sendResponse { data: reader.result, type: xhr.response.type }
+  xhr.send()
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -644,6 +676,9 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
+
+sendRequestAsyncHandlers =
+  fetchViaHttpAsBase64: fetchViaHttpAsBase64
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))

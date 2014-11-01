@@ -151,11 +151,29 @@ class VomnibarUI
       @populateUiWithCompletions(completions)
       callback() if callback
 
+  guessChromeFaviconUrl: (domain) -> "chrome://favicon/http://" + domain
+  guessHttpFaviconUrl: (domain) -> "http://" + domain + "/favicon.ico"
+  guessHttpsFaviconUrl: (domain) -> "https://" + domain + "/favicon.ico"
+  guessGoogleFaviconUrl: (domain) -> "https://www.google.com/profiles/c/favicons?domain="
+
+  guessFavicon: (favicon, domain, guessers) ->
+    if 0 < guessers.length
+      chrome.runtime.sendMessage {handler: "fetchViaHttpAsBase64", url: guessers[0](domain)}, (response) =>
+        if response.data and response.type and 0 == response.type.indexOf "image/"
+          favicon.src = response.data
+        else
+          @guessFavicon favicon, domain, guessers[1..]
+
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else "none"
     @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
+    # activate favicon guessers
+    for favicon in @completionList.getElementsByClassName "vomnibarIcon"
+      @guessFavicon favicon, favicon.getAttribute("domain"),
+        [@guessHttpFaviconUrl, @guessHttpsFaviconUrl, @guessGoogleFaviconUrl]
+    # update selection
     @updateSelection()
 
   update: (updateSynchronously, callback) ->
