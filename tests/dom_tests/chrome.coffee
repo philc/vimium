@@ -19,3 +19,11 @@ root.chrome = {
     getManifest: ->
   }
 }
+
+# Phantomjs does not seem to support MutationObserver;
+# see https://github.com/ariya/phantomjs/issues/10715.
+class MutationObserver
+  constructor: -> true
+  observe: -> true
+
+root.MutationObserver = MutationObserver
