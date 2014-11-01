@@ -194,6 +194,10 @@ document.addEventListener "DOMContentLoaded", ->
   $("showCommands").addEventListener "click", activateHelpDialog
   $("filterLinkHints").addEventListener "click", maintainLinkHintsView
 
+  for element in document.getElementsByClassName "nonEmptyTextOption"
+    element.className = element.className + " example info"
+    element.innerHTML = "If this option is empty, then it will be reset to its default value."
+
   maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
