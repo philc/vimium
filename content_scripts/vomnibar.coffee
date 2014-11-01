@@ -157,6 +157,10 @@ class VomnibarUI
   guessHttpsFaviconUrl: (favicon) -> "https://" + favicon.getAttribute("domain") + "/favicon.ico"
   guessGoogleFaviconUrl: (favicon) -> "https://www.google.com/profiles/c/favicons?domain="
 
+  # Chrome and Google's default favicons; cached here for the benefit of their servers :-)
+  chromeCacheMissFavicon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAArklEQVR4XqWQQQqDQAxFf1zY21k3XsAeoHgYu7NasV5QqM5mUlACw5RMWvrh7T6Pn2TMjH/IEGSaJtYgIoRIQsFurKrqg2VZMI4jI04s8P7obJsTICmKM4bhIRJ9QSplWaLvB04s8ADiW4975/m5s64vdN2df1pQ15cQ6SkLojjnQqSnC4hgYAiOUAJbYCA9/YkW9hOJdOwFIOT5SQWg1AJG295MvFcETXOlbxHBG8Vy2fHIq9l6AAAAAElFTkSuQmCC"
+  googleCacheMissFavicon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAACiElEQVQ4EaVTzU8TURCf2tJuS7tQtlRb6UKBIkQwkRRSEzkQgyEc6lkOKgcOph78Y+CgjXjDs2i44FXY9AMTlQRUELZapVlouy3d7kKtb0Zr0MSLTvL2zb75eL838xtTvV6H/xELBptMJojeXLCXyobnyog4YhzXYvmCFi6qVSfaeRdXdrfaU1areV5KykmX06rcvzumjY/1ggkR3Jh+bNf1mr8v1D5bLuvR3qDgFbvbBJYIrE1mCIoCrKxsHuzK+Rzvsi29+6DEbTZz9unijEYI8ObBgXOzlcrx9OAlXyDYKUCzwwrDQx1wVDGg089Dt+gR3mxmhcUnaWeoxwMbm/vzDFzmDEKMMNhquRqduT1KwXiGt0vre6iSeAUHNDE0d26NBtAXY9BACQyjFusKuL2Ry+IPb/Y9ZglwuVscdHaknUChqLF/O4jn3V5dP4mhgRJgwSYm+gV0Oi3XrvYB30yvhGa7BS70eGFHPoTJyQHhMK+F0ZesRVVznvXw5Ixv7/C10moEo6OZXbWvlFAF9FVZDOqEABUMRIkMd8GnLwVWg9/RkJF9sA4oDfYQAuzzjqzwvnaRUFxn/X2ZlmGLXAE7AL52B4xHgqAUqrC1nSNuoJkQtLkdqReszz/9aRvq90NOKdOS1nch8TpL555WDp49f3uAMXhACRjD5j4ykuCtf5PP7Fm1b0DIsl/VHGezzP1KwOiZQobFF9YyjSRYQETRENSlVzI8iK9mWlzckpSSCQHVALmN9Az1euDho9Xo8vKGd2rqooA8yBcrwHgCqYR0kMkWci08t/R+W4ljDCanWTg9TJGwGNaNk3vYZ7VUdeKsYJGFNkfSzjXNrSX20s4/h6kB81/271ghG17l+rPTAAAAAElFTkSuQmCC"
+
   guessFavicon: (favicon, guessers) ->
     if 0 < guessers.length
       url = guessers[0](favicon)
@@ -179,6 +183,7 @@ class VomnibarUI
       # return *something*.  The effectiveness of @guessChromeFaviconUrl depends upon the contents of chrome's
       # cache.  However, @guessGoogleFaviconUrl is more expensive -- particularly for failures (which cannot
       # be cached).
+      favicon.src = @chromeCacheMissFavicon
       @guessFavicon favicon, [@useKnownFaviconUrl, @guessHttpFaviconUrl, @guessChromeFaviconUrl]
     # update selection
     @updateSelection()
