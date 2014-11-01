@@ -70,8 +70,8 @@ sendResponseWithTimeout = (sendResponse) ->
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   if (sendRequestAsyncHandlers[request.handler])
-    sendRequestAsyncHandlers[request.handler](request, sender, sendResponseWithTimeout(sendResponse))
-    return true # Ensure The sendResponse callback is not freed.
+    # Handlers must return true if they will respond asynchronously, false otherwise.
+    return sendRequestAsyncHandlers[request.handler](request, sender, sendResponseWithTimeout(sendResponse))
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
   # Ensure the sendResponse callback is freed.
@@ -639,9 +639,9 @@ getCurrFrameIndex = (frames) ->
 fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
   sendError = -> sendResponse { error: "XMLHttpRequest error" }
   xhr = new XMLHttpRequest()
-  xhr.open('GET', request.url, true)
-  xhr.responseType = 'blob'
-  xhr.timeout = 1000
+  xhr.open("GET", request.url, true)
+  xhr.responseType = "blob"
+  xhr.timeout = 300
   xhr.ontimeout = xhr.onerror = sendError
   xhr.onload = ->
     return sendError() unless xhr.status == 200 and xhr.readyState == 4
@@ -649,8 +649,10 @@ fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
     reader.readAsDataURL xhr.response
     reader.onerror = sendError
     reader.onloadend = ->
+      console.log request.url
       sendResponse { data: reader.result, type: xhr.response.type }
   xhr.send()
+  true # sendResponse will be called asynchronously.
 
 # Port handler mapping
 portHandlers =
