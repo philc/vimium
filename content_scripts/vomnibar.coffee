@@ -175,15 +175,50 @@ class VomnibarUI
         @updateTimer = null
       @refreshInterval)
 
+  # Guess the URL of the favicon for each vomnibar entry; on error, try the next guess.  The final guess,
+  # guessGoogle, yields a little globe.
   activateFaviconObserver: (box) ->
+    guessChromeUrl = (domain) -> "chrome://favicon/http://" + domain
+    guessHttpUrl = (domain) -> "http://" + domain + "/favicon.ico"
+    guessHttpsUrl = (domain) -> "https://" + domain + "/favicon.ico"
+    guessGoogleUrl = (domain) -> "https://www.google.com/profiles/c/favicons?domain="
+    guessers = [guessHttpUrl, guessHttpsUrl, guessGoogleUrl]
+
+    guessFavicon = (favicon, domain, guessers) ->
+      return if guessers.length == 0
+      makeNextGuess = -> guessFavicon favicon, domain, guessers[1..]
+      url = guessers[0](domain)
+      xhr = new XMLHttpRequest()
+      xhr.open('GET', url , true)
+      xhr.responseType = 'blob'
+      xhr.timeout = 250
+      xhr.onerror = makeNextGuess
+      xhr.ontimeout = makeNextGuess
+      xhr.onload = ->
+        if xhr.status == 200 and xhr.readyState == 4
+          try
+            reader = new window.FileReader()
+            reader.readAsDataURL xhr.response
+            reader.onloadend = ->
+              base64data = reader.result
+              console.log base64data
+              favicon.src = base64data
+          catch
+            makeNextGuess()
+        else
+          makeNextGuess()
+      try
+        xhr.send()
+      catch
+        makeNextGuess()
+
     observer = new MutationObserver (mutations) ->
       for mutation in mutations
         for element in mutation.addedNodes
           for favicon in element.getElementsByClassName "vomnibarIcon"
             do (favicon) ->
-              favicon.onerror = ->
-                favicon.onerror = null
-                favicon.src = "https://www.google.com/profiles/c/favicons?domain="
+              domain = favicon.getAttribute "domain"
+              guessFavicon favicon, domain, guessers
     observer.observe box, {childList: true, subtree:true}
 
   initDom: ->

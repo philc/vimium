@@ -19,14 +19,14 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData, @favIconUrl) ->
+  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData, @favIconDomain) ->
     @title ||= ""
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
   generateHtml: ->
     return @html if @html
-    favIconUrl = @favIconUrl or Suggestion.getFavIconURL @url
+    favIconDomain = @favIconDomain or Suggestion.parseDomain @url
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -36,19 +36,11 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
       </div>
       <div class="vimiumReset vomnibarBottomHalf">
-         <img class="vimiumReset vomnibarIcon" src="#{favIconUrl}"/><nobr>
+         <img class="vimiumReset vomnibarIcon" domain="#{favIconDomain}" src=""/><nobr>
          <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
          #{relevancyHtml}
       </div>
       """
-
-  # Guess the favicon URL; static method.
-  @getFavIconURL: (url) ->
-    # Omit the URL scheme, so that we get the scheme from the host page.  If the host page is "https", we
-    # don't want to be generating "http" requests.
-    # TODO(smblott) For some sites (e.g. https://www.bbc.com/favicon.ico) the https request redirects to http,
-    # breaking the host page's security policy.
-    "//#{Suggestion.parseDomain(url)}/favicon.ico"
 
   # Static method.
   @parseDomain: (url) -> url.split("/")[2] || ""
@@ -222,8 +214,9 @@ class DomainCompleter
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
     suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy, undefined,
-      Suggestion.getFavIconURL("http://#{topDomain}"))
+      topDomain)
     onComplete([suggestion])
+
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
@@ -261,8 +254,6 @@ class DomainCompleter
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
 
-  parseDomain: (url) -> url.split("/")[2] || ""
-
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
@@ -275,7 +266,7 @@ class TabCompleter
       results = tabs.filter (tab) -> RankingUtils.matches(queryTerms, tab.url, tab.title)
       suggestions = results.map (tab) =>
         suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy, undefined,
-          tab.favIconUrl)
+          Suggestion.parseDomain(tab.favIconUrl))
         suggestion.tabId = tab.id
         suggestion
       onComplete(suggestions)
