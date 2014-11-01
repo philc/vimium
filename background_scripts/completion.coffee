@@ -27,6 +27,7 @@ class Suggestion
   generateHtml: ->
     return @html if @html
     favIconDomain = @favIconDomain or Suggestion.parseDomain @url
+    favIconUrl = @favIconUrl or ""
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -36,7 +37,7 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
       </div>
       <div class="vimiumReset vomnibarBottomHalf">
-         <img class="vimiumReset vomnibarIcon" domain="#{favIconDomain}" src=""/><nobr>
+         <img class="vimiumReset vomnibarIcon" domain="#{favIconDomain}" favIconUrl="#{favIconUrl}" src=""/><nobr>
          <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
          #{relevancyHtml}
       </div>
@@ -265,9 +266,9 @@ class TabCompleter
     chrome.tabs.query {}, (tabs) =>
       results = tabs.filter (tab) -> RankingUtils.matches(queryTerms, tab.url, tab.title)
       suggestions = results.map (tab) =>
-        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy, undefined,
-          Suggestion.parseDomain(tab.favIconUrl))
+        suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
         suggestion.tabId = tab.id
+        suggestion.favIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 
