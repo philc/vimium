@@ -135,32 +135,45 @@ initializePreDomReady = ->
     # Ensure the sendResponse callback is freed.
     false
 
+    installEventListeners()
+
 # Wrapper to install event listeners.  Syntactic sugar.
-installListener = (event, callback) -> document.addEventListener(event, callback, true)
+installListener = (element, event, callback) ->
+  element.addEventListener(event, ->
+    if isEnabledForUrl then callback.apply(this, arguments) else true
+  , true)
 
 #
 # This is called once the background page has told us that Vimium should be enabled for the current URL.
-# We enable/disable Vimium by toggling isEnabledForUrl.  The alternative, installing or uninstalling
-# listeners, is error prone.  It's more difficult to keep track of the state.
+# We enable/disable Vimium by toggling isEnabledForUrl.
 #
-installedListeners = false
 initializeWhenEnabled = (newPassKeys) ->
   isEnabledForUrl = true
   passKeys = newPassKeys
+
+#
+# Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
+# we know whether the listener should run or not.
+# Run this as early as possible, so the page can't register any event handlers before us.
+#
+installedListeners = false
+installEventListeners = ->
   if (!installedListeners)
-    installListener "keydown", (event) -> if isEnabledForUrl then onKeydown(event) else true
-    installListener "keypress", (event) -> if isEnabledForUrl then onKeypress(event) else true
-    installListener "keyup", (event) -> if isEnabledForUrl then onKeyup(event) else true
-    installListener "focus", (event) -> if isEnabledForUrl then onFocusCapturePhase(event) else true
-    installListener "blur", (event) -> if isEnabledForUrl then onBlurCapturePhase(event)
-    installListener "DOMActivate", (event) -> if isEnabledForUrl then onDOMActivate(event)
+    # Key event handlers fire on window before they do on document. Prefer window for key events so the page
+    # can't set handlers to grab the keys before us.
+    installListener window, "keydown", onKeydown
+    installListener window, "keypress", onKeypress
+    installListener window, "keyup", onKeyup
+    installListener document, "focus", onFocusCapturePhase
+    installListener document, "blur", onBlurCapturePhase
+    installListener document, "DOMActivate", onDOMActivate
     enterInsertModeIfElementIsFocused()
     installedListeners = true
 
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
-  initializeWhenEnabled(passKeys) if isEnabledForUrl and !installedListeners
+  initializeWhenEnabled(passKeys) if isEnabledForUrl
 
 #
 # The backend needs to know which frame has focus.
@@ -425,7 +438,7 @@ onKeydown = (event) ->
       handledKeydownEvents.push event
 
     else if (!modifiers)
-      event.stopPropagation()
+      event.stopImmediatePropagation()
       handledKeydownEvents.push event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
@@ -457,7 +470,7 @@ onKeydown = (event) ->
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    event.stopPropagation()
+    event.stopImmediatePropagation()
     handledKeydownEvents.push event
 
 onKeyup = (event) ->
@@ -473,7 +486,7 @@ onKeyup = (event) ->
        event.keyCode == keydown.keyCode
 
       handledKeydownEvents.splice i, 1
-      event.stopPropagation()
+      event.stopImmediatePropagation()
       break
 
 checkIfEnabledForUrl = ->
