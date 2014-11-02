@@ -144,7 +144,12 @@ Commands =
       "restoreTab",
       "moveTabToNewWindow",
       "togglePinTab",
-      "closeTabsOnLeft","closeTabsOnRight",
+      "restoreWindow",
+      "minimizeWindow",
+      "maximizeWindow",
+      "fullscreenWindow",
+      "closeTabsOnLeft",
+      "closeTabsOnRight",
       "closeOtherTabs",
       "moveTabLeft",
       "moveTabRight"]
@@ -170,6 +175,10 @@ Commands =
     "goPrevious",
     "Marks.activateCreateMode",
     "Marks.activateGotoMode",
+    "restoreWindow",
+    "minimizeWindow",
+    "maximizeWindow",
+    "fullscreenWindow",
     "moveTabLeft",
     "moveTabRight",
     "closeTabsOnLeft",
@@ -326,6 +335,11 @@ commandDescriptions =
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
+
+  restoreWindow: ["Restore the current window", { background: true, noRepeat: true }]
+  minimizeWindow: ["Minimize the current window", { background: true, noRepeat: true }]
+  maximizeWindow: ["Maximize the current window", { background: true, noRepeat: true }]
+  fullscreenWindow: ["Fullscreen the current window", { background: true, noRepeat: true }]
 
   closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
   closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]

@@ -276,6 +276,10 @@ BackgroundCommands =
   togglePinTab: (request) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
+  restoreWindow: (request) -> changeWindowState "normal"
+  minimizeWindow: (request) -> changeWindowState "minimized"
+  maximizeWindow: (request) -> changeWindowState "maximized"
+  fullscreenWindow: (request) -> changeWindowState "fullscreen"
   showHelp: (callback, frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.sendMessage(tab.id,
@@ -296,6 +300,12 @@ BackgroundCommands =
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
   closeOtherTabs: -> removeTabsRelative "both"
+
+changeWindowState = (state, windowId) ->
+  if windowId
+    chrome.windows.update windowId, {state: state}
+  else # Get the current window's id
+    chrome.windows.getLastFocused (window) -> changeWindowState state, window.id
 
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction) ->
