@@ -29,8 +29,7 @@ Vomnibar =
       .split(/[\?&]/)
       .map((option) ->
         [name, value] = option.split "="
-        options[name] = value
-        options[name] = unescape(value) if value
+        options[name] = if value? then unescape(value) else true
       )
 
     # Set boolean options.
