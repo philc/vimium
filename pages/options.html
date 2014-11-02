@@ -1,15 +1,7 @@
 <html>
   <head>
     <title>Vimium Options</title>
-    <script src="../lib/utils.js"></script>
-    <script src="../lib/keyboard_utils.js"></script>
-    <script src="../lib/dom_utils.js"></script>
-    <script src="../lib/handler_stack.js"></script>
-    <script src="../lib/clipboard.js"></script>
-    <script src="../content_scripts/link_hints.js"></script>
-    <script src="../content_scripts/vomnibar.js"></script>
-    <script src="../content_scripts/scroller.js"></script>
-    <script src="../content_scripts/vimium_frontend.js"></script>
+    <script src="content_script_loader.js"></script>
     <style type="text/css" media="screen">
       body {
         font: 14px "DejaVu Sans", "Arial", sans-serif;
@@ -199,7 +191,6 @@
         margin-right: 0px;
       }
     </style>
-  <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
   <script type="text/javascript" src="options.js"></script>
 
@@ -362,6 +353,17 @@ unmapAll
                   </div>
                 </div>
                 <input id="nextPatterns" type="text" />
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">New Tab Page</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                      Choose a custom page (or pages/blank.html for a blank, Vimium-enabled page) for Vimium to open with the "create new tab" command.<br />
+                  </div>
+                </div>
+                <input id="newTabUrl" type="text" />
             </td>
           </tr>
           <tr>

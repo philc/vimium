@@ -179,6 +179,7 @@ document.addEventListener "DOMContentLoaded", ->
     keyMappings: TextOption
     linkHintCharacters: NonEmptyTextOption
     linkHintNumbers: NonEmptyTextOption
+    newTabUrl: NonEmptyTextOption
     nextPatterns: NonEmptyTextOption
     previousPatterns: NonEmptyTextOption
     regexFindMode: CheckBoxOption
