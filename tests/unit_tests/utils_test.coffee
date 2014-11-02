@@ -47,6 +47,20 @@ context "convertToUrl",
     assert.equal "http://www.google.com/search?q=google", Utils.convertToUrl("google")
     assert.equal "http://www.google.com/search?q=go%20ogle.com", Utils.convertToUrl("go ogle.com")
 
+context "hasChromePrefix",
+  should "detect chrome prefixes of URLs", ->
+    assert.isTrue Utils.hasChromePrefix "about:foobar"
+    assert.isTrue Utils.hasChromePrefix "view-source:foobar"
+    assert.isTrue Utils.hasChromePrefix "chrome-extension:foobar"
+    assert.isTrue Utils.hasChromePrefix "data:foobar"
+    assert.isTrue Utils.hasChromePrefix "data:"
+    assert.isFalse Utils.hasChromePrefix ""
+    assert.isFalse Utils.hasChromePrefix "about"
+    assert.isFalse Utils.hasChromePrefix "view-source"
+    assert.isFalse Utils.hasChromePrefix "chrome-extension"
+    assert.isFalse Utils.hasChromePrefix "data"
+    assert.isFalse Utils.hasChromePrefix "data :foobar"
+
 context "Function currying",
   should "Curry correctly", ->
     foo = (a, b) -> "#{a},#{b}"

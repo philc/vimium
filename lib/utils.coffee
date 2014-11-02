@@ -25,11 +25,13 @@ Utils =
     id = 0
     -> id += 1
 
-  hasChromePrefix: (url) ->
-    chromePrefixes = [ "about", "view-source", "chrome-extension", "data" ]
-    for prefix in chromePrefixes
-      return true if url.startsWith prefix
-    false
+  hasChromePrefix: do ->
+    chromePrefixes = [ "about:", "view-source:", "chrome-extension:", "data:" ]
+    (url) ->
+      if 0 < url.indexOf ":"
+        for prefix in chromePrefixes
+          return true if url.startsWith prefix
+      false
 
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
