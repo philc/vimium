@@ -349,7 +349,7 @@ body.vimiumFindMode ::selection {
 #vomnibar li .vomnibarBottomHalf {
   font-size: 15px;
   margin-top: 3px;
-  padding: 2px 0;
+  padding: 0px 0;
 }
 
 #vomnibar li .vomnibarIcon {
