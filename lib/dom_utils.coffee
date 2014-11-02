@@ -129,7 +129,7 @@ DomUtils =
 
   suppressEvent: (event) ->
     event.preventDefault()
-    event.stopPropagation()
+    event.stopImmediatePropagation()
 
 root = exports ? window
 root.DomUtils = DomUtils

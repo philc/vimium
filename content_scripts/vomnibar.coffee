@@ -139,7 +139,7 @@ class VomnibarUI
           @hide()
 
     # It seems like we have to manually suppress the event here and still return true.
-    event.stopPropagation()
+    event.stopImmediatePropagation()
     event.preventDefault()
     true
 

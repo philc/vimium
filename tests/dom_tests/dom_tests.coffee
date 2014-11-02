@@ -8,7 +8,7 @@ mockKeyboardEvent = (keyChar) ->
   event.charCode = (if keyCodes[keyChar] isnt undefined then keyCodes[keyChar] else keyChar.charCodeAt(0))
   event.keyIdentifier = "U+00" + event.charCode.toString(16)
   event.keyCode = event.charCode
-  event.stopPropagation = ->
+  event.stopImmediatePropagation = ->
   event.preventDefault = ->
   event
 

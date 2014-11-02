@@ -52,7 +52,7 @@ context "Keep selection within bounds",
 
     eventMock =
       preventDefault: ->
-      stopPropagation: ->
+      stopImmediatePropagation: ->
 
     @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
     ui.update(true)
