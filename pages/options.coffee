@@ -195,7 +195,7 @@ document.addEventListener "DOMContentLoaded", ->
 
   for element in document.getElementsByClassName "nonEmptyTextOption"
     element.className = element.className + " example info"
-    element.innerHTML = "If this option is empty, then it will be reset to its default value."
+    element.innerHTML = "Leave empty to reset to the value."
 
   maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled

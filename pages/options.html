@@ -99,6 +99,8 @@
       .caption {
         margin-right: 10px;
         min-width: 130px;
+        padding-top: 3px;
+        vertical-align: top;
       }
       td { padding: 0; }
       div#exampleKeyMapping {
@@ -106,7 +108,13 @@
         margin-top: 5px;
       }
       input#linkHintCharacters {
-        width: 160px;
+        width: 100%;
+      }
+      input#linkHintNumbers {
+        width: 100%;
+      }
+      input#linkHintCharacters {
+        width: 100%;
       }
       input#scrollStepSize {
         width: 40px;
@@ -208,35 +216,10 @@
 
   <body>
     <div id="wrapper">
-      <header>Vimium options</header>
+      <header>Vimium Options</header>
       <table id="options">
         <tr>
-          <td class="caption">Scroll step size</td>
-          <td>
-            <input id="scrollStepSize" type="number" />px
-          </td>
-        </tr>
-        <tr>
-          <td class="caption">Custom key<br/>mappings</td>
-          <td id="mappingsHelp" verticalAlign="top">
-            <div class="help">
-              <div class="example">
-                <!-- TODO(ilya/philc): Expand this and style it better. -->
-                Enter commands to remap your keys. Available commands:<br/>
-                <pre id="exampleKeyMapping">
-map j scrollDown
-unmap j
-unmapAll
-" this is a comment
-# this is also a comment</pre>
-                <a href="#" id="showCommands">Show available commands.</a>
-              </div>
-            </div>
-            <textarea id="keyMappings" type="text"></textarea>
-          </td>
-        </tr>
-        <tr>
-          <td>Excluded URLs<br/>and keys</td>
+          <td class="caption">Excluded URLs<br/>and keys</td>
           <td>
             <div class="help">
               <div class="example">
@@ -263,19 +246,30 @@ unmapAll
             </div>
           </td>
         </tr>
+        <tr>
+          <td class="caption">Custom key<br/>mappings</td>
+          <td id="mappingsHelp" verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                <!-- TODO(ilya/philc): Expand this and style it better. -->
+                Enter commands to remap your keys. Available commands:<br/>
+                <pre id="exampleKeyMapping">
+map j scrollDown
+unmap j
+unmapAll
+" this is a comment
+# this is also a comment</pre>
+                <a href="#" id="showCommands">Show available commands.</a>
+              </div>
+            </div>
+            <textarea id="keyMappings" type="text"></textarea>
+          </td>
+        </tr>
         <tbody id='advancedOptions'>
           <tr>
-            <td class="caption">CSS for link hints</td>
-            <td verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  The CSS used to style the characters next to each link hint.<br/><br/>
-                  Note: these styles are used in addition to and take precedence over Vimium's
-                  default styles.
-                </div>
-              </div>
-              <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
-              <div class="nonEmptyTextOption">
+            <td class="caption">Scroll step size</td>
+            <td>
+              <input id="scrollStepSize" type="number" />px
             </td>
           </tr>
           <tr>
@@ -307,8 +301,7 @@ unmapAll
             <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
-                  After typing "F" to enter link hinting mode, this option lets you type the text of a link
-                  to select it.
+                  After typing "F" to enter link hinting mode, this option lets you select a link by typing its text.
                 </div>
               </div>
               <label>
@@ -396,6 +389,20 @@ unmapAll
                   </div>
                 </div>
                 <textarea id="searchEngines"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">CSS for link hints</td>
+            <td verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  The CSS used to style the characters next to each link hint.<br/><br/>
+                  Note: these styles are used in addition to and take precedence over Vimium's
+                  default styles.
+                </div>
+              </div>
+              <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+              <div class="nonEmptyTextOption">
             </td>
           </tr>
         </tbody>
