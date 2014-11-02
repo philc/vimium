@@ -393,10 +393,9 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
-  chrome.tabs.insertCSS tabId, cssConf, ->
-    if not chrome.runtime.lastError
-      updateOpenTabs(tab)
-      updateActiveState(tabId)
+  chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
+  updateOpenTabs(tab)
+  updateActiveState(tabId)
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
   # We should update all the tabs in the old window and the new window.

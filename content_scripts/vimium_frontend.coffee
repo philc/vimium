@@ -135,8 +135,6 @@ initializePreDomReady = ->
     # Ensure the sendResponse callback is freed.
     false
 
-    installEventListeners()
-
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
   element.addEventListener(event, ->
@@ -144,20 +142,14 @@ installListener = (element, event, callback) ->
   , true)
 
 #
-# This is called once the background page has told us that Vimium should be enabled for the current URL.
-# We enable/disable Vimium by toggling isEnabledForUrl.
-#
-initializeWhenEnabled = (newPassKeys) ->
-  isEnabledForUrl = true
-  passKeys = newPassKeys
-
-#
 # Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
 # we know whether the listener should run or not.
 # Run this as early as possible, so the page can't register any event handlers before us.
 #
 installedListeners = false
-installEventListeners = ->
+initializeWhenEnabled = (newPassKeys) ->
+  isEnabledForUrl = true
+  passKeys = newPassKeys
   if (!installedListeners)
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
@@ -171,9 +163,9 @@ installEventListeners = ->
     installedListeners = true
 
 setState = (request) ->
+  initializeWhenEnabled(request.passKeys) if request.enabled
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
-  initializeWhenEnabled(passKeys) if isEnabledForUrl
 
 #
 # The backend needs to know which frame has focus.
