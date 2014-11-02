@@ -438,7 +438,7 @@ onKeydown = (event) ->
       handledKeydownEvents.push event
 
     else if (!modifiers)
-      event.stopImmediatePropagation()
+      DomUtils.suppressPropagation(event)
       handledKeydownEvents.push event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
@@ -470,7 +470,7 @@ onKeydown = (event) ->
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    event.stopImmediatePropagation()
+    DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
 
 onKeyup = (event) ->
@@ -486,7 +486,7 @@ onKeyup = (event) ->
        event.keyCode == keydown.keyCode
 
       handledKeydownEvents.splice i, 1
-      event.stopImmediatePropagation()
+      DomUtils.suppressPropagation(event)
       break
 
 checkIfEnabledForUrl = ->

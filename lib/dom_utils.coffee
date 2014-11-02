@@ -127,9 +127,12 @@ DomUtils =
     document.documentElement.appendChild(flashEl)
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 
+  suppressPropagation: (event) ->
+    event.stopImmediatePropagation()
+
   suppressEvent: (event) ->
     event.preventDefault()
-    event.stopImmediatePropagation()
+    @suppressPropagation(event)
 
 root = exports ? window
 root.DomUtils = DomUtils
