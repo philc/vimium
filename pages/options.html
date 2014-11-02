@@ -19,7 +19,7 @@
       }
       a, a:visited { color: #15c; }
       a:active { color: #052577; }
-      div#wrapper { width: 538px; }
+      div#wrapper { width: 500px; }
       header {
         font-size: 18px;
         font-weight: normal;
@@ -277,6 +277,10 @@ unmapAll
               <textarea id="searchEngines"></textarea>
           </td>
         </tr>
+        <tr>
+           <td><a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a></td>
+           <td><button id="saveOptions" disabled="true">Save Options</button></td>
+        </tr>
         <tbody id='advancedOptions'>
           <tr>
             <td class="caption">Scroll step size</td>
@@ -404,11 +408,6 @@ unmapAll
           </tr>
         </tbody>
       </table>
-
-      <div id="buttonsPanel">
-        <a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a>
-          <button id="saveOptions" disabled="true">Save Options</button>
-      </div>
 
       <br/>
 
