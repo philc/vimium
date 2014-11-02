@@ -265,6 +265,21 @@ unmapAll
             <textarea id="keyMappings" type="text"></textarea>
           </td>
         </tr>
+        <tr>
+          <td class="caption">Custom Search<br/>Engines</td>
+          <td verticalAlign="top">
+              <div class="help">
+                <div class="example">
+                  Use this to add shortcuts for your common search engines when using the Vomnibar.<br/><br/>
+                  The format is:<br/>
+                  <pre>your-keyword: http://the-site.com/?q=%s</pre>
+                  %s will be replaced with your search term.<br/>
+                  Lines which start with "#" are comments.
+                </div>
+              </div>
+              <textarea id="searchEngines"></textarea>
+          </td>
+        </tr>
         <tbody id='advancedOptions'>
           <tr>
             <td class="caption">Scroll step size</td>
@@ -374,21 +389,6 @@ unmapAll
                 </div>
                 <input id="searchUrl" type="text" />
                 <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">Custom Search<br/>Engines</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    Use this to add shortcuts for your common search engines when using the Vomnibar.<br/><br/>
-                    The format is:<br/>
-                    <pre>your-keyword: http://the-site.com/?q=%s</pre>
-                    %s will be replaced with your search term.<br/>
-                    Lines which start with "#" are comments.
-                  </div>
-                </div>
-                <textarea id="searchEngines"></textarea>
             </td>
           </tr>
           <tr>
