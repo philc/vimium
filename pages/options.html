@@ -118,7 +118,6 @@
       }
       input#newTabUrl {
         width: 100%;
-        min-height: 135px;
       }
       input#searchUrl {
         width: 100%;
@@ -360,11 +359,12 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">New Tab Page</td>
+            <td class="caption">New Tab URL</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                      Choose a custom page (or pages/blank.html for a blank, Vimium-enabled page) for Vimium to open with the "create new tab" command.<br />
+                      Choose a custom page to open with the "create new tab" command.
+                      Set to "<tt>pages/blank.html</tt>" for a blank page.<br />
                   </div>
                 </div>
                 <input id="newTabUrl" type="text" />
