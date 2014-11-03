@@ -3,7 +3,7 @@ originalRule = undefined
 originalPattern = undefined
 originalPassKeys = undefined
 
-onLoad = (initialize=false) ->
+reset = (initialize=false) ->
   document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
   chrome.tabs.getSelected null, (tab) ->
     isEnabled = chrome.extension.getBackgroundPage().isEnabledForUrl(url: tab.url)
@@ -85,13 +85,13 @@ addExclusionRule = ->
   passKeys = document.getElementById("popupPassKeys").value.trim()
   chrome.extension.getBackgroundPage().addExclusionRule pattern, passKeys
   showMessage("Updated.")
-  onLoad()
+  reset()
 
 removeExclusionRule = ->
   pattern = document.getElementById("popupPattern").value.trim()
   chrome.extension.getBackgroundPage().removeExclusionRule pattern
   showMessage("Removed.")
-  onLoad()
+  reset()
 
 document.addEventListener "DOMContentLoaded", ->
   document.getElementById("popupExclude").addEventListener "click", addExclusionRule, false
@@ -99,4 +99,4 @@ document.addEventListener "DOMContentLoaded", ->
   for field in ["popupPattern", "popupPassKeys"]
     for event in ["input", "change"]
       document.getElementById(field).addEventListener event, onChange, false
-  onLoad true
+  reset true
