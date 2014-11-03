@@ -3,7 +3,7 @@ originalRule = undefined
 originalPattern = undefined
 originalPassKeys = undefined
 
-onLoad = ->
+onLoad = (initialize=false) ->
   document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
   chrome.tabs.getSelected null, (tab) ->
     isEnabled = chrome.extension.getBackgroundPage().isEnabledForUrl(url: tab.url)
@@ -19,8 +19,22 @@ onLoad = ->
       originalRule = null
       originalPattern = domain
       originalPassKeys = ""
-    document.getElementById("popupPattern").value  = originalPattern
-    document.getElementById("popupPassKeys").value = originalPassKeys
+    patternElement = document.getElementById("popupPattern")
+    passKeysElement = document.getElementById("popupPassKeys")
+    patternElement.value  = originalPattern
+    passKeysElement.value = originalPassKeys
+    if initialize
+      # Activate <Ctrl-Enter> to save.
+      for element in [ patternElement, passKeysElement ]
+        element.addEventListener "keyup", (event) ->
+          if event.ctrlKey and event.keyCode == 13
+            addExclusionRule()
+            window.close()
+        element.addEventListener "focus", -> document.getElementById("helpText").style.display = "block"
+        element.addEventListener "blur", -> document.getElementById("helpText").style.display = "none"
+      # Focus passkeys with cursor at the end (but only when creating popup).
+      passKeysElement.focus()
+      passKeysElement.setSelectionRange(passKeysElement.value.length, passKeysElement.value.length)
     onChange()
 
 onChange = ->
@@ -83,6 +97,6 @@ document.addEventListener "DOMContentLoaded", ->
   document.getElementById("popupExclude").addEventListener "click", addExclusionRule, false
   document.getElementById("popupRemove").addEventListener "click", removeExclusionRule, false
   for field in ["popupPattern", "popupPassKeys"]
-    for event in ["keyup", "change"]
+    for event in ["input", "change"]
       document.getElementById(field).addEventListener event, onChange, false
-  onLoad()
+  onLoad true

@@ -36,7 +36,7 @@
         list-style: none;
       }
 
-      #popupMenu a, #popupMenu a:active, #popupMenu a:visited {
+      #popupMenu li, #popupMenu a:active, #popupMenu a:visited {
         color: #3F6EC2;
         display: block;
         border-top: 1px solid #DDDDDD;
@@ -51,6 +51,14 @@
       #optionsLink {
         font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
         font-size: 12px;
+        float: right;
+      }
+      #helpText {
+        color: #979ca0;
+        font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        font-size: 12px;
+        float: left;
+        display: none;
       }
     </style>
     <script src="popup.js"></script>
@@ -67,7 +75,10 @@
 
       <div id="popupMenu">
         <ul>
-          <li><a id="optionsLink" target="_blank">Options</a></li>
+          <li>
+             <span id="helpText">Type <strong>Ctrl-ENTER</strong> to save and close.</span>
+             <a id="optionsLink" target="_blank">Options</a>
+          </li>
         </ul>
       </div>
     </div>
