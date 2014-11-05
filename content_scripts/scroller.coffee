@@ -38,7 +38,9 @@ ensureScrollChange = (direction, changeFn) ->
   element = activatedElement
   loop
     oldScrollValue = element[axisName]
-    changeFn(element, axisName)
+    overflow = window.getComputedStyle(element, null).getPropertyValue("overflow-#{direction}")
+    # Elements with `overflow: hidden` don't natively have scrolling, so we shouldn't scroll them.
+    changeFn(element, axisName) unless overflow == "hidden"
     break unless (element[axisName] == oldScrollValue && element != document.body)
     lastElement = element
     # we may have an orphaned element. if so, just scroll the body element.
