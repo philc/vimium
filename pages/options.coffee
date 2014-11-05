@@ -38,6 +38,18 @@ class Option
     bgSettings.clear @field
     @fetch()
 
+  # Static method.
+  @saveOptions: ->
+    Option.all.map (option) -> option.save()
+    $("saveOptions").disabled = true
+
+  # Used by text options. <ctrl-Enter> saves all options.
+  activateCtrlEnterListener: (element) ->
+    element.addEventListener "keyup", (event) ->
+      if event.ctrlKey and event.keyCode == 13
+        element.blur()
+        Option.saveOptions()
+
   # Abstract method; only implemented in sub-classes.
   # Populate the option's DOM element (@element) with the setting's current value.
   # populateElement: (value) -> DO_SOMETHING
@@ -51,10 +63,19 @@ class NumberOption extends Option
   readValueFromElement: -> parseFloat @element.value
 
 class TextOption extends Option
+  constructor: (field,enableSaveButton) ->
+    super(field,enableSaveButton)
+    @element.addEventListener "input", enableSaveButton
+    @activateCtrlEnterListener @element
   populateElement: (value) -> @element.value = value
   readValueFromElement: -> @element.value.trim()
 
 class NonEmptyTextOption extends Option
+  constructor: (field,enableSaveButton) ->
+    super(field,enableSaveButton)
+    @element.addEventListener "input", enableSaveButton
+    @activateCtrlEnterListener @element
+
   populateElement: (value) -> @element.value = value
   # If the new value is not empty, then return it. Otherwise, restore the default value.
   readValueFromElement: -> if value = @element.value.trim() then value else @restoreToDefault()
@@ -90,7 +111,8 @@ class ExclusionRulesOption extends Option
     for field in ["pattern", "passKeys"]
       element = row.querySelector ".#{field}"
       element.value = rule[field]
-      for event in [ "keyup", "change" ]
+      @activateCtrlEnterListener element
+      for event in [ "input", "change" ]
         element.addEventListener event, enableSaveButton
 
     remove = row.querySelector ".exclusionRemoveButton"
@@ -130,16 +152,6 @@ class ExclusionRulesOption extends Option
 # Operations for page elements.
 enableSaveButton = ->
   $("saveOptions").removeAttribute "disabled"
-
-saveOptions = ->
-  Option.all.map (option) -> option.save()
-  $("saveOptions").disabled = true
-
-restoreToDefaults = ->
-  return unless confirm "Are you sure you want to permanently return all of Vimium's settings to their defaults?"
-  Option.all.map (option) -> option.restoreToDefault()
-  maintainLinkHintsView()
-  $("saveOptions").disabled = true
 
 # Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
 maintainLinkHintsView = ->
@@ -189,11 +201,14 @@ document.addEventListener "DOMContentLoaded", ->
     userDefinedLinkHintCss: TextOption
   }
 
-  $("saveOptions").addEventListener "click", saveOptions
-  $("restoreSettings").addEventListener "click", restoreToDefaults
+  $("saveOptions").addEventListener "click", Option.saveOptions
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions
   $("showCommands").addEventListener "click", activateHelpDialog
   $("filterLinkHints").addEventListener "click", maintainLinkHintsView
+
+  for element in document.getElementsByClassName "nonEmptyTextOption"
+    element.className = element.className + " example info"
+    element.innerHTML = "Leave empty to reset this option."
 
   maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
