@@ -912,7 +912,7 @@ window.showHelpDialog = (html, fid) ->
           ele.addEventListener "click", ->
             commandName = ele.innerHTML
             chrome.runtime.sendMessage {handler: "copyToClipboard", data: commandName}
-            HUD.showForDuration "Copied #{commandName}", 1000
+            HUD.showForDuration " #{commandName} copied to the clipboard", 2500
 
     # Advanced commands are hidden by default so they don't overwhelm new and casual users.
     toggleAdvancedCommands: (event) ->
