@@ -163,9 +163,10 @@ class VomnibarUI
   chromeCacheMissFavicon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAArklEQVR4XqWQQQqDQAxFf1zY21k3XsAeoHgYu7NasV5QqM5mUlACw5RMWvrh7T6Pn2TMjH/IEGSaJtYgIoRIQsFurKrqg2VZMI4jI04s8P7obJsTICmKM4bhIRJ9QSplWaLvB04s8ADiW4975/m5s64vdN2df1pQ15cQ6SkLojjnQqSnC4hgYAiOUAJbYCA9/YkW9hOJdOwFIOT5SQWg1AJG295MvFcETXOlbxHBG8Vy2fHIq9l6AAAAAElFTkSuQmCC"
   googleCacheMissFavicon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAACiElEQVQ4EaVTzU8TURCf2tJuS7tQtlRb6UKBIkQwkRRSEzkQgyEc6lkOKgcOph78Y+CgjXjDs2i44FXY9AMTlQRUELZapVlouy3d7kKtb0Zr0MSLTvL2zb75eL838xtTvV6H/xELBptMJojeXLCXyobnyog4YhzXYvmCFi6qVSfaeRdXdrfaU1areV5KykmX06rcvzumjY/1ggkR3Jh+bNf1mr8v1D5bLuvR3qDgFbvbBJYIrE1mCIoCrKxsHuzK+Rzvsi29+6DEbTZz9unijEYI8ObBgXOzlcrx9OAlXyDYKUCzwwrDQx1wVDGg089Dt+gR3mxmhcUnaWeoxwMbm/vzDFzmDEKMMNhquRqduT1KwXiGt0vre6iSeAUHNDE0d26NBtAXY9BACQyjFusKuL2Ry+IPb/Y9ZglwuVscdHaknUChqLF/O4jn3V5dP4mhgRJgwSYm+gV0Oi3XrvYB30yvhGa7BS70eGFHPoTJyQHhMK+F0ZesRVVznvXw5Ixv7/C10moEo6OZXbWvlFAF9FVZDOqEABUMRIkMd8GnLwVWg9/RkJF9sA4oDfYQAuzzjqzwvnaRUFxn/X2ZlmGLXAE7AL52B4xHgqAUqrC1nSNuoJkQtLkdqReszz/9aRvq90NOKdOS1nch8TpL555WDp49f3uAMXhACRjD5j4ykuCtf5PP7Fm1b0DIsl/VHGezzP1KwOiZQobFF9YyjSRYQETRENSlVzI8iK9mWlzckpSSCQHVALmN9Az1euDho9Xo8vKGd2rqooA8yBcrwHgCqYR0kMkWci08t/R+W4ljDCanWTg9TJGwGNaNk3vYZ7VUdeKsYJGFNkfSzjXNrSX20s4/h6kB81/271ghG17l+rPTAAAAAElFTkSuQmCC"
 
-  # Note(smblott)  In certain (unknown) circumstances, chrome serializes XMLHttpRequests to the same domain,
-  # and doesn't cache the results.  The following is an asynchronous memo function which prevents us sending
-  # off multiple XMLHttpRequests for the same URL.
+  # Note(smblott)  In certain (unknown) circumstances, chrome serializes XMLHttpRequests to the same domain
+  # (which is normal), but doesn't cache the results.  The following is an asynchronous memo function which
+  # caches favicons, sending off at most one request for each URL.  Favicons are represented as base64-encoded
+  # data: URLs.
   faviconCache: do ->
     cache = {}
     callbacks = {}
@@ -176,7 +177,8 @@ class VomnibarUI
         callbacks[url].push callback
       else
         callbacks[url] = [ callback ]
-        chrome.runtime.sendMessage {handler: "fetchViaHttpAsBase64", url: url}, (response) =>
+        # We use a short timeout because the URLs we guess sometimes do not exist and hang.
+        chrome.runtime.sendMessage {handler: "fetchViaHttpAsBase64", url: url, timeout: 300}, (response) ->
           cache[url] = response
           for callback in callbacks[url]
             callback response
@@ -184,8 +186,8 @@ class VomnibarUI
 
   guessFavicon: (favicon, guessers) ->
     if 0 < guessers.length
-      url = guessers[0](favicon)
       tryNextGuess = => @guessFavicon favicon, guessers[1..]
+      url = guessers[0] favicon
       return tryNextGuess() unless url
       @faviconCache url, (response) =>
         if response.data and response.type and 0 == response.type.indexOf "image/"
@@ -193,18 +195,17 @@ class VomnibarUI
             return favicon.src = response.data
         tryNextGuess()
 
+  guessFavicons: ->
+    for favicon in @completionList.getElementsByClassName "vomnibarIcon"
+      favicon.src = @googleCacheMissFavicon # Set a default favicon, Google's small globe.
+      @guessFavicon favicon, [@useKnownFaviconUrl, @guessChromeFaviconUrl, @guessHttpFaviconUrl]
+
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else "none"
     @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
-    # activate favicon guessers
-    for favicon in @completionList.getElementsByClassName "vomnibarIcon"
-      favicon.src = @googleCacheMissFavicon
-      # Strategy.  Use a known favicon URL, if we have one.  Then try chrome's favicon cache (but we only use
-      # this favicon if it's not chrome's default favicon).  Then try guessing over HTTP.  If all of that
-      # fails, we'll be left with Google's default favicon, which is a little globe (@googleCacheMissFavicon).
-      @guessFavicon favicon, [@useKnownFaviconUrl, @guessChromeFaviconUrl, @guessHttpFaviconUrl]
+    @guessFavicons()
     @updateSelection()
 
   update: (updateSynchronously, callback) ->

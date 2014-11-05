@@ -56,17 +56,19 @@ chrome.runtime.onConnect.addListener((port, name) ->
     port.onMessage.addListener(portHandlers[port.name])
 )
 
-# With asynchronous responses to messages, we *must* call sendResponse (or we'll get a memory leak).
-# We allow two minutes and one second for the response to be sent, after which time we send an error response.
+# With asynchronous message handling, failure to call sendResponse will result in a memory leak.  We allow two
+# minutes and one second for the response to be sent, after which time we simply *assume* there is an an error
+# and call sendResponse with an error message.
 sendResponseWithTimeout = (sendResponse) ->
-  timer = setTimeout ( ->
+  timer = null
+  doSendResponse = (response=null) ->
     timer = null
-    sendResponse { error: "timed out"}), 121000
+    sendResponse (response || { error: "timeout", errorSource: "sendResponseWithTimeout" })
+  timer = setTimeout doSendResponse, 121000
   (response) ->
     if timer
-      sendResponse response
       clearTimeout timer
-      timer = null
+      doSendResponse response
 
 chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   if (sendRequestAsyncHandlers[request.handler])
@@ -74,8 +76,7 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     return sendRequestAsyncHandlers[request.handler](request, sender, sendResponseWithTimeout(sendResponse))
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
-  # Ensure the sendResponse callback is freed.
-  return false
+  false # sendResponse will not now be called, and can be freed.
 
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
@@ -637,19 +638,19 @@ getCurrFrameIndex = (frames) ->
 
 # Launch an asynchronous HTTP request and send the response as a base64-encoded data: URI.
 fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
-  sendError = -> sendResponse { error: "XMLHttpRequest error" }
+  sendError = (error) -> (-> sendResponse { error: error, errorSource: "fetchViaHttpAsBase64" })
   xhr = new XMLHttpRequest()
   xhr.open("GET", request.url, true)
   xhr.responseType = "blob"
-  xhr.timeout = 300
-  xhr.ontimeout = xhr.onerror = sendError
+  xhr.timeout = request.timeout || 5000
+  xhr.ontimeout = sendError "xmlhttprequest-timeout"
+  xhr.onerror = sendError "xmlhttprequest-error"
   xhr.onload = ->
-    return sendError() unless xhr.status == 200 and xhr.readyState == 4
+    return sendError("http-error")() unless xhr.status == 200 and xhr.readyState == 4
     reader = new window.FileReader()
     reader.readAsDataURL xhr.response
-    reader.onerror = sendError
+    reader.onerror = sendError "read-error"
     reader.onloadend = ->
-      console.log request.url
       sendResponse { data: reader.result, type: xhr.response.type }
   xhr.send()
   true # sendResponse will be called asynchronously.
