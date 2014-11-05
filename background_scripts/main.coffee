@@ -131,7 +131,7 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
         "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
 
       if (showCommandNames)
-        html.push("<span class='vimiumReset commandName'>(#{command})</span>")
+        html.push("<span class='vimiumReset'>(<span class='vimiumReset commandName'>#{command}</span>)</span>")
 
       html.push("</td></tr>")
   html.join("\n")

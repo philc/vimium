@@ -169,7 +169,7 @@ div#vimiumHelpDialog td.vimiumHelpSectionTitle {
   font-weight:bold;
   padding-top:3px;
 }
-div#vimiumHelpDialog div.commandName { font-family:"courier new"; }
+div#vimiumHelpDialog span.commandName { color: #339; }
 /* Advanced commands are hidden by default until you show them. */
 div#vimiumHelpDialog div.advanced { display: none; }
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) { color: #555; }
