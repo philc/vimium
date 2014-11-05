@@ -194,7 +194,7 @@
         overflow: scroll;
         overflow-x: hidden;
         overflow-y: auto;
-        height: 180px;
+        height: 170px;
         border: 1px solid #bfbfbf;
         border-radius: 2px;
         color: #444;
@@ -230,9 +230,13 @@
           <td>
             <div class="help">
               <div class="example">
-                The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the character "*" matches any zero or more characters.
+                The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs
+                matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the
+                character "*" matches any zero or more characters.
                 <br/><br/>
-                The right column contains keys which Vimium would would normally handle, but should instead be passed through to the underlying web page (for pages matching the corresponding pattern).  If empty, then Vimium is wholly disabled.
+                The right column contains keys which Vimium would would normally handle, but which should
+                instead be passed through to the underlying web page (for pages matching the
+                pattern).  If left empty, then Vimium will be wholly disabled.
               </div>
             </div>
             <div>
@@ -274,10 +278,10 @@ unmapAll
           <td verticalAlign="top">
               <div class="help">
                 <div class="example">
-                  Use this to add shortcuts for your common search engines when using the Vomnibar.<br/><br/>
+                  This adds search-engine shortcuts to the Vomnibar.<br/><br/>
                   The format is:<br/>
                   <pre>your-keyword: http://the-site.com/?q=%s</pre>
-                  %s will be replaced with your search term.<br/>
+                  %s will be replaced with your search terms.<br/>
                   Lines which start with "#" are comments.
                 </div>
               </div>
@@ -300,7 +304,7 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    The characters placed next to each link after typing "F" to enter link hinting mode.
+                    The characters placed next to each link after typing "f" to enter link-hint mode.
                   </div>
                 </div>
                 <input id="linkHintCharacters" type="text" />
@@ -312,7 +316,7 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    The numbers placed next to each link after typing "F" to enter link hinting mode.
+                    The numbers placed next to each link after typing "f" to enter link-hint mode.
                   </div>
                 </div>
                 <input id="linkHintNumbers" type="text" />
@@ -324,12 +328,12 @@ unmapAll
             <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
-                  After typing "F" to enter link hinting mode, this option lets you select a link by typing its text.
+                  In link-hint mode, this option lets you also select a link by typing its text.
                 </div>
               </div>
               <label>
                 <input id="filterLinkHints" type="checkbox"/>
-                Use the link's name and numbers for link hint filtering
+                Use the link's name and numbers for link-hint filtering
               </label>
             </td>
           </tr>
@@ -338,7 +342,7 @@ unmapAll
             <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
-                  The Heads-Up Display appears when typing into text boxes.
+                  When enabled, the HUD will not be displayed.
                 </div>
               </div>
               <label>
@@ -366,8 +370,7 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    Vimium will match against these patterns when using the "navigate to the previous page"
-                    command.
+                    The "navigate to previous page" command uses these patterns to find the link to follow.
                   </div>
                 </div>
                 <input id="previousPatterns" type="text" />
@@ -379,7 +382,7 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    Vimium will match against these patterns when using the "navigate to the next page" command.
+                    The "navigate to next page" command uses these patterns to find the link to follow.
                   </div>
                 </div>
                 <input id="nextPatterns" type="text" />
@@ -391,8 +394,7 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    The search engine which is used when searching from the Vomnibar
-                    (e.g.: "http://duckduckgo.com/?q=").
+                     The search engine to use in the Vomnibar <br> (e.g.: "http://duckduckgo.com/?q=").
                   </div>
                 </div>
                 <input id="searchUrl" type="text" />
@@ -405,7 +407,7 @@ unmapAll
               <div class="help">
                 <div class="example">
                   The CSS used to style the characters next to each link hint.<br/><br/>
-                  Note: these styles are used in addition to and take precedence over Vimium's
+                  These styles are used in addition to and take precedence over Vimium's
                   default styles.
                 </div>
               </div>
