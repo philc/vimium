@@ -26,7 +26,7 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "chrome-extension:", "data:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
     (url) ->
       if 0 < url.indexOf ":"
         for prefix in chromePrefixes
@@ -98,7 +98,7 @@ Utils =
   convertToUrl: (string) ->
     string = string.trim()
 
-    # Special-case about:[url] and view-source:[url]
+    # Special-case about:[url], view-source:[url] and the like
     if Utils.hasChromePrefix string
       string
     else if Utils.isUrl string
