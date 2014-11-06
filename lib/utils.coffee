@@ -43,11 +43,11 @@ Utils =
 
   # Tries to detect if :str is a valid URL.
   isUrl: (str) ->
-    # Starts with a scheme: URL
-    return true if @hasFullUrlPrefix str
-
     # Must not contain spaces
     return false if ' ' in str
+
+    # Starts with a scheme: URL
+    return true if @hasFullUrlPrefix str
 
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
