@@ -23,13 +23,24 @@ scrollProperties =
     viewSize: 'clientWidth'
   }
 
-getDimension = (el, direction, name) ->
-  # the clientSizes of the body are the dimensions of the entire page, but the viewport should only be the
-  # part visible through the window
-  if name is 'viewSize' and el is document.body
-    if direction is 'x' then window.innerWidth else window.innerHeight
+getDimension = (el, direction, amount) ->
+  if Utils.isString amount
+    name = amount
+    # the clientSizes of the body are the dimensions of the entire page, but the viewport should only be the
+    # part visible through the window
+    if name is 'viewSize' and el is document.body
+      if direction is 'x' then window.innerWidth else window.innerHeight
+    else
+      el[scrollProperties[direction][name]]
   else
-    el[scrollProperties[direction][name]]
+    amount
+
+# Test whether element should be scrolled.
+isScrollable = (element, direction) ->
+  # Elements with `overflow: hidden` should not be scrolled.
+  overflow = window.getComputedStyle(element).getPropertyValue("overflow-#{direction}")
+  return false if overflow == "hidden"
+  return true
 
 # Chrome does not report scrollHeight accurately for nodes with pseudo-elements of height 0 (bug 110149).
 # Therefore we cannot figure out if we have scrolled to the bottom of an element by testing if scrollTop +
@@ -41,9 +52,7 @@ ensureScrollChange = (direction, changeFn) ->
   progress = 0
   loop
     oldScrollValue = element[axisName]
-    # Elements with `overflow: hidden` should not be scrolled.
-    overflow = window.getComputedStyle(element).getPropertyValue("overflow-#{direction}")
-    changeFn(element, axisName) unless overflow == "hidden"
+    changeFn(element, axisName) if isScrollable element, direction
     progress += element[axisName] - oldScrollValue
     break unless element[axisName] == oldScrollValue && element != document.body
     # we may have an orphaned element. if so, just scroll the body element.
@@ -117,10 +126,7 @@ root.scrollBy = (direction, amount, factor = 1) ->
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  if Utils.isString amount
-    elementAmount = getDimension activatedElement, direction, amount
-  else
-    elementAmount = amount
+  elementAmount = getDimension activatedElement, direction, amount
   elementAmount *= factor
 
   doScrollBy direction, elementAmount, true
@@ -131,14 +137,17 @@ root.scrollTo = (direction, pos, wantSmooth=false) ->
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  if Utils.isString pos
-    elementPos = getDimension activatedElement, direction, pos
-  else
-    elementPos = pos
+  # Find the deepest scrollable element which would move if we scrolled it.  This is the element which
+  # ensureScrollChange will scroll.
+  # TODO(smblott) We're pretty much copying what ensureScrollChange does here.  Refactor.
+  element = activatedElement
   axisName = scrollProperties[direction].axisName
-  elementAmount = elementPos - activatedElement[axisName]
+  while element != document.body and
+    (getDimension(element, direction, pos) == element[axisName] or not isScrollable element, direction)
+      element = element.parentElement || document.body
 
-  doScrollBy direction, elementAmount, wantSmooth
+  amount = getDimension(element,direction,pos) - element[axisName]
+  doScrollBy direction, amount, wantSmooth
 
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
