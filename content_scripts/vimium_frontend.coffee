@@ -4,14 +4,15 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
-window.handlerStack = new HandlerStack
+root = exports ? window
+root.handlerStack = new HandlerStack
 
 insertModeLock = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
-isShowingHelpDialog = false
+root.isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
 # (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
@@ -114,7 +115,7 @@ initializePreDomReady = ->
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
-    toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
+    toggleHelpDialog: (request) -> toggleHelpDialog(request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
@@ -127,7 +128,7 @@ initializePreDomReady = ->
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
+    return if sender.tab and sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler == "registerFrame" or request.handler == "frameFocused"
@@ -219,14 +220,14 @@ setScrollPosition = (scrollX, scrollY) ->
 #
 # Called from the backend in order to change frame focus.
 #
-window.focusThisFrame = (shouldHighlight) ->
+root.focusThisFrame = (shouldHighlight) ->
   window.focus()
   if (document.body && shouldHighlight)
     borderWas = document.body.style.border
     document.body.style.border = '5px solid yellow'
     setTimeout((-> document.body.style.border = borderWas), 200)
 
-extend window,
+extend root,
   scrollToBottom: -> Scroller.scrollTo "y", "max"
   scrollToTop: -> Scroller.scrollTo "y", 0
   scrollToLeft: -> Scroller.scrollTo "x", 0
@@ -240,7 +241,7 @@ extend window,
   scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
   scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
 
-extend window,
+extend root,
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
@@ -542,7 +543,7 @@ isEditable = (target) ->
 # Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
 # mode manually by pressing "i". In most cases we do not show any UI (enterInsertModeWithoutShowingIndicator)
 #
-window.enterInsertMode = (target) ->
+root.enterInsertMode = (target) ->
   enterInsertModeWithoutShowingIndicator(target)
   HUD.show("Insert mode")
 
@@ -766,9 +767,9 @@ findAndFocus = (backwards) ->
 
   focusFoundLink()
 
-window.performFind = -> findAndFocus()
+root.performFind = -> findAndFocus()
 
-window.performBackwardsFind = -> findAndFocus(true)
+root.performBackwardsFind = -> findAndFocus(true)
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
@@ -861,12 +862,12 @@ findAndFollowRel = (value) ->
         followLink(element)
         return true
 
-window.goPrevious = ->
+root.goPrevious = ->
   previousPatterns = settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
-window.goNext = ->
+root.goNext = ->
   nextPatterns = settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
@@ -877,7 +878,7 @@ showFindModeHUDForQuery = ->
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
-window.enterFindMode = ->
+root.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
   findMode = true
   HUD.show("/")
@@ -886,66 +887,33 @@ exitFindMode = ->
   findMode = false
   HUD.hide()
 
-window.showHelpDialog = (html, fid) ->
-  return if (isShowingHelpDialog || !document.body || fid != frameId)
-  isShowingHelpDialog = true
-  container = document.createElement("div")
+root.showHelpDialog = (customTitle, showCommandNames) ->
+  return if (root.isShowingHelpDialog || !document.body)
+  root.isShowingHelpDialog = true
+  container = document.createElement("iframe")
   container.id = "vimiumHelpDialogContainer"
   container.className = "vimiumReset"
 
+  options = {frameId: frameId, customTitle: customTitle, showCommandNames: showCommandNames}
+  container.src = Utils.createOptionsUrl chrome.extension.getURL("pages/help_dialog.html"), options
+
   document.body.appendChild(container)
+  container.focus()
 
-  container.innerHTML = html
-  container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-
-  VimiumHelpDialog =
-    # This setting is pulled out of local storage. It's false by default.
-    getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
-
-    init: () ->
-      this.dialogElement = document.getElementById("vimiumHelpDialog")
-      this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
-        VimiumHelpDialog.toggleAdvancedCommands, false)
-      this.dialogElement.style.maxHeight = window.innerHeight - 80
-      this.showAdvancedCommands(this.getShowAdvancedCommands())
-
-    #
-    # Advanced commands are hidden by default so they don't overwhelm new and casual users.
-    #
-    toggleAdvancedCommands: (event) ->
-      event.preventDefault()
-      showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
-      VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
-      settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
-
-    showAdvancedCommands: (visible) ->
-      VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
-        if visible then "Hide advanced commands" else "Show advanced commands"
-      advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
-      for el in advancedEls
-        el.style.display = if visible then "table-row" else "none"
-
-  VimiumHelpDialog.init()
-
-  container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
-      clickEvent.preventDefault()
-      chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
-    false)
-
-
-hideHelpDialog = (clickEvent) ->
-  isShowingHelpDialog = false
+root.hideHelpDialog = (clickEvent) ->
+  root.isShowingHelpDialog = false
   helpDialog = document.getElementById("vimiumHelpDialogContainer")
   if (helpDialog)
     helpDialog.parentNode.removeChild(helpDialog)
   if (clickEvent)
     clickEvent.preventDefault()
 
-toggleHelpDialog = (html, fid) ->
-  if (isShowingHelpDialog)
+toggleHelpDialog = (fid) ->
+  return if fid != frameId
+  if (root.isShowingHelpDialog)
     hideHelpDialog()
   else
-    showHelpDialog(html, fid)
+    showHelpDialog()
 
 #
 # A heads-up-display (HUD) for showing Vimium page operations.
@@ -1063,7 +1031,6 @@ window.onbeforeunload = ->
     scrollX: window.scrollX
     scrollY: window.scrollY)
 
-root = exports ? window
 root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack

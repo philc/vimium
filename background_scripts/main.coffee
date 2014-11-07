@@ -58,7 +58,7 @@ chrome.runtime.onConnect.addListener((port, name) ->
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
-    sendResponse(sendRequestHandlers[request.handler](request, sender))
+    sendResponse(sendRequestHandlers[request.handler](request, sender, sendResponse))
   # Ensure the sendResponse callback is freed.
   return false)
 
@@ -100,7 +100,7 @@ saveHelpDialogSettings = (request) ->
 
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
 # This is called by options.coffee.
-root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
+root.helpDialogHtml = (showCommandNames, customTitle) ->
   commandsToKey = {}
   for key, command of Commands.keyToCommandRegistry
     (commandsToKey[command.name] ?= []).push(key)
@@ -108,20 +108,34 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   dialogHtml = fetchFileContents("pages/help_dialog.html")
   for group of commandLists
     dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, showUnboundCommands, showCommandNames))
+        helpDialogHtmlForCommandGroup(group, commandsToKey, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
   dialogHtml
 
+# Compiles the information needed to show the help dialog.
+getHelpDialogContents = (request, sender, sendResponse) ->
+  {customTitle, showCommandNames} = request
+  htmlFromKey = {version: currentVersion, title: customTitle || "Help"}
+  commandsToKey = {}
+  for key, command of Commands.keyToCommandRegistry
+    (commandsToKey[command.name] ?= []).push(key)
+
+  for group of commandLists
+    htmlFromKey[group] =
+        helpDialogHtmlForCommandGroup(group, commandsToKey, showCommandNames)
+
+  sendResponse htmlFromKey
+
 #
 # Generates HTML for a given set of commands. commandLists are defined in commands.coffee
 #
-helpDialogHtmlForCommandGroup = (group, commandsToKey, showUnboundCommands, showCommandNames) ->
+helpDialogHtmlForCommandGroup = (group, commandsToKey, showCommandNames) ->
   html = []
   for command in commandLists[group]
     {name, description, advanced} = command
     bindings = (commandsToKey[name] || [""]).join(", ")
-    if (showUnboundCommands || commandsToKey[name])
+    if (showCommandNames || commandsToKey[name])
       html.push(
         "<tr class='vimiumReset #{"advanced" if advanced}'>",
         "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
@@ -618,6 +632,12 @@ getCurrFrameIndex = (frames) ->
     return i if frames[i].id == focusedFrame
   frames.length + 1
 
+# Send message back to the tab unchanged.
+# Frames in the same tab can use this to communicate securely.
+echo = (request, sender) ->
+  delete request.handler # No need to send this information
+  chrome.tabs.sendMessage(sender.tab.id, request)
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -642,6 +662,8 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
+  echo: echo
+  getHelpDialogContents: getHelpDialogContents
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
