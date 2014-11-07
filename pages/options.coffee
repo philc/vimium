@@ -196,6 +196,7 @@ document.addEventListener "DOMContentLoaded", ->
     previousPatterns: NonEmptyTextOption
     regexFindMode: CheckBoxOption
     scrollStepSize: NumberOption
+    smoothScroll: CheckBoxOption
     searchEngines: TextOption
     searchUrl: NonEmptyTextOption
     userDefinedLinkHintCss: TextOption

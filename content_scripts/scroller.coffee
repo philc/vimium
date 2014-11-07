@@ -5,8 +5,10 @@ window.Scroller = root = {}
 # input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
 #
 activatedElement = null
+settings = null
 
-root.init = ->
+root.init = (frontendSettings) ->
+  settings = frontendSettings
   handlerStack.push DOMActivate: -> activatedElement = event.target
 
 scrollProperties =
@@ -36,11 +38,13 @@ getDimension = (el, direction, name) ->
 ensureScrollChange = (direction, changeFn) ->
   axisName = scrollProperties[direction].axisName
   element = activatedElement
+  progress = 0
   loop
     oldScrollValue = element[axisName]
     # Elements with `overflow: hidden` should not be scrolled.
     overflow = window.getComputedStyle(element).getPropertyValue("overflow-#{direction}")
     changeFn(element, axisName) unless overflow == "hidden"
+    progress += element[axisName] - oldScrollValue
     break unless element[axisName] == oldScrollValue && element != document.body
     # we may have an orphaned element. if so, just scroll the body element.
     element = element.parentElement || document.body
@@ -51,6 +55,53 @@ ensureScrollChange = (direction, changeFn) ->
   rect = activatedElement.getBoundingClientRect()
   if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
     activatedElement = element
+  # Return the amount by which the scroll position has changed.
+  return progress
+
+# Scroll by a relative amount in some direction, possibly smoothly.
+# The constants below seem to roughly match chrome's scroll speeds for both short and long scrolls.
+# TODO(smblott) For very-long scrolls, chrome implements a soft landing; we don't.
+doScrollBy = do ->
+  interval = 10 # Update interval (in ms).
+  duration = 120 # This must be a multiple of interval (also in ms).
+  fudgeFactor = 25
+  timer = null
+
+  clearTimer = ->
+    if timer
+      clearInterval timer
+      timer = null
+
+  # Allow a bit longer for longer scrolls.
+  calculateExtraDuration = (amount) ->
+    extra = fudgeFactor * Math.log Math.abs amount
+    # Ensure we have a multiple of interval.
+    return interval * Math.round (extra / interval)
+
+  scroller = (direction,amount) ->
+    return ensureScrollChange direction, (element, axisName) -> element[axisName] += amount
+
+  (direction,amount,wantSmooth) ->
+    clearTimer()
+
+    unless wantSmooth and settings.get "smoothScroll"
+      scroller direction, amount
+      return
+
+    requiredTicks = (duration + calculateExtraDuration amount) / interval
+    # Round away from 0, so that we don't leave any requested scroll amount unscrolled.
+    rounder = (if 0 <= amount then Math.ceil else Math.floor)
+    delta = rounder(amount / requiredTicks)
+
+    ticks = 0
+    ticker = ->
+      # If we haven't scrolled by the expected amount, then we've hit the top, bottom or side of the activated
+      # element, so stop scrolling.
+      if scroller(direction, delta) != delta or ++ticks == requiredTicks
+        clearTimer()
+
+    timer = setInterval ticker, interval
+    ticker()
 
 # scroll the active element in :direction by :amount * :factor.
 # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -66,26 +117,28 @@ root.scrollBy = (direction, amount, factor = 1) ->
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  ensureScrollChange direction, (element, axisName) ->
-    if Utils.isString amount
-      elementAmount = getDimension element, direction, amount
-    else
-      elementAmount = amount
-    elementAmount *= factor
-    element[axisName] += elementAmount
+  if Utils.isString amount
+    elementAmount = getDimension activatedElement, direction, amount
+  else
+    elementAmount = amount
+  elementAmount *= factor
 
-root.scrollTo = (direction, pos) ->
+  doScrollBy direction, elementAmount, true
+
+root.scrollTo = (direction, pos, wantSmooth=false) ->
   return unless document.body
 
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  ensureScrollChange direction, (element, axisName) ->
-    if Utils.isString pos
-      elementPos = getDimension element, direction, pos
-    else
-      elementPos = pos
-    element[axisName] = elementPos
+  if Utils.isString pos
+    elementPos = getDimension activatedElement, direction, pos
+  else
+    elementPos = pos
+  axisName = scrollProperties[direction].axisName
+  elementAmount = elementPos - activatedElement[axisName]
+
+  doScrollBy direction, elementAmount, wantSmooth
 
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
