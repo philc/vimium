@@ -114,7 +114,9 @@ iframe#vimiumHelpDialogContainer {
   height: 100%;
 }
 span.vimiumReset.commandName { display: none; }
-tr.vimiumReset.commandRow { display: none; }
+tr.vimiumReset.commandRow.unmappedCommand { display: none; }
+
+span.showAdvanced { display: none; }
 
 div#vimiumHelpDialog {
   border:3px solid red;
@@ -140,14 +142,14 @@ div#vimiumHelpDialog a { color:blue; }
 div#vimiumTitle, div#vimiumTitle span,  div#vimiumTitle * { font-size:20px; }
 #vimiumTitle {
   display: block;
-  line-height: 130%;
+  line-height: 120%;
 }
 div.vimiumColumn {
   width: 100%;
   float:left;
   font-size: 11px;
-  line-height: 130%;
-  height: 100%;
+  line-height: 120%;
+  max-height: 100%;
   -webkit-column-count: 2;
   -webkit-column-fill: balance;
   column-count: 2;
@@ -161,7 +163,7 @@ div.vimiumColumn tr {
 div.vimiumColumn td {
     display: table-cell;
     font-size: 11px;
-    line-height: 130%;
+    line-height: 120%;
 }
 div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr { padding:0; margin:0; }
 div.vimiumColumn table { width:100%; table-layout:auto; }
@@ -208,7 +210,7 @@ div#vimiumHelpDialog .optionsPage {
   position: absolute;
   display: block;
   font-size: 11px;
-  line-height: 130%;
+  line-height: 120%;
   right: 60px;
   top: 8px;
 }

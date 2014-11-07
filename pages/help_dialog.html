@@ -17,32 +17,14 @@
       <a class="vimiumReset optionsPage" target="_blank" href="options.html">Options</a>
       <a class="vimiumReset closeButton" href="#">&times;</a>
       <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium <span id="replace_with_title"></span></div>
-      <div class="vimiumReset vimiumColumn">
-        <table class="vimiumReset">
-          <tbody class="vimiumReset">
-          <tr class="vimiumReset" ><td class="vimiumReset"></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating the page</td></tr>
-          <tr id="replace_with_pageNavigation"></tr>
-          </tbody>
-        </table>
-        <table class="vimiumReset" >
-          <tbody class="vimiumReset">
-          <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using find</td></tr>
-          <tr id="replace_with_findCommands"></tr>
-          <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating history</td></tr>
-          <tr id="replace_with_historyNavigation"></tr>
-          <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Manipulating tabs</td></tr>
-          <tr id="replace_with_tabManipulation"></tr>
-          <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Miscellaneous</td></tr>
-          <tr id="replace_with_misc"></tr>
-          </tbody>
-        </table>
+      <div id="columnContainer" class="vimiumReset vimiumColumn">
       </div>
 
       <br clear="both"/>
       <div class="vimiumReset vimiumDivider"></div>
 
       <div id="vimiumHelpDialogFooter" class="vimiumReset">
-        <a href="#" class="vimiumReset toggleAdvancedCommands">Show advanced commands</a>
+          <a href="#" class="vimiumReset toggleAdvancedCommands"><span class="showAdvanced">Show advanced commands</span><span class="hideAdvanced">Hide advanced commands</span></a>
 
         <div class="vimiumReset vimiumColumn">
           Enjoying Vimium?
@@ -55,5 +37,24 @@
         </div>
       </div>
     </div>
+    <template id="sectionTemplate">
+        <table class="vimiumReset">
+          <tbody class="vimiumReset">
+              <tr class="vimiumReset" >
+                  <td class="vimiumReset"></td>
+                  <td class="vimiumReset"></td>
+                  <td class="vimiumReset vimiumHelpSectionTitle"></td>
+              </tr>
+          </tbody>
+        </table>
+    </template>
+    <template id="commandRowTemplate">
+      <tr class="vimiumReset commandRow unmappedCommand">
+          <td class="vimiumReset commandBindings"></td>
+          <td class="vimiumReset">:</td>
+          <td class="vimiumReset commandDescription">
+              <span class="vimiumReset commandName"></span>
+          </td>
+    </template>
   </body>
 </html>

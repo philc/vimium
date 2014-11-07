@@ -17,11 +17,13 @@ VimiumHelpDialog =
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
   stylesheet: null
+  commandToRow: {}
 
   init: ->
     @dialogElement = document.getElementById("vimiumHelpDialog")
-    @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
-      VimiumHelpDialog.toggleAdvancedCommands, false)
+    @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click", ->
+      VimiumHelpDialog.toggleAdvancedCommands(event)
+    , false)
 
     styleEl = document.createElement("style")
     styleEl.type = "text/css"
@@ -30,54 +32,68 @@ VimiumHelpDialog =
 
     @stylesheet = styleEl.sheet
 
+    advancedCssEl = document.createElement("style")
+    advancedCssEl.type = "text/css"
+    document.head.appendChild(advancedCssEl)
+
+    # This stylesheet hides all advanced commands.
+    @hideAdvancedStyle = advancedCssEl.sheet
+    @hideAdvancedStyle.insertRule("span.showAdvanced { display: inline; }", 0)
+    @hideAdvancedStyle.insertRule("span.hideAdvanced { display: none; }", 1)
+    @hideAdvancedStyle.insertRule("tr.vimiumReset.commandRow.advanced { display: none !important; }", 2)
+    @hideAdvancedStyle.disabled = false
+
   # Generates HTML for a given set of commands. commandLists are defined in commands.coffee
   populateFromCommandLists: ->
     document.getElementById("replace_with_title").outerHtml = customTitle or "Help"
     document.getElementById("replace_with_version").outerHtml = Utils.getCurrentVersion()
+    columnContainer = document.getElementById("columnContainer")
+
+    sectionTemplate = document.getElementById("sectionTemplate").content
+    commandRowTemplate = document.getElementById("commandRowTemplate").content
+
     for group, commandList of commandLists
-      groupPlaceholder = document.getElementById("replace_with_#{group}")
+      groupContainer = document.importNode(sectionTemplate, true)
+      sectionTitle = groupContainer.querySelector("td.vimiumHelpSectionTitle")
+      sectionTitle.appendChild(document.createTextNode(groupDescriptions[group]))
+      groupTable = groupContainer.querySelector("tbody")
+
       for command in commandList
         {name, description, advanced} = command
 
-        commandRow = document.createElement "tr"
-        commandRow.classList.add "vimiumReset", "commandRow", "command-#{name}"
-        commandRow.classList.add "advanced" if advanced
+        commandRow = document.importNode(commandRowTemplate, true)
+        trElement = @commandToRow[name] = commandRow.querySelector("tr")
 
-        bindingsCell = document.createElement "td"
-        bindingsCell.classList.add "vimiumReset", "bindings"
-        commandRow.appendChild bindingsCell
+        trElement.classList.add("advanced") if advanced
 
-        spacerCell = document.createElement "td"
-        spacerCell.classList.add "vimiumReset"
-        spacerCell.appendChild document.createTextNode ":"
-        commandRow.appendChild spacerCell
+        descriptionCell = commandRow.querySelector("td.commandDescription")
+        descriptionCell.insertBefore(document.createTextNode(description), descriptionCell.firstChild)
 
-        descriptionCell = document.createElement "td"
-        descriptionCell.classList.add "vimiumReset"
-        descriptionCell.appendChild document.createTextNode description
-        commandRow.appendChild descriptionCell
+        commandName = commandRow.querySelector("span.commandName")
+        commandName.appendChild(document.createTextNode(" (#{name})"))
 
-        commandName = document.createElement "span"
-        commandName.classList.add "vimiumReset", "commandName"
-        commandName.appendChild document.createTextNode " (#{name})"
-        descriptionCell.appendChild commandName
+        groupTable.appendChild(commandRow)
+      columnContainer.appendChild(groupContainer)
 
-        groupPlaceholder.parentElement.insertBefore commandRow, groupPlaceholder
-      groupPlaceholder.remove()
     if showCommandNames
       @stylesheet.insertRule("span.vimiumReset.commandName {display: inline;}", 0)
       @stylesheet.insertRule("tr.vimiumReset.commandRow {display: table-row;}", 1)
+    @showAdvancedCommands(@getShowAdvancedCommands())
     @dialogElement.style.visibility = "visible"
     @dialogElement.click() # Click the dialog element so that it is registered as the scrolling element.
 
   updateWithBindings: (keyToCommandRegistry) ->
+    commandToKeyRegistry = {}
     for key, {name} of keyToCommandRegistry
-      commandRow = document.getElementsByClassName("command-#{name}")[0]
-      commandRow.style.display = "table-row"
+      commandToKeyRegistry[name] ?= []
+      commandToKeyRegistry[name].push(key)
 
-      bindingsCell = commandRow.getElementsByClassName("bindings")[0]
-      seperator = if bindingsCell.firstChild != null then ", " else ""
-      bindingsCell.appendChild document.createTextNode(seperator + key)
+    for name, keys of commandToKeyRegistry
+      commandRow = @commandToRow[name]
+      commandRow.classList.remove("unmappedCommand")
+
+      bindingsCell = commandRow.querySelector("td.commandBindings")
+      bindingsCell.appendChild(document.createTextNode(commandToKeyRegistry[name].join(", ")))
     @dialogElement.click() # Click the dialog element so that it is registered as the scrolling element.
 
   #
@@ -85,16 +101,11 @@ VimiumHelpDialog =
   #
   toggleAdvancedCommands: (event) ->
     event.preventDefault()
-    showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
-    VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
+    showAdvanced = @getShowAdvancedCommands()
+    @showAdvancedCommands(!showAdvanced)
     settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
-  showAdvancedCommands: (visible) ->
-    VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
-      if visible then "Hide advanced commands" else "Show advanced commands"
-    advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
-    for el in advancedEls
-      el.style.display = if visible then "table-row" else "none"
+  showAdvancedCommands: (visible) -> @hideAdvancedStyle.disabled = visible
 
   hide: ->
     # Communicate to our parent frame that our iframe should be removed.

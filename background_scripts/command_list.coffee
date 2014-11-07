@@ -415,5 +415,13 @@ commandLists =
     }
   ]
 
+groupDescriptions =
+  pageNavigation: "Navigating the page"
+  findCommands: "Using find"
+  historyNavigation: "Navigating history"
+  tabManipulation: "Manipulating tabs"
+  misc: "Miscellaneous"
+
 root = exports ? window
 root.commandLists = commandLists
+root.groupDescriptions = groupDescriptions
