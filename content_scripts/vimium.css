@@ -113,6 +113,8 @@ iframe#vimiumHelpDialogContainer {
   width: 100%;
   height: 100%;
 }
+span.vimiumReset.commandName { display: none; }
+tr.vimiumReset.commandRow { display: none; }
 
 div#vimiumHelpDialog {
   border:3px solid red;
@@ -141,10 +143,15 @@ div#vimiumTitle, div#vimiumTitle span,  div#vimiumTitle * { font-size:20px; }
   line-height: 130%;
 }
 div.vimiumColumn {
-  width:50%;
+  width: 100%;
   float:left;
   font-size: 11px;
   line-height: 130%;
+  height: 100%;
+  -webkit-column-count: 2;
+  -webkit-column-fill: balance;
+  column-count: 2;
+  column-fill: balance;
 }
 
 div.vimiumColumn tr {

@@ -98,54 +98,8 @@ root.removeExclusionRule = (pattern) ->
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
 
-# Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-# This is called by options.coffee.
-root.helpDialogHtml = (showCommandNames, customTitle) ->
-  commandsToKey = {}
-  for key, command of Commands.keyToCommandRegistry
-    (commandsToKey[command.name] ?= []).push(key)
-
-  dialogHtml = fetchFileContents("pages/help_dialog.html")
-  for group of commandLists
-    dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, showCommandNames))
-  dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
-  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
-  dialogHtml
-
-# Compiles the information needed to show the help dialog.
-getHelpDialogContents = (request, sender, sendResponse) ->
-  {customTitle, showCommandNames} = request
-  htmlFromKey = {version: currentVersion, title: customTitle || "Help"}
-  commandsToKey = {}
-  for key, command of Commands.keyToCommandRegistry
-    (commandsToKey[command.name] ?= []).push(key)
-
-  for group of commandLists
-    htmlFromKey[group] =
-        helpDialogHtmlForCommandGroup(group, commandsToKey, showCommandNames)
-
-  sendResponse htmlFromKey
-
-#
-# Generates HTML for a given set of commands. commandLists are defined in commands.coffee
-#
-helpDialogHtmlForCommandGroup = (group, commandsToKey, showCommandNames) ->
-  html = []
-  for command in commandLists[group]
-    {name, description, advanced} = command
-    bindings = (commandsToKey[name] || [""]).join(", ")
-    if (showCommandNames || commandsToKey[name])
-      html.push(
-        "<tr class='vimiumReset #{"advanced" if advanced}'>",
-        "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
-        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", description)
-
-      if (showCommandNames)
-        html.push("<span class='vimiumReset commandName'>(#{name})</span>")
-
-      html.push("</td></tr>")
-  html.join("\n")
+getKeyToCommandRegistry = (request, sender, sendResponse) ->
+  sendResponse(Commands.keyToCommandRegistry)
 
 #
 # Fetches the contents of a file bundled with this extension.
@@ -289,8 +243,7 @@ BackgroundCommands =
       chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
   showHelp: (callback, frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
+      chrome.tabs.sendMessage(tab.id, { name: "toggleHelpDialog", frameId:frameId }))
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
@@ -663,7 +616,7 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
   echo: echo
-  getHelpDialogContents: getHelpDialogContents
+  getKeyToCommandRegistry: getKeyToCommandRegistry
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
