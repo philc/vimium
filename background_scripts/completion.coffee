@@ -259,6 +259,29 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
+# TabCache associates a timestamp with each tab.
+class TabCache
+  constructor: ->
+    @timestamp = 1
+    @cache = {}
+
+    chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
+    chrome.tabs.onRemoved.addListener (tabId) => @remove tabId
+
+    chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) =>
+      @remove removedTabId
+      @add addedTabId
+
+  add: (tabId) -> @cache[tabId] = ++@timestamp
+  remove: (tabId) -> delete @cache[tabId]
+
+  # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
+  recencyScore: (tabId) ->
+    @cache[tabId] ||= 1
+    if @cache[tabId] == @timestamp then 0.0 else @cache[tabId] / @timestamp
+
+tabCache = new TabCache()
+
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
   filter: (queryTerms, onComplete) ->
@@ -274,7 +297,10 @@ class TabCompleter
       onComplete(suggestions)
 
   computeRelevancy: (suggestion) ->
-    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    if 0 < suggestion.queryTerms.length
+      RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    else
+      tabCache.recencyScore suggestion.tabId
 
 # A completer which will return your search engines
 class SearchEngineCompleter
