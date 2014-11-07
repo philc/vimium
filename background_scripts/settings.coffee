@@ -89,7 +89,9 @@ root.Settings = Settings =
     exclusionRules:
       [
         # Disable Vimium on Gmail.
-        { pattern: "http*://mail.google.com/*", passKeys: "" }
+        { pattern: "http*://mail.google.com/*", passKeys: "" },
+        # Disable Vimium on Google Inbox.
+        { pattern: "http*://inbox.google.com/*", passKeys: "" }
       ]
 
     # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in
