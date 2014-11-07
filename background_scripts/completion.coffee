@@ -259,8 +259,8 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
-# TabCache associates a timestamp with each tab.
-class TabCache
+# TabRecency associates a timestamp with each tab id.
+class TabRecency
   constructor: ->
     @timestamp = 1
     @cache = {}
@@ -280,7 +280,7 @@ class TabCache
     @cache[tabId] ||= 1
     if @cache[tabId] == @timestamp then 0.0 else @cache[tabId] / @timestamp
 
-tabCache = new TabCache()
+tabRecency = new TabRecency()
 
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
@@ -300,7 +300,7 @@ class TabCompleter
     if 0 < suggestion.queryTerms.length
       RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
     else
-      tabCache.recencyScore suggestion.tabId
+      tabRecency.recencyScore suggestion.tabId
 
 # A completer which will return your search engines
 class SearchEngineCompleter
