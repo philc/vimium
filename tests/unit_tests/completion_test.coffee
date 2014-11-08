@@ -260,10 +260,6 @@ context "suggestions",
     expected = "<span class='vomnibarMatch'>ninjaword</span>s"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
-  should "shorten urls", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com/blah", "ninjawords", returns(1))
-    assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com/blah")
-
 context "RankingUtils.wordRelevancy",
   should "score higher in shorter URLs", ->
     highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/short",  "a-title")

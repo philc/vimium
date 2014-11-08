@@ -94,5 +94,6 @@ exports.chrome =
 
 class XMLHttpRequest
   open: -> true
+  send: -> true
 
 exports.XMLHttpRequest = XMLHttpRequest
