@@ -404,8 +404,19 @@ context "TabRecency",
     @tabRecency = new TabRecency()
     @tabRecency.add 3
     @tabRecency.add 2
+    @tabRecency.add 9
     @tabRecency.add 1
+    @tabRecency.remove 9
     @tabRecency.add 4
+
+  should "have entries for active tabs", ->
+    assert.isTrue @tabRecency.cache[1]
+    assert.isTrue @tabRecency.cache[2]
+    assert.isTrue @tabRecency.cache[3]
+    assert.isTrue @tabRecency.cache[4]
+
+  should "not have entries for removed tabs", ->
+    assert.isFalse @tabRecency.cache[9]
 
   should "give a high score to the most recent tab", ->
     assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 1
@@ -416,6 +427,17 @@ context "TabRecency",
     assert.isTrue @tabRecency.recencyScore(1) > @tabRecency.recencyScore 4
     assert.isTrue @tabRecency.recencyScore(2) > @tabRecency.recencyScore 4
     assert.isTrue @tabRecency.recencyScore(3) > @tabRecency.recencyScore 4
+
+  should "rank tabs by recency", ->
+    assert.isTrue @tabRecency.recencyScore(3) < @tabRecency.recencyScore 2
+    assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 1
+    @tabRecency.add 3
+    @tabRecency.add 4 # Making 3 the most recent tab which isn't the current tab.
+    assert.isTrue @tabRecency.recencyScore(1) < @tabRecency.recencyScore 3
+    assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 3
+    assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 3
+    assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 1
+    assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 2
 
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
