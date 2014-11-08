@@ -655,6 +655,25 @@ fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
   xhr.send()
   true # sendResponse will be called asynchronously.
 
+# Fetch a favicon and send it to the requester.  However, if the favicon is chrome's default favicon, then
+# instead send an error.
+fetchFavicon = do ->
+  nonExistentFaviconUrl = "chrome://favicon/ThisShouldNotExist-SoWeGetTheChromeDefaultFavicon"
+  chromeDefaultFavicon = null
+
+  fetcher = (request, sender, sendResponse) ->
+    fetchViaHttpAsBase64 request, sender, (response) ->
+      if response.data and response.type and 0 == response.type.indexOf "image/"
+        if response.data != chromeDefaultFavicon
+          return sendResponse response
+      sendResponse { error: "chrome-default-favicon", errorSource: "fetchFavicon" }
+
+  # Fetch chrome's default favicon.
+  fetcher { url: nonExistentFaviconUrl }, null, (response) ->
+    chromeDefaultFavicon = response.data if response.data and not response.error
+
+  return fetcher
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -681,7 +700,7 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
 
 sendRequestAsyncHandlers =
-  fetchViaHttpAsBase64: fetchViaHttpAsBase64
+  fetchFavicon: fetchFavicon
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
