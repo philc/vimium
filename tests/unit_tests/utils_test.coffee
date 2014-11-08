@@ -61,6 +61,13 @@ context "hasChromePrefix",
     assert.isFalse Utils.hasChromePrefix "data"
     assert.isFalse Utils.hasChromePrefix "data :foobar"
 
+context "isUrl",
+  should "identify URLs as URLs", ->
+    assert.isTrue Utils.isUrl "http://www.example.com/blah"
+
+  should "identify non-URLs and non-URLs", ->
+    assert.isFalse Utils.isUrl "http://www.example.com/ blah"
+
 context "Function currying",
   should "Curry correctly", ->
     foo = (a, b) -> "#{a},#{b}"

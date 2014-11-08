@@ -238,7 +238,7 @@ class DomainCompleter
       onComplete()
 
   onPageVisited: (newPage) ->
-    domain = @parseDomain(newPage.url)
+    domain = @parseDomainAndScheme newPage.url
     if domain
       slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
@@ -250,11 +250,13 @@ class DomainCompleter
       @domains = {}
     else
       toRemove.urls.forEach (url) =>
-        domain = @parseDomain(url)
+        domain = @parseDomainAndScheme url
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
 
-  parseDomain: (url) -> url.split("/")[2] || ""
+  # Return something like "http://www.example.com" or false.
+  parseDomainAndScheme: (url) ->
+      Utils.hasFullUrlPrefix(url) and not Utils.hasChromePrefix(url) and url.split("/",3).join "/"
 
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1

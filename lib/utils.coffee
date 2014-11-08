@@ -26,27 +26,28 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "chrome-extension:", "data:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
     (url) ->
       if 0 < url.indexOf ":"
         for prefix in chromePrefixes
           return true if url.startsWith prefix
       false
 
+  hasFullUrlPrefix: do ->
+    urlPrefix = new RegExp "^[a-z]{3,}://."
+    (url) -> urlPrefix.test url
+
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
-    unless /^[a-z]{3,}:\/\//.test partialUrl
-      "http://" + partialUrl
-    else
-      partialUrl
+    if @hasFullUrlPrefix(partialUrl) then partialUrl else ("http://" + partialUrl)
 
   # Tries to detect if :str is a valid URL.
   isUrl: (str) ->
-    # Starts with a scheme: URL
-    return true if /^[a-z]{3,}:\/\//.test str
-
     # Must not contain spaces
     return false if ' ' in str
+
+    # Starts with a scheme: URL
+    return true if @hasFullUrlPrefix str
 
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
@@ -98,7 +99,7 @@ Utils =
   convertToUrl: (string) ->
     string = string.trim()
 
-    # Special-case about:[url] and view-source:[url]
+    # Special-case about:[url], view-source:[url] and the like
     if Utils.hasChromePrefix string
       string
     else if Utils.isUrl string
