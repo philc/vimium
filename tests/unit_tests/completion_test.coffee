@@ -221,8 +221,8 @@ context "domain completer (removing entries)",
 context "tab completer",
   setup ->
     @tabs = [
-      { url: "tab1.com", title: "tab1", id: 1 }
-      { url: "tab2.com", title: "tab2", id: 2 }]
+      { url: "tab1.com", title: "tab1", id: 1, favIconUrl: "http://tab1.com/favicon.ico" }
+      { url: "tab2.com", title: "tab2", id: 2, favIconUrl: "http://tab2.com/favicon.ico" }]
     chrome.tabs = { query: (args, onComplete) => onComplete(@tabs) }
     @completer = new TabCompleter()
 
@@ -261,8 +261,8 @@ context "suggestions",
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "shorten urls", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
-    assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
+    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com/blah", "ninjawords", returns(1))
+    assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com/blah")
 
 context "RankingUtils.wordRelevancy",
   should "score higher in shorter URLs", ->

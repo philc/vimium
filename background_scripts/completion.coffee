@@ -19,14 +19,15 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
+  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData, @favIconDomain) ->
     @title ||= ""
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
   generateHtml: ->
     return @html if @html
-    favIconUrl = @tabFavIconUrl or "#{@getUrlRoot(@url)}/favicon.ico"
+    favIconDomain = @favIconDomain or Suggestion.parseDomain @url
+    favIconUrl = @favIconUrl or ""
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -34,19 +35,16 @@ class Suggestion
       <div class="vimiumReset vomnibarTopHalf">
          <span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
-       </div>
-       <div class="vimiumReset vomnibarBottomHalf vomnibarIcon"
-            style="background-image: url(#{favIconUrl});">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
-        #{relevancyHtml}
+      </div>
+      <div class="vimiumReset vomnibarBottomHalf">
+         <img class="vimiumReset vomnibarIcon" domain="#{favIconDomain}" favIconUrl="#{favIconUrl}" src=""/><nobr>
+         <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
+         #{relevancyHtml}
       </div>
       """
 
-  # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
-  getUrlRoot: (url) ->
-    a = document.createElement 'a'
-    a.href = url
-    a.protocol + "//" + a.hostname
+  # Static method.
+  @parseDomain: (url) -> url.split("/")[2] || ""
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
 
@@ -216,7 +214,10 @@ class DomainCompleter
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
-    onComplete([new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)])
+    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy, undefined,
+      topDomain)
+    onComplete([suggestion])
+
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
@@ -238,7 +239,7 @@ class DomainCompleter
       onComplete()
 
   onPageVisited: (newPage) ->
-    domain = @parseDomain(newPage.url)
+    domain = Suggestion.parseDomain(newPage.url)
     if domain
       slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
@@ -250,11 +251,9 @@ class DomainCompleter
       @domains = {}
     else
       toRemove.urls.forEach (url) =>
-        domain = @parseDomain(url)
+        domain = Suggestion.parseDomain(url)
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
-
-  parseDomain: (url) -> url.split("/")[2] || ""
 
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
@@ -269,7 +268,7 @@ class TabCompleter
       suggestions = results.map (tab) =>
         suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
         suggestion.tabId = tab.id
-        suggestion.tabFavIconUrl = tab.favIconUrl
+        suggestion.favIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 
