@@ -163,13 +163,13 @@ context "domain completer",
 
   should "return only a single matching domain", ->
     results = filterCompleter(@completer, ["story"])
-    assert.arrayEqual ["history1.com"], results.map (result) -> result.url
+    assert.arrayEqual ["http://history1.com"], results.map (result) -> result.url
 
   should "pick domains which are more recent", ->
     # These domains are the same except for their last visited time.
-    assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
+    assert.equal "http://history1.com", filterCompleter(@completer, ["story"])[0].url
     @history2.lastVisitTime = hours(3)
-    assert.equal "history2.com", filterCompleter(@completer, ["story"])[0].url
+    assert.equal "http://history2.com", filterCompleter(@completer, ["story"])[0].url
 
   should "returns no results when there's more than one query term, because clearly it's not a domain", ->
     assert.arrayEqual [], filterCompleter(@completer, ["his", "tory"])
@@ -194,15 +194,15 @@ context "domain completer (removing entries)",
 
   should "remove 1 entry for domain with reference count of 1", ->
     @onVisitRemovedListener { allHistory: false, urls: [@history1.url] }
-    assert.equal "history2.com", filterCompleter(@completer, ["story"])[0].url
+    assert.equal "http://history2.com", filterCompleter(@completer, ["story"])[0].url
     assert.equal 0, filterCompleter(@completer, ["story1"]).length
 
   should "remove 2 entries for domain with reference count of 2", ->
     @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
-    assert.equal "history2.com", filterCompleter(@completer, ["story2"])[0].url
+    assert.equal "http://history2.com", filterCompleter(@completer, ["story2"])[0].url
     @onVisitRemovedListener { allHistory: false, urls: [@history3.url] }
     assert.equal 0, filterCompleter(@completer, ["story2"]).length
-    assert.equal "history1.com", filterCompleter(@completer, ["story"])[0].url
+    assert.equal "http://history1.com", filterCompleter(@completer, ["story"])[0].url
 
   should "remove 3 (all) matching domain entries", ->
     @onVisitRemovedListener { allHistory: false, urls: [@history2.url] }
