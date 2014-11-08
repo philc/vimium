@@ -573,3 +573,4 @@ root.SearchEngineCompleter = SearchEngineCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache
+root.TabRecency = TabRecency

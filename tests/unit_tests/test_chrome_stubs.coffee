@@ -30,6 +30,10 @@ exports.chrome =
       addListener: () -> true
     onActiveChanged:
       addListener: () -> true
+    onActivated:
+      addListener: () -> true
+    onReplaced:
+      addListener: () -> true
     query: () -> true
 
   windows:

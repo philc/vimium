@@ -1,8 +1,8 @@
 require "./test_helper.js"
 extend(global, require "../../lib/utils.js")
 extend(global, require "../../background_scripts/completion.js")
+extend global, require "./test_chrome_stubs.js"
 
-global.chrome = {}
 global.document =
   createElement: -> {}
 
@@ -398,6 +398,24 @@ context "RegexpCache",
 
   should "search for a string with a prefix/suffix (negative case)", ->
     assert.isTrue "hound dog".search(RegexpCache.get("do", "\\b", "\\b")) == -1
+
+context "TabRecency",
+  setup ->
+    @tabRecency = new TabRecency()
+    @tabRecency.add 3
+    @tabRecency.add 2
+    @tabRecency.add 1
+    @tabRecency.add 4
+
+  should "give a high score to the most recent tab", ->
+    assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 1
+    assert.isTrue @tabRecency.recencyScore(3) < @tabRecency.recencyScore 1
+    assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 1
+
+  should "give a low score to the current tab", ->
+    assert.isTrue @tabRecency.recencyScore(1) > @tabRecency.recencyScore 4
+    assert.isTrue @tabRecency.recencyScore(2) > @tabRecency.recencyScore 4
+    assert.isTrue @tabRecency.recencyScore(3) > @tabRecency.recencyScore 4
 
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
