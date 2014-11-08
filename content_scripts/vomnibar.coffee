@@ -151,48 +151,39 @@ class VomnibarUI
       @populateUiWithCompletions(completions)
       callback() if callback
 
-  # Various ways in which we guess a favicon's URL.
-  useKnownFaviconUrl: (favicon) -> favicon.getAttribute "favIconUrl"
-  guessChromeFaviconUrl: (favicon) -> "chrome://favicon/http://" + favicon.getAttribute "domain"
-  guessHttpFaviconUrl: (favicon) -> "http://" + favicon.getAttribute("domain") + "/favicon.ico"
-  guessHttpsFaviconUrl: (favicon) -> "https://" + favicon.getAttribute("domain") + "/favicon.ico"
-
   # Google's default favicon; cached here for the benefit of their servers :-)
   googleCacheMissFavicon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAACiElEQVQ4EaVTzU8TURCf2tJuS7tQtlRb6UKBIkQwkRRSEzkQgyEc6lkOKgcOph78Y+CgjXjDs2i44FXY9AMTlQRUELZapVlouy3d7kKtb0Zr0MSLTvL2zb75eL838xtTvV6H/xELBptMJojeXLCXyobnyog4YhzXYvmCFi6qVSfaeRdXdrfaU1areV5KykmX06rcvzumjY/1ggkR3Jh+bNf1mr8v1D5bLuvR3qDgFbvbBJYIrE1mCIoCrKxsHuzK+Rzvsi29+6DEbTZz9unijEYI8ObBgXOzlcrx9OAlXyDYKUCzwwrDQx1wVDGg089Dt+gR3mxmhcUnaWeoxwMbm/vzDFzmDEKMMNhquRqduT1KwXiGt0vre6iSeAUHNDE0d26NBtAXY9BACQyjFusKuL2Ry+IPb/Y9ZglwuVscdHaknUChqLF/O4jn3V5dP4mhgRJgwSYm+gV0Oi3XrvYB30yvhGa7BS70eGFHPoTJyQHhMK+F0ZesRVVznvXw5Ixv7/C10moEo6OZXbWvlFAF9FVZDOqEABUMRIkMd8GnLwVWg9/RkJF9sA4oDfYQAuzzjqzwvnaRUFxn/X2ZlmGLXAE7AL52B4xHgqAUqrC1nSNuoJkQtLkdqReszz/9aRvq90NOKdOS1nch8TpL555WDp49f3uAMXhACRjD5j4ykuCtf5PP7Fm1b0DIsl/VHGezzP1KwOiZQobFF9YyjSRYQETRENSlVzI8iK9mWlzckpSSCQHVALmN9Az1euDho9Xo8vKGd2rqooA8yBcrwHgCqYR0kMkWci08t/R+W4ljDCanWTg9TJGwGNaNk3vYZ7VUdeKsYJGFNkfSzjXNrSX20s4/h6kB81/271ghG17l+rPTAAAAAElFTkSuQmCC"
 
-  # Note(smblott)  Chrome serializes XMLHttpRequests to the same domain, and (sometimes?) doesn't cache the
-  # results. So we cache favicons here.
-  faviconCache: do ->
-    cache = {}
-    callbacks = {}
-    (url,callback) ->
-      if url of cache
-        callback cache[url]
-      else if url of callbacks
-        callbacks[url].push callback
-      else
-        callbacks[url] = [ callback ]
-        # Use a short timeout, because the URLs we guess sometimes do not exist and hang.
-        chrome.runtime.sendMessage {handler: "fetchFavicon", url: url, timeout: 250}, (response) ->
-          cache[url] = response
-          for callback in callbacks[url]
-            callback response
-          delete callbacks[url]
+  skipNonDomains: (domain, url) ->
+    if 0 <= domain.indexOf(".") then url else ""
 
-  guessFavicon: (favicon, guessers) ->
+  # Various ways in which we guess a favicon's URL.
+  useKnownFaviconUrl: (domain, favicon) -> favicon.getAttribute "favIconUrl"
+  guessChromeFaviconUrl: (domain) => @skipNonDomains domain, "chrome://favicon/http://" + domain
+  guessHttpFaviconUrl: (domain) => @skipNonDomains domain, "http://" + domain + "/favicon.ico"
+  guessHttpsFaviconUrl: (domain) => @skipNonDomains domain, "https://" + domain + "/favicon.ico"
+
+  # This generates (and *is*) the default favicon; see @googleCacheMissFavicon.  So, a priori, we don't need
+  # this guesser. However, generating these guesses populates the background page's cache, which in turn
+  # eliminates many fruitless requests.
+  guessGoogleFaviconUrl: -> "https://www.google.com/profiles/c/favicons?domain="
+
+  guessFavicon: (favicon, guessers, domain=undefined) ->
     if 0 < guessers.length
-      tryNextGuess = => @guessFavicon favicon, guessers[1..]
-      url = guessers[0] favicon
+      domain ||= favicon.getAttribute("domain")
+      tryNextGuess = => @guessFavicon favicon, guessers[1..], domain
+      url = guessers[0] domain, favicon
       return tryNextGuess() unless url
-      @faviconCache url, (response) ->
+      chrome.runtime.sendMessage {handler: "fetchFavicon", url: url, domain: domain, timeout: 250}, (response) ->
         if response.data and not response.error
-          return favicon.src = response.data
-        tryNextGuess()
+          favicon.src = response.data
+        else
+          tryNextGuess()
 
   guessFavicons: ->
     for favicon in @completionList.getElementsByClassName "vomnibarIcon"
       favicon.src = @googleCacheMissFavicon # Set a default favicon, Google's small globe.
-      @guessFavicon favicon, [@useKnownFaviconUrl, @guessChromeFaviconUrl, @guessHttpFaviconUrl, @guessHttpsFaviconUrl]
+      @guessFavicon favicon, [@useKnownFaviconUrl, @guessChromeFaviconUrl, @guessHttpFaviconUrl, @guessHttpsFaviconUrl, @guessGoogleFaviconUrl]
 
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data

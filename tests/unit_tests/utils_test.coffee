@@ -60,3 +60,37 @@ context "compare versions",
     assert.equal -1, Utils.compareVersions("1.40.1", "1.40.2")
     assert.equal -1, Utils.compareVersions("1.40.1", "1.41")
     assert.equal 1, Utils.compareVersions("1.41", "1.40")
+
+context "SimpleCache",
+  setup ->
+    @cache = new SimpleCache()
+    @cache.set "a", 1
+    @cache.set "b", 2
+
+  should "cache values", ->
+    assert.equal 1, @cache.get "a"
+    assert.equal 2, @cache.get "b"
+
+  should "return value from set", ->
+    assert.equal @cache.set("z", 123), 123
+
+  should "keep cached values when rotated once", ->
+    assert.equal 1, @cache.get "a"
+    assert.equal 2, @cache.get "b"
+    @cache.rotate()
+    assert.equal 1, @cache.get "a"
+    assert.equal 2, @cache.get "b"
+
+  should "keep cached values when rotated twice and entries are re-used", ->
+    @cache.rotate()
+    assert.equal 1, @cache.get "a"
+    assert.equal 2, @cache.get "b"
+    @cache.rotate()
+    assert.equal 1, @cache.get "a"
+    assert.equal 2, @cache.get "b"
+
+  should "not keep cached values when rotated twice and entries not are re-used", ->
+    @cache.rotate()
+    @cache.rotate()
+    assert.isFalse @cache.get "a"
+    assert.isFalse @cache.get "b"

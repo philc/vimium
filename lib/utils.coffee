@@ -150,5 +150,27 @@ globalRoot.extend = (hash1, hash2) ->
     hash1[key] = hash2[key]
   hash1
 
+# A simple synchronous cache.  Entries which are used within each timeout period will remain cached.  Those
+# that aren't will be dropped.
+class SimpleCache
+  constructor: (timeout=1000*60*60*24) ->
+    @current = {}
+    @previous = {}
+    setInterval((=> @rotate()), timeout)
+
+  set: (key, value) ->
+    delete @previous[key]
+    @current[key] = value
+
+  get: (key) ->
+    return @current[key] if @current[key]
+    return @set(key, @previous[key]) if @previous[key]
+    return null
+
+  rotate: ->
+    @previous = @current
+    @current = {}
+
 root = exports ? window
 root.Utils = Utils
+root.SimpleCache = SimpleCache

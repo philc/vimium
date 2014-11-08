@@ -652,24 +652,58 @@ fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
     reader.onerror = sendError "read-error"
     reader.onloadend = ->
       sendResponse { data: reader.result, type: xhr.response.type }
-  xhr.send()
+  # Some favicon URL guesses are so bad that they raise exceptions immediately.
+  try
+    xhr.send()
+  catch
+    sendError("invalid-request")()
+    return false # sendResponse will not be called asynchronously.
   true # sendResponse will be called asynchronously.
 
-# Fetch a favicon and send it to the requester.  However, if the favicon is chrome's default favicon, then
-# instead send an error.
+# Fetch a favicon and send it to the requester.  However, if the response is chrome's default favicon, which
+# we don't want to use, then instead send an error.
+#
+# Favicons are cached based on both the domain of the request and on the URL.  Caching on the domain
+# short-circuits the current and future guesses (if the domain is in the cache, then we don't need to try any
+# URLs).  Caching on the URL is primarily for cases where we fail to find *any* usable favicon.  In this case,
+# we fall back to @guessGoogleFaviconUrl (which doesn't depend upon the domain).  So we get a cache hit (even
+# for domains we've never seen before), and all such failures end up sharing a single response object, which
+# itself is only fetched once.
 fetchFavicon = do ->
   nonExistentFaviconUrl = "chrome://favicon/ThisShouldNotExist-SoWeGetTheChromeDefaultFavicon"
-  chromeDefaultFavicon = null
+  defaultFaviconError = { error: "chrome-default-favicon", errorSource: "fetchFavicon" }
+  unfetchableError = { error: "unfetchable", errorSource: "fetchFavicon" }
+  cache = new SimpleCache 1000*60*60*24*7 # Rotate the cache every seven days.
+  callbacks = {}
+  chromeDefaultFavicon = ""
 
-  fetcher = (request, sender, sendResponse) ->
-    fetchViaHttpAsBase64 request, sender, (response) ->
-      if response.data and response.type and 0 == response.type.indexOf "image/"
-        if response.data != chromeDefaultFavicon
-          return sendResponse response
-      sendResponse { error: "chrome-default-favicon", errorSource: "fetchFavicon" }
+  fetcher = (request, sender=undefined, sendResponse=undefined) ->
+    if 0 == request.url.indexOf "chrome://theme/" # We can't fetch these.
+      sendResponse unfetchableError
+      return false # sendResponse will not be called asynchronously.
+    if response = cache.get request.url
+      cache.set request.domain, response
+    if response = (cache.get(request.domain) or cache.get(request.url))
+      sendResponse response
+      false # sendResponse will not be called asynchronously.
+    else if callbacks[request.url]
+      callbacks[request.url].push sendResponse
+      true # sendResponse will be called asynchronously.
+    else
+      callbacks[request.url] = [ sendResponse ]
+      fetchViaHttpAsBase64 request, sender, (response) ->
+        responseOk = response.type and not response.type.indexOf "image/"
+        responseOk &&= response.data and response.data != chromeDefaultFavicon
+        if responseOk
+          cache.set request.url, response
+          cache.set request.domain, response
+        else
+          response = defaultFaviconError
+        callback(response) for callback in callbacks[request.url] when callback
+        delete callbacks[request.url]
 
   # Fetch chrome's default favicon.
-  fetcher { url: nonExistentFaviconUrl }, null, (response) ->
+  fetcher { url: nonExistentFaviconUrl, domain: nonExistentFaviconUrl }, null, (response) ->
     chromeDefaultFavicon = response.data if response.data and not response.error
 
   return fetcher
