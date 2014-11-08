@@ -637,74 +637,45 @@ getCurrFrameIndex = (frames) ->
   frames.length + 1
 
 # Launch an asynchronous HTTP request and send the response as a base64-encoded data: URI.
-fetchViaHttpAsBase64 = (request, sender, sendResponse) ->
-  sendError = (error) -> (-> sendResponse { error: error, errorSource: "fetchViaHttpAsBase64" })
+fetchViaHttpAsBase64 = (request, sendResponse) ->
   xhr = new XMLHttpRequest()
   xhr.open("GET", request.url, true)
   xhr.responseType = "blob"
   xhr.timeout = request.timeout || 5000
-  xhr.ontimeout = sendError "xmlhttprequest-timeout"
-  xhr.onerror = sendError "xmlhttprequest-error"
+  xhr.ontimeout = -> sendResponse {}
+  xhr.onerror = -> sendResponse {}
   xhr.onload = ->
-    return sendError("http-error")() unless xhr.status == 200 and xhr.readyState == 4
+    return sendResponse({}) unless xhr.status == 200 and xhr.readyState == 4
     reader = new window.FileReader()
     reader.readAsDataURL xhr.response
-    reader.onerror = sendError "read-error"
+    reader.onerror = -> sendResponse {}
     reader.onloadend = ->
       sendResponse { data: reader.result, type: xhr.response.type }
-  # Some favicon URL guesses are so bad that they raise exceptions immediately.
-  try
-    xhr.send()
-  catch
-    sendError("invalid-request")()
-    return false # sendResponse will not be called asynchronously.
+  xhr.send()
   true # sendResponse will be called asynchronously.
 
-# Fetch a favicon and send it to the requester.  However, if the response is chrome's default favicon, which
-# we don't want to use, then instead send an error.
-#
-# Favicons are cached based on both the domain of the request and on the URL.  Caching on the domain
-# short-circuits the current and future guesses (if the domain is in the cache, then we don't need to try any
-# URLs).  Caching on the URL is primarily for cases where we fail to find *any* usable favicon.  In this case,
-# we fall back to @guessGoogleFaviconUrl (which doesn't depend upon the domain).  So we get a cache hit (even
-# for domains we've never seen before), and all such failures end up sharing a single response object, which
-# itself is only fetched once.
 fetchFavicon = do ->
-  nonExistentFaviconUrl = "chrome://favicon/ThisShouldNotExist-SoWeGetTheChromeDefaultFavicon"
-  defaultFaviconError = { error: "chrome-default-favicon", errorSource: "fetchFavicon" }
-  unfetchableError = { error: "unfetchable", errorSource: "fetchFavicon" }
-  cache = new SimpleCache 1000*60*60*24*7 # Rotate the cache every seven days.
-  callbacks = {}
-  chromeDefaultFavicon = ""
+  defaultFavicon = ""
+  cache = new SimpleCache 1000*60*60*24*8 # Eight days.
 
-  fetcher = (request, sender=undefined, sendResponse=undefined) ->
-    if 0 == request.url.indexOf "chrome://theme/" # We can't fetch these.
-      sendResponse unfetchableError
-      return false # sendResponse will not be called asynchronously.
-    if response = cache.get request.url
-      cache.set request.domain, response
-    if response = (cache.get(request.domain) or cache.get(request.url))
-      sendResponse response
-      false # sendResponse will not be called asynchronously.
-    else if callbacks[request.url]
-      callbacks[request.url].push sendResponse
-      true # sendResponse will be called asynchronously.
-    else
-      callbacks[request.url] = [ sendResponse ]
-      fetchViaHttpAsBase64 request, sender, (response) ->
-        responseOk = response.type and not response.type.indexOf "image/"
-        responseOk &&= response.data and response.data != chromeDefaultFavicon
-        if responseOk
-          cache.set request.url, response
-          cache.set request.domain, response
-        else
-          response = defaultFaviconError
-        callback(response) for callback in callbacks[request.url] when callback
-        delete callbacks[request.url]
+  fetcher = (request, _, sendResponse) ->
+    url = request.url
+    return sendResponse(response) if response = cache.get url
+    request.url = "chrome://favicon/#{url}"
+    fetchViaHttpAsBase64 request, (response) ->
+      return sendResponse({}) unless response.data
+      return sendResponse({}) unless response.type
+      return sendResponse({}) unless response.type.startsWith "image/"
+      if response.data == defaultFavicon
+        # Approach: only use the chrome default favicon for chrome URLs.
+        isChromeUrl = Utils.hasChromePrefix(url)
+        cache.set(url,response) if isChromeUrl
+        return sendResponse(if isChromeUrl then response else {})
+      sendResponse cache.set url, response
 
-  # Fetch chrome's default favicon.
-  fetcher { url: nonExistentFaviconUrl, domain: nonExistentFaviconUrl }, null, (response) ->
-    chromeDefaultFavicon = response.data if response.data and not response.error
+  # Fetch the default chrome favicon.
+  fetcher {url: "chrome://favicon/does-not-exits---hopefully---kz85S6j"}, null, (response) ->
+    defaultFavicon = response.data if response.data
 
   return fetcher
 

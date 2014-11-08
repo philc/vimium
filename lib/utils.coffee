@@ -26,7 +26,7 @@ Utils =
     -> id += 1
 
   hasChromePrefix: (url) ->
-    chromePrefixes = [ "about", "view-source", "chrome-extension", "data" ]
+    chromePrefixes = [ "about", "view-source", "chrome-extension", "data", "chrome-devtools" ]
     for prefix in chromePrefixes
       return true if url.startsWith prefix
     false
@@ -156,7 +156,7 @@ class SimpleCache
   constructor: (timeout=1000*60*60*24) ->
     @current = {}
     @previous = {}
-    setInterval((=> @rotate()), timeout)
+    setInterval((=> @rotate()), timeout) if timeout
 
   set: (key, value) ->
     delete @previous[key]

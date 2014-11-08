@@ -19,15 +19,13 @@ class Suggestion
   # - computeRelevancyFunction: a function which takes a Suggestion and returns a relevancy score
   #   between [0, 1]
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
-  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData, @favIconDomain) ->
+  constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
     @title ||= ""
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
   generateHtml: ->
     return @html if @html
-    favIconDomain = @favIconDomain or Suggestion.parseDomain @url
-    favIconUrl = @favIconUrl or ""
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
@@ -37,7 +35,7 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
       </div>
       <div class="vimiumReset vomnibarBottomHalf">
-         <img class="vimiumReset vomnibarIcon" domain="#{favIconDomain}" favIconUrl="#{favIconUrl}" src=""/><nobr>
+         <img class="vimiumReset vomnibarIcon" url="#{@url}" src=""/><nobr>
          <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
          #{relevancyHtml}
       </div>
@@ -214,9 +212,7 @@ class DomainCompleter
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
-    suggestion = new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy, undefined,
-      topDomain)
-    onComplete([suggestion])
+    onComplete([new Suggestion(queryTerms, "domain", topDomain, null, @computeRelevancy)])
 
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -268,7 +264,6 @@ class TabCompleter
       suggestions = results.map (tab) =>
         suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
         suggestion.tabId = tab.id
-        suggestion.favIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 
