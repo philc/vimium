@@ -36,40 +36,51 @@ getDimension = (el, direction, amount) ->
     amount
 
 # Test whether element should be scrolled.
-isScrollable = (element, direction) ->
+isScrollAllowed = (element, direction) ->
   # Elements with `overflow: hidden` should not be scrolled.
-  overflow = window.getComputedStyle(element).getPropertyValue("overflow-#{direction}")
-  return false if overflow == "hidden"
-  return true
+  window.getComputedStyle(element).getPropertyValue("overflow-#{direction}") != "hidden"
 
-# Chrome does not report scrollHeight accurately for nodes with pseudo-elements of height 0 (bug 110149).
-# Therefore we cannot figure out if we have scrolled to the bottom of an element by testing if scrollTop +
-# clientHeight == scrollHeight. So just try to increase scrollTop blindly -- if it fails we know we have
-# reached the end of the content.
-ensureScrollChange = (direction, changeFn) ->
+# Test whether element actually scrolls in the direction required when asked to do so.
+# Due to chrome bug 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an
+# element will scroll.  Instead, we scroll the element by 1 or -1 and see if it moved.
+isScrollPossible = (element, direction, amount, factor) ->
   axisName = scrollProperties[direction].axisName
-  element = activatedElement
-  progress = 0
-  loop
-    oldScrollValue = element[axisName]
-    changeFn(element, axisName) if isScrollable element, direction
-    progress += element[axisName] - oldScrollValue
-    break unless element[axisName] == oldScrollValue && element != document.body
-    # we may have an orphaned element. if so, just scroll the body element.
-    element = element.parentElement || document.body
+  # delta, here, is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls
+  # (only gg, G, and friends), amount can be either 'max' or zero. In the former case, we're definitely
+  # scrolling forwards, so any positive value will do for delta.  In the latter case, we're definitely
+  # scrolling backwards, so a delta of -1 will do.
+  delta = factor * getDimension(element, direction, amount) || -1
+  delta = delta / Math.abs delta # 1 or -1
+  before = element[axisName]
+  element[axisName] += delta
+  after = element[axisName]
+  element[axisName] = before
+  before != after
 
-  # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
-  # position will not provide any more visual feedback to the user. therefore we deactivate it so that
-  # subsequent scrolls only move the parent element.
-  rect = activatedElement.getBoundingClientRect()
-  if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
-    activatedElement = element
+# Find the element we should and can scroll.
+findScrollableElement = (element, direction, amount, factor = 1) ->
+  axisName = scrollProperties[direction].axisName
+  while element != document.body and
+    not (isScrollPossible(element, direction, amount, factor) and isScrollAllowed(element, direction))
+      element = element.parentElement || document.body
+  element
+
+performScroll = (element, axisName, amount, checkVisibility = true) ->
+  before = element[axisName]
+  element[axisName] += amount
+
+  if checkVisibility
+    # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
+    # position will not provide any more visual feedback to the user. therefore we deactivate it so that
+    # subsequent scrolls only move the parent element.
+    rect = activatedElement.getBoundingClientRect()
+    if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
+      activatedElement = element
+
   # Return the amount by which the scroll position has changed.
-  return progress
+  element[axisName] - before
 
-# Scroll by a relative amount in some direction, possibly smoothly.
-# The constants below seem to roughly match chrome's scroll speeds for both short and long scrolls.
-# TODO(smblott) For very-long scrolls, chrome implements a soft landing; we don't.
+# Scroll by a relative amount (a number) in some direction, possibly smoothly.
 doScrollBy = do ->
   interval = 10 # Update interval (in ms).
   duration = 120 # This must be a multiple of interval (also in ms).
@@ -87,30 +98,27 @@ doScrollBy = do ->
     # Ensure we have a multiple of interval.
     return interval * Math.round (extra / interval)
 
-  scroller = (direction,amount) ->
-    return ensureScrollChange direction, (element, axisName) -> element[axisName] += amount
-
-  (direction,amount,wantSmooth) ->
+  (element, direction, amount, wantSmooth) ->
+    axisName = scrollProperties[direction].axisName
     clearTimer()
 
     unless wantSmooth and settings.get "smoothScroll"
-      scroller direction, amount
-      return
+      return performScroll element, axisName, amount
 
     requiredTicks = (duration + calculateExtraDuration amount) / interval
-    # Round away from 0, so that we don't leave any requested scroll amount unscrolled.
-    rounder = (if 0 <= amount then Math.ceil else Math.floor)
-    delta = rounder(amount / requiredTicks)
+    # Round away from 0, so that we don't leave any scroll amount unscrolled.
+    delta = (if 0 <= amount then Math.ceil else Math.floor)(amount / requiredTicks)
 
-    ticks = 0
-    ticker = ->
-      # If we haven't scrolled by the expected amount, then we've hit the top, bottom or side of the activated
-      # element, so stop scrolling.
-      if scroller(direction, delta) != delta or ++ticks == requiredTicks
-        clearTimer()
+    if delta
+      ticks = 0
+      ticker = ->
+        if performScroll(element, axisName, delta, false) != delta or ++ticks == requiredTicks
+          # One final call of performScroll to check the visibility of the activated element.
+          performScroll(element, axisName, 0, true)
+          clearTimer()
 
-    timer = setInterval ticker, interval
-    ticker()
+      timer = setInterval ticker, interval
+      ticker()
 
 # scroll the active element in :direction by :amount * :factor.
 # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -126,28 +134,19 @@ root.scrollBy = (direction, amount, factor = 1) ->
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  elementAmount = getDimension activatedElement, direction, amount
-  elementAmount *= factor
+  element = findScrollableElement activatedElement, direction, amount, factor
+  elementAmount = factor * getDimension element, direction, amount
+  doScrollBy element, direction, elementAmount, true
 
-  doScrollBy direction, elementAmount, true
-
-root.scrollTo = (direction, pos, wantSmooth=false) ->
+root.scrollTo = (direction, pos, wantSmooth = false) ->
   return unless document.body
 
   if (!activatedElement || !isRendered(activatedElement))
     activatedElement = document.body
 
-  # Find the deepest scrollable element which would move if we scrolled it.  This is the element which
-  # ensureScrollChange will scroll.
-  # TODO(smblott) We're pretty much copying what ensureScrollChange does here.  Refactor.
-  element = activatedElement
-  axisName = scrollProperties[direction].axisName
-  while element != document.body and
-    (getDimension(element, direction, pos) == element[axisName] or not isScrollable element, direction)
-      element = element.parentElement || document.body
-
-  amount = getDimension(element,direction,pos) - element[axisName]
-  doScrollBy direction, amount, wantSmooth
+  element = findScrollableElement activatedElement, direction, pos
+  amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
+  doScrollBy element, direction, amount, wantSmooth
 
 # TODO refactor and put this together with the code in getVisibleClientRect
 isRendered = (element) ->
