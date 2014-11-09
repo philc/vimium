@@ -259,7 +259,7 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
-# TabRecency associates a timestamp with each tab id.
+# TabRecency associates a logical timestamp with each tab id.
 class TabRecency
   constructor: ->
     @timestamp = 1
@@ -297,10 +297,10 @@ class TabCompleter
       onComplete(suggestions)
 
   computeRelevancy: (suggestion) ->
-    if 0 < suggestion.queryTerms.length
+    if suggestion.queryTerms.length
       RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
     else
-      tabRecency.recencyScore suggestion.tabId
+      tabRecency.recencyScore(suggestion.tabId)
 
 # A completer which will return your search engines
 class SearchEngineCompleter
