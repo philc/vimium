@@ -24,10 +24,12 @@ class Suggestion
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
+  @faviconId: 0 # Static.
   generateHtml: ->
     return @html if @html
-    favIconUrl = @tabFavIconUrl or "#{@getUrlRoot(@url)}/favicon.ico"
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
+    Suggestion.faviconId += 1
+    @faviconId = "vimium-favicon-id-#{Suggestion.faviconId}"
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       """
@@ -35,11 +37,11 @@ class Suggestion
          <span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
        </div>
-       <div class="vimiumReset vomnibarBottomHalf vomnibarIcon"
-            style="background-image: url(#{favIconUrl});">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
-        #{relevancyHtml}
-      </div>
+       <div class="vimiumReset vomnibarBottomHalf">
+         <img class="vimiumReset vomnibarIcon" id="#{@faviconId}" src=""/><nobr>
+         <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
+         #{relevancyHtml}
+       </div>
       """
 
   # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
@@ -294,7 +296,6 @@ class TabCompleter
       suggestions = results.map (tab) =>
         suggestion = new Suggestion(queryTerms, "tab", tab.url, tab.title, @computeRelevancy)
         suggestion.tabId = tab.id
-        suggestion.tabFavIconUrl = tab.favIconUrl
         suggestion
       onComplete(suggestions)
 

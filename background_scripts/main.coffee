@@ -56,11 +56,27 @@ chrome.runtime.onConnect.addListener((port, name) ->
     port.onMessage.addListener(portHandlers[port.name])
 )
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
+# Ensure :sendResponse is called eventually.  After two minutes and one second, we assume an error and call it
+# directly.
+sendResponseWithTimeout = (sendResponse) ->
+  timer = null
+
+  doSendResponse = (response={}) ->
+    if timer
+      sendResponse response
+      clearTimer()
+      timer = null
+
+  timer = setTimeout doSendResponse, 121000
+  return doSendResponse
+
+chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
+  if (sendRequestAsyncHandlers[request.handler])
+    # Handlers must return true if they will respond asynchronously, false otherwise.
+    return sendRequestAsyncHandlers[request.handler](request, sender, sendResponseWithTimeout(sendResponse))
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
-  # Ensure the sendResponse callback is freed.
-  return false)
+  false # sendResponse will not be called asynchronously.
 
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
@@ -619,6 +635,47 @@ getCurrFrameIndex = (frames) ->
     return i if frames[i].id == focusedFrame
   frames.length + 1
 
+# Launch an asynchronous HTTP request and send the response as a base64-encoded data: URI.
+fetchViaHttpAsBase64 = (request, sendResponse) ->
+  xhr = new XMLHttpRequest()
+  xhr.open("GET", request.url, true)
+  xhr.responseType = "blob"
+  xhr.onerror = xhr.ontimeout = -> sendResponse {}
+  xhr.onload = ->
+    return sendResponse({}) unless xhr.status == 200 and xhr.readyState == 4
+    reader = new window.FileReader()
+    reader.readAsDataURL xhr.response
+    reader.onerror = -> sendResponse {}
+    reader.onloadend = -> sendResponse {data: reader.result, type: xhr.response.type}
+  xhr.send()
+  true # sendResponse will be called asynchronously.
+
+fetchFavicon = do ->
+  defaultFavicon = ""
+
+  # The favicons cache maps Urls to responses; it is the primary cache.
+  # The responses cache maps favicon data Uris to responses; we try to keep only a single copy of each favicon.
+  favicons = new SimpleCache 1000*60*60*24*2 # Two days.
+  responses = new SimpleCache 1000*60*60*24*2 # Two days.
+
+  fetcher = (request, _, sendResponse) ->
+    url = request.url.split("&",1)[0].split("#",1)[0] # Strip parameters and fragment.
+    if response = favicons.get url
+      sendResponse response
+      return false # sendResponse will not be called asynchronously.
+    fetchViaHttpAsBase64 {url: "chrome://favicon/#{url}"}, (response) ->
+      ok = response.data and response.type and response.type.startsWith "image/"
+      # Only use the chrome default favicon for chrome Urls.
+      ok = ok and (response.data != defaultFavicon or Utils.hasChromePrefix(url))
+      return sendResponse({}) unless ok
+      response = responses.get(response.data) or response
+      sendResponse favicons.set url, responses.set response.data, response
+
+  fetcher {url: "this-does-not-exits---hopefully---kz85S6j"}, null, (response) ->
+    defaultFavicon = response.data if response.data
+
+  return fetcher
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -643,6 +700,9 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
+
+sendRequestAsyncHandlers =
+  fetchFavicon: fetchFavicon
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
