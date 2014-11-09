@@ -77,8 +77,10 @@ VimiumHelpDialog =
 
     if showCommandNames
       @stylesheet.insertRule("span.vimiumReset.commandName {display: inline;}", 0)
-      @stylesheet.insertRule("tr.vimiumReset.commandRow {display: table-row;}", 1)
+      @stylesheet.insertRule("tr.vimiumReset.commandRow.unmappedCommand {display: table-row;}", 1)
     @showAdvancedCommands(@getShowAdvancedCommands())
+    settings.addEventListener("load", =>
+      @showAdvancedCommands(@getShowAdvancedCommands()))
     @dialogElement.style.visibility = "visible"
     @dialogElement.click() # Click the dialog element so that it is registered as the scrolling element.
 

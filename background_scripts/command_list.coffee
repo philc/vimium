@@ -14,7 +14,7 @@
 #   advanced:    [Optional] A boolean specifying whether the command is advanced (and hence should be hidden
 #                behind the "show advanced commands" toggle in the help dialog.
 commandLists =
-  pageNavigation: [
+  pageScrolling: [
     {
       name: "scrollDown"
       description: "Scroll down"
@@ -89,148 +89,11 @@ commandLists =
       context: "frame"
       repeat: "normal"
     }
-    {
-      name: "reload"
-      description: "Reload the page"
-      context: "frame"
-      repeat: "none"
-    }
+  ]
+  pageNavigation: [
     {
       name: "toggleViewSource"
       description: "View page source"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "copyCurrentUrl"
-      description: "Copy the current URL to the clipboard"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "LinkHints.activateModeToCopyLinkUrl"
-      description: "Copy a link URL to the clipboard"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "openCopiedUrlInCurrentTab"
-      description: "Open the clipboard's URL in the current tab"
-      context: "background"
-      repeat: "normal"
-      repeatLimit: 20
-    }
-    {
-      name: "openCopiedUrlInNewTab"
-      description: "Open the clipboard's URL in a new tab"
-      context: "background"
-      repeat: "normal"
-    }
-    {
-      name: "goUp"
-      description: "Go up the URL hierarchy"
-      context: "frame"
-      repeat: "pass_to_function"
-      advanced: true
-    }
-    {
-      name: "goToRoot"
-      description: "Go to root of current URL hierarchy"
-      context: "frame"
-      repeat: "none"
-      advanced: true
-    }
-    {
-      name: "enterInsertMode"
-      description: "Enter insert mode"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "focusInput"
-      description: "Focus the first text box on the page. Cycle between them using tab"
-      context: "frame"
-      repeat: "pass_to_function"
-      advanced: true
-    }
-    {
-      name: "LinkHints.activateMode"
-      description: "Open a link in the current tab"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "LinkHints.activateModeToOpenInNewTab"
-      description: "Open a link in a new tab"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "LinkHints.activateModeToOpenInNewForegroundTab"
-      description: "Open a link in a new tab & switch to it"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "LinkHints.activateModeWithQueue"
-      description: "Open multiple links in a new tab"
-      context: "frame"
-      repeat: "none"
-      advanced: true
-    }
-    {
-      name: "LinkHints.activateModeToDownloadLink"
-      description: "Download link url"
-      context: "frame"
-      repeat: "none"
-      advanced: true
-    }
-    {
-      name: "LinkHints.activateModeToOpenIncognito"
-      description: "Open a link in incognito window"
-      context: "frame"
-      repeat: "none"
-      advanced: true
-    }
-    {
-      name: "Vomnibar.activate"
-      description: "Open URL, bookmark, or history entry"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "Vomnibar.activateInNewTab"
-      description: "Open URL, bookmark, history entry, in a new tab"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "Vomnibar.activateTabSelection"
-      description: "Search through your open tabs"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "Vomnibar.activateBookmarks"
-      description: "Open a bookmark"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "Vomnibar.activateBookmarksInNewTab"
-      description: "Open a bookmark in a new tab"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "Vomnibar.activateEditUrl"
-      description: "Edit the current URL"
-      context: "frame"
-      repeat: "none"
-    }
-    {
-      name: "Vomnibar.activateEditUrlInNewTab"
-      description: "Edit the current URL and open in a new tab"
       context: "frame"
       repeat: "none"
     }
@@ -269,6 +132,141 @@ commandLists =
       advanced: true
     }
   ]
+  urlManipulation: [
+    {
+      name: "copyCurrentUrl"
+      description: "Copy the current URL to the clipboard"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "openCopiedUrlInCurrentTab"
+      description: "Open the clipboard's URL in the current tab"
+      context: "background"
+      repeat: "normal"
+      repeatLimit: 20
+    }
+    {
+      name: "openCopiedUrlInNewTab"
+      description: "Open the clipboard's URL in a new tab"
+      context: "background"
+      repeat: "normal"
+    }
+    {
+      name: "goUp"
+      description: "Go up the URL hierarchy"
+      context: "frame"
+      repeat: "pass_to_function"
+      advanced: true
+    }
+    {
+      name: "goToRoot"
+      description: "Go to root of current URL hierarchy"
+      context: "frame"
+      repeat: "none"
+      advanced: true
+    }
+    {
+      name: "Vomnibar.activateEditUrl"
+      description: "Edit the current URL"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "Vomnibar.activateEditUrlInNewTab"
+      description: "Edit the current URL and open in a new tab"
+      context: "frame"
+      repeat: "none"
+    }
+  ]
+  insertMode: [
+    {
+      name: "enterInsertMode"
+      description: "Enter insert mode"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "focusInput"
+      description: "Focus the first text box on the page. Cycle between them using tab"
+      context: "frame"
+      repeat: "pass_to_function"
+      advanced: true
+    }
+  ]
+  linkHints: [
+    {
+      name: "LinkHints.activateMode"
+      description: "Open a link in the current tab"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "LinkHints.activateModeToOpenInNewTab"
+      description: "Open a link in a new tab"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "LinkHints.activateModeToOpenInNewForegroundTab"
+      description: "Open a link in a new tab & switch to it"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "LinkHints.activateModeWithQueue"
+      description: "Open multiple links in a new tab"
+      context: "frame"
+      repeat: "none"
+      advanced: true
+    }
+    {
+      name: "LinkHints.activateModeToCopyLinkUrl"
+      description: "Copy a link URL to the clipboard"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "LinkHints.activateModeToDownloadLink"
+      description: "Download link url"
+      context: "frame"
+      repeat: "none"
+      advanced: true
+    }
+    {
+      name: "LinkHints.activateModeToOpenIncognito"
+      description: "Open a link in incognito window"
+      context: "frame"
+      repeat: "none"
+      advanced: true
+    }
+  ]
+  vomnibar: [
+    {
+      name: "Vomnibar.activate"
+      description: "Open URL, bookmark, or history entry"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "Vomnibar.activateInNewTab"
+      description: "Open URL, bookmark, history entry, in a new tab"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "Vomnibar.activateBookmarks"
+      description: "Open a bookmark"
+      context: "frame"
+      repeat: "none"
+    }
+    {
+      name: "Vomnibar.activateBookmarksInNewTab"
+      description: "Open a bookmark in a new tab"
+      context: "frame"
+      repeat: "none"
+    }
+  ]
   findCommands: [
     {
       name: "enterFindMode"
@@ -290,6 +288,12 @@ commandLists =
     }
   ]
   historyNavigation: [
+    {
+      name: "reload"
+      description: "Reload the page"
+      context: "frame"
+      repeat: "none"
+    }
     {
       name: "goBack"
       description: "Go back in history"
@@ -327,6 +331,12 @@ commandLists =
       description: "Go to the last tab"
       context: "background"
       repeat: "normal"
+    }
+    {
+      name: "Vomnibar.activateTabSelection"
+      description: "Search through your open tabs"
+      context: "frame"
+      repeat: "none"
     }
     {
       name: "createTab"
@@ -416,7 +426,12 @@ commandLists =
   ]
 
 groupDescriptions =
+  pageScrolling: "Scrolling the page"
   pageNavigation: "Navigating the page"
+  urlManipulation: "Manipulating URLs"
+  insertMode: "Insert mode"
+  linkHints: "Working with links"
+  vomnibar: "Navigate to a page"
   findCommands: "Using find"
   historyNavigation: "Navigating history"
   tabManipulation: "Manipulating tabs"

@@ -84,8 +84,7 @@ settings =
         listener()
 
   addEventListener: (eventName, callback) ->
-    if (!(eventName of @eventListeners))
-      @eventListeners[eventName] = []
+    @eventListeners[eventName] ?= []
     @eventListeners[eventName].push(callback)
 
 #
