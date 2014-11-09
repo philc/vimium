@@ -95,3 +95,9 @@ exports.chrome =
         callback() if callback
         # Now, generate (supposedly asynchronous) notification for listeners.
         global.chrome.storage.onChanged.callEmpty(key)
+
+class XMLHttpRequest
+  open: -> true
+  send: -> true
+
+exports.XMLHttpRequest = XMLHttpRequest

@@ -26,7 +26,7 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:", "chrome-devtools:" ]
     (url) ->
       if 0 < url.indexOf ":"
         for prefix in chromePrefixes
@@ -136,6 +136,28 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
+# A simple synchronous cache. Entries which are used within each timeout period remain cached.  Those that
+# aren't are removed.
+class SimpleCache
+  constructor: (timeout=1000*60*60*24) ->
+    @current = {}
+    @previous = {}
+    setInterval((=> @rotate()), timeout) if timeout
+
+  # NOTE: This returns the new value.
+  set: (key, value) ->
+    delete @previous[key]
+    @current[key] = value
+
+  get: (key) ->
+    return @current[key] if @current[key]
+    return @set(key, @previous[key]) if @previous[key]
+    return null
+
+  rotate: ->
+    @previous = @current
+    @current = {}
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
@@ -155,3 +177,4 @@ globalRoot.extend = (hash1, hash2) ->
 
 root = exports ? window
 root.Utils = Utils
+root.SimpleCache = SimpleCache

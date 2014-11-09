@@ -2,6 +2,8 @@ context "Keep selection within bounds",
 
   setup ->
     @completions = []
+    @faviconId = "1234"
+    @html = '<img id="' + @faviconId + '" src=""/>'
     oldGetCompleter = Vomnibar.getCompleter.bind Vomnibar
     stub Vomnibar, 'getCompleter', (name) =>
       completer = oldGetCompleter name
@@ -19,7 +21,7 @@ context "Keep selection within bounds",
     ui.update(true)
     assert.equal -1, ui.selection
 
-    @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
+    @completions = [{html:@html,type:'tab',url:'http://example.com',faviconId:@faviconId}]
     ui.update(true)
     assert.equal -1, ui.selection
 
@@ -35,7 +37,7 @@ context "Keep selection within bounds",
     ui.update(true)
     assert.equal -1, ui.selection
 
-    @completions = [{html:'foo',type:'bookmark',url:'http://example.com'}]
+    @completions = [{html:@html,type:'bookmark',url:'http://example.com',faviconId:@faviconId}]
     ui.update(true)
     assert.equal 0, ui.selection
 
@@ -54,7 +56,7 @@ context "Keep selection within bounds",
       preventDefault: ->
       stopImmediatePropagation: ->
 
-    @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
+    @completions = [{html:@html,type:'tab',url:'http://example.com',faviconId:@faviconId}]
     ui.update(true)
     stub ui, "actionFromKeyEvent", -> "down"
     ui.onKeydown eventMock
