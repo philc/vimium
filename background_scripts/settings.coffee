@@ -61,6 +61,7 @@ root.Settings = Settings =
   # or strings
   defaults:
     scrollStepSize: 60
+    smoothScroll: false
     keyMappings: "# Insert your prefered key mappings here."
     linkHintCharacters: "sadfjklewcmpgh"
     linkHintNumbers: "0123456789"
