@@ -280,7 +280,7 @@ extend window,
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
     # Pressing any other key will remove the overlays and the special tab behavior.
-    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+    resultSet = DomUtils.evaluateXPath(textInputXPath)
     visibleInputs =
       for i in [0...resultSet.snapshotLength] by 1
         element = resultSet.snapshotItem(i)
@@ -797,7 +797,7 @@ followLink = (linkElement) ->
 #
 findAndFollowLink = (linkStrings) ->
   linksXPath = DomUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"])
-  links = DomUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+  links = DomUtils.evaluateXPath(linksXPath)
   candidateLinks = []
 
   # at the end of this loop, candidateLinks will contain all visible links that match our patterns

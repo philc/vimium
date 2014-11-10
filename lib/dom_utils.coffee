@@ -36,7 +36,7 @@ DomUtils =
       xpath.push("//" + elementArray[i], "//xhtml:" + elementArray[i])
     xpath.join(" | ")
 
-  evaluateXPath: (xpath, resultType) ->
+  evaluateXPath: (xpath, resultType = XPathResult.ORDERED_NODE_SNAPSHOT_TYPE) ->
     namespaceResolver = (namespace) ->
       if (namespace == "xhtml") then "http://www.w3.org/1999/xhtml" else null
     document.evaluate(xpath, document.documentElement, namespaceResolver, resultType, null)
@@ -161,6 +161,7 @@ DomUtils =
                     accesskey.length == 1
 
       generateAccesskeyToElems() unless accesskeyToElems?
+      return unless accesskey of accesskeyToElems # Nothing to do if no elements capture this key
       element.removeAttribute("accesskey") for element in accesskeyToElems[accesskey]
       return ->
         element.setAttribute("accesskey", accesskey) for element in accesskeyToElems[accesskey]

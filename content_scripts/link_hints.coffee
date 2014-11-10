@@ -141,7 +141,7 @@ LinkHints =
   # of digits needed to enumerate all of the links on screen.
   #
   getVisibleClickableElements: ->
-    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath)
 
     visibleElements = []
 
