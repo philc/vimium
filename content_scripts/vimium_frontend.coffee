@@ -442,6 +442,7 @@ onKeydown = (event) ->
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1)
         DomUtils.suppressEvent event
+        handlerStack.push({ keyup: DomUtils.suppressAccesskeyAction event })
         handledKeydownEvents.push event
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })

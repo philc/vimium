@@ -134,5 +134,39 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
+  # The browser ignores our DomUtils.suppressEvent when activating an element via its accesskey. Removing the
+  # accesskey attribute of all elements which would be triggered is the only way to stop the browser from
+  # doing this.
+  # We return a function to restore all of the accesskeys, to be called at the corresponding keyup function.
+  suppressAccesskeyAction: do ->
+    accesskeyToElems = null # Mapping of accesskey -> [elements]
+
+    # Generate a cache of elements with accesskey set.
+    generateAccesskeyToElems = ->
+      accesskeyToElems = []
+      accesskeyElementList = document.querySelectorAll("*[accesskey]")
+      for element in accesskeyElementList
+        accesskey = element.getAttribute("accesskey").toLowerCase()
+        (accesskeyToElems[accesskey] ?= []).push element
+
+    (event) ->
+      return unless event.type == "keydown"
+
+      # The key combo to activate an accesskey element is a printing character with the modifiers:
+      #  * alt        on Windows/Linux
+      #  * ctrl, alt  on Mac
+      accesskey = KeyboardUtils.getKeyChar(event).toLowerCase()
+      return unless event.ctrlKey == (KeyboardUtils.platform == "Mac") and
+                    event.altKey == true and
+                    accesskey.length == 1
+
+      generateAccesskeyToElems() unless accesskeyToElems?
+      element.removeAttribute("accesskey") for element in accesskeyToElems[accesskey]
+      return ->
+        element.setAttribute("accesskey", accesskey) for element in accesskeyToElems[accesskey]
+        @remove?()
+        true
+
+
 root = exports ? window
 root.DomUtils = DomUtils
