@@ -12,7 +12,7 @@
 #                user from tab creation/deletion commands. repeat must be one of "normal", "pass_to_function"
 #                for this option to be valid.
 #   advanced:    [Optional] A boolean specifying whether the command is advanced (and hence should be hidden
-#                behind the "show advanced commands" toggle in the help dialog.
+#                behind the "show advanced commands" toggle in the help dialog).
 commandLists =
   pageScrolling: [
     {

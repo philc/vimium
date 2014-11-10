@@ -12,41 +12,45 @@ context "Key mappings",
     assert.equal (Commands.normalizeKey '<C-F12>'), '<c-f12>'
 
 context "Validate commands and options",
-  should "have either noRepeat or repeatLimit, but not both", ->
+  should "have a description for each command group", ->
     # TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
     # of the offending command appears in the output, if the test fails?
-    for command, options of Commands.availableCommands
-      assert.isTrue not (options.noRepeat and options.repeatLimit)
+    for group, commands of commandLists
+      assert.equal "string", typeof groupDescriptions[group]
 
-  should "describe each command", ->
-    for command, options of Commands.availableCommands
-      assert.equal 'string', typeof options.description
-
-  should "define each command in each command group", ->
-    for group, commands of Commands.commandGroups
+  should "have a name for each command", ->
+    for group, commands of commandLists
       for command in commands
-        assert.equal 'string', typeof command
-        assert.isTrue Commands.availableCommands[command]
+        assert.equal "string", typeof command.name
 
-  should "have valid commands for each advanced command", ->
-    for command in Commands.advancedCommands
-      assert.equal 'string', typeof command
-      assert.isTrue Commands.availableCommands[command]
+  should "have a description for each command", ->
+    for group, commands of commandLists
+      for command in commands
+        assert.equal "string", typeof command.description
+
+  should "have a valid context for each command", ->
+    for group, commands of commandLists
+      for command in commands
+        contextIndex = ["frame", "background"].indexOf command.context
+        assert.isTrue(contextIndex != -1)
+
+  should "have a valid value for repeat for each command", ->
+    for group, commands of commandLists
+      for command in commands
+        repeatIndex = ["normal", "pass_to_function", "none"].indexOf command.repeat
+        assert.isTrue(repeatIndex != -1)
+
+  should "not have both repeat=none and repeatLimit", ->
+    for group, commands of commandLists
+      for command in commands
+        assert.isFalse(command.repeat == "none" and "repeatLimit" of command)
 
   should "have valid commands for each default key mapping", ->
     count = Object.keys(Commands.keyToCommandRegistry).length
     assert.isTrue (0 < count)
     for key, command of Commands.keyToCommandRegistry
       assert.equal 'object', typeof command
-      assert.isTrue Commands.availableCommands[command.command]
-
-context "Validate advanced commands",
-  setup ->
-    @allCommands = [].concat.apply [], (commands for group, commands of Commands.commandGroups)
-
-  should "include each advanced command in a command group", ->
-    for command in Commands.advancedCommands
-      assert.isTrue 0 <= @allCommands.indexOf command
+      assert.isTrue Commands.availableCommands[command.name]
 
 # TODO (smblott) More tests:
 # - Ensure each background command has an implmentation in BackgroundCommands
