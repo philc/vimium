@@ -95,20 +95,24 @@ doScrollBy = do ->
   lastEvent = null
   keyHandler = null
 
-  (element, direction, amount, wantSmooth) ->
-    if not keyHandler
-      keyHandler = root.handlerStack.push
+  (element, direction, amount) ->
+    return unless amount
+
+    unless keyHandler
+      keyHandler = handlerStack.push
         keydown: (event) -> lastEvent = event
         keyup: -> time += 1
 
     axisName = scrollProperties[direction].axisName
 
-    unless wantSmooth and settings.get "smoothScroll"
+    unless settings.get "smoothScroll"
       return performScroll element, axisName, amount
 
     if mostRecentActivationId == time or lastEvent?.repeat
       # Either the most-recently activated animator has not yet received its keyup event (so it's still
-      # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).
+      # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).  We need both
+      # of these checks because sometimes (perhaps one time in twenty) the last keyboard repeat arrives
+      # *after* the corresponding keyup.
       return
 
     mostRecentActivationId = activationId = ++time
@@ -128,11 +132,9 @@ doScrollBy = do ->
     scrolledAmount = 0
 
     shouldStopScrolling = (progress) ->
-      if activationId == time
-        # This is the most recently-activated animator and we haven't yet seen its keyup event, so keep going.
-        false
-      else
-        duration <= progress
+      # If activationId == time, then this is the most recently-activated animator and we haven't yet seen its
+      # keyup event, so keep going.
+      if activationId == time then false else duration <= progress
 
     animate = (timestamp) ->
       start ?= timestamp
@@ -171,15 +173,15 @@ Scroller =
 
     element = findScrollableElement activatedElement, direction, amount, factor
     elementAmount = factor * getDimension element, direction, amount
-    doScrollBy element, direction, elementAmount, true
+    doScrollBy element, direction, elementAmount
 
-  scrollTo: (direction, pos, wantSmooth = false) ->
+  scrollTo: (direction, pos) ->
     return unless document.body or activatedElement
     activatedElement ||= document.body
 
     element = findScrollableElement activatedElement, direction, pos
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
-    doScrollBy element, direction, amount, wantSmooth
+    doScrollBy element, direction, amount
 
 root = exports ? window
 root.Scroller = Scroller

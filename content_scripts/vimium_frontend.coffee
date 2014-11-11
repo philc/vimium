@@ -227,10 +227,10 @@ window.focusThisFrame = (shouldHighlight) ->
     setTimeout((-> document.body.style.border = borderWas), 200)
 
 extend window,
-  scrollToBottom: -> Scroller.scrollTo "y", "max", true
-  scrollToTop: -> Scroller.scrollTo "y", 0, true
-  scrollToLeft: -> Scroller.scrollTo "x", 0, true
-  scrollToRight: -> Scroller.scrollTo "x", "max", true
+  scrollToBottom: -> Scroller.scrollTo "y", "max"
+  scrollToTop: -> Scroller.scrollTo "y", 0
+  scrollToLeft: -> Scroller.scrollTo "x", 0
+  scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
   scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
   scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
