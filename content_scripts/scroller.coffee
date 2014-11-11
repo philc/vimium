@@ -124,7 +124,6 @@ doScrollBy = do ->
     delta = roundOut(amount / duration)
 
     animatorId = null
-    lastTime = null
     start = null
     scrolledAmount = 0
 
