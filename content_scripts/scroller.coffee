@@ -30,16 +30,19 @@ getDimension = (el, direction, amount) ->
     amount
 
 # Test whether element should be scrolled.
-isScrollAllowed = (element, direction) ->
+shouldScroll = (element, direction) ->
   computedStyle = window.getComputedStyle(element)
   # Elements with `overflow: hidden` should not be scrolled.
-  return computedStyle.getPropertyValue("overflow-#{direction}") != "hidden" and
-         ["hidden", "collapse"].indexOf(computedStyle.getPropertyValue("visibility")) == -1 and
-         computedStyle.getPropertyValue("display") != "none"
+  return false if computedStyle.getPropertyValue("overflow-#{direction}") == "hidden"
+  # Non-visible elements should not be scrolled.
+  return false if ["hidden", "collapse"].indexOf(computedStyle.getPropertyValue("visibility")) != -1
+  return false if computedStyle.getPropertyValue("display") == "none"
+  true
 
-# Test whether element actually scrolls in the direction required when asked to do so.
-# Due to chrome bug 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an
-# element will scroll.  Instead, we scroll the element by 1 or -1 and see if it moved.
+# Test whether element actually scrolls in the direction required when asked to do so.  Due to chrome bug
+# 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an element will scroll.
+# Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).
+# Bug verified in Chrome 38.0.2125.104.
 isScrollPossible = (element, direction, amount, factor) ->
   axisName = scrollProperties[direction].axisName
   # delta, here, is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls
@@ -55,10 +58,10 @@ isScrollPossible = (element, direction, amount, factor) ->
   before != after
 
 # Find the element we should and can scroll.
-findScrollableElement = (element = document.body, direction, amount, factor = 1) ->
+findScrollableElement = (element, direction, amount, factor = 1) ->
   axisName = scrollProperties[direction].axisName
   while element != document.body and
-    not (isScrollPossible(element, direction, amount, factor) and isScrollAllowed(element, direction))
+    not (isScrollPossible(element, direction, amount, factor) and shouldScroll(element, direction))
       element = element.parentElement || document.body
   element
 
@@ -87,7 +90,7 @@ performScroll = (element, axisName, amount, checkVisibility = true) ->
 
 # Scroll by a relative amount (a number) in some direction, possibly smoothly.
 doScrollBy = do ->
-  time = 0
+  time = 0 # Logical time.
   mostRecentActivationId = -1
   lastEvent = null
   keyHandler = null
