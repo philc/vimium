@@ -2,6 +2,7 @@
 # activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
 # input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
 #
+root = exports ? window
 activatedElement = null
 settings = null
 
@@ -78,44 +79,81 @@ performScroll = (element, axisName, amount, checkVisibility = true) ->
   element[axisName] - before
 
 # Scroll by a relative amount (a number) in some direction, possibly smoothly.
-doScrollBy = (element, direction, amount, wantSmooth) ->
-  axisName = scrollProperties[direction].axisName
+doScrollBy = do ->
+  time = 0
+  lastActivationId = -1
+  keyupHandler = null
 
-  unless wantSmooth and settings.get "smoothScroll"
-    return performScroll element, axisName, amount
+  # When the keyboard is repeating and the key is released, sometimes the last key event is delivered *after*
+  # the keyup event.  This could cause indefinite scrolling with no key pressed, because no further keyup
+  # event is delivered (we behave as if the final key is still pressed).  To get around this, we briefly hold
+  # a lock to prevent a new smooth scrolling event from beginning too soon after the end of the previous
+  # scroll.  This is a hack.
+  keyLock = false
 
-  duration = 100 # Duration in ms.
-  fudgeFactor = 25
+  (element, direction, amount, wantSmooth) ->
+    axisName = scrollProperties[direction].axisName
 
-  # Allow a bit longer for longer scrolls.
-  duration += fudgeFactor * Math.log Math.abs amount
+    unless wantSmooth and settings.get "smoothScroll"
+      return performScroll element, axisName, amount
 
-  roundOut = if 0 <= amount then Math.ceil else Math.floor
+    # Assumption.  If animator A is started before animator B, then A will also finish before B.  We need to
+    # verify this - it may not always be true.
 
-  # Round away from 0, so that we don't leave any scroll amount unscrolled.
-  delta = roundOut(amount / duration)
+    console.log("locked") if keyLock
+    if lastActivationId == time or keyLock
+      # This is a keyboard repeat, and the most-recently activated animator will handle it.
+      return
 
-  animatorId = null
-  start = null
-  lastTime = null
-  scrolledAmount = 0
+    if not keyupHandler
+      keyupHandler = root.handlerStack.push keyup: ->
+        time += 1
+        keyLock = true
+        setTimeout((-> keyLock = false), 10)
+        console.log "keyup", time, lastActivationId
+        true # Do not prevent propagation.
 
-  animate = (timestamp) ->
-    start ?= timestamp
+    lastActivationId = activationId = ++time
+    console.log activationId
 
-    progress = Math.min(timestamp - start, duration)
-    scrollDelta = roundOut(delta * progress) - scrolledAmount
-    scrolledAmount += scrollDelta
+    duration = 100 # Duration in ms.
+    fudgeFactor = 25
 
-    if performScroll(element, axisName, scrollDelta, false) != scrollDelta or
-       progress >= duration
-      # One final call of performScroll to check the visibility of the activated element.
-      performScroll(element, axisName, 0, true)
-      window.cancelAnimationFrame(animatorId)
-    else
-      animatorId = window.requestAnimationFrame(animate)
+    # Allow a bit longer for longer scrolls.
+    duration += fudgeFactor * Math.log Math.abs amount
 
-  animatorId = window.requestAnimationFrame(animate)
+    # Round away from 0, so that we don't leave any scroll amount unscrolled.
+    roundOut = if 0 <= amount then Math.ceil else Math.floor
+    delta = roundOut(amount / duration)
+
+    animatorId = null
+    lastTime = null
+    start = null
+    scrolledAmount = 0
+
+    stopScrolling = (progress) ->
+      if activationId == time
+        # This is the most recent animator, and the key is still pressed.
+        false
+      else
+        duration <= progress
+
+    animate = (timestamp) ->
+      start ?= timestamp
+
+      progress = timestamp - start
+      scrollDelta = roundOut(delta * progress) - scrolledAmount
+      scrolledAmount += scrollDelta
+
+      if performScroll(element, axisName, scrollDelta, false) != scrollDelta or stopScrolling progress
+          # One final call of performScroll to check the visibility of the activated element.
+          performScroll(element, axisName, 0, true)
+          window.cancelAnimationFrame(animatorId)
+          time += 1 if activationId == time
+      else
+        animatorId = window.requestAnimationFrame(animate)
+
+    animatorId = window.requestAnimationFrame(animate)
 
 Scroller =
   init: (frontendSettings) ->
@@ -148,5 +186,4 @@ Scroller =
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     doScrollBy element, direction, amount, wantSmooth
 
-root = exports ? window
 root.Scroller = Scroller
