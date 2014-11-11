@@ -2,7 +2,6 @@
 # activatedElement is different from document.activeElement -- the latter seems to be reserved mostly for
 # input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
 #
-root = exports ? window
 activatedElement = null
 settings = null
 
@@ -84,12 +83,12 @@ doScrollBy = do ->
   lastActivationId = -1
   keyupHandler = null
 
-  # When the keyboard is repeating and the key is released, sometimes the last key event is delivered *after*
-  # the keyup event.  This could cause indefinite scrolling with no key pressed, because no further keyup
-  # event is delivered (we behave as if the final key is still pressed).  To get around this, we briefly hold
-  # a lock to prevent a new smooth scrolling event from beginning too soon after the end of the previous
-  # scroll.  This is a hack.
-  keyLock = false
+  # When the keyboard is repeating and then the key is released, sometimes the last key event is delivered
+  # *after* the keyup event.  This could cause indefinite scrolling with no key pressed, because no further
+  # keyup event is delivered (so we behave as if the key is still pressed).  To get around this, we briefly
+  # hold a lock; this prevents a new smooth scrolling event from starting too soon after the end of the
+  # previous one.
+  smoothScrollLock = false
 
   (element, direction, amount, wantSmooth) ->
     axisName = scrollProperties[direction].axisName
@@ -97,24 +96,18 @@ doScrollBy = do ->
     unless wantSmooth and settings.get "smoothScroll"
       return performScroll element, axisName, amount
 
-    # Assumption.  If animator A is started before animator B, then A will also finish before B.  We need to
-    # verify this - it may not always be true.
-
-    console.log("locked") if keyLock
-    if lastActivationId == time or keyLock
-      # This is a keyboard repeat, and the most-recently activated animator will handle it.
+    if lastActivationId == time or smoothScrollLock
+      # This is a keyboard repeat (and the most-recently activated animator -- which is still active -- will
+      # keep going), or it's too soon to begin smooth scrolling again.
       return
 
     if not keyupHandler
       keyupHandler = root.handlerStack.push keyup: ->
         time += 1
-        keyLock = true
-        setTimeout((-> keyLock = false), 10)
-        console.log "keyup", time, lastActivationId
-        true # Do not prevent propagation.
+        setTimeout((-> smoothScrollLock = false), 50)
+        smoothScrollLock = true # Hereby also returning true, so allowing further propagation of the event.
 
     lastActivationId = activationId = ++time
-    console.log activationId
 
     duration = 100 # Duration in ms.
     fudgeFactor = 25
@@ -131,9 +124,9 @@ doScrollBy = do ->
     start = null
     scrolledAmount = 0
 
-    stopScrolling = (progress) ->
+    shouldStopScrolling = (progress) ->
       if activationId == time
-        # This is the most recent animator, and the key is still pressed.
+        # This is the most recent animator and the key is still pressed, so keep going.
         false
       else
         duration <= progress
@@ -145,10 +138,11 @@ doScrollBy = do ->
       scrollDelta = roundOut(delta * progress) - scrolledAmount
       scrolledAmount += scrollDelta
 
-      if performScroll(element, axisName, scrollDelta, false) != scrollDelta or stopScrolling progress
+      if performScroll(element, axisName, scrollDelta, false) != scrollDelta or shouldStopScrolling progress
           # One final call of performScroll to check the visibility of the activated element.
           performScroll(element, axisName, 0, true)
           window.cancelAnimationFrame(animatorId)
+          # Advance time if this is the most-recently activated animator and time hasn't otherwise advanced.
           time += 1 if activationId == time
       else
         animatorId = window.requestAnimationFrame(animate)
@@ -186,4 +180,5 @@ Scroller =
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     doScrollBy element, direction, amount, wantSmooth
 
+root = exports ? window
 root.Scroller = Scroller
