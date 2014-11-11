@@ -77,37 +77,38 @@ performScroll = (element, axisName, amount, checkVisibility = true) ->
   # Return the amount by which the scroll position has changed.
   element[axisName] - before
 
+# How scrolling is handled:
+#   - For non-smooth scrolling, the entire scroll happens immediately.
+#   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key press.
+#     Therefore, several animators may be active at the same time.  This ensures that two quick taps on `j`
+#     scroll to (roughly) the same position as two slower taps.
+#   - For smooth scrolling with keyboard repeat, the most recently-activated animator continues scrolling
+#     until its corresponding keyup event is received.  We never initiate a new animator on keyboard repeat.
+
 # Scroll by a relative amount (a number) in some direction, possibly smoothly.
 doScrollBy = do ->
   time = 0
-  lastActivationId = -1
-  keyupHandler = null
-
-  # When the keyboard is repeating and then the key is released, sometimes the last key event is delivered
-  # *after* the keyup event.  This could cause indefinite scrolling with no key pressed, because no further
-  # keyup event is delivered (so we behave as if the key is still pressed).  To get around this, we briefly
-  # hold a lock; this prevents a new smooth scrolling event from starting too soon after the end of the
-  # previous one.
-  smoothScrollLock = false
+  mostRecentActivationId = -1
+  lastEvent = null
+  keyHandler = null
 
   (element, direction, amount, wantSmooth) ->
+    if not keyHandler
+      keyHandler = root.handlerStack.push
+        keydown: (event) -> lastEvent = event
+        keyup: -> time += 1
+
     axisName = scrollProperties[direction].axisName
 
     unless wantSmooth and settings.get "smoothScroll"
       return performScroll element, axisName, amount
 
-    if lastActivationId == time or smoothScrollLock
-      # This is a keyboard repeat (and the most-recently activated animator -- which is still active -- will
-      # keep going), or it's too soon to begin smooth scrolling again.
+    if mostRecentActivationId == time or lastEvent?.repeat
+      # Either the most-recently activated animator has not yet received its keyup event (so it's still
+      # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).
       return
 
-    if not keyupHandler
-      keyupHandler = root.handlerStack.push keyup: ->
-        time += 1
-        setTimeout((-> smoothScrollLock = false), 50)
-        smoothScrollLock = true # Hereby also returning true, so allowing further propagation of the event.
-
-    lastActivationId = activationId = ++time
+    mostRecentActivationId = activationId = ++time
 
     duration = 100 # Duration in ms.
     fudgeFactor = 25
@@ -126,7 +127,7 @@ doScrollBy = do ->
 
     shouldStopScrolling = (progress) ->
       if activationId == time
-        # This is the most recent animator and the key is still pressed, so keep going.
+        # This is the most recently-activated animator and we haven't yet seen its keyup event, so keep going.
         false
       else
         duration <= progress
@@ -142,8 +143,6 @@ doScrollBy = do ->
           # One final call of performScroll to check the visibility of the activated element.
           performScroll(element, axisName, 0, true)
           window.cancelAnimationFrame(animatorId)
-          # Advance time if this is the most-recently activated animator and time hasn't otherwise advanced.
-          time += 1 if activationId == time
       else
         animatorId = window.requestAnimationFrame(animate)
 
