@@ -126,14 +126,23 @@ Scroller =
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
   scrollBy: (direction, amount, factor = 1) ->
     # if this is called before domReady, just use the window scroll function
-    return unless document.body
+    if (!document.body and amount instanceof Number)
+      if (direction == "x")
+        window.scrollBy(amount, 0)
+      else
+        window.scrollBy(0, amount)
+      return
+
+    activatedElement ||= document.body
+    return unless activatedElement
 
     element = findScrollableElement activatedElement, direction, amount, factor
     elementAmount = factor * getDimension element, direction, amount
     doScrollBy element, direction, elementAmount, true
 
   scrollTo: (direction, pos, wantSmooth = false) ->
-    return unless document.body
+    return unless document.body or activatedElement
+    activatedElement ||= document.body
 
     element = findScrollableElement activatedElement, direction, pos
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
