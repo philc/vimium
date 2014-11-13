@@ -139,6 +139,9 @@ doScrollBy = do ->
     animate = (timestamp) ->
       start ?= timestamp
 
+      # FIXME(smblott) This calculation is not correctly calibrated:
+      #   - A `j` with smooth scrolling does not take you to the same place as a `j` with jump scrolling.
+      #   - A `j` followed by `k` does not take you back to exactly where you started.
       progress = timestamp - start
       scrollDelta = roundOut(delta * progress) - scrolledAmount
       scrolledAmount += scrollDelta
