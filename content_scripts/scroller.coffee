@@ -29,6 +29,12 @@ getDimension = (el, direction, amount) ->
   else
     amount
 
+# Perform a scroll. Return true if we successfully scrolled by the requested amount, and false otherwise.
+performScroll = (element, axisName, amount) ->
+  before = element[axisName]
+  element[axisName] += amount
+  amount == element[axisName] - before
+
 # Test whether element should be scrolled.
 shouldScroll = (element, direction) ->
   computedStyle = window.getComputedStyle(element)
@@ -45,17 +51,13 @@ shouldScroll = (element, direction) ->
 # Bug verified in Chrome 38.0.2125.104.
 isScrollPossible = (element, direction, amount, factor) ->
   axisName = scrollProperties[direction].axisName
-  # delta, here, is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls
+  # amount, here, is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls
   # (only gg, G, and friends), amount can be either 'max' or zero. In the former case, we're definitely
   # scrolling forwards, so any positive value will do for delta.  In the latter case, we're definitely
   # scrolling backwards, so a delta of -1 will do.
   delta = factor * getDimension(element, direction, amount) || -1
   delta = delta / Math.abs delta # 1 or -1
-  before = element[axisName]
-  element[axisName] += delta
-  after = element[axisName]
-  element[axisName] = before
-  before != after
+  performScroll(element, axisName, delta) and performScroll(element, axisName, -delta)
 
 # Find the element which we should and can scroll (or document.body).
 findScrollableElement = (element, direction, amount, factor = 1) ->
@@ -65,21 +67,13 @@ findScrollableElement = (element, direction, amount, factor = 1) ->
       element = element.parentElement || document.body
   element
 
-performScroll = (element, axisName, amount, checkVisibility = true) ->
-  before = element[axisName]
-  element[axisName] += amount
-
-  if checkVisibility
-    # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
-    # position will not provide any more visual feedback to the user. therefore we deactivate it so that
-    # subsequent scrolls only move the parent element.
-    # TODO(smblott) Refactor this out of here.
-    rect = activatedElement.getBoundingClientRect()
-    if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
-      activatedElement = element
-
-  # Return true if we successfully scrolled by the requested amount, false otherwise.
-  amount == element[axisName] - before
+checkVisibility = (element) ->
+  # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
+  # position will not provide any more visual feedback to the user. therefore we deactivate it so that
+  # subsequent scrolls only move the parent element.
+  rect = activatedElement.getBoundingClientRect()
+  if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
+    activatedElement = element
 
 # How scrolling is handled:
 #   - For non-smooth scrolling, the entire scroll happens immediately.
@@ -109,13 +103,16 @@ doScrollBy = do ->
     axisName = scrollProperties[direction].axisName
 
     unless settings.get "smoothScroll"
-      return performScroll element, axisName, amount
+      # Jump scrolling.
+      performScroll element, axisName, amount
+      checkVisibility element
+      return
 
     if mostRecentActivationTime == time or lastEvent?.repeat
       # Either the most-recently activated animator has not yet received its keyup event (so it's still
-      # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).  We need both
-      # of these checks because sometimes (perhaps one time in twenty) the last keyboard repeat arrives
-      # *after* the corresponding keyup.
+      # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).
+      # NOTE(smblott) We need both of these checks because sometimes (perhaps one time in twenty) the last
+      # keyboard repeat arrives *after* the corresponding keyup.
       return
 
     mostRecentActivationTime = activationTime = ++time
@@ -131,29 +128,26 @@ doScrollBy = do ->
     duration = Math.max 100, 20 * Math.log amount
 
     totalDelta = 0
+    totalElapsed = 0.0
     calibration = 1.0
-    initialTimestamp = null
     previousTimestamp = null
     animatorId = null
 
-    progressAnimation = ->
+    advanceAnimation = ->
       animatorId = requestAnimationFrame animate
 
     cancelAnimation = ->
-      # Make one final call of performScroll to check the visibility of the activated element.
-      performScroll element, axisName, 0, true
       cancelAnimationFrame animatorId
 
     animate = (timestamp) ->
-      initialTimestamp ?= timestamp
       previousTimestamp ?= timestamp
 
       if timestamp == previousTimestamp
-        return progressAnimation()
+        return advanceAnimation()
 
       # The elapsed time is typically about 16ms.
       elapsed = timestamp - previousTimestamp
-      totalElapsed = timestamp - initialTimestamp
+      totalElapsed += elapsed
       previousTimestamp = timestamp
 
       # The constants in the duration calculation, above, are chosen to provide reasonable scroll speeds for
@@ -168,15 +162,14 @@ doScrollBy = do ->
       delta = Math.ceil amount * (elapsed / duration) * calibration
       delta = if isKeyStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
 
-      if delta and performScroll element, axisName, sign * delta, false
+      if delta and performScroll element, axisName, sign * delta
         totalDelta += delta
-        progressAnimation()
+        advanceAnimation()
       else
-        # We're done. Make one final call of performScroll to check the visibility of the activated element.
-        performScroll element, axisName, 0, true
+        checkVisibility element
         cancelAnimationFrame animatorId
 
-    progressAnimation()
+    advanceAnimation()
 
 Scroller =
   init: (frontendSettings) ->
