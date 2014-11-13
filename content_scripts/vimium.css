@@ -174,8 +174,6 @@ div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
   color:#2f508e;
   white-space:nowrap;
 }
-/* Make the description column as wide as it can be. */
-div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) { width:100%; }
 div#vimiumHelpDialog div.vimiumDivider {
   display: block;
   height:1px;

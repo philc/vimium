@@ -96,7 +96,20 @@ VimiumHelpDialog =
 
       bindingsCell = commandRow.querySelector("td.commandBindings")
       bindingsCell.appendChild(document.createTextNode(commandToKeyRegistry[name].join(", ")))
+    @alignColumns()
     @dialogElement.click() # Click the dialog element so that it is registered as the scrolling element.
+
+  # CSS hack to line up the command column across multiple tables.
+  alignColumns: ->
+    maxWidth = 0
+    tables = document.querySelectorAll("table")
+    for table in tables
+      firstCell = table.querySelector("td.commandBindings")
+      maxWidth = Math.max(maxWidth, firstCell.scrollWidth)
+
+    for name, commandRow of @commandToRow
+      firstCell = commandRow.querySelector("td")
+      firstCell.style.width = maxWidth + "px"
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
