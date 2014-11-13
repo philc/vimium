@@ -57,7 +57,7 @@ isScrollPossible = (element, direction, amount, factor) ->
   element[axisName] = before
   before != after
 
-# Find the element we should and can scroll.
+# Find the element which we should and can scroll (or document.body).
 findScrollableElement = (element, direction, amount, factor = 1) ->
   axisName = scrollProperties[direction].axisName
   while element != document.body and
@@ -85,10 +85,10 @@ performScroll = (element, axisName, amount, checkVisibility = true) ->
 #   - For non-smooth scrolling, the entire scroll happens immediately.
 #   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key press.
 #     Therefore, several animators may be active at the same time.  This ensures that two quick taps on `j`
-#     scroll to the same position as two slower taps (modulo rounding errors).
-#   - For smooth scrolling with keyboard repeat, the most recently-activated animator continues scrolling
-#     at least until its corresponding keyup event is received.  We never initiate a new animator on keyboard
-#     repeat.
+#     scroll to the same position as two slower taps.
+#   - For smooth scrolling with keyboard repeat (continuous scrolling), the most recently-activated animator
+#     continues scrolling at least until its corresponding keyup event is received.  We never initiate a new
+#     animator on keyboard repeat.
 
 # Scroll by a relative amount (a number) in some direction, possibly smoothly.
 doScrollBy = do ->
@@ -103,7 +103,7 @@ doScrollBy = do ->
 
     unless keyHandler
       keyHandler = handlerStack.push
-        keydown: (event) -> lastEvent = event
+        keydown: -> lastEvent = event
         keyup: -> time += 1
 
     axisName = scrollProperties[direction].axisName
@@ -120,40 +120,63 @@ doScrollBy = do ->
 
     mostRecentActivationTime = activationTime = ++time
 
+    isKeyStillDown = ->
+      time == activationTime
+
+    # Store amount's sign and make amount positive; the logic is clearer when amount is positive.
+    sign = amount / Math.abs amount
+    amount = Math.abs amount
+
     # Duration in ms. Allow a bit longer for longer scrolls.
-    duration = 100 + 25 * Math.log Math.abs amount
+    duration = Math.max 100, 20 * Math.log amount
 
-    # Round away from 0, so that we don't leave any requested scroll amount unscrolled.
-    roundOut = if 0 <= amount then Math.ceil else Math.floor
-    delta = roundOut(amount / duration)
-
+    totalDelta = 0
+    calibration = 1.0
+    initialTimestamp = null
+    previousTimestamp = null
     animatorId = null
-    start = null
-    scrolledAmount = 0
 
-    shouldStopScrolling = (progress) ->
-      # If activationTime == time, then this is the most recently-activated animator and we haven't yet seen
-      # its keyup event, so keep going; otherwise, check progress and duration.
-      if activationTime == time then false else duration <= progress
+    progressAnimation = ->
+      animatorId = requestAnimationFrame animate
+
+    cancelAnimation = ->
+      # Make one final call of performScroll to check the visibility of the activated element.
+      performScroll element, axisName, 0, true
+      cancelAnimationFrame animatorId
 
     animate = (timestamp) ->
-      start ?= timestamp
+      initialTimestamp ?= timestamp
+      previousTimestamp ?= timestamp
 
-      # FIXME(smblott) This calculation is not correctly calibrated:
-      #   - A `j` with smooth scrolling does not take you to the same place as a `j` with jump scrolling.
-      #   - A `j` followed by `k` does not take you back to exactly where you started.
-      progress = timestamp - start
-      scrollDelta = roundOut(delta * progress) - scrolledAmount
-      scrolledAmount += scrollDelta
+      if timestamp == previousTimestamp
+        return progressAnimation()
 
-      if not performScroll(element, axisName, scrollDelta, false) or shouldStopScrolling progress
-          # One final call of performScroll to check the visibility of the activated element.
-          performScroll(element, axisName, 0, true)
-          window.cancelAnimationFrame(animatorId)
+      # The elapsed time is typically about 16ms.
+      elapsed = timestamp - previousTimestamp
+      totalElapsed = timestamp - initialTimestamp
+      previousTimestamp = timestamp
+
+      # The constants in the duration calculation, above, are chosen to provide reasonable scroll speeds for
+      # scrolls resulting from distinct keypresses.  For continuous scrolls (where the key remains depressed),
+      # some scrolls are too slow, and others too fast.  Here, we compensate a bit.
+      if isKeyStillDown() and 50 <= totalElapsed and 0.5 <= calibration <= 1.6
+        calibration *= 1.05 if 1.05 * calibration * amount <= 150 # Speed up slow scrolls.
+        calibration *= 0.95 if 150 <= 0.95 * calibration * amount # Slow down fast scrolls.
+
+      # Calculate the initial delta, rounding up to ensure progress.  Then, adjust delta to account for the
+      # current scroll state.
+      delta = Math.ceil amount * (elapsed / duration) * calibration
+      delta = if isKeyStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
+
+      if delta and performScroll element, axisName, sign * delta, false
+        totalDelta += delta
+        progressAnimation()
       else
-        animatorId = window.requestAnimationFrame(animate)
+        # We're done. Make one final call of performScroll to check the visibility of the activated element.
+        performScroll element, axisName, 0, true
+        cancelAnimationFrame animatorId
 
-    animatorId = window.requestAnimationFrame(animate)
+    progressAnimation()
 
 Scroller =
   init: (frontendSettings) ->
