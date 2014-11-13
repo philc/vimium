@@ -88,7 +88,6 @@ checkVisibility = (element) ->
 doScrollBy = do ->
   # This is logical time. Time is advanced each time an animator is activated, and on each keyup event.
   time = 0
-  mostRecentActivationTime = -1
   lastEvent = null
   keyHandler = null
 
@@ -108,14 +107,10 @@ doScrollBy = do ->
       checkVisibility element
       return
 
-    if mostRecentActivationTime == time or lastEvent?.repeat
-      # Either the most-recently activated animator has not yet received its keyup event (so it's still
-      # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).
-      # NOTE(smblott) We need both of these checks because sometimes (perhaps one time in twenty) the last
-      # keyboard repeat arrives *after* the corresponding keyup.
-      return
+    # We don't activate new animators on keyboard repeats.
+    return if lastEvent?.repeat
 
-    mostRecentActivationTime = activationTime = ++time
+    activationTime = ++time
 
     isKeyStillDown = ->
       time == activationTime
