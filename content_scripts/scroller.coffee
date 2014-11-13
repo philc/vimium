@@ -35,7 +35,7 @@ shouldScroll = (element, direction) ->
   # Elements with `overflow: hidden` should not be scrolled.
   return false if computedStyle.getPropertyValue("overflow-#{direction}") == "hidden"
   # Non-visible elements should not be scrolled.
-  return false if ["hidden", "collapse"].indexOf(computedStyle.getPropertyValue("visibility")) != -1
+  return false if computedStyle.getPropertyValue("visibility") in ["hidden", "collapse"]
   return false if computedStyle.getPropertyValue("display") == "none"
   true
 
@@ -73,25 +73,28 @@ performScroll = (element, axisName, amount, checkVisibility = true) ->
     # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
     # position will not provide any more visual feedback to the user. therefore we deactivate it so that
     # subsequent scrolls only move the parent element.
+    # TODO(smblott) Refactor this out of here.
     rect = activatedElement.getBoundingClientRect()
     if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
       activatedElement = element
 
-  # Return the amount by which the scroll position has changed.
-  element[axisName] - before
+  # Return true if we successfully scrolled by the requested amount, false otherwise.
+  amount == element[axisName] - before
 
 # How scrolling is handled:
 #   - For non-smooth scrolling, the entire scroll happens immediately.
 #   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key press.
 #     Therefore, several animators may be active at the same time.  This ensures that two quick taps on `j`
-#     scroll to (roughly) the same position as two slower taps.
+#     scroll to the same position as two slower taps (modulo rounding errors).
 #   - For smooth scrolling with keyboard repeat, the most recently-activated animator continues scrolling
-#     until its corresponding keyup event is received.  We never initiate a new animator on keyboard repeat.
+#     at least until its corresponding keyup event is received.  We never initiate a new animator on keyboard
+#     repeat.
 
 # Scroll by a relative amount (a number) in some direction, possibly smoothly.
 doScrollBy = do ->
-  time = 0 # Logical time.
-  mostRecentActivationId = -1
+  # This is logical time. Time is advanced each time an animator is activated, and on each keyup event.
+  time = 0
+  mostRecentActivationTime = -1
   lastEvent = null
   keyHandler = null
 
@@ -108,22 +111,19 @@ doScrollBy = do ->
     unless settings.get "smoothScroll"
       return performScroll element, axisName, amount
 
-    if mostRecentActivationId == time or lastEvent?.repeat
+    if mostRecentActivationTime == time or lastEvent?.repeat
       # Either the most-recently activated animator has not yet received its keyup event (so it's still
       # scrolling), or this is a keyboard repeat (for which we don't initiate a new animator).  We need both
       # of these checks because sometimes (perhaps one time in twenty) the last keyboard repeat arrives
       # *after* the corresponding keyup.
       return
 
-    mostRecentActivationId = activationId = ++time
+    mostRecentActivationTime = activationTime = ++time
 
-    duration = 100 # Duration in ms.
-    fudgeFactor = 25
+    # Duration in ms. Allow a bit longer for longer scrolls.
+    duration = 100 + 25 * Math.log Math.abs amount
 
-    # Allow a bit longer for longer scrolls.
-    duration += fudgeFactor * Math.log Math.abs amount
-
-    # Round away from 0, so that we don't leave any scroll amount unscrolled.
+    # Round away from 0, so that we don't leave any requested scroll amount unscrolled.
     roundOut = if 0 <= amount then Math.ceil else Math.floor
     delta = roundOut(amount / duration)
 
@@ -132,9 +132,9 @@ doScrollBy = do ->
     scrolledAmount = 0
 
     shouldStopScrolling = (progress) ->
-      # If activationId == time, then this is the most recently-activated animator and we haven't yet seen its
-      # keyup event, so keep going.
-      if activationId == time then false else duration <= progress
+      # If activationTime == time, then this is the most recently-activated animator and we haven't yet seen
+      # its keyup event, so keep going; otherwise, check progress and duration.
+      if activationTime == time then false else duration <= progress
 
     animate = (timestamp) ->
       start ?= timestamp
@@ -143,7 +143,7 @@ doScrollBy = do ->
       scrollDelta = roundOut(delta * progress) - scrolledAmount
       scrolledAmount += scrollDelta
 
-      if performScroll(element, axisName, scrollDelta, false) != scrollDelta or shouldStopScrolling progress
+      if not performScroll(element, axisName, scrollDelta, false) or shouldStopScrolling progress
           # One final call of performScroll to check the visibility of the activated element.
           performScroll(element, axisName, 0, true)
           window.cancelAnimationFrame(animatorId)
