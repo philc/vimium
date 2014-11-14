@@ -97,13 +97,13 @@ CoreScroller =
         @keyIsDown = false
         @time += 1
 
-    # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
-    # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
-    # (until it is less than @minCalibration) if we guess that the scroll is too fast.  The cutoff point for
-    # which guess we make is @calibrationBoundary. We require: 0 < @minCalibration <= 1 <= @maxCalibration.
-    @minCalibration = 0.5 # Controls how much we're willing to slow scrolls down; smaller => more slow down.
-    @maxCalibration = 1.6 # Controls how much we're willing to speed scrolls up; bigger => more speed up.
-    @calibrationBoundary = 150 # Boundary between scrolls which are considered too slow, and those too fast.
+  # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
+  # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
+  # (until it is less than @minCalibration) if we guess that the scroll is too fast.  The cutoff point for
+  # which guess we make is @calibrationBoundary. We require: 0 < @minCalibration <= 1 <= @maxCalibration.
+  minCalibration: 0.5 # Controls how much we're willing to slow scrolls down; smaller => more slow down.
+  maxCalibration: 1.6 # Controls how much we're willing to speed scrolls up; bigger => more speed up.
+  calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, and those too fast.
 
   # Scroll element by a relative amount (a number) in some direction.
   scroll: (element, direction, amount) ->
@@ -150,8 +150,8 @@ CoreScroller =
       # distinct keypresses.  For continuous scrolls, some scrolls are too slow, and others too fast. Here, we
       # speed up the slower scrolls, and slow down the faster scrolls.
       if isMyKeyStillDown() and 50 <= totalElapsed and @minCalibration <= calibration <= @maxCalibration
-        calibration *= 1.05 if 1.05 * calibration * amount <= @calibrationBoundary # Speed up slow scrolls.
-        calibration *= 0.95 if @calibrationBoundary <= 0.95 * calibration * amount # Slow down fast scrolls.
+        calibration *= 1.05 if 1.05 * calibration * amount < @calibrationBoundary # Speed up slow scrolls.
+        calibration *= 0.95 if @calibrationBoundary < 0.95 * calibration * amount # Slow down fast scrolls.
 
       # Calculate the initial delta, rounding up to ensure progress.  Then, adjust delta to account for the
       # current scroll state.
