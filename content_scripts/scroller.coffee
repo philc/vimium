@@ -30,7 +30,8 @@ getDimension = (el, direction, amount) ->
     amount
 
 # Perform a scroll. Return true if we successfully scrolled by the requested amount, and false otherwise.
-performScroll = (element, axisName, amount) ->
+performScroll = (element, direction, amount) ->
+  axisName = scrollProperties[direction].axisName
   before = element[axisName]
   element[axisName] += amount
   amount == element[axisName] - before
@@ -50,18 +51,16 @@ shouldScroll = (element, direction) ->
 # Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).
 # Bug verified in Chrome 38.0.2125.104.
 isScrollPossible = (element, direction, amount, factor) ->
-  axisName = scrollProperties[direction].axisName
   # amount, here, is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls
   # (only gg, G, and friends), amount can be either 'max' or zero. In the former case, we're definitely
-  # scrolling forwards, so any positive value will do for delta.  In the latter case, we're definitely
-  # scrolling backwards, so a delta of -1 will do.
+  # scrolling forwards, so any positive value will do for delta.  In the latter, we're definitely scrolling
+  # backwards, so a delta of -1 will do.
   delta = factor * getDimension(element, direction, amount) || -1
-  delta = delta / Math.abs delta # 1 or -1
-  performScroll(element, axisName, delta) and performScroll(element, axisName, -delta)
+  delta = Math.sign delta # 1 or -1
+  performScroll(element, direction, delta) and performScroll(element, direction, -delta)
 
 # Find the element which we should and can scroll (or document.body).
 findScrollableElement = (element, direction, amount, factor = 1) ->
-  axisName = scrollProperties[direction].axisName
   while element != document.body and
     not (isScrollPossible(element, direction, amount, factor) and shouldScroll(element, direction))
       element = element.parentElement || document.body
@@ -94,16 +93,13 @@ doScrollBy = do ->
   (element, direction, amount) ->
     return unless amount
 
-    unless keyHandler
-      keyHandler = handlerStack.push
-        keydown: -> lastEvent = event
-        keyup: -> time += 1
-
-    axisName = scrollProperties[direction].axisName
+    keyHandler ?= handlerStack.push
+      keydown: -> lastEvent = event
+      keyup: -> time += 1
 
     unless settings.get "smoothScroll"
       # Jump scrolling.
-      performScroll element, axisName, amount
+      performScroll element, direction, amount
       checkVisibility element
       return
 
@@ -116,7 +112,7 @@ doScrollBy = do ->
       time == activationTime
 
     # Store amount's sign and make amount positive; the logic is clearer when amount is positive.
-    sign = amount / Math.abs amount
+    sign = Math.sign amount
     amount = Math.abs amount
 
     # Duration in ms. Allow a bit longer for longer scrolls.
@@ -157,12 +153,12 @@ doScrollBy = do ->
       delta = Math.ceil amount * (elapsed / duration) * calibration
       delta = if isKeyStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
 
-      if delta and performScroll element, axisName, sign * delta
+      if delta and performScroll element, direction, sign * delta
         totalDelta += delta
         advanceAnimation()
       else
         checkVisibility element
-        cancelAnimationFrame animatorId
+        cancelAnimation()
 
     advanceAnimation()
 
