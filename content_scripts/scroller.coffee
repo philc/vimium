@@ -33,7 +33,7 @@ performScroll = (element, direction, amount) ->
   axisName = scrollProperties[direction].axisName
   before = element[axisName]
   element[axisName] += amount
-  amount == element[axisName] - before
+  element[axisName] == amount + before
 
 # Test whether element should be scrolled.
 shouldScroll = (element, direction) ->
@@ -88,6 +88,7 @@ CoreScroller =
     @time = 0
     @lastEvent = null
     @keyIsDown = false
+
     handlerStack.push
       keydown: (event) =>
         @keyIsDown = true
@@ -95,6 +96,14 @@ CoreScroller =
       keyup: =>
         @keyIsDown = false
         @time += 1
+
+    # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
+    # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
+    # (until it is less than @minCalibration) if we guess that the scroll is too fast.  The cutoff point for
+    # which guess we make is @calibrationBoundary. We require: 0 < @minCalibration <= 1 <= @maxCalibration.
+    @minCalibration = 0.5 # Controls how much we're willing to slow scrolls down; smaller => more slow down.
+    @maxCalibration = 1.6 # Controls how much we're willing to speed scrolls up; bigger => more speed up.
+    @calibrationBoundary = 150 # Boundary between scrolls which are considered too slow, and those too fast.
 
   # Scroll element by a relative amount (a number) in some direction.
   scroll: (element, direction, amount) ->
@@ -110,9 +119,7 @@ CoreScroller =
     return if @lastEvent?.repeat
 
     activationTime = ++@time
-
-    isMyKeyStillDown = =>
-      @time == activationTime and @keyIsDown
+    isMyKeyStillDown = => @time == activationTime and @keyIsDown
 
     # Store amount's sign and make amount positive; the logic is clearer when amount is positive.
     sign = Math.sign amount
@@ -127,17 +134,12 @@ CoreScroller =
     previousTimestamp = null
     animatorId = null
 
-    advanceAnimation = ->
-      animatorId = requestAnimationFrame animate
+    advanceAnimation = -> animatorId = requestAnimationFrame animate
+    cancelAnimation = -> cancelAnimationFrame animatorId
 
-    cancelAnimation = ->
-      cancelAnimationFrame animatorId
-
-    animate = (timestamp) ->
+    animate = (timestamp) =>
       previousTimestamp ?= timestamp
-
-      if timestamp == previousTimestamp
-        return advanceAnimation()
+      return advanceAnimation() if timestamp == previousTimestamp
 
       # The elapsed time is typically about 16ms.
       elapsed = timestamp - previousTimestamp
@@ -145,11 +147,11 @@ CoreScroller =
       previousTimestamp = timestamp
 
       # The constants in the duration calculation, above, are chosen to provide reasonable scroll speeds for
-      # scrolls resulting from distinct keypresses.  For continuous scrolls (where the key remains depressed),
-      # some scrolls are too slow, and others too fast.  Here, we compensate a bit.
-      if isMyKeyStillDown() and 50 <= totalElapsed and 0.5 <= calibration <= 1.6
-        calibration *= 1.05 if 1.05 * calibration * amount <= 150 # Speed up slow scrolls.
-        calibration *= 0.95 if 150 <= 0.95 * calibration * amount # Slow down fast scrolls.
+      # distinct keypresses.  For continuous scrolls, some scrolls are too slow, and others too fast. Here, we
+      # speed up the slower scrolls, and slow down the faster scrolls.
+      if isMyKeyStillDown() and 50 <= totalElapsed and @minCalibration <= calibration <= @maxCalibration
+        calibration *= 1.05 if 1.05 * calibration * amount <= @calibrationBoundary # Speed up slow scrolls.
+        calibration *= 0.95 if @calibrationBoundary <= 0.95 * calibration * amount # Slow down fast scrolls.
 
       # Calculate the initial delta, rounding up to ensure progress.  Then, adjust delta to account for the
       # current scroll state.
