@@ -89,13 +89,18 @@ doScrollBy = do ->
   time = 0
   lastEvent = null
   keyHandler = null
+  keyIsDown = false
 
   (element, direction, amount) ->
     return unless amount
 
     keyHandler ?= handlerStack.push
-      keydown: -> lastEvent = event
-      keyup: -> time += 1
+      keydown: ->
+        keyIsDown = true unless event.repeat
+        lastEvent = event
+      keyup: ->
+        keyIsDown = false
+        time += 1
 
     unless settings.get "smoothScroll"
       # Jump scrolling.
@@ -109,7 +114,7 @@ doScrollBy = do ->
     activationTime = ++time
 
     isKeyStillDown = ->
-      time == activationTime
+      time == activationTime and keyIsDown
 
     # Store amount's sign and make amount positive; the logic is clearer when amount is positive.
     sign = Math.sign amount
