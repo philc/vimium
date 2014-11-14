@@ -3,7 +3,6 @@
 # input elements. This mechanism allows us to decide whether to scroll a div or to scroll the whole document.
 #
 activatedElement = null
-settings = null
 
 scrollProperties =
   x: {
@@ -83,38 +82,37 @@ checkVisibility = (element) ->
 #     continues scrolling at least until its corresponding keyup event is received.  We never initiate a new
 #     animator on keyboard repeat.
 
-# Scroll by a relative amount (a number) in some direction, possibly smoothly.
-doScrollBy = do ->
-  # This is logical time. Time is advanced each time an animator is activated, and on each keyup event.
-  time = 0
-  lastEvent = null
-  keyHandler = null
-  keyIsDown = false
+CoreScroller =
+  init: (frontendSettings) ->
+    @settings = frontendSettings
+    @time = 0
+    @lastEvent = null
+    @keyIsDown = false
+    handlerStack.push
+      keydown: (event) =>
+        @keyIsDown = true
+        @lastEvent = event
+      keyup: =>
+        @keyIsDown = false
+        @time += 1
 
-  (element, direction, amount) ->
+  # Scroll element by a relative amount (a number) in some direction.
+  scroll: (element, direction, amount) ->
     return unless amount
 
-    keyHandler ?= handlerStack.push
-      keydown: ->
-        keyIsDown = true unless event.repeat
-        lastEvent = event
-      keyup: ->
-        keyIsDown = false
-        time += 1
-
-    unless settings.get "smoothScroll"
+    unless @settings.get "smoothScroll"
       # Jump scrolling.
       performScroll element, direction, amount
       checkVisibility element
       return
 
     # We don't activate new animators on keyboard repeats.
-    return if lastEvent?.repeat
+    return if @lastEvent?.repeat
 
-    activationTime = ++time
+    activationTime = ++@time
 
-    isKeyStillDown = ->
-      time == activationTime and keyIsDown
+    isMyKeyStillDown = =>
+      @time == activationTime and @keyIsDown
 
     # Store amount's sign and make amount positive; the logic is clearer when amount is positive.
     sign = Math.sign amount
@@ -149,14 +147,14 @@ doScrollBy = do ->
       # The constants in the duration calculation, above, are chosen to provide reasonable scroll speeds for
       # scrolls resulting from distinct keypresses.  For continuous scrolls (where the key remains depressed),
       # some scrolls are too slow, and others too fast.  Here, we compensate a bit.
-      if isKeyStillDown() and 50 <= totalElapsed and 0.5 <= calibration <= 1.6
+      if isMyKeyStillDown() and 50 <= totalElapsed and 0.5 <= calibration <= 1.6
         calibration *= 1.05 if 1.05 * calibration * amount <= 150 # Speed up slow scrolls.
         calibration *= 0.95 if 150 <= 0.95 * calibration * amount # Slow down fast scrolls.
 
       # Calculate the initial delta, rounding up to ensure progress.  Then, adjust delta to account for the
       # current scroll state.
       delta = Math.ceil amount * (elapsed / duration) * calibration
-      delta = if isKeyStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
+      delta = if isMyKeyStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
 
       if delta and performScroll element, direction, sign * delta
         totalDelta += delta
@@ -169,8 +167,8 @@ doScrollBy = do ->
 
 Scroller =
   init: (frontendSettings) ->
-    settings = frontendSettings
     handlerStack.push DOMActivate: -> activatedElement = event.target
+    CoreScroller.init frontendSettings
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -188,7 +186,7 @@ Scroller =
 
     element = findScrollableElement activatedElement, direction, amount, factor
     elementAmount = factor * getDimension element, direction, amount
-    doScrollBy element, direction, elementAmount
+    CoreScroller.scroll element, direction, elementAmount
 
   scrollTo: (direction, pos) ->
     return unless document.body or activatedElement
@@ -196,7 +194,7 @@ Scroller =
 
     element = findScrollableElement activatedElement, direction, pos
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
-    doScrollBy element, direction, amount
+    CoreScroller.scroll element, direction, amount
 
 root = exports ? window
 root.Scroller = Scroller
