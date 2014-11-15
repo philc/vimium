@@ -42,13 +42,7 @@ class Option
   @saveOptions: ->
     Option.all.map (option) -> option.save()
     $("saveOptions").disabled = true
-
-  # Used by text options. <ctrl-Enter> saves all options.
-  activateCtrlEnterListener: (element) ->
-    element.addEventListener "keyup", (event) ->
-      if event.ctrlKey and event.keyCode == 13
-        element.blur()
-        Option.saveOptions()
+    $("saveOptions").innerHTML = "No Changes"
 
   # Abstract method; only implemented in sub-classes.
   # Populate the option's DOM element (@element) with the setting's current value.
@@ -66,7 +60,6 @@ class TextOption extends Option
   constructor: (field,enableSaveButton) ->
     super(field,enableSaveButton)
     @element.addEventListener "input", enableSaveButton
-    @activateCtrlEnterListener @element
   populateElement: (value) -> @element.value = value
   readValueFromElement: -> @element.value.trim()
 
@@ -74,7 +67,6 @@ class NonEmptyTextOption extends Option
   constructor: (field,enableSaveButton) ->
     super(field,enableSaveButton)
     @element.addEventListener "input", enableSaveButton
-    @activateCtrlEnterListener @element
 
   populateElement: (value) -> @element.value = value
   # If the new value is not empty, then return it. Otherwise, restore the default value.
@@ -89,7 +81,6 @@ class ExclusionRulesOption extends Option
     super(args...)
     $("exclusionAddButton").addEventListener "click", (event) =>
       @appendRule { pattern: "", passKeys: "" }
-      @maintainExclusionMargin()
       # Focus the pattern element in the new rule.
       @element.children[@element.children.length-1].children[0].children[0].focus()
       # Scroll the new rule into view.
@@ -101,7 +92,6 @@ class ExclusionRulesOption extends Option
       @element.removeChild @element.firstChild
     for rule in rules
       @appendRule rule
-    @maintainExclusionMargin()
 
   # Append a row for a new rule.
   appendRule: (rule) ->
@@ -111,7 +101,6 @@ class ExclusionRulesOption extends Option
     for field in ["pattern", "passKeys"]
       element = row.querySelector ".#{field}"
       element.value = rule[field]
-      @activateCtrlEnterListener element
       for event in [ "input", "change" ]
         element.addEventListener event, enableSaveButton
 
@@ -120,7 +109,6 @@ class ExclusionRulesOption extends Option
       row = event.target.parentNode.parentNode
       row.parentNode.removeChild row
       enableSaveButton()
-      @maintainExclusionMargin()
 
     @element.appendChild row
 
@@ -138,20 +126,11 @@ class ExclusionRulesOption extends Option
     flatten = (rule) -> if rule and rule.pattern then rule.pattern + "\n" + rule.passKeys else ""
     a.map(flatten).join("\n") == b.map(flatten).join("\n")
 
-  # Hack.  There has to be a better way than...
-  # The y-axis scrollbar for "exclusionRules" is only displayed if it is needed.  When visible, it appears on
-  # top of the enclosed content (partially obscuring it).  Here, we adjust the margin of the "Remove" button to
-  # compensate.
-  maintainExclusionMargin: ->
-    scrollBox = $("exclusionScrollBox")
-    margin = if scrollBox.clientHeight < scrollBox.scrollHeight then "16px" else "0px"
-    for element in scrollBox.getElementsByClassName "exclusionRemoveButton"
-      element.style["margin-right"] = margin
-
 #
 # Operations for page elements.
 enableSaveButton = ->
   $("saveOptions").removeAttribute "disabled"
+  $("saveOptions").innerHTML = "Save Changes"
 
 # Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
 maintainLinkHintsView = ->
@@ -212,4 +191,8 @@ document.addEventListener "DOMContentLoaded", ->
 
   maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
+
+  document.addEventListener "keyup", (event) ->
+    if event.ctrlKey and event.keyCode == 13
+      Option.saveOptions()
 
