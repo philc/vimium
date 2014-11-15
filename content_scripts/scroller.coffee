@@ -38,49 +38,49 @@ performScroll = (element, direction, amount) ->
 # Test whether element should be scrolled.
 shouldScroll = (element, direction) ->
   computedStyle = window.getComputedStyle(element)
-  # Elements with `overflow: hidden` should not be scrolled.
+  # Elements with `overflow: hidden` must not be scrolled.
   return false if computedStyle.getPropertyValue("overflow-#{direction}") == "hidden"
-  # Non-visible elements should not be scrolled.
+  # Elements which are not visible should not be scrolled.
   return false if computedStyle.getPropertyValue("visibility") in ["hidden", "collapse"]
   return false if computedStyle.getPropertyValue("display") == "none"
   true
 
-# Test whether element actually scrolls in the direction required when asked to do so.  Due to chrome bug
+# Test whether element does actually scroll in the direction required when asked to do so.  Due to chrome bug
 # 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an element will scroll.
 # Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).
 # Bug verified in Chrome 38.0.2125.104.
-isScrollPossible = (element, direction, amount, factor) ->
-  # amount, here, is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls
-  # (only gg, G, and friends), amount can be either 'max' or zero. In the former case, we're definitely
-  # scrolling forwards, so any positive value will do for delta.  In the latter, we're definitely scrolling
-  # backwards, so a delta of -1 will do.
+doesScroll = (element, direction, amount, factor) ->
+  # amount is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls (only
+  # gg, G, and friends), amount can be either 'max' or zero. In the former case, we're definitely scrolling
+  # forwards, so any positive value will do for delta.  In the latter, we're definitely scrolling backwards,
+  # so a delta of -1 will do.  For absolute scrolls, factor is always 1.
   delta = factor * getDimension(element, direction, amount) || -1
   delta = Math.sign delta # 1 or -1
   performScroll(element, direction, delta) and performScroll(element, direction, -delta)
 
-# Find the element which we should and can scroll (or document.body).
-findScrollableElement = (element, direction, amount, factor = 1) ->
+# From element and its parents, find the first which we should scroll and which does scroll.
+findScrollableElement = (element, direction, amount, factor) ->
   while element != document.body and
-    not (isScrollPossible(element, direction, amount, factor) and shouldScroll(element, direction))
+    not (doesScroll(element, direction, amount, factor) and shouldScroll(element, direction))
       element = element.parentElement || document.body
   element
 
 checkVisibility = (element) ->
-  # if the activated element has been scrolled completely offscreen, subsequent changes in its scroll
-  # position will not provide any more visual feedback to the user. therefore we deactivate it so that
-  # subsequent scrolls only move the parent element.
+  # If the activated element has been scrolled completely offscreen, then subsequent changes in its scroll
+  # position will not provide any more visual feedback to the user. Therefore, we deactivate it so that
+  # subsequent scrolls affect the parent element.
   rect = activatedElement.getBoundingClientRect()
   if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
     activatedElement = element
 
-# How scrolling is handled:
-#   - For non-smooth scrolling, the entire scroll happens immediately.
+# How scrolling is handled by CoreScroller.
+#   - For jump scrolling, the entire scroll happens immediately.
 #   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key press.
 #     Therefore, several animators may be active at the same time.  This ensures that two quick taps on `j`
 #     scroll to the same position as two slower taps.
 #   - For smooth scrolling with keyboard repeat (continuous scrolling), the most recently-activated animator
-#     continues scrolling at least until its corresponding keyup event is received.  We never initiate a new
-#     animator on keyboard repeat.
+#     continues scrolling at least until its keyup event is received.  We never initiate a new animator on
+#     keyboard repeat.
 
 CoreScroller =
   init: (frontendSettings) ->
@@ -97,13 +97,16 @@ CoreScroller =
         @keyIsDown = false
         @time += 1
 
+  # Return true if CoreScroller would not initiate a new scroll right now.
+  wouldNotInitiateScroll: -> @lastEvent?.repeat and @settings.get "smoothScroll"
+
   # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
   # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
   # (until it is less than @minCalibration) if we guess that the scroll is too fast.  The cutoff point for
   # which guess we make is @calibrationBoundary. We require: 0 < @minCalibration <= 1 <= @maxCalibration.
-  minCalibration: 0.5 # Controls how much we're willing to slow scrolls down; smaller => more slow down.
-  maxCalibration: 1.6 # Controls how much we're willing to speed scrolls up; bigger => more speed up.
-  calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, and those too fast.
+  minCalibration: 0.5 # Controls how much we're willing to slow scrolls down; smaller means more slow down.
+  maxCalibration: 1.6 # Controls how much we're willing to speed scrolls up; bigger means more speed up.
+  calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, or too fast.
 
   # Scroll element by a relative amount (a number) in some direction.
   scroll: (element, direction, amount) ->
@@ -115,31 +118,28 @@ CoreScroller =
       checkVisibility element
       return
 
-    # We don't activate new animators on keyboard repeats.
+    # We don't activate new animators on keyboard repeats; rather, the most-recently activated animator
+    # continues scrolling.
     return if @lastEvent?.repeat
 
     activationTime = ++@time
-    isMyKeyStillDown = => @time == activationTime and @keyIsDown
+    myKeyIsStillDown = => @time == activationTime and @keyIsDown
 
-    # Store amount's sign and make amount positive; the logic is clearer when amount is positive.
+    # Store amount's sign and make amount positive; the arithmetic is clearer when amount is positive.
     sign = Math.sign amount
     amount = Math.abs amount
 
-    # Duration in ms. Allow a bit longer for longer scrolls.
+    # Initial intended scroll duration (in ms). We allow a bit longer for longer scrolls.
     duration = Math.max 100, 20 * Math.log amount
 
     totalDelta = 0
     totalElapsed = 0.0
     calibration = 1.0
     previousTimestamp = null
-    animatorId = null
-
-    advanceAnimation = -> animatorId = requestAnimationFrame animate
-    cancelAnimation = -> cancelAnimationFrame animatorId
 
     animate = (timestamp) =>
       previousTimestamp ?= timestamp
-      return advanceAnimation() if timestamp == previousTimestamp
+      return requestAnimationFrame(animate) if timestamp == previousTimestamp
 
       # The elapsed time is typically about 16ms.
       elapsed = timestamp - previousTimestamp
@@ -149,23 +149,24 @@ CoreScroller =
       # The constants in the duration calculation, above, are chosen to provide reasonable scroll speeds for
       # distinct keypresses.  For continuous scrolls, some scrolls are too slow, and others too fast. Here, we
       # speed up the slower scrolls, and slow down the faster scrolls.
-      if isMyKeyStillDown() and 50 <= totalElapsed and @minCalibration <= calibration <= @maxCalibration
+      if myKeyIsStillDown() and 75 <= totalElapsed and @minCalibration <= calibration <= @maxCalibration
         calibration *= 1.05 if 1.05 * calibration * amount < @calibrationBoundary # Speed up slow scrolls.
         calibration *= 0.95 if @calibrationBoundary < 0.95 * calibration * amount # Slow down fast scrolls.
 
       # Calculate the initial delta, rounding up to ensure progress.  Then, adjust delta to account for the
       # current scroll state.
       delta = Math.ceil amount * (elapsed / duration) * calibration
-      delta = if isMyKeyStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
+      delta = if myKeyIsStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
 
       if delta and performScroll element, direction, sign * delta
         totalDelta += delta
-        advanceAnimation()
+        requestAnimationFrame animate
       else
+        # We're done.
         checkVisibility element
-        cancelAnimation()
 
-    advanceAnimation()
+    # Launch animator.
+    requestAnimationFrame animate
 
 Scroller =
   init: (frontendSettings) ->
@@ -186,15 +187,18 @@ Scroller =
     activatedElement ||= document.body
     return unless activatedElement
 
-    element = findScrollableElement activatedElement, direction, amount, factor
-    elementAmount = factor * getDimension element, direction, amount
-    CoreScroller.scroll element, direction, elementAmount
+    # Avoid the expensive scroll calculation if it will not be used.  This reduces costs during smooth,
+    # continuous scrolls, and is just an optimization.
+    unless CoreScroller.wouldNotInitiateScroll()
+      element = findScrollableElement activatedElement, direction, amount, factor
+      elementAmount = factor * getDimension element, direction, amount
+      CoreScroller.scroll element, direction, elementAmount
 
   scrollTo: (direction, pos) ->
     return unless document.body or activatedElement
     activatedElement ||= document.body
 
-    element = findScrollableElement activatedElement, direction, pos
+    element = findScrollableElement activatedElement, direction, pos, 1
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
 
