@@ -6,12 +6,14 @@
       body {
         font: 14px "DejaVu Sans", "Arial", sans-serif;
         color: #303942;
-        width: 680px;
         margin: 0 auto;
       }
       a, a:visited { color: #15c; }
       a:active { color: #052577; }
-      div#wrapper { width: 500px; }
+      div#wrapper, #footerWrapper {
+        width: 540px;
+        margin-left: 35px;
+      }
       header {
         font-size: 18px;
         font-weight: normal;
@@ -141,20 +143,13 @@
         font-size: 80%;
       }
       /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-      td:first-child {
+      .caption {
         width: 1px;
         white-space: nowrap;
       }
       #buttonsPanel { width: 100%; }
       #advancedOptions { display: none; }
       #advancedOptionsLink { line-height: 24px; }
-      #saveOptions { float: right; }
-      #saveOptions { margin-right: 0; }
-      #showHelpDialogMessage {
-        width: 100%;
-        color: #979ca0;
-        font-size: 12px;
-      }
       .help {
         position: absolute;
         right: -320px;
@@ -180,10 +175,6 @@
       }
       /* Boolean options have a tighter form representation than text options. */
       td.booleanOption { font-size: 12px; }
-      footer {
-        padding: 15px 0;
-        border-top: 1px solid #eee;
-      }
       /* Ids and classes for rendering exclusionRules */
       #exclusionScrollBox {
         overflow: scroll;
@@ -193,21 +184,51 @@
         border: 1px solid #bfbfbf;
         border-radius: 2px;
         color: #444;
+        width: 100%
+      }
+      #exclusionRules {
+        width: 100%;
+      }
+      .exclusionRulePassKeys {
+        width: 33%;
+      }
+      .exclusionRemoveButton {
+        width: 1px; /* 1px; smaller than the button itself. */
       }
       input.pattern, input.passKeys {
+        width: 100%;
         font-family: Consolas, "Liberation Mono", Courier, monospace;
         font-size: 14px;
       }
-      .pattern {
-        width: 250px;
-      }
-      .passKeys {
-        width: 120px;
-      }
       #exclusionAddButton {
         float: right;
-        margin-top: 5px;
         margin-right: 0px;
+        margin-top: 5px;
+      }
+      #footer {
+        background: #f5f5f5;
+        position: fixed;
+        bottom: 0px;
+        z-index: 10;
+      }
+      #footer, #footerTable, #footerTableData {
+        width: 100%;
+      }
+      #endSpace {
+        /* Leave space for the fixed footer. */
+        min-height: 30px;
+        max-height: 30px;
+      }
+      #helpText {
+        color: #979ca0;
+        font-size: 12px;
+      }
+      #saveOptionsTableData {
+        float: right;
+      }
+      #saveOptions {
+        white-space: nowrap;
+        width: 110px;
       }
     </style>
 
@@ -237,10 +258,10 @@
                <div id="exclusionScrollBox">
                   <table id="exclusionRules"></table>
                   <template id="exclusionRuleTemplate">
-                    <tr>
+                  <tr>
                        <td><input/ type="text" class="pattern" placeholder="URL pattern"></td>
-                       <td><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
-                       <td><input/ type="button" class="exclusionRemoveButton" tabindex = "-1" value="&#x2716;"></td>
+                       <td class="exclusionRulePassKeys"><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
+                       <td class="exclusionRemoveButton"><input/ type="button" tabindex = "-1" value="&#x2716;"></td>
                     </tr>
                   </template>
                </div>
@@ -292,8 +313,7 @@ unmapAll
           </td>
         </tr>
         <tr>
-           <td><a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a></td>
-           <td><button id="saveOptions" disabled="true">Save Options</button></td>
+           <td colspan="2"><a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a></td>
         </tr>
         <tbody id='advancedOptions'>
           <tr>
@@ -315,7 +335,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Numbers used<br/> for filtered link hints</td>
+            <td class="caption">Numbers used<br/> for link hints</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
@@ -327,7 +347,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption"></td>
+            <td class="caption">Miscellaneous<br/>toggles</td>
             <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
@@ -433,14 +453,28 @@ unmapAll
           </tr>
         </tbody>
       </table>
+    </div>
 
-      <br/>
+    <!-- Some extra space which is hidden underneath the footer. -->
+    <div id="endSpace"/>
 
-      <footer id="showHelpDialogMessage">
-        Type <strong>?</strong> to show the Vimium help dialog.
-        <br/>
-        Type <strong>Ctrl-Enter</strong> in text inputs to save all options.
-      </footer>
+    <div id="footer">
+      <div id="footerWrapper">
+        <table id="footerTable">
+          <tr>
+            <td id="footerTableData">
+              <span id="helpText">
+                Type <strong>?</strong> to show the Vimium help dialog.
+                <br/>
+                Type <strong>Ctrl-Enter</strong> to save <i>all</i> options.
+              </span>
+            </td>
+            <td id="saveOptionsTableData">
+              <button id="saveOptions" disabled="true">No Changes</button>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
   </body>
 </html>
