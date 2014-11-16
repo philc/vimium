@@ -16,12 +16,18 @@ scrollProperties =
     viewSize: 'clientWidth'
   }
 
+# Translate a scroll request into a number (which will be interpreted by `scrollBy` as a relative amount, or
+# by `scrollTo` as an absolute amount).  :direction must be "x" or "y". :amount may be either a number (in
+# which case it is simply returned) or a string.  If :amount is a string, then it is either "max" (meaning the
+# height or width of element), or "viewSize".  In both cases, we look up and return the requested amount,
+# either in `element` or in `window`, as appropriate.
 getDimension = (el, direction, amount) ->
   if Utils.isString amount
     name = amount
     # the clientSizes of the body are the dimensions of the entire page, but the viewport should only be the
     # part visible through the window
     if name is 'viewSize' and el is document.body
+      # TODO(smblott) Should we not be returning the width/height of element, here?
       if direction is 'x' then window.innerWidth else window.innerHeight
     else
       el[scrollProperties[direction][name]]
@@ -35,7 +41,7 @@ performScroll = (element, direction, amount) ->
   element[axisName] += amount
   element[axisName] == amount + before
 
-# Test whether element should be scrolled.
+# Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
 shouldScroll = (element, direction) ->
   computedStyle = window.getComputedStyle(element)
   # Elements with `overflow: hidden` must not be scrolled.
@@ -47,13 +53,15 @@ shouldScroll = (element, direction) ->
 
 # Test whether element does actually scroll in the direction required when asked to do so.  Due to chrome bug
 # 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an element will scroll.
-# Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).
+# Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).  :factor is the factor by
+# which :scrollBy and :scrollTo will later scale the scroll amount. :factor can be negative, so we need it
+# here in order to decide whether we should test a forward scroll or a backward scroll.
 # Bug verified in Chrome 38.0.2125.104.
 doesScroll = (element, direction, amount, factor) ->
   # amount is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls (only
-  # gg, G, and friends), amount can be either 'max' or zero. In the former case, we're definitely scrolling
-  # forwards, so any positive value will do for delta.  In the latter, we're definitely scrolling backwards,
-  # so a delta of -1 will do.  For absolute scrolls, factor is always 1.
+  # gg, G, and friends), amount can be either a string ("max" or "viewSize") or zero. In the former case,
+  # we're definitely scrolling forwards, so any positive value will do for delta.  In the latter, we're
+  # definitely scrolling backwards, so a delta of -1 will do.  For absolute scrolls, factor is always 1.
   delta = factor * getDimension(element, direction, amount) || -1
   delta = Math.sign delta # 1 or -1
   performScroll(element, direction, delta) and performScroll(element, direction, -delta)
@@ -82,6 +90,8 @@ checkVisibility = (element) ->
 #     continues scrolling at least until its keyup event is received.  We never initiate a new animator on
 #     keyboard repeat.
 
+# CoreScroller contains the core function (scroll) and logic for relative scrolls.  All scrolls are ultimately
+# translated to relative scrolls.  CoreScroller is not exported.
 CoreScroller =
   init: (frontendSettings) ->
     @settings = frontendSettings
@@ -168,6 +178,7 @@ CoreScroller =
     # Launch animator.
     requestAnimationFrame animate
 
+# Scroller contains the two main scroll functions (scrollBy and scrollTo) which are exported to clients.
 Scroller =
   init: (frontendSettings) ->
     handlerStack.push DOMActivate: -> activatedElement = event.target
