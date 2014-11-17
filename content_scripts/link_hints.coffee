@@ -220,6 +220,9 @@ LinkHints =
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
       @deactivateMode(delay, -> LinkHints.delayMode = false)
+    else if clickEl.contentEditable == "true"
+      DomUtils.focusContentEditable(clickEl)
+      @deactivateMode(delay, -> LinkHints.delayMode = false)
     else
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" && clickEl.type != "button")
