@@ -115,6 +115,17 @@ DomUtils =
 
     element.focus()
 
+  isContentEditable: (element) ->
+    element = element.parentElement unless element.contentEditable
+    while element
+      switch element.contentEditable
+        when "true"
+          return true
+        when "inherit"
+          element = element.parentElement
+        else
+          return false
+
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
 
