@@ -3,6 +3,17 @@ originalRule = undefined
 originalPattern = undefined
 originalPassKeys = undefined
 
+generateDefaultPattern = (url) ->
+  if /^https?:\/\/./.test url
+    # The common use case is to disable Vimium at the domain level.
+    # Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
+    "https?:/" + url.split("/",3)[1..].join("/") + "/*"
+  else if /^[a-z]{3,}:\/\/./.test url
+    # Anything else which seems to be a URL.
+    url.split("/",3).join("/") + "/*"
+  else
+    url + "*"
+
 reset = (initialize=false) ->
   document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
   chrome.tabs.getSelected null, (tab) ->
@@ -13,11 +24,8 @@ reset = (initialize=false) ->
       originalPattern = originalRule.pattern
       originalPassKeys = originalRule.passKeys
     else
-      # The common use case is to disable Vimium at the domain level.
-      # This regexp will match "http://www.example.com/" from "http://www.example.com/path/to/page.html".
-      domain = (tab.url.match(/[^\/]*\/\/[^\/]*\//) or tab.url) + "*"
       originalRule = null
-      originalPattern = domain
+      originalPattern = generateDefaultPattern tab.url
       originalPassKeys = ""
     patternElement = document.getElementById("popupPattern")
     passKeysElement = document.getElementById("popupPassKeys")
