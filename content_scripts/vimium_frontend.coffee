@@ -200,14 +200,7 @@ enterInsertModeIfElementIsFocused = ->
   if (document.activeElement && isEditable(document.activeElement) && !findMode)
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
-onDOMActivate = (event) ->
-  handlerStack.bubbleEvent 'DOMActivate', event
-
-  # If the user blurs a contentEditable element using the mouse (ie. clicks another element), this may be
-  # the first that we know about it, since sometimes it will not fire a blur event. If the contentEditable
-  # element *is* still focused, exitInsertMode will do the right thing and keep us in insert mode.
-  if insertModeLock and DomUtils.isContentEditable insertModeLock
-    exitInsertMode(insertModeLock)
+onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -416,6 +409,8 @@ onKeydown = (event) ->
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
+      else if (DomUtils.isContentEditableFocused())
+        document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
@@ -563,18 +558,17 @@ window.enterInsertMode = (target) ->
 enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
 
 exitInsertMode = (target) ->
-  if target != undefined
-    # If we have a caret or a selection in a contentEditable element, we don't want to exit insert mode.
-    selection = document.getSelection()
-    if (selection.type == "Caret" or selection.type == "Range") and
-       DomUtils.isContentEditable selection.anchorNode
-      return
-
   if (target == undefined || insertModeLock == target)
     insertModeLock = null
     HUD.hide()
 
-isInsertMode = -> insertModeLock != null
+isInsertMode = ->
+  # If the user currently has a caret/selection in a contentEditable element, they should be in insert mode,
+  # but sometimes are not.  This can happen for several reasons:
+  #  - the contentEditable element sets document.designMode when it is focused (which immediately fires a
+  #    blur event).
+  #  - contentEditable is set dynamically (eg. inbox.google.com).
+  insertModeLock != null or DomUtils.isContentEditableFocused()
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
