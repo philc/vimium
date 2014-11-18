@@ -122,6 +122,7 @@ DomUtils =
   isContentEditableFocused: ->
     {type: selType, anchorNode} = document.getSelection()
     return false unless anchorNode?
+    # We need an element. If anchorNode is not an element (eg. a text node) then we take its parentElement.
     anchorElement = if "isContentEditable" of anchorNode then anchorNode else anchorNode.parentElement
 
     (selType == "Caret" or selType == "Range") and anchorElement.isContentEditable
