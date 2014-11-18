@@ -68,6 +68,11 @@ class NonEmptyTextOption extends Option
     super(field,enableSaveButton)
     @element.addEventListener "input", enableSaveButton
 
+    leaveEmptyMessage = document.createElement "div"
+    leaveEmptyMessage.className = "nonEmptyTextOption example info"
+    leaveEmptyMessage.appendChild document.createTextNode "Leave empty to reset this option."
+    @element.parentElement.appendChild(leaveEmptyMessage)
+
   populateElement: (value) -> @element.value = value
   # If the new value is not empty, then return it. Otherwise, restore the default value.
   readValueFromElement: -> if value = @element.value.trim() then value else @restoreToDefault()
@@ -187,10 +192,6 @@ document.addEventListener "DOMContentLoaded", ->
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions
   $("showCommands").addEventListener "click", activateHelpDialog
   $("filterLinkHints").addEventListener "click", maintainLinkHintsView
-
-  for element in document.getElementsByClassName "nonEmptyTextOption"
-    element.className = element.className + " example info"
-    element.innerHTML = "Leave empty to reset this option."
 
   maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled

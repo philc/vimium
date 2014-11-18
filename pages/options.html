@@ -10,6 +10,7 @@
       }
       a, a:visited { color: #15c; }
       a:active { color: #052577; }
+      span.monosp { font-family: monospace; }
       div#wrapper, #footerWrapper {
         width: calc(100% - 70px);
         max-width: 888px; /* Same as Chrome settings width */
@@ -260,21 +261,18 @@
                <button id="exclusionAddButton">Add Rule</button>
             </div>
           </td>
-          <td class="help">
-            <div class="example">
+          <td class="help"><div class="example">
               Wholly or partially disable Vimium.  "Patterns" are URL regular expressions;
               additionally, "*" matches any zero or more characters.
               <br/><br/>
               If "Keys" is left empty, then vimium is wholly disabled.
               Otherwise, just the listed keys are disabled (they are passed through).
-            </div>
-          </td>
+          </div></td>
         </tr>
         <tr>
           <td class="caption">Custom key<br/>mappings</td>
           <td class="option"><textarea id="keyMappings" type="text"></textarea></td>
-          <td id="mappingsHelp" class="help">
-            <div class="example">
+          <td id="mappingsHelp" class="help"><div class="example">
               <!-- TODO(ilya/philc): Expand this and style it better. -->
               Enter commands to remap your keys. Available commands:<br/>
               <pre id="exampleKeyMapping">
@@ -284,21 +282,18 @@ unmapAll
 " this is a comment
 # this is also a comment</pre>
               <a href="#" id="showCommands">Show available commands.</a>
-            </div>
-          </td>
+          </div></td>
         </tr>
         <tr>
           <td class="caption">Custom search<br/>engines</td>
           <td class="option"><textarea id="searchEngines"></textarea></td>
-          <td class="help">
-            <div class="example">
+          <td class="help"><div class="example">
               This adds search-engine shortcuts to the Vomnibar.<br/><br/>
               The format is:<br/>
               <pre>your-keyword: http://the-site.com/?q=%s</pre>
               %s will be replaced with your search terms.<br/>
               Lines which start with "#" are comments.
-            </div>
-          </td>
+          </div></td>
         </tr>
         <tr>
           <td class="caption"></td>
@@ -326,25 +321,19 @@ unmapAll
             <td class="caption">Characters used<br/> for link hints</td>
             <td class="option">
                 <input id="linkHintCharacters" type="text" />
-                <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 The characters placed next to each link after typing "f" to enter link-hint mode.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption">Numbers used<br/> for link hints</td>
             <td class="option">
                 <input id="linkHintNumbers" type="text" />
-                <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 The numbers placed next to each link after typing "f" to enter link-hint mode.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption">Miscellaneous<br/>options</td>
@@ -354,11 +343,9 @@ unmapAll
                 Use the link's name and numbers for link-hint filtering
               </label>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 In link-hint mode, this option lets you also select a link by typing its text.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption"></td>
@@ -368,11 +355,9 @@ unmapAll
                 Hide the Heads Up Display (HUD)
               </label>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 When enabled, the HUD will not be displayed.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption"></td>
@@ -382,74 +367,57 @@ unmapAll
                 Treat find queries as regular expressions.
               </label>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 Switch back to plain find mode by using the <code>\R</code> escape sequence.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption">Previous patterns</td>
             <td class="option">
                 <input id="previousPatterns" type="text" />
-                <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 The "navigate to previous page" command uses these patterns to find the link to follow.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption">Next patterns</td>
             <td class="option">
                 <input id="nextPatterns" type="text" />
-                <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 The "navigate to next page" command uses these patterns to find the link to follow.
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption">New tab URL</td>
             <td class="option">
                 <input id="newTabUrl" type="text" />
-                <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                   The page to open with the "create new tab" command.
-                  Set this to "<tt>pages/blank.html</tt>" for a blank page.<br />
-              </div>
-            </td>
+                  Set this to "<span class="monosp">pages/blank.html</span>" for a blank page.<br />
+            </div></td>
           </tr>
           <tr>
             <td class="caption">Default search<br/>engine</td>
             <td class="option">
                 <input id="searchUrl" type="text" />
-                <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                  The search engine to use in the Vomnibar <br> (e.g.: "http://duckduckgo.com/?q=").
-              </div>
-            </td>
+            </div></td>
           </tr>
           <tr>
             <td class="caption">CSS for link hints</td>
             <td class="option">
               <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
-              <div class="nonEmptyTextOption"></div>
             </td>
-            <td class="help">
-              <div class="example">
+            <td class="help"><div class="example">
                 The CSS used to style the characters next to each link hint.<br/><br/>
                 These styles are used in addition to and take precedence over Vimium's
                 default styles.
-              </div>
-            </td>
+            </div></td>
           </tr>
         </tbody>
       </table>
