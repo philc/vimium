@@ -560,7 +560,12 @@ exitInsertMode = (target) ->
     insertModeLock = null
     HUD.hide()
 
-isInsertMode = -> insertModeLock != null
+isInsertMode = ->
+  # In addition to checking insertModeLock, we also need to check whether the active element is
+  # contentEditable because some sites (e.g. inbox.google.com) change the contentEditable attribute on the
+  # fly; see #1245.
+  insertModeLock != null or
+    (document.activeElement and document.activeElement.isContentEditable)
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
