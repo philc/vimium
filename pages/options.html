@@ -11,7 +11,8 @@
       a, a:visited { color: #15c; }
       a:active { color: #052577; }
       div#wrapper, #footerWrapper {
-        width: 540px;
+        width: calc(100% - 70px);
+        max-width: 888px; /* Same as Chrome settings width */
         margin-left: 35px;
       }
       header {
@@ -90,67 +91,49 @@
       .info {
         margin-left: 0px;
       }
-      .caption {
+      td.caption {
         margin-right: 10px;
-        min-width: 130px;
+        max-width: 150px;
         padding-top: 3px;
         vertical-align: top;
+        /*white-space: nowrap;*/
       }
-      td { padding: 0; }
+      td.option {
+        min-width: calc(50% - 130px);
+      }
+      td.help {
+        max-width: 500px;
+      }
+      td.caption, td.option, td.help { padding-top: 0; }
       div#exampleKeyMapping {
         margin-left: 10px;
         margin-top: 5px;
       }
-      input#linkHintCharacters {
-        width: 100%;
-      }
-      input#linkHintNumbers {
-        width: 100%;
-      }
-      input#linkHintCharacters {
+      td.option > input[type="text"], td.option > textarea {
         width: 100%;
       }
       input#scrollStepSize {
         width: 40px;
         margin-right: 3px;
       }
-      textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
-        width: 100%;;
+      textarea#userDefinedLinkHintCss {
         min-height: 130px;
         white-space: nowrap;
       }
-      input#previousPatterns, input#nextPatterns {
-        width: 100%;
+      textarea#keyMappings {
+        min-height: 135px;
+        white-space: nowrap;
       }
-      input#newTabUrl {
-        width: 100%;
-      }
-      input#searchUrl {
-        width: 100%;
+      textarea#searchEngines {
+        min-height: 135px;
+        white-space: nowrap;
       }
       #status {
         margin-left: 10px;
         font-size: 80%;
       }
-      /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-      .caption {
-        width: 1px;
-        white-space: nowrap;
-      }
-      #buttonsPanel { width: 100%; }
       #advancedOptions { display: none; }
       #advancedOptionsLink { line-height: 24px; }
-      .help {
-        position: absolute;
-        right: -320px;
-        width: 320px;
-      }
-      input:read-only {
-        background-color: #eee;
-        color: #666;
-        pointer-events: none;
-        -webkit-user-select: none;
-      }
       input[type="text"], textarea {
         border: 1px solid #bfbfbf;
         border-radius: 2px;
@@ -256,16 +239,7 @@
       <table id="options">
         <tr>
           <td class="caption">Excluded URLs<br/>and keys</td>
-          <td>
-            <div class="help">
-              <div class="example">
-                Wholly or partially disable Vimium.  "Patterns" are URL regular expressions;
-                additionally, "*" matches any zero or more characters.
-                <br/><br/>
-                If "Keys" is left empty, then vimium is wholly disabled.
-                Otherwise, just the listed keys are disabled (they are passed through).
-              </div>
-            </div>
+          <td class="option">
             <div>
                <div id="exclusionScrollBox">
                   <table id="exclusionRules">
@@ -286,39 +260,44 @@
                <button id="exclusionAddButton">Add Rule</button>
             </div>
           </td>
+          <td class="help">
+            <div class="example">
+              Wholly or partially disable Vimium.  "Patterns" are URL regular expressions;
+              additionally, "*" matches any zero or more characters.
+              <br/><br/>
+              If "Keys" is left empty, then vimium is wholly disabled.
+              Otherwise, just the listed keys are disabled (they are passed through).
+            </div>
+          </td>
         </tr>
         <tr>
           <td class="caption">Custom key<br/>mappings</td>
-          <td id="mappingsHelp" verticalAlign="top">
-            <div class="help">
-              <div class="example">
-                <!-- TODO(ilya/philc): Expand this and style it better. -->
-                Enter commands to remap your keys. Available commands:<br/>
-                <pre id="exampleKeyMapping">
+          <td class="option"><textarea id="keyMappings" type="text"></textarea></td>
+          <td id="mappingsHelp" class="help">
+            <div class="example">
+              <!-- TODO(ilya/philc): Expand this and style it better. -->
+              Enter commands to remap your keys. Available commands:<br/>
+              <pre id="exampleKeyMapping">
 map j scrollDown
 unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-                <a href="#" id="showCommands">Show available commands.</a>
-              </div>
+              <a href="#" id="showCommands">Show available commands.</a>
             </div>
-            <textarea id="keyMappings" type="text"></textarea>
           </td>
         </tr>
         <tr>
           <td class="caption">Custom search<br/>engines</td>
-          <td verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  This adds search-engine shortcuts to the Vomnibar.<br/><br/>
-                  The format is:<br/>
-                  <pre>your-keyword: http://the-site.com/?q=%s</pre>
-                  %s will be replaced with your search terms.<br/>
-                  Lines which start with "#" are comments.
-                </div>
-              </div>
-              <textarea id="searchEngines"></textarea>
+          <td class="option"><textarea id="searchEngines"></textarea></td>
+          <td class="help">
+            <div class="example">
+              This adds search-engine shortcuts to the Vomnibar.<br/><br/>
+              The format is:<br/>
+              <pre>your-keyword: http://the-site.com/?q=%s</pre>
+              %s will be replaced with your search terms.<br/>
+              Lines which start with "#" are comments.
+            </div>
           </td>
         </tr>
         <tr>
@@ -336,142 +315,140 @@ unmapAll
         <tbody id='advancedOptions'>
           <tr>
             <td class="caption">Scroll step size</td>
-            <td>
-                <div class="help">
-                  <div class="example">
-                    The size for basic movements (usually j/k/h/l).
-                  </div>
-                </div>
-              <input id="scrollStepSize" type="number" />px
+            <td class="option"><input id="scrollStepSize" type="number" />px</td>
+            <td class="help">
+              <div class="example">
+                The size for basic movements (usually j/k/h/l).
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">Characters used<br/> for link hints</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The characters placed next to each link after typing "f" to enter link-hint mode.
-                  </div>
-                </div>
+            <td class="option">
                 <input id="linkHintCharacters" type="text" />
-                <div class="nonEmptyTextOption">
+                <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                The characters placed next to each link after typing "f" to enter link-hint mode.
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">Numbers used<br/> for link hints</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The numbers placed next to each link after typing "f" to enter link-hint mode.
-                  </div>
-                </div>
+            <td class="option">
                 <input id="linkHintNumbers" type="text" />
-                <div class="nonEmptyTextOption">
+                <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                The numbers placed next to each link after typing "f" to enter link-hint mode.
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">Miscellaneous<br/>options</td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  In link-hint mode, this option lets you also select a link by typing its text.
-                </div>
-              </div>
+            <td class="option booleanOption">
               <label>
                 <input id="filterLinkHints" type="checkbox"/>
                 Use the link's name and numbers for link-hint filtering
               </label>
             </td>
+            <td class="help">
+              <div class="example">
+                In link-hint mode, this option lets you also select a link by typing its text.
+              </div>
+            </td>
           </tr>
           <tr>
             <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  When enabled, the HUD will not be displayed.
-                </div>
-              </div>
+            <td class="option booleanOption">
               <label>
                 <input id="hideHud" type="checkbox"/>
                 Hide the Heads Up Display (HUD)
               </label>
             </td>
+            <td class="help">
+              <div class="example">
+                When enabled, the HUD will not be displayed.
+              </div>
+            </td>
           </tr>
           <tr>
             <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  Switch back to plain find mode by using the <code>\R</code> escape sequence.
-                </div>
-              </div>
+            <td class="option booleanOption">
               <label>
                 <input id="regexFindMode" type="checkbox"/>
                 Treat find queries as regular expressions.
               </label>
             </td>
+            <td class="help">
+              <div class="example">
+                Switch back to plain find mode by using the <code>\R</code> escape sequence.
+              </div>
+            </td>
           </tr>
           <tr>
             <td class="caption">Previous patterns</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The "navigate to previous page" command uses these patterns to find the link to follow.
-                  </div>
-                </div>
+            <td class="option">
                 <input id="previousPatterns" type="text" />
-                <div class="nonEmptyTextOption">
+                <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                The "navigate to previous page" command uses these patterns to find the link to follow.
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">Next patterns</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The "navigate to next page" command uses these patterns to find the link to follow.
-                  </div>
-                </div>
+            <td class="option">
                 <input id="nextPatterns" type="text" />
-                <div class="nonEmptyTextOption">
+                <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                The "navigate to next page" command uses these patterns to find the link to follow.
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">New tab URL</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                      The page to open with the "create new tab" command.
-                      Set this to "<tt>pages/blank.html</tt>" for a blank page.<br />
-                  </div>
-                </div>
+            <td class="option">
                 <input id="newTabUrl" type="text" />
-                <div class="nonEmptyTextOption">
+                <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                  The page to open with the "create new tab" command.
+                  Set this to "<tt>pages/blank.html</tt>" for a blank page.<br />
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">Default search<br/>engine</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                     The search engine to use in the Vomnibar <br> (e.g.: "http://duckduckgo.com/?q=").
-                  </div>
-                </div>
+            <td class="option">
                 <input id="searchUrl" type="text" />
-                <div class="nonEmptyTextOption">
+                <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                 The search engine to use in the Vomnibar <br> (e.g.: "http://duckduckgo.com/?q=").
+              </div>
             </td>
           </tr>
           <tr>
             <td class="caption">CSS for link hints</td>
-            <td verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  The CSS used to style the characters next to each link hint.<br/><br/>
-                  These styles are used in addition to and take precedence over Vimium's
-                  default styles.
-                </div>
-              </div>
+            <td class="option">
               <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
-              <div class="nonEmptyTextOption">
+              <div class="nonEmptyTextOption"></div>
+            </td>
+            <td class="help">
+              <div class="example">
+                The CSS used to style the characters next to each link hint.<br/><br/>
+                These styles are used in addition to and take precedence over Vimium's
+                default styles.
+              </div>
             </td>
           </tr>
         </tbody>
