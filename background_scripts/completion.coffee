@@ -259,7 +259,8 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
-# TabRecency associates a logical timestamp with each tab id.
+# TabRecency associates a logical timestamp with each tab id.  These are used to provide an initial
+# recency-based ordering in the tabs vomnibar (which allows jumping quickly between recently-visited tabs).
 class TabRecency
   constructor: ->
     @timestamp = 1
@@ -272,8 +273,19 @@ class TabRecency
       @remove removedTabId
       @add addedTabId
 
-  add: (tabId) -> @cache[tabId] = ++@timestamp
+  add: (tabId) -> @soon => @cache[tabId] = ++@timestamp
   remove: (tabId) -> delete @cache[tabId]
+
+  # Call callback in 750ms time; unless we're pre-empted by another call before then.  The idea is that tabs
+  # which are visited only for a very-short time (e.g. with `3J`) shouldn't register as visited at all.
+  soon: do ->
+    timer = null
+    (callback) ->
+      clearTimeout timer if timer
+      timer = setTimeout (->
+        timer = null
+        callback())
+      , 750
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
