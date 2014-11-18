@@ -88,8 +88,6 @@ class ExclusionRulesOption extends Option
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
 
   populateElement: (rules) ->
-    # while @element.firstChild.nextSibling
-    #   @element.removeChild @element.firstChild.nextSibling
     for rule in rules
       @appendRule rule
 
@@ -194,5 +192,6 @@ document.addEventListener "DOMContentLoaded", ->
 
   document.addEventListener "keyup", (event) ->
     if event.ctrlKey and event.keyCode == 13
+      document.activeElement.blur() if document?.activeElement?.blur
       Option.saveOptions()
 
