@@ -88,8 +88,8 @@ class ExclusionRulesOption extends Option
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
 
   populateElement: (rules) ->
-    while @element.firstChild
-      @element.removeChild @element.firstChild
+    # while @element.firstChild.nextSibling
+    #   @element.removeChild @element.firstChild.nextSibling
     for rule in rules
       @appendRule rule
 
@@ -114,7 +114,7 @@ class ExclusionRulesOption extends Option
 
   readValueFromElement: ->
     rules =
-      for element in @element.children
+      for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
         pattern = element.children[0].firstChild.value.trim()
         passKeys = element.children[1].firstChild.value.trim()
         { pattern: pattern, passKeys: passKeys }

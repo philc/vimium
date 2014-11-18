@@ -114,19 +114,9 @@
         width: 40px;
         margin-right: 3px;
       }
-      textarea#userDefinedLinkHintCss {
+      textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
         width: 100%;;
         min-height: 130px;
-        white-space: nowrap;
-      }
-      textarea#keyMappings {
-        width: 100%;
-        min-height: 135px;
-        white-space: nowrap;
-      }
-      textarea#searchEngines {
-        width: 100%;
-        min-height: 135px;
         white-space: nowrap;
       }
       input#previousPatterns, input#nextPatterns {
@@ -180,7 +170,8 @@
         overflow: scroll;
         overflow-x: hidden;
         overflow-y: auto;
-        height: 170px;
+        min-height: 135px;
+        height: 135px;
         border: 1px solid #bfbfbf;
         border-radius: 2px;
         color: #444;
@@ -195,10 +186,14 @@
       .exclusionRemoveButton {
         width: 1px; /* 1px; smaller than the button itself. */
       }
-      input.pattern, input.passKeys {
+      input.pattern, input.passKeys, .exclusionHeaderText {
         width: 100%;
         font-family: Consolas, "Liberation Mono", Courier, monospace;
         font-size: 14px;
+      }
+      .exclusionHeaderText {
+        padding-left: 3px;
+        color: #979ca0;
       }
       #exclusionAddButton {
         float: right;
@@ -207,6 +202,7 @@
       }
       #footer {
         background: #f5f5f5;
+        border-top: 1px solid #979ca0;
         position: fixed;
         bottom: 0px;
         z-index: 10;
@@ -220,7 +216,6 @@
         max-height: 30px;
       }
       #helpText {
-        color: #979ca0;
         font-size: 12px;
       }
       #saveOptionsTableData {
@@ -245,24 +240,27 @@
           <td>
             <div class="help">
               <div class="example">
-                The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs
-                matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the
-                character "*" matches any zero or more characters.
+                Wholly or partially disable Vimium.  "Patterns" are URL regular expressions;
+                additionally, "*" matches any zero or more characters.
                 <br/><br/>
-                The right column contains keys which Vimium would would normally handle, but which should
-                instead be passed through to the underlying web page (for pages matching the
-                pattern).  If left empty, then Vimium will be wholly disabled.
+                If "Keys" is left empty, then vimium is wholly disabled.
+                Otherwise, just the listed keys are disabled (they are passed through).
               </div>
             </div>
             <div>
                <div id="exclusionScrollBox">
-                  <table id="exclusionRules"></table>
+                  <table id="exclusionRules">
+                     <tr>
+                        <td><span class="exclusionHeaderText">Patterns</span></td>
+                        <td><span class="exclusionHeaderText">Keys</span></td>
+                     </tr>
+                  </table>
                   <template id="exclusionRuleTemplate">
-                  <tr>
-                       <td><input/ type="text" class="pattern" placeholder="URL pattern"></td>
-                       <td class="exclusionRulePassKeys"><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
-                       <td class="exclusionRemoveButton"><input/ type="button" tabindex = "-1" value="&#x2716;"></td>
-                    </tr>
+                     <tr class="exclusionRuleTemplateInstance">
+                        <td><input/ type="text" class="pattern" placeholder="URL pattern"></td>
+                        <td class="exclusionRulePassKeys"><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
+                        <td class="exclusionRemoveButton"><input/ type="button" tabindex = "-1" value="&#x2716;"></td>
+                     </tr>
                   </template>
                </div>
                <button id="exclusionAddButton">Add Rule</button>
@@ -347,7 +345,7 @@ unmapAll
             </td>
           </tr>
           <tr>
-            <td class="caption">Miscellaneous<br/>toggles</td>
+            <td class="caption">Miscellaneous<br/>options</td>
             <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
