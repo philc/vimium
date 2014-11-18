@@ -266,6 +266,7 @@ class TabRecency
     @timestamp = 1
     @current = -1
     @cache = {}
+    @removed = []
 
     chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
     chrome.tabs.onRemoved.addListener (tabId) => @remove tabId
@@ -276,21 +277,24 @@ class TabRecency
 
   add: (tabId) ->
     @current = tabId
-    @registerTabSoon tabId
+    @registerVisitSoon tabId
 
   remove: (tabId) ->
+    @removed.push tabId
     delete @cache[tabId]
 
-  # Call callback in 750ms time; unless we're pre-empted by another call before then.  The idea is that tabs
-  # which are visited only for a very-short time (e.g. with `3J`) shouldn't register as visited at all.
-  registerTabSoon: do ->
+  # Register tabId in 500ms time, unless another tab is visited before then.  Tabs which are visited only for
+  # a very-short time (e.g. those passed through with `5J`) shouldn't be registered as visited at all.
+  registerVisitSoon: do ->
     timer = null
     (tabId) ->
       clearTimeout timer if timer
       timer = setTimeout (=>
         timer = null
-        @cache[tabId] = ++@timestamp)
-      , 750
+        # Register visit, except if tabId has already been removed (note: tab IDs are unique).
+        @cache[tabId] = ++@timestamp unless tabId in @removed
+        @removed = [])
+      , 500
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
