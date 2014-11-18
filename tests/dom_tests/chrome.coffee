@@ -18,6 +18,9 @@ root.chrome = {
     onMessage: {
       addListener: ->
     }
+    onInstalled: {
+      addListener: ->
+    }
     sendMessage: ->
     getManifest: ->
   }
