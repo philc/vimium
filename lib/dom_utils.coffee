@@ -109,22 +109,18 @@ DomUtils =
       range.setStartAfter element.lastChild
       range.setEndAfter element.lastChild
 
-    sel= window.getSelection()
+    sel = window.getSelection()
     sel.removeAllRanges()
     sel.addRange range
 
     element.focus()
 
-  isContentEditable: (element) ->
-    element = element.parentElement unless element.contentEditable
-    while element
-      switch element.contentEditable
-        when "true"
-          return true
-        when "inherit"
-          element = element.parentElement
-        else
-          return false
+  isContentEditableFocused: ->
+    {type: selType, anchorNode} = document.getSelection()
+    return false unless anchorNode?
+    anchorElement = if "isContentEditable" of anchorNode then anchorNode else anchorNode.parentElement
+
+    (selType == "Caret" or selType == "Range") and anchorElement.isContentEditable
 
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
