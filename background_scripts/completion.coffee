@@ -264,6 +264,7 @@ class DomainCompleter
 class TabRecency
   constructor: ->
     @timestamp = 1
+    @current = -1
     @cache = {}
 
     chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
@@ -273,24 +274,28 @@ class TabRecency
       @remove removedTabId
       @add addedTabId
 
-  add: (tabId) -> @soon => @cache[tabId] = ++@timestamp
-  remove: (tabId) -> delete @cache[tabId]
+  add: (tabId) ->
+    @current = tabId
+    @registerTabSoon tabId
+
+  remove: (tabId) ->
+    delete @cache[tabId]
 
   # Call callback in 750ms time; unless we're pre-empted by another call before then.  The idea is that tabs
   # which are visited only for a very-short time (e.g. with `3J`) shouldn't register as visited at all.
-  soon: do ->
+  registerTabSoon: do ->
     timer = null
-    (callback) ->
+    (tabId) ->
       clearTimeout timer if timer
-      timer = setTimeout (->
+      timer = setTimeout (=>
         timer = null
-        callback())
+        @cache[tabId] = ++@timestamp)
       , 750
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
     @cache[tabId] ||= 1
-    if @cache[tabId] == @timestamp then 0.0 else @cache[tabId] / @timestamp
+    if tabId == @current then 0.0 else @cache[tabId] / @timestamp
 
 tabRecency = new TabRecency()
 
