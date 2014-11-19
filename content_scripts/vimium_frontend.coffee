@@ -478,7 +478,9 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
-  else if contentEditableNormalMode and not KeyboardUtils.isEscape(event)
+  else if (contentEditableNormalMode and not KeyboardUtils.isEscape(event) and not
+           ([keyCodes.shiftKey, keyCodes.ctrlKey, keyCodes.altKey].indexOf(event.keyCode) != -1 or
+            currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)))
     # We've got a key we're not handling, blur the contentEditable element.
     contentEditableNormalMode = false
     document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
