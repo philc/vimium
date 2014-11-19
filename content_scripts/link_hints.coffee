@@ -15,6 +15,7 @@ OPEN_WITH_QUEUE = {}
 COPY_LINK_URL = {}
 OPEN_INCOGNITO = {}
 DOWNLOAD_LINK_URL = {}
+MARKER_MINIMUM_Z_INDEX = 2000000000
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -65,6 +66,8 @@ LinkHints =
 
     @setOpenLinkMode(mode)
     hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
+    for marker, index in hintMarkers
+      marker.style.setProperty('z-index', MARKER_MINIMUM_Z_INDEX + index, 'important')
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
@@ -192,6 +195,10 @@ LinkHints =
 
       else # event.keyCode == keyCodes.ctrlKey
         @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
+
+    if event.keyCode == KeyboardUtils.keyCodes.space
+      rotateOverlappingMarkers(hintMarkers, yes)
+      return
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
@@ -502,6 +509,73 @@ numberToHintString = (number, characterSet, numHintDigits = 0) ->
 
   hintString.join("")
 
+#
+# Finds all stacks of markers that overlap each other (by using `getStackFor`) (#1), and rotates
+# their `z-index`:es (#2), thus alternating which markers are visible.
+# Ported from VimFx (https://github.com/akhodakivskiy/VimFx).
+#
+rotateOverlappingMarkers = (originalMarkers, forward) ->
+  # Shallow working copy. This is necessary since `markers` will be mutated and eventually empty.
+  markers = originalMarkers[..]
+
+  # (#1)
+  stacks = (getStackFor(markers.pop(), markers) while markers.length > 0)
+
+  # (#2)
+  # Stacks of length 1 don't participate in any overlapping, and can therefore be skipped.
+  for stack in stacks when stack.length > 1
+    # This sort is not required, but makes the rotation more predictable.
+    stack.sort((a, b) -> a.style.zIndex - b.style.zIndex)
+
+    # Array of z-indices
+    indexStack = (marker.style.zIndex for marker in stack)
+    # Shift the array of indices one item forward or back
+    if forward
+      indexStack.unshift(indexStack.pop())
+    else
+      indexStack.push(indexStack.shift())
+
+    for marker, index in stack
+      marker.style.setProperty('z-index', indexStack[index], 'important')
+
+#
+# Return the boundaries of a marker.
+#
+getRect = (marker) ->
+  top = parseInt(marker.style.top)
+  bottom = top + marker.offsetHeight
+  left = parseInt(marker.style.left)
+  right = top + marker.offsetWidth
+
+  { top, left, bottom, right }
+
+#
+# Get an array containing `marker` and all markers that overlap `marker`, if any, which is called
+# a "stack". All markers in the returned stack are spliced out from `markers`, thus mutating it.
+# Ported from VimFx (https://github.com/akhodakivskiy/VimFx).
+#
+getStackFor = (marker, markers) ->
+  stack = [marker]
+
+  { top, left, bottom, right } = getRect(marker)
+
+  index = 0
+  while index < markers.length
+    nextMarker = markers[index]
+
+    { top: nextTop, bottom: nextBottom, left: nextLeft, right: nextRight } = getRect(nextMarker)
+    overlapsVertically   = (nextBottom >= top  and nextTop  <= bottom)
+    overlapsHorizontally = (nextRight  >= left and nextLeft <= right)
+
+    if overlapsVertically and overlapsHorizontally
+      # Also get all markers overlapping this one
+      markers.splice(index, 1)
+      stack = stack.concat(getStackFor(nextMarker, markers))
+    else
+      # Continue the search
+      index++
+
+  stack
 
 root = exports ? window
 root.LinkHints = LinkHints
