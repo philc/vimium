@@ -7,6 +7,7 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
+contentEditableNormalMode = false
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -364,7 +365,7 @@ onKeypress = (event) ->
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
-      else if (!isInsertMode() && !findMode)
+      else if ((contentEditableNormalMode or not isInsertMode()) and not findMode)
         if (isPassKey keyChar)
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
@@ -402,7 +403,7 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
+  if (isInsertMode() and KeyboardUtils.isEscape(event))
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
@@ -410,7 +411,13 @@ onKeydown = (event) ->
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       else if (DomUtils.isContentEditableFocused())
-        document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
+        # If the user presses escape once, retain the selection and only blur if we don't handle the key.
+        # Pressing escape the second time also removes the selection, which blurs the element.
+        if (contentEditableNormalMode)
+          contentEditableNormalMode = false
+          document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
+        else
+          contentEditableNormalMode = true
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
@@ -440,11 +447,13 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     handledKeydownEvents.push event
 
-  else if (!isInsertMode() && !findMode)
+  else if ((contentEditableNormalMode or not isInsertMode()) and not findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
+      else if (contentEditableNormalMode) # We won't handle the key and the user wanted to blur the element.
+        document.getSelection.removeAllRanges() # Remove the caret, which blurs the element.
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -452,6 +461,9 @@ onKeydown = (event) ->
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
+      if (contentEditableNormalMode)
+        contentEditableNormalMode = false
+        document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
       return undefined
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
@@ -461,11 +473,15 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
-     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
+  if (keyChar == "" and (contentEditableNormalMode or not isInsertMode()) and
+     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 or
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
+  else if contentEditableNormalMode and not KeyboardUtils.isEscape(event)
+    # We've got a key we're not handling, blur the contentEditable element.
+    contentEditableNormalMode = false
+    document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
 
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
@@ -555,7 +571,9 @@ window.enterInsertMode = (target) ->
 # If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
 # leave insert mode when the user presses <ESC>.
 #
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
+enterInsertModeWithoutShowingIndicator = (target) ->
+  insertModeLock = target
+  contentEditableNormalMode = false
 
 exitInsertMode = (target) ->
   if (target == undefined || insertModeLock == target)
