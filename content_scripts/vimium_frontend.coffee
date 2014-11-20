@@ -408,24 +408,24 @@ onKeydown = (event) ->
   if (isInsertMode() and KeyboardUtils.isEscape(event))
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
+      keyHandled = true
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       else if (DomUtils.isContentEditableFocused())
-        # If the user presses escape once, retain the selection and only blur if we don't handle the key.
+        # If the user presses escape once with text selected, retain the selection and only blur if we don't
+        # end up handling a key.
         # If the user presses escape again, we blur directly since keyHandled = false.
-        if (contentEditableNormalMode)
-          DomUtils.suppressPropagation(event)
-          handledKeydownEvents.push event
+        if (contentEditableNormalMode or document.getSelection().type == "Caret")
+          # We check these values in order to blur, so make sure we have them set correctly.
+          contentEditableNormalMode = true
           keyHandled = false
         else
           contentEditableNormalMode = true
-          keyHandled = true
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
-      keyHandled = true
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
