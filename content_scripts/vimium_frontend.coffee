@@ -409,8 +409,6 @@ onKeydown = (event) ->
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
-      else if (DomUtils.isContentEditableFocused())
-        document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
