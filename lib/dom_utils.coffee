@@ -127,6 +127,15 @@ DomUtils =
 
     (selType == "Caret" or selType == "Range") and anchorElement.isContentEditable
 
+  getFocusedContentEditable: ->
+    {anchorNode} = document.getSelection()
+    ceElement = if "isContentEditable" of anchorNode then anchorNode else anchorNode.parentElement
+
+    return null unless ceElement.isContentEditable
+
+    ceElement = ceElement.parentElement while ceElement.parentElement.isContentEditable
+    ceElement
+
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
 
