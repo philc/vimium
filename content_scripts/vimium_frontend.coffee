@@ -529,6 +529,7 @@ isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase(
 # any element which makes it a rich text editor, like the notes on jjot.com.
 #
 isEditable = (target) ->
+  # Note: document.activeElement.isContentEditable is also rechecked in isInsertMode() dynamically.
   return true if target.isContentEditable
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
@@ -552,6 +553,7 @@ window.enterInsertMode = (target) ->
 # when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
 # If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
 # leave insert mode when the user presses <ESC>.
+# Note. This returns the truthiness of target, which is required by isInsertMode.
 #
 enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
 
@@ -561,11 +563,13 @@ exitInsertMode = (target) ->
     HUD.hide()
 
 isInsertMode = ->
-  # In addition to checking insertModeLock, we also need to check whether the active element is
-  # contentEditable because some sites (e.g. inbox.google.com) change the contentEditable attribute on the
-  # fly; see #1245.
-  insertModeLock != null or
-    (document.activeElement and document.activeElement.isContentEditable)
+  return true if insertModeLock != null
+  # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
+  # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check whether
+  # the active element is contentEditable.
+  document.activeElement and
+    document.activeElement.isContentEditable and
+    enterInsertModeWithoutShowingIndicator document.activeElement
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
