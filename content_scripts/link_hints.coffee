@@ -198,7 +198,6 @@ LinkHints =
 
     else if event.keyCode == keyCodes.space
       rotateOverlappingMarkers(hintMarkers, not event.shiftKey)
-      return
 
     # TODO(philc): Ignore keys that have modifiers.
     else if (KeyboardUtils.isEscape(event))
