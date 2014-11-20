@@ -367,7 +367,7 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (currentCompletionKeys.indexOf(keyChar) != -1)
+        if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
@@ -440,7 +440,7 @@ onKeydown = (event) ->
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1)
+      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
 
