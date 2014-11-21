@@ -259,11 +259,14 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
-# TabRecency associates a logical timestamp with each tab id.
+# TabRecency associates a logical timestamp with each tab id.  These are used to provide an initial
+# recency-based ordering in the tabs vomnibar (which allows jumping quickly between recently-visited tabs).
 class TabRecency
   constructor: ->
     @timestamp = 1
+    @current = -1
     @cache = {}
+    @removed = []
 
     chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
     chrome.tabs.onRemoved.addListener (tabId) => @remove tabId
@@ -272,13 +275,31 @@ class TabRecency
       @remove removedTabId
       @add addedTabId
 
-  add: (tabId) -> @cache[tabId] = ++@timestamp
-  remove: (tabId) -> delete @cache[tabId]
+  add: (tabId) ->
+    @current = tabId
+    @registerVisitSoon tabId
+
+  remove: (tabId) ->
+    @removed.push tabId
+    delete @cache[tabId]
+
+  # Register tabId in 500ms time, unless another tab is visited before then.  Tabs which are visited only for
+  # a very-short time (e.g. those passed through with `5J`) shouldn't be registered as visited at all.
+  registerVisitSoon: do ->
+    timer = null
+    (tabId) ->
+      clearTimeout timer if timer
+      timer = setTimeout (=>
+        timer = null
+        # Register visit, except if tabId has already been removed (note: tab IDs are unique).
+        @cache[tabId] = ++@timestamp unless tabId in @removed
+        @removed = [])
+      , 500
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
     @cache[tabId] ||= 1
-    if @cache[tabId] == @timestamp then 0.0 else @cache[tabId] / @timestamp
+    if tabId == @current then 0.0 else @cache[tabId] / @timestamp
 
 tabRecency = new TabRecency()
 
