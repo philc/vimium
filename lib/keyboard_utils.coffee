@@ -46,7 +46,9 @@ KeyboardUtils =
       correctedIdentifiers = @keyIdentifierCorrectionMap[keyIdentifier]
       keyIdentifier = if event.shiftKey then correctedIdentifiers[1] else correctedIdentifiers[0]
     unicodeKeyInHex = "0x" + keyIdentifier.substring(2)
-    character = String.fromCharCode(parseInt(unicodeKeyInHex)).toLowerCase()
+    keyCode = parseInt(unicodeKeyInHex)
+    return "" unless keyCode < 128
+    character = String.fromCharCode(keyCode).toLowerCase()
     if event.shiftKey then character.toUpperCase() else character
 
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey

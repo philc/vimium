@@ -196,12 +196,11 @@ LinkHints =
       else # event.keyCode == keyCodes.ctrlKey
         @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
-    if event.keyCode == KeyboardUtils.keyCodes.space
-      rotateOverlappingMarkers(hintMarkers, yes)
-      return
+    else if event.keyCode == keyCodes.space
+      rotateOverlappingMarkers(hintMarkers, not event.shiftKey)
 
     # TODO(philc): Ignore keys that have modifiers.
-    if (KeyboardUtils.isEscape(event))
+    else if (KeyboardUtils.isEscape(event))
       @deactivateMode()
     else
       keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
