@@ -262,12 +262,16 @@ class DomainCompleter
 # TabRecency associates a logical timestamp with each tab id.  These are used to provide an initial
 # recency-based ordering in the tabs vomnibar (which allows jumping quickly between recently-visited tabs).
 class TabRecency
-  constructor: ->
-    @timestamp = 1
-    @current = -1
-    @cache = {}
-    @removed = []
+  timestamp: 1
+  current: -1
+  cache: {}
 
+  lastVisited: null
+  lastVisitedTime: null
+
+  timeDelta: 500
+
+  constructor: ->
     chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
     chrome.tabs.onRemoved.addListener (tabId) => @remove tabId
 
@@ -276,25 +280,23 @@ class TabRecency
       @add addedTabId
 
   add: (tabId) ->
+    currentTime = new Date()
+    # Register tabId if it has been visited for at least @timeDelta.  Tabs which are visited only for a
+    # very-short time (e.g. those passed through with `5J`) shouldn't be registered as visited at all.
+    if @lastVisitedTime? and currentTime - @lastVisitedTime >= @timeDelta
+      @cache[@lastVisited] = ++@timestamp
+
     @current = tabId
-    @registerVisitSoon tabId
+    @lastVisited = tabId
+    # If the tab we were previously on has gone away (or never existed if this is the first tab), then make
+    # this one registers as soon as it's blurred.
+    @lastVisitedTime = if @lastVisitedTime? then currentTime else new Date(currentTime - @timeDelta)
 
   remove: (tabId) ->
-    @removed.push tabId
+    if tabId == @lastVisited
+      # Ensure we don't register this tab, since it's going away.
+      @lastVisited = @lastVisitedTime = null
     delete @cache[tabId]
-
-  # Register tabId in 500ms time, unless another tab is visited before then.  Tabs which are visited only for
-  # a very-short time (e.g. those passed through with `5J`) shouldn't be registered as visited at all.
-  registerVisitSoon: do ->
-    timer = null
-    (tabId) ->
-      clearTimeout timer if timer
-      timer = setTimeout (=>
-        timer = null
-        # Register visit, except if tabId has already been removed (note: tab IDs are unique).
-        @cache[tabId] = ++@timestamp unless tabId in @removed
-        @removed = [])
-      , 500
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
