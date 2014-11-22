@@ -95,3 +95,5 @@ exports.chrome =
         callback() if callback
         # Now, generate (supposedly asynchronous) notification for listeners.
         global.chrome.storage.onChanged.callEmpty(key)
+
+exports.setTimeout = (callback,timeout) -> callback()

@@ -259,12 +259,19 @@ class DomainCompleter
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
 
-# TabRecency associates a logical timestamp with each tab id.
+# TabRecency associates a logical timestamp with each tab id.  These are used to provide an initial
+# recency-based ordering in the tabs vomnibar (which allows jumping quickly between recently-visited tabs).
 class TabRecency
-  constructor: ->
-    @timestamp = 1
-    @cache = {}
+  timestamp: 1
+  current: -1
+  cache: {}
 
+  lastVisited: null
+  lastVisitedTime: null
+
+  timeDelta: 500
+
+  constructor: ->
     chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
     chrome.tabs.onRemoved.addListener (tabId) => @remove tabId
 
@@ -272,13 +279,29 @@ class TabRecency
       @remove removedTabId
       @add addedTabId
 
-  add: (tabId) -> @cache[tabId] = ++@timestamp
-  remove: (tabId) -> delete @cache[tabId]
+  add: (tabId) ->
+    currentTime = new Date()
+    # Register tabId if it has been visited for at least @timeDelta.  Tabs which are visited only for a
+    # very-short time (e.g. those passed through with `5J`) shouldn't be registered as visited at all.
+    if @lastVisitedTime? and currentTime - @lastVisitedTime >= @timeDelta
+      @cache[@lastVisited] = ++@timestamp
+
+    @current = tabId
+    @lastVisited = tabId
+    # If the tab we were previously on has gone away (or never existed if this is the first tab), then make
+    # this one registers as soon as it's blurred.
+    @lastVisitedTime = if @lastVisitedTime? then currentTime else new Date(currentTime - @timeDelta)
+
+  remove: (tabId) ->
+    if tabId == @lastVisited
+      # Ensure we don't register this tab, since it's going away.
+      @lastVisited = @lastVisitedTime = null
+    delete @cache[tabId]
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
     @cache[tabId] ||= 1
-    if @cache[tabId] == @timestamp then 0.0 else @cache[tabId] / @timestamp
+    if tabId == @current then 0.0 else @cache[tabId] / @timestamp
 
 tabRecency = new TabRecency()
 
