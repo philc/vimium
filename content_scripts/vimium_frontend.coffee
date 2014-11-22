@@ -292,44 +292,44 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
+    # Only give visial feedback of what are inputs and which is selected if there are several to choose from.
+    unless visibleInputs.length == 1
+
+      hints = for tuple in visibleInputs
+        hint = document.createElement("div")
+        hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+
+        # minus 1 for the border
+        hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+        hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+        hint.style.width = tuple.rect.width + "px"
+        hint.style.height = tuple.rect.height + "px"
+
+        hint
+
+      hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+
+      hintContainingDiv = DomUtils.addElementList(hints,
+        { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
+
+      handlerStack.push keydown: (event) ->
+        if event.keyCode == KeyboardUtils.keyCodes.tab
+          hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+          if event.shiftKey
+            if --selectedInputIndex == -1
+              selectedInputIndex = hints.length - 1
+          else
+            if ++selectedInputIndex == hints.length
+              selectedInputIndex = 0
+          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+          visibleInputs[selectedInputIndex].element.focus()
+        else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+          DomUtils.removeElement hintContainingDiv
+          @remove()
+          return true
+
     visibleInputs[selectedInputIndex].element.focus()
-
-    return if visibleInputs.length == 1
-
-    hints = for tuple in visibleInputs
-      hint = document.createElement("div")
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
-
-      # minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-      hint.style.width = tuple.rect.width + "px"
-      hint.style.height = tuple.rect.height + "px"
-
-      hint
-
-    hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-
-    hintContainingDiv = DomUtils.addElementList(hints,
-      { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
-
-    handlerStack.push keydown: (event) ->
-      if event.keyCode == KeyboardUtils.keyCodes.tab
-        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-        if event.shiftKey
-          if --selectedInputIndex == -1
-            selectedInputIndex = hints.length - 1
-        else
-          if ++selectedInputIndex == hints.length
-            selectedInputIndex = 0
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-        visibleInputs[selectedInputIndex].element.focus()
-      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-        DomUtils.removeElement hintContainingDiv
-        @remove()
-        return true
-
-      false
+    false
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
