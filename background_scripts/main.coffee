@@ -156,19 +156,22 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
 #
 # Opens the url in the current tab.
 #
-openUrlInCurrentTab = (request) ->
-  chrome.tabs.getSelected(null,
-    (tab) -> chrome.tabs.update(tab.id, { url: Utils.convertToUrl(request.url) }))
+openUrlInCurrentTab = (request, sender, callback) ->
+  chrome.tabs.update(sender.tab.id, {url: Utils.convertToUrl(request.url)}, callback)
 
 #
 # Opens request.url in new tab and switches to it if request.selected is true.
 #
-openUrlInNewTab = (request) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true }))
+openUrlInNewTab = (request, sender, callback) ->
+  chrome.tabs.create
+    url: Utils.convertToUrl(request.url)
+    index: sender.tab.index + 1
+    windowId: sender.tab.windowId
+    openerTabId: sender.tab.id
+  , callback
 
 openUrlInIncognito = (request) ->
-  chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
+  chrome.windows.create({url: Utils.convertToUrl(request.url), incognito: true})
 
 #
 # Called when the user has clicked the close icon on the "Vimium has been updated" message.
@@ -220,11 +223,23 @@ repeatFunction = (func, count, tab, frameId) ->
       -> repeatFunction(func, count - 1, null, frameId),
       1, tab, frameId)
 
-moveTab = (callback, direction) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    # Use Math.max to prevent -1 as the new index, otherwise the tab of index n will wrap to the far RHS when
-    # moved left by exactly (n+1) places.
-    chrome.tabs.move(tab.id, {index: Math.max(0, tab.index + direction) }, callback))
+moveTab = (callback, tab, direction) ->
+  # Use Math.max to prevent -1 as the new index, otherwise the tab of index n will wrap to the far RHS when
+  # moved left by exactly (n+1) places.
+  chrome.tabs.move(tab.id, {index: Math.max(0, tab.index + direction) }, callback)
+
+# Helper function to ensure a background command always receives a tab if it needs one.
+requireTab = (backgroundCommand) ->
+  (callback, count, tab, frameId) ->
+    if tab?
+      # Fetch the tab object even though we already have it; port.sender.tab is never updated so it goes
+      # stale if the URL is changed without update (eg. history.pushState or changing location.hash), or if
+      # we modify it's pinned status.
+      chrome.tabs.get(tab.id, (tab) ->
+        backgroundCommand(callback, count, tab, frameId))
+    else
+      chrome.tabs.query({active: true, currentWindow: true}, ([tab]) ->
+        backgroundCommand(callback, count, tab, frameId))
 
 # Start action functions
 
@@ -237,114 +252,106 @@ moveTab = (callback, direction) ->
 # tab      - The tab from which the command was called, or null for all repeats after the first.
 # frameId  - The unique id of the frame from which the command was called, or -1 for all repeats after the
 #            first.
-# (callback, count, tab, frameId),
+# Applying the requireTab helper function in the definition of a command ensures that tab is set to the
+# current tab when it would otherwise have been null.
 BackgroundCommands =
   createTab: (callback, count, tab, frameId) ->
     chrome.tabs.create({url: Settings.get("newTabUrl")}, (tab) -> callback())
-  duplicateTab: (callback, count, tab, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.duplicate(tab.id)
-      selectionChangedHandlers.push(callback))
-  moveTabToNewWindow: (callback, count, tab, frameId) ->
-    chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
-      tab = tabs[0]
+  duplicateTab: requireTab (callback, count, tab, frameId) ->
+      chrome.tabs.duplicate(tab.id, -> callback())
+  moveTabToNewWindow: requireTab (callback, count, tab, frameId) ->
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
-  nextTab: (callback, count, tab, frameId) -> selectTab(callback, "next")
-  previousTab: (callback, count, tab, frameId) -> selectTab(callback, "previous")
-  firstTab: (callback, count, tab, frameId) -> selectTab(callback, "first")
-  lastTab: (callback, count, tab, frameId) -> selectTab(callback, "last")
-  removeTab: (callback, count, tab, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.remove(tab.id)
-      selectionChangedHandlers.push(callback))
-  restoreTab: (callback, count, tab, frameId) ->
+  nextTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "next")
+  previousTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "previous")
+  firstTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "first")
+  lastTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "last")
+  removeTab: requireTab (callback, count, tab, frameId) ->
+    chrome.tabs.remove(tab.id)
+    selectionChangedHandlers.push(callback)
+  # TODO(mrmr1993): This won't need requireTab any more when we only use chrome.sessions.
+  restoreTab: requireTab (callback, count, tab, frameId) ->
     # TODO: remove if-else -block when adopted into stable
     if chrome.sessions
       chrome.sessions.restore(null, (restoredSession) ->
           callback() unless chrome.runtime.lastError)
     else
-      # TODO(ilya): Should this be getLastFocused instead?
-      chrome.windows.getCurrent((window) ->
-        return unless (tabQueue[window.id] && tabQueue[window.id].length > 0)
-        tabQueueEntry = tabQueue[window.id].pop()
-        # Clean out the tabQueue so we don't have unused windows laying about.
-        delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
+      windowId = tab.windowId
+      return unless (tabQueue[windowId] && tabQueue[windowId].length > 0)
+      tabQueueEntry = tabQueue[windowId].pop()
+      # Clean out the tabQueue so we don't have unused windows laying about.
+      delete tabQueue[windowId] if (tabQueue[windowId].length == 0)
 
-        # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-        # tab is created because the content script is not available during the "loading" state. We need to
-        # wait until that's over before we can call setScrollPosition.
-        chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
-          tabLoadedHandlers[tab.id] = ->
-            chrome.tabs.sendRequest(tab.id,
-              name: "setScrollPosition",
-              scrollX: tabQueueEntry.scrollX,
-              scrollY: tabQueueEntry.scrollY)
-          callback()))
-  openCopiedUrlInCurrentTab: (callback, count, tab, frameId) ->
-    openUrlInCurrentTab({ url: Clipboard.paste() })
+      # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
+      # tab is created because the content script is not available during the "loading" state. We need to
+      # wait until that's over before we can call setScrollPosition.
+      chrome.tabs.create({ windowId, url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
+        tabLoadedHandlers[tab.id] = ->
+          chrome.tabs.sendRequest(tab.id,
+            name: "setScrollPosition",
+            scrollX: tabQueueEntry.scrollX,
+            scrollY: tabQueueEntry.scrollY)
+        callback())
+  openCopiedUrlInCurrentTab: requireTab (callback, count, tab, frameId) ->
+    openUrlInCurrentTab({ url: Clipboard.paste() }, {tab}, callback)
   openCopiedUrlInNewTab: (callback, count, tab, frameId) ->
-    openUrlInNewTab({ url: Clipboard.paste() })
-  togglePinTab: (callback, count, tab, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
-  showHelp: (callback, count, tab, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
-  moveTabLeft: (callback, count, tab, frameId) -> moveTab(null, -count)
-  moveTabRight: (callback, count, tab, frameId) -> moveTab(null, count)
-  nextFrame: (callback, count, tab, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      frames = framesForTab[tab.id].frames
-      currIndex = getCurrFrameIndex(frames)
+    openUrlInNewTab({ url: Clipboard.paste() }, {tab}, callback)
+  togglePinTab: requireTab (callback, count, tab, frameId) ->
+    chrome.tabs.update(tab.id, { pinned: !tab.pinned })
+  showHelp: requireTab (callback, count, tab, frameId) ->
+    chrome.tabs.sendMessage(tab.id,
+      { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId: frameId })
+  moveTabLeft: requireTab (callback, count, tab, frameId) -> moveTab(callback, tab, -count)
+  moveTabRight: requireTab (callback, count, tab, frameId) -> moveTab(callback, tab, count)
+  nextFrame: requireTab (callback, count, tab, frameId) ->
+    frames = framesForTab[tab.id].frames
+    currIndex = getCurrFrameIndex(frames)
 
-      # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
-      # since it exists only to contain the other frames.
-      newIndex = (currIndex + count) % frames.length
+    # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag), since it exists only to contain
+    # the other frames.
+    newIndex = (currIndex + count) % frames.length
 
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
+    chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true })
+    callback()
 
-  closeTabsOnLeft: (callback, count, tab, frameId) -> removeTabsRelative "before"
-  closeTabsOnRight: (callback, count, tab, frameId) -> removeTabsRelative "after"
-  closeOtherTabs: (callback, count, tab, frameId) -> removeTabsRelative "both"
+  closeTabsOnLeft: requireTab (callback, count, tab, frameId) -> removeTabsRelative callback, tab, "before"
+  closeTabsOnRight: requireTab (callback, count, tab, frameId) -> removeTabsRelative callback, tab, "after"
+  closeOtherTabs: requireTab (callback, count, tab, frameId) -> removeTabsRelative callback, tab, "both"
 
-# Remove tabs before, after, or either side of the currently active tab
-removeTabsRelative = (direction) ->
+# Remove tabs before, after, or either side of the given tab.
+removeTabsRelative = (callback, tab, direction) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
-    chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
-      activeTabIndex = activeTabs[0].index
+    activeTabIndex = tab.index
 
-      shouldDelete = switch direction
-        when "before"
-          (index) -> index < activeTabIndex
-        when "after"
-          (index) -> index > activeTabIndex
-        when "both"
-          (index) -> index != activeTabIndex
+    shouldDelete = switch direction
+      when "before"
+        (index) -> index < activeTabIndex
+      when "after"
+        (index) -> index > activeTabIndex
+      when "both"
+        (index) -> index != activeTabIndex
 
-      toRemove = []
-      for tab in tabs
-        if not tab.pinned and shouldDelete tab.index
-          toRemove.push tab.id
-      chrome.tabs.remove toRemove
+    toRemove = []
+    for tab in tabs
+      if not tab.pinned and shouldDelete tab.index
+        toRemove.push tab.id
+    chrome.tabs.remove toRemove, callback
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
-selectTab = (callback, direction) ->
-  chrome.tabs.getAllInWindow(null, (tabs) ->
+selectTab = (callback, tab, direction) ->
+  chrome.tabs.getAllInWindow(tab.windowId, (tabs) ->
     return unless tabs.length > 1
-    chrome.tabs.getSelected(null, (currentTab) ->
-      switch direction
-        when "next"
-          toSelect = tabs[(currentTab.index + 1 + tabs.length) % tabs.length]
-        when "previous"
-          toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length]
-        when "first"
-          toSelect = tabs[0]
-        when "last"
-          toSelect = tabs[tabs.length - 1]
-      selectionChangedHandlers.push(callback)
-      chrome.tabs.update(toSelect.id, { selected: true })))
+    switch direction
+      when "next"
+        toSelect = tabs[(tab.index + 1 + tabs.length) % tabs.length]
+      when "previous"
+        toSelect = tabs[(tab.index - 1 + tabs.length) % tabs.length]
+      when "first"
+        toSelect = tabs[0]
+      when "last"
+        toSelect = tabs[tabs.length - 1]
+    selectionChangedHandlers.push(callback)
+    chrome.tabs.update(toSelect.id, { selected: true }))
 
 updateOpenTabs = (tab) ->
   # Chrome might reuse the tab ID of a recently removed tab.
