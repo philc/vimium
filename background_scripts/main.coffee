@@ -156,19 +156,22 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
 #
 # Opens the url in the current tab.
 #
-openUrlInCurrentTab = (request) ->
-  chrome.tabs.getSelected(null,
-    (tab) -> chrome.tabs.update(tab.id, { url: Utils.convertToUrl(request.url) }))
+openUrlInCurrentTab = (request, sender, callback) ->
+  chrome.tabs.update(sender.tab.id, {url: Utils.convertToUrl(request.url)}, callback)
 
 #
 # Opens request.url in new tab and switches to it if request.selected is true.
 #
-openUrlInNewTab = (request) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true }))
+openUrlInNewTab = (request, sender, callback) ->
+  chrome.tabs.create
+    url: Utils.convertToUrl(request.url)
+    index: sender.tab.index + 1
+    windowId: sender.tab.windowId
+    openerTabId: sender.tab.id
+  , callback
 
 openUrlInIncognito = (request) ->
-  chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
+  chrome.windows.create({url: Utils.convertToUrl(request.url), incognito: true})
 
 #
 # Called when the user has clicked the close icon on the "Vimium has been updated" message.
@@ -214,126 +217,141 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
     selectionChangedHandlers.pop().call()
 
-repeatFunction = (func, totalCount, currentCount, frameId) ->
-  if (currentCount < totalCount)
+repeatFunction = (func, count, tab, frameId) ->
+  if (0 < count)
     func(
-      -> repeatFunction(func, totalCount, currentCount + 1, frameId),
-      frameId)
+      -> repeatFunction(func, count - 1, null, frameId),
+      1, tab, frameId)
 
-moveTab = (callback, direction) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    # Use Math.max to prevent -1 as the new index, otherwise the tab of index n will wrap to the far RHS when
-    # moved left by exactly (n+1) places.
-    chrome.tabs.move(tab.id, {index: Math.max(0, tab.index + direction) }, callback))
+moveTab = (callback, tab, direction) ->
+  # Use Math.max to prevent -1 as the new index, otherwise the tab of index n will wrap to the far RHS when
+  # moved left by exactly (n+1) places.
+  chrome.tabs.move(tab.id, {index: Math.max(0, tab.index + direction) }, callback)
+
+# Helper function to ensure a background command always receives a tab if it needs one.
+requireTab = (backgroundCommand) ->
+  (callback, count, tab, frameId) ->
+    if tab?
+      # Fetch the tab object even though we already have it; port.sender.tab is never updated so it goes
+      # stale if the URL is changed without update (eg. history.pushState or changing location.hash), or if
+      # we modify it's pinned status.
+      chrome.tabs.get(tab.id, (tab) ->
+        backgroundCommand(callback, count, tab, frameId))
+    else
+      chrome.tabs.query({active: true, currentWindow: true}, ([tab]) ->
+        backgroundCommand(callback, count, tab, frameId))
 
 # Start action functions
 
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
+# Commands take the arguments:
+# callback - The function to call when the command is complete.
+# count    - The number of times to repeat the function. This is always 1 for commands without
+#            passCountToFunction.
+# tab      - The tab from which the command was called, or null for all repeats after the first.
+# frameId  - The unique id of the frame from which the command was called, or -1 for all repeats after the
+#            first.
+# Applying the requireTab helper function in the definition of a command ensures that tab is set to the
+# current tab when it would otherwise have been null.
 BackgroundCommands =
-  createTab: (callback) -> chrome.tabs.create({url: Settings.get("newTabUrl")}, (tab) -> callback())
-  duplicateTab: (callback) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.duplicate(tab.id)
-      selectionChangedHandlers.push(callback))
-  moveTabToNewWindow: (callback) ->
-    chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
-      tab = tabs[0]
+  createTab: (callback, count, tab, frameId) ->
+    chrome.tabs.create({url: Settings.get("newTabUrl")}, (tab) -> callback())
+  duplicateTab: requireTab (callback, count, tab, frameId) ->
+      chrome.tabs.duplicate(tab.id, -> callback())
+  moveTabToNewWindow: requireTab (callback, count, tab, frameId) ->
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
-  nextTab: (callback) -> selectTab(callback, "next")
-  previousTab: (callback) -> selectTab(callback, "previous")
-  firstTab: (callback) -> selectTab(callback, "first")
-  lastTab: (callback) -> selectTab(callback, "last")
-  removeTab: (callback) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.remove(tab.id)
-      selectionChangedHandlers.push(callback))
-  restoreTab: (callback) ->
+  nextTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "next")
+  previousTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "previous")
+  firstTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "first")
+  lastTab: requireTab (callback, count, tab, frameId) -> selectTab(callback, tab, "last")
+  removeTab: requireTab (callback, count, tab, frameId) ->
+    chrome.tabs.remove(tab.id)
+    selectionChangedHandlers.push(callback)
+  # TODO(mrmr1993): This won't need requireTab any more when we only use chrome.sessions.
+  restoreTab: requireTab (callback, count, tab, frameId) ->
     # TODO: remove if-else -block when adopted into stable
     if chrome.sessions
       chrome.sessions.restore(null, (restoredSession) ->
           callback() unless chrome.runtime.lastError)
     else
-      # TODO(ilya): Should this be getLastFocused instead?
-      chrome.windows.getCurrent((window) ->
-        return unless (tabQueue[window.id] && tabQueue[window.id].length > 0)
-        tabQueueEntry = tabQueue[window.id].pop()
-        # Clean out the tabQueue so we don't have unused windows laying about.
-        delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
+      windowId = tab.windowId
+      return unless (tabQueue[windowId] && tabQueue[windowId].length > 0)
+      tabQueueEntry = tabQueue[windowId].pop()
+      # Clean out the tabQueue so we don't have unused windows laying about.
+      delete tabQueue[windowId] if (tabQueue[windowId].length == 0)
 
-        # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-        # tab is created because the content script is not available during the "loading" state. We need to
-        # wait until that's over before we can call setScrollPosition.
-        chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
-          tabLoadedHandlers[tab.id] = ->
-            chrome.tabs.sendRequest(tab.id,
-              name: "setScrollPosition",
-              scrollX: tabQueueEntry.scrollX,
-              scrollY: tabQueueEntry.scrollY)
-          callback()))
-  openCopiedUrlInCurrentTab: (request) -> openUrlInCurrentTab({ url: Clipboard.paste() })
-  openCopiedUrlInNewTab: (request) -> openUrlInNewTab({ url: Clipboard.paste() })
-  togglePinTab: (request) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
-  showHelp: (callback, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
-  moveTabLeft: (count) -> moveTab(null, -count)
-  moveTabRight: (count) -> moveTab(null, count)
-  nextFrame: (count) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      frames = framesForTab[tab.id].frames
-      currIndex = getCurrFrameIndex(frames)
+      # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
+      # tab is created because the content script is not available during the "loading" state. We need to
+      # wait until that's over before we can call setScrollPosition.
+      chrome.tabs.create({ windowId, url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
+        tabLoadedHandlers[tab.id] = ->
+          chrome.tabs.sendRequest(tab.id,
+            name: "setScrollPosition",
+            scrollX: tabQueueEntry.scrollX,
+            scrollY: tabQueueEntry.scrollY)
+        callback())
+  openCopiedUrlInCurrentTab: requireTab (callback, count, tab, frameId) ->
+    openUrlInCurrentTab({ url: Clipboard.paste() }, {tab}, callback)
+  openCopiedUrlInNewTab: (callback, count, tab, frameId) ->
+    openUrlInNewTab({ url: Clipboard.paste() }, {tab}, callback)
+  togglePinTab: requireTab (callback, count, tab, frameId) ->
+    chrome.tabs.update(tab.id, { pinned: !tab.pinned })
+  showHelp: requireTab (callback, count, tab, frameId) ->
+    chrome.tabs.sendMessage(tab.id,
+      { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId: frameId })
+  moveTabLeft: requireTab (callback, count, tab, frameId) -> moveTab(callback, tab, -count)
+  moveTabRight: requireTab (callback, count, tab, frameId) -> moveTab(callback, tab, count)
+  nextFrame: requireTab (callback, count, tab, frameId) ->
+    frames = framesForTab[tab.id].frames
+    currIndex = getCurrFrameIndex(frames)
 
-      # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
-      # since it exists only to contain the other frames.
-      newIndex = (currIndex + count) % frames.length
+    # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag), since it exists only to contain
+    # the other frames.
+    newIndex = (currIndex + count) % frames.length
 
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
+    chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true })
+    callback()
 
-  closeTabsOnLeft: -> removeTabsRelative "before"
-  closeTabsOnRight: -> removeTabsRelative "after"
-  closeOtherTabs: -> removeTabsRelative "both"
+  closeTabsOnLeft: requireTab (callback, count, tab, frameId) -> removeTabsRelative callback, tab, "before"
+  closeTabsOnRight: requireTab (callback, count, tab, frameId) -> removeTabsRelative callback, tab, "after"
+  closeOtherTabs: requireTab (callback, count, tab, frameId) -> removeTabsRelative callback, tab, "both"
 
-# Remove tabs before, after, or either side of the currently active tab
-removeTabsRelative = (direction) ->
+# Remove tabs before, after, or either side of the given tab.
+removeTabsRelative = (callback, tab, direction) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
-    chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
-      activeTabIndex = activeTabs[0].index
+    activeTabIndex = tab.index
 
-      shouldDelete = switch direction
-        when "before"
-          (index) -> index < activeTabIndex
-        when "after"
-          (index) -> index > activeTabIndex
-        when "both"
-          (index) -> index != activeTabIndex
+    shouldDelete = switch direction
+      when "before"
+        (index) -> index < activeTabIndex
+      when "after"
+        (index) -> index > activeTabIndex
+      when "both"
+        (index) -> index != activeTabIndex
 
-      toRemove = []
-      for tab in tabs
-        if not tab.pinned and shouldDelete tab.index
-          toRemove.push tab.id
-      chrome.tabs.remove toRemove
+    toRemove = []
+    for tab in tabs
+      if not tab.pinned and shouldDelete tab.index
+        toRemove.push tab.id
+    chrome.tabs.remove toRemove, callback
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
-selectTab = (callback, direction) ->
-  chrome.tabs.getAllInWindow(null, (tabs) ->
+selectTab = (callback, tab, direction) ->
+  chrome.tabs.getAllInWindow(tab.windowId, (tabs) ->
     return unless tabs.length > 1
-    chrome.tabs.getSelected(null, (currentTab) ->
-      switch direction
-        when "next"
-          toSelect = tabs[(currentTab.index + 1 + tabs.length) % tabs.length]
-        when "previous"
-          toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length]
-        when "first"
-          toSelect = tabs[0]
-        when "last"
-          toSelect = tabs[tabs.length - 1]
-      selectionChangedHandlers.push(callback)
-      chrome.tabs.update(toSelect.id, { selected: true })))
+    switch direction
+      when "next"
+        toSelect = tabs[(tab.index + 1 + tabs.length) % tabs.length]
+      when "previous"
+        toSelect = tabs[(tab.index - 1 + tabs.length) % tabs.length]
+      when "first"
+        toSelect = tabs[0]
+      when "last"
+        toSelect = tabs[tabs.length - 1]
+    selectionChangedHandlers.push(callback)
+    chrome.tabs.update(toSelect.id, { selected: true }))
 
 updateOpenTabs = (tab) ->
   # Chrome might reuse the tab ID of a recently removed tab.
@@ -508,7 +526,7 @@ handleKeyDown = (request, port) ->
     keyQueue = ""
   else
     console.log("checking keyQueue: [", keyQueue + key, "]")
-    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
+    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab, request.frameId)
     console.log("new KeyQueue: " + keyQueue)
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
@@ -519,7 +537,7 @@ handleKeyDown = (request, port) ->
     name: "currentKeyQueue",
     keyQueue: keyQueue)
 
-checkKeyQueue = (keysToCheck, tabId, frameId) ->
+checkKeyQueue = (keysToCheck, tab, frameId) ->
   refreshedCompletionKeys = false
   splitHash = splitKeyQueue(keysToCheck)
   command = splitHash.command
@@ -544,7 +562,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
     if runCommand
       if not registryEntry.isBackgroundCommand
-        chrome.tabs.sendMessage(tabId,
+        chrome.tabs.sendMessage(tab.id,
           name: "executePageCommand",
           command: registryEntry.command,
           frameId: frameId,
@@ -553,12 +571,11 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
           completionKeys: generateCompletionKeys(""))
         refreshedCompletionKeys = true
       else
+        count = 1 if registryEntry.noRepeat
         if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count)
-        else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command]()
+          BackgroundCommands[registryEntry.command](null, count, tab, frameId)
         else
-          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
+          repeatFunction(BackgroundCommands[registryEntry.command], count, tab, frameId)
 
     newKeyQueue = ""
   else if (getActualKeyStrokeLength(command) > 1)
@@ -566,7 +583,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
     # The second key might be a valid command by its self.
     if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
+      newKeyQueue = checkKeyQueue(splitKey.second, tab, frameId)
     else
       newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
   else
@@ -575,7 +592,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   # If we haven't sent the completion keys piggybacked on executePageCommand,
   # send them by themselves.
   unless refreshedCompletionKeys
-    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
+    chrome.tabs.sendMessage(tab.id, getCompletionKeysRequest(null, newKeyQueue), null)
 
   newKeyQueue
 
