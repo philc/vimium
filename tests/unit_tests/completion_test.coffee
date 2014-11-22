@@ -409,16 +409,16 @@ context "TabRecency",
       if @tabRecency.lastVisitedTime?
         @tabRecency.lastVisitedTime = new Date(@tabRecency.lastVisitedTime - @tabRecency.timeDelta)
 
-    @tabRecency.add 3
+    @tabRecency.register 3
     fakeTimeDeltaElapsing()
-    @tabRecency.add 2
+    @tabRecency.register 2
     fakeTimeDeltaElapsing()
-    @tabRecency.add 9
+    @tabRecency.register 9
     fakeTimeDeltaElapsing()
-    @tabRecency.add 1
-    @tabRecency.remove 9
+    @tabRecency.register 1
+    @tabRecency.deregister 9
     fakeTimeDeltaElapsing()
-    @tabRecency.add 4
+    @tabRecency.register 4
     fakeTimeDeltaElapsing()
 
   should "have entries for recently active tabs", ->
@@ -442,9 +442,9 @@ context "TabRecency",
   should "rank tabs by recency", ->
     assert.isTrue @tabRecency.recencyScore(3) < @tabRecency.recencyScore 2
     assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 1
-    @tabRecency.add 3
+    @tabRecency.register 3
     fakeTimeDeltaElapsing()
-    @tabRecency.add 4 # Making 3 the most recent tab which isn't the current tab.
+    @tabRecency.register 4 # Making 3 the most recent tab which isn't the current tab.
     assert.isTrue @tabRecency.recencyScore(1) < @tabRecency.recencyScore 3
     assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 3
     assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 3

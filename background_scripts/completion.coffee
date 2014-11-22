@@ -265,31 +265,29 @@ class TabRecency
   timestamp: 1
   current: -1
   cache: {}
-
   lastVisited: null
   lastVisitedTime: null
-
-  timeDelta: 500
+  timeDelta: 500 # Milliseconds.
 
   constructor: ->
-    chrome.tabs.onActivated.addListener (activeInfo) => @add activeInfo.tabId
-    chrome.tabs.onRemoved.addListener (tabId) => @remove tabId
+    chrome.tabs.onActivated.addListener (activeInfo) => @register activeInfo.tabId
+    chrome.tabs.onRemoved.addListener (tabId) => @deregister tabId
 
     chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) =>
-      @remove removedTabId
-      @add addedTabId
+      @deregister removedTabId
+      @register addedTabId
 
-  add: (tabId) ->
+  register: (tabId) ->
     currentTime = new Date()
-    # Register tabId if it has been visited for at least @timeDelta.  Tabs which are visited only for a
-    # very-short time (e.g. those passed through with `5J`) shouldn't be registered as visited at all.
-    if @lastVisitedTime? and currentTime - @lastVisitedTime >= @timeDelta
+    # Register tabId if it has been visited for at least @timeDelta ms.  Tabs which are visited only for a
+    # very-short time (e.g. those passed through with `5J`) aren't registered as visited at all.
+    if @lastVisitedTime? and @timeDelta <= currentTime - @lastVisitedTime
       @cache[@lastVisited] = ++@timestamp
 
     @current = @lastVisited = tabId
     @lastVisitedTime = currentTime
 
-  remove: (tabId) ->
+  deregister: (tabId) ->
     if tabId == @lastVisited
       # Ensure we don't register this tab, since it's going away.
       @lastVisited = @lastVisitedTime = null
