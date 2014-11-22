@@ -7,6 +7,7 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
+contentEditableNormalMode = false
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -364,7 +365,7 @@ onKeypress = (event) ->
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
-      else if (!isInsertMode() && !findMode)
+      else if ((contentEditableNormalMode or not isInsertMode()) and not findMode)
         if (isPassKey keyChar)
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
@@ -374,6 +375,8 @@ onKeypress = (event) ->
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
+
+  keyHandled = false
 
   keyChar = ""
 
@@ -402,13 +405,24 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
+  if (isInsertMode() and KeyboardUtils.isEscape(event))
     # Note that we can't programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
+      keyHandled = true
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
+      else if (DomUtils.isContentEditableFocused())
+        # If the user presses escape once with text selected, retain the selection and only blur if we don't
+        # end up handling a key.
+        # If the user presses escape again, we blur directly since keyHandled = false.
+        if (contentEditableNormalMode or document.getSelection().type == "Caret")
+          # We check these values in order to blur, so make sure we have them set correctly.
+          contentEditableNormalMode = true
+          keyHandled = false
+        else
+          contentEditableNormalMode = true
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
@@ -418,31 +432,39 @@ onKeydown = (event) ->
       handleEscapeForFindMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
+      keyHandled = true
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
+      keyHandled = true
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
+      keyHandled = true
 
     else if (!modifiers)
       DomUtils.suppressPropagation(event)
       handledKeydownEvents.push event
+      keyHandled = true
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
     handledKeydownEvents.push event
+    keyHandled = true
 
-  else if (!isInsertMode() && !findMode)
+  else if ((contentEditableNormalMode or not isInsertMode()) and not findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
+        keyHandled = true
+      else if (contentEditableNormalMode) # We won't handle the key and the user wanted to blur the element.
+        document.getSelection.removeAllRanges() # Remove the caret, which blurs the element.
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -450,7 +472,13 @@ onKeydown = (event) ->
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
+      if (contentEditableNormalMode)
+        contentEditableNormalMode = false
+        document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
       return undefined
+
+  # Ignore modifier keys
+  keyHandled ||= [keyCodes.shiftKey, keyCodes.ctrlKey, keyCodes.altKey].indexOf(event.keyCode) != -1
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -459,11 +487,16 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
-     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
+  if ((contentEditableNormalMode or not isInsertMode()) and
+     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 or
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    DomUtils.suppressPropagation(event)
-    handledKeydownEvents.push event
+    if (keyChar == "") # We're going to handle this key, but as a keypress event.
+      DomUtils.suppressPropagation(event)
+      handledKeydownEvents.push event
+  else if (contentEditableNormalMode and not keyHandled)
+    # This is a key we're not handling, blur the contentEditable element.
+    contentEditableNormalMode = false
+    document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
 
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
@@ -525,11 +558,9 @@ isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase(
 
 #
 # Input or text elements are considered focusable and able to receieve their own keyboard events,
-# and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
-# any element which makes it a rich text editor, like the notes on jjot.com.
+# and will enter enter mode if focused.
 #
 isEditable = (target) ->
-  return true if target.isContentEditable
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
   noFocus = ["radio", "checkbox"]
@@ -553,14 +584,22 @@ window.enterInsertMode = (target) ->
 # If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
 # leave insert mode when the user presses <ESC>.
 #
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
+enterInsertModeWithoutShowingIndicator = (target) ->
+  insertModeLock = target
+  contentEditableNormalMode = false
 
 exitInsertMode = (target) ->
   if (target == undefined || insertModeLock == target)
     insertModeLock = null
     HUD.hide()
 
-isInsertMode = -> insertModeLock != null
+isInsertMode = ->
+  # If the user currently has a caret/selection in a contentEditable element, they should be in insert mode,
+  # but sometimes are not.  This can happen for several reasons:
+  #  - the contentEditable element sets document.designMode when it is focused (which immediately fires a
+  #    blur event).
+  #  - contentEditable is set dynamically (eg. inbox.google.com).
+  insertModeLock != null or DomUtils.isContentEditableFocused()
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -647,6 +686,7 @@ handleDeleteForFindMode = ->
 handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
+  contentEditableNormalMode = true if DomUtils.isContentEditableFocused()
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
@@ -730,7 +770,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
-  mostRecentQuery = settings.get("findModeRawQuery") || ""
+  mostRecentQuery = settings.get("findModeRawQuery") or ""
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
@@ -750,15 +790,21 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  elementCanTakeInput = document.activeElement &&
-    DomUtils.isSelectable(document.activeElement) &&
+  elementCanTakeInput = document.activeElement and
+    DomUtils.isSelectable(document.activeElement) and
     isDOMDescendant(findModeAnchorNode, document.activeElement)
-  if (elementCanTakeInput)
+  elementIsContentEditable = DomUtils.isContentEditableFocused()
+  if (elementCanTakeInput or elementIsContentEditable)
+    contentEditableNormalMode = true if elementIsContentEditable
     handlerStack.push({
       keydown: (event) ->
         @remove()
         if (KeyboardUtils.isEscape(event))
-          DomUtils.simulateSelect(document.activeElement)
+          if (elementIsContentEditable)
+            DomUtils.focusContentEditable(DomUtils.getFocusedContentEditable())
+            contentEditableNormalMode = false # Focus the contentEditableElement
+          else
+            DomUtils.simulateSelect(document.activeElement)
           enterInsertModeWithoutShowingIndicator(document.activeElement)
           return false # we have "consumed" this event, so do not propagate
         return true

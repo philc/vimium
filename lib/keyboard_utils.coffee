@@ -1,7 +1,7 @@
 KeyboardUtils =
   keyCodes:
-    { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, space: 32, shiftKey: 16, ctrlKey: 17, f1: 112,
-    f12: 123, tab: 9 }
+    { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, space: 32, shiftKey: 16, ctrlKey: 17, altKey: 18,
+    f1: 112, f12: 123, tab: 9 }
 
   keyNames:
     { 37: "left", 38: "up", 39: "right", 40: "down" }
