@@ -214,10 +214,10 @@ chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
     selectionChangedHandlers.pop().call()
 
-repeatFunction = (func, totalCount, currentCount, frameId) ->
-  if (currentCount < totalCount)
+repeatFunction = (func, count, frameId) ->
+  if (0 < count)
     func(
-      -> repeatFunction(func, totalCount, currentCount + 1, frameId),
+      -> repeatFunction(func, count - 1, frameId),
       frameId)
 
 moveTab = (callback, direction) ->
@@ -558,7 +558,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         else if registryEntry.noRepeat
           BackgroundCommands[registryEntry.command]()
         else
-          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
+          repeatFunction(BackgroundCommands[registryEntry.command], count, frameId)
 
     newKeyQueue = ""
   else if (getActualKeyStrokeLength(command) > 1)
