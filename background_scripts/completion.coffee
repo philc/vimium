@@ -286,8 +286,7 @@ class TabRecency
     if @lastVisitedTime? and currentTime - @lastVisitedTime >= @timeDelta
       @cache[@lastVisited] = ++@timestamp
 
-    @current = tabId
-    @lastVisited = tabId
+    @current = @lastVisited = tabId
     # If the tab we were previously on has gone away (or never existed if this is the first tab), then make
     # this one registers as soon as it's blurred.
     @lastVisitedTime = if @lastVisitedTime? then currentTime else new Date(currentTime - @timeDelta)
