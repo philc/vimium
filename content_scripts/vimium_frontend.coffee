@@ -567,7 +567,7 @@ isInsertMode = ->
   # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
   # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check whether
   # the active element is contentEditable.
-  document.activeElement and document.activeElement.isContentEditable and !findMode and
+  document.activeElement and document.activeElement.isContentEditable and
     enterInsertModeWithoutShowingIndicator document.activeElement
 
 # should be called whenever rawQuery is modified.
