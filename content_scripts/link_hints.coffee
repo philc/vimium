@@ -424,10 +424,12 @@ class LinkHintsMode
   #
   # Sends a "mouseout" event to the last "mouseover"-ed element.
   #
-  unhoverLast: (element) ->
-    DomUtils.simulateUnhover(@_lastHoveredElement) if @_lastHoveredElement
-    @_lastHoveredElement = element
-  _lastHoveredElement: null
+  unhoverLast: do ->
+    lastHoveredElement = null
+
+    (nextHoveredElement) ->
+      DomUtils.simulateUnhover(lastHoveredElement) if lastHoveredElement?
+      lastHoveredElement = nextHoveredElement
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
