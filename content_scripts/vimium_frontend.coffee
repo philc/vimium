@@ -188,14 +188,16 @@ registerFrame = ->
   chrome.runtime.sendMessage(
     handler: "registerFrame"
     frameId: frameId
-    is_top: window.top == window.self)
+    is_top: window.top == window.self
+    is_frameset: document.body.tagName == "FRAMESET")
 
 # Unregister the frame if we're going to exit.
 unregisterFrame = ->
   chrome.runtime.sendMessage(
     handler: "unregisterFrame"
     frameId: frameId
-    is_top: window.top == window.self)
+    is_top: window.top == window.self
+    is_frameset: document.body.tagName == "FRAMESET")
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.

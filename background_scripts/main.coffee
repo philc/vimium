@@ -598,6 +598,7 @@ openOptionsPageInNewTab = ->
 
 registerFrame = (request, sender) ->
   frames = frameIdsForTab[sender.tab.id] ?= []
+  return if request.is_frameset # Don't store frameset containers; focusing them is no use.
   if request.is_top
     frames.unshift request.frameId
   else
@@ -609,7 +610,7 @@ unregisterFrame = (request, sender) ->
 
   if request.is_top # The whole tab is closing, so we can drop the frames list.
     updateOpenTabs sender.tab
-  else
+  else if not request.if_frameset
     index = frames.indexOf request.frameId
     return if index == -1
     frames.splice index, 1
