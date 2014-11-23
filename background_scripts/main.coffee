@@ -600,9 +600,9 @@ openOptionsPageInNewTab = ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
-  frames = frameIdsForTab[sender.tab.id] ?= []
-  unless request.is_frameset # Don't store frameset containers; focusing them is no use.
-    if request.is_top then frames.unshift request.frameId else frames.push request.frameId
+  frameIdsForTab[sender.tab.id] ?= []
+  # Don't store frameset containers; focusing them is no use.
+  frameIdsForTab[sender.tab.id].push request.frameId unless request.is_frameset
 
 unregisterFrame = (request, sender) ->
   tabId = sender.tab.id
