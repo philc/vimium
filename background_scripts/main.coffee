@@ -388,7 +388,7 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
-  updateOpenTabs(tab) if "url" in changeInfo
+  updateOpenTabs(tab) if changeInfo.url?
   updateActiveState(tabId)
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
@@ -608,7 +608,7 @@ unregisterFrame = (request, sender) ->
   return unless frames?
 
   if request.is_top # The whole tab is closing, so we can drop the frames list.
-    updateOpenTabs(sender.tab)
+    updateOpenTabs sender.tab
   else
     index = getFrameIndex frames, request.frameId
     frames.splice index, 1
