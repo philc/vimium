@@ -282,9 +282,12 @@ BackgroundCommands =
         { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
-  nextFrame: (count) ->
+  nextFrame: (count,frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
-      frames = frameIdsForTab[tab.id] = frameIdsForTab[tab.id].rotate(count)
+      # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
+      # additional offset such that we do indeed start from frameId.
+      offset = Math.max 0, frameIdsForTab[tab.id].indexOf frameId
+      frames = frameIdsForTab[tab.id] = frameIdsForTab[tab.id].rotate(count+offset)
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
 
   closeTabsOnLeft: -> removeTabsRelative "before"
@@ -548,9 +551,9 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count)
+          BackgroundCommands[registryEntry.command](count, frameId)
         else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command]()
+          BackgroundCommands[registryEntry.command](frameId)
         else
           repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
