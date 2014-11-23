@@ -295,15 +295,21 @@ extend window,
     # Only give visial feedback of what are inputs and which is selected if there are several to choose from.
     unless visibleInputs.length == 1
 
-      hints = for tuple in visibleInputs
+      hints = for {rect} in visibleInputs
         hint = document.createElement("div")
         hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
+        hintRect =
+          left: rect.oldLeft ? rect.left
+          top: rect.oldTop ? rect.top
+          width: rect.oldWidth ? rect.width
+          height: rect.oldHeight ? rect.height
+
         # minus 1 for the border
-        hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-        hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-        hint.style.width = tuple.rect.width + "px"
-        hint.style.height = tuple.rect.height + "px"
+        hint.style.left = (hintRect.left - 1) + window.scrollX + "px"
+        hint.style.top = (hintRect.top - 1) + window.scrollY  + "px"
+        hint.style.width = hintRect.width + "px"
+        hint.style.height = hintRect.height + "px"
 
         hint
 

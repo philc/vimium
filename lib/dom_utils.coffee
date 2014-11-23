@@ -53,10 +53,14 @@ DomUtils =
 
     for clientRect in clientRects
       if (clientRect.top < 0)
+        clientRect.oldTop = clientRect.top
+        clientRect.oldHeight = clientRect.height
         clientRect.height += clientRect.top
         clientRect.top = 0
 
       if (clientRect.left < 0)
+        clientRect.oldLeft = clientRect.left
+        clientRect.oldWidth = clientRect.width
         clientRect.width += clientRect.left
         clientRect.left = 0
 
