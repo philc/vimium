@@ -608,10 +608,7 @@ unregisterFrame = (request, sender) ->
   if request.is_top # The whole tab is closing, so we can drop the frames list.
     updateOpenTabs sender.tab
   else
-    removingCurrent = frameIdsForTab[tabId].length and frameIdsForTab[tabId][0] == request.frameId
     frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
-    # NOTE(smblott) It's not clear whether the following is either needed or a good idea.
-    # BackgroundCommands.nextFrame 0 if removingCurrent
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
