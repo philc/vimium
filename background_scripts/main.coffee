@@ -609,13 +609,13 @@ unregisterFrame = (request, sender) ->
     updateOpenTabs sender.tab
   else
     removingCurrent = frameIdsForTab[tabId].length and frameIdsForTab[tabId][0] == request.frameId
-    frameIdsForTab[tabId] = (id for id in frameIdsForTab[tabId] when id != request.frameId)
+    frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
     BackGroundCommands.nextFrame 0 if removingCurrent
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
   frameIdsForTab[tabId] =
-    [request.frameId, (id for id in frameIdsForTab[tabId] when id != request.frameId)...]
+    [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
 
 # Port handler mapping
 portHandlers =
