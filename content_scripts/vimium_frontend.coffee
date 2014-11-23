@@ -414,6 +414,8 @@ onKeydown = (event) ->
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
+      else if (DomUtils.isContentEditableFocused())
+        document.getSelection().removeAllRanges() # Remove the caret, which blurs the element.
       exitInsertMode()
       DomUtils.suppressEvent event
       handledKeydownEvents.push event
@@ -530,11 +532,9 @@ isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase(
 
 #
 # Input or text elements are considered focusable and able to receieve their own keyboard events,
-# and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
-# any element which makes it a rich text editor, like the notes on jjot.com.
+# and will enter enter mode if focused.
 #
 isEditable = (target) ->
-  return true if target.isContentEditable
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
   noFocus = ["radio", "checkbox"]
@@ -565,7 +565,13 @@ exitInsertMode = (target) ->
     insertModeLock = null
     HUD.hide()
 
-isInsertMode = -> insertModeLock != null
+isInsertMode = ->
+  # If the user currently has a caret/selection in a contentEditable element, they should be in insert mode,
+  # but sometimes are not.  This can happen for several reasons:
+  #  - the contentEditable element sets document.designMode when it is focused (which immediately fires a
+  #    blur event).
+  #  - contentEditable is set dynamically (eg. inbox.google.com).
+  insertModeLock != null or DomUtils.isContentEditableFocused()
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->

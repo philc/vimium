@@ -103,6 +103,30 @@ DomUtils =
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
     element.setSelectionRange(element.value.length, element.value.length)
 
+  # For contentEditable elements, we need to explicitly set a caret in them to make sure they are activated.
+  focusContentEditable: (element) ->
+    range = document.createRange()
+    if element.lastChild
+      range.setStartAfter element.lastChild
+      range.setEndAfter element.lastChild
+
+    sel = window.getSelection()
+    sel.removeAllRanges()
+    sel.addRange range
+
+    element.focus()
+
+  # Detect contentEditable elements having focus via the current selection. This avoids issues with tracking
+  # blur/focus events on badly behaved elements.
+  # (See comment isInsertMode in content_scripts/vimium_frontend.coffee for more info.)
+  isContentEditableFocused: ->
+    {type: selType, anchorNode} = document.getSelection()
+    return false unless anchorNode?
+    # We need an element. If anchorNode is not an element (eg. a text node) then we take its parentElement.
+    anchorElement = if "isContentEditable" of anchorNode then anchorNode else anchorNode.parentElement
+
+    (selType == "Caret" or selType == "Range") and anchorElement.isContentEditable
+
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
 
