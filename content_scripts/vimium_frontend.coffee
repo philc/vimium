@@ -185,19 +185,18 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
 
 registerFrame = ->
-  chrome.runtime.sendMessage(
-    handler: "registerFrame"
-    frameId: frameId
-    is_top: window.top == window.self
-    is_frameset: document.body.tagName == "FRAMESET")
+  # Don't register frameset containers; focusing them is no use.
+  if document.body.tagName != "FRAMESET"
+    chrome.runtime.sendMessage
+      handler: "registerFrame"
+      frameId: frameId
 
 # Unregister the frame if we're going to exit.
 unregisterFrame = ->
-  chrome.runtime.sendMessage(
+  chrome.runtime.sendMessage
     handler: "unregisterFrame"
     frameId: frameId
-    is_top: window.top == window.self
-    is_frameset: document.body.tagName == "FRAMESET")
+    tab_is_closing: window.top == window.self
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -1062,8 +1061,8 @@ Tween =
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
-window.addEventListener("DOMContentLoaded", initializeOnDomReady)
 window.addEventListener("unload", unregisterFrame)
+window.addEventListener("DOMContentLoaded", initializeOnDomReady)
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(

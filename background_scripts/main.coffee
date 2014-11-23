@@ -600,23 +600,21 @@ openOptionsPageInNewTab = ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
-  frameIdsForTab[sender.tab.id] ?= []
-  # Don't store frameset containers; focusing them is no use.
-  frameIdsForTab[sender.tab.id].push request.frameId unless request.is_frameset
+  (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
 
 unregisterFrame = (request, sender) ->
   tabId = sender.tab.id
-  return unless frameIdsForTab[tabId]?
-
-  if request.is_top # The whole tab is closing, so we can drop the frames list.
-    updateOpenTabs sender.tab
-  else
-    frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
+  if frameIdsForTab[tabId]?
+    if request.tab_is_closing
+      updateOpenTabs sender.tab
+    else
+      frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
-  frameIdsForTab[tabId] =
-    [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
+  if frameIdsForTab[tabId]?
+    frameIdsForTab[tabId] =
+      [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
 
 # Port handler mapping
 portHandlers =
