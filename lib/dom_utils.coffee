@@ -32,8 +32,8 @@ DomUtils =
   #
   makeXPath: (elementArray) ->
     xpath = []
-    for i of elementArray
-      xpath.push("//" + elementArray[i], "//xhtml:" + elementArray[i])
+    for element in elementArray
+      xpath.push("//" + element, "//xhtml:" + element)
     xpath.join(" | ")
 
   evaluateXPath: (xpath, resultType) ->
