@@ -58,7 +58,7 @@ chrome.runtime.onConnect.addListener((port, name) ->
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
-    sendResponse(sendRequestHandlers[request.handler](request, sender))
+    sendResponse(sendRequestHandlers[request.handler](request, sender, sendResponse))
   # Ensure the sendResponse callback is freed.
   return false)
 
@@ -98,43 +98,8 @@ root.removeExclusionRule = (pattern) ->
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
 
-# Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-# This is called by options.coffee.
-root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
-  commandsToKey = {}
-  for key of Commands.keyToCommandRegistry
-    command = Commands.keyToCommandRegistry[key].command
-    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
-
-  dialogHtml = fetchFileContents("pages/help_dialog.html")
-  for group of Commands.commandGroups
-    dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
-                                      showUnboundCommands, showCommandNames))
-  dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
-  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
-  dialogHtml
-
-#
-# Generates HTML for a given set of commands. commandGroups are defined in commands.js
-#
-helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
-    showUnboundCommands, showCommandNames) ->
-  html = []
-  for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
-    if (showUnboundCommands || commandsToKey[command])
-      isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
-      html.push(
-        "<tr class='vimiumReset #{"advanced" if isAdvanced}'>",
-        "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
-        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
-
-      if (showCommandNames)
-        html.push("<span class='vimiumReset commandName'>(#{command})</span>")
-
-      html.push("</td></tr>")
-  html.join("\n")
+getKeyToCommandRegistry = (request, sender, sendResponse) ->
+  sendResponse(Commands.keyToCommandRegistry)
 
 #
 # Fetches the contents of a file bundled with this extension.
@@ -278,8 +243,7 @@ BackgroundCommands =
       chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
   showHelp: (callback, frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
+      chrome.tabs.sendMessage(tab.id, { name: "toggleHelpDialog", frameId:frameId }))
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
@@ -532,33 +496,35 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
     registryEntry = Commands.keyToCommandRegistry[command]
     runCommand = true
 
-    if registryEntry.noRepeat
+    if registryEntry.repeat == "none"
       count = 1
     else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
       runCommand = confirm """
         You have asked Vimium to perform #{count} repeats of the command:
-        #{Commands.availableCommands[registryEntry.command].description}
+        #{registryEntry.description}
 
         Are you sure you want to continue?
       """
 
     if runCommand
-      if not registryEntry.isBackgroundCommand
-        chrome.tabs.sendMessage(tabId,
-          name: "executePageCommand",
-          command: registryEntry.command,
-          frameId: frameId,
-          count: count,
-          passCountToFunction: registryEntry.passCountToFunction,
-          completionKeys: generateCompletionKeys(""))
-        refreshedCompletionKeys = true
-      else
-        if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count)
-        else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command]()
-        else
-          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
+      switch (registryEntry.context)
+        when "frame"
+          chrome.tabs.sendMessage(tabId,
+            name: "executePageCommand",
+            command: registryEntry.name,
+            frameId: frameId,
+            count: count,
+            passCountToFunction: registryEntry.repeat == "pass_to_function",
+            completionKeys: generateCompletionKeys(""))
+          refreshedCompletionKeys = true
+        when "background"
+          switch (registryEntry.repeat)
+            when "pass_to_function"
+              BackgroundCommands[registryEntry.name](count)
+            when "none"
+              BackgroundCommands[registryEntry.name]()
+            when "normal"
+              repeatFunction(BackgroundCommands[registryEntry.name], count, 0, frameId)
 
     newKeyQueue = ""
   else if (getActualKeyStrokeLength(command) > 1)
@@ -619,6 +585,12 @@ getCurrFrameIndex = (frames) ->
     return i if frames[i].id == focusedFrame
   frames.length + 1
 
+# Send message back to the tab unchanged.
+# Frames in the same tab can use this to communicate securely.
+echo = (request, sender) ->
+  delete request.handler # No need to send this information
+  chrome.tabs.sendMessage(sender.tab.id, request)
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -643,6 +615,8 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
+  echo: echo
+  getKeyToCommandRegistry: getKeyToCommandRegistry
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))

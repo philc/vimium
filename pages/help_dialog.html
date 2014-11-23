@@ -5,47 +5,56 @@
 
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
        page with the up-to-date key bindings when the dialog is shown. -->
-  <div id="vimiumHelpDialog" class="vimiumReset">
-  <a class="vimiumReset optionsPage" href="#">Options</a>
-  <a class="vimiumReset closeButton" href="#">&times;</a>
-  <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium {{title}}</div>
-  <div class="vimiumReset vimiumColumn">
-    <table class="vimiumReset">
-      <tbody class="vimiumReset">
-      <tr class="vimiumReset" ><td class="vimiumReset"></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating the page</td></tr>
-      {{pageNavigation}}
-      </tbody>
-    </table>
-  </div>
-  <div class="vimiumReset vimiumColumn">
-    <table class="vimiumReset" >
-      <tbody class="vimiumReset">
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using find</td></tr>
-      {{findCommands}}
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating history</td></tr>
-      {{historyNavigation}}
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Manipulating tabs</td></tr>
-      {{tabManipulation}}
-      <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Miscellaneous</td></tr>
-      {{misc}}
-      </tbody>
-    </table>
-  </div>
+<html>
+  <head>
+    <title>Vimium Help</title>
+    <script type="text/javascript" src="../background_scripts/command_list.js"></script>
+    <script type="text/javascript" src="help_dialog.js"></script>
+    <script type="text/javascript" src="content_script_loader.js"></script>
+  </head>
+  <body style="overflow: hidden">
+    <div id="vimiumHelpDialog" class="vimiumReset">
+      <a class="vimiumReset optionsPage" target="_blank" href="options.html">Options</a>
+      <a class="vimiumReset closeButton" href="#">&times;</a>
+      <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium <span id="replace_with_title"></span></div>
+      <div id="columnContainer" class="vimiumReset vimiumColumn">
+      </div>
 
-  <br clear="both"/>
-  <div class="vimiumReset vimiumDivider"></div>
+      <br clear="both"/>
+      <div class="vimiumReset vimiumDivider"></div>
 
-  <div id="vimiumHelpDialogFooter" class="vimiumReset">
-    <a href="#" class="vimiumReset toggleAdvancedCommands">Show advanced commands</a>
+      <div id="vimiumHelpDialogFooter" class="vimiumReset">
+          <a href="#" class="vimiumReset toggleAdvancedCommands"><span class="showAdvanced">Show advanced commands</span><span class="hideAdvanced">Hide advanced commands</span></a>
 
-    <div class="vimiumReset vimiumColumn">
-      Enjoying Vimium?
-      <a class="vimiumReset" href="https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb">Leave us
-          feedback</a>.<br/>
-      Found a bug? <a class="vimiumReset" href="http://github.com/philc/vimium/issues">Report it here</a>.
+        <div class="vimiumReset vimiumColumn">
+          Enjoying Vimium?
+          <a class="vimiumReset" href="https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb">Leave us
+              feedback</a>.<br/>
+          Found a bug? <a class="vimiumReset" href="http://github.com/philc/vimium/issues">Report it here</a>.
+        </div>
+        <div class="vimiumReset vimiumColumn" style="text-align:right">
+          <span class="vimiumReset">Version <span id="replace_with_version"></span></span><br/>
+        </div>
+      </div>
     </div>
-    <div class="vimiumReset vimiumColumn" style="text-align:right">
-      <span class="vimiumReset">Version {{version}}</span><br/>
-    </div>
-  </div>
-</div>
+    <template id="sectionTemplate">
+        <table class="vimiumReset">
+          <tbody class="vimiumReset">
+              <tr class="vimiumReset" >
+                  <td class="vimiumReset"></td>
+                  <td class="vimiumReset"></td>
+                  <td class="vimiumReset vimiumHelpSectionTitle"></td>
+              </tr>
+          </tbody>
+        </table>
+    </template>
+    <template id="commandRowTemplate">
+      <tr class="vimiumReset commandRow unmappedCommand">
+          <td class="vimiumReset commandBindings"></td>
+          <td class="vimiumReset">:</td>
+          <td class="vimiumReset commandDescription">
+              <span class="vimiumReset commandName"></span>
+          </td>
+    </template>
+  </body>
+</html>

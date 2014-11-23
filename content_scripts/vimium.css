@@ -106,6 +106,18 @@ div.internalVimiumSelectedInputHint span {
 
 /* Help Dialog CSS */
 
+iframe#vimiumHelpDialogContainer {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+}
+span.vimiumReset.commandName { display: none; }
+tr.vimiumReset.commandRow.unmappedCommand { display: none; }
+
+span.showAdvanced { display: none; }
+
 div#vimiumHelpDialog {
   border:3px solid red;
   opacity:0.92;
@@ -115,7 +127,7 @@ div#vimiumHelpDialog {
   border-radius:6px;
   padding:8px 12px;
   width:640px;
-  max-height: 85%;
+  max-height: calc(100% - 80px);
   left:50%;
   /* This needs to be 1/2 width to horizontally center the help dialog */
   margin-left:-320px;
@@ -123,19 +135,25 @@ div#vimiumHelpDialog {
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
   overflow-y: auto;
   z-index:99999998;
+  visibility: hidden;
 }
 
 div#vimiumHelpDialog a { color:blue; }
 div#vimiumTitle, div#vimiumTitle span,  div#vimiumTitle * { font-size:20px; }
 #vimiumTitle {
   display: block;
-  line-height: 130%;
+  line-height: 120%;
 }
 div.vimiumColumn {
-  width:50%;
+  width: 100%;
   float:left;
   font-size: 11px;
-  line-height: 130%;
+  line-height: 120%;
+  max-height: 100%;
+  -webkit-column-count: 2;
+  -webkit-column-fill: balance;
+  column-count: 2;
+  column-fill: balance;
 }
 
 div.vimiumColumn tr {
@@ -145,7 +163,7 @@ div.vimiumColumn tr {
 div.vimiumColumn td {
     display: table-cell;
     font-size: 11px;
-    line-height: 130%;
+    line-height: 120%;
 }
 div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr { padding:0; margin:0; }
 div.vimiumColumn table { width:100%; table-layout:auto; }
@@ -156,8 +174,6 @@ div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
   color:#2f508e;
   white-space:nowrap;
 }
-/* Make the description column as wide as it can be. */
-div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) { width:100%; }
 div#vimiumHelpDialog div.vimiumDivider {
   display: block;
   height:1px;
@@ -192,7 +208,7 @@ div#vimiumHelpDialog .optionsPage {
   position: absolute;
   display: block;
   font-size: 11px;
-  line-height: 130%;
+  line-height: 120%;
   right: 60px;
   top: 8px;
 }

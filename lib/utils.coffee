@@ -136,6 +136,31 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
+  getUrlOptions: (url, defaultOptions = {}, booleanOptions = []) ->
+    options = extend {}, defaultOptions # Copy options to a new object.
+
+    url.search
+      .split(/[\?&]/)
+      .map((option) ->
+        [name, value] = option.split "="
+        options[name] = if value? then unescape(value) else true
+      )
+
+    for option in booleanOptions
+      options[option] = option of options and options[option] != "false"
+
+    options
+
+  createOptionsUrl: (url, options) ->
+    alreadyHasOptions = url.indexOf("?") != -1
+    optionList = []
+    for option, value of options
+      continue if value == undefined
+      optionList.push(if value == true then option else "#{option}=#{value}")
+
+    url + (if alreadyHasOptions then "&" else "?") + optionList.join("&")
+
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->

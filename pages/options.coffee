@@ -177,7 +177,7 @@ toggleAdvancedOptions =
       event.preventDefault()
 
 activateHelpDialog = ->
-  showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+  showHelpDialog "Command Listing", true
 
 #
 # Initialization.
