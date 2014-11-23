@@ -598,27 +598,24 @@ openOptionsPageInNewTab = ->
 
 registerFrame = (request, sender) ->
   frames = frameIdsForTab[sender.tab.id] ?= []
-  return if request.is_frameset # Don't store frameset containers; focusing them is no use.
-  if request.is_top
-    frames.unshift request.frameId
-  else
-    frames.push request.frameId
+  unless request.is_frameset # Don't store frameset containers; focusing them is no use.
+    if request.is_top then frames.unshift request.frameId else frames.push request.frameId
 
 unregisterFrame = (request, sender) ->
-  frames = frameIdsForTab[sender.tab.id]
-  return unless frames?
+  tabId = sender.tab.id
+  return unless frameIdsForTab[tabId]?
 
   if request.is_top # The whole tab is closing, so we can drop the frames list.
     updateOpenTabs sender.tab
-  else if not request.if_frameset
-    index = frames.indexOf request.frameId
-    return if index == -1
-    frames.splice index, 1
-    nextFrame 0 if index == 0
+  else
+    removingCurrent = frameIdsForTab[tabId].length and frameIdsForTab[tabId][0] == request.frameId
+    frameIdsForTab[tabId] = (id for id in frameIdsForTab[tabId] when id != request.frameId)
+    BackGroundCommands.nextFrame 0 if removingCurrent
 
 handleFrameFocused = (request, sender) ->
-  index = frameIdsForTab[sender.tab.id].indexOf request.frameId
-  frameIdsForTab[sender.tab.id] = frames.rotate index
+  tabId = sender.tab.id
+  frameIdsForTab[tabId] =
+    [request.frameId, (id for id in frameIdsForTab[tabId] when id != request.frameId)...]
 
 # Port handler mapping
 portHandlers =
