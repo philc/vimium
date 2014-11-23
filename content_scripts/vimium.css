@@ -93,6 +93,7 @@ div.internalVimiumInputHint {
   display: block;
   background-color: rgba(255, 247, 133, 0.3);
   border: solid 1px #C38A22;
+  pointer-events: none;
 }
 
 div.internalVimiumSelectedInputHint {
