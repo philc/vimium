@@ -610,7 +610,7 @@ unregisterFrame = (request, sender) ->
   else
     removingCurrent = frameIdsForTab[tabId].length and frameIdsForTab[tabId][0] == request.frameId
     frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
-    BackGroundCommands.nextFrame 0 if removingCurrent
+    BackgroundCommands.nextFrame 0 if removingCurrent
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
