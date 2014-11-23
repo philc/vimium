@@ -8,7 +8,7 @@ keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
 singleKeyCommands = []
 focusedFrame = null
-framesForTab = {}
+frameIdsForTab = {}
 
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
 # This regular expression captures two groups: the first is a named key, the second is the remainder of
@@ -284,14 +284,8 @@ BackgroundCommands =
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
-      frames = framesForTab[tab.id].frames
-      currIndex = getCurrFrameIndex(frames)
-
-      # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
-      # since it exists only to contain the other frames.
-      newIndex = (currIndex + count) % frames.length
-
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
+      frames = frameIdsForTab[tab.id] = frameIdsForTab[tab.id].rotate(count)
+      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
@@ -347,7 +341,7 @@ updateOpenTabs = (tab) ->
     scrollY: null
     deletor: null
   # Frames are recreated on refresh
-  delete framesForTab[tab.id]
+  delete frameIdsForTab[tab.id]
 
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
@@ -394,7 +388,7 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
-  updateOpenTabs(tab)
+  updateOpenTabs(tab) if changeInfo.url?
   updateActiveState(tabId)
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
@@ -429,7 +423,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   # scroll position)
   tabInfoMap.deletor = -> delete tabInfoMap[tabId]
   setTimeout tabInfoMap.deletor, 1000
-  delete framesForTab[tabId]
+  delete frameIdsForTab[tabId]
 
 chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
 
@@ -603,21 +597,28 @@ openOptionsPageInNewTab = ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
-  unless framesForTab[sender.tab.id]
-    framesForTab[sender.tab.id] = { frames: [] }
+  frames = frameIdsForTab[sender.tab.id] ?= []
+  return if request.is_frameset # Don't store frameset containers; focusing them is no use.
+  if request.is_top
+    frames.unshift request.frameId
+  else
+    frames.push request.frameId
 
-  if (request.is_top)
-    focusedFrame = request.frameId
-    framesForTab[sender.tab.id].total = request.total
+unregisterFrame = (request, sender) ->
+  frames = frameIdsForTab[sender.tab.id]
+  return unless frames?
 
-  framesForTab[sender.tab.id].frames.push({ id: request.frameId })
+  if request.is_top # The whole tab is closing, so we can drop the frames list.
+    updateOpenTabs sender.tab
+  else if not request.if_frameset
+    index = frames.indexOf request.frameId
+    return if index == -1
+    frames.splice index, 1
+    nextFrame 0 if index == 0
 
-handleFrameFocused = (request, sender) -> focusedFrame = request.frameId
-
-getCurrFrameIndex = (frames) ->
-  for i in [0...frames.length]
-    return i if frames[i].id == focusedFrame
-  frames.length + 1
+handleFrameFocused = (request, sender) ->
+  index = frameIdsForTab[sender.tab.id].indexOf request.frameId
+  frameIdsForTab[sender.tab.id] = frames.rotate index
 
 # Port handler mapping
 portHandlers =
@@ -633,6 +634,7 @@ sendRequestHandlers =
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
   registerFrame: registerFrame,
+  unregisterFrame: unregisterFrame,
   frameFocused: handleFrameFocused,
   upgradeNotificationClosed: upgradeNotificationClosed,
   updateScrollPosition: handleUpdateScrollPosition,
@@ -640,7 +642,7 @@ sendRequestHandlers =
   isEnabledForUrl: isEnabledForUrl,
   saveHelpDialogSettings: saveHelpDialogSettings,
   selectSpecificTab: selectSpecificTab,
-  refreshCompleter: refreshCompleter
+  refreshCompleter: refreshCompleter,
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks)
 
