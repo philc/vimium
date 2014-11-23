@@ -8,7 +8,7 @@ keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
 singleKeyCommands = []
 focusedFrame = null
-framesForTab = {}
+frameIdsForTab = {}
 
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
 # This regular expression captures two groups: the first is a named key, the second is the remainder of
@@ -284,8 +284,8 @@ BackgroundCommands =
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
-      frames = framesForTab[tab.id] = framesForTab[tab.id].rotate(count)
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0].id, highlight: true }))
+      frames = frameIdsForTab[tab.id] = frameIdsForTab[tab.id].rotate(count)
+      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
@@ -341,7 +341,7 @@ updateOpenTabs = (tab) ->
     scrollY: null
     deletor: null
   # Frames are recreated on refresh
-  delete framesForTab[tab.id]
+  delete frameIdsForTab[tab.id]
 
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
@@ -423,7 +423,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   # scroll position)
   tabInfoMap.deletor = -> delete tabInfoMap[tabId]
   setTimeout tabInfoMap.deletor, 1000
-  delete framesForTab[tabId]
+  delete frameIdsForTab[tabId]
 
 chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
 
@@ -597,31 +597,27 @@ openOptionsPageInNewTab = ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
-  frames = framesForTab[sender.tab.id] ?= []
+  frames = frameIdsForTab[sender.tab.id] ?= []
   if request.is_top
-    frames.unshift id: request.frameId
+    frames.unshift request.frameId
   else
-    frames.push id: request.frameId
+    frames.push request.frameId
 
 unregisterFrame = (request, sender) ->
-  frames = framesForTab[sender.tab.id]
+  frames = frameIdsForTab[sender.tab.id]
   return unless frames?
 
   if request.is_top # The whole tab is closing, so we can drop the frames list.
     updateOpenTabs sender.tab
   else
-    index = getFrameIndex frames, request.frameId
+    index = frames.indexOf request.frameId
+    return if index == -1
     frames.splice index, 1
-    nextFrame 0
+    nextFrame 0 if index == 0
 
 handleFrameFocused = (request, sender) ->
-  index = getFrameIndex framesForTab[sender.tab.id], request.frameId
-  framesForTab[sender.tab.id] = frames.rotate index
-
-getFrameIndex = (frames, frameId) ->
-  for frameDetails, index in frames
-    return index if frameDetails.id == frameId
-  frames.length + 1
+  index = frameIdsForTab[sender.tab.id].indexOf request.frameId
+  frameIdsForTab[sender.tab.id] = frames.rotate index
 
 # Port handler mapping
 portHandlers =
