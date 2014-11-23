@@ -147,6 +147,13 @@ Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
 String::startsWith = (str) -> @indexOf(str) == 0
 
+Array::rotate = (count) ->
+  return this if @length == 0
+  count = count % @length
+  count = count + @length if count < 0
+  Array::push.apply(this, @splice(0, count))
+  this
+
 globalRoot = window ? global
 globalRoot.extend = (hash1, hash2) ->
   for key of hash2

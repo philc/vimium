@@ -284,14 +284,8 @@ BackgroundCommands =
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count) ->
     chrome.tabs.getSelected(null, (tab) ->
-      frames = framesForTab[tab.id].frames
-      currIndex = frames.frameIndex or getCurrFrameIndex(frames)
-
-      # TODO: Skip the "top" frame (which doesn't actually have a <frame> tag),
-      # since it exists only to contain the other frames.
-      frames.frameIndex = newIndex = (currIndex + count) % frames.length
-
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[newIndex].id, highlight: true }))
+      frames = framesForTab[tab.id] = framesForTab[tab.id].rotate(count)
+      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0].id, highlight: true }))
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
@@ -603,39 +597,30 @@ openOptionsPageInNewTab = ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 registerFrame = (request, sender) ->
-  unless framesForTab[sender.tab.id]
-    framesForTab[sender.tab.id] = { frames: [] }
-
-  if (request.is_top)
-    focusedFrame = request.frameId
-    framesForTab[sender.tab.id].frames.frameIndex = getCurrFrameIndex(framesForTab[sender.tab.id])
-
-  framesForTab[sender.tab.id].frames.push({ id: request.frameId })
+  frames = framesForTab[sender.tab.id] ?= []
+  if request.is_top
+    frames.unshift id: request.frameId
+  else
+    frames.push id: request.frameId
 
 unregisterFrame = (request, sender) ->
-  return unless framesForTab[sender.tab.id]
+  frames = framesForTab[sender.tab.id]
+  return unless frames?
 
   if request.is_top # The whole tab is closing, so we can drop the frames list.
     updateOpenTabs(sender.tab)
-    return
-
-  frames = framesForTab[sender.tab.id].frames
-
-  for index, tabDetails of frames
-    if (tabDetails.id == request.frameId)
-      frames.splice(index, 1)
-
-      frames.frameIndex-- if frames.frameIndex >= index # Adjust index if it is shifted.
-      nextFrame(0) if frames.frameIndex == index # Focus another frame if the closed one was focused.
-      return
+  else
+    index = getFrameIndex frames, request.frameId
+    frames.splice index, 1
+    nextFrame 0
 
 handleFrameFocused = (request, sender) ->
-  focusedFrame = request.frameId
-  framesForTab[sender.tab.id].frames.frameIndex = getCurrFrameIndex(framesForTab[sender.tab.id])
+  index = getFrameIndex framesForTab[sender.tab.id], request.frameId
+  framesForTab[sender.tab.id] = frames.rotate index
 
-getCurrFrameIndex = (frames) ->
-  for i in [0...frames.length]
-    return i if frames[i].id == focusedFrame
+getFrameIndex = (frames, frameId) ->
+  for frameDetails, index in frames
+    return index if frameDetails.id == frameId
   frames.length + 1
 
 # Port handler mapping
