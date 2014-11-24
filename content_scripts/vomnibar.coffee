@@ -10,26 +10,29 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activateWithCompleter: (completerName, refreshInterval, initialQueryValue, selectFirstResult, forceNewTab) ->
+  activateWithCompleter: (completerName, refreshInterval, initialQueryValue, selectFirstResult, openType = "current") ->
     completer = @getCompleter(completerName)
     @vomnibarUI = new VomnibarUI() unless @vomnibarUI
     completer.refresh()
     @vomnibarUI.setInitialSelectionValue(if selectFirstResult then 0 else -1)
     @vomnibarUI.setCompleter(completer)
     @vomnibarUI.setRefreshInterval(refreshInterval)
-    @vomnibarUI.setForceNewTab(forceNewTab)
+    @vomnibarUI.setOpenType(openType)
     @vomnibarUI.show()
     if (initialQueryValue)
       @vomnibarUI.setQuery(initialQueryValue)
       @vomnibarUI.update()
 
   activate: -> @activateWithCompleter("omni", 100)
-  activateInNewTab: -> @activateWithCompleter("omni", 100, null, false, true)
+  activateInNewTab: -> @activateWithCompleter("omni", 100, null, false, "tab")
+  activateInNewWindow: -> @activateWithCompleter("omni", 100, null, false, "window")
   activateTabSelection: -> @activateWithCompleter("tabs", 0, null, true)
   activateBookmarks: -> @activateWithCompleter("bookmarks", 0, null, true)
-  activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, true)
+  activateBookmarksInNewTab: -> @activateWithCompleter("bookmarks", 0, null, true, "tab")
+  activateBookmarksInNewWindow: -> @activateWithCompleter("bookmarks", 0, null, true, "window")
   activateEditUrl: -> @activateWithCompleter("omni", 100, window.location.href)
-  activateEditUrlInNewTab: -> @activateWithCompleter("omni", 100, window.location.href, false, true)
+  activateEditUrlInNewTab: -> @activateWithCompleter("omni", 100, window.location.href, false, "tab")
+  activateEditUrlInNewWindow: -> @activateWithCompleter("omni", 100, window.location.href, false, "window")
   getUI: -> @vomnibarUI
 
 
@@ -49,7 +52,7 @@ class VomnibarUI
 
   setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
 
-  setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
+  setOpenType: (openType) -> @openType = openType
 
   show: ->
     @box.style.display = "block"
@@ -106,8 +109,13 @@ class VomnibarUI
     action = @actionFromKeyEvent(event)
     return true unless action # pass through
 
-    openInNewTab = @forceNewTab ||
-      (event.shiftKey || event.ctrlKey || KeyboardUtils.isPrimaryModifierKey(event))
+    openType =
+      if event.shiftKey
+        "window"
+      else if event.ctrlKey or KeyboardUtils.isPrimaryModifierKey(event)
+        "tab"
+      else @openType
+
     if (action == "dismiss")
       @hide()
     else if (action == "up")
@@ -129,13 +137,20 @@ class VomnibarUI
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
         @hide()
+        handler = switch (openType)
+          when "tab"
+            "openUrlInNewTab"
+          when "window"
+            "openUrlInNewWindow"
+          else
+            "openUrlInCurrentTab"
         chrome.runtime.sendMessage({
-          handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+          handler: handler
           url: query })
       else
         @update true, =>
           # Shift+Enter will open the result in a new tab instead of the current tab.
-          @completions[@selection].performAction(openInNewTab)
+          @completions[@selection].performAction(openType)
           @hide()
 
     # It seems like we have to manually suppress the event here and still return true.
@@ -227,17 +242,24 @@ extend BackgroundCompleter,
   # These are the actions we can perform when the user selects a result in the Vomnibox.
   #
   completionActions:
-    navigateToUrl: (url, openInNewTab) ->
+    navigateToUrl: (url, openType) ->
       # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
       if url.startsWith "javascript:"
         script = document.createElement 'script'
         script.textContent = decodeURIComponent(url["javascript:".length..])
         (document.head || document.documentElement).appendChild script
       else
+        handler = switch (openType)
+          when "tab"
+            "openUrlInNewTab"
+          when "window"
+            "openUrlInNewWindow"
+          else
+            "openUrlInCurrentTab"
         chrome.runtime.sendMessage(
-          handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-          url: url,
-          selected: openInNewTab)
+          handler: handler
+          url: url
+          selected: true)
 
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
