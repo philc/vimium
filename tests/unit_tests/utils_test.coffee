@@ -81,3 +81,9 @@ context "compare versions",
     assert.equal -1, Utils.compareVersions("1.40.1", "1.40.2")
     assert.equal -1, Utils.compareVersions("1.40.1", "1.41")
     assert.equal 1, Utils.compareVersions("1.41", "1.40")
+
+context "miscellaneous tests for arrays",
+  # We should not add Array::abc methods.
+  should "not have additional properties", ->
+    for value in []
+      assert.isTrue false
