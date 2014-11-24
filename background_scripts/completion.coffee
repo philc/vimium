@@ -210,7 +210,7 @@ class DomainCompleter
 
   performSearch: (queryTerms, onComplete) ->
     query = queryTerms[0]
-    domainCandidates = (domain for domain of @domains when domain.indexOf(query) >= 0)
+    domainCandidates = (domain for own domain of @domains when domain.indexOf(query) >= 0)
     domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
     return onComplete([]) if domains.length == 0
     topDomain = domains[0][0]
