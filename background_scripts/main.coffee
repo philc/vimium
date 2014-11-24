@@ -412,16 +412,14 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   # reappear. Pretend they never existed and adjust tab indices accordingly. Could possibly expand this into
   # a blacklist in the future.
   unless chrome.sessions
+    currentWindowTabQueue = tabQueue[openTabInfo.windowId] ?= []
     if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
-      for i of tabQueue[openTabInfo.windowId]
-        if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
-          tabQueue[openTabInfo.windowId][i].positionIndex--
+      for tab in currentWindowTabQueue
+        if (tab.positionIndex > openTabInfo.positionIndex)
+          tab.positionIndex--
       return
 
-    if (tabQueue[openTabInfo.windowId])
-      tabQueue[openTabInfo.windowId].push(openTabInfo)
-    else
-      tabQueue[openTabInfo.windowId] = [openTabInfo]
+    currentWindowTabQueue.push(openTabInfo)
 
   # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
   # scroll position)

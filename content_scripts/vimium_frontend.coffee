@@ -68,8 +68,8 @@ settings =
   load: ->
     @init() unless @port
 
-    for i of @valuesToLoad
-      @port.postMessage({ operation: "get", key: @valuesToLoad[i] })
+    for key in @valuesToLoad
+      @port.postMessage({ operation: "get", key: key })
 
   receiveMessage: (args) ->
     # not using 'this' due to issues with binding on callback
@@ -83,8 +83,7 @@ settings =
         listener()
 
   addEventListener: (eventName, callback) ->
-    if (!(eventName of @eventListeners))
-      @eventListeners[eventName] = []
+    @eventListeners[eventName] ?= []
     @eventListeners[eventName].push(callback)
 
 #
@@ -401,8 +400,8 @@ onKeydown = (event) ->
       if (event.altKey)
         modifiers.push("a")
 
-      for i of modifiers
-        keyChar = modifiers[i] + "-" + keyChar
+      for modifier in modifiers
+        keyChar = modifier + "-" + keyChar
 
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
