@@ -286,8 +286,9 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
       # additional offset such that we do indeed start from frameId.
-      offset = Math.max 0, frameIdsForTab[tab.id].indexOf frameId
-      frames = frameIdsForTab[tab.id] = frameIdsForTab[tab.id].rotate(count+offset)
+      count += Math.max 0, frameIdsForTab[tab.id].indexOf frameId
+      frames = frameIdsForTab[tab.id]
+      frames = frameIdsForTab[tab.id] = [frames[count..]..., frames[0...count]...]
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
 
   closeTabsOnLeft: -> removeTabsRelative "before"

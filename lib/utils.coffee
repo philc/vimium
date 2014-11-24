@@ -145,13 +145,6 @@ Function::curry = ->
 
 Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
-Array::rotate = (count) ->
-  if @length
-    count = count % @length
-    count += @length while count < 0
-    Array::push.apply(this, @splice(0, count))
-  this
-
 String::startsWith = (str) -> @indexOf(str) == 0
 
 globalRoot = window ? global
