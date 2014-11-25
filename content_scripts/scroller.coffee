@@ -26,7 +26,6 @@ addToJumpHistory = (direction, val) ->
     point.y = val
   jumpHistory.push(point)
   jumpHistory = jumpHistory.slice(-maxHistory)
-  console.log('updateing history', jumpHistory.length)
 
 
 root.init = ->
