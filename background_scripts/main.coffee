@@ -10,6 +10,9 @@ singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
 
+# The current request, global variable.  Only reliable during the synchronous part of command's execution.
+currentRequest = null
+
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
 # This regular expression captures two groups: the first is a named key, the second is the remainder of
 # the string.
@@ -282,14 +285,12 @@ BackgroundCommands =
         { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
-  nextFrame: (count,frameId) ->
+  nextFrame: (count) ->
+    frameId = currentRequest.frameId
     chrome.tabs.getSelected(null, (tab) ->
       frames = frameIdsForTab[tab.id]
-      # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
-      # additional offset such that we do indeed start from frameId.
-      count = (count + Math.max 0, frameIdsForTab[tab.id].indexOf frameId) % frames.length
-      frames = frameIdsForTab[tab.id] = [frames[count..]..., frames[0...count]...]
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
+      count = (count + frames.indexOf frameId) % frames.length
+      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[count], highlight: true }))
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
@@ -500,6 +501,7 @@ splitKeyQueue = (queue) ->
   { count: count, command: command }
 
 handleKeyDown = (request, port) ->
+  currentRequest = request
   key = request.keyChar
   if (key == "<ESC>")
     console.log("clearing keyQueue")
@@ -552,9 +554,9 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count, frameId)
+          BackgroundCommands[registryEntry.command](count)
         else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command](frameId)
+          BackgroundCommands[registryEntry.command]()
         else
           repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
@@ -605,11 +607,7 @@ registerFrame = (request, sender) ->
 
 unregisterFrame = (request, sender) ->
   tabId = sender.tab.id
-  if frameIdsForTab[tabId]?
-    if request.tab_is_closing
-      updateOpenTabs sender.tab
-    else
-      frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
+  frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
 
 # Port handler mapping
 portHandlers =
