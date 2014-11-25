@@ -130,7 +130,7 @@ initializePreDomReady = ->
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
-    return if request.handler == "registerFrame" or request.handler == "frameFocused"
+    return if request.handler == "registerFrame"
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
@@ -173,7 +173,6 @@ setState = (request) ->
 window.addEventListener "focus", ->
   # settings may have changed since the frame last had focus
   settings.load()
-  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
 # Initialization tasks that must wait for the document to be ready.

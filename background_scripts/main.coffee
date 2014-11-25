@@ -611,12 +611,6 @@ unregisterFrame = (request, sender) ->
     else
       frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
 
-handleFrameFocused = (request, sender) ->
-  tabId = sender.tab.id
-  if frameIdsForTab[tabId]?
-    frameIdsForTab[tabId] =
-      [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
-
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -632,7 +626,6 @@ sendRequestHandlers =
   openOptionsPageInNewTab: openOptionsPageInNewTab,
   registerFrame: registerFrame,
   unregisterFrame: unregisterFrame,
-  frameFocused: handleFrameFocused,
   upgradeNotificationClosed: upgradeNotificationClosed,
   updateScrollPosition: handleUpdateScrollPosition,
   copyToClipboard: copyToClipboard,
