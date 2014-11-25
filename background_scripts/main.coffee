@@ -5,15 +5,13 @@ currentVersion = Utils.getCurrentVersion()
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed
-validFirstKeys = {}
-singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
 
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
 # This regular expression captures two groups: the first is a named key, the second is the remainder of
 # the string.
-namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
+namedKeyRegex = /(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
 selectionChangedHandlers = []
@@ -148,10 +146,9 @@ fetchFileContents = (extensionFileName) ->
 #
 # Returns the keys that can complete a valid command given the current key queue.
 #
-getCompletionKeysRequest = (request, keysToCheck = "") ->
+getCompletionKeysRequest = (request, sender, keysToCheck = "") ->
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
-  validFirstKeys: validFirstKeys
 
 #
 # Opens the url in the current tab.
@@ -451,50 +448,52 @@ splitKeyIntoFirstAndSecond = (key) ->
     { first: key[0], second: key.slice(1) }
 
 getActualKeyStrokeLength = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    1 + getActualKeyStrokeLength(RegExp.$2)
-  else
+  firstNamedKey = key.search(namedKeyRegex)
+  if firstNamedKey == -1
     key.length
-
-populateValidFirstKeys = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
-      validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
-
-populateSingleKeyCommands = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
-      singleKeyCommands.push(key)
+  else
+    firstNamedKey + 1 + getActualKeyStrokeLength(RegExp.$2)
 
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
-  validFirstKeys = {}
-  singleKeyCommands = []
-
-  populateValidFirstKeys()
-  populateSingleKeyCommands()
-
   sendRequestToAllTabs(getCompletionKeysRequest())
 
-# Generates a list of keys that can complete a valid command given the current key queue or the one passed in
+# Generates a list of key mappings that can be fired by the current key combination.
+generateCompletionMappings = (keysToCheck) ->
+  if keysToCheck == ""
+    substringMappings = []
+  else
+    {second: reducedKeys} = splitKeyIntoFirstAndSecond(keysToCheck)
+    substringMappings = generateCompletionMappings(reducedKeys)
+
+  keysTyped = keysToCheck.length
+  mappings = []
+  for keys of Commands.keyToCommandRegistry
+    if keys.indexOf(keysToCheck) == 0
+      mappings.push
+        mapping: keys
+        completionKeys: keys.substring(keysTyped)
+
+  mappings.concat(substringMappings)
+
+# Generates a list of keys that can follow the current combination to complete a valid command.
 generateCompletionKeys = (keysToCheck) ->
   splitHash = splitKeyQueue(keysToCheck || keyQueue)
   command = splitHash.command
   count = splitHash.count
 
-  completionKeys = singleKeyCommands.slice(0)
+  keysTyped = command.length
+  mappings = generateCompletionMappings(command)
 
-  if (getActualKeyStrokeLength(command) == 1)
-    for key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
+  # Take the first key of each mapping's continuation to the current combination.
+  completionKeys = for mapping in mappings
+    splitKeyIntoFirstAndSecond(mapping.completionKeys).first
 
   completionKeys
 
 splitKeyQueue = (queue) ->
   match = /([1-9][0-9]*)?(.*)/.exec(queue)
-  count = parseInt(match[1], 10)
+  count = parseInt(match[1], 10) || 1
   command = match[2]
 
   { count: count, command: command }
@@ -519,15 +518,15 @@ handleKeyDown = (request, port) ->
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false
-  splitHash = splitKeyQueue(keysToCheck)
-  command = splitHash.command
-  count = splitHash.count
+  {count, command} = splitKeyQueue(keysToCheck)
 
   return keysToCheck if command.length == 0
-  count = 1 if isNaN(count)
 
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
+  completionMappings = generateCompletionMappings(command)
+  completeMatches = completionMappings.filter (x) -> x.completionKeys == ""
+
+  if (completeMatches.length > 0)
+    registryEntry = Commands.keyToCommandRegistry[completeMatches[0].mapping]
     runCommand = true
 
     if registryEntry.noRepeat
@@ -559,21 +558,13 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
           repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
     newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
-    splitKey = splitKeyIntoFirstAndSecond(command)
-
-    # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
-    else
-      newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
   else
-    newKeyQueue = (if validFirstKeys[command] then count.toString() + command else "")
+    newKeyQueue = if completionMappings.length == 0 then "" else count.toString() + command
 
   # If we haven't sent the completion keys piggybacked on executePageCommand,
   # send them by themselves.
   unless refreshedCompletionKeys
-    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
+    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, null, newKeyQueue), null)
 
   newKeyQueue
 
@@ -654,8 +645,6 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
-populateValidFirstKeys()
-populateSingleKeyCommands()
 if shouldShowUpgradeMessage()
   sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 
