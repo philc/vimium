@@ -9,8 +9,8 @@ focusedFrame = null
 frameIdsForTab = {}
 
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
-# This regular expression captures two groups: the first is a named key, the second is the remainder of
-# the string.
+# This regular expression captures two groups: the first instance of a named key in a string, and the
+# remainder of the string.
 namedKeyRegex = /(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
