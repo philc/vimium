@@ -235,7 +235,7 @@ iframe.vimiumHUDFrame {
 }
 
 iframe.vimiumHUDFrame.vimiumHiddenFrame {
-  left: -450px;
+  left: -100%;
   right: auto;
 }
 
