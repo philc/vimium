@@ -17,5 +17,11 @@ root.chrome = {
     }
     sendMessage: ->
     getManifest: ->
+    getURL: (url) ->
+      if url == ""
+        # We use this to get the origin for our extension. Just pass * so we don't have problems.
+        "*"
+      else
+        "../../" + url
   }
 }

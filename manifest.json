@@ -57,5 +57,8 @@
   "browser_action": {
     "default_icon": "icons/browser_action_disabled.png",
     "default_popup": "pages/popup.html"
-  }
+  },
+  "web_accessible_resources": [
+    "pages/HUD.html"
+  ]
 }
