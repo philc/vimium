@@ -966,86 +966,81 @@ toggleHelpDialog = (html, fid) ->
 # Note: you cannot interact with the HUD until document.body is available.
 #
 HUD =
-  _tweenId: -1
   _displayElement: null
   _upgradeNotificationElement: null
 
   init: ->
-    # Create our elements on DOMContentLoaded so there's no delay if/when we have to show them.
-    @displayElement()
-    @upgradeNotificationElement()
+    # Create our elements on DOMContentLoaded so they are available as soon as needed, and associate
+    # a listener to handle messages from them.
+    @displayElement().onMessage = @upgradeNotificationElement().onMessage = (request) ->
+      HUD[request.name]?(request) if request.name?
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   showForDuration: (text, duration) ->
-    @show(text)
-    @_showForDurationTimerId = setTimeout((-> HUD.hide()), duration)
+    @show text
+    @_showForDurationTimerId = setTimeout (-> HUD.hide()), duration
 
   show: (text) ->
     return unless @enabled()
-    clearTimeout(@_showForDurationTimerId)
+    clearTimeout @_showForDurationTimerId
     @displayElement().sendMessage {name: "show", text}
-    @displayElement().classList.remove("vimiumHiddenFrame")
-    # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
-    @displayElement().style.right = rightOffset = "150px"
-    @displayElement().style.width = "calc(100% - #{rightOffset})"
-    clearInterval(@_tweenId)
-    @_tweenId = Tween.fade(@displayElement(), 1.0, 150)
+    @displayElement().show "150px" # Far right enough that it won't overlap chrome's "popups blocked" HUD.
 
-  hide: (immediate) ->
-    clearInterval(@_tweenId)
-    if (immediate)
-      @displayElement().classList.add("vimiumHiddenFrame")
-      @displayElement().style.right = ""
-    else
-      @_tweenId = Tween.fade(@displayElement(), 0, 150, =>
-        @displayElement().classList.add("vimiumHiddenFrame")
-        @displayElement().style.right = "")
+  hide: (immediate) -> @displayElement().hide immediate
+
+  showFindMode: ->
+    clearTimeout @_showForDurationTimerId
+    @displayElement().sendMessage {name: "find"}
+    @displayElement().show "150px" # Far right enough that it won't overlap chrome's "popups blocked" HUD.
 
   showUpgradeNotification: (version) ->
-    return unless @enabled()
     @upgradeNotificationElement().sendMessage {name: "update", version}
-    @upgradeNotificationElement().classList.remove("vimiumHiddenFrame")
-    # Position this just to the left of our normal HUD.
-    @upgradeNotificationElement().style.right = rightOffset = "315px"
-    @upgradeNotificationElement().style.width = "calc(100% - #{rightOffset})"
-    Tween.fade(@upgradeNotificationElement(), 1.0, 150)
+    @upgradeNotificationElement().show "315px" # Position this just to the left of our normal HUD.
 
-  hideUpgradeNotification: (clickEvent) ->
-    Tween.fade(@upgradeNotificationElement(), 0, 150, =>
-      @upgradeNotificationElement().classList.add("vimiumHiddenFrame")
-      @upgradeNotificationElement().style.right = "")
+  hideUpgradeNotification: (clickEvent) -> @upgradeNotificationElement().hide()
 
-  #
-  # Retrieves the HUD HTML element.
-  #
-  displayElement: -> @_displayElement ?= @createHudElement()
-  upgradeNotificationElement: -> @_upgradeNotificationElement ?= @createHudElement()
-
-  # Returns an iframe containing a HUD, equipped with the method sendMessage to communicate with it.
-  createHudElement: ->
-    element = document.createElement("iframe")
-    element.src = chrome.runtime.getURL("pages/HUD.html")
-    element.className = "vimiumReset vimiumHUDFrame vimiumHiddenFrame"
-    document.body.appendChild(element)
-
-    element.sendMessage = (data) ->
-      element.contentWindow.postMessage data, chrome.runtime.getURL("")
-
-    window.addEventListener "message", (event) ->
-      return if event.source != element.contentWindow
-
-      {data} = event
-      HUD[data.name]? data
-
-    element
+  # Retrieves the HUDElements for the normal HUD and the upgrade notification HUD.
+  displayElement: -> @_displayElement ?= new HUDElement()
+  upgradeNotificationElement: -> @_upgradeNotificationElement ?= new HUDElement()
 
   isReady: -> document.body != null
 
   # A preference which can be toggled in the Options page. */
   enabled: -> !settings.get("hideHud")
+
+# A constructor for HUD elements. Used to generate the standard HUD and the "upgrade notification" HUD.
+class HUDElement
+  element: null
+  _tweenId: -1
+
+  constructor: ->
+    @element = document.createElement("iframe")
+    @element.src = chrome.runtime.getURL("pages/HUD.html")
+    @element.className = "vimiumReset vimiumHUDFrame vimiumHiddenFrame"
+    document.body.appendChild(@element)
+    window.addEventListener "message", (event) =>
+      @onMessage?(event.data) if event.source == @element.contentWindow
+
+  sendMessage: (data) ->
+    @element.contentWindow.postMessage data, chrome.runtime.getURL("")
+  show: (rightOffset) ->
+    clearInterval @_tweenId
+    @element.classList.remove("vimiumHiddenFrame")
+    @element.style.right = rightOffset
+    @element.style.width = "calc(100% - #{rightOffset})"
+    @_tweenId = Tween.fade @element, 1.0, 150
+  hide: (immediate) ->
+    clearInterval @_tweenId
+    if (immediate)
+      @element.classList.add("vimiumHiddenFrame")
+      @element.style.right = ""
+      -1
+    else
+      @_tweenId = Tween.fade @element, 0, 150, => @element.hide true
+
 
 Tween =
   #
