@@ -234,6 +234,8 @@ iframe.vimiumHUDFrame {
   opacity: 0;
 }
 
+/* Push the frame off the side of the screen; we it to be 'rendered' so the browser doesn't unload it, but we
+ * don't want it to be visible. */
 iframe.vimiumHUDFrame.vimiumHiddenFrame {
   left: -100%;
   right: auto;

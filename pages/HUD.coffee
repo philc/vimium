@@ -34,18 +34,18 @@ enterFindMode = (data) ->
     # Strip newlines in case the user had pasted some.
     sendMessage name: "search", query: inputElement.innerText.replace(/\r\n/g, "")
   inputElement.addEventListener "keydown", (event) ->
-    eventType = undefined
+    key = undefined
     if KeyboardUtils.isEscape event
-      eventType = "esc"
+      key = "esc"
     else if (event.keyCode == keyCodes.backspace or event.keyCode == keyCodes.deleteKey)
       if inputElement.innerText.length == 0
-        eventType = "del"
+        key = "del"
     else if event.keyCode == keyCodes.enter
-      eventType = "enter"
+      key = "enter"
 
-    if eventType?
+    if key?
       DomUtils.suppressEvent event
-      sendMessage name: "hideFindMode", type: eventType, query: inputElement.innerText.replace(/\r\n/g, "")
+      sendMessage name: "hideFindMode", key: key
       inputElement.blur()
 
   inputElement.focus()

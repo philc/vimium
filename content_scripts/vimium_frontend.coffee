@@ -472,9 +472,6 @@ checkIfEnabledForUrl = ->
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
       initializeWhenEnabled(response.passKeys)
-    else if (HUD.isReady())
-      # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
-      HUD.hide()
 
 refreshCompletionKeys = (response) ->
   if (response)
@@ -605,30 +602,30 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleEscapeForFindMode = ->
-  exitFindMode()
-  document.body.classList.remove("vimiumFindMode")
-  # removing the class does not re-color existing selections. we recreate the current selection so it reverts
-  # back to the default color.
-  selection = window.getSelection()
-  unless selection.isCollapsed
-    range = window.getSelection().getRangeAt(0)
-    window.getSelection().removeAllRanges()
-    window.getSelection().addRange(range)
-  focusFoundLink() || selectFoundInputElement()
-
-handleDeleteForFindMode = ->
-  exitFindMode()
-  performFindInPlace()
-
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-handleEnterForFindMode = ->
+handleKeyForFindMode = (key) ->
   exitFindMode()
-  focusFoundLink()
-  document.body.classList.add("vimiumFindMode")
-  settings.set("findModeRawQuery", findModeQuery.rawQuery)
+
+  if key == "del"
+    performFindInPlace()
+
+  else if key == "esc"
+    document.body.classList.remove("vimiumFindMode")
+    # removing the class does not re-color existing selections. we recreate the current selection so it
+    # reverts back to the default color.
+    selection = window.getSelection()
+    unless getSelection().isCollapsed
+      range = getSelection().getRangeAt(0)
+      getSelection().removeAllRanges()
+      getSelection().addRange(range)
+    focusFoundLink() || selectFoundInputElement()
+
+  else if key == "enter"
+    focusFoundLink()
+    document.body.classList.add("vimiumFindMode")
+    settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -950,7 +947,7 @@ HUD =
     @_showForDurationTimerId = setTimeout (-> HUD.hide()), duration
 
   show: (text) ->
-    return unless @enabled()
+    return if settings.get("hideHud") # The user can disable the HUD from the options page.
     clearTimeout @_showForDurationTimerId
     @displayElement().sendMessage {name: "show", text}
     @displayElement().show "150px" # Far right enough that it won't overlap chrome's "popups blocked" HUD.
@@ -971,17 +968,11 @@ HUD =
   updateMatchesCount: (count) ->
     @displayElement().sendMessage {name: "updateMatchesCount", count}
 
-  hideFindMode: do ->
-    handlers =
-      esc: handleEscapeForFindMode
-      del: handleDeleteForFindMode
-      enter: handleEnterForFindMode
-    (request) ->
-      handlerStack.push focus: -> @remove() and false
-      window.focus()
-      findModeQuery.rawQuery = request.query
-      handlers[request.type]?()
-      @displayElement().hide()
+  hideFindMode: (request) ->
+    @displayElement().hide()
+    handlerStack.push focus: -> @remove() and false # Stop onfocus firing and fetching stale settings.
+    window.focus()
+    handleKeyForFindMode(request.key)
 
   showUpgradeNotification: (version) ->
     @upgradeNotificationElement().sendMessage {name: "update", version}
@@ -992,11 +983,6 @@ HUD =
   # Retrieves the HUDElements for the normal HUD and the upgrade notification HUD.
   displayElement: -> @_displayElement ?= new HUDElement()
   upgradeNotificationElement: -> @_upgradeNotificationElement ?= new HUDElement()
-
-  isReady: -> document.body != null
-
-  # A preference which can be toggled in the Options page. */
-  enabled: -> !settings.get("hideHud")
 
 # A constructor for HUD elements. Used to generate the standard HUD and the "upgrade notification" HUD.
 class HUDElement
@@ -1011,8 +997,7 @@ class HUDElement
     window.addEventListener "message", (event) =>
       @onMessage?(event.data) if event.source == @element.contentWindow
 
-  sendMessage: (data) ->
-    @element.contentWindow.postMessage data, chrome.runtime.getURL("")
+  sendMessage: (data) -> @element.contentWindow.postMessage data, chrome.runtime.getURL("")
   show: (rightOffset) ->
     clearInterval @_tweenId
     @element.classList.remove("vimiumHiddenFrame")
@@ -1024,7 +1009,6 @@ class HUDElement
     if (immediate)
       @element.classList.add("vimiumHiddenFrame")
       @element.style.right = ""
-      -1
     else
       @_tweenId = Tween.fade @element, 0, 150, => @hide true
 
