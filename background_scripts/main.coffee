@@ -4,16 +4,8 @@ currentVersion = Utils.getCurrentVersion()
 
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
-keyQueue = "" # Queue of keys typed
-validFirstKeys = {}
-singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
-
-# Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
-# This regular expression captures two groups: the first is a named key, the second is the remainder of
-# the string.
-namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
 selectionChangedHandlers = []
@@ -145,13 +137,19 @@ fetchFileContents = (extensionFileName) ->
   req.send()
   req.responseText
 
-#
-# Returns the keys that can complete a valid command given the current key queue.
-#
-getCompletionKeysRequest = (request, keysToCheck = "") ->
-  name: "refreshCompletionKeys"
-  completionKeys: generateCompletionKeys(keysToCheck)
-  validFirstKeys: validFirstKeys
+getKeyToCommandRegistryRequest = (request, sender) ->
+  keyToCommandRegistry = {}
+  for key, commandDetails of Commands.keyToCommandRegistry
+    keyToCommandRegistry[key] =
+      command: commandDetails.command
+      isBackgroundCommand: commandDetails.isBackgroundCommand
+      passCountToFunction: commandDetails.passCountToFunction
+      noRepeat: commandDetails.noRepeat
+      repeatLimit: commandDetails.repeatLimit
+      description: Commands.availableCommands[commandDetails.command].description
+
+  name: "refreshKeyToCommandRegistry"
+  keyToCommandRegistry: keyToCommandRegistry
 
 #
 # Opens the url in the current tab.
@@ -444,138 +442,18 @@ updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
         openTabInfo.positionIndex = tab.index
         openTabInfo.windowId = tab.windowId)
 
-splitKeyIntoFirstAndSecond = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    { first: RegExp.$1, second: RegExp.$2 }
-  else
-    { first: key[0], second: key.slice(1) }
-
-getActualKeyStrokeLength = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    1 + getActualKeyStrokeLength(RegExp.$2)
-  else
-    key.length
-
-populateValidFirstKeys = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
-      validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
-
-populateSingleKeyCommands = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
-      singleKeyCommands.push(key)
-
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
-  validFirstKeys = {}
-  singleKeyCommands = []
+  sendRequestToAllTabs(getKeyToCommandRegistryRequest())
 
-  populateValidFirstKeys()
-  populateSingleKeyCommands()
-
-  sendRequestToAllTabs(getCompletionKeysRequest())
-
-# Generates a list of keys that can complete a valid command given the current key queue or the one passed in
-generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueue)
-  command = splitHash.command
-  count = splitHash.count
-
-  completionKeys = singleKeyCommands.slice(0)
-
-  if (getActualKeyStrokeLength(command) == 1)
-    for key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
-
-  completionKeys
-
-splitKeyQueue = (queue) ->
-  match = /([1-9][0-9]*)?(.*)/.exec(queue)
-  count = parseInt(match[1], 10)
-  command = match[2]
-
-  { count: count, command: command }
-
-handleKeyDown = (request, port) ->
-  key = request.keyChar
-  if (key == "<ESC>")
-    console.log("clearing keyQueue")
-    keyQueue = ""
+executeBackgroundCommand = (request) ->
+  {command, frameId, count, passCountToFunction, noRepeat} = request
+  if passCountToFunction
+    BackgroundCommands[command](count, frameId)
+  else if noRepeat
+    BackgroundCommands[command](frameId)
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
-    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
-  # Tell the content script whether there are keys in the queue.
-  # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
-  # back there before or after the next keystroke.
-  # That being said, I suspect there are other similar race conditions here, for example in checkKeyQueue().
-  # Steve (23 Aug, 14).
-  chrome.tabs.sendMessage(port.sender.tab.id,
-    name: "currentKeyQueue",
-    keyQueue: keyQueue)
-
-checkKeyQueue = (keysToCheck, tabId, frameId) ->
-  refreshedCompletionKeys = false
-  splitHash = splitKeyQueue(keysToCheck)
-  command = splitHash.command
-  count = splitHash.count
-
-  return keysToCheck if command.length == 0
-  count = 1 if isNaN(count)
-
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
-    runCommand = true
-
-    if registryEntry.noRepeat
-      count = 1
-    else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
-      runCommand = confirm """
-        You have asked Vimium to perform #{count} repeats of the command:
-        #{Commands.availableCommands[registryEntry.command].description}
-
-        Are you sure you want to continue?
-      """
-
-    if runCommand
-      if not registryEntry.isBackgroundCommand
-        chrome.tabs.sendMessage(tabId,
-          name: "executePageCommand",
-          command: registryEntry.command,
-          frameId: frameId,
-          count: count,
-          passCountToFunction: registryEntry.passCountToFunction,
-          completionKeys: generateCompletionKeys(""))
-        refreshedCompletionKeys = true
-      else
-        if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count, frameId)
-        else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command](frameId)
-        else
-          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
-
-    newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
-    splitKey = splitKeyIntoFirstAndSecond(command)
-
-    # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
-    else
-      newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
-  else
-    newKeyQueue = (if validFirstKeys[command] then count.toString() + command else "")
-
-  # If we haven't sent the completion keys piggybacked on executePageCommand,
-  # send them by themselves.
-  unless refreshedCompletionKeys
-    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
-
-  newKeyQueue
+    repeatFunction(BackgroundCommands[command], count, 0, frameId)
 
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
@@ -625,12 +503,12 @@ echo = (request, sender) ->
 
 # Port handler mapping
 portHandlers =
-  keyDown: handleKeyDown,
   settings: handleSettings,
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
-  getCompletionKeys: getCompletionKeysRequest
+  executeBackgroundCommand: executeBackgroundCommand
+  getKeyToCommandRegistry: getKeyToCommandRegistryRequest
   getCurrentTabUrl: getCurrentTabUrl
   openUrlInNewTab: openUrlInNewTab
   openUrlInIncognito: openUrlInIncognito
@@ -661,8 +539,6 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
-populateValidFirstKeys()
-populateSingleKeyCommands()
 if shouldShowUpgradeMessage()
   sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 
