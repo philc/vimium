@@ -21,7 +21,7 @@ KeyHandler =
       newKeyQueue = @keyQueue.concat([key])
       @log("checking keyQueue: [#{newKeyQueue.join("")}]") unless noAction
       keyHandled = @checkKeyQueue(newKeyQueue, noAction)
-      @log("new KeyQueue: " + @keyQueue) unless noAction
+      @log("new KeyQueue: " + @keyQueue.join("")) unless noAction
 
     keyHandled
 
