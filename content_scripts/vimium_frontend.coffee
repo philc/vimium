@@ -17,7 +17,6 @@ isShowingHelpDialog = false
 # are passed through to the underlying page.
 isEnabledForUrl = true
 passKeys = null
-keyQueue = null
 # The user's operating system.
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
@@ -114,7 +113,6 @@ initializePreDomReady = ->
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -322,7 +320,7 @@ extend window,
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
 isPassKey = ( keyChar ) ->
-  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
+  return !KeyHandler.keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
 handledKeydownEvents = []
 
