@@ -1,4 +1,3 @@
-#
 # This content script takes input from its webpage and executes commands locally on behalf of the background
 # page. It must be run prior to domReady so that we perform some operations very early. We tell the
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
@@ -20,8 +19,6 @@ isEnabledForUrl = true
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = null
-validFirstKeys = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -104,7 +101,7 @@ initializePreDomReady = ->
 
   checkIfEnabledForUrl()
 
-  refreshCompletionKeys()
+  updateKeyToCommandRegistry()
 
   window.requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -112,7 +109,6 @@ initializePreDomReady = ->
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
-    refreshCompletionKeys: refreshCompletionKeys
     refreshKeyToCommandRegistry: KeyHandler.refreshKeyToCommandRegistry.bind(KeyHandler)
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
@@ -358,7 +354,7 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+        if (KeyHandler.completionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
 
         KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId })
@@ -431,7 +427,7 @@ onKeydown = (event) ->
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+      if (KeyHandler.completionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
 
@@ -451,7 +447,7 @@ onKeydown = (event) ->
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if (keyChar == "" && !isInsertMode() &&
-     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
+     (KeyHandler.completionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
@@ -483,18 +479,12 @@ checkIfEnabledForUrl = ->
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
 
-refreshCompletionKeys = (response) ->
-  if (response)
-    currentCompletionKeys = response.completionKeys
-
-    if (response.validFirstKeys)
-      validFirstKeys = response.validFirstKeys
-  else
-    chrome.runtime.sendMessage { handler: "getKeyToCommandRegistry" }, (request) ->
-      KeyHandler.refreshKeyToCommandRegistry request
+updateKeyToCommandRegistry = ->
+  chrome.runtime.sendMessage { handler: "getKeyToCommandRegistry" }, (request) ->
+    KeyHandler.refreshKeyToCommandRegistry request
 
 isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
+  KeyHandler.validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
   if (isFocusable(event.target) && !findMode)
