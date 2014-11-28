@@ -72,7 +72,6 @@ KeyHandler =
     { count: count, command: command }
 
   checkKeyQueue: (keysToCheck, frameId) ->
-    refreshedCompletionKeys = false
     splitHash = @splitKeyQueue(keysToCheck)
     command = splitHash.command
     count = splitHash.count
@@ -96,14 +95,10 @@ KeyHandler =
 
       if runCommand
         if not registryEntry.isBackgroundCommand
-          requestHandlers.executePageCommand(
-            name: "executePageCommand",
-            command: registryEntry.command,
-            frameId: frameId,
-            count: count,
-            passCountToFunction: registryEntry.passCountToFunction,
-            completionKeys: @generateCompletionKeys(""))
-          refreshedCompletionKeys = true
+          if (registryEntry.passCountToFunction)
+            Utils.invokeCommandString(registryEntry.command, [count])
+          else
+            Utils.invokeCommandString(registryEntry.command) for i in [0...count]
         else
           chrome.runtime.sendMessage
             handler: "executeBackgroundCommand",
@@ -125,10 +120,8 @@ KeyHandler =
     else
       newKeyQueue = (if @validFirstKeys[command] then count.toString() + command else "")
 
-    # If we haven't sent the completion keys piggybacked on executePageCommand,
-    # send them by themselves.
-    unless refreshedCompletionKeys
-      requestHandlers.refreshCompletionKeys(@getCompletionKeysRequest(newKeyQueue))
+    # Send the completion keys to vimium_frontend.coffee.
+    requestHandlers.refreshCompletionKeys(@getCompletionKeysRequest(newKeyQueue))
 
     newKeyQueue
 

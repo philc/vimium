@@ -125,7 +125,6 @@ initializePreDomReady = ->
     refreshKeyToCommandRegistry: KeyHandler.refreshKeyToCommandRegistry.bind(KeyHandler)
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
-    executePageCommand: executePageCommand
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
@@ -215,16 +214,6 @@ enterInsertModeIfElementIsFocused = ->
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-
-executePageCommand = (request) ->
-  return unless frameId == request.frameId
-
-  if (request.passCountToFunction)
-    Utils.invokeCommandString(request.command, [request.count])
-  else
-    Utils.invokeCommandString(request.command) for i in [0...request.count]
-
-  refreshCompletionKeys(request)
 
 setScrollPosition = (scrollX, scrollY) ->
   if (scrollX > 0 || scrollY > 0)
