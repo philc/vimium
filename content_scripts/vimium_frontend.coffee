@@ -6,6 +6,7 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
+visualMode = false
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -539,6 +540,17 @@ isInsertMode = ->
   # the active element is contentEditable.
   document.activeElement and document.activeElement.isContentEditable and
     enterInsertModeWithoutShowingIndicator document.activeElement
+
+#
+# Enters visual mode and show an "Visual mode" message.
+#
+window.enterVisualMode = ->
+  visualMode = true
+  HUD.show("Visual mode")
+
+window.exitVisualMode = (target) ->
+  visualMode = false
+  HUD.hide()
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->

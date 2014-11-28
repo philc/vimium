@@ -101,7 +101,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   dialogHtml = fetchFileContents("pages/help_dialog.html")
   for group of Commands.commandGroups
     dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
+        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommandsForMode["normal"],
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
@@ -147,7 +147,7 @@ getKeyToCommandRegistryRequest = (request, sender) ->
         passCountToFunction: commandDetails.passCountToFunction
         noRepeat: commandDetails.noRepeat
         repeatLimit: commandDetails.repeatLimit
-        description: Commands.availableCommands[commandDetails.command].description
+        description: Commands.availableCommandsForMode[mode][commandDetails.command].description
 
   name: "refreshKeyToCommandRegistry"
   keyToCommandRegistries: keyToCommandRegistries
