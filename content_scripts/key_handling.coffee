@@ -2,7 +2,6 @@ KeyHandler =
   keyQueue: "" # Queue of keys typed
   completionKeys: []
   validFirstKeys: {}
-  singleKeyCommands: []
   keyToCommandRegistry: {}
 
   # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>.
@@ -42,19 +41,12 @@ KeyHandler =
   refreshKeyToCommandRegistry: (request) ->
     @keyToCommandRegistry = request.keyToCommandRegistry
     @populateValidFirstKeys()
-    @populateSingleKeyCommands()
 
     @generateCompletionKeys("")
 
   populateValidFirstKeys: ->
     for key of @keyToCommandRegistry
-      if (@getActualKeyStrokeLength(key) == 2)
-        @validFirstKeys[@splitKeyIntoFirstAndSecond(key).first] = true
-
-  populateSingleKeyCommands: ->
-    for key of @keyToCommandRegistry
-      if (@getActualKeyStrokeLength(key) == 1)
-        @singleKeyCommands.push(key)
+      @validFirstKeys[@splitKeyIntoFirstAndSecond(key).first] = true
 
   splitKeyQueue: (queue) ->
     match = /([1-9][0-9]*)?(.*)/.exec(queue)
@@ -123,7 +115,7 @@ KeyHandler =
     command = splitHash.command
     count = splitHash.count
 
-    @completionKeys = @singleKeyCommands.slice(0)
+    @completionKeys = []
 
     if (@getActualKeyStrokeLength(command) == 1)
       for key of @keyToCommandRegistry
