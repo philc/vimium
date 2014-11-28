@@ -125,5 +125,8 @@ KeyHandler =
 
     @completionKeys
 
+  willHandleKey: (keyChar) ->
+    @completionKeys.indexOf(keyChar) != -1 or @validFirstKeys[keyChar] or /^[1-9]/.test(keyChar)
+
 root = exports ? window
 root.KeyHandler = KeyHandler

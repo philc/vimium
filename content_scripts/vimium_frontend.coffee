@@ -364,7 +364,7 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (KeyHandler.completionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+        if (KeyHandler.willHandleKey(keyChar))
           DomUtils.suppressEvent(event)
 
         KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId })
@@ -437,7 +437,7 @@ onKeydown = (event) ->
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
-      if (KeyHandler.completionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+      if (KeyHandler.willHandleKey(keyChar))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
 
@@ -456,9 +456,7 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
-     (KeyHandler.completionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
+  if (keyChar == "" && !isInsertMode() && KeyHandler.willHandleKey(KeyboardUtils.getKeyChar(event)))
     DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
 
@@ -492,9 +490,6 @@ checkIfEnabledForUrl = ->
 updateKeyToCommandRegistry = ->
   chrome.runtime.sendMessage { handler: "getKeyToCommandRegistry" }, (request) ->
     KeyHandler.refreshKeyToCommandRegistry request
-
-isValidFirstKey = (keyChar) ->
-  KeyHandler.validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
   if (isFocusable(event.target) && !findMode)
