@@ -94,8 +94,8 @@ saveHelpDialogSettings = (request) ->
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   commandsToKey = {}
-  for key of Commands.keyToCommandRegistry
-    command = Commands.keyToCommandRegistry[key].command
+  for key of Commands.keyToCommandRegistries.normal
+    command = Commands.keyToCommandRegistries.normal[key].command
     commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
   dialogHtml = fetchFileContents("pages/help_dialog.html")
@@ -138,18 +138,19 @@ fetchFileContents = (extensionFileName) ->
   req.responseText
 
 getKeyToCommandRegistryRequest = (request, sender) ->
-  keyToCommandRegistry = {}
-  for key, commandDetails of Commands.keyToCommandRegistry
-    keyToCommandRegistry[key] =
-      command: commandDetails.command
-      isBackgroundCommand: commandDetails.isBackgroundCommand
-      passCountToFunction: commandDetails.passCountToFunction
-      noRepeat: commandDetails.noRepeat
-      repeatLimit: commandDetails.repeatLimit
-      description: Commands.availableCommands[commandDetails.command].description
+  keyToCommandRegistries = {}
+  for mode, keyToCommandRegistry of Commands.keyToCommandRegistries
+    for key, commandDetails of keyToCommandRegistry
+      (keyToCommandRegistries[mode] ?= {})[key] =
+        command: commandDetails.command
+        isBackgroundCommand: commandDetails.isBackgroundCommand
+        passCountToFunction: commandDetails.passCountToFunction
+        noRepeat: commandDetails.noRepeat
+        repeatLimit: commandDetails.repeatLimit
+        description: Commands.availableCommands[commandDetails.command].description
 
   name: "refreshKeyToCommandRegistry"
-  keyToCommandRegistry: keyToCommandRegistry
+  keyToCommandRegistries: keyToCommandRegistries
 
 #
 # Opens the url in the current tab.

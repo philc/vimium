@@ -4,7 +4,7 @@ Commands =
       @addCommand(command, description[0], description[1])
 
   availableCommands: {}
-  keyToCommandRegistry: {}
+  keyToCommandRegistries: {} # A mapping of mode => key => command.
 
   # Registers a command, making it available to be optionally bound to a key.
   # options:
@@ -24,21 +24,22 @@ Commands =
       noRepeat: options.noRepeat
       repeatLimit: options.repeatLimit
 
-  mapKeyToCommand: (key, command) ->
+  mapKeyToCommand: (key, mode, command) ->
     unless @availableCommands[command]
       console.log(command, "doesn't exist!")
       return
 
     commandDetails = @availableCommands[command]
+    keyToCommandRegistry = @keyToCommandRegistries[mode] ?= {}
 
-    @keyToCommandRegistry[key] =
+    keyToCommandRegistry[key] =
       command: command
       isBackgroundCommand: commandDetails.isBackgroundCommand
       passCountToFunction: commandDetails.passCountToFunction
       noRepeat: commandDetails.noRepeat
       repeatLimit: commandDetails.repeatLimit
 
-  unmapKey: (key) -> delete @keyToCommandRegistry[key]
+  unmapKey: (key, mode) -> delete @keyToCommandRegistries[mode][key]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -53,38 +54,52 @@ Commands =
        .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
           "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
 
-  parseCustomKeyMappings: (customKeyMappings) ->
-    lines = customKeyMappings.split("\n")
+  parseCustomKeyMappings: do ->
+    lineCommandToCommandAndModes =
+      map: ["map", ["normal", "visual"]]
+      nmap: ["map", ["normal"]]
+      vmap: ["map", ["visual"]]
+      unmap: ["unmap", ["normal", "visual"]]
+      nunmap: ["unmap", ["normal"]]
+      vunmap: ["unmap", ["visual"]]
+      unmapAll: ["unmapAll", ["normal", "visual"]]
+      nunmapAll: ["unmapAll", ["normal"]]
+      vunmapAll: ["unmapAll", ["visual"]]
+    (customKeyMappings) ->
+      lines = customKeyMappings.split("\n")
 
-    for line in lines
-      continue if (line[0] == "\"" || line[0] == "#")
-      splitLine = line.split(/\s+/)
+      for line in lines
+        continue if (line[0] == "\"" || line[0] == "#")
+        splitLine = line.split(/\s+/)
 
-      lineCommand = splitLine[0]
+        lineCommand = splitLine[0]
+        [parseCommand, modes] = lineCommandToCommandAndModes[lineCommand] ? ["", []]
 
-      if (lineCommand == "map")
-        continue if (splitLine.length != 3)
-        key = @normalizeKey(splitLine[1])
-        vimiumCommand = splitLine[2]
+        if (parseCommand == "map")
+          continue if (splitLine.length != 3)
+          key = @normalizeKey(splitLine[1])
+          vimiumCommand = splitLine[2]
 
-        continue unless @availableCommands[vimiumCommand]
+          continue unless @availableCommands[vimiumCommand]
 
-        console.log("Mapping", key, "to", vimiumCommand)
-        @mapKeyToCommand(key, vimiumCommand)
-      else if (lineCommand == "unmap")
-        continue if (splitLine.length != 2)
+          console.log("Mapping #{key} to #{vimiumCommand} in #{modes.join(", ")} modes")
+          @mapKeyToCommand(key, mode, vimiumCommand) for mode in modes
+        else if (parseCommand == "unmap")
+          continue if (splitLine.length != 2)
 
-        key = @normalizeKey(splitLine[1])
-        console.log("Unmapping", key)
-        @unmapKey(key)
-      else if (lineCommand == "unmapAll")
-        @keyToCommandRegistry = {}
+          key = @normalizeKey(splitLine[1])
+          console.log("Unapping #{key} in #{modes.join(", ")} modes")
+          @unmapKey(key, mode) for mode in modes
+        else if (parseCommand == "unmapAll")
+          console.log("Unapping all keys in #{modes.join(", ")} modes")
+          @keyToCommandRegistries[mode] = {} for mode in modes
 
   clearKeyMappingsAndSetDefaults: ->
-    @keyToCommandRegistry = {}
+    @keyToCommandRegistries = {}
 
-    for key of defaultKeyMappings
-      @mapKeyToCommand(key, defaultKeyMappings[key])
+    for mode, defaultKeyMappings of defaultKeyMappingsForModes
+      for key, command of defaultKeyMappings
+        @mapKeyToCommand(key, mode, command)
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -176,84 +191,85 @@ Commands =
     "closeTabsOnRight",
     "closeOtherTabs"]
 
-defaultKeyMappings =
-  "?": "showHelp"
-  "j": "scrollDown"
-  "k": "scrollUp"
-  "h": "scrollLeft"
-  "l": "scrollRight"
-  "gg": "scrollToTop"
-  "G": "scrollToBottom"
-  "zH": "scrollToLeft"
-  "zL": "scrollToRight"
-  "<c-e>": "scrollDown"
-  "<c-y>": "scrollUp"
+defaultKeyMappingsForModes =
+  "normal":
+    "?": "showHelp"
+    "j": "scrollDown"
+    "k": "scrollUp"
+    "h": "scrollLeft"
+    "l": "scrollRight"
+    "gg": "scrollToTop"
+    "G": "scrollToBottom"
+    "zH": "scrollToLeft"
+    "zL": "scrollToRight"
+    "<c-e>": "scrollDown"
+    "<c-y>": "scrollUp"
 
-  "d": "scrollPageDown"
-  "u": "scrollPageUp"
-  "r": "reload"
-  "gs": "toggleViewSource"
+    "d": "scrollPageDown"
+    "u": "scrollPageUp"
+    "r": "reload"
+    "gs": "toggleViewSource"
 
-  "i": "enterInsertMode"
+    "i": "enterInsertMode"
 
-  "H": "goBack"
-  "L": "goForward"
-  "gu": "goUp"
-  "gU": "goToRoot"
+    "H": "goBack"
+    "L": "goForward"
+    "gu": "goUp"
+    "gU": "goToRoot"
 
-  "gi": "focusInput"
+    "gi": "focusInput"
 
-  "f":     "LinkHints.activateMode"
-  "F":     "LinkHints.activateModeToOpenInNewTab"
-  "<a-f>": "LinkHints.activateModeWithQueue"
+    "f":     "LinkHints.activateMode"
+    "F":     "LinkHints.activateModeToOpenInNewTab"
+    "<a-f>": "LinkHints.activateModeWithQueue"
 
-  "af": "LinkHints.activateModeToDownloadLink"
+    "af": "LinkHints.activateModeToDownloadLink"
 
-  "/": "enterFindMode"
-  "n": "performFind"
-  "N": "performBackwardsFind"
+    "/": "enterFindMode"
+    "n": "performFind"
+    "N": "performBackwardsFind"
 
-  "[[": "goPrevious"
-  "]]": "goNext"
+    "[[": "goPrevious"
+    "]]": "goNext"
 
-  "yy": "copyCurrentUrl"
-  "yf": "LinkHints.activateModeToCopyLinkUrl"
+    "yy": "copyCurrentUrl"
+    "yf": "LinkHints.activateModeToCopyLinkUrl"
 
-  "p": "openCopiedUrlInCurrentTab"
-  "P": "openCopiedUrlInNewTab"
+    "p": "openCopiedUrlInCurrentTab"
+    "P": "openCopiedUrlInNewTab"
 
-  "K": "nextTab"
-  "J": "previousTab"
-  "gt": "nextTab"
-  "gT": "previousTab"
-  "<<": "moveTabLeft"
-  ">>": "moveTabRight"
-  "g0": "firstTab"
-  "g$": "lastTab"
+    "K": "nextTab"
+    "J": "previousTab"
+    "gt": "nextTab"
+    "gT": "previousTab"
+    "<<": "moveTabLeft"
+    ">>": "moveTabRight"
+    "g0": "firstTab"
+    "g$": "lastTab"
 
-  "W": "moveTabToNewWindow"
-  "t": "createTab"
-  "yt": "duplicateTab"
-  "x": "removeTab"
-  "X": "restoreTab"
+    "W": "moveTabToNewWindow"
+    "t": "createTab"
+    "yt": "duplicateTab"
+    "x": "removeTab"
+    "X": "restoreTab"
 
-  "<a-p>": "togglePinTab"
+    "<a-p>": "togglePinTab"
 
-  "o": "Vomnibar.activate"
-  "O": "Vomnibar.activateInNewTab"
+    "o": "Vomnibar.activate"
+    "O": "Vomnibar.activateInNewTab"
 
-  "T": "Vomnibar.activateTabSelection"
+    "T": "Vomnibar.activateTabSelection"
 
-  "b": "Vomnibar.activateBookmarks"
-  "B": "Vomnibar.activateBookmarksInNewTab"
+    "b": "Vomnibar.activateBookmarks"
+    "B": "Vomnibar.activateBookmarksInNewTab"
 
-  "ge": "Vomnibar.activateEditUrl"
-  "gE": "Vomnibar.activateEditUrlInNewTab"
+    "ge": "Vomnibar.activateEditUrl"
+    "gE": "Vomnibar.activateEditUrlInNewTab"
 
-  "gf": "nextFrame"
+    "gf": "nextFrame"
 
-  "m": "Marks.activateCreateMode"
-  "`": "Marks.activateGotoMode"
+    "m": "Marks.activateCreateMode"
+    "`": "Marks.activateGotoMode"
 
 
 # This is a mapping of: commandIdentifier => [description, options].

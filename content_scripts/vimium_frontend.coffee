@@ -352,7 +352,7 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (KeyHandler.handleKeyDown(keyChar))
+        if (KeyHandler.handleKeyDown(keyChar, "normal"))
           DomUtils.suppressEvent(event)
 
 onKeydown = (event) ->
@@ -424,7 +424,7 @@ onKeydown = (event) ->
   else if (!isInsertMode() && !findMode)
     keyChar = "<ESC>" if (KeyboardUtils.isEscape(event))
     if (keyChar)
-      if (KeyHandler.handleKeyDown(keyChar))
+      if (KeyHandler.handleKeyDown(keyChar, "normal"))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
 
@@ -438,7 +438,8 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() && KeyHandler.handleKeyDown(KeyboardUtils.getKeyChar(event), true))
+  if (keyChar == "" && !isInsertMode() &&
+      KeyHandler.handleKeyDown(KeyboardUtils.getKeyChar(event), "normal", true))
     DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
 
