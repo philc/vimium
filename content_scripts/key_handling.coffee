@@ -10,15 +10,22 @@ KeyHandler =
   # string.
   namedKeyRegex: /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
+  # Used to log our key handling progress to the background page.
+  log: (data) ->
+    chrome.runtime.sendMessage
+      handler: "log"
+      data: data
+      frameId: frameId
+
   handleKeyDown: (request) ->
     key = request.keyChar
     if (key == "<ESC>")
-      console.log("clearing keyQueue")
+      @log("clearing keyQueue")
       @keyQueue = ""
     else
-      console.log("checking keyQueue: [", @keyQueue + key, "]")
+      @log("checking keyQueue: [#{@keyQueue + key}]")
       @keyQueue = @checkKeyQueue(@keyQueue + key, request.frameId)
-      console.log("new KeyQueue: " + @keyQueue)
+      @log("new KeyQueue: " + @keyQueue)
 
   splitKeyIntoFirstAndSecond: (key) ->
     if (key.search(@namedKeyRegex) == 0)

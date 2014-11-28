@@ -502,6 +502,7 @@ portHandlers =
 
 sendRequestHandlers =
   executeBackgroundCommand: executeBackgroundCommand,
+  log: (request, sender) -> console.log "(tab #{sender.tab.id}, frame #{request.frameId}): #{request.data}"
   getKeyToCommandRegistry: getKeyToCommandRegistryRequest,
   getCurrentTabUrl: getCurrentTabUrl,
   openUrlInNewTab: openUrlInNewTab,
