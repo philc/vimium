@@ -36,12 +36,6 @@ KeyHandler =
     else
       { first: key[0], second: key.slice(1) }
 
-  getActualKeyStrokeLength: (key) ->
-    if (key.search(@namedKeyRegex) == 0)
-      1 + @getActualKeyStrokeLength(RegExp.$2)
-    else
-      key.length
-
   refreshKeyToCommandRegistry: (request) ->
     @keyToCommandRegistry = request.keyToCommandRegistry
     @populateValidFirstKeys()
@@ -102,9 +96,7 @@ KeyHandler =
             noRepeat: registryEntry.noRepeat
 
       newKeyQueue = ""
-    else if (@getActualKeyStrokeLength(command) > 1)
-      splitKey = @splitKeyIntoFirstAndSecond(command)
-
+    else if ((splitKey = @splitKeyIntoFirstAndSecond(command)).second != "")
       # The second key might be a valid command by its self.
       if (@keyToCommandRegistry[splitKey.second])
         keyHandled = @checkKeyQueue(splitKey.second, noAction)
