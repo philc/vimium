@@ -1,5 +1,4 @@
 KeyHandler =
-  port: undefined
   keyQueue: "" # Queue of keys typed
   validFirstKeys: {}
   singleKeyCommands: []
@@ -10,11 +9,7 @@ KeyHandler =
   # string.
   namedKeyRegex: /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
-  setKeyPort: (@port) ->
-    @port.onmessage = (event) ->
-      KeyHandler.handleKeyDown event.data, @port
-
-  handleKeyDown: (request, port) ->
+  handleKeyDown: (request) ->
     key = request.keyChar
     if (key == "<ESC>")
       console.log("clearing keyQueue")
