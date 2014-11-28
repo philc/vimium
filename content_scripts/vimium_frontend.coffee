@@ -12,7 +12,6 @@ findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
-keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
 # (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
 # "passKeys" are keys which would normally be handled by Vimium, but are disabled on this tab, and therefore
@@ -115,11 +114,6 @@ initializePreDomReady = ->
   checkIfEnabledForUrl()
 
   refreshCompletionKeys()
-
-  # Send the key to the key handler.
-  messageChannel = new MessageChannel()
-  KeyHandler.setKeyPort messageChannel.port1
-  keyPort = messageChannel.port2
 
   window.requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -390,7 +384,7 @@ onKeypress = (event) ->
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
 
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId })
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
@@ -464,10 +458,10 @@ onKeydown = (event) ->
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
 
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+      KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId })
 
     else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
+      KeyHandler.handleKeyDown({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
       return undefined
