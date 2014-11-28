@@ -1,6 +1,5 @@
 KeyHandler =
   keyQueue: "" # Queue of keys typed
-  completionKeys: []
   validFirstKeys: {}
   keyToCommandRegistry: {}
 
@@ -46,8 +45,6 @@ KeyHandler =
   refreshKeyToCommandRegistry: (request) ->
     @keyToCommandRegistry = request.keyToCommandRegistry
     @populateValidFirstKeys()
-
-    @generateCompletionKeys("")
 
   populateValidFirstKeys: ->
     for key of @keyToCommandRegistry
@@ -127,30 +124,8 @@ KeyHandler =
         newKeyQueue = ""
         keyHandled = false
 
-    # Send the completion keys to vimium_frontend.coffee.
-    @generateCompletionKeys(newKeyQueue)
-
     @keyQueue = newKeyQueue unless noAction
     keyHandled
-
-  # Generates a list of keys that can complete a valid command given the current key queue or the one passed in
-  generateCompletionKeys: (keysToCheck) ->
-    splitHash = @splitKeyQueue(keysToCheck || @keyQueue)
-    command = splitHash.command
-    count = splitHash.count
-
-    @completionKeys = []
-
-    if (@getActualKeyStrokeLength(command) == 1)
-      for key of @keyToCommandRegistry
-        splitKey = @splitKeyIntoFirstAndSecond(key)
-        if (splitKey.first == command)
-          @completionKeys.push(splitKey.second)
-
-    @completionKeys
-
-  willHandleKey: (keyChar) ->
-    @completionKeys.indexOf(keyChar) != -1 or @validFirstKeys[keyChar] or /^[1-9]/.test(keyChar)
 
 root = exports ? window
 root.KeyHandler = KeyHandler
