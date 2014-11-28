@@ -1,12 +1,6 @@
 KeyHandler =
   keyQueue: [] # Queue of keys typed
-  validFirstKeys: {}
   keyToCommandRegistry: {}
-
-  # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>.
-  # This regular expression captures two groups: the first is a named key, the second is the remainder of the
-  # string.
-  namedKeyRegex: /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
   # Used to log our key handling progress to the background page.
   log: (data) ->
@@ -31,19 +25,7 @@ KeyHandler =
 
     keyHandled
 
-  splitKeyIntoFirstAndSecond: (key) ->
-    if (key.search(@namedKeyRegex) == 0)
-      { first: RegExp.$1, second: RegExp.$2 }
-    else
-      { first: key[0], second: key.slice(1) }
-
-  refreshKeyToCommandRegistry: (request) ->
-    @keyToCommandRegistry = request.keyToCommandRegistry
-    @populateValidFirstKeys()
-
-  populateValidFirstKeys: ->
-    for key of @keyToCommandRegistry
-      @validFirstKeys[@splitKeyIntoFirstAndSecond(key).first] = true
+  refreshKeyToCommandRegistry: (request) -> @keyToCommandRegistry = request.keyToCommandRegistry
 
   splitKeyQueue: (queue) ->
     l = queue.length
