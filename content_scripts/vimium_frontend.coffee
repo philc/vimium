@@ -475,16 +475,13 @@ onKeyup = (event) ->
   return if isInsertMode()
 
   # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  for keydown, i in handledKeydownEvents
-    if event.metaKey == keydown.metaKey and
-       event.altKey == keydown.altKey and
-       event.ctrlKey == keydown.ctrlKey and
-       event.keyIdentifier == keydown.keyIdentifier and
-       event.keyCode == keydown.keyCode
-
-      handledKeydownEvents.splice i, 1
-      DomUtils.suppressPropagation(event)
-      break
+  handledKeydownEvents = handledKeydownEvents.filter (keydown) ->
+    (event.metaKey != keydown.metaKey or
+     event.altKey != keydown.altKey or
+     event.ctrlKey != keydown.ctrlKey or
+     event.keyIdentifier != keydown.keyIdentifier or
+     event.keyCode != keydown.keyCode) and
+    DomUtils.suppressPropagation(event) # Suppress the event if we found a corresponding keydown
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
