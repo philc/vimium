@@ -108,15 +108,18 @@ initializePreDomReady = ->
   refreshCompletionKeys()
 
   # Send the key to the key handler in the background page.
-  keyPort = chrome.runtime.connect({ name: "keyDown" })
+  messageChannel = new MessageChannel()
+  KeyHandler.setKeyPort messageChannel.port1
+  keyPort = messageChannel.port2
 
-  requestHandlers =
+  window.requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
+    refreshKeyToCommandRegistry: KeyHandler.refreshKeyToCommandRegistry.bind(KeyHandler)
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
@@ -504,7 +507,8 @@ refreshCompletionKeys = (response) ->
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
   else
-    chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
+    chrome.runtime.sendMessage { handler: "getKeyToCommandRegistry" }, (request) ->
+      KeyHandler.refreshKeyToCommandRegistry request
 
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
