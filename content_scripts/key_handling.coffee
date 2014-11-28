@@ -16,16 +16,18 @@ KeyHandler =
       data: data
       frameId: frameId
 
-  handleKeyDown: (request) ->
-    key = request.keyChar
+  # Returns true if the most recent key was handled, false otherwise.
+  # No command is executed if the second argument is true, so that we can handle keydowns for keys that
+  # should be activated by a keypress listener.
+  handleKeyDown: (key, noAction) ->
     keyHandled = false
     if (key == "<ESC>")
       @log("clearing keyQueue")
       @keyQueue = ""
     else
-      @log("checking keyQueue: [#{@keyQueue + key}]")
-      keyHandled = @checkKeyQueue(@keyQueue + key, request.frameId)
-      @log("new KeyQueue: " + @keyQueue)
+      @log("checking keyQueue: [#{@keyQueue + key}]") unless noAction
+      keyHandled = @checkKeyQueue(@keyQueue + key, noAction)
+      @log("new KeyQueue: " + @keyQueue) unless noAction
 
     keyHandled
 
@@ -59,18 +61,21 @@ KeyHandler =
     { count: count, command: command }
 
   # Returns true if the most recent key was handled, false otherwise.
-  checkKeyQueue: (keysToCheck, frameId) ->
+  # No command is executed if the second argument is true, so that we can handle keydowns for keys that
+  # should be activated by a keypress listener.
+  checkKeyQueue: (keysToCheck, noAction) ->
     keyHandled = true
     splitHash = @splitKeyQueue(keysToCheck)
     command = splitHash.command
     count = splitHash.count
 
     if command.length == 0
-      @keyQueue = keysToCheck
+      @keyQueue = keysToCheck unless noAction
       return true
     count = 1 if isNaN(count)
 
     if (@keyToCommandRegistry[command])
+      return true if noAction
       registryEntry = @keyToCommandRegistry[command]
       runCommand = true
 
@@ -99,31 +104,33 @@ KeyHandler =
             passCountToFunction: registryEntry.passCountToFunction,
             noRepeat: registryEntry.noRepeat
 
-      @keyQueue = ""
+      newKeyQueue = ""
     else if (@getActualKeyStrokeLength(command) > 1)
       splitKey = @splitKeyIntoFirstAndSecond(command)
 
       # The second key might be a valid command by its self.
       if (@keyToCommandRegistry[splitKey.second])
-        keyHandled = @checkKeyQueue(splitKey.second, frameId)
+        keyHandled = @checkKeyQueue(splitKey.second, noAction)
+        newKeyQueue = @keyQueue
       else
         if @validFirstKeys[splitKey.second]
-          @keyQueue = splitKey.second
+          newKeyQueue = splitKey.second
           keyHandled = true
         else
-          @keyQueue = ""
+          newKeyQueue = ""
           keyHandled = false
     else
       if @validFirstKeys[command]
-        @keyQueue = count.toString() + command
+        newKeyQueue = count.toString() + command
         keyHandled = true
       else
-        @keyQueue = ""
+        newKeyQueue = ""
         keyHandled = false
 
     # Send the completion keys to vimium_frontend.coffee.
-    @generateCompletionKeys(@keyQueue)
+    @generateCompletionKeys(newKeyQueue)
 
+    @keyQueue = newKeyQueue unless noAction
     keyHandled
 
   # Generates a list of keys that can complete a valid command given the current key queue or the one passed in
