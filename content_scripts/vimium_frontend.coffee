@@ -364,10 +364,8 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (KeyHandler.willHandleKey(keyChar))
+        if (KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId }))
           DomUtils.suppressEvent(event)
-
-        KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId })
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
@@ -436,15 +434,11 @@ onKeydown = (event) ->
     handledKeydownEvents.push event
 
   else if (!isInsertMode() && !findMode)
+    keyChar = "<ESC>" if (KeyboardUtils.isEscape(event))
     if (keyChar)
-      if (KeyHandler.willHandleKey(keyChar))
+      if (KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId }))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
-
-      KeyHandler.handleKeyDown({ keyChar:keyChar, frameId:frameId })
-
-    else if (KeyboardUtils.isEscape(event))
-      KeyHandler.handleKeyDown({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
       return undefined
