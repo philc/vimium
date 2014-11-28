@@ -14,7 +14,7 @@ KeyHandler =
   # be activated by a keypress listener.
   handleKeyDown: (key, mode, noAction) ->
     keyHandled = false
-    if (key == "<ESC>")
+    if (key == "<ESC>" and not @keyToCommandRegistries[mode]?[key])
       @log("clearing keyQueue")
       @keyQueue = []
     else
@@ -94,7 +94,7 @@ KeyHandler =
       keyHandled = true
     else if commandQueue.length > 1
       commandQueue.shift()
-      keyHandled = @checkKeyQueue(commandQueue, noAction)
+      keyHandled = @checkKeyQueue(commandQueue, mode, noAction)
       newKeyQueue = @keyQueue
     else
       newKeyQueue = []

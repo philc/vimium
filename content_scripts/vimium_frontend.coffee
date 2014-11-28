@@ -350,6 +350,9 @@ onKeypress = (event) ->
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
+      else if (visualMode)
+        if (KeyHandler.handleKeyDown(keyChar, "visual"))
+          DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
@@ -422,7 +425,15 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     handledKeydownEvents.push event
 
-  else if (!isInsertMode() && !findMode)
+  else if (visualMode)
+    keyChar = "<ESC>" if (KeyboardUtils.isEscape(event))
+    if (keyChar)
+      if (KeyHandler.handleKeyDown(keyChar, "visual"))
+        DomUtils.suppressEvent event
+        handledKeydownEvents.push event
+
+
+  else if (!isInsertMode())
     keyChar = "<ESC>" if (KeyboardUtils.isEscape(event))
     if (keyChar)
       if (KeyHandler.handleKeyDown(keyChar, "normal"))
