@@ -1,5 +1,5 @@
 KeyHandler =
-  keyQueue: "" # Queue of keys typed
+  keyQueue: [] # Queue of keys typed
   validFirstKeys: {}
   keyToCommandRegistry: {}
 
@@ -22,10 +22,11 @@ KeyHandler =
     keyHandled = false
     if (key == "<ESC>")
       @log("clearing keyQueue")
-      @keyQueue = ""
+      @keyQueue = []
     else
-      @log("checking keyQueue: [#{@keyQueue + key}]") unless noAction
-      keyHandled = @checkKeyQueue(@keyQueue + key, noAction)
+      newKeyQueue = @keyQueue.concat([key])
+      @log("checking keyQueue: [#{newKeyQueue.join("")}]") unless noAction
+      keyHandled = @checkKeyQueue(newKeyQueue, noAction)
       @log("new KeyQueue: " + @keyQueue) unless noAction
 
     keyHandled
@@ -45,11 +46,20 @@ KeyHandler =
       @validFirstKeys[@splitKeyIntoFirstAndSecond(key).first] = true
 
   splitKeyQueue: (queue) ->
-    match = /([1-9][0-9]*)?(.*)/.exec(queue)
-    count = parseInt(match[1], 10)
-    command = match[2]
+    l = queue.length
+    if l > 0 and queue[0].match /^[1-9]$/
+      i = 1
+      while i < l and queue[i].match /^[0-9]$/
+        i++
+      count = parseInt(queue[0..i-1].join(""), 10)
+      {count: count, command: queue[i..]}
+    else
+      {count: 1, command: queue}
 
-    { count: count, command: command }
+  isPartialCommand: (command) ->
+    for key of @keyToCommandRegistry
+      return true if key.indexOf(command) == 0
+    false
 
   # Returns true if the most recent key was handled, false otherwise.
   # No command is executed if the second argument is true, so that we can handle keydowns for keys that
@@ -57,13 +67,13 @@ KeyHandler =
   checkKeyQueue: (keysToCheck, noAction) ->
     keyHandled = true
     splitHash = @splitKeyQueue(keysToCheck)
-    command = splitHash.command
     count = splitHash.count
+    commandQueue = splitHash.command
+    command = commandQueue.join("")
 
-    if command.length == 0
+    if commandQueue.length == 0
       @keyQueue = keysToCheck unless noAction
       return true
-    count = 1 if isNaN(count)
 
     if (@keyToCommandRegistry[command])
       return true if noAction
@@ -95,26 +105,18 @@ KeyHandler =
             passCountToFunction: registryEntry.passCountToFunction,
             noRepeat: registryEntry.noRepeat
 
-      newKeyQueue = ""
-    else if ((splitKey = @splitKeyIntoFirstAndSecond(command)).second != "")
-      # The second key might be a valid command by its self.
-      if (@keyToCommandRegistry[splitKey.second])
-        keyHandled = @checkKeyQueue(splitKey.second, noAction)
-        newKeyQueue = @keyQueue
-      else
-        if @validFirstKeys[splitKey.second]
-          newKeyQueue = splitKey.second
-          keyHandled = true
-        else
-          newKeyQueue = ""
-          keyHandled = false
+      newKeyQueue = []
+      keyHandled = true
+    else if @isPartialCommand command
+      newKeyQueue = keysToCheck
+      keyHandled = true
+    else if commandQueue.length > 1
+      commandQueue.shift()
+      keyHandled = @checkKeyQueue(commandQueue, noAction)
+      newKeyQueue = @keyQueue
     else
-      if @validFirstKeys[command]
-        newKeyQueue = count.toString() + command
-        keyHandled = true
-      else
-        newKeyQueue = ""
-        keyHandled = false
+      newKeyQueue = []
+      keyHandled = false
 
     @keyQueue = newKeyQueue unless noAction
     keyHandled
