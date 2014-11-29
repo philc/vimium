@@ -152,9 +152,13 @@ toggleAdvancedOptions =
         $("advancedOptionsLink").innerHTML = "Hide advanced options"
       advancedMode = !advancedMode
       event.preventDefault()
+      # Prevent the "advanced options" link from retaining the focus.
+      document.activeElement.blur()
 
 activateHelpDialog = ->
   showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+  # Prevent the "show help" link from retaining the focus.
+  document.activeElement.blur()
 
 #
 # Initialization.
