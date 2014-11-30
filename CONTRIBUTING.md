@@ -96,23 +96,3 @@ We use these guidelines, in addition to the code complexity, when deciding wheth
 
 If you're worried that a feature you plan to build won't be a good fit for core Vimium, just open a github
 issue for discussion or send an email to the Vimium mailing list.
-
-## How to release Vimium to the Chrome Store
-
-This process is currently only done by Phil or Ilya.
-
-1. Increment the version number in manifest.json
-2. Update the Changelog in README.md
-
-    You can see a summary of commits since the last version: `git log --oneline v1.45..`
-
-3. Push your commits
-4. Create a git tag for this newly released version
-
-        git tag -a v1.45 -m "v1.45 release"
-
-5. Run `cake package`
-6. Take the distributable found in `dist` and upload it
-   [here](https://chrome.google.com/webstore/developer/dashboard)
-7. Update the description in the Chrome store to include the latest version's release notes
-8. Celebrate
