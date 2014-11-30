@@ -3,8 +3,8 @@ Vimium - The Hacker's Browser
 
 [![Build Status](https://secure.travis-ci.org/philc/vimium.png?branch=master)](https://travis-ci.org/philc/vimium)
 
-Vimium is a Chrome extension that provides keyboard-based navigation and control in the spirit of the Vim
-editor.
+Vimium is a Chrome extension that provides keyboard-based navigation and control of the web in the spirit of
+the Vim editor.
 
 __Installation instructions:__
 
@@ -15,14 +15,16 @@ Please see
 [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md#installing-from-source)
 for instructions on how you can install Vimium from source.
 
-The Options page can be reached via a link on the help dialog (hit `?`) or via the button next to Vimium on
+The Options page can be reached via a link on the help dialog (type `?`) or via the button next to Vimium on
 the Chrome Extensions page (`chrome://extensions`).
 
 Keyboard Bindings
 -----------------
 
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x
-respectively. See the next section for instructions on customizing these bindings.
+respectively. See the next section for how to customize these bindings.
+
+Once you have Vimium installed, you can see this list of key bindings at any time by typing `?`.
 
 Navigating the current page:
 
@@ -90,7 +92,7 @@ Additional advanced browsing commands:
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. `<ESC>` (or
 `<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
-There are some advanced commands which aren't documented here. Refer to the help dialog (type `?`) for a full
+There are some advanced commands which aren't documented here; refer to the help dialog (type `?`) for a full
 list.
 
 Custom Key Mappings
