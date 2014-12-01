@@ -49,7 +49,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands"]
+    "helpDialog_showAdvancedCommands", "smoothScroll"]
   isLoaded: false
   eventListeners: {}
 
@@ -101,7 +101,7 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  Scroller.init()
+  Scroller.init settings
 
   checkIfEnabledForUrl()
 
