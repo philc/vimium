@@ -141,13 +141,9 @@ getKeyToCommandRegistryRequest = (request, sender) ->
   keyToCommandRegistries = {}
   for mode, keyToCommandRegistry of Commands.keyToCommandRegistries
     for key, commandDetails of keyToCommandRegistry
-      (keyToCommandRegistries[mode] ?= {})[key] =
-        command: commandDetails.command
-        isBackgroundCommand: commandDetails.isBackgroundCommand
-        passCountToFunction: commandDetails.passCountToFunction
-        noRepeat: commandDetails.noRepeat
-        repeatLimit: commandDetails.repeatLimit
-        description: Commands.availableCommandsForMode[mode][commandDetails.command].description
+      details = extend {}, commandDetails # Copy commandDetails by property
+      details.description = Commands.availableCommandsForMode[mode][commandDetails.command].description
+      (keyToCommandRegistries[mode] ?= {})[key] = details
 
   name: "refreshKeyToCommandRegistry"
   keyToCommandRegistries: keyToCommandRegistries
