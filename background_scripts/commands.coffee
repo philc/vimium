@@ -392,10 +392,10 @@ commandDescriptionsForMode =
     "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
   visual:
-    "VisualMode.extendFront": ["Extend the current selection from the front"]
-    "VisualMode.extendBack": ["Extend the current selection from the back"]
-    "VisualMode.extendFocus": ["Extend the current selection from its endpoint"]
-    "VisualMode.extendAnchor": ["Extend the current selection from its startpoint"]
+    "VisualMode.extendFront": ["Extend the current selection\\{ \\1} from the front\\{ by \\2}"]
+    "VisualMode.extendBack": ["Extend the current selection\\{ \\1} from the back\\{ by \\2}"]
+    "VisualMode.extendFocus": ["Extend the current selection\\{ \\1} from its endpoint\\{ by \\2}"]
+    "VisualMode.extendAnchor": ["Extend the current selection\\{ \\1} from its startpoint\\{ by \\2}"]
     "VisualMode.yank": ["Copy the currently selected text to the clipboard"]
     exitVisualMode: ["Exit visual mode", { noRepeat: true }]
 

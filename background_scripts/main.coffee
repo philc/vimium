@@ -93,10 +93,11 @@ saveHelpDialogSettings = (request) ->
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
-  commandsToKey = {}
+  argsToKeysFromCommands = {}
   for mode, keyToCommandRegistry of Commands.keyToCommandRegistries
-    for key, {command} of keyToCommandRegistry
-      commandsToKey[command] = (commandsToKey[command] || []).concat(key)
+    for key, {command, args} of keyToCommandRegistry
+      commandName = command + if args.length > 0 then " " + args.join " " else ""
+      ((argsToKeysFromCommands[command] ?= {})[args.join(" ")] ?= []).push(key)
 
   dialogHtml = fetchFileContents("pages/help_dialog.html")
   availableCommands = {}
@@ -105,7 +106,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
 
   for group of Commands.commandGroups
     dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands,
+        helpDialogHtmlForCommandGroup(group, argsToKeysFromCommands, availableCommands,
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
@@ -114,20 +115,24 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
 #
 # Generates HTML for a given set of commands. commandGroups are defined in commands.js
 #
-helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
+helpDialogHtmlForCommandGroup = (group, argsToKeysFromCommands, availableCommands,
     showUnboundCommands, showCommandNames) ->
   html = []
   for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
-    if (showUnboundCommands || commandsToKey[command])
+    argsToKeys = argsToKeysFromCommands[command] ?= {}
+    argsToKeys[""] ?= [""] if showUnboundCommands
+    for args, keys of argsToKeys
+      bindings = keys.join(", ")
       isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
+      description = Utils.descriptionString availableCommands[command].description, args.split(" ")
       html.push(
         "<tr class='vimiumReset #{"advanced" if isAdvanced}'>",
         "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
-        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
+        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", description)
 
       if (showCommandNames)
-        html.push("<span class='vimiumReset commandName'>(#{command})</span>")
+        cmd = command + if args.length > 0 then " " + args else ""
+        html.push("<span class='vimiumReset commandName'>(#{cmd})</span>")
 
       html.push("</td></tr>")
   html.join("\n")

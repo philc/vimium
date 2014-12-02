@@ -67,7 +67,7 @@ KeyHandler =
       else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
         runCommand = confirm """
           You have asked Vimium to perform #{count} repeats of the command:
-          #{registryEntry.description}
+          #{Utils.descriptionString registryEntry.description, registryEntry.args}
 
           Are you sure you want to continue?
         """
