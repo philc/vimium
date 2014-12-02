@@ -131,7 +131,6 @@ Commands =
       "goUp",
       "goToRoot",
       "enterInsertMode",
-      "enterVisualMode",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
@@ -171,6 +170,14 @@ Commands =
       "moveTabRight"]
     misc:
       ["showHelp"]
+    visualMode: [
+      "enterVisualMode",
+      "exitVisualMode"
+      "VisualMode.extendFront",
+      "VisualMode.extendBack",
+      "VisualMode.extendFocus",
+      "VisualMode.extendAnchor",
+      "VisualMode.yank"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
