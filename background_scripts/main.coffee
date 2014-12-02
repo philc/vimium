@@ -94,14 +94,18 @@ saveHelpDialogSettings = (request) ->
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   commandsToKey = {}
-  for key of Commands.keyToCommandRegistries.normal
-    command = Commands.keyToCommandRegistries.normal[key].command
-    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
+  for mode, keyToCommandRegistry of Commands.keyToCommandRegistries
+    for key, {command} of keyToCommandRegistry
+      commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
   dialogHtml = fetchFileContents("pages/help_dialog.html")
+  availableCommands = {}
+  for mode, modedAvailableCommands of Commands.availableCommandsForMode
+    extend availableCommands, modedAvailableCommands
+
   for group of Commands.commandGroups
     dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommandsForMode["normal"],
+        helpDialogHtmlForCommandGroup(group, commandsToKey, availableCommands,
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
