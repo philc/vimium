@@ -103,7 +103,8 @@ Commands =
 
     for mode, defaultKeyMappings of defaultKeyMappingsForModes
       for key, command of defaultKeyMappings
-        @mapKeyToCommand(key, mode, command)
+        [commandName, args...] = command.split(/\s+/)
+        @mapKeyToCommand(key, mode, commandName, args)
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -279,6 +280,15 @@ defaultKeyMappingsForModes =
 
   visual:
     "<ESC>": "exitVisualMode"
+    "h": "VisualMode.extendFocus backward"
+    "l": "VisualMode.extendFocus forward"
+    "k": "VisualMode.extendFocus backward line"
+    "j": "VisualMode.extendFocus forward line"
+    "e": "VisualMode.extendFocus backward word"
+    "w": "VisualMode.extendFocus forward word"
+    "0": "VisualMode.extendFocus backward lineboundary"
+    "$": "VisualMode.extendFocus forward lineboundary"
+    "y": "VisualMode.yank"
 
 
 # This is a mapping of: commandIdentifier => [description, options].
