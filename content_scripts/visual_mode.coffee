@@ -51,6 +51,9 @@ VisualMode =
         selection.collapseToStart()
       selection.extend anchorNode, anchorOffset
 
+  yank: ->
+    chrome.runtime.sendMessage {handler: "copyToClipboard", data: window.getSelection().toString()}
+
 directions = ["Forward", "Backward", "Left", "Right"]
 granularities = [
   "Character", "Word", "Sentence", "Line", "Paragraph", "Lineboundary", "Sentenceboundary",

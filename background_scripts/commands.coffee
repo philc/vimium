@@ -379,6 +379,7 @@ commandDescriptionsForMode =
     "VisualMode.extendBack": ["Extend the current selection from the back"]
     "VisualMode.extendFocus": ["Extend the current selection from its endpoint"]
     "VisualMode.extendAnchor": ["Extend the current selection from its startpoint"]
+    "VisualMode.yank": ["Copy the currently selected text to the clipboard"]
     exitVisualMode: ["Exit visual mode", { noRepeat: true }]
 
 Commands.init()
