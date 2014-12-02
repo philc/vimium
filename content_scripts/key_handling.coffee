@@ -75,9 +75,9 @@ KeyHandler =
       if runCommand
         if not registryEntry.isBackgroundCommand
           if (registryEntry.passCountToFunction)
-            Utils.invokeCommandString(registryEntry.command, [count])
+            Utils.invokeCommandString(registryEntry.command, [count, registryEntry.args...])
           else
-            Utils.invokeCommandString(registryEntry.command) for i in [0...count]
+            Utils.invokeCommandString(registryEntry.command, registryEntry.args) for i in [0...count]
         else
           chrome.runtime.sendMessage
             handler: "executeBackgroundCommand",

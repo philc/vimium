@@ -26,7 +26,7 @@ Commands =
       noRepeat: options.noRepeat
       repeatLimit: options.repeatLimit
 
-  mapKeyToCommand: (key, mode, command) ->
+  mapKeyToCommand: (key, mode, command, args) ->
     availableCommands = @availableCommandsForMode[mode] ?= {}
     unless availableCommands[command]
       console.log("#{command} doesn't exist for mode #{mode}!")
@@ -36,6 +36,7 @@ Commands =
     keyToCommandRegistry = @keyToCommandRegistries[mode] ?= {}
 
     keyToCommandRegistry[key] =
+      args: args
       command: command
       isBackgroundCommand: commandDetails.isBackgroundCommand
       passCountToFunction: commandDetails.passCountToFunction
@@ -79,14 +80,14 @@ Commands =
         [parseCommand, modes] = lineCommandToCommandAndModes[lineCommand] ? ["", []]
 
         if (parseCommand == "map")
-          continue if (splitLine.length != 3)
-          key = @normalizeKey(splitLine[1])
-          vimiumCommand = splitLine[2]
+          continue if (splitLine.length < 3)
+          [key, vimiumCommand, args...] = splitLine[1...]
+          key = @normalizeKey(key)
 
           for mode in modes
             continue unless @availableCommandsForMode[mode][vimiumCommand]
             console.log("Mapping #{key} to #{vimiumCommand} in #{mode} mode")
-            @mapKeyToCommand(key, mode, vimiumCommand)
+            @mapKeyToCommand(key, mode, vimiumCommand, args)
         else if (parseCommand == "unmap")
           continue if (splitLine.length != 2)
 
