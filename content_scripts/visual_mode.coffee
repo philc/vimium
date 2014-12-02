@@ -7,20 +7,20 @@ VisualMode =
 
     anchorPoint.compareBoundaryPoints(Range.START_TO_START, focusPoint) >= 0
 
-  extendFront: (direction, granularity) ->
+  extendFront: (direction = "forward", granularity = "character") ->
     selectionForwards = @isSelectionForwards()
     @reverseSelection(selectionForwards) unless selectionForwards
     window.getSelection().modify "extend", direction, granularity
 
-  extendBack: (direction, granularity) ->
+  extendBack: (direction = "forward", granularity = "character") ->
     selectionForwards = @isSelectionForwards()
     @reverseSelection(selectionForwards) if selectionForwards
     window.getSelection().modify "extend", direction, granularity
 
-  extendFocus: (direction, granularity) ->
+  extendFocus: (direction = "forward", granularity = "character") ->
     window.getSelection().modify "extend", direction, granularity
 
-  extendAnchor: (direction, granularity) ->
+  extendAnchor: (direction = "forward", granularity = "character") ->
     @reverseSelection direction, granularity
     @extendFocus direction, granularity
     @reverseSelection direction, granularity
