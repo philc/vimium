@@ -353,6 +353,8 @@ onKeypress = (event) ->
       else if (visualMode)
         if (KeyHandler.handleKeyDown(keyChar, "visual"))
           DomUtils.suppressEvent(event)
+        else
+          exitVisualMode()
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
@@ -431,6 +433,8 @@ onKeydown = (event) ->
       if (KeyHandler.handleKeyDown(keyChar, "visual"))
         DomUtils.suppressEvent event
         handledKeydownEvents.push event
+      else
+        exitVisualMode()
 
 
   else if (!isInsertMode())
