@@ -375,6 +375,10 @@ commandDescriptionsForMode =
     "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
   visual:
+    "VisualMode.extendFront": ["Extend the current selection from the front"]
+    "VisualMode.extendBack": ["Extend the current selection from the back"]
+    "VisualMode.extendFocus": ["Extend the current selection from its endpoint"]
+    "VisualMode.extendAnchor": ["Extend the current selection from its startpoint"]
     exitVisualMode: ["Exit visual mode", { noRepeat: true }]
 
 Commands.init()
