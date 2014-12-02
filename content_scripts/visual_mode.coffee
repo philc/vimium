@@ -5,7 +5,7 @@ VisualMode =
     (anchorPoint = new Range()).setStart anchorNode, anchorOffset
     (focusPoint = new Range()).setStart focusNode, focusOffset
 
-    anchorPoint.compareBoundaryPoints(Range.START_TO_START, focusPoint) >= 0
+    anchorPoint.compareBoundaryPoints(Range.START_TO_START, focusPoint) <= 0
 
   extendFront: (direction = "forward", granularity = "character") ->
     selectionForwards = @isSelectionForwards()
@@ -21,12 +21,12 @@ VisualMode =
     window.getSelection().modify "extend", direction, granularity
 
   extendAnchor: (direction = "forward", granularity = "character") ->
-    @reverseSelection direction, granularity
+    @reverseSelection()
     @extendFocus direction, granularity
-    @reverseSelection direction, granularity
+    @reverseSelection()
 
   reverseSelection: (forwards = @isSelectionForwards())->
-    selection = window.getSelection()
+    {anchorNode, anchorOffset, focusNode, focusOffset} = selection = window.getSelection()
     if forwards
       selection.collapseToEnd()
     else
