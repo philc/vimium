@@ -54,20 +54,5 @@ VisualMode =
   yank: ->
     chrome.runtime.sendMessage {handler: "copyToClipboard", data: window.getSelection().toString()}
 
-directions = ["Forward", "Backward", "Left", "Right"]
-granularities = [
-  "Character", "Word", "Sentence", "Line", "Paragraph", "Lineboundary", "Sentenceboundary",
-  "Paragraphboundary", "Documentboundary"
-]
-types = ["Front", "Back", "Focus", "Anchor"]
-
-for direction in directions
-  for granularity in granularities
-    for type in types
-      fnName = "extend#{type}#{direction}By#{granularity}"
-      directionLower = direction.toLowerCase()
-      granularityLower = granularity.toLowerCase()
-      VisualMode[fnName] = VisualMode["extend#{type}"].bind(VisualMode, directionLower, granularityLower)
-
 root = exports ? window
 root.VisualMode = VisualMode
