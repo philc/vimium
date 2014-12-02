@@ -11,19 +11,26 @@ VisualMode =
     selectionForwards = @isSelectionForwards()
     @reverseSelection(selectionForwards) unless selectionForwards
     window.getSelection().modify "extend", direction, granularity
+    @ensureNotEmpty direction
 
   extendBack: (direction = "forward", granularity = "character") ->
     selectionForwards = @isSelectionForwards()
     @reverseSelection(selectionForwards) if selectionForwards
     window.getSelection().modify "extend", direction, granularity
+    @ensureNotEmpty direction
 
   extendFocus: (direction = "forward", granularity = "character") ->
     window.getSelection().modify "extend", direction, granularity
+    @ensureNotEmpty direction
 
   extendAnchor: (direction = "forward", granularity = "character") ->
     @reverseSelection()
     @extendFocus direction, granularity
     @reverseSelection()
+
+  ensureNotEmpty: (direction = "forward") ->
+    selection = window.getSelection()
+    selection.modify("extend", direction, "character") if selection.isCollapsed
 
   reverseSelection: (forwards = @isSelectionForwards())->
     {anchorNode, anchorOffset, focusNode, focusOffset} = selection = window.getSelection()
