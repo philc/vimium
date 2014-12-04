@@ -188,9 +188,9 @@ class VomnibarUI
     @box.style.display = "none"
     document.body.appendChild(@box)
 
-    @input = document.querySelector("#vomnibar input")
+    @input = @box.querySelector("input")
     @input.addEventListener "input", => @update()
-    @completionList = document.querySelector("#vomnibar ul")
+    @completionList = @box.querySelector("ul")
     @completionList.style.display = "none"
 
 #

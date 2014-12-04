@@ -2,6 +2,29 @@ root = exports ? window
 
 currentVersion = Utils.getCurrentVersion()
 
+# Iterate over tabs and inject the necessary javascript/css into each of them
+injectContentScriptsIntoOpenTabs = ->
+  manifest = chrome.runtime.getManifest()
+  # All content scripts loaded on every page should go in the same group, assume it is the first
+  contentScripts = manifest.content_scripts[0]
+  chrome.tabs.query({status: "complete"}, (tabs) ->
+    tabs.forEach (tab) -> # Use a function to have a seperate `stylesNotInjectedYet` for each tab
+      for script in contentScripts.js
+        chrome.tabs.executeScript(tab.id, {file: script, allFrames: contentScripts.allFrames})
+
+      stylesNotInjectedYet = contentScripts.css.length
+
+      for style in contentScripts.css
+        chrome.tabs.insertCSS(tab.id, {file: style, allFrames: contentScripts.allFrames}, ->
+          if --stylesNotInjectedYet == 0 # Don't run tabUpdated until all styles have been injected
+            tabUpdated tab.id, {status: "loading"}, tab)
+  )
+
+# If this is a new install, the browser may have tabs already open, and so we should inject the content
+# scripts directly into them, so they work straight away.
+chrome.runtime.onInstalled.addListener (details) ->
+  injectContentScriptsIntoOpenTabs()
+
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed

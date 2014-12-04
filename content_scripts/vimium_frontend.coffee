@@ -54,8 +54,13 @@ settings =
   eventListeners: {}
 
   init: ->
+    # Connect to background page to recieve up-to-date settings
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
+    # The onDisconnect event fires only when the extension's background page is closing, since we have no
+    # code that closes it ourselves. When this happens we stop responding to events, to allow a replacement
+    # content script to take over, or for Vimium to deactivate if it has been disabled.
+    @port.onDisconnect.addListener -> isEnabledForUrl = false
 
   get: (key) -> @values[key]
 
@@ -109,6 +114,10 @@ initializePreDomReady = ->
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # The onDisconnect event fires only when the extension's background page is closing, since we have no
+  # code that closes it ourselves. When this happens we stop responding to events, to allow a replacement
+  # content script to take over, or for Vimium to deactivate if it has been disabled.
+  keyPort.onDisconnect.addListener -> isEnabledForUrl = false
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -157,6 +166,7 @@ initializeWhenEnabled = (newPassKeys) ->
     installListener window, "keypress", onKeypress
     installListener window, "keyup", onKeyup
     installListener document, "focus", onFocusCapturePhase
+    installListener document, "focus", detectFrameFocused
     installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
     enterInsertModeIfElementIsFocused()
@@ -170,7 +180,7 @@ setState = (request) ->
 #
 # The backend needs to know which frame has focus.
 #
-window.addEventListener "focus", ->
+detectFrameFocused = ->
   # settings may have changed since the frame last had focus
   settings.load()
   chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })

@@ -10,9 +10,15 @@ root.chrome = {
       onMessage: {
         addListener: ->
       }
+      onDisconnect: {
+        addListener: ->
+      }
       postMessage: ->
     }
     onMessage: {
+      addListener: ->
+    }
+    onInstalled: {
       addListener: ->
     }
     sendMessage: ->
