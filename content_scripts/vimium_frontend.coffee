@@ -20,7 +20,6 @@ keyPort = null
 isEnabledForUrl = true
 passKeys = null
 keyQueue = null
-# The user's operating system.
 currentCompletionKeys = null
 validFirstKeys = null
 
@@ -49,7 +48,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "disableAutoFocus"]
   isLoaded: false
   eventListeners: {}
 
@@ -110,6 +109,8 @@ initializePreDomReady = ->
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
 
+  FocusPrevention.preventFocus()
+
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
@@ -161,6 +162,39 @@ initializeWhenEnabled = (newPassKeys) ->
     installListener document, "DOMActivate", onDOMActivate
     enterInsertModeIfElementIsFocused()
     installedListeners = true
+
+# If the user hasn't acted yet, and has specified that they don't want Vimium to lose focus, we should detect
+# whether the page has focused an element and automatically blur it again.
+FocusPrevention =
+  lastUnfocused: null
+  allowFocusAfterEvents: ["keydown", "keypress", "keyup", "mousedown", "click", "mouseup"]
+
+  unfocus: (event) ->
+    # If the page keeps re-focusing the same element every time we blur it, give up. It's better to fail than
+    # stick the UI in an infinite loop.
+    return true if @lastUnfocused == event.target or not isFocusable event.target
+    event.target.blur()
+    exitInsertMode()
+    DomUtils.suppressPropagation event
+    @lastUnfocused = event.target
+
+  # Either add or remove the event listeners responsible for stopping autofocus, depending on add.
+  modifyListeners: (add) ->
+    changeEventListener = if add then "addEventListener" else "removeEventListener"
+    #document[changeEventListener] "focus", @unfocus, false
+    document[changeEventListener] "focus", @unfocus, true
+    for eventType in @allowFocusAfterEvents
+      document[changeEventListener] eventType, @_stopPreventingFocus, false
+
+  preventFocus: ->
+    @modifyListeners true
+    settings.addEventListener "load", ->
+      FocusPrevention.stopPreventingFocus true unless settings.get "disableAutoFocus"
+
+  _stopPreventingFocus: -> FocusPrevention.stopPreventingFocus()
+  stopPreventingFocus: (restoreFocus = false) ->
+    @modifyListeners false
+    @lastUnfocused?.focus() if restoreFocus
 
 setState = (request) ->
   initializeWhenEnabled(request.passKeys) if request.enabled
@@ -493,9 +527,11 @@ checkIfEnabledForUrl = ->
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
       initializeWhenEnabled(response.passKeys)
-    else if (HUD.isReady())
-      # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
-      HUD.hide()
+    else
+      FocusPrevention.stopPreventingFocus true
+      if (HUD.isReady())
+        # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
+        HUD.hide()
 
 refreshCompletionKeys = (response) ->
   if (response)
