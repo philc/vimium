@@ -33,13 +33,13 @@ DomUtils =
   makeXPath: (elementArray) ->
     xpath = []
     for element in elementArray
-      xpath.push("//" + element, "//xhtml:" + element)
+      xpath.push(".//" + element, ".//xhtml:" + element)
     xpath.join(" | ")
 
-  evaluateXPath: (xpath, resultType) ->
+  evaluateXPath: (xpath, resultType, contextNode = document.documentElement) ->
     namespaceResolver = (namespace) ->
       if (namespace == "xhtml") then "http://www.w3.org/1999/xhtml" else null
-    document.evaluate(xpath, document.documentElement, namespaceResolver, resultType, null)
+    document.evaluate(xpath, contextNode, namespaceResolver, resultType, null)
 
   #
   # Returns the first visible clientRect of an element if it exists. Otherwise it returns null.
