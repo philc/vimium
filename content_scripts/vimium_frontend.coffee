@@ -54,6 +54,12 @@ settings =
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
 
+    chrome.storage.onChanged.addListener((changes, namespace) =>
+      if (namespace == "sync")
+        for own key, change of changes
+          @values[key] = JSON.parse change.newValue if key of @values
+    )
+
   get: (key) -> @values[key] or Settings.defaults[key]
 
   set: (key, value) ->
@@ -159,7 +165,6 @@ setState = (request) ->
 #
 window.addEventListener "focus", ->
   # settings may have changed since the frame last had focus
-  settings.load()
   chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
