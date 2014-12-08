@@ -49,7 +49,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "captureAllKeys"]
   isLoaded: false
   eventListeners: {}
 
@@ -377,6 +377,8 @@ onKeypress = (event) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
+  DomUtils.suppressEvent(event) if settings.get("captureAllKeys") and not isInsertMode()
+
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
 
@@ -470,6 +472,9 @@ onKeydown = (event) ->
     DomUtils.suppressPropagation(event)
     handledKeydownEvents.push event
 
+  # Use suppressPropagation; if we don't we stop keypress from firing for appropriate keys.
+  DomUtils.suppressPropagation(event) if settings.get("captureAllKeys") and not isInsertMode()
+
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
   return if isInsertMode()
@@ -485,6 +490,8 @@ onKeyup = (event) ->
       handledKeydownEvents.splice i, 1
       DomUtils.suppressPropagation(event)
       break
+
+  DomUtils.suppressEvent(event) if settings.get("captureAllKeys")
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
