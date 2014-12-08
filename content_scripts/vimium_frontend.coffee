@@ -44,7 +44,6 @@ textInputXPath = (->
 # must be called beforehand to ensure get() will return up-to-date values.
 #
 settings =
-  port: null
   values: {}
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
@@ -52,8 +51,6 @@ settings =
   eventListeners: {}
 
   init: ->
-    @port = chrome.runtime.connect({ name: "settings" })
-
     chrome.storage.onChanged.addListener((changes, namespace) =>
       if (namespace == "sync")
         for own key, change of changes
@@ -63,10 +60,10 @@ settings =
   get: (key) -> @values[key] or Settings.defaults[key]
 
   set: (key, value) ->
-    @init() unless @port
-
     @values[key] = value
-    @port.postMessage({ operation: "set", key: key, value: value })
+    changedValue = {}
+    changedValue[key] = JSON.stringify value
+    chrome.storage.sync.set(changedValue)
 
   load: ->
     chrome.storage.sync.get(@valuesToLoad, (items) =>

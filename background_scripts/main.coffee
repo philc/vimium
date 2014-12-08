@@ -191,13 +191,6 @@ selectSpecificTab = (request) ->
     chrome.windows.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { selected: true }))
 
-#
-# Used by the content scripts to set settings from the local storage.
-#
-handleSettings = (args, port) ->
-  if (args.operation == "set")
-    Settings.set(args.key, args.value)
-
 refreshCompleter = (request) -> completers[request.name].refresh()
 
 whitespaceRegexp = /\s+/
@@ -617,7 +610,6 @@ handleFrameFocused = (request, sender) ->
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
-  settings: handleSettings,
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
