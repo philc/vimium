@@ -17,8 +17,7 @@ root.Settings = Settings =
       Sync.set key, jsonValue
 
   clear: (key) ->
-    if @has key
-      delete localStorage[key]
+    delete localStorage[key]
     Sync.clear key
 
   has: (key) -> key of localStorage
