@@ -46,18 +46,15 @@ textInputXPath = (->
 settings =
   port: null
   values: {}
-  loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
     "helpDialog_showAdvancedCommands", "smoothScroll"]
-  isLoaded: false
   eventListeners: {}
 
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
-    @port.onMessage.addListener(@receiveMessage)
 
-  get: (key) -> @values[key]
+  get: (key) -> @values[key] or Settings.defaults[key]
 
   set: (key, value) ->
     @init() unless @port
@@ -66,21 +63,11 @@ settings =
     @port.postMessage({ operation: "set", key: key, value: value })
 
   load: ->
-    @init() unless @port
-
-    for i of @valuesToLoad
-      @port.postMessage({ operation: "get", key: @valuesToLoad[i] })
-
-  receiveMessage: (args) ->
-    # not using 'this' due to issues with binding on callback
-    settings.values[args.key] = args.value
-    # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
-    # for equality so initializeOnReady only runs once
-    if (++settings.loadedValues == settings.valuesToLoad.length)
-      settings.isLoaded = true
-      listener = null
-      while (listener = settings.eventListeners["load"].pop())
+    chrome.storage.sync.get(@valuesToLoad, (items) =>
+      @values[key] = JSON.parse value for key, value of items
+      while (listener = @eventListeners["load"].pop())
         listener()
+    )
 
   addEventListener: (eventName, callback) ->
     if (!(eventName of @eventListeners))

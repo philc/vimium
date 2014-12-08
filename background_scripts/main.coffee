@@ -192,13 +192,10 @@ selectSpecificTab = (request) ->
     chrome.tabs.update(request.id, { selected: true }))
 
 #
-# Used by the content scripts to get settings from the local storage.
+# Used by the content scripts to set settings from the local storage.
 #
 handleSettings = (args, port) ->
-  if (args.operation == "get")
-    value = Settings.get(args.key)
-    port.postMessage({ key: args.key, value: value })
-  else # operation == "set"
+  if (args.operation == "set")
     Settings.set(args.key, args.value)
 
 refreshCompleter = (request) -> completers[request.name].refresh()
