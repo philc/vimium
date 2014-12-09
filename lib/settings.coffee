@@ -145,7 +145,7 @@ Sync =
     if chrome.runtime.lastError is undefined
       items_ = {}
       for own key, value of items
-        @log "updateSettings: #{key} <- #{value}" if functionName?
+        @log "updateSettings: #{key} <- #{value}"
         @storeAndPropagate key, value, syncType, items_
       Settings.dispatchEvent "update", items_
       Settings.loaded syncType
@@ -158,13 +158,13 @@ Sync =
     return if syncType == "managed"
     items_ = {}
     for own key, {newValue: value} of changes
-      @log "handleStorageUpdate: #{key} <- #{value}" if functionName?
+      @log "handleStorageUpdate: #{key} <- #{value}"
       @storeAndPropagate key, value, syncType, items_
     Settings.dispatchEvent "update", items_
 
   # Only ever called from asynchronous chrome.storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value, syncType, items) ->
-    return if syncTypeForValuesToLoad[key] and syncType == @syncType key
+    return unless syncTypeForValuesToLoad[key] and syncType is syncTypeForValuesToLoad[key]
     return if value and key of values and values[key] is value
 
     defaultValue = Settings.defaults[key]
