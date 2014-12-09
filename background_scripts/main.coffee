@@ -657,5 +657,11 @@ chrome.windows.getAll { populate: true }, (windows) ->
         (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
       chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
 
+Settings.addEventListener "change", (changeDetails) ->
+  return unless "keyMappings" of changeDetails
+  Commands.clearKeyMappingsAndSetDefaults()
+  Commands.parseCustomKeyMappings Settings.get("keyMappings")
+  refreshCompletionKeysAfterMappingSave()
+
 # Start pulling changes from synchronized storage.
 Settings.init()

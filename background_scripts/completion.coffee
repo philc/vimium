@@ -340,6 +340,10 @@ class SearchEngineCompleter
   getSearchEngineMatches: (queryTerm) ->
     this.searchEngines[queryTerm]
 
+Settings.addEventListener "change", (changeDetails) ->
+  return unless "searchEngines" of changeDetails
+  Settings.parseSearchEngines Settings.get("searchEngines")
+
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter

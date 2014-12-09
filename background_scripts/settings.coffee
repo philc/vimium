@@ -3,6 +3,7 @@
 #
 
 values = {}
+eventListeners = {}
 
 root = exports ? window
 root.Settings = Settings =
@@ -29,24 +30,20 @@ root.Settings = Settings =
 
   has: (key) -> key of values
 
-  # For settings which require action when their value changes, add hooks here called from
-  # options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when an
-  # update propagates from chrome.storage.sync).
-  postUpdateHooks:
-    keyMappings: (value) ->
-      root.Commands.clearKeyMappingsAndSetDefaults()
-      root.Commands.parseCustomKeyMappings value
-      root.refreshCompletionKeysAfterMappingSave()
+  # Dispatches the "load" event if both chrome.storage.sync and chrome.storage.local have loaded.
+  loaded: do ->
+    syncLoaded = false
+    localLoaded = false
+    (isSync) ->
+      loaded = syncLoaded and localLoaded
+      return if loaded
+      if isSync then syncLoaded = true else localLoaded = true
+      @dispatchEvent "load" if loaded == syncLoaded and localLoaded
 
-    searchEngines: (value) ->
-      root.Settings.parseSearchEngines value
-
-    exclusionRules: (value) ->
-      root.Exclusions.postUpdateHook value
-
-  # postUpdateHooks convenience wrapper
-  performPostUpdateHook: (key, value) ->
-    @postUpdateHooks[key] value if @postUpdateHooks[key]
+  addEventListener: (eventName, callback) ->
+    (eventListeners[eventName] ?= []).push(callback)
+  dispatchEvent: (eventName, details) ->
+    listener details while (listener = eventListeners[eventName].pop())
 
   # Here we have our functions that parse the search engines
   # this is a map that we use to store our search engines for use.
@@ -60,7 +57,7 @@ root.Settings = Settings =
     @searchEnginesMap[a[0]] = a[1] for a in split_pairs
     @searchEnginesMap
   getSearchEngines: ->
-    this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
+    @parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
     @searchEnginesMap
 
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
@@ -124,7 +121,7 @@ root.Settings = Settings =
 #   changes to values and into vimium's internal state.
 #
 # Changes are propagated into vimium's state using the same mechanism
-# (Settings.performPostUpdateHook) that is used when options are changed on
+# (Settings.dispatchEvent) that is used when options are changed on
 # the options page.
 #
 # The effect is best-effort synchronization of vimium options/settings between
@@ -143,7 +140,6 @@ Sync =
   # and make sense of console logs on background pages. So disable it, by default. For genuine errors, we
   # call console.log directly.
   debug: false
-  storage: chrome.storage.sync
   doNotSync: ["settingsVersion", "previousVersion"]
 
   # This is called in main.coffee.
@@ -175,9 +171,13 @@ Sync =
   updateSettings: (isSync, callback, items) ->
     # Chrome sets chrome.runtime.lastError if there is an error.
     if chrome.runtime.lastError is undefined
+      items_ = {}
       for own key, value of items
         @log "fetchAsync: #{key} <- #{value}"
         @storeAndPropagate key, value, isSync
+        items_[key] = JSON.parse value
+      Settings.dispatchEvent "update", items_
+      loaded isSync
       callback?()
     else
       console.log "callback for Sync.fetchAsync() indicates error"
@@ -185,9 +185,13 @@ Sync =
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
+    items_ = {}
     for own key, change of changes
-      @log "handleStorageUpdate: #{key} <- #{change.newValue}"
-      @storeAndPropagate key, change?.newValue, (area == "sync")
+      value = change.newValue
+      @log "handleStorageUpdate: #{key} <- #{value}"
+      @storeAndPropagate key, value, (area == "sync")
+      items_[key] = JSON.parse value
+    Settings.dispatchEvent "update", items_
 
   # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value, isSync) ->
@@ -201,13 +205,11 @@ Sync =
       # Key/value has been changed to non-default value at remote instance.
       @log "storeAndPropagate update: #{key}=#{value}"
       values[key] = value
-      Settings.performPostUpdateHook key, JSON.parse(value)
     else
       # Key has been reset to default value at remote instance.
       @log "storeAndPropagate clear: #{key}"
       if key of values
         delete values[key]
-      Settings.performPostUpdateHook key, defaultValue
 
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates to the rest of vimium, that's already been done.
