@@ -473,7 +473,9 @@ onKeydown = (event) ->
     handledKeydownEvents.push event
 
   # Use suppressPropagation; if we don't we stop keypress from firing for appropriate keys.
-  DomUtils.suppressPropagation(event) if settings.get("captureAllKeys") and not isInsertMode()
+  if settings.get("captureAllKeys") and not isInsertMode()
+    DomUtils.suppressPropagation(event)
+    handledKeydownEvents.push event
 
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
@@ -490,8 +492,6 @@ onKeyup = (event) ->
       handledKeydownEvents.splice i, 1
       DomUtils.suppressPropagation(event)
       break
-
-  DomUtils.suppressEvent(event) if settings.get("captureAllKeys")
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
