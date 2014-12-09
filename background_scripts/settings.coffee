@@ -45,21 +45,6 @@ root.Settings = Settings =
   dispatchEvent: (eventName, details) ->
     listener details while (listener = eventListeners[eventName].pop())
 
-  # Here we have our functions that parse the search engines
-  # this is a map that we use to store our search engines for use.
-  searchEnginesMap: {}
-
-  # this parses the search engines settings and clears the old searchEngines and sets the new one
-  parseSearchEngines: (searchEnginesText) ->
-    @searchEnginesMap = {}
-    # find the split pairs by first splitting by line then splitting on the first `: `
-    split_pairs = ( pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#" )
-    @searchEnginesMap[a[0]] = a[1] for a in split_pairs
-    @searchEnginesMap
-  getSearchEngines: ->
-    @parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
-    @searchEnginesMap
-
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
   # or strings
   defaults:
