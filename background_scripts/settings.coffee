@@ -1,11 +1,18 @@
 #
-# Used by all parts of Vimium to manipulate localStorage.
+# Used by all parts of Vimium to manipulate chrome.storage.
 #
+
+values = {}
 
 root = exports ? window
 root.Settings = Settings =
+  init: ->
+    Sync.init()
+    # Migrate from localStorage to chrome.storage.
+    Sync.pushDestroyAsync localStorage if "settingsVersion" of localStorage
+
   get: (key) ->
-    if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
+    if (key of values) then JSON.parse(values[key]) else @defaults[key]
 
   set: (key, value) ->
     # Don't store the value if it is equal to the default, so we can change the defaults in the future
@@ -13,14 +20,14 @@ root.Settings = Settings =
       @clear(key)
     else
       jsonValue = JSON.stringify value
-      localStorage[key] = jsonValue
+      values[key] = jsonValue
       Sync.set key, jsonValue
 
   clear: (key) ->
-    delete localStorage[key]
+    delete values[key]
     Sync.clear key
 
-  has: (key) -> key of localStorage
+  has: (key) -> key of values
 
   # For settings which require action when their value changes, add hooks here called from
   # options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when an
@@ -112,9 +119,9 @@ root.Settings = Settings =
 #
 # * Sync.set() and Sync.clear() propagate local changes to chrome.storage.sync.
 # * Sync.handleStorageUpdate() listens for changes to chrome.storage.sync and propagates those
-#   changes to localStorage and into vimium's internal state.
+#   changes to values and into vimium's internal state.
 # * Sync.fetchAsync() polls chrome.storage.sync at startup, similarly propagating
-#   changes to localStorage and into vimium's internal state.
+#   changes to values and into vimium's internal state.
 #
 # Changes are propagated into vimium's state using the same mechanism
 # (Settings.performPostUpdateHook) that is used when options are changed on
@@ -129,7 +136,7 @@ root.Settings = Settings =
 #
 
 root = exports ? window
-root.Sync = Sync =
+Sync =
 
   # April 19 2014: Leave logging statements in, but disable debugging. We may need to come back to this, so
   # removing logging now would be premature. However, if users report problems, they are unlikely to notice
@@ -145,20 +152,36 @@ root.Sync = Sync =
     @fetchAsync()
 
   # Asynchronous fetch from synced storage, called only at startup.
-  fetchAsync: do ->
-    updateSettings = (isSync, items) ->
-      # Chrome sets chrome.runtime.lastError if there is an error.
-      if chrome.runtime.lastError is undefined
-        for own key, value of items
-          @log "fetchAsync: #{key} <- #{value}"
-          @storeAndPropagate key, value, isSync
-      else
-        console.log "callback for Sync.fetchAsync() indicates error"
-        console.log chrome.runtime.lastError
+  fetchAsync: ->
+    chrome.storage.sync.get null, @updateSettings.bind(this, true, undefined)
+    chrome.storage.local.get null, @updateSettings.bind(this, false, undefined)
 
-    ->
-      chrome.storage.sync.get null, updateSettings.bind(this, true)
-      chrome.storage.local.get null, updateSettings.bind(this, false)
+  # Asynchronous push to synced storage, called only to migrate from localStorage to chrome.storage.
+  # The elements of the original object are destroyed when they are confirmed stored.
+  pushDestroyAsync: (localStorage_) ->
+    sync_ = {}
+    local_ = {}
+    for key in @doNotSync
+      local_[key] = localStorage_[key]
+    for own key, value of localStorage_
+      sync_[key] = value unless key of local_
+
+    deleteLocal = (storage) ->
+      -> delete localStorage_[key] for key of storage
+
+    chrome.storage.sync.set sync_, @updateSettings.bind(this, true, deleteLocal sync_, sync_)
+    chrome.storage.local.set local_, @updateSettings.bind(this, false, deleteLocal local_, local_)
+
+  updateSettings: (isSync, callback, items) ->
+    # Chrome sets chrome.runtime.lastError if there is an error.
+    if chrome.runtime.lastError is undefined
+      for own key, value of items
+        @log "fetchAsync: #{key} <- #{value}"
+        @storeAndPropagate key, value, isSync
+      callback?()
+    else
+      console.log "callback for Sync.fetchAsync() indicates error"
+      console.log chrome.runtime.lastError
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
@@ -170,20 +193,20 @@ root.Sync = Sync =
   storeAndPropagate: (key, value, isSync) ->
     return if not key of Settings.defaults
     return if isSync != @shouldSyncKey key
-    return if value and key of localStorage and localStorage[key] is value
+    return if value and key of values and values[key] is value
     defaultValue = Settings.defaults[key]
     defaultValueJSON = JSON.stringify(defaultValue)
 
     if value and value != defaultValueJSON
       # Key/value has been changed to non-default value at remote instance.
       @log "storeAndPropagate update: #{key}=#{value}"
-      localStorage[key] = value
+      values[key] = value
       Settings.performPostUpdateHook key, JSON.parse(value)
     else
       # Key has been reset to default value at remote instance.
       @log "storeAndPropagate clear: #{key}"
-      if key of localStorage
-        delete localStorage[key]
+      if key of values
+        delete values[key]
       Settings.performPostUpdateHook key, defaultValue
 
   # Only called synchronously from within vimium, never on a callback.
