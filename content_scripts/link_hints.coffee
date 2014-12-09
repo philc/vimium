@@ -20,6 +20,8 @@ LinkHints =
   hintMarkerContainingDiv: null
   # one of the enums listed at the top of this file
   mode: undefined
+  # the number of times left to activate the current mode
+  count: undefined
   # function that does the appropriate action on the selected link
   linkActivator: undefined
   # While in delayMode, all keypresses have no effect.
@@ -48,22 +50,26 @@ LinkHints =
      "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
-  activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
-  activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
-  activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
+  activateModeToOpenInNewTab: (count) -> @activateMode(OPEN_IN_NEW_BG_TAB, count)
+  activateModeToOpenInNewForegroundTab: (count) -> @activateMode(OPEN_IN_NEW_FG_TAB, count)
+  activateModeToCopyLinkUrl: (count) -> @activateMode(COPY_LINK_URL, count)
   activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
-  activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
-  activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
+  activateModeToOpenIncognito: (count) -> @activateMode(OPEN_INCOGNITO, count)
+  activateModeToDownloadLink: (count) -> @activateMode(DOWNLOAD_LINK_URL, count)
 
-  activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
+  activateMode: (mode = OPEN_IN_CURRENT_TAB, count) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
+
+    if typeof mode == "number"
+      count = mode
+      mode = OPEN_IN_CURRENT_TAB
 
     if @isActive
       return
     @isActive = true
 
-    @setOpenLinkMode(mode)
+    @setOpenLinkMode(mode, count)
     hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 
@@ -81,7 +87,7 @@ LinkHints =
       keyup: -> false
     })
 
-  setOpenLinkMode: (@mode) ->
+  setOpenLinkMode: (@mode, @count) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
         HUD.show("Open link in new tab")
@@ -226,10 +232,12 @@ LinkHints =
         clickEl.focus()
       DomUtils.flashRect(matchedLink.rect)
       @linkActivator(clickEl)
-      if @mode is OPEN_WITH_QUEUE
+      if not @count? or --@count > 0
+        oldMode = @mode
+        oldCount = @count
         @deactivateMode delay, ->
           LinkHints.delayMode = false
-          LinkHints.activateModeWithQueue()
+          LinkHints.activateMode(oldMode, oldCount)
       else
         @deactivateMode(delay, -> LinkHints.delayMode = false)
 
