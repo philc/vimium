@@ -2,15 +2,17 @@
 # Used by all parts of Vimium to manipulate chrome.storage.
 #
 
-values = {}
+if location.protocol == "chrome-extension:" and chrome.extension.getBackgroundPage() == window
+  # We're on the background page. Use localStorage, so we don't have to wait before settings are available.
+  values = localStorage
+else
+  values = {}
 eventListeners = {}
 
 root = exports ? window
 root.Settings = Settings =
   init: ->
     Sync.init()
-    # Migrate from localStorage to chrome.storage.
-    Sync.pushDestroyAsync localStorage if "settingsVersion" of localStorage
 
   get: (key) ->
     if (key of values) then JSON.parse(values[key]) else @defaults[key]
@@ -134,26 +136,10 @@ Sync =
 
   # Asynchronous fetch from synced storage, called only at startup.
   fetchAsync: ->
-    chrome.storage.sync.get null, @updateSettings.bind(this, true, undefined)
-    chrome.storage.local.get null, @updateSettings.bind(this, false, undefined)
+    chrome.storage.sync.get null, @updateSettings.bind(this, true)
+    chrome.storage.local.get null, @updateSettings.bind(this, false)
 
-  # Asynchronous push to synced storage, called only to migrate from localStorage to chrome.storage.
-  # The elements of the original object are destroyed when they are confirmed stored.
-  pushDestroyAsync: (localStorage_) ->
-    sync_ = {}
-    local_ = {}
-    for key in @doNotSync
-      local_[key] = localStorage_[key]
-    for own key, value of localStorage_
-      sync_[key] = value unless key of local_
-
-    destroy = (storage) ->
-      -> delete localStorage_[key] for key of storage
-
-    chrome.storage.sync.set sync_, @updateSettings.bind(this, true, destroy sync_, sync_)
-    chrome.storage.local.set local_, @updateSettings.bind(this, false, destroy local_, local_)
-
-  updateSettings: (isSync, callback, items) ->
+  updateSettings: (isSync, items) ->
     # Chrome sets chrome.runtime.lastError if there is an error.
     if chrome.runtime.lastError is undefined
       items_ = {}
