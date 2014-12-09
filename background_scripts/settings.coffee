@@ -45,7 +45,7 @@ root.Settings = Settings =
       loaded = syncLoaded and localLoaded
       return if loaded
       if isSync then syncLoaded = true else localLoaded = true
-      @dispatchEvent "load" if loaded == syncLoaded and localLoaded
+      @dispatchEvent "load" if loaded == (syncLoaded and localLoaded)
 
   addEventListener: (eventName, callback) ->
     (eventListeners[eventName] ?= []).push(callback)
