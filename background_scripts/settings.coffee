@@ -8,10 +8,15 @@ if location.protocol == "chrome-extension:" and chrome.extension.getBackgroundPa
 else
   values = {}
 eventListeners = {}
+valuesToLoadHash = {}
 
 root = exports ? window
 root.Settings = Settings =
-  init: ->
+  init: (valuesToLoad) ->
+    if valuesToLoad?
+      valuesToLoadHash[key] = true for key in valuesToLoad
+    else
+      valuesToLoadHash[key] = true for key of @defaults
     Sync.init()
 
   get: (key) ->
@@ -136,37 +141,40 @@ Sync =
 
   # Asynchronous fetch from synced storage, called only at startup.
   fetchAsync: ->
-    chrome.storage.sync.get null, @updateSettings.bind(this, true)
-    chrome.storage.local.get null, @updateSettings.bind(this, false)
+    chrome.storage.sync.get Object.keys(valuesToLoadHash), @updateSettings.bind(this, true)
+    chrome.storage.local.get Object.keys(valuesToLoadHash), @updateSettings.bind(this, false)
 
   updateSettings: (isSync, items) ->
     # Chrome sets chrome.runtime.lastError if there is an error.
     if chrome.runtime.lastError is undefined
       items_ = {}
       for own key, value of items
-        @log "fetchAsync: #{key} <- #{value}"
+        continue unless valuesToLoadHash[key]
+        @log "Sync.updateSettings: #{key} <- #{value}"
         @storeAndPropagate key, value, isSync
         items_[key] = JSON.parse value
       Settings.dispatchEvent "update", items_
       loaded isSync
       callback?()
     else
-      console.log "callback for Sync.fetchAsync() indicates error"
+      console.log "callback for Sync.updateSettings() indicates error"
       console.log chrome.runtime.lastError
 
-  # Asynchronous message from synced storage.
+  # Asynchronous message from chrome.storage.
   handleStorageUpdate: (changes, area) ->
+    return if area == "managed"
     items_ = {}
     for own key, change of changes
+      continue unless valuesToLoadHash[key]
       value = change.newValue
       @log "handleStorageUpdate: #{key} <- #{value}"
       @storeAndPropagate key, value, (area == "sync")
       items_[key] = JSON.parse value
     Settings.dispatchEvent "update", items_
 
-  # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
+  # Only ever called from asynchronous chrome.storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value, isSync) ->
-    return if not key of Settings.defaults
+    return if not valuesToLoadHash[key]
     return if isSync != @shouldSyncKey key
     return if value and key of values and values[key] is value
     defaultValue = Settings.defaults[key]
