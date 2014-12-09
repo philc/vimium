@@ -145,27 +145,31 @@ root.Sync = Sync =
     @fetchAsync()
 
   # Asynchronous fetch from synced storage, called only at startup.
-  fetchAsync: ->
-    @storage.get null, (items) =>
+  fetchAsync: do ->
+    updateSettings = (isSync, items) ->
       # Chrome sets chrome.runtime.lastError if there is an error.
       if chrome.runtime.lastError is undefined
         for own key, value of items
           @log "fetchAsync: #{key} <- #{value}"
-          @storeAndPropagate key, value
+          @storeAndPropagate key, value, isSync
       else
         console.log "callback for Sync.fetchAsync() indicates error"
         console.log chrome.runtime.lastError
+
+    ->
+      chrome.storage.sync.get null, updateSettings.bind(this, true)
+      chrome.storage.local.get null, updateSettings.bind(this, false)
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
     for own key, change of changes
       @log "handleStorageUpdate: #{key} <- #{change.newValue}"
-      @storeAndPropagate key, change?.newValue
+      @storeAndPropagate key, change?.newValue, (area == "sync")
 
   # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
-  storeAndPropagate: (key, value) ->
+  storeAndPropagate: (key, value, isSync) ->
     return if not key of Settings.defaults
-    return if not @shouldSyncKey key
+    return if isSync != @shouldSyncKey key
     return if value and key of localStorage and localStorage[key] is value
     defaultValue = Settings.defaults[key]
     defaultValueJSON = JSON.stringify(defaultValue)
@@ -185,25 +189,25 @@ root.Sync = Sync =
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates to the rest of vimium, that's already been done.
   set: (key, value) ->
-    if @shouldSyncKey key
-      @log "set scheduled: #{key}=#{value}"
-      key_value = {}
-      key_value[key] = value
-      @storage.set key_value, =>
-        # Chrome sets chrome.runtime.lastError if there is an error.
-        if chrome.runtime.lastError
-          console.log "callback for Sync.set() indicates error: #{key} <- #{value}"
-          console.log chrome.runtime.lastError
+    storage = if @shouldSyncKey key then chrome.storage.sync else chrome.storage.local
+    @log "set scheduled: #{key}=#{value}"
+    key_value = {}
+    key_value[key] = value
+    storage.set key_value, =>
+      # Chrome sets chrome.runtime.lastError if there is an error.
+      if chrome.runtime.lastError
+        console.log "callback for Sync.set() indicates error: #{key} <- #{value}"
+        console.log chrome.runtime.lastError
 
   # Only called synchronously from within vimium, never on a callback.
   clear: (key) ->
-    if @shouldSyncKey key
-      @log "clear scheduled: #{key}"
-      @storage.remove key, =>
-        # Chrome sets chrome.runtime.lastError if there is an error.
-        if chrome.runtime.lastError
-          console.log "for Sync.clear() indicates error: #{key}"
-          console.log chrome.runtime.lastError
+    storage = if @shouldSyncKey key then chrome.storage.sync else chrome.storage.local
+    @log "clear scheduled: #{key}"
+    storage.remove key, =>
+      # Chrome sets chrome.runtime.lastError if there is an error.
+      if chrome.runtime.lastError
+        console.log "for Sync.clear() indicates error: #{key}"
+        console.log chrome.runtime.lastError
 
   # Should we synchronize this key?
   shouldSyncKey: (key) ->
