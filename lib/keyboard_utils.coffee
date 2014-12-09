@@ -31,15 +31,21 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
+    keyIdentifier = event.keyIdentifier
+
+    # On Linux, the keyIdentifier for Shift key is not "Shift", but a "U+" code.
+    # See this for details: https://bugs.webkit.org/show_bug.cgi?id=139430
+    if (@platform == "Linux" && event.keyCode == keyCodes.shiftKey)
+      keyIdentifier = "Shift"
+
     # Not a letter
-    if (event.keyIdentifier.slice(0, 2) != "U+")
+    if (keyIdentifier.slice(0, 2) != "U+")
       return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
       # F-key
       if (event.keyCode >= @keyCodes.f1 && event.keyCode <= @keyCodes.f12)
         return "f" + (1 + event.keyCode - keyCodes.f1)
       return ""
 
-    keyIdentifier = event.keyIdentifier
     # On Windows, the keyIdentifiers for non-letter keys are incorrect. See
     # https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
     if ((@platform == "Windows" || @platform == "Linux") && @keyIdentifierCorrectionMap[keyIdentifier])
