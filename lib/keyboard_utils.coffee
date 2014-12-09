@@ -33,10 +33,12 @@ KeyboardUtils =
   getKeyChar: (event) ->
     keyIdentifier = event.keyIdentifier
 
-    # On Linux, the keyIdentifier for Shift key is not "Shift", but a "U+" code.
-    # See this for details: https://bugs.webkit.org/show_bug.cgi?id=139430
-    if (@platform == "Linux" && event.keyCode == keyCodes.shiftKey)
-      keyIdentifier = "Shift"
+    # On Linux (and probably Mac), the keyIdentifier for control keys is a "U+" code, but should be textual.
+    # Webkit bug: https://bugs.webkit.org/show_bug.cgi?id=139429
+    # Chromium bug: https://code.google.com/p/chromium/issues/detail?id=362551
+    keyIdentifiersToFix = { 16: "Shift", 17: "Ctrl", 18: "Alt" }
+    if (@platform != "Windows" && event.keyCode of keyIdentifiersToFix)
+      keyIdentifier = keyIdentifiersToFix[event.keyCode]
 
     # Not a letter
     if (keyIdentifier.slice(0, 2) != "U+")
