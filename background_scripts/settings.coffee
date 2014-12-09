@@ -8,15 +8,15 @@ if location.protocol == "chrome-extension:" and chrome.extension.getBackgroundPa
 else
   values = {}
 eventListeners = {}
-valuesToLoadHash = {}
+syncTypeForValuesToLoad = {}
 
 root = exports ? window
 root.Settings = Settings =
   init: (valuesToLoad) ->
     if valuesToLoad?
-      valuesToLoadHash[key] = true for key in valuesToLoad
+      syncTypeForValuesToLoad[key] = Sync.syncType key for key in valuesToLoad
     else
-      valuesToLoadHash[key] = true for key of @defaults
+      syncTypeForValuesToLoad[key] = Sync.syncType key for key of @defaults
     Sync.init()
 
   get: (key) ->
@@ -39,13 +39,12 @@ root.Settings = Settings =
 
   # Dispatches the "load" event if both chrome.storage.sync and chrome.storage.local have loaded.
   loaded: do ->
-    syncLoaded = false
-    localLoaded = false
-    (isSync) ->
-      loaded = syncLoaded and localLoaded
-      return if loaded
-      if isSync then syncLoaded = true else localLoaded = true
-      @dispatchEvent "load" if loaded == (syncLoaded and localLoaded)
+    loaded = {}
+    hasLoaded = -> loaded.sync and loaded.local
+    (syncType) ->
+      return if hasLoaded()
+      loaded[syncType] = true
+      @dispatchEvent "load" if hasLoaded()
 
   addEventListener: (eventName, callback) ->
     (eventListeners[eventName] ?= []).push(callback)
@@ -137,88 +136,76 @@ Sync =
   # This is called in main.coffee.
   init: ->
     chrome.storage.onChanged.addListener (changes, area) -> Sync.handleStorageUpdate changes, area
-    @fetchAsync()
 
-  # Asynchronous fetch from synced storage, called only at startup.
-  fetchAsync: ->
-    chrome.storage.sync.get Object.keys(valuesToLoadHash), @updateSettings.bind(this, true)
-    chrome.storage.local.get Object.keys(valuesToLoadHash), @updateSettings.bind(this, false)
+    # Fetch settings asynchronously from chrome.storage.
+    chrome.storage.sync.get Object.keys(syncTypeForValuesToLoad), @updateSettings.bind(this, "sync")
+    chrome.storage.local.get Object.keys(syncTypeForValuesToLoad), @updateSettings.bind(this, "local")
 
-  updateSettings: (isSync, items) ->
-    # Chrome sets chrome.runtime.lastError if there is an error.
+  updateSettings: (syncType, items) ->
     if chrome.runtime.lastError is undefined
       items_ = {}
       for own key, value of items
-        continue unless valuesToLoadHash[key]
-        @log "Sync.updateSettings: #{key} <- #{value}"
-        @storeAndPropagate key, value, isSync
-        items_[key] = JSON.parse value
+        @log "updateSettings: #{key} <- #{value}" if functionName?
+        @storeAndPropagate key, value, syncType, items_
       Settings.dispatchEvent "update", items_
-      loaded isSync
+      Settings.loaded syncType
       callback?()
     else
-      console.log "callback for Sync.updateSettings() indicates error"
-      console.log chrome.runtime.lastError
+      @logError "Sync.updateSettings" if chrome.runtime.lastError
 
   # Asynchronous message from chrome.storage.
-  handleStorageUpdate: (changes, area) ->
-    return if area == "managed"
+  handleStorageUpdate: (changes, syncType) ->
+    return if syncType == "managed"
     items_ = {}
-    for own key, change of changes
-      continue unless valuesToLoadHash[key]
-      value = change.newValue
-      @log "handleStorageUpdate: #{key} <- #{value}"
-      @storeAndPropagate key, value, (area == "sync")
-      items_[key] = JSON.parse value
+    for own key, {newValue: value} of changes
+      @log "handleStorageUpdate: #{key} <- #{value}" if functionName?
+      @storeAndPropagate key, value, syncType, items_
     Settings.dispatchEvent "update", items_
 
   # Only ever called from asynchronous chrome.storage callbacks (fetchAsync and handleStorageUpdate).
-  storeAndPropagate: (key, value, isSync) ->
-    return if not valuesToLoadHash[key]
-    return if isSync != @shouldSyncKey key
+  storeAndPropagate: (key, value, syncType, items) ->
+    return if syncTypeForValuesToLoad[key] and syncType == @syncType key
     return if value and key of values and values[key] is value
-    defaultValue = Settings.defaults[key]
-    defaultValueJSON = JSON.stringify(defaultValue)
 
-    if value and value != defaultValueJSON
+    defaultValue = Settings.defaults[key]
+    parsedValue = JSON.parse value
+    items?[key] = parsedValue # Add this to the settings that should be mentioned in the "update" event.
+
+    if value and parsedValue != defaultValue
       # Key/value has been changed to non-default value at remote instance.
       @log "storeAndPropagate update: #{key}=#{value}"
       values[key] = value
     else
       # Key has been reset to default value at remote instance.
       @log "storeAndPropagate clear: #{key}"
-      if key of values
-        delete values[key]
+      delete values[key]
 
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates to the rest of vimium, that's already been done.
   set: (key, value) ->
-    storage = if @shouldSyncKey key then chrome.storage.sync else chrome.storage.local
+    storage = if @syncType key then chrome.storage.sync else chrome.storage.local
     @log "set scheduled: #{key}=#{value}"
     key_value = {}
     key_value[key] = value
     storage.set key_value, =>
-      # Chrome sets chrome.runtime.lastError if there is an error.
-      if chrome.runtime.lastError
-        console.log "callback for Sync.set() indicates error: #{key} <- #{value}"
-        console.log chrome.runtime.lastError
+      @logError "Sync.set" if chrome.runtime.lastError
 
   # Only called synchronously from within vimium, never on a callback.
   clear: (key) ->
-    storage = if @shouldSyncKey key then chrome.storage.sync else chrome.storage.local
+    storage = chrome.storage[@syncType key]
     @log "clear scheduled: #{key}"
     storage.remove key, =>
-      # Chrome sets chrome.runtime.lastError if there is an error.
-      if chrome.runtime.lastError
-        console.log "for Sync.clear() indicates error: #{key}"
-        console.log chrome.runtime.lastError
+      @logError "Sync.clear" if chrome.runtime.lastError
 
   # Should we synchronize this key?
-  shouldSyncKey: (key) ->
-    key not in @doNotSync
+  syncType: (key) ->
+    if key in @doNotSync then "local" else "sync"
 
-  log: (msg) ->
-    console.log "Sync: #{msg}" if @debug
+  log: (msg) -> console.log "Sync: #{msg}" if @debug
+
+  logError: (functionName) ->
+    console.log "callback for #{functionName} indicates error:"
+    console.log chrome.runtime.lastError
 
 
 # We use settingsVersion to coordinate any necessary schema changes.
