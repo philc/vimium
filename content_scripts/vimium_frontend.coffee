@@ -39,43 +39,9 @@ textInputXPath = (->
   DomUtils.makeXPath(inputElements)
 )()
 
-#
-# settings provides a browser-global localStorage-backed dict. get() and set() are synchronous, but load()
-# must be called beforehand to ensure get() will return up-to-date values.
-#
-settings =
-  values: {}
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
-    "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
-  eventListeners: {}
-
-  init: ->
-    chrome.storage.onChanged.addListener((changes, namespace) =>
-      if (namespace == "sync")
-        for own key, change of changes
-          @values[key] = JSON.parse change.newValue if key of @values
-    )
-
-  get: (key) -> @values[key] or Settings.defaults[key]
-
-  set: (key, value) ->
-    @values[key] = value
-    changedValue = {}
-    changedValue[key] = JSON.stringify value
-    chrome.storage.sync.set(changedValue)
-
-  load: ->
-    chrome.storage.sync.get(@valuesToLoad, (items) =>
-      @values[key] = JSON.parse value for key, value of items
-      while (listener = @eventListeners["load"].pop())
-        listener()
-    )
-
-  addEventListener: (eventName, callback) ->
-    if (!(eventName of @eventListeners))
-      @eventListeners[eventName] = []
-    @eventListeners[eventName].push(callback)
+settingsToLoad = ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
+  "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
+  "helpDialog_showAdvancedCommands", "smoothScroll"]
 
 #
 # Give this frame a unique id.
@@ -88,10 +54,10 @@ hasModifiersRegex = /^<([amc]-)+.>/
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-  settings.addEventListener("load", LinkHints.init.bind(LinkHints))
-  settings.load()
+  Settings.addEventListener("load", LinkHints.init.bind(LinkHints))
+  Settings.init(settingsToLoad)
 
-  Scroller.init settings
+  Scroller.init()
 
   checkIfEnabledForUrl()
 
@@ -161,7 +127,6 @@ setState = (request) ->
 # The backend needs to know which frame has focus.
 #
 window.addEventListener "focus", ->
-  # settings may have changed since the frame last had focus
   chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
@@ -225,14 +190,14 @@ extend window,
   scrollToTop: -> Scroller.scrollTo "y", 0
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
-  scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
+  scrollUp: -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize")
+  scrollDown: -> Scroller.scrollBy "y", Settings.get("scrollStepSize")
   scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
   scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
   scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
-  scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
-  scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
+  scrollLeft: -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize")
+  scrollRight: -> Scroller.scrollBy "x", Settings.get("scrollStepSize")
 
 extend window,
   reload: -> window.location.reload()
@@ -569,7 +534,7 @@ updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
-  findModeQuery.isRegex = settings.get 'regexFindMode'
+  findModeQuery.isRegex = Settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /\\./g, (match) ->
     switch (match)
@@ -650,7 +615,7 @@ handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  settings.set("findModeRawQuery", findModeQuery.rawQuery)
+  Settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -732,7 +697,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
-  mostRecentQuery = settings.get("findModeRawQuery") || ""
+  mostRecentQuery = Settings.get("findModeRawQuery") || ""
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
@@ -864,12 +829,12 @@ findAndFollowRel = (value) ->
         return true
 
 window.goPrevious = ->
-  previousPatterns = settings.get("previousPatterns") || ""
+  previousPatterns = Settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
 window.goNext = ->
-  nextPatterns = settings.get("nextPatterns") || ""
+  nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
@@ -902,7 +867,7 @@ window.showHelpDialog = (html, fid) ->
 
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
-    getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
+    getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
     init: () ->
       this.dialogElement = document.getElementById("vimiumHelpDialog")
@@ -918,7 +883,7 @@ window.showHelpDialog = (html, fid) ->
       event.preventDefault()
       showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
       VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
-      settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
+      Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
     showAdvancedCommands: (visible) ->
       VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
@@ -1028,7 +993,7 @@ HUD =
   isReady: -> document.body != null
 
   # A preference which can be toggled in the Options page. */
-  enabled: -> !settings.get("hideHud")
+  enabled: -> !Settings.get("hideHud")
 
 Tween =
   #
@@ -1068,7 +1033,6 @@ window.onbeforeunload = ->
     scrollY: window.scrollY)
 
 root = exports ? window
-root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
