@@ -49,7 +49,7 @@ root.Settings = Settings =
   addEventListener: (eventName, callback) ->
     (eventListeners[eventName] ?= []).push(callback)
   dispatchEvent: (eventName, details) ->
-    listener details while (listener = eventListeners[eventName].pop())
+    listener details while (listener = eventListeners[eventName]?.pop())
 
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
   # or strings
