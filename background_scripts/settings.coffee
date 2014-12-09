@@ -162,11 +162,11 @@ Sync =
     for own key, value of localStorage_
       sync_[key] = value unless key of local_
 
-    deleteLocal = (storage) ->
+    destroy = (storage) ->
       -> delete localStorage_[key] for key of storage
 
-    chrome.storage.sync.set sync_, @updateSettings.bind(this, true, deleteLocal sync_, sync_)
-    chrome.storage.local.set local_, @updateSettings.bind(this, false, deleteLocal local_, local_)
+    chrome.storage.sync.set sync_, @updateSettings.bind(this, true, destroy sync_, sync_)
+    chrome.storage.local.set local_, @updateSettings.bind(this, false, destroy local_, local_)
 
   updateSettings: (isSync, callback, items) ->
     # Chrome sets chrome.runtime.lastError if there is an error.
