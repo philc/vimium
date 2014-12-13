@@ -8,12 +8,12 @@ scrollProperties =
   x: {
     axisName: 'scrollLeft'
     max: 'scrollWidth'
-    viewSize: 'clientHeight'
+    viewSize: 'clientWidth'
   }
   y: {
     axisName: 'scrollTop'
     max: 'scrollHeight'
-    viewSize: 'clientWidth'
+    viewSize: 'clientHeight'
   }
 
 # Translate a scroll request into a number (which will be interpreted by `scrollBy` as a relative amount, or
