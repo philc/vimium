@@ -136,6 +136,15 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
+  # Deletes all but the first n \\{...} blocks when there are n elements of args, and replaces every \\x with
+  # the value of the x-th argument.
+  descriptionString: (str, args) ->
+    n = args.length
+    str = str.replace /\\\{([^}]+)\}/g, (_, p1) -> if n-- > 0 then p1 else ""
+    for arg, i in args by -1 # Loop backwards to avoid partially replacing eg. \11 with the first argument.
+      str = str.replace(new RegExp("\\\\"+(i+1), "g"), arg)
+    str
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->

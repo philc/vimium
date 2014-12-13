@@ -4,16 +4,8 @@ currentVersion = Utils.getCurrentVersion()
 
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
-keyQueue = "" # Queue of keys typed
-validFirstKeys = {}
-singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
-
-# Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
-# This regular expression captures two groups: the first is a named key, the second is the remainder of
-# the string.
-namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
 selectionChangedHandlers = []
@@ -101,15 +93,20 @@ saveHelpDialogSettings = (request) ->
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
-  commandsToKey = {}
-  for key of Commands.keyToCommandRegistry
-    command = Commands.keyToCommandRegistry[key].command
-    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
+  argsToKeysFromCommands = {}
+  for mode, keyToCommandRegistry of Commands.keyToCommandRegistries
+    for key, {command, args} of keyToCommandRegistry
+      commandName = command + if args.length > 0 then " " + args.join " " else ""
+      ((argsToKeysFromCommands[command] ?= {})[args.join(" ")] ?= []).push(key)
 
   dialogHtml = fetchFileContents("pages/help_dialog.html")
+  availableCommands = {}
+  for mode, modedAvailableCommands of Commands.availableCommandsForMode
+    extend availableCommands, modedAvailableCommands
+
   for group of Commands.commandGroups
     dialogHtml = dialogHtml.replace("{{#{group}}}",
-        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
+        helpDialogHtmlForCommandGroup(group, argsToKeysFromCommands, availableCommands,
                                       showUnboundCommands, showCommandNames))
   dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
   dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
@@ -118,20 +115,24 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
 #
 # Generates HTML for a given set of commands. commandGroups are defined in commands.js
 #
-helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
+helpDialogHtmlForCommandGroup = (group, argsToKeysFromCommands, availableCommands,
     showUnboundCommands, showCommandNames) ->
   html = []
   for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
-    if (showUnboundCommands || commandsToKey[command])
+    argsToKeys = argsToKeysFromCommands[command] ?= {}
+    argsToKeys[""] ?= [""] if showUnboundCommands
+    for args, keys of argsToKeys
+      bindings = keys.join(", ")
       isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
+      description = Utils.descriptionString availableCommands[command].description, args.split(" ")
       html.push(
         "<tr class='vimiumReset #{"advanced" if isAdvanced}'>",
         "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>",
-        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", availableCommands[command].description)
+        "<td class='vimiumReset'>:</td><td class='vimiumReset'>", description)
 
       if (showCommandNames)
-        html.push("<span class='vimiumReset commandName'>(#{command})</span>")
+        cmd = command + if args.length > 0 then " " + args else ""
+        html.push("<span class='vimiumReset commandName'>(#{cmd})</span>")
 
       html.push("</td></tr>")
   html.join("\n")
@@ -145,13 +146,16 @@ fetchFileContents = (extensionFileName) ->
   req.send()
   req.responseText
 
-#
-# Returns the keys that can complete a valid command given the current key queue.
-#
-getCompletionKeysRequest = (request, keysToCheck = "") ->
-  name: "refreshCompletionKeys"
-  completionKeys: generateCompletionKeys(keysToCheck)
-  validFirstKeys: validFirstKeys
+getKeyToCommandRegistryRequest = (request, sender) ->
+  keyToCommandRegistries = {}
+  for mode, keyToCommandRegistry of Commands.keyToCommandRegistries
+    for key, commandDetails of keyToCommandRegistry
+      details = extend {}, commandDetails # Copy commandDetails by property
+      details.description = Commands.availableCommandsForMode[mode][commandDetails.command].description
+      (keyToCommandRegistries[mode] ?= {})[key] = details
+
+  name: "refreshKeyToCommandRegistry"
+  keyToCommandRegistries: keyToCommandRegistries
 
 #
 # Opens the url in the current tab.
@@ -444,138 +448,18 @@ updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
         openTabInfo.positionIndex = tab.index
         openTabInfo.windowId = tab.windowId)
 
-splitKeyIntoFirstAndSecond = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    { first: RegExp.$1, second: RegExp.$2 }
-  else
-    { first: key[0], second: key.slice(1) }
-
-getActualKeyStrokeLength = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    1 + getActualKeyStrokeLength(RegExp.$2)
-  else
-    key.length
-
-populateValidFirstKeys = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
-      validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
-
-populateSingleKeyCommands = ->
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
-      singleKeyCommands.push(key)
-
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
-  validFirstKeys = {}
-  singleKeyCommands = []
+  sendRequestToAllTabs(getKeyToCommandRegistryRequest())
 
-  populateValidFirstKeys()
-  populateSingleKeyCommands()
-
-  sendRequestToAllTabs(getCompletionKeysRequest())
-
-# Generates a list of keys that can complete a valid command given the current key queue or the one passed in
-generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueue)
-  command = splitHash.command
-  count = splitHash.count
-
-  completionKeys = singleKeyCommands.slice(0)
-
-  if (getActualKeyStrokeLength(command) == 1)
-    for key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
-
-  completionKeys
-
-splitKeyQueue = (queue) ->
-  match = /([1-9][0-9]*)?(.*)/.exec(queue)
-  count = parseInt(match[1], 10)
-  command = match[2]
-
-  { count: count, command: command }
-
-handleKeyDown = (request, port) ->
-  key = request.keyChar
-  if (key == "<ESC>")
-    console.log("clearing keyQueue")
-    keyQueue = ""
+executeBackgroundCommand = (request) ->
+  {command, frameId, count, passCountToFunction, noRepeat} = request
+  if passCountToFunction
+    BackgroundCommands[command](count, frameId)
+  else if noRepeat
+    BackgroundCommands[command](frameId)
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
-    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
-  # Tell the content script whether there are keys in the queue.
-  # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
-  # back there before or after the next keystroke.
-  # That being said, I suspect there are other similar race conditions here, for example in checkKeyQueue().
-  # Steve (23 Aug, 14).
-  chrome.tabs.sendMessage(port.sender.tab.id,
-    name: "currentKeyQueue",
-    keyQueue: keyQueue)
-
-checkKeyQueue = (keysToCheck, tabId, frameId) ->
-  refreshedCompletionKeys = false
-  splitHash = splitKeyQueue(keysToCheck)
-  command = splitHash.command
-  count = splitHash.count
-
-  return keysToCheck if command.length == 0
-  count = 1 if isNaN(count)
-
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
-    runCommand = true
-
-    if registryEntry.noRepeat
-      count = 1
-    else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
-      runCommand = confirm """
-        You have asked Vimium to perform #{count} repeats of the command:
-        #{Commands.availableCommands[registryEntry.command].description}
-
-        Are you sure you want to continue?
-      """
-
-    if runCommand
-      if not registryEntry.isBackgroundCommand
-        chrome.tabs.sendMessage(tabId,
-          name: "executePageCommand",
-          command: registryEntry.command,
-          frameId: frameId,
-          count: count,
-          passCountToFunction: registryEntry.passCountToFunction,
-          completionKeys: generateCompletionKeys(""))
-        refreshedCompletionKeys = true
-      else
-        if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count, frameId)
-        else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command](frameId)
-        else
-          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
-
-    newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
-    splitKey = splitKeyIntoFirstAndSecond(command)
-
-    # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
-    else
-      newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
-  else
-    newKeyQueue = (if validFirstKeys[command] then count.toString() + command else "")
-
-  # If we haven't sent the completion keys piggybacked on executePageCommand,
-  # send them by themselves.
-  unless refreshedCompletionKeys
-    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
-
-  newKeyQueue
+    repeatFunction(BackgroundCommands[command], count, 0, frameId)
 
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
@@ -619,12 +503,13 @@ handleFrameFocused = (request, sender) ->
 
 # Port handler mapping
 portHandlers =
-  keyDown: handleKeyDown,
   settings: handleSettings,
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
-  getCompletionKeys: getCompletionKeysRequest,
+  executeBackgroundCommand: executeBackgroundCommand,
+  log: (request, sender) -> console.log "(tab #{sender.tab.id}, frame #{request.frameId}): #{request.data}"
+  getKeyToCommandRegistry: getKeyToCommandRegistryRequest,
   getCurrentTabUrl: getCurrentTabUrl,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInIncognito: openUrlInIncognito,
@@ -654,8 +539,6 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
-populateValidFirstKeys()
-populateSingleKeyCommands()
 if shouldShowUpgradeMessage()
   sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
 

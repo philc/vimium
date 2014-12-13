@@ -41,6 +41,8 @@
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
              "content_scripts/marks.js",
+             "content_scripts/visual_mode.js",
+             "content_scripts/key_handling.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["content_scripts/vimium.css"],

@@ -1,44 +1,49 @@
 Commands =
   init: ->
-    for command, description of commandDescriptions
-      @addCommand(command, description[0], description[1])
+    for mode, commandDescriptions of commandDescriptionsForMode
+      for command, description of commandDescriptions
+        @addCommand(command, mode, description[0], description[1])
 
-  availableCommands: {}
-  keyToCommandRegistry: {}
+  availableCommandsForMode: {}
+  keyToCommandRegistries: {} # A mapping of mode => key => command.
 
   # Registers a command, making it available to be optionally bound to a key.
   # options:
   #  - background: whether this command needs to be run against the background page.
   #  - passCountToFunction: true if this command should have any digits which were typed prior to the
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
-  addCommand: (command, description, options) ->
-    if command of @availableCommands
+  addCommand: (command, mode, description, options) ->
+    availableCommands = @availableCommandsForMode[mode] ?= {}
+    if command of availableCommands
       console.log(command, "is already defined! Check commands.coffee for duplicates.")
       return
 
     options ||= {}
-    @availableCommands[command] =
+    availableCommands[command] =
       description: description
       isBackgroundCommand: options.background
       passCountToFunction: options.passCountToFunction
       noRepeat: options.noRepeat
       repeatLimit: options.repeatLimit
 
-  mapKeyToCommand: (key, command) ->
-    unless @availableCommands[command]
-      console.log(command, "doesn't exist!")
+  mapKeyToCommand: (key, mode, command, args) ->
+    availableCommands = @availableCommandsForMode[mode] ?= {}
+    unless availableCommands[command]
+      console.log("#{command} doesn't exist for mode #{mode}!")
       return
 
-    commandDetails = @availableCommands[command]
+    commandDetails = availableCommands[command]
+    keyToCommandRegistry = @keyToCommandRegistries[mode] ?= {}
 
-    @keyToCommandRegistry[key] =
+    keyToCommandRegistry[key] =
+      args: args
       command: command
       isBackgroundCommand: commandDetails.isBackgroundCommand
       passCountToFunction: commandDetails.passCountToFunction
       noRepeat: commandDetails.noRepeat
       repeatLimit: commandDetails.repeatLimit
 
-  unmapKey: (key) -> delete @keyToCommandRegistry[key]
+  unmapKey: (key, mode) -> delete @keyToCommandRegistries[mode][key]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -53,38 +58,53 @@ Commands =
        .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
           "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
 
-  parseCustomKeyMappings: (customKeyMappings) ->
-    lines = customKeyMappings.split("\n")
+  parseCustomKeyMappings: do ->
+    lineCommandToCommandAndModes =
+      map: ["map", ["normal", "visual"]]
+      nmap: ["map", ["normal"]]
+      vmap: ["map", ["visual"]]
+      unmap: ["unmap", ["normal", "visual"]]
+      nunmap: ["unmap", ["normal"]]
+      vunmap: ["unmap", ["visual"]]
+      unmapAll: ["unmapAll", ["normal", "visual"]]
+      nunmapAll: ["unmapAll", ["normal"]]
+      vunmapAll: ["unmapAll", ["visual"]]
+    (customKeyMappings) ->
+      lines = customKeyMappings.split("\n")
 
-    for line in lines
-      continue if (line[0] == "\"" || line[0] == "#")
-      splitLine = line.split(/\s+/)
+      for line in lines
+        continue if (line[0] == "\"" || line[0] == "#")
+        splitLine = line.split(/\s+/)
 
-      lineCommand = splitLine[0]
+        lineCommand = splitLine[0]
+        [parseCommand, modes] = lineCommandToCommandAndModes[lineCommand] ? ["", []]
 
-      if (lineCommand == "map")
-        continue if (splitLine.length != 3)
-        key = @normalizeKey(splitLine[1])
-        vimiumCommand = splitLine[2]
+        if (parseCommand == "map")
+          continue if (splitLine.length < 3)
+          [key, vimiumCommand, args...] = splitLine[1...]
+          key = @normalizeKey(key)
 
-        continue unless @availableCommands[vimiumCommand]
+          for mode in modes
+            continue unless @availableCommandsForMode[mode][vimiumCommand]
+            console.log("Mapping #{key} to #{vimiumCommand} in #{mode} mode")
+            @mapKeyToCommand(key, mode, vimiumCommand, args)
+        else if (parseCommand == "unmap")
+          continue if (splitLine.length != 2)
 
-        console.log("Mapping", key, "to", vimiumCommand)
-        @mapKeyToCommand(key, vimiumCommand)
-      else if (lineCommand == "unmap")
-        continue if (splitLine.length != 2)
-
-        key = @normalizeKey(splitLine[1])
-        console.log("Unmapping", key)
-        @unmapKey(key)
-      else if (lineCommand == "unmapAll")
-        @keyToCommandRegistry = {}
+          key = @normalizeKey(splitLine[1])
+          console.log("Unapping #{key} in #{modes.join(", ")} modes")
+          @unmapKey(key, mode) for mode in modes
+        else if (parseCommand == "unmapAll")
+          console.log("Unapping all keys in #{modes.join(", ")} modes")
+          @keyToCommandRegistries[mode] = {} for mode in modes
 
   clearKeyMappingsAndSetDefaults: ->
-    @keyToCommandRegistry = {}
+    @keyToCommandRegistries = {}
 
-    for key of defaultKeyMappings
-      @mapKeyToCommand(key, defaultKeyMappings[key])
+    for mode, defaultKeyMappings of defaultKeyMappingsForModes
+      for key, command of defaultKeyMappings
+        [commandName, args...] = command.split(/\s+/)
+        @mapKeyToCommand(key, mode, commandName, args)
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -150,6 +170,14 @@ Commands =
       "moveTabRight"]
     misc:
       ["showHelp"]
+    visualMode: [
+      "enterVisualMode",
+      "exitVisualMode"
+      "VisualMode.extendFront",
+      "VisualMode.extendBack",
+      "VisualMode.extendFocus",
+      "VisualMode.extendAnchor",
+      "VisualMode.yank"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
@@ -176,176 +204,200 @@ Commands =
     "closeTabsOnRight",
     "closeOtherTabs"]
 
-defaultKeyMappings =
-  "?": "showHelp"
-  "j": "scrollDown"
-  "k": "scrollUp"
-  "h": "scrollLeft"
-  "l": "scrollRight"
-  "gg": "scrollToTop"
-  "G": "scrollToBottom"
-  "zH": "scrollToLeft"
-  "zL": "scrollToRight"
-  "<c-e>": "scrollDown"
-  "<c-y>": "scrollUp"
+defaultKeyMappingsForModes =
+  "normal":
+    "?": "showHelp"
+    "j": "scrollDown"
+    "k": "scrollUp"
+    "h": "scrollLeft"
+    "l": "scrollRight"
+    "gg": "scrollToTop"
+    "G": "scrollToBottom"
+    "zH": "scrollToLeft"
+    "zL": "scrollToRight"
+    "<c-e>": "scrollDown"
+    "<c-y>": "scrollUp"
 
-  "d": "scrollPageDown"
-  "u": "scrollPageUp"
-  "r": "reload"
-  "gs": "toggleViewSource"
+    "d": "scrollPageDown"
+    "u": "scrollPageUp"
+    "r": "reload"
+    "gs": "toggleViewSource"
 
-  "i": "enterInsertMode"
+    "i": "enterInsertMode"
+    "v": "enterVisualMode"
 
-  "H": "goBack"
-  "L": "goForward"
-  "gu": "goUp"
-  "gU": "goToRoot"
+    "H": "goBack"
+    "L": "goForward"
+    "gu": "goUp"
+    "gU": "goToRoot"
 
-  "gi": "focusInput"
+    "gi": "focusInput"
 
-  "f":     "LinkHints.activateMode"
-  "F":     "LinkHints.activateModeToOpenInNewTab"
-  "<a-f>": "LinkHints.activateModeWithQueue"
+    "f":     "LinkHints.activateMode"
+    "F":     "LinkHints.activateModeToOpenInNewTab"
+    "<a-f>": "LinkHints.activateModeWithQueue"
 
-  "af": "LinkHints.activateModeToDownloadLink"
+    "af": "LinkHints.activateModeToDownloadLink"
 
-  "/": "enterFindMode"
-  "n": "performFind"
-  "N": "performBackwardsFind"
+    "/": "enterFindMode"
+    "n": "performFind"
+    "N": "performBackwardsFind"
 
-  "[[": "goPrevious"
-  "]]": "goNext"
+    "[[": "goPrevious"
+    "]]": "goNext"
 
-  "yy": "copyCurrentUrl"
-  "yf": "LinkHints.activateModeToCopyLinkUrl"
+    "yy": "copyCurrentUrl"
+    "yf": "LinkHints.activateModeToCopyLinkUrl"
 
-  "p": "openCopiedUrlInCurrentTab"
-  "P": "openCopiedUrlInNewTab"
+    "p": "openCopiedUrlInCurrentTab"
+    "P": "openCopiedUrlInNewTab"
 
-  "K": "nextTab"
-  "J": "previousTab"
-  "gt": "nextTab"
-  "gT": "previousTab"
-  "<<": "moveTabLeft"
-  ">>": "moveTabRight"
-  "g0": "firstTab"
-  "g$": "lastTab"
+    "K": "nextTab"
+    "J": "previousTab"
+    "gt": "nextTab"
+    "gT": "previousTab"
+    "<<": "moveTabLeft"
+    ">>": "moveTabRight"
+    "g0": "firstTab"
+    "g$": "lastTab"
 
-  "W": "moveTabToNewWindow"
-  "t": "createTab"
-  "yt": "duplicateTab"
-  "x": "removeTab"
-  "X": "restoreTab"
+    "W": "moveTabToNewWindow"
+    "t": "createTab"
+    "yt": "duplicateTab"
+    "x": "removeTab"
+    "X": "restoreTab"
 
-  "<a-p>": "togglePinTab"
+    "<a-p>": "togglePinTab"
 
-  "o": "Vomnibar.activate"
-  "O": "Vomnibar.activateInNewTab"
+    "o": "Vomnibar.activate"
+    "O": "Vomnibar.activateInNewTab"
 
-  "T": "Vomnibar.activateTabSelection"
+    "T": "Vomnibar.activateTabSelection"
 
-  "b": "Vomnibar.activateBookmarks"
-  "B": "Vomnibar.activateBookmarksInNewTab"
+    "b": "Vomnibar.activateBookmarks"
+    "B": "Vomnibar.activateBookmarksInNewTab"
 
-  "ge": "Vomnibar.activateEditUrl"
-  "gE": "Vomnibar.activateEditUrlInNewTab"
+    "ge": "Vomnibar.activateEditUrl"
+    "gE": "Vomnibar.activateEditUrlInNewTab"
 
-  "gf": "nextFrame"
+    "gf": "nextFrame"
 
-  "m": "Marks.activateCreateMode"
-  "`": "Marks.activateGotoMode"
+    "m": "Marks.activateCreateMode"
+    "`": "Marks.activateGotoMode"
+
+  visual:
+    "<ESC>": "exitVisualMode"
+    "h": "VisualMode.extendFocus backward"
+    "l": "VisualMode.extendFocus forward"
+    "k": "VisualMode.extendFocus backward line"
+    "j": "VisualMode.extendFocus forward line"
+    "e": "VisualMode.extendFocus backward word"
+    "w": "VisualMode.extendFocus forward word"
+    "0": "VisualMode.extendFocus backward lineboundary"
+    "$": "VisualMode.extendFocus forward lineboundary"
+    "y": "VisualMode.yank"
 
 
 # This is a mapping of: commandIdentifier => [description, options].
 # If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
-commandDescriptions =
-  # Navigating the current page
-  showHelp: ["Show help", { background: true }]
-  scrollDown: ["Scroll down"]
-  scrollUp: ["Scroll up"]
-  scrollLeft: ["Scroll left"]
-  scrollRight: ["Scroll right"]
+commandDescriptionsForMode =
+  normal:
+    # Navigating the current page
+    showHelp: ["Show help", { background: true }]
+    scrollDown: ["Scroll down"]
+    scrollUp: ["Scroll up"]
+    scrollLeft: ["Scroll left"]
+    scrollRight: ["Scroll right"]
 
-  scrollToTop: ["Scroll to the top of the page", { noRepeat: true }]
-  scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
-  scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
-  scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
+    scrollToTop: ["Scroll to the top of the page", { noRepeat: true }]
+    scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
+    scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
+    scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
 
-  scrollPageDown: ["Scroll a page down"]
-  scrollPageUp: ["Scroll a page up"]
-  scrollFullPageDown: ["Scroll a full page down"]
-  scrollFullPageUp: ["Scroll a full page up"]
+    scrollPageDown: ["Scroll a page down"]
+    scrollPageUp: ["Scroll a page up"]
+    scrollFullPageDown: ["Scroll a full page down"]
+    scrollFullPageUp: ["Scroll a full page up"]
 
-  reload: ["Reload the page", { noRepeat: true }]
-  toggleViewSource: ["View page source", { noRepeat: true }]
+    reload: ["Reload the page", { noRepeat: true }]
+    toggleViewSource: ["View page source", { noRepeat: true }]
 
-  copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
-  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { noRepeat: true }]
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
+    copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
+    "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { noRepeat: true }]
+    openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
+    openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
-  enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+    enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+    enterVisualMode: ["Enter visual mode", { noRepeat: true }]
 
-  focusInput: ["Focus the first text box on the page. Cycle between them using tab",
-    { passCountToFunction: true }]
+    focusInput: ["Focus the first text box on the page. Cycle between them using tab",
+      { passCountToFunction: true }]
 
-  "LinkHints.activateMode": ["Open a link in the current tab", { noRepeat: true }]
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", { noRepeat: true }]
-  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", { noRepeat: true }]
-  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { noRepeat: true }]
-  "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
+    "LinkHints.activateMode": ["Open a link in the current tab", { noRepeat: true }]
+    "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", { noRepeat: true }]
+    "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", { noRepeat: true }]
+    "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
+    "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { noRepeat: true }]
+    "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
 
-  enterFindMode: ["Enter find mode", { noRepeat: true }]
-  performFind: ["Cycle forward to the next find match"]
-  performBackwardsFind: ["Cycle backward to the previous find match"]
+    enterFindMode: ["Enter find mode", { noRepeat: true }]
+    performFind: ["Cycle forward to the next find match"]
+    performBackwardsFind: ["Cycle backward to the previous find match"]
 
-  goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }]
-  goNext: ["Follow the link labeled next or >", { noRepeat: true }]
+    goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }]
+    goNext: ["Follow the link labeled next or >", { noRepeat: true }]
 
-  # Navigating your history
-  goBack: ["Go back in history", { passCountToFunction: true }]
-  goForward: ["Go forward in history", { passCountToFunction: true }]
+    # Navigating your history
+    goBack: ["Go back in history", { passCountToFunction: true }]
+    goForward: ["Go forward in history", { passCountToFunction: true }]
 
-  # Navigating the URL hierarchy
-  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
-  goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
+    # Navigating the URL hierarchy
+    goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
+    goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
 
-  # Manipulating tabs
-  nextTab: ["Go one tab right", { background: true }]
-  previousTab: ["Go one tab left", { background: true }]
-  firstTab: ["Go to the first tab", { background: true }]
-  lastTab: ["Go to the last tab", { background: true }]
+    # Manipulating tabs
+    nextTab: ["Go one tab right", { background: true }]
+    previousTab: ["Go one tab left", { background: true }]
+    firstTab: ["Go to the first tab", { background: true }]
+    lastTab: ["Go to the last tab", { background: true }]
 
-  createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
-  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
-  removeTab: ["Close current tab", { background: true, repeatLimit:
-    # Require confirmation to remove more tabs than we can restore.
-    (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
-  restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
+    createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
+    duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
+    removeTab: ["Close current tab", { background: true, repeatLimit:
+      # Require confirmation to remove more tabs than we can restore.
+      (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
+    restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
 
-  moveTabToNewWindow: ["Move tab to new window", { background: true }]
-  togglePinTab: ["Pin/unpin current tab", { background: true }]
+    moveTabToNewWindow: ["Move tab to new window", { background: true }]
+    togglePinTab: ["Pin/unpin current tab", { background: true }]
 
-  closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
-  closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]
-  closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
+    closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
+    closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]
+    closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
 
-  moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
-  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
+    moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
+    moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
 
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry", { noRepeat: true }]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { noRepeat: true }]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs", { noRepeat: true }]
-  "Vomnibar.activateBookmarks": ["Open a bookmark", { noRepeat: true }]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { noRepeat: true }]
-  "Vomnibar.activateEditUrl": ["Edit the current URL", { noRepeat: true }]
-  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { noRepeat: true }]
+    "Vomnibar.activate": ["Open URL, bookmark, or history entry", { noRepeat: true }]
+    "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { noRepeat: true }]
+    "Vomnibar.activateTabSelection": ["Search through your open tabs", { noRepeat: true }]
+    "Vomnibar.activateBookmarks": ["Open a bookmark", { noRepeat: true }]
+    "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { noRepeat: true }]
+    "Vomnibar.activateEditUrl": ["Edit the current URL", { noRepeat: true }]
+    "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { noRepeat: true }]
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
+    nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
 
-  "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
-  "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+    "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
+    "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+
+  visual:
+    "VisualMode.extendFront": ["Extend the current selection\\{ \\1} from the front\\{ by \\2}"]
+    "VisualMode.extendBack": ["Extend the current selection\\{ \\1} from the back\\{ by \\2}"]
+    "VisualMode.extendFocus": ["Extend the current selection\\{ \\1} from its endpoint\\{ by \\2}"]
+    "VisualMode.extendAnchor": ["Extend the current selection\\{ \\1} from its startpoint\\{ by \\2}"]
+    "VisualMode.yank": ["Copy the currently selected text to the clipboard"]
+    exitVisualMode: ["Exit visual mode", { noRepeat: true }]
 
 Commands.init()
 

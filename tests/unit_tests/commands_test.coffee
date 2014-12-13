@@ -10,34 +10,41 @@ context "Key mappings",
     assert.equal (Commands.normalizeKey '<F12>'), '<f12>'
     assert.equal (Commands.normalizeKey '<C-F12>'), '<c-f12>'
 
+availableCommands = null
+
 context "Validate commands and options",
+  setup ->
+    availableCommands = {}
+    for mode, modedAvailableCommands of Commands.availableCommandsForMode
+      extend availableCommands, modedAvailableCommands
+
   should "have either noRepeat or repeatLimit, but not both", ->
     # TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
     # of the offending command appears in the output, if the test fails?
-    for command, options of Commands.availableCommands
-      assert.isTrue not (options.noRepeat and options.repeatLimit)
+    for mode, availableCommands of Commands.availableCommandsForMode
+      for command, options of availableCommands
+        assert.isTrue not (options.noRepeat and options.repeatLimit)
 
   should "describe each command", ->
-    for command, options of Commands.availableCommands
-      assert.equal 'string', typeof options.description
+    for mode, availableCommands of Commands.availableCommandsForMode
+      for command, options of availableCommands
+        assert.equal 'string', typeof options.description
 
   should "define each command in each command group", ->
     for group, commands of Commands.commandGroups
       for command in commands
         assert.equal 'string', typeof command
-        assert.isTrue Commands.availableCommands[command]
+        assert.isTrue availableCommands[command]
 
   should "have valid commands for each advanced command", ->
     for command in Commands.advancedCommands
       assert.equal 'string', typeof command
-      assert.isTrue Commands.availableCommands[command]
+      assert.isTrue availableCommands[command]
 
   should "have valid commands for each default key mapping", ->
-    count = Object.keys(Commands.keyToCommandRegistry).length
-    assert.isTrue (0 < count)
     for key, command of Commands.keyToCommandRegistry
       assert.equal 'object', typeof command
-      assert.isTrue Commands.availableCommands[command.command]
+      assert.isTrue availableCommands[command.command]
 
 context "Validate advanced commands",
   setup ->
