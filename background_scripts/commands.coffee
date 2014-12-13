@@ -116,6 +116,8 @@ Commands =
       "LinkHints.activateModeToOpenInNewTab",
       "LinkHints.activateModeToOpenInNewForegroundTab",
       "LinkHints.activateModeWithQueue",
+      "LinkHints.activateModeToOpenInNewWindow",
+      "LinkHints.activateModeToOpenInNewFullscreenWindow",
       "LinkHints.activateModeToDownloadLink",
       "LinkHints.activateModeToOpenIncognito",
       "Vomnibar.activate",
@@ -166,6 +168,8 @@ Commands =
     "Vomnibar.activateEditUrl",
     "Vomnibar.activateEditUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito",
+    "LinkHints.activateModeToOpenInNewWindow",
+    "LinkHints.activateModeToOpenInNewFullscreenWindow",
     "goNext",
     "goPrevious",
     "Marks.activateCreateMode",
@@ -293,6 +297,8 @@ commandDescriptions =
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", { noRepeat: true }]
   "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", { noRepeat: true }]
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewWindow": ["Open a link in a new window", { noRepeat: true }]
+  "LinkHints.activateModeToOpenInNewFullscreenWindow": ["Open a link in a fullscreen window", { noRepeat: true }]
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { noRepeat: true }]
   "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
 

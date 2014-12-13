@@ -167,8 +167,18 @@ openUrlInNewTab = (request) ->
   chrome.tabs.getSelected(null, (tab) ->
     chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true }))
 
+#
+# Opens request.url in new incognito window.
+#
 openUrlInIncognito = (request) ->
-  chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
+  chrome.windows.create({url: Utils.convertToUrl(request.url), incognito: true})
+
+#
+# Opens request.url in new fullscreen window.
+#
+openUrlInFullscreen = (request) ->
+  chrome.windows.create({url: Utils.convertToUrl(request.url)}, (window) ->
+    chrome.windows.update window.id, {state: "fullscreen"})
 
 #
 # Called when the user has clicked the close icon on the "Vimium has been updated" message.
@@ -628,6 +638,7 @@ sendRequestHandlers =
   getCurrentTabUrl: getCurrentTabUrl,
   openUrlInNewTab: openUrlInNewTab,
   openUrlInIncognito: openUrlInIncognito,
+  openUrlInFullscreen: openUrlInFullscreen,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
   registerFrame: registerFrame,
