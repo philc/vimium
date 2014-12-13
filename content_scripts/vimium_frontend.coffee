@@ -61,10 +61,9 @@ settings =
     # settings object so we don't keep trying to connect to the extension even though it's gone away.
     @port.onDisconnect.addListener =>
       @port = null
-      _get = @get # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
       for own property, value of this
-        @[property] = (->) if "function" == typeof value
-      @get = _get
+        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
+        @[property] = (->) if "function" == typeof value and property != "get"
 
 
   get: (key) -> @values[key]
