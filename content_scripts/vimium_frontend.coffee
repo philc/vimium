@@ -472,7 +472,6 @@ onKeydown = (event) ->
 
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
-  return if isInsertMode()
 
   # Check whether we have handled a keydown for this keyup, and remove all matching keydowns from
   # handledKeydownEvents.
