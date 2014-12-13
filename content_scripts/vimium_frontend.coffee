@@ -474,14 +474,20 @@ onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
   return if isInsertMode()
 
-  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
+  # Check whether we have handled a keydown for this keyup, and remove all matching keydowns from
+  # handledKeydownEvents.
+  # NOTE: There can be multiple keydown events for every keyup due to keys repeating when held.
+  hasHandledKeydown = false
   handledKeydownEvents = handledKeydownEvents.filter (keydown) ->
     (event.metaKey != keydown.metaKey or
      event.altKey != keydown.altKey or
      event.ctrlKey != keydown.ctrlKey or
      event.keyIdentifier != keydown.keyIdentifier or
      event.keyCode != keydown.keyCode) and
-    DomUtils.suppressPropagation(event) # Suppress the event if we found a corresponding keydown
+     hasHandledKeydown = true # We've found a matching keydown!
+
+  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
+  DomUtils.suppressPropagation(event) if hasHandledKeydown
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
