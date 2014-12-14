@@ -28,7 +28,7 @@ context "Keep selection within bounds",
     assert.equal -1, ui.selection
 
   should "set selection to position 0 for bookmark completion if possible", ->
-    Vomnibar.activateBookmarks()
+    Vomnibar.activate "completer=bookmark&selectFirst"
     ui = Vomnibar.vomnibarUI
 
     @completions = []
