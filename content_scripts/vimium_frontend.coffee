@@ -1075,7 +1075,8 @@ CursorHider =
   cursorHideStyle: null
   isScrolling: false
 
-  showCursor: -> @cursorHideStyle.remove()
+  showCursor: ->
+    @cursorHideStyle.remove() if @cursorHideStyle.parentElement
   hideCursor: ->
     document.head.appendChild @cursorHideStyle unless @cursorHideStyle.parentElement
 
