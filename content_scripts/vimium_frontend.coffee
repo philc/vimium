@@ -1089,23 +1089,20 @@ Tween =
 CursorHider =
   #
   # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
+  # NOTE(smblott) onScroll and onMouseMove events come in pairs.
   #
   cursorHideStyle: null
   isScrolling: false
 
-  showCursor: ->
-    @cursorHideStyle.remove() if @cursorHideStyle.parentElement
-  hideCursor: ->
-    document.head.appendChild @cursorHideStyle unless @cursorHideStyle.parentElement
-
-  onMouseMove: (event) ->
-    if CursorHider.isScrolling # This event was caused by scrolling, don't show the cursor.
-      CursorHider.isScrolling = false
-    else
-      CursorHider.showCursor()
   onScroll: (event) ->
     CursorHider.isScrolling = true
-    CursorHider.hideCursor()
+    unless CursorHider.cursorHideStyle.parentElement
+      document.head.appendChild CursorHider.cursorHideStyle
+
+  onMouseMove: (event) ->
+    if CursorHider.cursorHideStyle.parentElement and not CursorHider.isScrolling
+      CursorHider.cursorHideStyle.remove()
+    CursorHider.isScrolling = false
 
   init: ->
     @cursorHideStyle = document.createElement("style")
