@@ -93,6 +93,11 @@ DomUtils =
   #
   # Selectable means that we should use the simulateSelect method to activate the element instead of a click.
   #
+  # The html5 input types that should use simulateSelect are:
+  #   ["date", "datetime", "datetime-local", "email", "month", "number", "password", "range", "search",
+  #    "submit", "tel", "text", "time", "url", "week"]
+  # An unknown type will be treated the same as "text", in the same way that the browser does.
+  #
   isSelectable: (element) ->
     unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset"]
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
