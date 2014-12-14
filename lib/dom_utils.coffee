@@ -91,7 +91,7 @@ DomUtils =
     null
 
   #
-  # Selectable means the element has a text caret; this is not the same as "focusable".
+  # Selectable means that we should use the simulateSelect method to activate the element instead of a click.
   #
   isSelectable: (element) ->
     unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset"]
