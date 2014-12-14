@@ -1073,20 +1073,20 @@ CursorHider =
   # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
   #
   cursorHideStyle: null
+  isScrolling: false
 
   showCursor: -> @cursorHideStyle.remove()
   hideCursor: ->
     document.head.appendChild @cursorHideStyle unless @cursorHideStyle.parentElement
 
-  onMouseMove: (event) -> CursorHider.showCursor()
+  onMouseMove: (event) ->
+    if CursorHider.isScrolling # This event was caused by scrolling, don't show the cursor.
+      CursorHider.isScrolling = false
+    else
+      CursorHider.showCursor()
   onScroll: (event) ->
+    CursorHider.isScrolling = true
     CursorHider.hideCursor()
-
-    # Ignore next mousemove, caused by the scrolling, so the mouse doesn't re-show straight away.
-    window.removeEventListener "mousemove", CursorHider.onMouseMove
-    window.addEventListener "mousemove", ->
-      window.addEventListener "mousemove", CursorHider.onMouseMove
-      window.removeEventListener "mousemove", arguments.callee
 
   init: ->
     @cursorHideStyle = document.createElement("style")
