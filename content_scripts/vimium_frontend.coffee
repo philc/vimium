@@ -183,6 +183,7 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+  CursorHider.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -1066,6 +1067,36 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+CursorHider =
+  #
+  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
+  #
+  cursorHideStyle: null
+  isScrolling: false
+
+  showCursor: ->
+    @cursorHideStyle.remove() if @cursorHideStyle.parentElement
+  hideCursor: ->
+    document.head.appendChild @cursorHideStyle unless @cursorHideStyle.parentElement
+
+  onMouseMove: (event) ->
+    if CursorHider.isScrolling # This event was caused by scrolling, don't show the cursor.
+      CursorHider.isScrolling = false
+    else
+      CursorHider.showCursor()
+  onScroll: (event) ->
+    CursorHider.isScrolling = true
+    CursorHider.hideCursor()
+
+  init: ->
+    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle.innerHTML = """
+      body * {pointer-events: none !important; cursor: none !important;}
+      body {cursor: none !important;}
+    """
+    window.addEventListener "mousemove", @onMouseMove
+    window.addEventListener "scroll", @onScroll
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
