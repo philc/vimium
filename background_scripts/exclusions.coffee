@@ -6,7 +6,11 @@ RegexpCache =
     if regexp = @cache[pattern]
       regexp
     else
-      @cache[pattern] = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$")
+      @cache[pattern] =
+        try
+          new RegExp("^" + pattern.replace(/\*/g, ".*") + "$")
+        catch
+          /^$/ # Match the empty string.
 
 # The Exclusions class manages the exclusion rule setting.
 # An exclusion is an object with two attributes: pattern and passKeys.
