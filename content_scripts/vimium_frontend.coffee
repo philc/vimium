@@ -1073,7 +1073,6 @@ CursorHider =
   # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
   #
   cursorHideStyle: null
-  cursorHideTimeout: 5000
 
   showCursor: -> @cursorHideStyle.remove()
   hideCursor: ->
@@ -1097,11 +1096,6 @@ CursorHider =
     """
     window.addEventListener "mousemove", @onMouseMove
     window.addEventListener "scroll", @onScroll
-
-  deinit: ->
-    window.removeEventListener "mousemove", @onMouseMove
-    window.removeEventListener "scroll", @onScroll
-    @showCursor()
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
