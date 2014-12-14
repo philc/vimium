@@ -1072,23 +1072,15 @@ CursorHider =
   #
   # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
   #
-  cursorHidden: false
-  hoverBlockElement: undefined
+  cursorHideStyle: null
+  cursorHideTimeout: 5000
 
+  showCursor: -> @cursorHideStyle.remove()
   hideCursor: ->
-    unless @cursorHidden
-      @hoverBlockElement.style.display =  "block"
-      @cursorHidden = true
+    document.head.appendChild @cursorHideStyle unless @cursorHideStyle.parentElement
 
-  showCursor: ->
-    if @cursorHidden
-      @hoverBlockElement.style.display = "none"
-      @cursorHidden = false
-
-  onMouseMove: (event) ->
-    CursorHider.showCursor()
-
-  onScroll: ->
+  onMouseMove: (event) -> CursorHider.showCursor()
+  onScroll: (event) ->
     CursorHider.hideCursor()
 
     # Ignore next mousemove, caused by the scrolling, so the mouse doesn't re-show straight away.
@@ -1098,21 +1090,11 @@ CursorHider =
       window.removeEventListener "mousemove", arguments.callee
 
   init: ->
-    # cover the <body> element entirely by a div with cursor: none
-    @hoverBlockElement = document.createElement("div")
-    @hoverBlockElement.style.position = "fixed"
-    @hoverBlockElement.style.width = "104%"
-    @hoverBlockElement.style.height = "104%"
-    @hoverBlockElement.style.zIndex = "2147483647" # Maximum value of z-index
-    @hoverBlockElement.style.left = "0px"
-    @hoverBlockElement.style.top =  "0px"
-    @hoverBlockElement.style.opacity = "0.0"
-    @hoverBlockElement.style.display = "none"
-    @hoverBlockElement.style.cursor = "none"
-    @hoverBlockElement.style.border = "none"
-    @hoverBlockElement.style.margin = "-2% -2% -2% -2%"
-    document.body.appendChild(@hoverBlockElement)
-
+    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle.innerHTML = """
+      body * {pointer-events: none !important; cursor: none !important;}
+      body {cursor: none !important;}
+    """
     window.addEventListener "mousemove", @onMouseMove
     window.addEventListener "scroll", @onScroll
 
