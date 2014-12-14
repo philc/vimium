@@ -7,6 +7,7 @@ RegexpCache =
       regexp
     else
       @cache[pattern] =
+        # We use try/catch to ensure that a broken regexp doesn't wholly cripple Vimium.
         try
           new RegExp("^" + pattern.replace(/\*/g, ".*") + "$")
         catch
