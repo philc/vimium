@@ -57,6 +57,15 @@ settings =
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
 
+    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
+    # settings object so we don't keep trying to connect to the extension even though it's gone away.
+    @port.onDisconnect.addListener =>
+      @port = null
+      for own property, value of this
+        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
+        @[property] = (->) if "function" == typeof value and property != "get"
+
+
   get: (key) -> @values[key]
 
   set: (key, value) ->
@@ -109,6 +118,13 @@ initializePreDomReady = ->
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # If the port is closed, the background page has gone away (since we never close it ourselves). Disable all
+  # our event listeners, and stub out chrome.runtime.sendMessage/connect (to prevent errors).
+  # TODO(mrmr1993): Do some actual cleanup to free resources, hide UI, etc.
+  keyPort.onDisconnect.addListener ->
+    isEnabledForUrl = false
+    chrome.runtime.sendMessage = ->
+    chrome.runtime.connect = ->
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
