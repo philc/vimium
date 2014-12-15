@@ -1,4 +1,3 @@
-#
 # This content script takes input from its webpage and executes commands locally on behalf of the background
 # page. It must be run prior to domReady so that we perform some operations very early. We tell the
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
@@ -12,17 +11,13 @@ findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
-keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
 # (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
 # "passKeys" are keys which would normally be handled by Vimium, but are disabled on this tab, and therefore
 # are passed through to the underlying page.
 isEnabledForUrl = true
 passKeys = null
-keyQueue = null
 # The user's operating system.
-currentCompletionKeys = null
-validFirstKeys = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -56,6 +51,15 @@ settings =
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
+
+    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
+    # settings object so we don't keep trying to connect to the extension even though it's gone away.
+    @port.onDisconnect.addListener =>
+      @port = null
+      for own property, value of this
+        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
+        @[property] = (->) if "function" == typeof value and property != "get"
+
 
   get: (key) -> @values[key]
 
@@ -105,33 +109,30 @@ initializePreDomReady = ->
 
   checkIfEnabledForUrl()
 
-  refreshCompletionKeys()
+  updateKeyToCommandRegistry()
 
-  # Send the key to the key handler in the background page.
-  keyPort = chrome.runtime.connect({ name: "keyDown" })
-
-  requestHandlers =
+  window.requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
-    refreshCompletionKeys: refreshCompletionKeys
+    refreshKeyToCommandRegistry: KeyHandler.refreshKeyToCommandRegistry.bind(KeyHandler)
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
-    executePageCommand: executePageCommand
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    vomnibarShow: -> Vomnibar.show()
+    vomnibarClose: -> Vomnibar.close()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
-    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
+    return if sender.tab and sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler == "registerFrame" or request.handler == "frameFocused"
-    sendResponse requestHandlers[request.name](request, sender)
+    sendResponse requestHandlers[request.name]?(request, sender)
     # Ensure the sendResponse callback is freed.
     false
 
@@ -183,6 +184,7 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+  CursorHider.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -206,16 +208,6 @@ enterInsertModeIfElementIsFocused = ->
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-
-executePageCommand = (request) ->
-  return unless frameId == request.frameId
-
-  if (request.passCountToFunction)
-    Utils.invokeCommandString(request.command, [request.count])
-  else
-    Utils.invokeCommandString(request.command) for i in [0...request.count]
-
-  refreshCompletionKeys(request)
 
 setScrollPosition = (scrollX, scrollY) ->
   if (scrollX > 0 || scrollY > 0)
@@ -340,7 +332,7 @@ extend window,
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
 isPassKey = ( keyChar ) ->
-  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
+  return !KeyHandler.keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
 # event.
@@ -394,10 +386,8 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+        if (KeyHandler.handleKeyDown(keyChar))
           DomUtils.suppressEvent(event)
-
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
@@ -466,15 +456,11 @@ onKeydown = (event) ->
     KeydownEvents.push event
 
   else if (!isInsertMode() && !findMode)
+    keyChar = "<ESC>" if (KeyboardUtils.isEscape(event))
     if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+      if (KeyHandler.handleKeyDown(keyChar))
         DomUtils.suppressEvent event
         KeydownEvents.push event
-
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-
-    else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
       return undefined
@@ -486,9 +472,7 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
-     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
+  if (keyChar == "" && !isInsertMode() && KeyHandler.handleKeyDown(KeyboardUtils.getKeyChar(event), true))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
 
@@ -510,17 +494,9 @@ checkIfEnabledForUrl = ->
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
 
-refreshCompletionKeys = (response) ->
-  if (response)
-    currentCompletionKeys = response.completionKeys
-
-    if (response.validFirstKeys)
-      validFirstKeys = response.validFirstKeys
-  else
-    chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
-
-isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
+updateKeyToCommandRegistry = ->
+  chrome.runtime.sendMessage { handler: "getKeyToCommandRegistry" }, (request) ->
+    KeyHandler.refreshKeyToCommandRegistry request
 
 onFocusCapturePhase = (event) ->
   if (isFocusable(event.target) && !findMode)
@@ -1079,6 +1055,33 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+CursorHider =
+  #
+  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
+  # NOTE(smblott) onScroll and onMouseMove events come in pairs.
+  #
+  cursorHideStyle: null
+  isScrolling: false
+
+  onScroll: (event) ->
+    CursorHider.isScrolling = true
+    unless CursorHider.cursorHideStyle.parentElement
+      document.head.appendChild CursorHider.cursorHideStyle
+
+  onMouseMove: (event) ->
+    if CursorHider.cursorHideStyle.parentElement and not CursorHider.isScrolling
+      CursorHider.cursorHideStyle.remove()
+    CursorHider.isScrolling = false
+
+  init: ->
+    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle.innerHTML = """
+      body * {pointer-events: none !important; cursor: none !important;}
+      body {cursor: none !important;}
+    """
+    window.addEventListener "mousemove", @onMouseMove
+    window.addEventListener "scroll", @onScroll
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
