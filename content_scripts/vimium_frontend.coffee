@@ -342,20 +342,31 @@ extend window,
 isPassKey = ( keyChar ) ->
   return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
-handledKeydownEvents = {}
-eventDetailsString = (event) ->
-  JSON.stringify
-    metaKey: event.metaKey
-    altKey: event.altKey
-    ctrlKey: event.ctrlKey
-    keyIdentifier: event.keyIdentifier
-    keyCode: event.keyCode
-pushHandledKeydownEvent = (event) -> handledKeydownEvents[eventDetailsString event] = true
-hasHandledKeydownEvent = (event) ->
-  detailString = eventDetailsString event
-  value = handledKeydownEvents[detailString]
-  delete handledKeydownEvents[detailString]
-  value
+# Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
+# event.
+KeydownEvents =
+  handledEvents: {}
+
+  stringify: (event) ->
+    JSON.stringify
+      metaKey: event.metaKey
+      altKey: event.altKey
+      ctrlKey: event.ctrlKey
+      keyIdentifier: event.keyIdentifier
+      keyCode: event.keyCode
+
+  push: (event) ->
+    @handledEvents[@stringify event] = true
+
+  # Yields truthy or falsy depending upon whether a corresponding keydown event is present (and removes that
+  # event).
+  pop: (event) ->
+    console.log @handledEvents
+    detailString = @stringify event
+    value = @handledEvents[detailString]
+    delete @handledEvents[detailString]
+    console.log @handledEvents
+    value
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -429,38 +440,38 @@ onKeydown = (event) ->
         event.srcElement.blur()
       exitInsertMode()
       DomUtils.suppressEvent event
-      pushHandledKeydownEvent event
+      KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
       DomUtils.suppressEvent event
-      pushHandledKeydownEvent event
+      KeydownEvents.push event
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
       DomUtils.suppressEvent event
-      pushHandledKeydownEvent event
+      KeydownEvents.push event
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
       DomUtils.suppressEvent event
-      pushHandledKeydownEvent event
+      KeydownEvents.push event
 
     else if (!modifiers)
       DomUtils.suppressPropagation(event)
-      pushHandledKeydownEvent event
+      KeydownEvents.push event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
-    pushHandledKeydownEvent event
+    KeydownEvents.push event
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
-        pushHandledKeydownEvent event
+        KeydownEvents.push event
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -481,13 +492,13 @@ onKeydown = (event) ->
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
-    pushHandledKeydownEvent event
+    KeydownEvents.push event
 
 onKeyup = (event) ->
   return unless handlerStack.bubbleEvent("keyup", event)
 
   # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  DomUtils.suppressPropagation(event) if hasHandledKeydownEvent event
+  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
