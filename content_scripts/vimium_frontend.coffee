@@ -361,11 +361,9 @@ KeydownEvents =
   # Yields truthy or falsy depending upon whether a corresponding keydown event is present (and removes that
   # event).
   pop: (event) ->
-    console.log @handledEvents
     detailString = @stringify event
     value = @handledEvents[detailString]
     delete @handledEvents[detailString]
-    console.log @handledEvents
     value
 
 #
@@ -495,10 +493,11 @@ onKeydown = (event) ->
     KeydownEvents.push event
 
 onKeyup = (event) ->
+  handledKeydown = KeydownEvents.pop event
   return unless handlerStack.bubbleEvent("keyup", event)
 
   # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
+  DomUtils.suppressPropagation(event) if handledKeydown
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
