@@ -36,7 +36,13 @@ DomUtils =
       xpath.push(".//" + element, ".//xhtml:" + element)
     xpath.join(" | ")
 
-  evaluateXPath: (xpath, resultType, contextNode = document.documentElement) ->
+  # Evaluates an XPath on the whole document, or on the contents of the fullscreen element if an element is
+  # fullscreen.
+  evaluateXPath: (xpath, resultType) ->
+    contextNode = if document.webkitIsFullScreen
+      document.webkitFullscreenElement
+    else
+      document.documentElement
     namespaceResolver = (namespace) ->
       if (namespace == "xhtml") then "http://www.w3.org/1999/xhtml" else null
     document.evaluate(xpath, contextNode, namespaceResolver, resultType, null)

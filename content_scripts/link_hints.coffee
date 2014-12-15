@@ -141,12 +141,7 @@ LinkHints =
   # of digits needed to enumerate all of the links on screen.
   #
   getVisibleClickableElements: ->
-    # If we are fullscreen, only consider elements contained in the fullscreen element.
-    resultType = XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
-    resultSet = if document.webkitIsFullScreen
-      DomUtils.evaluateXPath(@clickableElementsXPath, resultType, document.webkitFullscreenElement)
-    else
-      DomUtils.evaluateXPath(@clickableElementsXPath, resultType)
+    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
 
     visibleElements = []
 
