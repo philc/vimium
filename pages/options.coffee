@@ -25,11 +25,11 @@ class Option
     @previous
 
   # Write this option's new value back to localStorage, if necessary.
-  save: ->
+  save: (key_value) ->
     value = @readValueFromElement()
     if not @areEqual value, @previous
-      bgSettings.set @field, @previous = value
-      bgSettings.performPostUpdateHook @field, value
+      key_value[@field] = @previous = value
+      bgSettings.set @field, value
 
   # Compare values; this is overridden by sub-classes.
   areEqual: (a,b) -> a == b
@@ -40,7 +40,9 @@ class Option
 
   # Static method.
   @saveOptions: ->
-    Option.all.map (option) -> option.save()
+    key_value = {}
+    Option.all.map (option) -> option.save(key_value)
+    bgSettings.dispatchEvent "update", key_value # Notify settings listeners about the updated values.
     $("saveOptions").disabled = true
     $("saveOptions").innerHTML = "No Changes"
 

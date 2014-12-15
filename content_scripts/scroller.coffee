@@ -93,8 +93,7 @@ checkVisibility = (element) ->
 # CoreScroller contains the core function (scroll) and logic for relative scrolls.  All scrolls are ultimately
 # translated to relative scrolls.  CoreScroller is not exported.
 CoreScroller =
-  init: (frontendSettings) ->
-    @settings = frontendSettings
+  init: ->
     @time = 0
     @lastEvent = null
     @keyIsDown = false
@@ -108,7 +107,7 @@ CoreScroller =
         @time += 1
 
   # Return true if CoreScroller would not initiate a new scroll right now.
-  wouldNotInitiateScroll: -> @lastEvent?.repeat and @settings.get "smoothScroll"
+  wouldNotInitiateScroll: -> @lastEvent?.repeat and Settings.get "smoothScroll"
 
   # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
   # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
@@ -122,7 +121,7 @@ CoreScroller =
   scroll: (element, direction, amount) ->
     return unless amount
 
-    unless @settings.get "smoothScroll"
+    unless Settings.get "smoothScroll"
       # Jump scrolling.
       performScroll element, direction, amount
       checkVisibility element
@@ -180,9 +179,9 @@ CoreScroller =
 
 # Scroller contains the two main scroll functions (scrollBy and scrollTo) which are exported to clients.
 Scroller =
-  init: (frontendSettings) ->
+  init: ->
     handlerStack.push DOMActivate: -> activatedElement = event.target
-    CoreScroller.init frontendSettings
+    CoreScroller.init()
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.

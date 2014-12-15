@@ -27,7 +27,7 @@ LinkHints =
   # Handle the link hinting marker generation and matching. Must be initialized after settings have been
   # loaded, so that we can retrieve the option setting.
   getMarkerMatcher: ->
-    if settings.get("filterLinkHints") then filterHints else alphabetHints
+    if Settings.get("filterLinkHints") then filterHints else alphabetHints
   # lock to ensure only one instance runs at a time
   isActive: false
 
@@ -290,7 +290,7 @@ alphabetHints =
   # may be of different lengths.
   #
   hintStrings: (linkCount) ->
-    linkHintCharacters = settings.get("linkHintCharacters")
+    linkHintCharacters = Settings.get("linkHintCharacters")
     # Determine how many digits the link hints will require in the worst case. Usually we do not need
     # all of these digits for every link single hint, so we can show shorter hints for a few of the links.
     digitsNeeded = Math.ceil(@logXOfBase(linkCount, linkHintCharacters.length))
@@ -361,7 +361,7 @@ filterHints =
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    (numberToHintString linkHintNumber + 1, settings.get "linkHintNumbers").toUpperCase()
+    (numberToHintString linkHintNumber + 1, Settings.get "linkHintNumbers").toUpperCase()
 
   generateLinkText: (element) ->
     linkText = ""
@@ -419,7 +419,7 @@ filterHints =
       if (!@hintKeystrokeQueue.pop() && !@linkTextKeystrokeQueue.pop())
         return { linksMatched: [] }
     else if (keyChar)
-      if (settings.get("linkHintNumbers").indexOf(keyChar) >= 0)
+      if (Settings.get("linkHintNumbers").indexOf(keyChar) >= 0)
         @hintKeystrokeQueue.push(keyChar)
       else
         # since we might renumber the hints, the current hintKeyStrokeQueue

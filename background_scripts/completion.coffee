@@ -335,10 +335,23 @@ class SearchEngineCompleter
   computeRelevancy: -> 1
 
   refresh: ->
-    this.searchEngines = root.Settings.getSearchEngines()
+    @parseSearchEngines() if Object.keys(@searchEngines).length == 0
+    @searchEngines
 
   getSearchEngineMatches: (queryTerm) ->
     this.searchEngines[queryTerm]
+
+  # this parses the search engines settings and clears the old searchEngines and sets the new one
+  parseSearchEngines: () ->
+    searchEnginesText = Settings.get "searchEngines"
+    @searchEngines = {}
+    # find the split pairs by first splitting by line then splitting on the first `: `
+    split_pairs = ( pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#" )
+    @searchEngines[a[0]] = a[1] for a in split_pairs
+    @searchEngines
+
+Settings.addEventListener "change", (changeDetails) ->
+  SearchEngineCompleter.parseSearchEngines() if "searchEngines" of changeDetails
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.

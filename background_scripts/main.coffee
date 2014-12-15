@@ -191,16 +191,6 @@ selectSpecificTab = (request) ->
     chrome.windows.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { selected: true }))
 
-#
-# Used by the content scripts to get settings from the local storage.
-#
-handleSettings = (args, port) ->
-  if (args.operation == "get")
-    value = Settings.get(args.key)
-    port.postMessage({ key: args.key, value: value })
-  else # operation == "set"
-    Settings.set(args.key, args.value)
-
 refreshCompleter = (request) -> completers[request.name].refresh()
 
 whitespaceRegexp = /\s+/
@@ -620,7 +610,6 @@ handleFrameFocused = (request, sender) ->
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
-  settings: handleSettings,
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
@@ -668,5 +657,11 @@ chrome.windows.getAll { populate: true }, (windows) ->
         (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
       chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
 
+Settings.addEventListener "change", (changeDetails) ->
+  return unless "keyMappings" of changeDetails
+  Commands.clearKeyMappingsAndSetDefaults()
+  Commands.parseCustomKeyMappings Settings.get("keyMappings")
+  refreshCompletionKeysAfterMappingSave()
+
 # Start pulling changes from synchronized storage.
-Sync.init()
+Settings.init()

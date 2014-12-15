@@ -48,6 +48,10 @@ root.Exclusions = Exclusions =
   remove: (pattern) ->
     @setRules(@rules.filter((rule) -> rule and rule.pattern != pattern))
 
+Settings.addEventListener "change", (changeDetails) ->
+  return unless "exclusionRules" of changeDetails
+  Exclusions.postUpdateHook Settings.get("exclusionRules")
+
 # Development and debug only.
 # Enable this (temporarily) to restore legacy exclusion rules from backup.
 if false and Settings.has("excludedUrlsBackup")
