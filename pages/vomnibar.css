@@ -24,7 +24,7 @@
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
   border: 1px solid #aaa;
   /* One less than hint markers and the help dialog. */
-  z-index: 99999996;
+  z-index: 2147483646;
 }
 
 #vomnibar input {
