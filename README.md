@@ -140,6 +140,15 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+1.46 (2014-12-15)
+
+- Site-specific excluded keys: you can disable some Vimium key bindings on sites like gmail.com, so you can use the key bindings provided by the site itself.
+- Smooth scrolling.
+- The Vomnibar now orders tabs by recency. Use this to quickly switch between your most recently-used tabs.
+- New commands: "close tabs to the left", "close tabs to the right", "close all other tabs".
+- Usability improvements.
+- Bug fixes.
+
 1.45 (2014-07-20)
 
 - Vimium's settings are now synced across computers.
