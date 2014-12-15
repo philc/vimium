@@ -31,15 +31,23 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
+    keyIdentifier = event.keyIdentifier
+
+    # On Linux (and probably Mac), the keyIdentifier for control keys is a "U+" code, but should be textual.
+    # Webkit bug: https://bugs.webkit.org/show_bug.cgi?id=139429
+    # Chromium bug: https://code.google.com/p/chromium/issues/detail?id=362551
+    keyIdentifiersToFix = { 16: "Shift", 17: "Ctrl", 18: "Alt" }
+    if (@platform != "Windows" && event.keyCode of keyIdentifiersToFix)
+      keyIdentifier = keyIdentifiersToFix[event.keyCode]
+
     # Not a letter
-    if (event.keyIdentifier.slice(0, 2) != "U+")
+    if (keyIdentifier.slice(0, 2) != "U+")
       return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
       # F-key
       if (event.keyCode >= @keyCodes.f1 && event.keyCode <= @keyCodes.f12)
         return "f" + (1 + event.keyCode - keyCodes.f1)
       return ""
 
-    keyIdentifier = event.keyIdentifier
     # On Windows, the keyIdentifiers for non-letter keys are incorrect. See
     # https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
     if ((@platform == "Windows" || @platform == "Linux") && @keyIdentifierCorrectionMap[keyIdentifier])
