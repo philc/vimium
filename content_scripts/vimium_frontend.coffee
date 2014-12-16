@@ -244,6 +244,12 @@ setScrollPosition = (scrollX, scrollY) ->
 # Called from the backend in order to change frame focus.
 #
 window.focusThisFrame = (shouldHighlight) ->
+  if window.innerWidth < 3 or window.innerHeight < 3
+    # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
+    # NOTE(smblott) We assume that there is at least one frame large enough to focus.
+    # See #1317.
+    chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
+    return
   window.focus()
   if (document.body && shouldHighlight)
     borderWas = document.body.style.border
