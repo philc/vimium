@@ -34,12 +34,12 @@ getDimension = (el, direction, amount) ->
   else
     amount
 
-# Perform a scroll. Return true if we successfully scrolled by the requested amount, and false otherwise.
+# Perform a scroll. Return true if we successfully scrolled by any amount, and false otherwise.
 performScroll = (element, direction, amount) ->
   axisName = scrollProperties[direction].axisName
   before = element[axisName]
   element[axisName] += amount
-  element[axisName] == amount + before
+  element[axisName] != before
 
 # Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
 shouldScroll = (element, direction) ->
