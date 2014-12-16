@@ -123,7 +123,7 @@ CoreScroller =
   scroll: (element, direction, amount) ->
     return unless amount
 
-    unless @settings.get "smoothScroll"
+    if true # unless @settings.get "smoothScroll"
       # Jump scrolling.
       performScroll element, direction, amount
       checkVisibility element
