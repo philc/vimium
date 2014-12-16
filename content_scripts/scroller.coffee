@@ -4,6 +4,13 @@
 #
 activatedElement = null
 
+# Return 0, -1 or 1: the sign of the argument.
+getSign = (val) ->
+  if not val
+    0
+  else
+    if val < 0 then -1 else 1
+
 scrollProperties =
   x: {
     axisName: 'scrollLeft'
@@ -63,7 +70,7 @@ doesScroll = (element, direction, amount, factor) ->
   # we're definitely scrolling forwards, so any positive value will do for delta.  In the latter, we're
   # definitely scrolling backwards, so a delta of -1 will do.  For absolute scrolls, factor is always 1.
   delta = factor * getDimension(element, direction, amount) || -1
-  delta = Math.sign delta # 1 or -1
+  delta = getSign delta # 1 or -1
   performScroll(element, direction, delta) and performScroll(element, direction, -delta)
 
 # From element and its parents, find the first which we should scroll and which does scroll.
@@ -136,7 +143,7 @@ CoreScroller =
     myKeyIsStillDown = => @time == activationTime and @keyIsDown
 
     # Store amount's sign and make amount positive; the arithmetic is clearer when amount is positive.
-    sign = Math.sign amount
+    sign = getSign amount
     amount = Math.abs amount
 
     # Initial intended scroll duration (in ms). We allow a bit longer for longer scrolls.
