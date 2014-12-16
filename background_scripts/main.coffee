@@ -633,6 +633,7 @@ sendRequestHandlers =
   registerFrame: registerFrame,
   unregisterFrame: unregisterFrame,
   frameFocused: handleFrameFocused,
+  nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
   upgradeNotificationClosed: upgradeNotificationClosed,
   updateScrollPosition: handleUpdateScrollPosition,
   copyToClipboard: copyToClipboard,
