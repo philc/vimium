@@ -39,8 +39,7 @@ performScroll = (element, direction, amount) ->
   axisName = scrollProperties[direction].axisName
   before = element[axisName]
   element[axisName] += amount
-  scrollChange = element[axisName] - before
-  Math.abs(scrollChange - amount) <= 4 # At 25% zoom the scroll can be off by as much as 4.
+  element[axisName] - before # Return the difference; equivalent to false if no scrolling took place.
 
 # Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
 shouldScroll = (element, direction) ->
@@ -169,8 +168,9 @@ CoreScroller =
       delta = Math.ceil amount * (elapsed / duration) * calibration
       delta = if myKeyIsStillDown() then delta else Math.max 0, Math.min delta, amount - totalDelta
 
-      if delta and performScroll element, direction, sign * delta
-        totalDelta += delta
+      scrolledAmount = performScroll element, direction, sign * delta
+      if delta and scrolledAmount
+        totalDelta += scrolledAmount
         requestAnimationFrame animate
       else
         # We're done.
