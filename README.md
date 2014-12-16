@@ -140,7 +140,7 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-1.46, 1.47 (2014-12-15)
+1.46, 1.47, 1.48 (2014-12-15)
 
 - Site-specific excluded keys: you can disable some Vimium key bindings on sites like gmail.com, so you can use the key bindings provided by the site itself.
 - Smooth scrolling.
