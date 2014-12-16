@@ -39,7 +39,8 @@ performScroll = (element, direction, amount) ->
   axisName = scrollProperties[direction].axisName
   before = element[axisName]
   element[axisName] += amount
-  element[axisName] == amount + before
+  scrollChange = element[axisName] - before
+  Math.abs(scrollChange - amount) <= 4 # At 25% zoom the scroll can be off by as much as 4.
 
 # Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
 shouldScroll = (element, direction) ->
