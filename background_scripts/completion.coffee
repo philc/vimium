@@ -327,7 +327,7 @@ class SearchEngineCompleter
     searchEngineMatch = this.getSearchEngineMatches(queryTerms[0])
     suggestions = []
     if searchEngineMatch
-      searchEngineMatch = searchEngineMatch.replace(/%s/g, queryTerms[1..].join(" "))
+      searchEngineMatch = searchEngineMatch.replace(/%s/g, encodeURIComponent queryTerms[1..].join(" "))
       suggestion = new Suggestion(queryTerms, "search", searchEngineMatch, queryTerms[0] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
       suggestions.push(suggestion)
     onComplete(suggestions)
