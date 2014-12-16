@@ -95,11 +95,11 @@ DomUtils =
   #
   # The html5 input types that should use simulateSelect are:
   #   ["date", "datetime", "datetime-local", "email", "month", "number", "password", "range", "search",
-  #    "submit", "tel", "text", "time", "url", "week"]
+  #    "tel", "text", "time", "url", "week"]
   # An unknown type will be treated the same as "text", in the same way that the browser does.
   #
   isSelectable: (element) ->
-    unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset"]
+    unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset", "submit"]
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
         element.nodeName.toLowerCase() == "textarea"
 
