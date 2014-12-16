@@ -227,8 +227,8 @@ setScrollPosition = (scrollX, scrollY) ->
 window.focusThisFrame = (shouldHighlight) ->
   if window.innerWidth < 3 or window.innerHeight < 3
     # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
-    # NOTE(smblott) We assume that there is at least one frame large enough to focus.
-    # See #1317.
+    # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
+    # Here we're assuming that there is at least one frame large enough to focus.
     chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
     return
   window.focus()
