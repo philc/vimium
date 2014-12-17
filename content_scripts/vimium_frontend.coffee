@@ -1007,7 +1007,7 @@ HUD =
   showUpgradeNotification: (version) ->
     HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to
       <a class='vimiumReset'
-      href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>
+      href='https://github.com/philc/vimium#release-notes'>
       #{version}</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
     links = HUD.upgradeNotificationElement().getElementsByTagName("a")
     links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
