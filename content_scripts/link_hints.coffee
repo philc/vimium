@@ -130,7 +130,41 @@ LinkHints =
   # of digits needed to enumerate all of the links on screen.
   #
   getVisibleClickableElements: ->
-    resultSet = DomUtils.getClickableElements()
+    elements = Array::slice.call(document.documentElement.getElementsByTagName "*")
+    resultSet = []
+
+    for element in elements
+      isClickable = false
+      tagName = element.tagName.toLowerCase()
+      isClickable = (->
+        if element.hasAttribute "onclick"
+          true
+        else if element.hasAttribute "tabindex"
+          true
+        else if element.getAttribute "role" in ["button", "link"]
+          true
+        else if element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0
+          true
+        else if element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"]
+          true
+        else if tagName == "a"
+          true
+        else if tagName == "img"
+          mapName = element.getAttribute "usemap"
+          if mapName
+            map = document.querySelector(mapName.replace /^#/, "")
+            areas = Array::slice.call(map.getElementsByTagName "area")
+            resultSet.concat areas
+          false
+        else if (tagName == "input" and DomUtils.isSelectable element) or tagName == "textarea"
+          not (element.disabled or element.readOnly)
+        else if (tagName == "input" and element.getAttribute("type")?.toLowerCase() != "hidden") or
+                tagName in ["button", "select"]
+          not element.disabled
+        else
+          false
+      )()
+      resultSet.push element if isClickable
 
     visibleElements = []
 
