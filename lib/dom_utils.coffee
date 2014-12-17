@@ -72,7 +72,7 @@ DomUtils =
             elements.concat areas
           false
         else if (tagName == "input" and DomUtils.isSelectable element) or tagName == "textarea"
-          not (element.disabled or element.hasAttribute "readonly")
+          not (element.disabled or element.readOnly)
         else if (tagName == "input" and element.getAttribute("type")?.toLowerCase() != "hidden") or
                 tagName in ["button", "select"]
           not element.disabled
