@@ -36,17 +36,6 @@ LinkHints =
   #
   init: ->
 
-  #
-  # Generate an XPath describing what a clickable element is.
-  # The final expression will be something like "//button | //xhtml:button | ..."
-  # We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
-  #
-  clickableElementsXPath: DomUtils.makeXPath(
-    ["a", "area[@href]", "textarea", "button", "select",
-     "input[not(@type='hidden' or @disabled or @readonly)]",
-     "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
-     "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
-
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
   activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
@@ -141,13 +130,12 @@ LinkHints =
   # of digits needed to enumerate all of the links on screen.
   #
   getVisibleClickableElements: ->
-    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+    resultSet = DomUtils.getClickableElements()
 
     visibleElements = []
 
     # Find all visible clickable elements.
-    for i in [0...resultSet.snapshotLength] by 1
-      element = resultSet.snapshotItem(i)
+    for element in resultSet
       clientRect = DomUtils.getVisibleClientRect(element, clientRect)
       if (clientRect != null)
         visibleElements.push({element: element, rect: clientRect})

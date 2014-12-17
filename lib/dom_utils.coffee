@@ -42,6 +42,42 @@ DomUtils =
     document.evaluate(xpath, document.documentElement, namespaceResolver, resultType, null)
 
   #
+  # Returns all the clickable element children of contextNode. This also can include contextNode itself.
+  #
+  getClickableElements: (contextNode = document.documentElement) ->
+    elements = Array::slice.call(contextNode?.getElementsByTagName "*")
+    elements.unshift contextNode # Check the contextNode as well.
+    clickableElements = []
+    for element in elements
+      isClickable = false
+      tagName = element.tagName.toLowerCase()
+      isClickable = (->
+        if element.hasAttribute "onclick"
+          true
+        else if element.hasAttribute "tabindex"
+          true
+        else if element.getAttribute "role" in ["button", "link"]
+          true
+        else if element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0
+          true
+        else if element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"]
+          true
+        else if tagName == "a"
+          true
+        else if tagName == "area"
+          element.hasAttribute "href"
+        else if (tagName == "input" and DomUtils.isSelectable element) or tagName == "textarea"
+          not (element.disabled or element.hasAttribute "readonly")
+        else if (tagName == "input" and element.getAttribute("type")?.toLowerCase() != "hidden") or
+                tagName in ["button", "select"]
+          not element.disabled
+        else
+          false
+      )()
+      clickableElements.push element if isClickable
+    clickableElements
+
+  #
   # Returns the first visible clientRect of an element if it exists. Otherwise it returns null.
   #
   getVisibleClientRect: (element) ->
