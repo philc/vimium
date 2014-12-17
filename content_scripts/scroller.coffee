@@ -5,6 +5,10 @@
 activatedElement = null
 
 # Return 0, -1 or 1: the sign of the argument.
+# NOTE(smblott; 2014/12/17) We would like to use Math.sign().  However, according to this site
+# (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign) Math.sign() was
+# only introduced in Chrome 38.  This caused problems in R1.48 for users with old Chrome installations.  We
+# can replace this with Math.sign() at some point.
 getSign = (val) ->
   if not val
     0
