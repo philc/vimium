@@ -1124,6 +1124,7 @@ CursorHider =
     CursorHider.isScrolling = false
 
   init: ->
+    return unless @cursorHideStyle?
     @cursorHideStyle = document.createElement("style")
     @cursorHideStyle.innerHTML = """
       body * {pointer-events: none !important; cursor: none !important;}
