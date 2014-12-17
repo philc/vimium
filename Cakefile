@@ -40,8 +40,36 @@ visitDirectory = (directory, visitor) ->
     visitor(filepath)
 
 task "build", "compile all coffeescript files to javascript", ->
+  fs.unlink "pages/git-information.js", (->)
   coffee = spawn "coffee", ["-c", __dirname]
   coffee.on 'exit', (returnCode) -> process.exit returnCode
+
+appendToOptionsPage = (data) -> fs.writeFile "pages/git-information.js", data
+
+task "dev-build", "compile all coffeescript files and add git information", ->
+  invoke "build"
+
+  branchDone = commitDone = false
+  currentBranch = commitSummary = ""
+  tryAppendToOptionsPage = ->
+    branchDone and commitDone and appendToOptionsPage """
+      branchName = #{currentBranch}
+      commitData = #{commitSummary}
+    """
+
+  spawn = child_process.spawn "git", ["rev-parse", "--abbrev-ref", "HEAD"]
+  spawn.stdout.on "data", (data) -> currentBranch += data
+  spawn.on "close", (code) ->
+    currentBranch = JSON.stringify currentBranch
+    branchDone = true
+    tryAppendToOptionsPage()
+
+  spawn = child_process.spawn "git", ["show", "--quiet", "HEAD"]
+  spawn.stdout.on "data", (data) -> commitSummary += data
+  spawn.on "close", (code) ->
+    commitSummary = JSON.stringify commitSummary
+    commitDone = true
+    tryAppendToOptionsPage()
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   visitDirectory __dirname, (filepath) ->
