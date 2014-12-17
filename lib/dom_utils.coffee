@@ -52,20 +52,6 @@ DomUtils =
     } for clientRect in element.getClientRects())
 
     for clientRect in clientRects
-      clientRect = @cropRectToVisible clientRect
-
-      if (!clientRect || clientRect.width < 3 || clientRect.height < 3)
-        continue
-
-      # eliminate invisible elements (see test_harnesses/visibility_test.html)
-      computedStyle = window.getComputedStyle(element, null)
-      if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-          computedStyle.getPropertyValue('display') == 'none')
-        continue
-
-      return clientRect
-
-    for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible
       # but floated elements. Check for this.
       if (clientRect.width == 0 || clientRect.height == 0)
@@ -78,6 +64,21 @@ DomUtils =
           childClientRect = @getVisibleClientRect(child)
           continue if (childClientRect == null)
           return childClientRect
+
+      else
+        clientRect = @cropRectToVisible clientRect
+
+        if (!clientRect || clientRect.width < 3 || clientRect.height < 3)
+          continue
+
+        # eliminate invisible elements (see test_harnesses/visibility_test.html)
+        computedStyle = window.getComputedStyle(element, null)
+        if (computedStyle.getPropertyValue('visibility') != 'visible' ||
+            computedStyle.getPropertyValue('display') == 'none')
+          continue
+
+        return clientRect
+
     null
 
   cropRectToVisible: (rect) ->
