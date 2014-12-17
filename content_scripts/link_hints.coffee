@@ -130,7 +130,7 @@ LinkHints =
   # of digits needed to enumerate all of the links on screen.
   #
   getVisibleClickableElements: ->
-    elements = Array::slice.call(document.documentElement.getElementsByTagName "*")
+    elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
     for element in elements
