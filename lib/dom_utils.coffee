@@ -64,8 +64,13 @@ DomUtils =
           true
         else if tagName == "a"
           true
-        else if tagName == "area"
-          element.hasAttribute "href"
+        else if tagName == "img"
+          mapName = element.getAttribute "usemap"
+          if mapName
+            map = document.querySelector(mapName.replace /^#/, "")
+            areas = Array::slice.call(map.getElementsByTagName "area")
+            elements.concat areas
+          false
         else if (tagName == "input" and DomUtils.isSelectable element) or tagName == "textarea"
           not (element.disabled or element.hasAttribute "readonly")
         else if (tagName == "input" and element.getAttribute("type")?.toLowerCase() != "hidden") or
