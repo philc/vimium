@@ -57,6 +57,15 @@ settings =
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
 
+    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
+    # settings object so we don't keep trying to connect to the extension even though it's gone away.
+    @port.onDisconnect.addListener =>
+      @port = null
+      for own property, value of this
+        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
+        @[property] = (->) if "function" == typeof value and property != "get"
+
+
   get: (key) -> @values[key]
 
   set: (key, value) ->
@@ -109,6 +118,13 @@ initializePreDomReady = ->
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # If the port is closed, the background page has gone away (since we never close it ourselves). Disable all
+  # our event listeners, and stub out chrome.runtime.sendMessage/connect (to prevent errors).
+  # TODO(mrmr1993): Do some actual cleanup to free resources, hide UI, etc.
+  keyPort.onDisconnect.addListener ->
+    isEnabledForUrl = false
+    chrome.runtime.sendMessage = ->
+    chrome.runtime.connect = ->
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -123,6 +139,8 @@ initializePreDomReady = ->
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    vomnibarShow: -> Vomnibar.show()
+    vomnibarClose: -> Vomnibar.close()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -183,6 +201,7 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+  CursorHider.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -1085,6 +1104,33 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+CursorHider =
+  #
+  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
+  # NOTE(smblott) onScroll and onMouseMove events come in pairs.
+  #
+  cursorHideStyle: null
+  isScrolling: false
+
+  onScroll: (event) ->
+    CursorHider.isScrolling = true
+    unless CursorHider.cursorHideStyle.parentElement
+      document.head.appendChild CursorHider.cursorHideStyle
+
+  onMouseMove: (event) ->
+    if CursorHider.cursorHideStyle.parentElement and not CursorHider.isScrolling
+      CursorHider.cursorHideStyle.remove()
+    CursorHider.isScrolling = false
+
+  init: ->
+    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle.innerHTML = """
+      body * {pointer-events: none !important; cursor: none !important;}
+      body, html {cursor: none !important;}
+    """
+    window.addEventListener "mousemove", @onMouseMove
+    window.addEventListener "scroll", @onScroll
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)

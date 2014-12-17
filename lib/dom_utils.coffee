@@ -33,13 +33,17 @@ DomUtils =
   makeXPath: (elementArray) ->
     xpath = []
     for element in elementArray
-      xpath.push("//" + element, "//xhtml:" + element)
+      xpath.push(".//" + element, ".//xhtml:" + element)
     xpath.join(" | ")
 
+  # Evaluates an XPath on the whole document, or on the contents of the fullscreen element if an element is
+  # fullscreen.
   evaluateXPath: (xpath, resultType) ->
+    contextNode =
+      if document.webkitIsFullScreen then document.webkitFullscreenElement else document.documentElement
     namespaceResolver = (namespace) ->
       if (namespace == "xhtml") then "http://www.w3.org/1999/xhtml" else null
-    document.evaluate(xpath, document.documentElement, namespaceResolver, resultType, null)
+    document.evaluate(xpath, contextNode, namespaceResolver, resultType, null)
 
   #
   # Returns the first visible clientRect of an element if it exists. Otherwise it returns null.

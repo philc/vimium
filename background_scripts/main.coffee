@@ -617,6 +617,12 @@ handleFrameFocused = (request, sender) ->
     frameIdsForTab[tabId] =
       [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
 
+# Send message back to the tab unchanged. This allows different frames from the same tab to message eachother
+# while avoiding security concerns such as eavesdropping or message spoofing.
+echo = (request, sender) ->
+  delete request.handler # No need to send this information
+  chrome.tabs.sendMessage(sender.tab.id, request)
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -624,25 +630,26 @@ portHandlers =
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
-  getCompletionKeys: getCompletionKeysRequest,
-  getCurrentTabUrl: getCurrentTabUrl,
-  openUrlInNewTab: openUrlInNewTab,
-  openUrlInIncognito: openUrlInIncognito,
-  openUrlInCurrentTab: openUrlInCurrentTab,
-  openOptionsPageInNewTab: openOptionsPageInNewTab,
-  registerFrame: registerFrame,
-  unregisterFrame: unregisterFrame,
-  frameFocused: handleFrameFocused,
+  getCompletionKeys: getCompletionKeysRequest
+  getCurrentTabUrl: getCurrentTabUrl
+  openUrlInNewTab: openUrlInNewTab
+  openUrlInIncognito: openUrlInIncognito
+  openUrlInCurrentTab: openUrlInCurrentTab
+  openOptionsPageInNewTab: openOptionsPageInNewTab
+  registerFrame: registerFrame
+  unregisterFrame: unregisterFrame
+  frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
-  upgradeNotificationClosed: upgradeNotificationClosed,
-  updateScrollPosition: handleUpdateScrollPosition,
-  copyToClipboard: copyToClipboard,
-  isEnabledForUrl: isEnabledForUrl,
-  saveHelpDialogSettings: saveHelpDialogSettings,
-  selectSpecificTab: selectSpecificTab,
-  refreshCompleter: refreshCompleter,
-  createMark: Marks.create.bind(Marks),
+  upgradeNotificationClosed: upgradeNotificationClosed
+  updateScrollPosition: handleUpdateScrollPosition
+  copyToClipboard: copyToClipboard
+  isEnabledForUrl: isEnabledForUrl
+  saveHelpDialogSettings: saveHelpDialogSettings
+  selectSpecificTab: selectSpecificTab
+  refreshCompleter: refreshCompleter
+  createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
+  echo: echo
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
