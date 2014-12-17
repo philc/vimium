@@ -134,37 +134,35 @@ LinkHints =
     resultSet = []
 
     for element in elements
-      isClickable = false
       tagName = element.tagName.toLowerCase()
-      isClickable = (->
-        if element.hasAttribute "onclick"
-          true
-        else if element.hasAttribute "tabindex"
-          true
-        else if element.getAttribute "role" in ["button", "link"]
-          true
-        else if element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0
-          true
-        else if element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"]
-          true
-        else if tagName == "a"
-          true
-        else if tagName == "img"
-          mapName = element.getAttribute "usemap"
-          if mapName
-            map = document.querySelector(mapName.replace /^#/, "")
-            areas = Array::slice.call(map.getElementsByTagName "area")
-            resultSet.concat areas
-          false
-        else if (tagName == "input" and DomUtils.isSelectable element) or tagName == "textarea"
-          not (element.disabled or element.readOnly)
-        else if (tagName == "input" and element.getAttribute("type")?.toLowerCase() != "hidden") or
-                tagName in ["button", "select"]
-          not element.disabled
-        else
-          false
-      )()
-      resultSet.push element if isClickable
+
+      # Insert area elements that provide click functionality to an img.
+      if tagName == "img"
+        mapName = element.getAttribute "usemap"
+        if mapName
+          mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+          map = document.querySelector "map[name=\"#{mapName}\"]"
+          areas = if map then Array::slice.call(map.getElementsByTagName "area") else []
+          resultSet = resultSet.concat areas
+
+      # Check for attributes that make an element clickable regardless of its tagName.
+      if (element.hasAttribute "onclick" or
+          element.hasAttribute "tabindex" or
+          element.getAttribute "role" in ["button", "link"] or
+          element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
+          element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
+        resultSet.push element
+        continue
+
+      switch tagName
+        when "a"
+          resultSet.push element
+        when "textarea", "input"
+          unless (tagName == "input" and element.getAttribute("type")?.toLowerCase() == "hidden") or
+                 element.disabled or (element.readOnly and DomUtils.isSelectable element)
+            resultSet.push element
+        when "button", "select"
+          resultSet.push element unless element.disabled
 
     visibleElements = []
 
