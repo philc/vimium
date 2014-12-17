@@ -1127,7 +1127,7 @@ CursorHider =
     @cursorHideStyle = document.createElement("style")
     @cursorHideStyle.innerHTML = """
       body * {pointer-events: none !important; cursor: none !important;}
-      body {cursor: none !important;}
+      body, html {cursor: none !important;}
     """
     window.addEventListener "mousemove", @onMouseMove
     window.addEventListener "scroll", @onScroll
