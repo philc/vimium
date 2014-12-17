@@ -52,18 +52,9 @@ DomUtils =
     } for clientRect in element.getClientRects())
 
     for clientRect in clientRects
-      if (clientRect.top < 0)
-        clientRect.height += clientRect.top
-        clientRect.top = 0
+      clientRect = @cropRectToVisible clientRect
 
-      if (clientRect.left < 0)
-        clientRect.width += clientRect.left
-        clientRect.left = 0
-
-      if (clientRect.top >= window.innerHeight - 4 || clientRect.left  >= window.innerWidth - 4)
-        continue
-
-      if (clientRect.width < 3 || clientRect.height < 3)
+      if (!clientRect || clientRect.width < 3 || clientRect.height < 3)
         continue
 
       # eliminate invisible elements (see test_harnesses/visibility_test.html)
@@ -90,6 +81,21 @@ DomUtils =
           return childClientRect
     null
 
+  cropRectToVisible: (rect) ->
+    if (rect.top < 0)
+      rect.height += rect.top
+      rect.top = 0
+
+    if (rect.left < 0)
+      rect.width += rect.left
+      rect.left = 0
+
+    if (rect.top >= window.innerHeight - 4 || rect.left  >= window.innerWidth - 4)
+      null
+    else
+      rect
+
+
   getClientRectsForAreas: (imgClientRect, areas) ->
     rects = []
     for area in areas
@@ -108,7 +114,7 @@ DomUtils =
         # something more sophisticated, but likely not worth the effort.
         [x1, y1, x2, y2] = coords
 
-      rect =
+      rect = @cropRectToVisible
         top: imgClientRect.top + y1
         left: imgClientRect.left + x1
         right: imgClientRect.left + x2
@@ -116,7 +122,7 @@ DomUtils =
         width: x2 - x1
         height: y2 - y1
 
-      rects.push {element: area, rect: rect} unless isNaN rect.top
+      rects.push {element: area, rect: rect} unless not rect or isNaN rect.top
     rects
 
   #
