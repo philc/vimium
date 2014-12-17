@@ -1124,6 +1124,8 @@ CursorHider =
     CursorHider.isScrolling = false
 
   init: ->
+    # NOTE(smblott) CursorHider is currently disabled pending a fix for #1345.
+    return
     @cursorHideStyle = document.createElement("style")
     @cursorHideStyle.innerHTML = """
       body * {pointer-events: none !important; cursor: none !important;}
