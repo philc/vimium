@@ -95,17 +95,18 @@ DomUtils =
     for area in areas
       coords = area.coords.split(",").map((coord) -> parseInt(coord, 10))
       shape = area.shape.toLowerCase()
-      if shape == "rect"
+      if shape == "rect" or coords.length == 4
         [x1, y1, x2, y2] = coords
-      else if shape == "circle"
+      else if shape == "circle" or coords.length == 3
         [x, y, r] = coords
         x1 = x - r
         x2 = x + r
         y1 = y - r
         y2 = y + r
-      else # For polygons and unknown shapes, don't return a rectangle.
-        # TODO(mrmr1993): revisit this.
-        continue
+      else
+        # Just consider the rectangle surrounding the first two points in a polygon. It's possible to do
+        # something more sophisticated, but likely not worth the effort.
+        [x1, y1, x2, y2] = coords
 
       rect =
         top: imgClientRect.top + y1
