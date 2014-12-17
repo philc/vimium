@@ -90,6 +90,34 @@ DomUtils =
           return childClientRect
     null
 
+  getClientRectsForAreas: (imgClientRect, areas) ->
+    rects = []
+    for area in areas
+      coords = area.coords.split(",").map((coord) -> parseInt(coord, 10))
+      shape = area.shape.toLowerCase()
+      if shape == "rect"
+        [x1, y1, x2, y2] = coords
+      else if shape == "circle"
+        [x, y, r] = coords
+        x1 = x - r
+        x2 = x + r
+        y1 = y - r
+        y2 = y + r
+      else # For polygons and unknown shapes, don't return a rectangle.
+        # TODO(mrmr1993): revisit this.
+        continue
+
+      rect =
+        top: imgClientRect.top + y1
+        left: imgClientRect.left + x1
+        right: imgClientRect.left + x2
+        bottom: imgClientRect.top + y2
+        width: x2 - x1
+        height: y2 - y1
+
+      rects.push {element: area, rect: rect} unless isNaN rect.top
+    rects
+
   #
   # Selectable means that we should use the simulateSelect method to activate the element instead of a click.
   #

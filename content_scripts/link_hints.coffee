@@ -131,19 +131,23 @@ LinkHints =
   #
   getVisibleClickableElements: ->
     elements = Array::slice.call(document.documentElement.getElementsByTagName "*")
-    resultSet = []
+    visibleElements = []
 
     for element in elements
       tagName = element.tagName.toLowerCase()
+      isClickable = false
 
       # Insert area elements that provide click functionality to an img.
       if tagName == "img"
         mapName = element.getAttribute "usemap"
         if mapName
+          imgClientRects = element.getClientRects()
           mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
           map = document.querySelector "map[name=\"#{mapName}\"]"
-          areas = if map then Array::slice.call(map.getElementsByTagName "area") else []
-          resultSet = resultSet.concat areas
+          if map and imgClientRects.length > 0
+            areas = map.getElementsByTagName "area"
+            areaRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+            visibleElements = visibleElements.concat areaRects
 
       # Check for attributes that make an element clickable regardless of its tagName.
       if (element.hasAttribute "onclick" or
@@ -151,46 +155,23 @@ LinkHints =
           element.getAttribute "role" in ["button", "link"] or
           element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
           element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
-        resultSet.push element
-        continue
+        isClickable = true
 
+      # Check for tagNames which are natively clickable.
       switch tagName
         when "a"
-          resultSet.push element
+          isClickable = true
         when "textarea", "input"
           unless (tagName == "input" and element.getAttribute("type")?.toLowerCase() == "hidden") or
                  element.disabled or (element.readOnly and DomUtils.isSelectable element)
-            resultSet.push element
+            isClickable = true
         when "button", "select"
-          resultSet.push element unless element.disabled
+          isClickable = not element.disabled
 
-    visibleElements = []
-
-    # Find all visible clickable elements.
-    for element in resultSet
-      clientRect = DomUtils.getVisibleClientRect(element, clientRect)
-      if (clientRect != null)
-        visibleElements.push({element: element, rect: clientRect})
-
-      if (element.localName == "area")
-        map = element.parentElement
-        continue unless map
-        img = document.querySelector("img[usemap='#" + map.getAttribute("name") + "']")
-        continue unless img
-        imgClientRects = img.getClientRects()
-        continue if (imgClientRects.length == 0)
-        c = element.coords.split(/,/)
-        coords = [parseInt(c[0], 10), parseInt(c[1], 10), parseInt(c[2], 10), parseInt(c[3], 10)]
-        rect = {
-          top: imgClientRects[0].top + coords[1],
-          left: imgClientRects[0].left + coords[0],
-          right: imgClientRects[0].left + coords[2],
-          bottom: imgClientRects[0].top + coords[3],
-          width: coords[2] - coords[0],
-          height: coords[3] - coords[1]
-        }
-
-        visibleElements.push({element: element, rect: rect})
+      continue unless isClickable # If the element isn't clickable, do nothing.
+      clientRect = DomUtils.getVisibleClientRect element
+      if clientRect != null
+        visibleElements.push {element: element, rect: clientRect}
 
     visibleElements
 
