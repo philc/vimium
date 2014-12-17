@@ -1107,7 +1107,8 @@ Tween =
 
 CursorHider =
   #
-  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible
+  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible.
+  # Disabled for Chrome versions less than 39.0.2171.71 due to a browser error.
   # NOTE(smblott) onScroll and onMouseMove events come in pairs.
   #
   cursorHideStyle: null
@@ -1124,8 +1125,10 @@ CursorHider =
     CursorHider.isScrolling = false
 
   init: ->
-    # NOTE(smblott) CursorHider is currently disabled pending a fix for #1345.
-    return
+    # Disable for Chrome versions less than 39.0.2171.71 due to a browser error.
+    chromeVersion = navigator.appVersion.match(/Chrome\/(.*?) /)?[1] || ""
+    return if 0 <= Utils.compareVersions "39.0.2171.71", chromeVersion
+
     @cursorHideStyle = document.createElement("style")
     @cursorHideStyle.innerHTML = """
       body * {pointer-events: none !important; cursor: none !important;}
