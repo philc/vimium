@@ -46,10 +46,7 @@ DomUtils =
   #
   getVisibleClientRect: (element) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
-    clientRects = ({
-      top: clientRect.top, right: clientRect.right, bottom: clientRect.bottom, left: clientRect.left,
-      width: clientRect.width, height: clientRect.height
-    } for clientRect in element.getClientRects())
+    clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
 
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible
