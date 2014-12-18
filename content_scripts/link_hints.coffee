@@ -192,7 +192,7 @@ LinkHints =
     #        + the ancestors of (1) and (2) have equal z-index, and
     #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
     #
-    # Remove rects from
+    # Remove rects from elements where another clickable element lies above it.
     nonOverlappingElements = []
     visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
