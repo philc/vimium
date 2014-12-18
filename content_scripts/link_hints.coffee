@@ -173,7 +173,35 @@ LinkHints =
       if clientRect != null
         visibleElements.push {element: element, rect: clientRect}
 
-    visibleElements
+    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
+    #  * The document has a local stacking context.
+    #  * An element with z-index specified
+    #    - sets its z-order position in the containing stacking context, and
+    #    - creates a local stacking context containing its children.
+    #  * An element (1) is shown above another element (2) if either
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
+    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
+    #        + the ancestors of (1) and (2) have equal z-index, and
+    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
+    #
+    # Remove rects from
+    nonOverlappingElements = []
+    visibleElements = visibleElements.reverse()
+    while visibleElement = visibleElements.pop()
+      rects = [visibleElement.rect]
+      for {rect: negativeRect} in visibleElements
+        rects = Array::concat.apply [], (rects.map (rect) -> Utils.subtractRect rect, negativeRect)
+      if rects.length > 0
+        nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
+      else
+        # Every part of the element is covered by some other element, so just insert the whole element's
+        # rect.
+        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
+        # click some elements that we could click before.
+        nonOverlappingElements.push visibleElement
+
+    nonOverlappingElements
 
   #
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.

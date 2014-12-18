@@ -136,6 +136,66 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
+  # Create a rect given the top left and bottom right corners.
+  createRect: (x1, y1, x2, y2) ->
+    bottom: y2
+    top: y1
+    left: x1
+    right: x2
+    width: x2 - x1
+    height: y2 - y1
+
+  # Translate a rect by x horizontally and y vertically.
+  shiftRect: (rect, x, y) ->
+    bottom: rect.bottom + y
+    top: rect.top + y
+    left: rect.left + x
+    right: rect.right + x
+    width: rect.width
+    height: rect.height
+
+  # Subtract rect2 from rect1, returning an array of rects which are in rect1 but not rect2.
+  subtractRect: (rect1, rect2_) ->
+    # Bound rect2 by rect1
+    rect2 = {}
+    rect2 = @createRect(
+      Math.max(rect1.left, rect2_.left),
+      Math.max(rect1.top, rect2_.top),
+      Math.min(rect1.right, rect2_.right),
+      Math.min(rect1.bottom, rect2_.bottom)
+    )
+
+    # If bounding rect2 has made the width or height negative, rect1 does not contain rect2.
+    return [rect1] if rect2.width < 0 or rect2.height < 0
+
+    #
+    # All the possible rects, in the order
+    # +-+-+-+
+    # |1|2|3|
+    # +-+-+-+
+    # |4| |5|
+    # +-+-+-+
+    # |6|7|8|
+    # +-+-+-+
+    # where the outer rectangle is rect1 and the inner rectangle is rect 2. Note that the rects may be of
+    # width or height 0.
+    #
+    rects = [
+      # Top row.
+      @createRect rect1.left, rect1.top, rect2.left, rect2.top
+      @createRect rect2.left, rect1.top, rect2.right, rect2.top
+      @createRect rect2.right, rect1.top, rect1.right, rect2.top
+      # Middle row.
+      @createRect rect1.left, rect2.top, rect2.left, rect2.bottom
+      @createRect rect2.right, rect2.top, rect1.right, rect2.bottom
+      # Bottom row.
+      @createRect rect1.left, rect2.bottom, rect2.left, rect1.bottom
+      @createRect rect2.left, rect2.bottom, rect2.right, rect1.bottom
+      @createRect rect2.right, rect2.bottom, rect1.right, rect1.bottom
+    ]
+
+    rects.filter (rect) -> rect.height > 0 and rect.width > 0
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->

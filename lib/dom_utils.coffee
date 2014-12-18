@@ -114,13 +114,8 @@ DomUtils =
         # something more sophisticated, but likely not worth the effort.
         [x1, y1, x2, y2] = coords
 
-      rect = @cropRectToVisible
-        top: imgClientRect.top + y1
-        left: imgClientRect.left + x1
-        right: imgClientRect.left + x2
-        bottom: imgClientRect.top + y2
-        width: x2 - x1
-        height: y2 - y1
+      rect = Utils.shiftRect (Utils.createRect x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
+      rect = @cropRectToVisible rect
 
       rects.push {element: area, rect: rect} unless not rect or isNaN rect.top
     rects
