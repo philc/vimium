@@ -152,9 +152,9 @@ LinkHints =
             visibleElements = visibleElements.concat areaRects
 
       # Check for attributes that make an element clickable regardless of its tagName.
-      if (element.hasAttribute "onclick" or
-          element.hasAttribute "tabindex" or
-          element.getAttribute "role" in ["button", "link"] or
+      if (element.hasAttribute("onclick") or
+          element.hasAttribute("tabindex") or
+          element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
           element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
           element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
         isClickable = true
