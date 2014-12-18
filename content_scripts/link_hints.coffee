@@ -125,9 +125,11 @@ LinkHints =
     marker
 
   #
-  # Returns all clickable elements that are not hidden and are in the current viewport.
-  # We prune invisible elements partly for performance reasons, but moreso it's to decrease the number
-  # of digits needed to enumerate all of the links on screen.
+  # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
+  # at which (parts of) the elements are displayed.
+  # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
+  # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
+  # element.
   #
   getVisibleClickableElements: ->
     elements = document.documentElement.getElementsByTagName "*"
@@ -197,6 +199,7 @@ LinkHints =
     #
     # Remove rects from elements where another clickable element lies above it.
     nonOverlappingElements = []
+    # Traverse the DOM from first to last, since later elements show above earlier elements.
     visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
       rects = [visibleElement.rect]
