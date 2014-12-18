@@ -95,7 +95,6 @@ DomUtils =
     else
       rect
 
-
   getClientRectsForAreas: (imgClientRect, areas) ->
     rects = []
     for area in areas
@@ -114,7 +113,7 @@ DomUtils =
         # something more sophisticated, but likely not worth the effort.
         [x1, y1, x2, y2] = coords
 
-      rect = Utils.shiftRect (Utils.createRect x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
+      rect = Rect.translate (Rect.create x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
       rect = @cropRectToVisible rect
 
       rects.push {element: area, rect: rect} unless not rect or isNaN rect.top
