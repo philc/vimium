@@ -157,6 +157,13 @@ LinkHints =
           element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
         isClickable = true
 
+      # Check for jsaction event listeners on the element.
+      if element.hasAttribute "jsaction"
+        jsactionRules = element.getAttribute("jsaction").split(";")
+        for jsactionRule in jsactionRules
+          ruleSplit = jsactionRule.split ":"
+          isClickable = true if ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+
       # Check for tagNames which are natively clickable.
       switch tagName
         when "a"
