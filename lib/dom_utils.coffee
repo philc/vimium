@@ -68,8 +68,7 @@ DomUtils =
       else
         clientRect = @cropRectToVisible clientRect
 
-        if (!clientRect || clientRect.width < 3 || clientRect.height < 3)
-          continue
+        continue unless clientRect
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
         computedStyle = window.getComputedStyle(element, null)
@@ -81,33 +80,42 @@ DomUtils =
 
     null
 
+  #
+  # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a height or width < 3
+  # then null is returned instead of a rect.
+  #
   cropRectToVisible: (rect) ->
-    if (rect.top < 0)
-      rect.height += rect.top
-      rect.top = 0
-
-    if (rect.left < 0)
-      rect.width += rect.left
-      rect.left = 0
-
-    if (rect.top >= window.innerHeight - 4 || rect.left  >= window.innerWidth - 4)
+    boundedRect = Rect.create(
+      Math.max(rect.left, 0),
+      Math.max(rect.top, 0),
+      Math.min(rect.right, window.innerWidth),
+      Math.min(rect.bottom, window.innerHeight)
+    )
+    if boundedRect.width < 3 or boundedRect.height < 3
       null
     else
-      rect
+      boundedRect
 
+  #
+  # Get the client rects for the <area> elements in a <map> based on the position of the <img> element using
+  # the map. Returns an array of rects.
+  #
   getClientRectsForAreas: (imgClientRect, areas) ->
     rects = []
     for area in areas
       coords = area.coords.split(",").map((coord) -> parseInt(coord, 10))
       shape = area.shape.toLowerCase()
-      if shape == "rect" or coords.length == 4
+      if shape in ["rect", "rectangle"] # "rectangle" is an IE non-standard.
         [x1, y1, x2, y2] = coords
-      else if shape == "circle" or coords.length == 3
+      else if shape in ["circle", "circ"] # "circ" is an IE non-standard.
         [x, y, r] = coords
-        x1 = x - r
-        x2 = x + r
-        y1 = y - r
-        y2 = y + r
+        diff = r / Math.sqrt 2 # Gives us an inner square
+        x1 = x - diff
+        x2 = x + diff
+        y1 = y - diff
+        y2 = y + diff
+      else if shape == "default"
+        [x1, y1, x2, y2] = [0, 0, imgClientRect.width, imgClientRect.height]
       else
         # Just consider the rectangle surrounding the first two points in a polygon. It's possible to do
         # something more sophisticated, but likely not worth the effort.
@@ -116,7 +124,7 @@ DomUtils =
       rect = Rect.translate (Rect.create x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
       rect = @cropRectToVisible rect
 
-      rects.push {element: area, rect: rect} unless not rect or isNaN rect.top
+      rects.push {element: area, rect: rect} if rect and not isNaN rect.top
     rects
 
   #
