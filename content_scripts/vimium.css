@@ -2,6 +2,10 @@
  * Many CSS class names in this file use the verbose "vimiumXYZ" as the class name. This is so we don't
  * use the same CSS class names that the page is using, so the page's CSS doesn't mess with the style of our
  * Vimium dialogs.
+ *
+ * The z-indexes of Vimium elements are very large, because we always want them to show on top. Chrome may
+ * support up to Number.MAX_VALUE, which is approximately 1.7976e+308. We're using 2^31, which is the max
+ * value of a singed 32 bit int. Let's try larger valeus if 2**31 empirically isn't large enough.
  */
 
 /*
@@ -54,7 +58,7 @@ tr.vimiumReset {
   vertical-align: baseline;
   white-space: normal;
   width: auto;
-  z-index: 99999999;
+  z-index: 2147483648;
 }
 
 /* Linkhints CSS */
@@ -122,7 +126,8 @@ div#vimiumHelpDialog {
   top:50px;
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
   overflow-y: auto;
-  z-index:99999998;
+  /* One less than vimiumReset */
+  z-index: 2147483647;
 }
 
 div#vimiumHelpDialog a { color:blue; }
@@ -233,8 +238,8 @@ div.vimiumHUD {
   border-radius: 4px 4px 0 0;
   font-family: "Lucida Grande", "Arial", "Sans";
   font-size: 12px;
-  /* One less than vimium's hint markers, so link hints can be shown e.g. for the panel's close button. */
-  z-index: 99999997;
+  /* One less than vimium's hint markers, so link hints can be shown e.g. for the HUD panel's close button. */
+  z-index: 2147483646;
   text-shadow: 0px 1px 2px #FFF;
   line-height: 1.0;
   opacity: 0;
@@ -291,7 +296,7 @@ body.vimiumFindMode ::selection {
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
   border: 1px solid #aaa;
   /* One less than hint markers and the help dialog. */
-  z-index: 99999996;
+  z-index: 2147483645;
 }
 
 #vomnibar input {
@@ -401,5 +406,5 @@ div#vimiumFlash {
   padding: 1px;
   background-color: transparent;
   position: absolute;
-  z-index: 99999;
+  z-index: 2147483648;
 }

@@ -6,7 +6,12 @@ RegexpCache =
     if regexp = @cache[pattern]
       regexp
     else
-      @cache[pattern] = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$")
+      @cache[pattern] =
+        # We use try/catch to ensure that a broken regexp doesn't wholly cripple Vimium.
+        try
+          new RegExp("^" + pattern.replace(/\*/g, ".*") + "$")
+        catch
+          /^$/ # Match the empty string.
 
 # The Exclusions class manages the exclusion rule setting.
 # An exclusion is an object with two attributes: pattern and passKeys.

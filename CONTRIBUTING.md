@@ -74,6 +74,34 @@ reports:
 When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
 CREDITS file with your patch.
 
+Vimium design goals
+-------------------
+
+When improving Vimium it's helpful to know what design goals we're optimizing for.
+
+The core goal is to make it easy to navigate the web using just the keyboard. When people first start using
+Vimium, it provides an incredibly powerful workflow improvement and it makes them feel awesome. And it turns
+out that Vimium is applicable to a huge, broad population of people, not just users of Vim, which is great.
+
+A secondary goal is to make Vimium approachable, or in other words, to minimize the barriers which will
+prevent a new user from feeling awesome. Many of Vimium's users haven't used Vim before (about 1 in 5 app
+store reviews say this), and most people have strong web browsing habits forged from years of browsing that
+they rely on. Given that, it's a great experience when Vimium feels like a natural addition to Chrome which
+augments but doesn't break their current browsing habits.
+
+In some ways, making software approachable is even harder than just enabling the core use case. But in this
+area, Vimium really shines. It's approachable today because:
+
+1. It's simple to understand (even if you're not very familiar with Vim). The Vimium video shows you all you
+   need to know to start using Vimium and feel awesome.
+2. The core feature set works in almost all cases on all sites, so Vimium feels reliable.
+3. Requires no configuration or doc-reading before it's useful. Just watch the video or hit `?`.
+4. Doesn't drastically change the way Chrome looks or behaves. You can transition into using Vimium piecemeal;
+   you don't need to jump in whole-hog from the start.
+5. The core feature set isn't overwhelming. This is easy to degrade as we evolve Vimium, so it requires active
+   effort to maintain this feel.
+6. Developers find the code is relatively simple and easy to jump into, so we have an active dev community.
+
 ## What makes for a good feature request/contribution to Vimium?
 
 Good features:
@@ -96,23 +124,3 @@ We use these guidelines, in addition to the code complexity, when deciding wheth
 
 If you're worried that a feature you plan to build won't be a good fit for core Vimium, just open a github
 issue for discussion or send an email to the Vimium mailing list.
-
-## How to release Vimium to the Chrome Store
-
-This process is currently only done by Phil or Ilya.
-
-1. Increment the version number in manifest.json
-2. Update the Changelog in README.md
-
-    You can see a summary of commits since the last version: `git log --oneline v1.45..`
-
-3. Push your commits
-4. Create a git tag for this newly released version
-
-        git tag -a v1.45 -m "v1.45 release"
-
-5. Run `cake package`
-6. Take the distributable found in `dist` and upload it
-   [here](https://chrome.google.com/webstore/developer/dashboard)
-7. Update the description in the Chrome store to include the latest version's release notes
-8. Celebrate

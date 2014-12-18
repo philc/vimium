@@ -3,8 +3,8 @@ Vimium - The Hacker's Browser
 
 [![Build Status](https://secure.travis-ci.org/philc/vimium.png?branch=master)](https://travis-ci.org/philc/vimium)
 
-Vimium is a Chrome extension that provides keyboard-based navigation and control in the spirit of the Vim
-editor.
+Vimium is a Chrome extension that provides keyboard-based navigation and control of the web in the spirit of
+the Vim editor.
 
 __Installation instructions:__
 
@@ -15,14 +15,16 @@ Please see
 [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md#installing-from-source)
 for instructions on how you can install Vimium from source.
 
-The Options page can be reached via a link on the help dialog (hit `?`) or via the button next to Vimium on
+The Options page can be reached via a link on the help dialog (type `?`) or via the button next to Vimium on
 the Chrome Extensions page (`chrome://extensions`).
 
 Keyboard Bindings
 -----------------
 
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x
-respectively. See the next section for instructions on customizing these bindings.
+respectively. See the next section for how to customize these bindings.
+
+Once you have Vimium installed, you can see this list of key bindings at any time by typing `?`.
 
 Navigating the current page:
 
@@ -90,7 +92,7 @@ Additional advanced browsing commands:
 Vimium supports command repetition so, for example, hitting '5t' will open 5 tabs in rapid succession. `<ESC>` (or
 `<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
-There are some advanced commands which aren't documented here. Refer to the help dialog (type `?`) for a full
+There are some advanced commands which aren't documented here; refer to the help dialog (type `?`) for a full
 list.
 
 Custom Key Mappings
@@ -138,6 +140,20 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+1.49 (2014-12-16)
+
+- An option to toggle smooth scrolling.
+- Make Vimium work on older versions of Chrome.
+
+1.46, 1.47, 1.48 (2014-12-15)
+
+- Site-specific excluded keys: you can disable some Vimium key bindings on sites like gmail.com, so you can use the key bindings provided by the site itself.
+- Smooth scrolling.
+- The Vomnibar now orders tabs by recency. Use this to quickly switch between your most recently-used tabs.
+- New commands: "close tabs to the left", "close tabs to the right", "close all other tabs".
+- Usability improvements.
+- Bug fixes.
+
 1.45 (2014-07-20)
 
 - Vimium's settings are now synced across computers.
@@ -145,12 +161,12 @@ Release Notes
 - Vomnibar can now use [search engine shortcuts](https://github.com/philc/vimium/wiki/Search-Engines), similar to Chrome's Omnibar.
 - Due to significant ranking improvements, Vomnibar's search results are now even more helpful.
 - When reopening a closed tab, its history is now preserved.
-- Bugfixes.
+- Bug fixes.
 
 1.44 (2013-11-06)
 
 - Add support for recent versions of Chromium.
-- Bugfixes.
+- Bug fixes.
 
 1.43 (2013-05-18)
 
@@ -162,25 +178,25 @@ Release Notes
 - Added "LinkHints.activateModeToOpenIncognito", currently an advanced, unbound command.
 - Disallowed repeat tab closings, since this causes trouble for many people.
 - Update our Chrome APIs so Vimium works on Chrome 28+.
-- Bugfixes.
+- Bug fixes.
 
 1.42 (2012-11-03)
 
-- Bugfixes.
+- Bug fixes.
 
 1.41 (2012-10-27)
 
-- Bugfixes.
+- Bug fixes.
 
 1.40 (2012-10-27)
 
-- Bugfixes.
+- Bug fixes.
 - Added options for search engines and regex find.
 - Pressing unmapped keys in hints mode now deactivates the mode.
 
 1.39 (2012-09-09)
 
-- Bugfixes.
+- Bug fixes.
 
 1.38 (2012-09-08)
 
@@ -188,7 +204,7 @@ Release Notes
 - Add a browser icon to quickly add sites to Vimium's exclude list.
 - Restyle options page.
 - `gi` now launches a new mode that allows the user to tab through the input elements on the page.
-- Bugfixes.
+- Bug fixes.
 
 1.37 (2012-07-07)
 
@@ -201,11 +217,11 @@ Release Notes
 
 1.35 (2012-07-05)
 
-- Bugfixes.
+- Bug fixes.
 
 1.34 (2012-07-03)
 
-- A bugfix for bookmarklets in Vomnibar.
+- A bug fix for bookmarklets in Vomnibar.
 
 1.33 (2012-07-02)
 
@@ -245,11 +261,11 @@ Release Notes
 
 - Support for opening bookmarks (`b` and `B`).
 - Support for contenteditable text boxes.
-- Speed improvements and bugfixes.
+- Speed improvements and bug fixes.
 
 1.27 (2011-03-24)
 
-- Improvements and bugfixes.
+- Improvements and bug fixes.
 
 1.26 (2011-02-17)
 
@@ -264,11 +280,11 @@ Release Notes
 -  Many of the less-used commands are now marked as "advanced" and hidden in the help dialog by default, so
    that the core command set is more focused and approachable.
 -  Improvements to link hinting.
--  Bugfixes.
+-  Bug fixes.
 
 1.21 (2010-10-24)
 
--  Critical bugfix for an excluded URLs regression due to frame support.
+-  Critical bug fix for an excluded URLs regression due to frame support.
 
 1.20 (2010-10-24)
 
@@ -315,7 +331,7 @@ does not support command repetition.
 
 -  Make the CSS used by the link hints configurable. It's under Advanced Options.
 -  Add a notification linking to the changelog when Vimium is updated in the background.
--  Link-hinting performance improvements and bugfixes.
+-  Link-hinting performance improvements and bug fixes.
 -  Ctrl+D and Ctrl+U now scroll by 1/2 page instead of a fixed amount, to mirror Vim's behavior.
 
 1.14 (2010-01-21)
@@ -325,7 +341,7 @@ does not support command repetition.
 1.13 (2010-01-21)
 
 - `<c-f>` and `<c-b>` are now mapped to scroll a full page up or down respectively.
--  Bugfixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
+-  Bug fixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
 -  Added command listing to the Options page for easy reference.
 -  J & K have reversed for tab switching: J goes left and K goes right.
 -  `<c-[>` is now equivalent to ESC, to match the behavior of VIM.

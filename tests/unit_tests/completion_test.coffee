@@ -399,21 +399,32 @@ context "RegexpCache",
   should "search for a string with a prefix/suffix (negative case)", ->
     assert.isTrue "hound dog".search(RegexpCache.get("do", "\\b", "\\b")) == -1
 
+fakeTimeDeltaElapsing = ->
+
 context "TabRecency",
   setup ->
     @tabRecency = new TabRecency()
-    @tabRecency.add 3
-    @tabRecency.add 2
-    @tabRecency.add 9
-    @tabRecency.add 1
-    @tabRecency.remove 9
-    @tabRecency.add 4
 
-  should "have entries for active tabs", ->
+    fakeTimeDeltaElapsing = =>
+      if @tabRecency.lastVisitedTime?
+        @tabRecency.lastVisitedTime = new Date(@tabRecency.lastVisitedTime - @tabRecency.timeDelta)
+
+    @tabRecency.register 3
+    fakeTimeDeltaElapsing()
+    @tabRecency.register 2
+    fakeTimeDeltaElapsing()
+    @tabRecency.register 9
+    fakeTimeDeltaElapsing()
+    @tabRecency.register 1
+    @tabRecency.deregister 9
+    fakeTimeDeltaElapsing()
+    @tabRecency.register 4
+    fakeTimeDeltaElapsing()
+
+  should "have entries for recently active tabs", ->
     assert.isTrue @tabRecency.cache[1]
     assert.isTrue @tabRecency.cache[2]
     assert.isTrue @tabRecency.cache[3]
-    assert.isTrue @tabRecency.cache[4]
 
   should "not have entries for removed tabs", ->
     assert.isFalse @tabRecency.cache[9]
@@ -431,8 +442,9 @@ context "TabRecency",
   should "rank tabs by recency", ->
     assert.isTrue @tabRecency.recencyScore(3) < @tabRecency.recencyScore 2
     assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 1
-    @tabRecency.add 3
-    @tabRecency.add 4 # Making 3 the most recent tab which isn't the current tab.
+    @tabRecency.register 3
+    fakeTimeDeltaElapsing()
+    @tabRecency.register 4 # Making 3 the most recent tab which isn't the current tab.
     assert.isTrue @tabRecency.recencyScore(1) < @tabRecency.recencyScore 3
     assert.isTrue @tabRecency.recencyScore(2) < @tabRecency.recencyScore 3
     assert.isTrue @tabRecency.recencyScore(4) < @tabRecency.recencyScore 3

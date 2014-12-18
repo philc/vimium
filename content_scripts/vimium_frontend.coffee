@@ -49,7 +49,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands"]
+    "helpDialog_showAdvancedCommands", "smoothScroll"]
   isLoaded: false
   eventListeners: {}
 
@@ -101,7 +101,7 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  Scroller.init()
+  Scroller.init settings
 
   checkIfEnabledForUrl()
 
@@ -179,19 +179,24 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrame(window.top == window.self)
-
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
-registerFrame = (is_top) ->
-  chrome.runtime.sendMessage(
-    handler: "registerFrame"
+registerFrame = ->
+  # Don't register frameset containers; focusing them is no use.
+  if document.body.tagName.toLowerCase() != "frameset"
+    chrome.runtime.sendMessage
+      handler: "registerFrame"
+      frameId: frameId
+
+# Unregister the frame if we're going to exit.
+unregisterFrame = ->
+  chrome.runtime.sendMessage
+    handler: "unregisterFrame"
     frameId: frameId
-    is_top: is_top
-    total: frames.length + 1)
+    tab_is_closing: window.top == window.self
 
 #
 # Enters insert mode if the currently focused element in the DOM is focusable.
@@ -220,6 +225,12 @@ setScrollPosition = (scrollX, scrollY) ->
 # Called from the backend in order to change frame focus.
 #
 window.focusThisFrame = (shouldHighlight) ->
+  if window.innerWidth < 3 or window.innerHeight < 3
+    # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
+    # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
+    # Here we're assuming that there is at least one frame large enough to focus.
+    chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
+    return
   window.focus()
   if (document.body && shouldHighlight)
     borderWas = document.body.style.border
@@ -337,7 +348,29 @@ extend window,
 isPassKey = ( keyChar ) ->
   return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
-handledKeydownEvents = []
+# Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
+# event.
+KeydownEvents =
+  handledEvents: {}
+
+  stringify: (event) ->
+    JSON.stringify
+      metaKey: event.metaKey
+      altKey: event.altKey
+      ctrlKey: event.ctrlKey
+      keyIdentifier: event.keyIdentifier
+      keyCode: event.keyCode
+
+  push: (event) ->
+    @handledEvents[@stringify event] = true
+
+  # Yields truthy or falsy depending upon whether a corresponding keydown event is present (and removes that
+  # event).
+  pop: (event) ->
+    detailString = @stringify event
+    value = @handledEvents[detailString]
+    delete @handledEvents[detailString]
+    value
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -367,7 +400,7 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return undefined
-        if (currentCompletionKeys.indexOf(keyChar) != -1)
+        if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
@@ -411,38 +444,38 @@ onKeydown = (event) ->
         event.srcElement.blur()
       exitInsertMode()
       DomUtils.suppressEvent event
-      handledKeydownEvents.push event
+      KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
       DomUtils.suppressEvent event
-      handledKeydownEvents.push event
+      KeydownEvents.push event
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
       DomUtils.suppressEvent event
-      handledKeydownEvents.push event
+      KeydownEvents.push event
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
       DomUtils.suppressEvent event
-      handledKeydownEvents.push event
+      KeydownEvents.push event
 
     else if (!modifiers)
       DomUtils.suppressPropagation(event)
-      handledKeydownEvents.push event
+      KeydownEvents.push event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
-    handledKeydownEvents.push event
+    KeydownEvents.push event
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1)
+      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
-        handledKeydownEvents.push event
+        KeydownEvents.push event
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -463,23 +496,14 @@ onKeydown = (event) ->
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
-    handledKeydownEvents.push event
+    KeydownEvents.push event
 
 onKeyup = (event) ->
+  handledKeydown = KeydownEvents.pop event
   return unless handlerStack.bubbleEvent("keyup", event)
-  return if isInsertMode()
 
   # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  for keydown, i in handledKeydownEvents
-    if event.metaKey == keydown.metaKey and
-       event.altKey == keydown.altKey and
-       event.ctrlKey == keydown.ctrlKey and
-       event.keyIdentifier == keydown.keyIdentifier and
-       event.keyCode == keydown.keyCode
-
-      handledKeydownEvents.splice i, 1
-      DomUtils.suppressPropagation(event)
-      break
+  DomUtils.suppressPropagation(event) if handledKeydown
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -502,7 +526,7 @@ refreshCompletionKeys = (response) ->
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
 isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
+  validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
   if (isFocusable(event.target) && !findMode)
@@ -529,6 +553,7 @@ isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase(
 # any element which makes it a rich text editor, like the notes on jjot.com.
 #
 isEditable = (target) ->
+  # Note: document.activeElement.isContentEditable is also rechecked in isInsertMode() dynamically.
   return true if target.isContentEditable
   nodeName = target.nodeName.toLowerCase()
   # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
@@ -552,6 +577,7 @@ window.enterInsertMode = (target) ->
 # when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
 # If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
 # leave insert mode when the user presses <ESC>.
+# Note. This returns the truthiness of target, which is required by isInsertMode.
 #
 enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
 
@@ -560,7 +586,13 @@ exitInsertMode = (target) ->
     insertModeLock = null
     HUD.hide()
 
-isInsertMode = -> insertModeLock != null
+isInsertMode = ->
+  return true if insertModeLock != null
+  # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
+  # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check whether
+  # the active element is contentEditable.
+  document.activeElement and document.activeElement.isContentEditable and
+    enterInsertModeWithoutShowingIndicator document.activeElement
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -1055,6 +1087,8 @@ Tween =
       state.onUpdate(value)
 
 initializePreDomReady()
+window.addEventListener("DOMContentLoaded", registerFrame)
+window.addEventListener("unload", unregisterFrame)
 window.addEventListener("DOMContentLoaded", initializeOnDomReady)
 
 window.onbeforeunload = ->
