@@ -168,12 +168,15 @@ LinkHints =
       switch tagName
         when "a"
           isClickable = true
-        when "textarea", "input"
-          unless (tagName == "input" and element.getAttribute("type")?.toLowerCase() == "hidden") or
-                 element.disabled or (element.readOnly and DomUtils.isSelectable element)
+        when "textarea"
+          isClickable = not element.disabled and not element.readOnly
+        when "input"
+          unless element.getAttribute("type")?.toLowerCase() == "hidden" or
+                 element.disabled or
+                 (element.readOnly and DomUtils.isSelectable element)
             isClickable = true
         when "button", "select"
-          isClickable = not element.disabled
+          isClickable = true unless element.disabled
 
       continue unless isClickable # If the element isn't clickable, do nothing.
       clientRect = DomUtils.getVisibleClientRect element
