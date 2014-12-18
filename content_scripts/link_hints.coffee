@@ -138,6 +138,7 @@ LinkHints =
     for element in elements
       tagName = element.tagName.toLowerCase()
       isClickable = false
+      onlyHasTabIndex = false
 
       # Insert area elements that provide click functionality to an img.
       if tagName == "img"
@@ -153,7 +154,6 @@ LinkHints =
 
       # Check for attributes that make an element clickable regardless of its tagName.
       if (element.hasAttribute("onclick") or
-          element.hasAttribute("tabindex") or
           element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
           element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
           element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
@@ -180,10 +180,15 @@ LinkHints =
         when "button", "select"
           isClickable = true unless element.disabled
 
+      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+      # citizens when it improves UX, so take special note of them.
+      if element.hasAttribute("tabindex") and not isClickable
+        isClickable = onlyHasTabIndex = true
+
       continue unless isClickable # If the element isn't clickable, do nothing.
       clientRect = DomUtils.getVisibleClientRect element
       if clientRect != null
-        visibleElements.push {element: element, rect: clientRect}
+        visibleElements.push {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
     #  * The document has a local stacking context.
@@ -209,10 +214,10 @@ LinkHints =
         nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
       else
         # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect.
+        # rect. Except for elements with tabIndex set; these are often more trouble than they're worth.
         # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
         # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement
+        nonOverlappingElements.push visibleElement unless visibleElement.onlyHasTabIndex
 
     nonOverlappingElements
 
