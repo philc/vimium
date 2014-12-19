@@ -67,7 +67,7 @@ shouldScroll = (element, direction) ->
 # Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).  :factor is the factor by
 # which :scrollBy and :scrollTo will later scale the scroll amount. :factor can be negative, so we need it
 # here in order to decide whether we should test a forward scroll or a backward scroll.
-# Bug verified in Chrome 38.0.2125.104.
+# Bug last verified in Chrome 38.0.2125.104.
 doesScroll = (element, direction, amount, factor) ->
   # amount is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls (only
   # gg, G, and friends), amount can be either a string ("max" or "viewSize") or zero. In the former case,
@@ -87,7 +87,7 @@ findScrollableElement = (element, direction, amount, factor) ->
 # On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
 # element which does scroll vertically. This is used to initialize activatedElement. See #1358.
 firstScrollableElement = (element=document.body) ->
-  if doesScroll element, "y", 1, 1
+  if doesScroll(element, "y", 1, 1) or doesScroll(element, "y", -1, 1)
     element
   else
     children = ({element: child, rect: DomUtils.getVisibleClientRect(child)} for child in element.children)
