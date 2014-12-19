@@ -1123,6 +1123,10 @@ CursorHider =
     CursorHider.isScrolling = false
 
   init: ->
+    # Temporarily disabled pending consideration of #1359 (in particular, whether cursor hiding is too fragile
+    # as to provide a consistent UX).
+    return
+
     # Disable cursor hiding for Chrome versions less than 39.0.2171.71 due to a suspected browser error.
     # See #1345 and #1348.
     return unless Utils.haveChromeVersion "39.0.2171.71"
