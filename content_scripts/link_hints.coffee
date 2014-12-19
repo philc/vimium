@@ -156,7 +156,8 @@ LinkHints =
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
-        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
+        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"] or
+        element.hasAttribute("vimium-has-onclick-listener"))
       isClickable = true
 
     # Check for jsaction event listeners on the element.
