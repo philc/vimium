@@ -152,6 +152,11 @@ LinkHints =
             areaRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
             visibleElements = visibleElements.concat areaRects
 
+      # Check aria properties to see if the element should be ignored.
+      if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+          element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+        continue # No point continuing the loop; this element should never have a link hint
+
       # Check for attributes that make an element clickable regardless of its tagName.
       if (element.hasAttribute("onclick") or
           element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
