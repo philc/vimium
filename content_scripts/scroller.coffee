@@ -84,14 +84,17 @@ findScrollableElement = (element, direction, amount, factor) ->
       element = element.parentElement || document.body
   element
 
-# On some pages, document.body is not scrollable.  Here, we search the document for the first visible element
-# which does scroll vertically. This is used to initialize activatedElement. See #1358.
+# On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
+# element which does scroll vertically. This is used to initialize activatedElement. See #1358.
 firstScrollableElement = (element=document.body) ->
   if doesScroll element, "y", 1, 1
     element
   else
-    for child in element.children
-      return ele if DomUtils.getVisibleClientRect(child) and ele = firstScrollableElement child
+    children = ({element: child, rect: DomUtils.getVisibleClientRect(child)} for child in element.children)
+    children = children.filter (child) -> child.rect # Filter out non-visible elements.
+    children.map (child) -> child.area = child.rect.width * child.rect.height
+    for child in children.sort((a,b) -> b.area - a.area) # Largest to smallest by visible area.
+      return ele if ele = firstScrollableElement child.element
     null
 
 checkVisibility = (element) ->
