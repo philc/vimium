@@ -84,6 +84,16 @@ findScrollableElement = (element, direction, amount, factor) ->
       element = element.parentElement || document.body
   element
 
+# On some pages, document.body is not scrollable.  Here, we search the document for the first visible element
+# which does scroll vertically. This is used to initialize activatedElement. See #1358.
+firstScrollableElement = (element=document.body) ->
+  if doesScroll element, "y", 1, 1
+    element
+  else
+    for child in element.children
+      return ele if DomUtils.getVisibleClientRect(child) and ele = firstScrollableElement child
+    null
+
 checkVisibility = (element) ->
   # If the activated element has been scrolled completely offscreen, then subsequent changes in its scroll
   # position will not provide any more visual feedback to the user. Therefore, we deactivate it so that
@@ -206,7 +216,7 @@ Scroller =
         window.scrollBy(0, amount)
       return
 
-    activatedElement ||= document.body
+    activatedElement ||= firstScrollableElement() || document.body
     return unless activatedElement
 
     # Avoid the expensive scroll calculation if it will not be used.  This reduces costs during smooth,
@@ -218,7 +228,7 @@ Scroller =
 
   scrollTo: (direction, pos) ->
     return unless document.body or activatedElement
-    activatedElement ||= document.body
+    activatedElement ||= firstScrollableElement() || document.body
 
     element = findScrollableElement activatedElement, direction, pos, 1
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
