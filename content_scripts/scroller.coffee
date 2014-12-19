@@ -67,7 +67,7 @@ shouldScroll = (element, direction) ->
 # Instead, we scroll the element by 1 or -1 and see if it moved (then put it back).  :factor is the factor by
 # which :scrollBy and :scrollTo will later scale the scroll amount. :factor can be negative, so we need it
 # here in order to decide whether we should test a forward scroll or a backward scroll.
-# Bug verified in Chrome 38.0.2125.104.
+# Bug last verified in Chrome 38.0.2125.104.
 doesScroll = (element, direction, amount, factor) ->
   # amount is treated as a relative amount, which is correct for relative scrolls. For absolute scrolls (only
   # gg, G, and friends), amount can be either a string ("max" or "viewSize") or zero. In the former case,
@@ -83,6 +83,19 @@ findScrollableElement = (element, direction, amount, factor) ->
     not (doesScroll(element, direction, amount, factor) and shouldScroll(element, direction))
       element = element.parentElement || document.body
   element
+
+# On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
+# element which does scroll vertically. This is used to initialize activatedElement. See #1358.
+firstScrollableElement = (element=document.body) ->
+  if doesScroll(element, "y", 1, 1) or doesScroll(element, "y", -1, 1)
+    element
+  else
+    children = ({element: child, rect: DomUtils.getVisibleClientRect(child)} for child in element.children)
+    children = children.filter (child) -> child.rect # Filter out non-visible elements.
+    children.map (child) -> child.area = child.rect.width * child.rect.height
+    for child in children.sort((a,b) -> b.area - a.area) # Largest to smallest by visible area.
+      return ele if ele = firstScrollableElement child.element
+    null
 
 checkVisibility = (element) ->
   # If the activated element has been scrolled completely offscreen, then subsequent changes in its scroll
@@ -206,7 +219,7 @@ Scroller =
         window.scrollBy(0, amount)
       return
 
-    activatedElement ||= document.body
+    activatedElement ||= firstScrollableElement()
     return unless activatedElement
 
     # Avoid the expensive scroll calculation if it will not be used.  This reduces costs during smooth,
@@ -217,8 +230,8 @@ Scroller =
       CoreScroller.scroll element, direction, elementAmount
 
   scrollTo: (direction, pos) ->
-    return unless document.body or activatedElement
-    activatedElement ||= document.body
+    activatedElement ||= firstScrollableElement()
+    return unless activatedElement
 
     element = findScrollableElement activatedElement, direction, pos, 1
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
