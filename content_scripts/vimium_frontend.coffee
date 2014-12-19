@@ -1107,9 +1107,7 @@ Tween =
 
 CursorHider =
   #
-  # Hides the cursor when the browser scrolls, and prevent mouse from hovering while invisible.
-  # Disabled for Chrome versions less than 39.0.2171.71 due to a browser error.
-  # NOTE(smblott) onScroll and onMouseMove events come in pairs.
+  # Hide the cursor when the browser scrolls, and prevent mouse from hovering while invisible.
   #
   cursorHideStyle: null
   isScrolling: false
@@ -1125,9 +1123,9 @@ CursorHider =
     CursorHider.isScrolling = false
 
   init: ->
-    # Disable for Chrome versions less than 39.0.2171.71 due to a browser error.
-    chromeVersion = navigator.appVersion.match(/Chrome\/(.*?) /)?[1] || ""
-    return if 0 <= Utils.compareVersions "39.0.2171.71", chromeVersion
+    # Disable cursor hiding for Chrome versions less than 39.0.2171.71 due to a suspected browser error.
+    # See #1345 and #1348.
+    return unless Utils.haveChromeVersion "39.0.2171.71"
 
     @cursorHideStyle = document.createElement("style")
     @cursorHideStyle.innerHTML = """
