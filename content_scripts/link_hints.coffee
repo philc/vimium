@@ -44,7 +44,8 @@ LinkHints =
     ["a", "area[@href]", "textarea", "button", "select",
      "input[not(@type='hidden' or @disabled or @readonly)]",
      "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
-     "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
+     "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true' or" +
+     "@vimium-has-onclick-listener]"])
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
