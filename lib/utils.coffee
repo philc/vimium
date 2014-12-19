@@ -124,6 +124,11 @@ Utils =
         return 1
     0
 
+  # True if the current Chrome version is at least the required version.
+  haveChromeVersion: (required) ->
+    chromeVersion = navigator.appVersion.match(/Chrome\/(.*?) /)?[1]
+    chromeVersion and 0 <= Utils.compareVersions chromeVersion, required
+
   # Zip two (or more) arrays:
   #   - Utils.zip([ [a,b], [1,2] ]) returns [ [a,1], [b,2] ]
   #   - Length of result is `arrays[0].length`.
