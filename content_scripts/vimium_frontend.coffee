@@ -1006,7 +1006,7 @@ HUD =
 
   showUpgradeNotification: (version) ->
     HUD.upgradeNotificationElement().innerHTML = "Vimium has been upgraded to #{version}. See
-      <a class='vimiumReset'
+      <a class='vimiumReset' target='_blank'
       href='https://github.com/philc/vimium#release-notes'>
       what's new</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
     links = HUD.upgradeNotificationElement().getElementsByTagName("a")
