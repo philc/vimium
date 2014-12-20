@@ -176,18 +176,19 @@ LinkHints =
         when "a"
           isClickable = true
         when "textarea"
-          isClickable = not element.disabled and not element.readOnly
+          isClickable ||= not element.disabled and not element.readOnly
         when "input"
-          unless element.getAttribute("type")?.toLowerCase() == "hidden" or
-                 element.disabled or
-                 (element.readOnly and DomUtils.isSelectable element)
-            isClickable = true
+          isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
+                               element.disabled or
+                               (element.readOnly and DomUtils.isSelectable element))
         when "button", "select"
-          isClickable = true unless element.disabled
+          isClickable ||= not element.disabled
 
       # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
       # citizens when it improves UX, so take special note of them.
-      if element.hasAttribute("tabindex") and not isClickable
+      tabIndexValue = element.getAttribute("tabindex")
+      tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+      unless isClickable or isNaN(tabIndex) or tabIndexI < 0
         isClickable = onlyHasTabIndex = true
 
       continue unless isClickable # If the element isn't clickable, do nothing.
