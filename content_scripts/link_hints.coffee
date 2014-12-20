@@ -37,15 +37,37 @@ LinkHints =
   init: ->
 
   #
+  # Generate an XPath of properties which describe clickable elements, regardless of their tag name.
+  #
+
+  clickablePropertiesXPath: clickablePropertiesXPath = [
+    "@onclick"
+    DomUtils.propertyEqualsXPath "@role", ["button", "link"]
+    "contains(@class, 'button')"
+    DomUtils.propertyEqualsXPath "@contentEditable", ["", "contentEditable", "true"]
+    "contains(translate(@jsaction, ' ', ''), ';click:')"
+    "starts-with(translate(@jsaction, ' ', ''), 'click:')"
+    "@tabIndex >= 0"
+  ].join " or "
+
+  #
   # Generate an XPath describing what a clickable element is.
   # The final expression will be something like "//button | //xhtml:button | ..."
   # We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
   #
-  clickableElementsXPath: DomUtils.makeXPath(
-    ["a", "area[@href]", "textarea", "button", "select",
-     "input[not(@type='hidden' or @disabled or @readonly)]",
-     "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
-     "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
+  clickableElementsXPath: DomUtils.makeXPath([
+    "a"
+    "img[@usemap]"
+    "textarea[not(@disabled or @readonly)]"
+    "input[not(@disabled or #{DomUtils.propertyEqualsXPath "type", ["hidden"]} or " +
+      # Using the types from DomUtils.isSelectable:
+      "((#{DomUtils.propertyEqualsXPath "type",
+        ["date", "datetime", "datetime-local", "email", "month", "number", "password", "range", "search",
+         "tel", "text", "time", "url", "week"]}) and @readonly))]"
+    "button[not(@disabled)]"
+    "select[not(@disabled)]"
+    "*[#{clickablePropertiesXPath}]"
+    ])
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
@@ -136,43 +158,73 @@ LinkHints =
     marker
 
   #
-  # Returns all clickable elements that are not hidden and are in the current viewport.
-  # We prune invisible elements partly for performance reasons, but moreso it's to decrease the number
-  # of digits needed to enumerate all of the links on screen.
+  # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
+  # at which (parts of) the elements are displayed.
+  # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
+  # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
+  # element.
   #
   getVisibleClickableElements: ->
-    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
-
+    resultSet = DomUtils.evaluateXPath @clickableElementsXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE
     visibleElements = []
 
-    # Find all visible clickable elements.
-    for i in [0...resultSet.snapshotLength] by 1
-      element = resultSet.snapshotItem(i)
-      clientRect = DomUtils.getVisibleClientRect(element, clientRect)
-      if (clientRect != null)
-        visibleElements.push({element: element, rect: clientRect})
+    while element = resultSet.iterateNext()
+      # Insert area elements that provide click functionality to an img, and remove the img if it is not
+      # otherwise clickable.
+      if element.tagName.toLowerCase() == "img"
+        mapName = element.getAttribute "usemap"
+        if mapName
+          imgClientRects = element.getClientRects()
+          mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+          map = document.querySelector "map[name=\"#{mapName}\"]"
+          if map and imgClientRects.length > 0
+            areas = map.getElementsByTagName "area"
+            areaRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+            visibleElements = visibleElements.concat areaRects
+          # If the element only matches the XPath because of "usemap", don't include it in our results.
+          isClickableXPath = "boolean(#{@clickablePropertiesXPath})"
+          unless (DomUtils.evaluateXPath isClickableXPath, XPathResult.BOOLEAN_TYPE, element).booleanValue
+            continue
 
-      if (element.localName == "area")
-        map = element.parentElement
-        continue unless map
-        img = document.querySelector("img[usemap='#" + map.getAttribute("name") + "']")
-        continue unless img
-        imgClientRects = img.getClientRects()
-        continue if (imgClientRects.length == 0)
-        c = element.coords.split(/,/)
-        coords = [parseInt(c[0], 10), parseInt(c[1], 10), parseInt(c[2], 10), parseInt(c[3], 10)]
-        rect = {
-          top: imgClientRects[0].top + coords[1],
-          left: imgClientRects[0].left + coords[0],
-          right: imgClientRects[0].left + coords[2],
-          bottom: imgClientRects[0].top + coords[3],
-          width: coords[2] - coords[0],
-          height: coords[3] - coords[1]
-        }
+      # Check aria properties to see if the element should be ignored.
+      if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+          element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+        continue
 
-        visibleElements.push({element: element, rect: rect})
+      clientRect = DomUtils.getVisibleClientRect element
+      if clientRect != null
+        visibleElements.push {element: element, rect: clientRect}
 
-    visibleElements
+    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
+    #  * The document has a local stacking context.
+    #  * An element with z-index specified
+    #    - sets its z-order position in the containing stacking context, and
+    #    - creates a local stacking context containing its children.
+    #  * An element (1) is shown above another element (2) if either
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
+    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
+    #        + the ancestors of (1) and (2) have equal z-index, and
+    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
+    #
+    # Remove rects from elements where another clickable element lies above it.
+    nonOverlappingElements = []
+    # Traverse the DOM from first to last, since later elements show above earlier elements.
+    visibleElements = visibleElements.reverse()
+    while visibleElement = visibleElements.pop()
+      rects = [visibleElement.rect]
+      for {rect: negativeRect} in visibleElements
+        rects = Array::concat.apply [], (rects.map (rect) -> Rect.subtract rect, negativeRect)
+      if rects.length > 0
+        nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
+      else
+        # Every part of the element is covered by some other element, so just insert the whole element's
+        # rect.
+        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
+        # click some elements that we could click before.
+        nonOverlappingElements.push visibleElement
+
+    nonOverlappingElements
 
   #
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
