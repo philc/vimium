@@ -36,6 +36,39 @@ LinkHints =
   #
   init: ->
 
+  #
+  # Generate an XPath of properties which describe clickable elements, regardless of their tag name.
+  #
+
+  clickablePropertiesXPath: clickablePropertiesXPath = [
+    "@onclick"
+    DomUtils.propertyEqualsXPath "@role", ["button", "link"]
+    "contains(@class, 'button')"
+    DomUtils.propertyEqualsXPath "@contentEditable", ["", "contentEditable", "true"]
+    "contains(translate(@jsaction, ' ', ''), ';click:')"
+    "starts-with(translate(@jsaction, ' ', ''), 'click:')"
+    "@tabIndex >= 0"
+  ].join " or "
+
+  #
+  # Generate an XPath describing what a clickable element is.
+  # The final expression will be something like "//button | //xhtml:button | ..."
+  # We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
+  #
+  clickableElementsXPath: DomUtils.makeXPath([
+    "a"
+    "img[@usemap]"
+    "textarea[not(@disabled or @readonly)]"
+    "input[not(@disabled or #{DomUtils.propertyEqualsXPath "type", ["hidden"]} or " +
+      # Using the types from DomUtils.isSelectable:
+      "((#{DomUtils.propertyEqualsXPath "type",
+        ["date", "datetime", "datetime-local", "email", "month", "number", "password", "range", "search",
+         "tel", "text", "time", "url", "week"]}) and @readonly))]"
+    "button[not(@disabled)]"
+    "select[not(@disabled)]"
+    "*[#{clickablePropertiesXPath}]"
+    ])
+
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
   activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
@@ -132,16 +165,14 @@ LinkHints =
   # element.
   #
   getVisibleClickableElements: ->
+    resultSet = DomUtils.evaluateXPath @clickableElementsXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
-    for element in elements
-      tagName = element.tagName.toLowerCase()
-      isClickable = false
-      onlyHasTabIndex = false
-
-      # Insert area elements that provide click functionality to an img.
-      if tagName == "img"
+    while element = resultSet.iterateNext()
+      # Insert area elements that provide click functionality to an img, and remove the img if it is not
+      # otherwise clickable.
+      if element.tagName.toLowerCase() == "img"
         mapName = element.getAttribute "usemap"
         if mapName
           imgClientRects = element.getClientRects()
@@ -151,50 +182,19 @@ LinkHints =
             areas = map.getElementsByTagName "area"
             areaRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
             visibleElements = visibleElements.concat areaRects
+          # If the element only matches the XPath because of "usemap", don't include it in our results.
+          isClickableXPath = "boolean(#{@clickablePropertiesXPath})"
+          unless (DomUtils.evaluateXPath isClickableXPath, XPathResult.BOOLEAN_TYPE, element).booleanValue
+            continue
 
       # Check aria properties to see if the element should be ignored.
       if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
           element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-        continue # No point continuing the loop; this element should never have a link hint
+        continue
 
-      # Check for attributes that make an element clickable regardless of its tagName.
-      if (element.hasAttribute("onclick") or
-          element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
-          element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
-          element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
-        isClickable = true
-
-      # Check for jsaction event listeners on the element.
-      if element.hasAttribute "jsaction"
-        jsactionRules = element.getAttribute("jsaction").split(";")
-        for jsactionRule in jsactionRules
-          ruleSplit = jsactionRule.split ":"
-          isClickable = true if ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
-
-      # Check for tagNames which are natively clickable.
-      switch tagName
-        when "a"
-          isClickable = true
-        when "textarea"
-          isClickable ||= not element.disabled and not element.readOnly
-        when "input"
-          isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
-                               element.disabled or
-                               (element.readOnly and DomUtils.isSelectable element))
-        when "button", "select"
-          isClickable ||= not element.disabled
-
-      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-      # citizens when it improves UX, so take special note of them.
-      tabIndexValue = element.getAttribute("tabindex")
-      tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-      unless isClickable or isNaN(tabIndex) or tabIndexI < 0
-        isClickable = onlyHasTabIndex = true
-
-      continue unless isClickable # If the element isn't clickable, do nothing.
       clientRect = DomUtils.getVisibleClientRect element
       if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
+        visibleElements.push {element: element, rect: clientRect}
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
     #  * The document has a local stacking context.
@@ -220,10 +220,10 @@ LinkHints =
         nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
       else
         # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect. Except for elements with tabIndex set; these are often more trouble than they're worth.
+        # rect.
         # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
         # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement unless visibleElement.onlyHasTabIndex
+        nonOverlappingElements.push visibleElement
 
     nonOverlappingElements
 

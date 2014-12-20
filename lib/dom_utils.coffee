@@ -36,10 +36,15 @@ DomUtils =
       xpath.push("//" + element, "//xhtml:" + element)
     xpath.join(" | ")
 
-  evaluateXPath: (xpath, resultType) ->
+  propertyEqualsXPath: (property, values) ->
+    xpathStrs = for value in values
+      "translate(#{property}, '#{value.toUpperCase()}', '#{value.toLowerCase()}')='#{value.toLowerCase()}'"
+    xpathStrs.join " or "
+
+  evaluateXPath: (xpath, resultType, contextNode = document.documentElement) ->
     namespaceResolver = (namespace) ->
       if (namespace == "xhtml") then "http://www.w3.org/1999/xhtml" else null
-    document.evaluate(xpath, document.documentElement, namespaceResolver, resultType, null)
+    document.evaluate(xpath, contextNode, namespaceResolver, resultType, null)
 
   #
   # Returns the first visible clientRect of an element if it exists. Otherwise it returns null.
