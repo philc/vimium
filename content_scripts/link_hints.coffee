@@ -166,7 +166,6 @@ LinkHints =
   #
   getVisibleClickableElements: ->
     resultSet = DomUtils.evaluateXPath @clickableElementsXPath, XPathResult.ORDERED_NODE_ITERATOR_TYPE
-    elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
     while element = resultSet.iterateNext()
