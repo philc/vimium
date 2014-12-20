@@ -1,6 +1,6 @@
-
 $ = (id) -> document.getElementById id
 bgSettings = chrome.extension.getBackgroundPage().Settings
+Exclusions = chrome.extension.getBackgroundPage().Exclusions
 
 #
 # Class hierarchy for various types of option.
@@ -13,6 +13,7 @@ class Option
 
   constructor: (field,enableSaveButton) ->
     @field = field
+    @onUpdated = enableSaveButton
     @element = $(@field)
     @element.addEventListener "change", enableSaveButton
     @fetch()
@@ -41,8 +42,10 @@ class Option
   # Static method.
   @saveOptions: ->
     Option.all.map (option) -> option.save()
-    $("saveOptions").disabled = true
-    $("saveOptions").innerHTML = "No Changes"
+    # These are only relevant on the options page; catch the exception on the popup page.
+    try
+      $("saveOptions").disabled = true
+      $("saveOptions").innerHTML = "No Changes"
 
   # Abstract method; only implemented in sub-classes.
   # Populate the option's DOM element (@element) with the setting's current value.
@@ -77,8 +80,8 @@ class CheckBoxOption extends Option
   readValueFromElement: -> @element.checked
 
 class ExclusionRulesOption extends Option
-  constructor: (args...) ->
-    super(args...)
+  constructor: (field, onUpdated, @url=null) ->
+    super(field, onUpdated)
     $("exclusionAddButton").addEventListener "click", (event) =>
       @appendRule { pattern: "", passKeys: "" }
       # Focus the pattern element in the new rule.
@@ -91,6 +94,16 @@ class ExclusionRulesOption extends Option
     for rule in rules
       @appendRule rule
 
+    # If this is the popup page (@url is defined), then hide rules which do not match @url.  If no rules
+    # match, then add a default rule.
+    if @url
+      haveMatch = false
+      for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
+        pattern = element.children[0].firstChild.value.trim()
+        unless @url.match Exclusions.RegexpCache.get pattern
+          element.style.display = 'none'
+          haveMatch = true
+
   # Append a row for a new rule.
   appendRule: (rule) ->
     content = document.querySelector('#exclusionRuleTemplate').content
@@ -100,13 +113,13 @@ class ExclusionRulesOption extends Option
       element = row.querySelector ".#{field}"
       element.value = rule[field]
       for event in [ "input", "change" ]
-        element.addEventListener event, enableSaveButton
+        element.addEventListener event, @onUpdated
 
     remove = row.querySelector ".exclusionRemoveButton"
     remove.addEventListener "click", (event) =>
       row = event.target.parentNode.parentNode
       row.parentNode.removeChild row
-      enableSaveButton()
+      @onUpdated()
 
     @element.appendChild row
 
@@ -160,12 +173,8 @@ activateHelpDialog = ->
   # Prevent the "show help" link from retaining the focus.
   document.activeElement.blur()
 
-#
-# Initialization.
-document.addEventListener "DOMContentLoaded", ->
-
-  # Populate options.  The constructor adds each new object to "Option.all".
-  new type(name,enableSaveButton) for name, type of {
+initOptions = ->
+  options =
     exclusionRules: ExclusionRulesOption
     filterLinkHints: CheckBoxOption
     hideHud: CheckBoxOption
@@ -181,7 +190,10 @@ document.addEventListener "DOMContentLoaded", ->
     searchEngines: TextOption
     searchUrl: NonEmptyTextOption
     userDefinedLinkHintCss: TextOption
-  }
+
+  # Populate options.  The constructor adds each new object to "Option.all".
+  for name, type of options
+    new type(name,enableSaveButton)
 
   $("saveOptions").addEventListener "click", Option.saveOptions
   $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions
@@ -199,4 +211,27 @@ document.addEventListener "DOMContentLoaded", ->
     if event.ctrlKey and event.keyCode == 13
       document.activeElement.blur() if document?.activeElement?.blur
       Option.saveOptions()
+
+initPopup = ->
+  chrome.tabs.getSelected null, (tab) ->
+    document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
+    updated = false
+
+    onUpdated = ->
+      $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close; <strong>Esc</strong> to cancel."
+      updated = true
+
+    document.addEventListener "keyup", (event) ->
+      if event.ctrlKey and event.keyCode == 13
+        Option.saveOptions()
+        window.close()
+
+    new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
+
+#
+# Initialization.
+document.addEventListener "DOMContentLoaded", ->
+  switch location.pathname
+    when "/pages/options.html" then initOptions()
+    when "/pages/popup.html" then initPopup()
 

@@ -18,6 +18,8 @@ RegexpCache =
 # The exclusions are an array of such objects (because the order matters).
 
 root.Exclusions = Exclusions =
+  # Make RegexpCache, which is required on the page popup, accessible via Exclusions.
+  RegexpCache: RegexpCache
 
   rules: Settings.get("exclusionRules")
 
