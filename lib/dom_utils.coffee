@@ -38,7 +38,10 @@ DomUtils =
 
   propertyEqualsXPath: (property, values) ->
     xpathStrs = for value in values
-      "translate(#{property}, '#{value.toUpperCase()}', '#{value.toLowerCase()}')='#{value.toLowerCase()}'"
+      if value == ""
+        "#{property}=''"
+      else
+        "translate(#{property}, '#{value.toUpperCase()}', '#{value.toLowerCase()}')='#{value.toLowerCase()}'"
     xpathStrs.join " or "
 
   evaluateXPath: (xpath, resultType, contextNode = document.documentElement) ->
