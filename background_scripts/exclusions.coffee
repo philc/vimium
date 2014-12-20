@@ -21,11 +21,10 @@ root.Exclusions = Exclusions =
 
   rules: Settings.get("exclusionRules")
 
-  # Return the first exclusion rule matching the URL, or null.
-  getRule: (url) ->
-    for rule in @rules
-      return rule if url.match(RegexpCache.get(rule.pattern))
-    return null
+  # Return exclusion rules matching the URL.
+  getRules: (url) ->
+    return @rules.filter (rule) ->
+      url.match(RegexpCache.get(rule.pattern))
 
   setRules: (rules) ->
     # Callers map a rule to null to have it deleted, and rules without a pattern are useless.

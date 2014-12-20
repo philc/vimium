@@ -73,11 +73,16 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 # whether any keys should be passed through to the underlying page.
 #
 root.isEnabledForUrl = isEnabledForUrl = (request) ->
-  rule = Exclusions.getRule(request.url)
+  rules = Exclusions.getRules(request.url)
+  passKeys = []
+  for rule in rules
+    if rule.passKeys
+      passKeys.push rule.passKeys
+    else
+      return isEnabledForUrl: false
   {
-    rule: rule
-    isEnabledForUrl: not rule or rule.passKeys
-    passKeys: rule?.passKeys or ""
+    isEnabledForUrl: true
+    passKeys: passKeys.join ""
   }
 
 # Called by the popup UI.
