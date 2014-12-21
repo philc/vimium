@@ -25,13 +25,13 @@ root.Exclusions = Exclusions =
 
   # Merge the matching rules for URL, or null. If rules are provided, match against those.
   getRule: (url, rules=@rules) ->
-    matching = (rule for rule in rules when rule.pattern and url.match(RegexpCache.get(rule.pattern)))
+    matches = (rule for rule in rules when rule.pattern and 0 <= url.search(RegexpCache.get(rule.pattern)))
     # An absolute exclusion rule (with no passKeys) takes priority.
-    for rule in matching
+    for rule in matches
       return rule unless rule.passKeys
-    if matching.length
-      pattern: (rule.pattern for rule in matching).join " | " # Not used; for debugging only.
-      passKeys: Utils.uniqueCharacters (rule.passKeys for rule in matching).join ""
+    if matches.length
+      pattern: (rule.pattern for rule in matches).join " | " # Not used; for debugging only.
+      passKeys: Utils.uniqueCharacters (rule.passKeys for rule in matches).join ""
     else
       null
 

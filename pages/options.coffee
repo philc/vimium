@@ -120,7 +120,7 @@ class ExclusionRulesOption extends Option
       haveMatch = false
       for element in elements
         pattern = element.children[0].firstChild.value.trim()
-        if @url.match bgExclusions.RegexpCache.get pattern
+        if 0 <= @url.search bgExclusions.RegexpCache.get pattern
           haveMatch = true
           element.children[1].firstChild.focus()
         else
@@ -131,14 +131,13 @@ class ExclusionRulesOption extends Option
   # On the popup page, provide visual feedback when a pattern does not match the current page.  This assumes
   # that @url is not empty.
   activatePatternWatcher: (element) ->
-    computedStyle = window.getComputedStyle(element)
-    originalColor = computedStyle.getPropertyValue("color")
     patternElement = element.children[0].firstChild
     patternElement.addEventListener "keyup", =>
       if @url.match bgExclusions.RegexpCache.get patternElement.value
-        patternElement.style.color = originalColor
+        patternElement.title = patternElement.style.color = ""
       else
         patternElement.style.color = "red"
+        patternElement.title = "Red text means that the pattern does not\nmatch the current URL."
 
   # Append a row for a new rule.
   appendRule: (rule) ->
