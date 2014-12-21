@@ -107,14 +107,15 @@ class ExclusionRulesOption extends Option
     for rule in rules
       @appendRule rule
 
-    # If this is the popup page (@url is defined), then hide rules which do not match @url.  If no rules
-    # match, then add a default rule.
+    # If this is the popup page (@url is truthy), then hide rules which do not match @url.  If no rules
+    # match, then add a default rule.  Focus the passKeys field in the last (most recent) rule.
     if @url
       haveMatch = false
       for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
         pattern = element.children[0].firstChild.value.trim()
         if @url.match bgExclusions.RegexpCache.get pattern
           haveMatch = true
+          element.children[1].firstChild.focus()
         else
           element.style.display = 'none'
       @addRule() unless haveMatch
