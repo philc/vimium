@@ -261,7 +261,7 @@ initPopupPage = ->
       console.log isEnabled
       $("state").innerHTML =
         if isEnabled and isEnabled.passKeys
-          "Excluded: #{isEnabled.passKeys}"
+          "Excluded: <strong class='code'>#{isEnabled.passKeys}</strong>"
         else if isEnabled
           "Disabled"
         else
