@@ -359,8 +359,7 @@ setPassKeys = (newPassKeys) ->
   passKeyGroups = passKeys.split " "
   splitPassKeys = []
   for passKeyGroup in passKeyGroups
-    namedKeyMatch = passKeyGroup.search namedKeyRegex
-    if namedKeyMatch # The current space delimited group is a single named key.
+    if namedKeyRegex.test passKeyGroup # The current space delimited group is a single named key.
       splitPassKeys.push passKeyGroup # Push this to as a single key
     else
       splitPassKeys = splitPassKeys.concat passKeyGroup.split "" # Pass all the characters as seperate keys.
