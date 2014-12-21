@@ -102,6 +102,7 @@ class ExclusionRulesOption extends Option
       # Scroll the new rule into view.
       exclusionScrollBox = $("exclusionScrollBox")
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
+      @onUpdated()
 
   populateElement: (rules) ->
     for rule in rules
@@ -120,7 +121,6 @@ class ExclusionRulesOption extends Option
           element.style.display = 'none'
       unless haveMatch
         @addRule()
-        @onUpdated()
 
   # Append a row for a new rule.
   appendRule: (rule) ->
@@ -241,7 +241,6 @@ initPopupPage = ->
       $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close."
       $("saveOptions").removeAttribute "disabled"
       $("saveOptions").innerHTML = "Save Changes"
-
 
     $("saveOptions").addEventListener "click", ->
       Option.saveOptions()
