@@ -7,36 +7,27 @@
         padding: 0px;
       }
 
-      #endSpace {
-        width: 450px;
-      }
-
       #helpText, #optionsLink {
         font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
         font-size: 12px;
       }
 
-      #helpText {
-        color: #979ca0;
-      }
+      #helpText { color: #979ca0; }
 
       #exclusionAddButton {
         width: 80px;
       }
 
-      /* Styles overwridden or changed from options.css. */
+      /* These are overridden from options.css. */
 
-      #footerWrapper {
-        width: 450px; /* As for #endSpace */
-        margin-left: 0px;
+      #endSpace, #footerWrapper { width: 450px; }
+
+      #endSpace { /* Leave space for the fixed footer. */
+        min-height: 46px;
+        max-height: 46px;
       }
 
-      #endSpace {
-        /* Leave space for the fixed footer. */
-        min-height: 36px;
-        max-height: 36px;
-      }
-
+      #footerWrapper { margin-left: 0px; }
     </style>
     <script src="options.js"></script>
   </head>

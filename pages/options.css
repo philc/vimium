@@ -1,3 +1,5 @@
+/* NOTE: This stylesheet is included in both options.html and popup.html.  So changes here affect
+   both of these. */
 body {
   font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
