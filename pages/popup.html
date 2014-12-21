@@ -13,21 +13,24 @@
       }
 
       #helpText { color: #979ca0; }
+      #exclusionAddButton { width: 80px; }
 
-      #exclusionAddButton {
-        width: 80px;
+      #saveOptions {
+        margin-top: 5px; /* Match exclusionAddButton */
+        margin-left: 5px;
+        float: right;
       }
 
       /* These are overridden from options.css. */
 
       #endSpace, #footerWrapper { width: 450px; }
+      #footerWrapper { margin-left: 0px; }
 
       #endSpace { /* Leave space for the fixed footer. */
         min-height: 46px;
         max-height: 46px;
       }
 
-      #footerWrapper { margin-left: 0px; }
     </style>
     <script src="options.js"></script>
   </head>
@@ -61,12 +64,11 @@
             <td id="footerTableData">
               <span>
                 <span id="helpText">These are the matching rules for this page.</span>
+                <button id="saveOptions" disabled="true">No Changes</button>
+                <button id="exclusionAddButton">Add Rule</button>
                 <br/>
                 <span> <a id="optionsLink" target="_blank">Vimium Options</a>.</span>
               </span>
-            </td>
-            <td>
-              <button id="exclusionAddButton">Add Rule</button>
             </td>
           </tr>
         </table>

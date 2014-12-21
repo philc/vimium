@@ -118,7 +118,9 @@ class ExclusionRulesOption extends Option
           element.children[1].firstChild.focus()
         else
           element.style.display = 'none'
-      @addRule() unless haveMatch
+      unless haveMatch
+        @addRule()
+        @onUpdated()
 
   # Append a row for a new rule.
   appendRule: (rule) ->
@@ -236,8 +238,18 @@ initPopupPage = ->
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
 
     onUpdated = ->
-      $("helpText").innerHTML =
-        "Type <strong>Ctrl-Enter</strong> to save and close; <strong>Esc</strong> to cancel."
+      $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close."
+      $("saveOptions").removeAttribute "disabled"
+      $("saveOptions").innerHTML = "Save Changes"
+
+
+    $("saveOptions").addEventListener "click", ->
+      Option.saveOptions()
+      $("helpText").innerHTML = "Rules saved."
+      $("saveOptions").innerHTML = "No Changes"
+      $("saveOptions").disabled = true
+      chrome.tabs.query { windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, (tabs) ->
+        chrome.extension.getBackgroundPage().updateActiveState(tabs[0].id)
 
     document.addEventListener "keyup", (event) ->
       if event.ctrlKey and event.keyCode == 13
