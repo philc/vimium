@@ -294,7 +294,14 @@ initPopupPage = ->
 #
 # Initialization.
 document.addEventListener "DOMContentLoaded", ->
-  switch location.pathname
-    when "/pages/options.html" then initOptionsPage()
-    when "/pages/popup.html" then initPopupPage()
+  xhr = new XMLHttpRequest()
+  xhr.open 'GET', chrome.extension.getURL('pages/exclusions.html'), true
+  xhr.onreadystatechange = ->
+    if xhr.readyState == 4
+      $("exclusionScrollBox").innerHTML = xhr.responseText
+      switch location.pathname
+        when "/pages/options.html" then initOptionsPage()
+        when "/pages/popup.html" then initPopupPage()
+
+  xhr.send()
 
