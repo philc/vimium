@@ -15,7 +15,7 @@ RegexpCache =
 
 # The Exclusions class manages the exclusion rule setting.
 # An exclusion is an object with two attributes: pattern and passKeys.
-# The exclusions are an array of such objects (because the order matters).
+# The exclusions are an array of such objects.
 
 root.Exclusions = Exclusions =
   # Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
