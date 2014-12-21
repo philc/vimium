@@ -161,8 +161,8 @@ class ExclusionRulesOption extends Option
   readValueFromElement: ->
     rules =
       for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
-        pattern = element.children[0].firstChild.value.trim()
-        passKeys = element.children[1].firstChild.value.trim()
+        pattern = element.children[0].firstChild.value.trim().split(/\s+/).join ""
+        passKeys = element.children[1].firstChild.value.trim().split(/\s+/).join ""
         { pattern: pattern, passKeys: passKeys }
     rules.filter (rule) -> rule.pattern
 
@@ -275,7 +275,19 @@ initPopupPage = ->
         window.close()
 
     # Populate options. Just one, here.
-    new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
+    exclusions = new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
+
+    document.addEventListener "keyup", (event) ->
+      rules = exclusions.readValueFromElement()
+      isEnabled = bgExclusions.getRule tab.url, rules
+      console.log isEnabled
+      $("state").innerHTML =
+        if isEnabled and isEnabled.passKeys
+          "Excluded: #{isEnabled.passKeys}"
+        else if isEnabled
+          "Disabled"
+        else
+          "Enabled"
 
 #
 # Initialization.

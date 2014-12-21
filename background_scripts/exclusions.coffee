@@ -23,9 +23,9 @@ root.Exclusions = Exclusions =
 
   rules: Settings.get("exclusionRules")
 
-  # Merge the matching rules for URL, or null.
-  getRule: (url) ->
-    matching = (rule for rule in @rules when url.match(RegexpCache.get(rule.pattern)))
+  # Merge the matching rules for URL, or null. If rules are provided, match against those.
+  getRule: (url, rules=@rules) ->
+    matching = (rule for rule in rules when rule.pattern and url.match(RegexpCache.get(rule.pattern)))
     # An absolute exclusion rule (with no passKeys) takes priority.
     for rule in matching
       return rule unless rule.passKeys

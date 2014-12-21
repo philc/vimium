@@ -7,12 +7,12 @@
         padding: 0px;
       }
 
-      #helpText, #optionsLink {
+      #helpText, #optionsLink, #state {
         font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
         font-size: 12px;
       }
 
-      #helpText { color: #979ca0; }
+      #helpText, #stateLine { color: #979ca0; }
       #exclusionAddButton { width: 80px; }
 
       #saveOptions {
@@ -67,16 +67,20 @@
 
     <div id="footer">
       <div id="footerWrapper">
-        <table id="footerTable">
+        <table>
           <tr>
-            <td id="footerTableData">
-              <span>
-                <span id="helpText">These are the matching rules for this page.</span>
-                <button id="saveOptions" disabled="true">No Changes</button>
-                <button id="exclusionAddButton">Add Rule</button>
-                <br/>
-                <span> <a id="optionsLink" target="_blank">Vimium Options</a></span>
-              </span>
+            <td id="stateLine" style="width: 99%">
+              <span id="state"></span>
+              <br/>
+              <span id="helpText">These are the matching rules for this page.</span>
+              <br/>
+              <span> <a id="optionsLink" target="_blank">Options</a></span>
+            </td>
+            <td valign="top">
+              <button id="exclusionAddButton">Add Rule</button>
+            </td>
+            <td valign="top">
+              <button id="saveOptions" disabled="true">No Changes</button>
             </td>
           </tr>
         </table>
