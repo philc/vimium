@@ -26,7 +26,7 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome://", "chrome-extension:", "data:" ]
     (url) ->
       if 0 < url.indexOf ":"
         for prefix in chromePrefixes

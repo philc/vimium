@@ -1,4 +1,5 @@
 $ = (id) -> document.getElementById id
+bgUtils = chrome.extension.getBackgroundPage().Utils
 bgSettings = chrome.extension.getBackgroundPage().Settings
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
 
@@ -251,16 +252,20 @@ initOptionsPage = ->
     new type(name,enableSaveButton)
 
 initPopupPage = ->
-  exclusions = null
   chrome.tabs.getSelected null, (tab) ->
+    exclusions = null
+    console.log tab.url
+    hasChromePrefix = bgUtils.hasChromePrefix tab.url
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
 
     updateState = ->
       rules = exclusions.readValueFromElement()
       isEnabled = bgExclusions.getRule tab.url, rules
-      console.log isEnabled
+      console.log hasChromePrefix
       $("state").innerHTML =
-        if isEnabled and isEnabled.passKeys
+        if hasChromePrefix
+          "Vimium cannot run on this page."
+        else if isEnabled and isEnabled.passKeys
           "Excluded: <strong class='code'>#{isEnabled.passKeys}</strong>"
         else if isEnabled
           "Disabled"
