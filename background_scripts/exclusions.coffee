@@ -23,11 +23,14 @@ root.Exclusions = Exclusions =
 
   rules: Settings.get("exclusionRules")
 
-  # Return the first exclusion rule matching the URL, or null.
+  # Merge the matching rules for URL, or null.
   getRule: (url) ->
-    for rule in @rules
-      return rule if url.match(RegexpCache.get(rule.pattern))
-    return null
+    matching = (rule for rule in @rules when url.match(RegexpCache.get(rule.pattern)))
+    if matching.length
+      pattern: (rule.pattern for rule in matching).join " | " # Not used; for documentation/debugging only.
+      passKeys: (rule.passKeys for rule in matching).join ""
+    else
+      null
 
   setRules: (rules) ->
     # Callers map a rule to null to have it deleted, and rules without a pattern are useless.
@@ -36,19 +39,6 @@ root.Exclusions = Exclusions =
 
   postUpdateHook: (rules) ->
     @rules = rules
-
-  # Update an existing rule or add a new rule.
-  updateOrAdd: (newRule) ->
-    seen = false
-    @rules.push(newRule)
-    @setRules @rules.map (rule) ->
-      if rule.pattern == newRule.pattern
-        if seen then null else seen = newRule
-      else
-        rule
-
-  remove: (pattern) ->
-    @setRules(@rules.filter((rule) -> rule and rule.pattern != pattern))
 
 # Development and debug only.
 # Enable this (temporarily) to restore legacy exclusion rules from backup.

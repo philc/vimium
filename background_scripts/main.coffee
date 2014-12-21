@@ -75,25 +75,9 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 root.isEnabledForUrl = isEnabledForUrl = (request) ->
   rule = Exclusions.getRule(request.url)
   {
-    rule: rule
     isEnabledForUrl: not rule or rule.passKeys
     passKeys: rule?.passKeys or ""
   }
-
-# Called by the popup UI.
-# If the URL pattern matches an existing rule, then the existing rule is updated. Otherwise, a new rule is created.
-root.addExclusionRule = (pattern,passKeys) ->
-  if pattern = pattern.trim()
-    Exclusions.updateOrAdd({ pattern: pattern, passKeys: passKeys })
-    chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
-      (tabs) -> updateActiveState(tabs[0].id))
-
-# Called by the popup UI.  Remove all existing exclusion rules with this pattern.
-root.removeExclusionRule = (pattern) ->
-  if pattern = pattern.trim()
-    Exclusions.remove(pattern)
-    chrome.tabs.query({ windowId: chrome.windows.WINDOW_ID_CURRENT, active: true },
-      (tabs) -> updateActiveState(tabs[0].id))
 
 saveHelpDialogSettings = (request) ->
   Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
@@ -353,7 +337,8 @@ setBrowserActionIcon = (tabId,path) ->
 # Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
 # Also propagates new enabled/disabled/passkeys state to active window, if necessary.
 # This lets you disable Vimium on a page without needing to reload.
-updateActiveState = (tabId) ->
+# Exported via root because it's called from the page popup.
+root.updateActiveState = updateActiveState = (tabId) ->
   enabledIcon = "icons/browser_action_enabled.png"
   disabledIcon = "icons/browser_action_disabled.png"
   partialIcon = "icons/browser_action_partial.png"

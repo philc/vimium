@@ -1,6 +1,18 @@
 $ = (id) -> document.getElementById id
 bgSettings = chrome.extension.getBackgroundPage().Settings
-Exclusions = chrome.extension.getBackgroundPage().Exclusions
+bgExclusions = chrome.extension.getBackgroundPage().Exclusions
+
+# Generate a default exclusion-rule pattern from a URL.
+generateDefaultPattern = (url) ->
+  if /^https?:\/\/./.test url
+    # The common use case is to disable Vimium at the domain level.
+    # Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
+    "https?:/" + url.split("/",3)[1..].join("/") + "/*"
+  else if /^[a-z]{3,}:\/\/./.test url
+    # Anything else which seems to be a URL.
+    url.split("/",3).join("/") + "/*"
+  else
+    url + "*"
 
 #
 # Class hierarchy for various types of option.
@@ -76,12 +88,17 @@ class CheckBoxOption extends Option
   readValueFromElement: -> @element.checked
 
 class ExclusionRulesOption extends Option
-  constructor: (field, onUpdated, @url=null) ->
+  constructor: (field, onUpdated, @url="") ->
     super(field, onUpdated)
     $("exclusionAddButton").addEventListener "click", (event) =>
-      @appendRule { pattern: "", passKeys: "" }
-      # Focus the pattern element in the new rule.
-      @element.children[@element.children.length-1].children[0].children[0].focus()
+      @addRule()
+
+  addRule: ->
+      @appendRule { pattern: (if @url then generateDefaultPattern(@url) else ""), passKeys: "" }
+      # On the options page, focus the pattern; on the page popup (where we already have a pattern), focus the
+      # passKeys.
+      focus = if @url then 1 else 0
+      @element.children[@element.children.length-1].children[focus].children[0].focus()
       # Scroll the new rule into view.
       exclusionScrollBox = $("exclusionScrollBox")
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
@@ -96,9 +113,11 @@ class ExclusionRulesOption extends Option
       haveMatch = false
       for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
         pattern = element.children[0].firstChild.value.trim()
-        unless @url.match Exclusions.RegexpCache.get pattern
-          element.style.display = 'none'
+        if @url.match bgExclusions.RegexpCache.get pattern
           haveMatch = true
+        else
+          element.style.display = 'none'
+      @addRule() unless haveMatch
 
   # Append a row for a new rule.
   appendRule: (rule) ->
@@ -222,6 +241,8 @@ initPopupPage = ->
     document.addEventListener "keyup", (event) ->
       if event.ctrlKey and event.keyCode == 13
         Option.saveOptions()
+        chrome.tabs.query { windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, (tabs) ->
+          chrome.extension.getBackgroundPage().updateActiveState(tabs[0].id)
         window.close()
 
     new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
