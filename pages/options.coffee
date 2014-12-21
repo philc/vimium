@@ -254,23 +254,17 @@ initOptionsPage = ->
 initPopupPage = ->
   chrome.tabs.getSelected null, (tab) ->
     exclusions = null
-    console.log tab.url
-    hasChromePrefix = bgUtils.hasChromePrefix tab.url
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
 
     updateState = ->
-      rules = exclusions.readValueFromElement()
-      isEnabled = bgExclusions.getRule tab.url, rules
-      console.log hasChromePrefix
-      $("state").innerHTML =
-        if hasChromePrefix
-          "Vimium cannot run on this page."
-        else if isEnabled and isEnabled.passKeys
-          "Excluded: <strong class='code'>#{isEnabled.passKeys}</strong>"
-        else if isEnabled
-          "Disabled"
+      rule = bgExclusions.getRule tab.url, exclusions.readValueFromElement()
+      $("state").innerHTML = "Vimium will " +
+        if rule and rule.passKeys
+          "exclude <span class='code'>#{rule.passKeys}</span>"
+        else if rule
+          "be disabled"
         else
-          "Enabled"
+          "be enabled"
 
     onUpdated = ->
       $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close."
@@ -280,8 +274,7 @@ initPopupPage = ->
 
     saveOptions = ->
       Option.saveOptions()
-      $("helpText").innerHTML = "Rules saved."
-      $("saveOptions").innerHTML = "No Changes"
+      $("saveOptions").innerHTML = "Saved"
       $("saveOptions").disabled = true
       chrome.tabs.query { windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, (tabs) ->
         chrome.extension.getBackgroundPage().updateActiveState(tabs[0].id)
