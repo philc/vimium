@@ -530,8 +530,8 @@ checkIfEnabledForUrl = ->
 refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
-    insertExitKeys = response.insertExitKeys
-    insertExitPassKeys = response.insertExitPassKeys
+    insertExitKeys = response.insertExitKeys || []
+    insertExitPassKeys = response.insertExitPassKeys || []
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
