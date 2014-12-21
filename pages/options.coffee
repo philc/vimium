@@ -251,13 +251,27 @@ initOptionsPage = ->
     new type(name,enableSaveButton)
 
 initPopupPage = ->
+  exclusions = null
   chrome.tabs.getSelected null, (tab) ->
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
+
+    updateState = ->
+      rules = exclusions.readValueFromElement()
+      isEnabled = bgExclusions.getRule tab.url, rules
+      console.log isEnabled
+      $("state").innerHTML =
+        if isEnabled and isEnabled.passKeys
+          "Excluded: #{isEnabled.passKeys}"
+        else if isEnabled
+          "Disabled"
+        else
+          "Enabled"
 
     onUpdated = ->
       $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close."
       $("saveOptions").removeAttribute "disabled"
       $("saveOptions").innerHTML = "Save Changes"
+      updateState() if exclusions
 
     saveOptions = ->
       Option.saveOptions()
@@ -277,21 +291,8 @@ initPopupPage = ->
     # Populate options. Just one, here.
     exclusions = new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
 
-    updateState = ->
-      rules = exclusions.readValueFromElement()
-      isEnabled = bgExclusions.getRule tab.url, rules
-      console.log isEnabled
-      $("state").innerHTML =
-        if isEnabled and isEnabled.passKeys
-          "Excluded: #{isEnabled.passKeys}"
-        else if isEnabled
-          "Disabled"
-        else
-          "Enabled"
-
     updateState()
-    for event in ["keyup", "DOMNodeInserted", "DOMNodeRemoved"]
-      document.addEventListener event, updateState
+    document.addEventListener "keyup", updateState
 
 #
 # Initialization.
