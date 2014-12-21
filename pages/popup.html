@@ -25,6 +25,9 @@
 
       #endSpace, #footerWrapper { width: 450px; }
       #footerWrapper { margin-left: 0px; }
+      /* Make exclusionScrollBox smaller than on the options page, because there are likely to be fewer
+         matching rules, and the popup obscures the underlying page. */
+      #exclusionScrollBox { max-height: 124px; }
 
       #endSpace { /* Leave space for the fixed footer. */
         min-height: 46px;
