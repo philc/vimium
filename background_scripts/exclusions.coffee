@@ -31,7 +31,7 @@ root.Exclusions = Exclusions =
       return rule unless rule.passKeys
     if matching.length
       pattern: (rule.pattern for rule in matching).join " | " # Not used; for debugging only.
-      passKeys: (rule.passKeys for rule in matching).join ""
+      passKeys: Utils.uniqueCharacters (rule.passKeys for rule in matching).join ""
     else
       null
 
