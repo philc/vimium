@@ -277,7 +277,7 @@ initPopupPage = ->
     # Populate options. Just one, here.
     exclusions = new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
 
-    document.addEventListener "keyup", (event) ->
+    updateState = ->
       rules = exclusions.readValueFromElement()
       isEnabled = bgExclusions.getRule tab.url, rules
       console.log isEnabled
@@ -288,6 +288,10 @@ initPopupPage = ->
           "Disabled"
         else
           "Enabled"
+
+    updateState()
+    for event in ["keyup", "DOMNodeInserted", "DOMNodeRemoved"]
+      document.addEventListener event, updateState
 
 #
 # Initialization.
