@@ -26,8 +26,11 @@ root.Exclusions = Exclusions =
   # Merge the matching rules for URL, or null.
   getRule: (url) ->
     matching = (rule for rule in @rules when url.match(RegexpCache.get(rule.pattern)))
+    # An absolute exclusion rule (with no passKeys) takes priority.
+    for rule in matching
+      return rule unless rule.passKeys
     if matching.length
-      pattern: (rule.pattern for rule in matching).join " | " # Not used; for documentation/debugging only.
+      pattern: (rule.pattern for rule in matching).join " | " # Not used; for debugging only.
       passKeys: (rule.passKeys for rule in matching).join ""
     else
       null

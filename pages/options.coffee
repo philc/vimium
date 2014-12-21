@@ -229,7 +229,7 @@ initOptionsPage = ->
     searchUrl: NonEmptyTextOption
     userDefinedLinkHintCss: TextOption
 
-  # Populate options.  The constructor adds each new object to "Option.all".
+  # Populate options. The constructor adds each new object to "Option.all".
   for name, type of options
     new type(name,enableSaveButton)
 
@@ -242,7 +242,7 @@ initPopupPage = ->
       $("saveOptions").removeAttribute "disabled"
       $("saveOptions").innerHTML = "Save Changes"
 
-    $("saveOptions").addEventListener "click", ->
+    saveOptions = ->
       Option.saveOptions()
       $("helpText").innerHTML = "Rules saved."
       $("saveOptions").innerHTML = "No Changes"
@@ -250,13 +250,14 @@ initPopupPage = ->
       chrome.tabs.query { windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, (tabs) ->
         chrome.extension.getBackgroundPage().updateActiveState(tabs[0].id)
 
+    $("saveOptions").addEventListener "click", saveOptions
+
     document.addEventListener "keyup", (event) ->
       if event.ctrlKey and event.keyCode == 13
-        Option.saveOptions()
-        chrome.tabs.query { windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, (tabs) ->
-          chrome.extension.getBackgroundPage().updateActiveState(tabs[0].id)
+        saveOptions()
         window.close()
 
+    # Populate options. Just one, here.
     new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
 
 #
