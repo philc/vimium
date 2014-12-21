@@ -25,9 +25,14 @@
 
       #endSpace, #footerWrapper { width: 450px; }
       #footerWrapper { margin-left: 0px; }
+
       /* Make exclusionScrollBox smaller than on the options page, because there are likely to be fewer
-         matching rules, and the popup obscures the underlying page. */
-      #exclusionScrollBox { max-height: 124px; }
+         matching rules, and the popup obscures the underlying page.
+       */
+      #exclusionScrollBox {
+        max-height: 124px;
+        min-height: 124px;
+      }
 
       #endSpace { /* Leave space for the fixed footer. */
         min-height: 46px;
@@ -70,7 +75,7 @@
                 <button id="saveOptions" disabled="true">No Changes</button>
                 <button id="exclusionAddButton">Add Rule</button>
                 <br/>
-                <span> <a id="optionsLink" target="_blank">Vimium Options</a>.</span>
+                <span> <a id="optionsLink" target="_blank">Vimium Options</a></span>
               </span>
             </td>
           </tr>

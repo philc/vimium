@@ -98,7 +98,9 @@ class ExclusionRulesOption extends Option
       # On the options page, focus the pattern; on the page popup (where we already have a pattern), focus the
       # passKeys.
       focus = if @url then 1 else 0
-      @element.children[@element.children.length-1].children[focus].children[0].focus()
+      element = @element.children[@element.children.length-1]
+      element.children[focus].children[0].focus()
+      @activatePatternWatcher element if @url
       # Scroll the new rule into view.
       exclusionScrollBox = $("exclusionScrollBox")
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
@@ -108,11 +110,14 @@ class ExclusionRulesOption extends Option
     for rule in rules
       @appendRule rule
 
+    elements = @element.getElementsByClassName "exclusionRuleTemplateInstance"
+    @activatePatternWatcher element for element in elements if @url
+
     # If this is the popup page (@url is truthy), then hide rules which do not match @url.  If no rules
     # match, then add a default rule.  Focus the passKeys field in the last (most recent) rule.
     if @url
       haveMatch = false
-      for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
+      for element in elements
         pattern = element.children[0].firstChild.value.trim()
         if @url.match bgExclusions.RegexpCache.get pattern
           haveMatch = true
@@ -121,6 +126,18 @@ class ExclusionRulesOption extends Option
           element.style.display = 'none'
       unless haveMatch
         @addRule()
+
+  # On the popup page, provide visual feedback when a pattern does not match the current page.  This assumes
+  # that @url is not empty.
+  activatePatternWatcher: (element) ->
+    computedStyle = window.getComputedStyle(element)
+    originalColor = computedStyle.getPropertyValue("color")
+    patternElement = element.children[0].firstChild
+    patternElement.addEventListener "keyup", =>
+      if @url.match bgExclusions.RegexpCache.get patternElement.value
+        patternElement.style.color = originalColor
+      else
+        patternElement.style.color = "red"
 
   # Append a row for a new rule.
   appendRule: (rule) ->
