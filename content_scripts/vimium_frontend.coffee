@@ -463,16 +463,14 @@ onKeydown = (event) ->
 
   if (isInsertMode() and (isInsertExitPassKey or rawKeyChar in insertExitKeys))
     return undefined if (isPassKey rawKeyChar)
-    # We don't want to programmatically blur out of Flash embeds from Javascript.
-    if (!isEmbed(event.srcElement))
+    if (isEditable(event.srcElement) or isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
-      if (isEditable(event.srcElement))
-        event.srcElement.blur()
-      exitInsertMode()
-      unless isInsertExitPassKey
-        DomUtils.suppressEvent event
-        KeydownEvents.push event
+      event.srcElement.blur()
+    exitInsertMode()
+    unless isInsertExitPassKey
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
