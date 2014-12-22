@@ -169,7 +169,7 @@ LinkHints =
         jsactionRules = element.getAttribute("jsaction").split(";")
         for jsactionRule in jsactionRules
           ruleSplit = jsactionRule.split ":"
-          isClickable = true if ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+          isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
 
       # Check for tagNames which are natively clickable.
       switch tagName
