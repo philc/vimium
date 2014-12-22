@@ -458,6 +458,9 @@ onKeydown = (event) ->
     if isEditable(event.srcElement) or isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
+      # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
+      # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+      # games.  See discussion in #1211 and #1194.
       event.srcElement.blur()
     exitInsertMode()
     DomUtils.suppressEvent event
