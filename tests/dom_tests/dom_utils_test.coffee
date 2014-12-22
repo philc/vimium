@@ -50,12 +50,6 @@ context "Check visibility",
     assert.isTrue (DomUtils.getVisibleClientRect document.getElementById 'foo') != null
     assert.isTrue (DomUtils.getVisibleClientRect document.getElementById 'bar') != null
 
-  should "detect opacity:0 links as hidden", ->
-    document.getElementById("test-div").innerHTML = """
-    <a id='foo' style='opacity:0'>test</a>
-    """
-    assert.equal null, DomUtils.getVisibleClientRect document.getElementById 'foo'
-
   should "detect links that contain only floated / absolutely-positioned divs as visible", ->
     document.getElementById("test-div").innerHTML = """
     <a id='foo'>
