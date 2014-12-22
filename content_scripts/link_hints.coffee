@@ -150,7 +150,7 @@ LinkHints =
           if map and imgClientRects.length > 0
             areas = map.getElementsByTagName "area"
             areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-            visibleElements = visibleElements.concat areasAndRects
+            visibleElements.push areasAndRects...
 
       # Check aria properties to see if the element should be ignored.
       if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
