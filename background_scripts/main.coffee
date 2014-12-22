@@ -149,9 +149,12 @@ fetchFileContents = (extensionFileName) ->
 # Returns the keys that can complete a valid command given the current key queue.
 #
 getCompletionKeysRequest = (request, keysToCheck = "") ->
+  [insertExitKeys, insertExitPassKeys] = Commands.getInsertExitKeys()
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
+  insertExitKeys: insertExitKeys
+  insertExitPassKeys: insertExitPassKeys
 
 #
 # Opens the url in the current tab.
@@ -542,13 +545,16 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
     if runCommand
       if not registryEntry.isBackgroundCommand
+        [insertExitKeys, insertExitPassKeys] = Commands.getInsertExitKeys()
         chrome.tabs.sendMessage(tabId,
           name: "executePageCommand",
           command: registryEntry.command,
           frameId: frameId,
           count: count,
           passCountToFunction: registryEntry.passCountToFunction,
-          completionKeys: generateCompletionKeys(""))
+          completionKeys: generateCompletionKeys("")
+          insertExitKeys: insertExitKeys
+          insertExitPassKeys: insertExitPassKeys)
         refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction

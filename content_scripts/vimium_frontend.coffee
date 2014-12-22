@@ -23,6 +23,8 @@ splitPassKeys = []
 keyQueue = null
 # The user's operating system.
 currentCompletionKeys = null
+insertExitKeys = null
+insertExitPassKeys = null
 validFirstKeys = null
 
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
@@ -451,16 +453,25 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
-    # Note that we can't programmatically blur out of Flash embeds from Javascript.
+  rawKeyChar = keyChar
+  if (KeyboardUtils.isEscape(event))
+    rawKeyChar = "<esc>"
+
+  rawKeyChar ||= KeyboardUtils.getKeyChar(event)
+
+  isInsertExitPassKey = (rawKeyChar in insertExitPassKeys)
+
+  if (isInsertMode() and (isInsertExitPassKey or rawKeyChar in insertExitKeys))
+    # We don't want to programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       exitInsertMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
+      unless isInsertExitPassKey
+        DomUtils.suppressEvent event
+        KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
@@ -537,6 +548,8 @@ checkIfEnabledForUrl = ->
 refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
+    insertExitKeys = response.insertExitKeys || []
+    insertExitPassKeys = response.insertExitPassKeys || []
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
