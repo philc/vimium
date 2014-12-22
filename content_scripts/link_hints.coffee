@@ -149,8 +149,8 @@ LinkHints =
           map = document.querySelector "map[name=\"#{mapName}\"]"
           if map and imgClientRects.length > 0
             areas = map.getElementsByTagName "area"
-            areaRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-            visibleElements = visibleElements.concat areaRects
+            areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+            visibleElements = visibleElements.concat areasAndRects
 
       # Check aria properties to see if the element should be ignored.
       if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
