@@ -455,12 +455,14 @@ onKeydown = (event) ->
         keyChar = "<" + keyChar + ">"
 
   if (isInsertMode() && KeyboardUtils.isEscape(event))
-    # Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if (!isEmbed(event.srcElement))
+    if isEditable(event.srcElement) or isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
+      # NOTE(smblott, 2014/12/22) Including embeds for exitInsertMode() etc. here is experimental.  It's the
+      # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+      # games.  See #1211 and #1194.
       exitInsertMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
