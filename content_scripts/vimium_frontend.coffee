@@ -462,6 +462,7 @@ onKeydown = (event) ->
   isInsertExitPassKey = (rawKeyChar in insertExitPassKeys)
 
   if (isInsertMode() and (isInsertExitPassKey or rawKeyChar in insertExitKeys))
+    return undefined if (isPassKey rawKeyChar)
     # We don't want to programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
