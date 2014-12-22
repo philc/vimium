@@ -49,7 +49,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "enableBlurEmbeds"]
   isLoaded: false
   eventListeners: {}
 
@@ -436,15 +436,15 @@ onKeydown = (event) ->
         keyChar = "<" + keyChar + ">"
 
   if (isInsertMode() && KeyboardUtils.isEscape(event))
-    # Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if (!isEmbed(event.srcElement))
+    # Blurring out of embeds could be dangerous, do nothing unless the user explicitly enables it.
+    return if isEmbed(event.srcElement) and not settings.get "enableBlurEmbeds"
+    if isEditable(event.srcElement) or isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
-      if (isEditable(event.srcElement))
-        event.srcElement.blur()
-      exitInsertMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
+      event.srcElement.blur()
+    exitInsertMode()
+    DomUtils.suppressEvent event
+    handledKeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
