@@ -215,7 +215,8 @@ LinkHints =
     while visibleElement = visibleElements.pop()
       rects = [visibleElement.rect]
       for {rect: negativeRect} in visibleElements
-        rects = Array::concat.apply [], (rects.map (rect) -> Rect.subtract rect, negativeRect)
+        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
+        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
       if rects.length > 0
         nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
       else
