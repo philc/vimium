@@ -59,13 +59,13 @@ DomUtils =
           continue if (computedStyle.getPropertyValue('float') == 'none' &&
             computedStyle.getPropertyValue('position') != 'absolute')
           childClientRect = @getVisibleClientRect(child)
-          continue if (childClientRect == null)
+          continue if clientRect == null
           return childClientRect
 
       else
         clientRect = @cropRectToVisible clientRect
 
-        continue unless clientRect
+        continue if clientRect == null or clientRect.width < 3 or clientRect.height < 3
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
         computedStyle = window.getComputedStyle(element, null)
@@ -83,12 +83,12 @@ DomUtils =
   #
   cropRectToVisible: (rect) ->
     boundedRect = Rect.create(
-      Math.max(rect.left, 0),
-      Math.max(rect.top, 0),
-      Math.min(rect.right, window.innerWidth),
-      Math.min(rect.bottom, window.innerHeight)
+      Math.max(rect.left, 0)
+      Math.max(rect.top, 0)
+      rect.right
+      rect.bottom
     )
-    if boundedRect.width < 3 or boundedRect.height < 3
+    if boundedRect.top >= window.innerHeight - 4 or boundedRect.left >= window.innerWidth - 4
       null
     else
       boundedRect
