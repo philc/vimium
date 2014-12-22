@@ -59,7 +59,7 @@ DomUtils =
           continue if (computedStyle.getPropertyValue('float') == 'none' &&
             computedStyle.getPropertyValue('position') != 'absolute')
           childClientRect = @getVisibleClientRect(child)
-          continue if clientRect == null
+          continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
           return childClientRect
 
       else
