@@ -186,7 +186,7 @@ initializeOnDomReady = ->
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
-  if document.body.tagName.toLowerCase() != "frameset"
+  unless document.body?.tagName.toLowerCase() == "frameset"
     chrome.runtime.sendMessage
       handler: "registerFrame"
       frameId: frameId
