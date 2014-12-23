@@ -441,7 +441,12 @@ onKeydown = (event) ->
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if (isEditable(event.srcElement))
-        event.srcElement.blur()
+        ele = event.srcElement
+        # If vim-in-textarea is active and not in COMMAND mode, then let it handle the event.
+        # "COMMAND" is a constant in jsvim.js.  See discussion in jsvim.js as to how these two components
+        # interact.
+        return if ele.__vimium_vim_attached and not ele.__vimium_vim_attached.is_mode "COMMAND"
+        ele.blur()
       exitInsertMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
