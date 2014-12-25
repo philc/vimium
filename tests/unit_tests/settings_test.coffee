@@ -71,13 +71,18 @@ context "settings",
     assert.equal message, Sync.message
 
   should "set search engines, retrieve them correctly and check that it has been parsed correctly", ->
-    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s"
-    parsedSearchEngines = {"foo": "bar?q=%s", "baz": "qux?q=%s"}
+    searchEngines = "foo: bar?q=%s #comment\n#comment\nbaz: qux?q=%s\nbary: stuff?q=%s"
+    parsedSearchEngines = {"foo": ["bar?q=%s", "comment"], "baz": ["qux?q=%s", "comment"], "bary": ["stuff?q=%s", "bary"]}
     Settings.set 'searchEngines', searchEngines
     assert.equal(searchEngines, Settings.get('searchEngines'))
     result = Settings.getSearchEngines()
-    assert.isTrue(parsedSearchEngines["foo"] == result["foo"] &&
-      parsedSearchEngines["baz"] == result["baz"] && Object.keys(result).length == 2)
+    arrayEqual = (a, b) ->
+      a.length is b.length and a.every (elem, i) -> elem is b[i]
+    assert.isTrue(
+     arrayEqual(parsedSearchEngines["foo"], result["foo"]) &&
+      arrayEqual(parsedSearchEngines["baz"], result["baz"]) &&
+      arrayEqual(parsedSearchEngines["bary"], result["bary"]) &&
+       Object.keys(result).length == 3)
 
   should "sync a key which is not a known setting (without crashing)", ->
     chrome.storage.sync.set { notASetting: JSON.stringify("notAUsefullValue") }

@@ -243,7 +243,7 @@ context "search engines",
   should "return search engine suggestion", ->
     results = filterCompleter(@completer, ["foo", "hello"])
     assert.arrayEqual ["bar?q=hello"], results.map (result) -> result.url
-    assert.arrayEqual ["foo: hello"], results.map (result) -> result.title
+    assert.arrayEqual ["comment: hello"], results.map (result) -> result.title
 
 context "suggestions",
   should "escape html in page titles", ->
