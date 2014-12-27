@@ -52,8 +52,11 @@ Vomnibar =
     messageChannel = new MessageChannel()
     @vomnibarPort = messageChannel.port1
     @vomnibarPort.onmessage = (event) => @handleMessage event
-    # Pass messageChannel.port2 to the vomnibar iframe, so that we can communicate with it.
-    @vomnibarElement.contentWindow.postMessage "", chrome.runtime.getURL(""), [messageChannel.port2]
+
+    # Get iframeMessageSecret so the iframe can determine that our message isn't the page impersonating us.
+    chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) =>
+      # Pass messageChannel.port2 to the vomnibar iframe, so that we can communicate with it.
+      @vomnibarElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
 
   handleMessage: (event) ->
     if event.data == "show"

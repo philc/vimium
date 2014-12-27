@@ -243,10 +243,16 @@ extend BackgroundCompleter,
 
 # Register the port recieved from the parent window, and stop listening for messages on the window object.
 window.addEventListener "message", (event) ->
-  return unless event.data == "" and event.source == window.parent
-  Vomnibar.ownerPagePort = event.ports[0]
-  Vomnibar.ownerPagePort.onmessage = (event) -> Vomnibar.activate event.data
-  window.removeEventListener "message", arguments.callee
+  return unless event.source == window.parent
+
+  currentFunction = arguments.callee
+
+  # Check event.data against iframeMessageSecret so we can determine that this message hasn't been spoofed.
+  chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) ->
+    return unless event.data == secret
+    Vomnibar.ownerPagePort = event.ports[0]
+    Vomnibar.ownerPagePort.onmessage = (event) -> Vomnibar.activate event.data
+    window.removeEventListener "message", currentFunction
 
 root = exports ? window
 root.Vomnibar = Vomnibar
