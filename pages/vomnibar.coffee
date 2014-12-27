@@ -30,7 +30,7 @@ Vomnibar =
       else 0
 
     completer = @getCompleter(options.completer)
-    @vomnibarUI ?= new VomnibarUI()
+    @vomnibarUI ?= new VomnibarUI(@ownerPagePort)
     completer.refresh()
     @vomnibarUI.setInitialSelectionValue(if options.selectFirst then 0 else -1)
     @vomnibarUI.setCompleter(completer)
@@ -42,7 +42,7 @@ Vomnibar =
     @vomnibarUI.update()
 
 class VomnibarUI
-  constructor: ->
+  constructor: (@ownerPagePort) ->
     @refreshInterval = 0
     @initDom()
 
@@ -66,10 +66,7 @@ class VomnibarUI
     @input.focus()
     @input.addEventListener "keydown", @onKeydown
 
-    chrome.runtime.sendMessage
-      handler: "echo"
-      name: "vomnibarShow"
-      frameId: @frameId
+    @ownerPagePort.postMessage "show"
 
   hide: ->
     @box.style.display = "none"
@@ -77,10 +74,7 @@ class VomnibarUI
     @input.blur()
     @input.removeEventListener "keydown", @onKeydown
     window.parent.focus()
-    chrome.runtime.sendMessage
-      handler: "echo"
-      name: "vomnibarClose"
-      frameId: @frameId
+    @ownerPagePort.postMessage "hide"
 
   reset: ->
     @input.value = ""

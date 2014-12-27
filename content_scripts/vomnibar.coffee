@@ -51,8 +51,15 @@ Vomnibar =
   openPort: ->
     messageChannel = new MessageChannel()
     @vomnibarPort = messageChannel.port1
+    @vomnibarPort.onmessage = (event) => @handleMessage event
     # Pass messageChannel.port2 to the vomnibar iframe, so that we can communicate with it.
     @vomnibarElement.contentWindow.postMessage "", chrome.runtime.getURL(""), [messageChannel.port2]
+
+  handleMessage: (event) ->
+    if event.data == "show"
+      @show()
+    else if event.data == "hide"
+      @hide()
 
   # This function opens the vomnibar. It accepts options, a map with the values:
   #   completer   - The completer to fetch results from.
