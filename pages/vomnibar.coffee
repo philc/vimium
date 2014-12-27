@@ -5,6 +5,7 @@
 #
 Vomnibar =
   vomnibarUI: null # the dialog instance for this window
+  ownerPagePort: null
   getUI: -> @vomnibarUI
   completers: {}
 
@@ -16,26 +17,14 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activate: (params = "") ->
+  activate: (userOptions) ->
     options =
       completer: "omni"
       query: null
+      newTab: false
       frameId: -1
-
-    booleanOptions = ["selectFirst", "newTab"]
-
-    # Convert options/params in URL to options object.
-    params
-      .split(/[\?&]/)
-      .map((option) ->
-        [name, value] = option.split "="
-        options[name] = if value? then unescape(value) else true
-      )
-
-    # Set boolean options.
-    for option in booleanOptions
-      options[option] = option of options and options[option] != "false"
-
+      selectFirst: false
+    extend options, userOptions
     options.refreshInterval = switch options.completer
       when "omni" then 100
       else 0
@@ -49,9 +38,8 @@ Vomnibar =
     @vomnibarUI.setForceNewTab(options.newTab)
     @vomnibarUI.setFrameId(options.frameId)
     @vomnibarUI.show()
-    if (options.query)
-      @vomnibarUI.setQuery(options.query)
-      @vomnibarUI.update()
+    @vomnibarUI.setQuery(options.query) if options.query
+    @vomnibarUI.update()
 
 class VomnibarUI
   constructor: ->
@@ -259,10 +247,12 @@ extend BackgroundCompleter,
 
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
-initializeOnDomReady = ->
-  Vomnibar.activate document.location.search
-
-window.addEventListener "DOMContentLoaded", initializeOnDomReady
+# Register the port recieved from the parent window, and stop listening for messages on the window object.
+window.addEventListener "message", (event) ->
+  return unless event.data == "" and event.source == window.parent
+  Vomnibar.ownerPagePort = event.ports[0]
+  Vomnibar.ownerPagePort.onmessage = (event) -> Vomnibar.activate event.data
+  window.removeEventListener "message", arguments.callee
 
 root = exports ? window
 root.Vomnibar = Vomnibar

@@ -202,6 +202,7 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
+  Vomnibar.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
