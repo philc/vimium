@@ -165,7 +165,7 @@ activateHelpDialog = ->
 document.addEventListener "DOMContentLoaded", ->
 
   # Populate options.  The constructor adds each new object to "Option.all".
-  new type(name,enableSaveButton) for name, type of {
+  new type(name,enableSaveButton) for own name, type of {
     exclusionRules: ExclusionRulesOption
     filterLinkHints: CheckBoxOption
     hideHud: CheckBoxOption

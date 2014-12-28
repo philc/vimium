@@ -17,7 +17,7 @@ chrome.tabs.onRemoved.addListener (tabId, removeInfo) ->
   removeMarksForTab tabId
 
 removeMarksForTab = (id) ->
-  for markName, mark of marks
+  for own markName, mark of marks
     if mark.tabId is id
       delete marks[markName]
 

@@ -1,6 +1,6 @@
 Commands =
   init: ->
-    for command, description of commandDescriptions
+    for own command, description of commandDescriptions
       @addCommand(command, description[0], description[1])
 
   availableCommands: {}
@@ -83,7 +83,7 @@ Commands =
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
 
-    for key of defaultKeyMappings
+    for own key of defaultKeyMappings
       @mapKeyToCommand(key, defaultKeyMappings[key])
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
