@@ -45,7 +45,8 @@ context "convertToUrl",
 
   should "convert non-URL terms into search queries", ->
     assert.equal "http://www.google.com/search?q=google", Utils.convertToUrl("google")
-    assert.equal "http://www.google.com/search?q=go%20ogle.com", Utils.convertToUrl("go ogle.com")
+    assert.equal "http://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com")
+    assert.equal "http://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter")
 
 context "hasChromePrefix",
   should "detect chrome prefixes of URLs", ->
