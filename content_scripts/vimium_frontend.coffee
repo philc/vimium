@@ -181,6 +181,8 @@ window.addEventListener "focus", ->
 initializeOnDomReady = ->
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
+  testUIComponentSetup()
+
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
@@ -920,6 +922,10 @@ exitFindMode = ->
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
+
+  testUIComponent.show()
+  testUIComponent.postMessage "version: #{chrome.runtime.getManifest().version}; random number: #{Math.random()}"
+
   isShowingHelpDialog = true
   container = document.createElement("div")
   container.id = "vimiumHelpDialogContainer"
@@ -966,6 +972,9 @@ window.showHelpDialog = (html, fid) ->
 
 
 hideHelpDialog = (clickEvent) ->
+
+  testUIComponent.hide()
+
   isShowingHelpDialog = false
   helpDialog = document.getElementById("vimiumHelpDialogContainer")
   if (helpDialog)
@@ -1085,6 +1094,12 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+testUIComponent = null
+testUIComponentSetup = ->
+  testUIComponent = new UIComponent "pages/test_ui_component.html", "testUIComponent"
+  testUIComponent.setHideStyle "display: none;"
+  testUIComponent.setShowStyle "display: block;"
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
