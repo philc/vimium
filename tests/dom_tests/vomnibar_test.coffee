@@ -1,19 +1,34 @@
+vomnibarFrame = null
+
 context "Keep selection within bounds",
 
   setup ->
     @completions = []
-    oldGetCompleter = Vomnibar.getCompleter.bind Vomnibar
-    stub Vomnibar, 'getCompleter', (name) =>
+
+    vomnibarFrame = Vomnibar.vomnibarElement.contentWindow
+
+    # The vomnibar frame is dynamically injected, so inject our stubs here.
+    vomnibarFrame.Function::bind = Function::bind
+    vomnibarFrame.chrome = chrome
+
+    oldGetCompleter = vomnibarFrame.Vomnibar.getCompleter.bind vomnibarFrame.Vomnibar
+    stub vomnibarFrame.Vomnibar, "getCompleter", (name) =>
       completer = oldGetCompleter name
-      stub completer, 'filter', (query, callback) => callback(@completions)
+      stub completer, 'filter', (query, callback) =>
+        callback(@completions)
       completer
 
+    # Shoulda.js doesn't support async tests, so we have to hack around.
+    stub Vomnibar, "open", (options) -> vomnibarFrame.Vomnibar.activate options
+    vomnibarFrame.Vomnibar.ownerPagePort =
+      postMessage: (event) -> Vomnibar.handleMessage event
+
   tearDown ->
-    Vomnibar.vomnibarUI.hide()
+    Vomnibar.hide()
 
   should "set selection to position -1 for omni completion by default", ->
     Vomnibar.activate()
-    ui = Vomnibar.vomnibarUI
+    ui = vomnibarFrame.Vomnibar.vomnibarUI
 
     @completions = []
     ui.update(true)
@@ -28,8 +43,8 @@ context "Keep selection within bounds",
     assert.equal -1, ui.selection
 
   should "set selection to position 0 for bookmark completion if possible", ->
-    Vomnibar.activate "completer=bookmark&selectFirst"
-    ui = Vomnibar.vomnibarUI
+    Vomnibar.activateBookmarks()
+    ui = vomnibarFrame.Vomnibar.vomnibarUI
 
     @completions = []
     ui.update(true)
@@ -45,7 +60,7 @@ context "Keep selection within bounds",
 
   should "keep selection within bounds", ->
     Vomnibar.activate()
-    ui = Vomnibar.vomnibarUI
+    ui = vomnibarFrame.Vomnibar.vomnibarUI
 
     @completions = []
     ui.update(true)
