@@ -96,8 +96,8 @@ Utils =
 
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # it would be better to pull the default search engine from chrome itself,
-    # but it is not clear if/how that is possible
+    # It would be better to pull the default search engine from chrome itself.  However, unfortunately chrome
+    # does not provide an API for doing so.
     Settings.get("searchUrl") + @createSearchQuery query
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
