@@ -16,25 +16,13 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activate: (params = "") ->
+  activate: (userOptions) ->
     options =
       completer: "omni"
       query: null
-      frameId: -1
-
-    booleanOptions = ["selectFirst", "newTab"]
-
-    # Convert options/params in URL to options object.
-    params
-      .split(/[\?&]/)
-      .map((option) ->
-        [name, value] = option.split "="
-        options[name] = if value? then unescape(value) else true
-      )
-
-    # Set boolean options.
-    for option in booleanOptions
-      options[option] = option of options and options[option] != "false"
+      newTab: false
+      selectFirst: false
+    extend options, userOptions
 
     options.refreshInterval = switch options.completer
       when "omni" then 100
@@ -47,11 +35,8 @@ Vomnibar =
     @vomnibarUI.setCompleter(completer)
     @vomnibarUI.setRefreshInterval(options.refreshInterval)
     @vomnibarUI.setForceNewTab(options.newTab)
-    @vomnibarUI.setFrameId(options.frameId)
-    @vomnibarUI.show()
-    if (options.query)
-      @vomnibarUI.setQuery(options.query)
-      @vomnibarUI.update()
+    @vomnibarUI.setQuery(options.query) if options.query
+    @vomnibarUI.update()
 
 class VomnibarUI
   constructor: ->
@@ -71,30 +56,14 @@ class VomnibarUI
 
   setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
-  setFrameId: (frameId) -> @frameId = frameId
-
-  show: ->
-    @box.style.display = "block"
-    @input.focus()
-    @input.addEventListener "keydown", @onKeydown
-
-    chrome.runtime.sendMessage
-      handler: "echo"
-      name: "vomnibarShow"
-      frameId: @frameId
-
   hide: ->
-    @box.style.display = "none"
-    @completionList.style.display = "none"
     @input.blur()
-    @input.removeEventListener "keydown", @onKeydown
     window.parent.focus()
-    chrome.runtime.sendMessage
-      handler: "echo"
-      name: "vomnibarClose"
-      frameId: @frameId
+    UIComponentServer.postMessage "hide"
+    @reset()
 
   reset: ->
+    @completionList.style.display = "none"
     @input.value = ""
     @updateTimer = null
     @completions = []
@@ -188,7 +157,7 @@ class VomnibarUI
     @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
     @updateSelection()
 
-  update: (updateSynchronously, callback) ->
+  update: (updateSynchronously, callback) =>
     if (updateSynchronously)
       # cancel scheduled update
       if (@updateTimer != null)
@@ -205,11 +174,14 @@ class VomnibarUI
         @updateTimer = null
       @refreshInterval)
 
+    @input.focus()
+
   initDom: ->
     @box = document.getElementById("vomnibar")
 
     @input = @box.querySelector("input")
-    @input.addEventListener "input", => @update()
+    @input.addEventListener "input", @update
+    @input.addEventListener "keydown", @onKeydown
     @completionList = @box.querySelector("ul")
     @completionList.style.display = "none"
 
@@ -259,10 +231,7 @@ extend BackgroundCompleter,
 
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
-initializeOnDomReady = ->
-  Vomnibar.activate document.location.search
-
-window.addEventListener "DOMContentLoaded", initializeOnDomReady
+UIComponentServer.registerHandler (event) -> Vomnibar.activate event.data
 
 root = exports ? window
 root.Vomnibar = Vomnibar

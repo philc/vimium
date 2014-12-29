@@ -2,7 +2,7 @@
 # This wraps the vomnibar iframe, which we inject into the page to provide the vomnibar.
 #
 Vomnibar =
-  vomnibarElement: null
+  vomnibarUI: null
 
   activate: -> @open {completer:"omni"}
   activateInNewTab: -> @open {
@@ -35,41 +35,23 @@ Vomnibar =
     newTab: true
   }
 
+  init: ->
+    unless @vomnibarUI?
+      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", @handleMessage.bind this
+
+  handleMessage: (event) ->
+    if event.data == "hide"
+      @hide()
+
+
   # This function opens the vomnibar. It accepts options, a map with the values:
   #   completer   - The completer to fetch results from.
   #   query       - Optional. Text to prefill the Vomnibar with.
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
-  open: (options) ->
-    unless @vomnibarElement?
-      @vomnibarElement = document.createElement "iframe"
-      @vomnibarElement.className = "vomnibarFrame"
-      @vomnibarElement.seamless = "seamless"
-      @hide()
+  open: (options) -> @vomnibarUI.activate options
 
-    options.frameId = frameId
-
-    optionStrings = []
-    for option of options
-      if typeof options[option] == "boolean"
-        optionStrings.push option if options[option]
-      else
-        optionStrings.push "#{option}=#{escape(options[option])}"
-
-    @vomnibarElement.src = "#{chrome.runtime.getURL "pages/vomnibar.html"}?#{optionStrings.join "&"}"
-    document.documentElement.appendChild @vomnibarElement
-
-    @vomnibarElement.focus()
-
-  close: ->
-    @hide()
-    @vomnibarElement?.remove()
-
-  show: ->
-    @vomnibarElement?.style.display = "block"
-
-  hide: ->
-    @vomnibarElement?.style.display = "none"
+  hide: -> @vomnibarUI?.hide()
 
 root = exports ? window
 root.Vomnibar = Vomnibar

@@ -42,7 +42,7 @@ class UIComponent
       @showing = true
     @iframeElement.focus()
 
-  hide: (focusWindow=true)->
+  hide: (focusWindow = true)->
     if @showing
       @iframeElement.setAttribute "style", @hideStyle
       window.focus() if focusWindow
