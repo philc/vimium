@@ -7,11 +7,13 @@ window.addEventListener "message", (event) ->
   chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) ->
     return unless event.data == secret
     UIComponentServer.portOpen event.ports[0]
+    window.addEventListener "keydown", (event) -> UIComponentServer.keydownListener event
     window.removeEventListener "message", currentFunction # Stop listening for message events.
 
 UIComponentServer =
   ownerPagePort: null
   messageEventListeners: []
+  exitOnEsc: true
 
   portOpen: (@ownerPagePort) ->
     @ownerPagePort.onmessage = (event) => @handleMessage event
@@ -36,6 +38,13 @@ UIComponentServer =
       if listenerIndex > -1
         @messageEventListeners = @messageEventListeners.splice listenerIndex, 1
     undefined
+
+  keydownListener: (event) ->
+    if @exitOnEsc and KeyboardUtils.isEscape event
+      @postMessage "hide"
+      false
+    else
+      true
 
 root = exports ? window
 root.UIComponentServer = UIComponentServer

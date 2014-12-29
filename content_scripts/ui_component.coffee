@@ -14,6 +14,8 @@ class UIComponent
     document.documentElement.appendChild @iframeElement
     @hide()
 
+    @addEventListener "message", handleHideMessage
+
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->
     messageChannel = new MessageChannel()
@@ -30,6 +32,7 @@ class UIComponent
   handleMessage: (event) ->
     for listener in @messageEventListeners
       retVal = listener.call this, event
+      retVal ?= true
       return false unless retVal
     true
 
@@ -60,7 +63,15 @@ class UIComponent
   hide: ->
     return unless @iframeElement?
     @iframeElement.setAttribute "style", @hideStyle
+    window.focus()
     @showing = false
+
+handleHideMessage = (event) ->
+  if event.data == "hide"
+    @hide()
+    false
+  else
+    true
 
 root = exports ? window
 root.UIComponent = UIComponent
