@@ -219,7 +219,7 @@ Scroller =
         window.scrollBy(0, amount)
       return
 
-    activatedElement ||= firstScrollableElement()
+    activatedElement ||= document.body and firstScrollableElement()
     return unless activatedElement
 
     # Avoid the expensive scroll calculation if it will not be used.  This reduces costs during smooth,
@@ -230,7 +230,7 @@ Scroller =
       CoreScroller.scroll element, direction, elementAmount
 
   scrollTo: (direction, pos) ->
-    activatedElement ||= firstScrollableElement()
+    activatedElement ||= document.body and firstScrollableElement()
     return unless activatedElement
 
     element = findScrollableElement activatedElement, direction, pos, 1
