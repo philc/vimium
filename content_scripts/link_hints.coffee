@@ -125,6 +125,72 @@ LinkHints =
     marker
 
   #
+  # Determine whether the element is visible and clickable. If it is, return the element and the rect
+  # bounding the element in the viewport.
+  getVisibleClickable: (element) ->
+    tagName = element.tagName.toLowerCase()
+    isClickable = false
+    onlyHasTabIndex = false
+
+    # Insert area elements that provide click functionality to an img.
+    if tagName == "img"
+      mapName = element.getAttribute "usemap"
+      if mapName
+        imgClientRects = element.getClientRects()
+        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+        map = document.querySelector "map[name=\"#{mapName}\"]"
+        if map and imgClientRects.length > 0
+          areas = map.getElementsByTagName "area"
+          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+          visibleElements.push areasAndRects...
+
+    # Check aria properties to see if the element should be ignored.
+    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+      return null # This element should never have a link hint.
+
+    # Check for attributes that make an element clickable regardless of its tagName.
+    if (element.hasAttribute("onclick") or
+        element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
+        element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
+        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
+      isClickable = true
+
+    # Check for jsaction event listeners on the element.
+    if element.hasAttribute "jsaction"
+      jsactionRules = element.getAttribute("jsaction").split(";")
+      for jsactionRule in jsactionRules
+        ruleSplit = jsactionRule.split ":"
+        isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+
+    # Check for tagNames which are natively clickable.
+    switch tagName
+      when "a"
+        isClickable = true
+      when "textarea"
+        isClickable ||= not element.disabled and not element.readOnly
+      when "input"
+        isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
+                             element.disabled or
+                             (element.readOnly and DomUtils.isSelectable element))
+      when "button", "select"
+        isClickable ||= not element.disabled
+
+    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+    # citizens when it improves UX, so take special note of them.
+    tabIndexValue = element.getAttribute("tabindex")
+    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+    unless isClickable or isNaN(tabIndex) or tabIndex < 0
+      isClickable = onlyHasTabIndex = true
+
+    return null unless isClickable # The element isn't clickable.
+    clientRect = DomUtils.getVisibleClientRect element
+    if clientRect == null
+      null
+    else
+      {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
+
+  #
   # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
   # at which (parts of) the elements are displayed.
   # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
@@ -141,65 +207,8 @@ LinkHints =
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      tagName = element.tagName.toLowerCase()
-      isClickable = false
-      onlyHasTabIndex = false
-
-      # Insert area elements that provide click functionality to an img.
-      if tagName == "img"
-        mapName = element.getAttribute "usemap"
-        if mapName
-          imgClientRects = element.getClientRects()
-          mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
-          map = document.querySelector "map[name=\"#{mapName}\"]"
-          if map and imgClientRects.length > 0
-            areas = map.getElementsByTagName "area"
-            areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-            visibleElements.push areasAndRects...
-
-      # Check aria properties to see if the element should be ignored.
-      if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
-          element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-        continue # No point continuing the loop; this element should never have a link hint
-
-      # Check for attributes that make an element clickable regardless of its tagName.
-      if (element.hasAttribute("onclick") or
-          element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
-          element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
-          element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
-        isClickable = true
-
-      # Check for jsaction event listeners on the element.
-      if element.hasAttribute "jsaction"
-        jsactionRules = element.getAttribute("jsaction").split(";")
-        for jsactionRule in jsactionRules
-          ruleSplit = jsactionRule.split ":"
-          isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
-
-      # Check for tagNames which are natively clickable.
-      switch tagName
-        when "a"
-          isClickable = true
-        when "textarea"
-          isClickable ||= not element.disabled and not element.readOnly
-        when "input"
-          isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
-                               element.disabled or
-                               (element.readOnly and DomUtils.isSelectable element))
-        when "button", "select"
-          isClickable ||= not element.disabled
-
-      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-      # citizens when it improves UX, so take special note of them.
-      tabIndexValue = element.getAttribute("tabindex")
-      tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-      unless isClickable or isNaN(tabIndex) or tabIndex < 0
-        isClickable = onlyHasTabIndex = true
-
-      continue unless isClickable # If the element isn't clickable, do nothing.
-      clientRect = DomUtils.getVisibleClientRect element
-      if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
+      visibleElement = @getVisibleClickable element
+      visibleElements.push visibleElement if visibleElement?
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
     #  * The document has a local stacking context.
