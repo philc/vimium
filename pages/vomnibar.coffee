@@ -5,6 +5,7 @@
 #
 Vomnibar =
   vomnibarUI: null # the dialog instance for this window
+  ownerPagePort: null
   getUI: -> @vomnibarUI
   completers: {}
 
@@ -16,32 +17,20 @@ Vomnibar =
   #
   # Activate the Vomnibox.
   #
-  activate: (params = "") ->
+  activate: (userOptions) ->
     options =
       completer: "omni"
       query: null
+      newTab: false
       frameId: -1
-
-    booleanOptions = ["selectFirst", "newTab"]
-
-    # Convert options/params in URL to options object.
-    params
-      .split(/[\?&]/)
-      .map((option) ->
-        [name, value] = option.split "="
-        options[name] = if value? then unescape(value) else true
-      )
-
-    # Set boolean options.
-    for option in booleanOptions
-      options[option] = option of options and options[option] != "false"
-
+      selectFirst: false
+    extend options, userOptions
     options.refreshInterval = switch options.completer
       when "omni" then 100
       else 0
 
     completer = @getCompleter(options.completer)
-    @vomnibarUI ?= new VomnibarUI()
+    @vomnibarUI ?= new VomnibarUI(@ownerPagePort)
     completer.refresh()
     @vomnibarUI.setInitialSelectionValue(if options.selectFirst then 0 else -1)
     @vomnibarUI.setCompleter(completer)
@@ -49,12 +38,11 @@ Vomnibar =
     @vomnibarUI.setForceNewTab(options.newTab)
     @vomnibarUI.setFrameId(options.frameId)
     @vomnibarUI.show()
-    if (options.query)
-      @vomnibarUI.setQuery(options.query)
-      @vomnibarUI.update()
+    @vomnibarUI.setQuery(options.query) if options.query
+    @vomnibarUI.update()
 
 class VomnibarUI
-  constructor: ->
+  constructor: (@ownerPagePort) ->
     @refreshInterval = 0
     @initDom()
 
@@ -78,10 +66,7 @@ class VomnibarUI
     @input.focus()
     @input.addEventListener "keydown", @onKeydown
 
-    chrome.runtime.sendMessage
-      handler: "echo"
-      name: "vomnibarShow"
-      frameId: @frameId
+    @ownerPagePort.postMessage "show"
 
   hide: ->
     @box.style.display = "none"
@@ -89,10 +74,7 @@ class VomnibarUI
     @input.blur()
     @input.removeEventListener "keydown", @onKeydown
     window.parent.focus()
-    chrome.runtime.sendMessage
-      handler: "echo"
-      name: "vomnibarClose"
-      frameId: @frameId
+    @ownerPagePort.postMessage "hide"
 
   reset: ->
     @input.value = ""
@@ -259,10 +241,18 @@ extend BackgroundCompleter,
 
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
-initializeOnDomReady = ->
-  Vomnibar.activate document.location.search
+# Register the port recieved from the parent window, and stop listening for messages on the window object.
+window.addEventListener "message", (event) ->
+  return unless event.source == window.parent
 
-window.addEventListener "DOMContentLoaded", initializeOnDomReady
+  currentFunction = arguments.callee
+
+  # Check event.data against iframeMessageSecret so we can determine that this message hasn't been spoofed.
+  chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) ->
+    return unless event.data == secret
+    Vomnibar.ownerPagePort = event.ports[0]
+    Vomnibar.ownerPagePort.onmessage = (event) -> Vomnibar.activate event.data
+    window.removeEventListener "message", currentFunction
 
 root = exports ? window
 root.Vomnibar = Vomnibar

@@ -2,6 +2,31 @@ root = exports ? window
 
 currentVersion = Utils.getCurrentVersion()
 
+#
+# ##### ##### ##### #   # ####  ##### ##### #   #
+# #     #     #     #   # #   #   #     #    # #
+# ##### ##### #     #   # ####    #     #     #
+#     # #     #     #   # #   #   #     #     #
+# ##### ##### ##### ##### #   # #####   #     #
+#
+# In order to prevent us from exposing the permissions of this extension, this should only be used when:
+#  * sending a message
+#    - from a content script
+#    - to an iframe, whose contents are a page bundled with the extension
+#    - using window.postMessage (ie. iframeElement.contentWindow.postMessage).
+# Any iframe page which accepts messages from a content script via window.postMessage should:
+#  * fail if the sender (event.source) isn't the expected window object (eg. the parent window)
+#  * fail if no secret parameter is passed
+#  * fail if the secret parameter passed does not match this secret
+# Correspondingly, any content script which uses window.postMessage to communicate with an iframe should
+# disclose this security parameter in the message, so that the iframe's listener does not fail.
+#
+# If used in this way, this secret is never disclosed to a malicious page/extension, making random
+# guessing an attacker's best possible approach.
+#
+iframeMessageSecret = Math.floor(Math.random()*999999999)
+chrome.storage.local.set {iframeMessageSecret}
+
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed

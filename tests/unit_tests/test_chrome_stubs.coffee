@@ -95,3 +95,7 @@ exports.chrome =
         callback() if callback
         # Now, generate (supposedly asynchronous) notification for listeners.
         global.chrome.storage.onChanged.callEmpty(key)
+
+# Use chrome.storage.sync stubs for chrome.storage.local too.
+exports.chrome.storage.local = exports.chrome.storage.sync
+exports.chrome.storage.sync.store = {}

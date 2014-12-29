@@ -139,8 +139,6 @@ initializePreDomReady = ->
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
-    vomnibarShow: -> Vomnibar.show()
-    vomnibarClose: -> Vomnibar.close()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -202,6 +200,7 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
+  Vomnibar.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
