@@ -17,8 +17,6 @@ class UIComponent
     @setHideStyle hideStyle if showStyle?
     @hide()
 
-    @addEventListener "message", handleHideMessage
-
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->
     messageChannel = new MessageChannel()
