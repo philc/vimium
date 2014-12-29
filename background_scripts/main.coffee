@@ -19,6 +19,11 @@ namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 selectionChangedHandlers = []
 tabLoadedHandlers = {} # tabId -> function()
 
+# A secret, available only within the current instantiation of Vimium.  The secret is big, likely unguessable
+# in practice, but less than 2^31.
+chrome.storage.local.set
+  vimiumSecret: Math.floor Math.random() * 2000000000
+
 completionSources =
   bookmarks: new BookmarkCompleter()
   history: new HistoryCompleter()
