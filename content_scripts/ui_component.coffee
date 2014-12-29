@@ -2,8 +2,8 @@ class UIComponent
   iframeElement: null
   iframePort: null
   messageEventListeners: []
-  showStyle: ""
-  hideStyle: ""
+  showStyle: "display: block;"
+  hideStyle: "display: none;"
 
   constructor: (iframeUrl, className) ->
     @iframeElement = document.createElement "iframe"
