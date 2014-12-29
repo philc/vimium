@@ -135,6 +135,11 @@ LinkHints =
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
+    # The order of elements here is important; they should appear in the order they are in the DOM, so that
+    # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
+    # is the sensible, efficient way to ensure this happens.
+    # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
+    # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
       tagName = element.tagName.toLowerCase()
       isClickable = false
