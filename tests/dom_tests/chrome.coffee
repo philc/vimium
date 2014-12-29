@@ -17,5 +17,10 @@ root.chrome = {
     }
     sendMessage: ->
     getManifest: ->
+    getURL: (url) -> "../../#{url}"
   }
+  storage:
+    local:
+      get: ->
+      set: ->
 }

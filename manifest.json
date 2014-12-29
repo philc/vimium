@@ -37,6 +37,7 @@
              "lib/dom_utils.js",
              "lib/handler_stack.js",
              "lib/clipboard.js",
+             "content_scripts/ui_component.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
@@ -57,5 +58,8 @@
   "browser_action": {
     "default_icon": "icons/browser_action_disabled.png",
     "default_popup": "pages/popup.html"
-  }
+  },
+  "web_accessible_resources": [
+    "pages/test_ui_component.html"
+  ]
 }

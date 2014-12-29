@@ -181,6 +181,8 @@ window.addEventListener "focus", ->
 initializeOnDomReady = ->
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
 
+  testUIComponentSetup()
+
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
 
@@ -1085,6 +1087,20 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+testUIComponent = null
+testUIComponentSetup = ->
+  testUIComponent = new UIComponent "pages/test_ui_component.html", "testUIComponent", (event) ->
+    if event.data == "hide"
+      @hide()
+      window.focus()
+    else
+      # ... And we can get data back!
+      console.log event.data
+
+window.activateTestUIComponent = ->
+  chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
+    testUIComponent.activate [chrome.runtime.getManifest().version, secret, Math.random(), ].join "<br/>"
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
