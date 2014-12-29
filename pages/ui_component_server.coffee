@@ -18,12 +18,13 @@ UIComponentServer =
   portOpen: (@ownerPagePort) ->
     @ownerPagePort.onmessage = (event) => @handleMessage event
 
-  postMessage: (data) -> @ownerPagePort.postMessage data
+  postMessage: (message) -> @ownerPagePort.postMessage message
 
-  # Execute each event listener on the current event until we get a falsy return value.
+  # Execute each event listener on the current event until we get a non-null falsy return value.
   handleMessage: (event) ->
     for listener in @messageEventListeners
       retVal = listener.call this, event
+      retVal ?= true
       return false unless retVal
     true
 
@@ -34,9 +35,7 @@ UIComponentServer =
 
   removeEventListener: (type, listener) ->
     if type == "message"
-      listenerIndex = @messageEventListeners.indexOf listener
-      if listenerIndex > -1
-        @messageEventListeners = @messageEventListeners.splice listenerIndex, 1
+      @messageEventListeners = @messageEventListeners.filter (f) -> f != listener
     undefined
 
   keydownListener: (event) ->

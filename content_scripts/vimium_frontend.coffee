@@ -1091,8 +1091,6 @@ Tween =
 testUIComponent = null
 testUIComponentSetup = ->
   testUIComponent = new UIComponent "pages/test_ui_component.html", "testUIComponent"
-  testUIComponent.setHideStyle "display: none;"
-  testUIComponent.setShowStyle "display: block;"
 
 window.activateTestUIComponent = ->
   testUIComponent.show()

@@ -29,9 +29,9 @@ class UIComponent
     chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) =>
       @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
 
-  postMessage: (data) -> @iframePort.postMessage data
+  postMessage: (message) -> @iframePort.postMessage message
 
-  # Execute each event listener on the current event until we get a falsy return value.
+  # Execute each event listener on the current event until we get a non-null falsy return value.
   handleMessage: (event) ->
     for listener in @messageEventListeners
       retVal = listener.call this, event
@@ -61,7 +61,8 @@ class UIComponent
     else
       @hide()
 
-  show: ->
+  show: (message) ->
+    @postMessage message if message?
     @iframeElement.setAttribute "style", @showStyle
     @iframeElement.focus()
     @showing = true
