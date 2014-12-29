@@ -198,6 +198,7 @@ window.addEventListener "focus", ->
 #
 initializeOnDomReady = ->
   enterInsertModeIfElementIsFocused() if isEnabledForUrl
+
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
