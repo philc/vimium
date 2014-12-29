@@ -1093,8 +1093,7 @@ testUIComponentSetup = ->
   testUIComponent = new UIComponent "pages/test_ui_component.html", "testUIComponent"
 
 window.activateTestUIComponent = ->
-  testUIComponent.show()
-  testUIComponent.postMessage "version: #{chrome.runtime.getManifest().version}; random number: #{Math.random()}"
+  testUIComponent.show "version: #{chrome.runtime.getManifest().version}; random number: #{Math.random()}"
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
