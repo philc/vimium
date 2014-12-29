@@ -88,11 +88,17 @@ Utils =
     # Fallback: no URL
     return false
 
+  # Map a search query to its URL encoded form. The query may be either a string or an array of strings.
+  # E.g. "BBC Sport" -> "BBC+Sport".
+  createSearchQuery: (query) ->
+    query = query.split(/\s+/) if typeof(query) == "string"
+    query.map(encodeURIComponent).join "+"
+
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # it would be better to pull the default search engine from chrome itself,
-    # but it is not clear if/how that is possible
-    Settings.get("searchUrl") + encodeURIComponent(query)
+    # It would be better to pull the default search engine from chrome itself.  However, unfortunately chrome
+    # does not provide an API for doing so.
+    Settings.get("searchUrl") + @createSearchQuery query
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
