@@ -59,10 +59,14 @@ class UIComponent
     else
       @hide()
 
+  activate: (message) ->
+    @postMessage message if message?
+    @show() unless @showing
+    @iframeElement.focus()
+
   show: (message) ->
     @postMessage message if message?
     @iframeElement.setAttribute "style", @showStyle
-    @iframeElement.focus()
     @showing = true
 
   hide: ->
