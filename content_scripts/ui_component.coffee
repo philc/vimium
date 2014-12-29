@@ -1,7 +1,7 @@
 class UIComponent
   iframeElement: null
   iframePort: null
-  showing: true
+  showing: null
   showStyle: "display: block;"
   hideStyle: "display: none;"
 
@@ -12,7 +12,8 @@ class UIComponent
     @iframeElement.src = chrome.runtime.getURL iframeUrl
     @iframeElement.addEventListener "load", => @openPort()
     document.documentElement.appendChild @iframeElement
-    # Hide iframe, but don't interfere with the focus.
+    @showing = true # The iframe is visible now.
+    # Hide the iframe, but don't interfere with the focus.
     @hide false
 
   # Open a port and pass it to the iframe via window.postMessage.
@@ -44,7 +45,6 @@ class UIComponent
   hide: (focusWindow=true)->
     if @showing
       @iframeElement.setAttribute "style", @hideStyle
-      # TODO(smblott) Is window always the right thing to focus, here?
       window.focus() if focusWindow
       @showing = false
 
