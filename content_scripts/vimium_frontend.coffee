@@ -1090,17 +1090,17 @@ Tween =
 
 testUIComponent = null
 testUIComponentSetup = ->
-  testUIComponent = new UIComponent "pages/test_ui_component.html", "testUIComponent"
-  testUIComponent.addEventListener "message", (event) ->
+  testUIComponent = new UIComponent "pages/test_ui_component.html", "testUIComponent", (event) ->
     if event.data == "hide"
       @hide()
       window.focus()
-      false
     else
-      true
+      # ... And we can get data back!
+      console.log event.data
 
 window.activateTestUIComponent = ->
-  testUIComponent.activate "version: #{chrome.runtime.getManifest().version}; random number: #{Math.random()}"
+  chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
+    testUIComponent.activate [chrome.runtime.getManifest().version, secret, Math.random(), ].join "<br/>"
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)

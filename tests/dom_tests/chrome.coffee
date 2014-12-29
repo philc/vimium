@@ -22,4 +22,5 @@ root.chrome = {
   storage:
     local:
       get: ->
+      set: ->
 }

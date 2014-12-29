@@ -1,21 +1,19 @@
 class UIComponent
   iframeElement: null
   iframePort: null
-  messageEventListeners: []
+  showing: true
   showStyle: "display: block;"
   hideStyle: "display: none;"
 
-  constructor: (iframeUrl, className, showStyle, hideStyle) ->
+  constructor: (iframeUrl, className, @handleMessage) ->
     @iframeElement = document.createElement "iframe"
     @iframeElement.className = className
     @iframeElement.seamless = "seamless"
     @iframeElement.src = chrome.runtime.getURL iframeUrl
     @iframeElement.addEventListener "load", => @openPort()
     document.documentElement.appendChild @iframeElement
-
-    @setShowStyle showStyle if showStyle?
-    @setHideStyle hideStyle if showStyle?
-    @hide()
+    # Hide iframe, but don't interfere with the focus.
+    @hide false
 
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->
@@ -23,63 +21,32 @@ class UIComponent
     @iframePort = messageChannel.port1
     @iframePort.onmessage = (event) => @handleMessage event
 
-    # Get iframeMessageSecret so the iframe can determine that our message isn't the page impersonating us.
-    chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) =>
+    # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
+    chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) =>
       @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
 
-  postMessage: (message) -> @iframePort.postMessage message
-
-  # Execute each event listener on the current event until we get a non-null falsy return value.
-  handleMessage: (event) ->
-    for listener in @messageEventListeners
-      retVal = listener.call this, event
-      retVal ?= true
-      return false unless retVal
-    true
-
-  addEventListener: (type, listener) ->
-    if type == "message"
-      @messageEventListeners.push listener
-    undefined
-
-  removeEventListener: (type, listener) ->
-    if type == "message"
-      @messageEventListeners = @messageEventListeners.filter (f) -> f != listener
-    undefined
-
-  setHideStyle: (@hideStyle) ->
-    @hide() if @showing == false
-
-  setShowStyle: (@showStyle) ->
-    @show() if @showing == true
-
-  setStyles: (@showStyle = @showStyle, @hideStyle = @hideStyle) ->
-    if @showing
-      @show()
-    else
-      @hide()
+  postMessage: (message) ->
+    @iframePort.postMessage message
 
   activate: (message) ->
     @postMessage message if message?
-    @show() unless @showing
+    if @showing
+      # NOTE(smblott) Experimental.  Not sure this is a great idea. If the iframe was already showing, then
+      # the user gets no visual feedback when it is re-focused.  So flash its border.
+      borderWas = @iframeElement.style.border
+      @iframeElement.style.border = '5px solid yellow'
+      setTimeout((=> @iframeElement.style.border = borderWas), 200)
+    else
+      @iframeElement.setAttribute "style", @showStyle
+      @showing = true
     @iframeElement.focus()
 
-  show: (message) ->
-    @postMessage message if message?
-    @iframeElement.setAttribute "style", @showStyle
-    @showing = true
-
-  hide: ->
-    @iframeElement.setAttribute "style", @hideStyle
-    window.focus()
-    @showing = false
-
-handleHideMessage = (event) ->
-  if event.data == "hide"
-    @hide()
-    false
-  else
-    true
+  hide: (focusWindow=true)->
+    if @showing
+      @iframeElement.setAttribute "style", @hideStyle
+      # TODO(smblott) Is window always the right thing to focus, here?
+      window.focus() if focusWindow
+      @showing = false
 
 root = exports ? window
 root.UIComponent = UIComponent

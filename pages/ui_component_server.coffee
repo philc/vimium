@@ -1,41 +1,27 @@
-# Register the port recieved from the parent window, and stop listening for messages on the window object.
-window.addEventListener "message", (event) ->
-  return unless event.source == window.parent
-  currentFunction = arguments.callee
 
-  # Check event.data against iframeMessageSecret so we can determine that this message hasn't been spoofed.
-  chrome.storage.local.get "iframeMessageSecret", ({iframeMessageSecret: secret}) ->
-    return unless event.data == secret
+# Fetch the Vimium secret, register the port recieved from the parent window, and stop listening for messages
+# on the window object. vimiumSecret is accessible only within the current instantion of Vimium.  So a
+# malicious host page trying to register its own port can do no better than guessing.
+registerPort = (event) ->
+  chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
+    return unless event.source == window.parent and event.data == secret
     UIComponentServer.portOpen event.ports[0]
-    window.removeEventListener "message", currentFunction # Stop listening for message events.
+    window.removeEventListener "message", registerPort
+
+window.addEventListener "message", registerPort
 
 UIComponentServer =
   ownerPagePort: null
-  messageEventListeners: []
-  exitOnEsc: true
+  handleMessage: null
 
   portOpen: (@ownerPagePort) ->
-    @ownerPagePort.onmessage = (event) => @handleMessage event
+    @ownerPagePort.onmessage = (event) =>
+      @handleMessage event if @handleMessage
 
-  postMessage: (message) -> @ownerPagePort.postMessage message
+  registerHandler: (@handleMessage) ->
 
-  # Execute each event listener on the current event until we get a non-null falsy return value.
-  handleMessage: (event) ->
-    for listener in @messageEventListeners
-      retVal = listener.call this, event
-      retVal ?= true
-      return false unless retVal
-    true
-
-  addEventListener: (type, listener) ->
-    if type == "message"
-      @messageEventListeners.push listener
-    undefined
-
-  removeEventListener: (type, listener) ->
-    if type == "message"
-      @messageEventListeners = @messageEventListeners.filter (f) -> f != listener
-    undefined
+  postMessage: (message) ->
+    @ownerPagePort.postMessage message if @ownerPagePort
 
 root = exports ? window
 root.UIComponentServer = UIComponentServer
