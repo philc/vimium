@@ -91,6 +91,7 @@ Commands =
   commandGroups:
     pageNavigation:
       ["scrollDown",
+      "activateTestUIComponent",
       "scrollUp",
       "scrollLeft",
       "scrollRight",
@@ -252,6 +253,7 @@ defaultKeyMappings =
 
   "m": "Marks.activateCreateMode"
   "`": "Marks.activateGotoMode"
+  "D": "activateTestUIComponent"
 
 
 # This is a mapping of: commandIdentifier => [description, options].
@@ -263,6 +265,7 @@ commandDescriptions =
   scrollUp: ["Scroll up"]
   scrollLeft: ["Scroll left"]
   scrollRight: ["Scroll right"]
+  activateTestUIComponent: ["UI component test"]
 
   scrollToTop: ["Scroll to the top of the page", { noRepeat: true }]
   scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
