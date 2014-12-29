@@ -922,7 +922,6 @@ exitFindMode = ->
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
-
   isShowingHelpDialog = true
   container = document.createElement("div")
   container.id = "vimiumHelpDialogContainer"

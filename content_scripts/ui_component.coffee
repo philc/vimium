@@ -5,13 +5,16 @@ class UIComponent
   showStyle: "display: block;"
   hideStyle: "display: none;"
 
-  constructor: (iframeUrl, className) ->
+  constructor: (iframeUrl, className, showStyle, hideStyle) ->
     @iframeElement = document.createElement "iframe"
     @iframeElement.className = className
     @iframeElement.seamless = "seamless"
     @iframeElement.src = chrome.runtime.getURL iframeUrl
     @iframeElement.addEventListener "load", => @openPort()
     document.documentElement.appendChild @iframeElement
+
+    @setShowStyle showStyle if showStyle?
+    @setHideStyle hideStyle if showStyle?
     @hide()
 
     @addEventListener "message", handleHideMessage
@@ -43,9 +46,7 @@ class UIComponent
 
   removeEventListener: (type, listener) ->
     if type == "message"
-      listenerIndex = @messageEventListeners.indexOf listener
-      if listenerIndex > -1
-        @messageEventListeners = @messageEventListeners.splice listenerIndex, 1
+      @messageEventListeners = @messageEventListeners.filter (f) -> f != listener
     undefined
 
   setHideStyle: (@hideStyle) ->
@@ -54,14 +55,18 @@ class UIComponent
   setShowStyle: (@showStyle) ->
     @show() if @showing == true
 
+  setStyles: (@showStyle = @showStyle, @hideStyle = @hideStyle) ->
+    if @showing
+      @show()
+    else
+      @hide()
+
   show: ->
-    return unless @iframeElement?
     @iframeElement.setAttribute "style", @showStyle
     @iframeElement.focus()
     @showing = true
 
   hide: ->
-    return unless @iframeElement?
     @iframeElement.setAttribute "style", @hideStyle
     window.focus()
     @showing = false
