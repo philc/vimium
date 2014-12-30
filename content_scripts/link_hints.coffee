@@ -141,13 +141,26 @@ LinkHints =
   # of digits needed to enumerate all of the links on screen.
   #
   getVisibleClickableElements: ->
-    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ANY_TYPE)
+    clickableElements = (result while result = resultSet.iterateNext())
+
+    # Detect click event listeners declared using google's jsaction library.
+    jsactionResults = document.querySelectorAll("*[jsaction]")
+    hasClickRule = (element) ->
+      jsactionRules = element.getAttribute("jsaction").split(";")
+      for jsactionRule in jsactionRules
+        ruleSplit = jsactionRule.split(":")
+        return true if ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+      false
+    jsactionResults = Array::filter.call jsactionResults, hasClickRule
+
+    # Add jsaction clickable elements to our other clickable elements list.
+    clickableElements = clickableElements.concat jsactionResults
 
     visibleElements = []
 
     # Find all visible clickable elements.
-    for i in [0...resultSet.snapshotLength] by 1
-      element = resultSet.snapshotItem(i)
+    for element in clickableElements
       clientRect = DomUtils.getVisibleClientRect(element, clientRect)
       if (clientRect != null)
         visibleElements.push({element: element, rect: clientRect})
