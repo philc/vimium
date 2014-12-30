@@ -36,17 +36,6 @@ LinkHints =
   #
   init: ->
 
-  #
-  # Generate an XPath describing what a clickable element is.
-  # The final expression will be something like "//button | //xhtml:button | ..."
-  # We use translate() instead of lower-case() because Chrome only supports XPath 1.0.
-  #
-  clickableElementsXPath: DomUtils.makeXPath(
-    ["a", "area[@href]", "textarea", "button", "select",
-     "input[not(@type='hidden' or @disabled or @readonly)]",
-     "*[@onclick or @tabindex or @role='link' or @role='button' or contains(@class, 'button') or " +
-     "@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"])
-
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
   activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
@@ -136,43 +125,126 @@ LinkHints =
     marker
 
   #
-  # Returns all clickable elements that are not hidden and are in the current viewport.
-  # We prune invisible elements partly for performance reasons, but moreso it's to decrease the number
-  # of digits needed to enumerate all of the links on screen.
+  # Determine whether the element is visible and clickable. If it is, return the element and the rect bounding
+  # the element in the viewport.  There may be more than one part of element which is clickable (for example,
+  # if it's an image), therefore we return a list of element/rect pairs.
   #
-  getVisibleClickableElements: ->
-    resultSet = DomUtils.evaluateXPath(@clickableElementsXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
-
+  getVisibleClickable: (element) ->
+    tagName = element.tagName.toLowerCase()
+    isClickable = false
+    onlyHasTabIndex = false
     visibleElements = []
 
-    # Find all visible clickable elements.
-    for i in [0...resultSet.snapshotLength] by 1
-      element = resultSet.snapshotItem(i)
-      clientRect = DomUtils.getVisibleClientRect(element, clientRect)
-      if (clientRect != null)
-        visibleElements.push({element: element, rect: clientRect})
+    # Insert area elements that provide click functionality to an img.
+    if tagName == "img"
+      mapName = element.getAttribute "usemap"
+      if mapName
+        imgClientRects = element.getClientRects()
+        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+        map = document.querySelector "map[name=\"#{mapName}\"]"
+        if map and imgClientRects.length > 0
+          areas = map.getElementsByTagName "area"
+          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+          visibleElements.push areasAndRects...
 
-      if (element.localName == "area")
-        map = element.parentElement
-        continue unless map
-        img = document.querySelector("img[usemap='#" + map.getAttribute("name") + "']")
-        continue unless img
-        imgClientRects = img.getClientRects()
-        continue if (imgClientRects.length == 0)
-        c = element.coords.split(/,/)
-        coords = [parseInt(c[0], 10), parseInt(c[1], 10), parseInt(c[2], 10), parseInt(c[3], 10)]
-        rect = {
-          top: imgClientRects[0].top + coords[1],
-          left: imgClientRects[0].left + coords[0],
-          right: imgClientRects[0].left + coords[2],
-          bottom: imgClientRects[0].top + coords[3],
-          width: coords[2] - coords[0],
-          height: coords[3] - coords[1]
-        }
+    # Check aria properties to see if the element should be ignored.
+    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+      return [] # This element should never have a link hint.
 
-        visibleElements.push({element: element, rect: rect})
+    # Check for attributes that make an element clickable regardless of its tagName.
+    if (element.hasAttribute("onclick") or
+        element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
+        element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
+        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
+      isClickable = true
+
+    # Check for jsaction event listeners on the element.
+    if element.hasAttribute "jsaction"
+      jsactionRules = element.getAttribute("jsaction").split(";")
+      for jsactionRule in jsactionRules
+        ruleSplit = jsactionRule.split ":"
+        isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+
+    # Check for tagNames which are natively clickable.
+    switch tagName
+      when "a"
+        isClickable = true
+      when "textarea"
+        isClickable ||= not element.disabled and not element.readOnly
+      when "input"
+        isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
+                             element.disabled or
+                             (element.readOnly and DomUtils.isSelectable element))
+      when "button", "select"
+        isClickable ||= not element.disabled
+
+    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+    # citizens when it improves UX, so take special note of them.
+    tabIndexValue = element.getAttribute("tabindex")
+    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+    unless isClickable or isNaN(tabIndex) or tabIndex < 0
+      isClickable = onlyHasTabIndex = true
+
+    if isClickable
+      clientRect = DomUtils.getVisibleClientRect element
+      if clientRect != null
+        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex}
 
     visibleElements
+
+  #
+  # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
+  # at which (parts of) the elements are displayed.
+  # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
+  # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
+  # element.
+  #
+  getVisibleClickableElements: ->
+    elements = document.documentElement.getElementsByTagName "*"
+    visibleElements = []
+
+    # The order of elements here is important; they should appear in the order they are in the DOM, so that
+    # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
+    # is the sensible, efficient way to ensure this happens.
+    # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
+    # this, so it's necessary to check whether elements are clickable in order, as we do below.
+    for element in elements
+      visibleElement = @getVisibleClickable element
+      visibleElements.push visibleElement...
+
+    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
+    #  * The document has a local stacking context.
+    #  * An element with z-index specified
+    #    - sets its z-order position in the containing stacking context, and
+    #    - creates a local stacking context containing its children.
+    #  * An element (1) is shown above another element (2) if either
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
+    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
+    #        + the ancestors of (1) and (2) have equal z-index, and
+    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
+    #
+    # Remove rects from elements where another clickable element lies above it.
+    nonOverlappingElements = []
+    # Traverse the DOM from first to last, since later elements show above earlier elements.
+    visibleElements = visibleElements.reverse()
+    while visibleElement = visibleElements.pop()
+      rects = [visibleElement.rect]
+      for {rect: negativeRect} in visibleElements
+        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
+        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
+      if rects.length > 0
+        nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
+      else
+        # Every part of the element is covered by some other element, so just insert the whole element's
+        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
+        # than they're worth.
+        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
+        # click some elements that we could click before.
+        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+
+    nonOverlappingElements
 
   #
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.

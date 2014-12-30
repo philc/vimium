@@ -50,34 +50,7 @@ DomUtils =
   #
   getVisibleClientRect: (element) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
-    clientRects = ({
-      top: clientRect.top, right: clientRect.right, bottom: clientRect.bottom, left: clientRect.left,
-      width: clientRect.width, height: clientRect.height
-    } for clientRect in element.getClientRects())
-
-    for clientRect in clientRects
-      if (clientRect.top < 0)
-        clientRect.height += clientRect.top
-        clientRect.top = 0
-
-      if (clientRect.left < 0)
-        clientRect.width += clientRect.left
-        clientRect.left = 0
-
-      if (clientRect.top >= window.innerHeight - 4 || clientRect.left  >= window.innerWidth - 4)
-        continue
-
-      if (clientRect.width < 3 || clientRect.height < 3)
-        continue
-
-      # eliminate invisible elements (see test_harnesses/visibility_test.html)
-      computedStyle = window.getComputedStyle(element, null)
-      if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-          computedStyle.getPropertyValue('display') == 'none' ||
-          computedStyle.getPropertyValue('opacity') == '0')
-        continue
-
-      return clientRect
+    clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
 
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible
@@ -90,9 +63,70 @@ DomUtils =
           continue if (computedStyle.getPropertyValue('float') == 'none' &&
             computedStyle.getPropertyValue('position') != 'absolute')
           childClientRect = @getVisibleClientRect(child)
-          continue if (childClientRect == null)
+          continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
           return childClientRect
+
+      else
+        clientRect = @cropRectToVisible clientRect
+
+        continue if clientRect == null or clientRect.width < 3 or clientRect.height < 3
+
+        # eliminate invisible elements (see test_harnesses/visibility_test.html)
+        computedStyle = window.getComputedStyle(element, null)
+        if (computedStyle.getPropertyValue('visibility') != 'visible' ||
+            computedStyle.getPropertyValue('display') == 'none')
+          continue
+
+        return clientRect
+
     null
+
+  #
+  # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a height or width < 3
+  # then null is returned instead of a rect.
+  #
+  cropRectToVisible: (rect) ->
+    boundedRect = Rect.create(
+      Math.max(rect.left, 0)
+      Math.max(rect.top, 0)
+      rect.right
+      rect.bottom
+    )
+    if boundedRect.top >= window.innerHeight - 4 or boundedRect.left >= window.innerWidth - 4
+      null
+    else
+      boundedRect
+
+  #
+  # Get the client rects for the <area> elements in a <map> based on the position of the <img> element using
+  # the map. Returns an array of rects.
+  #
+  getClientRectsForAreas: (imgClientRect, areas) ->
+    rects = []
+    for area in areas
+      coords = area.coords.split(",").map((coord) -> parseInt(coord, 10))
+      shape = area.shape.toLowerCase()
+      if shape in ["rect", "rectangle"] # "rectangle" is an IE non-standard.
+        [x1, y1, x2, y2] = coords
+      else if shape in ["circle", "circ"] # "circ" is an IE non-standard.
+        [x, y, r] = coords
+        diff = r / Math.sqrt 2 # Gives us an inner square
+        x1 = x - diff
+        x2 = x + diff
+        y1 = y - diff
+        y2 = y + diff
+      else if shape == "default"
+        [x1, y1, x2, y2] = [0, 0, imgClientRect.width, imgClientRect.height]
+      else
+        # Just consider the rectangle surrounding the first two points in a polygon. It's possible to do
+        # something more sophisticated, but likely not worth the effort.
+        [x1, y1, x2, y2] = coords
+
+      rect = Rect.translate (Rect.create x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
+      rect = @cropRectToVisible rect
+
+      rects.push {element: area, rect: rect} if rect and not isNaN rect.top
+    rects
 
   #
   # Selectable means that we should use the simulateSelect method to activate the element instead of a click.
