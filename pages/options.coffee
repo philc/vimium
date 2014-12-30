@@ -3,18 +3,6 @@ bgUtils = chrome.extension.getBackgroundPage().Utils
 bgSettings = chrome.extension.getBackgroundPage().Settings
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
 
-# Generate a default exclusion-rule pattern from a URL.
-generateDefaultPattern = (url) ->
-  if /^https?:\/\/./.test url
-    # The common use case is to disable Vimium at the domain level.
-    # Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
-    "https?:/" + url.split("/",3)[1..].join("/") + "/*"
-  else if /^[a-z]{3,}:\/\/./.test url
-    # Anything else which seems to be a URL.
-    url.split("/",3).join("/") + "/*"
-  else
-    url + "*"
-
 #
 # Class hierarchy for various types of option.
 class Option
@@ -89,55 +77,28 @@ class CheckBoxOption extends Option
   readValueFromElement: -> @element.checked
 
 class ExclusionRulesOption extends Option
-  constructor: (field, onUpdated, @url="") ->
+  constructor: (field, onUpdated) ->
     super(field, onUpdated)
     $("exclusionAddButton").addEventListener "click", (event) =>
       @addRule()
 
-  addRule: ->
-      @appendRule { pattern: (if @url then generateDefaultPattern(@url) else ""), passKeys: "" }
-      # On the options page, focus the pattern; on the page popup (where we already have a pattern), focus the
-      # passKeys.
-      focus = if @url then 1 else 0
+  # Add a new rule, focus its pattern, scroll it into view, and return the newly-added element.  On the
+  # options page, there is no current URL, so there is no initial pattern.  This is the default.  On the popup
+  # page (see ExclusionRulesOnPopupOption), the pattern is pre-populated based on the current tab's URL.
+  addRule: (pattern="") ->
+      @appendRule { pattern: pattern, passKeys: "" }
+      # Focus the pattern within the new rule.
       element = @element.children[@element.children.length-1]
-      element.children[focus].children[0].focus()
-      @activatePatternWatcher element if @url
+      element.children[0].children[0].focus()
       # Scroll the new rule into view.
       exclusionScrollBox = $("exclusionScrollBox")
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
       @onUpdated()
+      element
 
   populateElement: (rules) ->
     for rule in rules
       @appendRule rule
-
-    elements = @element.getElementsByClassName "exclusionRuleTemplateInstance"
-    @activatePatternWatcher element for element in elements if @url
-
-    # If this is the popup page (@url is truthy), then hide rules which do not match @url.  If no rules
-    # match, then add a default rule.  Focus the passKeys field in the last (most recent) rule.
-    if @url
-      haveMatch = false
-      for element in elements
-        pattern = element.children[0].firstChild.value.trim()
-        if 0 <= @url.search bgExclusions.RegexpCache.get pattern
-          haveMatch = true
-          element.children[1].firstChild.focus()
-        else
-          element.style.display = 'none'
-      unless haveMatch
-        @addRule()
-
-  # On the popup page, provide visual feedback when a pattern does not match the current page.  This assumes
-  # that @url is not empty.
-  activatePatternWatcher: (element) ->
-    patternElement = element.children[0].firstChild
-    patternElement.addEventListener "keyup", =>
-      if @url.match bgExclusions.RegexpCache.get patternElement.value
-        patternElement.title = patternElement.style.color = ""
-      else
-        patternElement.style.color = "red"
-        patternElement.title = "Red text means that the pattern does not\nmatch the current URL."
 
   # Append a row for a new rule.
   appendRule: (rule) ->
@@ -171,6 +132,58 @@ class ExclusionRulesOption extends Option
     # This is correct because patterns and passKeys cannot themselves contain newlines.
     flatten = (rule) -> if rule and rule.pattern then rule.pattern + "\n" + rule.passKeys else ""
     a.map(flatten).join("\n") == b.map(flatten).join("\n")
+
+# ExclusionRulesOnPopupOption is ExclusionRulesOption, extended with some UI tweeks suitable for use in the
+# page popup.  This also differs from ExclusionRulesOption in that, on the page popup, there is always a URL
+# (@url) associated with the current tab.
+class ExclusionRulesOnPopupOption extends ExclusionRulesOption
+  constructor: (field, onUpdated, @url) ->
+    super field, onUpdated
+
+  addRule: ->
+    element = super @generateDefaultPattern()
+    @activatePatternWatcher element
+    # ExclusionRulesOption.addRule()/super() has focused the pattern.  Here, focus the passKeys instead;
+    # because, in the popup, we already have a pattern.
+    element.children[1].children[0].focus()
+
+  populateElement: (rules) ->
+    super(rules)
+    elements = @element.getElementsByClassName "exclusionRuleTemplateInstance"
+    @activatePatternWatcher element for element in elements
+
+    haveMatch = false
+    for element in elements
+      pattern = element.children[0].firstChild.value.trim()
+      if 0 <= @url.search bgExclusions.RegexpCache.get pattern
+        haveMatch = true
+        element.children[1].firstChild.focus()
+      else
+        element.style.display = 'none'
+    @addRule() unless haveMatch
+
+  # Provide visual feedback when a pattern does not match the current page.
+  activatePatternWatcher: (element) ->
+    patternElement = element.children[0].firstChild
+    patternElement.addEventListener "keyup", =>
+      if @url.match bgExclusions.RegexpCache.get patternElement.value
+        patternElement.title = patternElement.style.color = ""
+      else
+        patternElement.style.color = "red"
+        patternElement.title = "Red text means that the pattern does not\nmatch the current URL."
+
+  # Generate a default exclusion-rule pattern from a URL.  This is used to pre-populate the pattern on the
+  # page popup.
+  generateDefaultPattern: ->
+    if /^https?:\/\/./.test @url
+      # The common use case is to disable Vimium at the domain level.
+      # Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
+      "https?:/" + @url.split("/",3)[1..].join("/") + "/*"
+    else if /^[a-z]{3,}:\/\/./.test @url
+      # Anything else which seems to be a URL.
+      @url.split("/",3).join("/") + "/*"
+    else
+      @url + "*"
 
 initOptionsPage = ->
   enableSaveButton = ->
@@ -286,7 +299,7 @@ initPopupPage = ->
         window.close()
 
     # Populate options. Just one, here.
-    exclusions = new ExclusionRulesOption("exclusionRules", onUpdated, tab.url)
+    exclusions = new ExclusionRulesOnPopupOption("exclusionRules", onUpdated, tab.url)
 
     updateState()
     document.addEventListener "keyup", updateState
