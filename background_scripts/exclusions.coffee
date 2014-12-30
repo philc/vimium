@@ -15,17 +15,27 @@ RegexpCache =
 
 # The Exclusions class manages the exclusion rule setting.
 # An exclusion is an object with two attributes: pattern and passKeys.
-# The exclusions are an array of such objects (because the order matters).
+# The exclusions are an array of such objects.
 
 root.Exclusions = Exclusions =
+  # Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
+  RegexpCache: RegexpCache
 
   rules: Settings.get("exclusionRules")
 
-  # Return the first exclusion rule matching the URL, or null.
-  getRule: (url) ->
-    for rule in @rules
-      return rule if url.match(RegexpCache.get(rule.pattern))
-    return null
+  # Merge the matching rules for URL, or null.  In the normal case, we use the configured @rules; hence, this
+  # is the default.  However, when called from the page popup, we are testing what effect candidate new rules
+  # would have on the current tab.  In this case, the candidate rules are provided by the caller.
+  getRule: (url, rules=@rules) ->
+    matches = (rule for rule in rules when rule.pattern and 0 <= url.search(RegexpCache.get(rule.pattern)))
+    # An absolute exclusion rule (with no passKeys) takes priority.
+    for rule in matches
+      return rule unless rule.passKeys
+    if 0 < matches.length
+      pattern: (rule.pattern for rule in matches).join " | " # Not used; for debugging only.
+      passKeys: Utils.distinctCharacters (rule.passKeys for rule in matches).join ""
+    else
+      null
 
   setRules: (rules) ->
     # Callers map a rule to null to have it deleted, and rules without a pattern are useless.
@@ -34,19 +44,6 @@ root.Exclusions = Exclusions =
 
   postUpdateHook: (rules) ->
     @rules = rules
-
-  # Update an existing rule or add a new rule.
-  updateOrAdd: (newRule) ->
-    seen = false
-    @rules.push(newRule)
-    @setRules @rules.map (rule) ->
-      if rule.pattern == newRule.pattern
-        if seen then null else seen = newRule
-      else
-        rule
-
-  remove: (pattern) ->
-    @setRules(@rules.filter((rule) -> rule and rule.pattern != pattern))
 
 # Development and debug only.
 # Enable this (temporarily) to restore legacy exclusion rules from backup.

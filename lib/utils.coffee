@@ -116,6 +116,12 @@ Utils =
   # detects both literals and dynamically created strings
   isString: (obj) -> typeof obj == 'string' or obj instanceof String
 
+  # Transform "zjkjkabz" into "abjkz".
+  distinctCharacters: (str) ->
+    unique = ""
+    for char in str.split("").sort()
+      unique += char unless 0 <= unique.indexOf char
+    unique
 
   # Compares two version strings (e.g. "1.1" and "1.5") and returns
   # -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.

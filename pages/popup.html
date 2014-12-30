@@ -1,85 +1,82 @@
 <html>
   <head>
+    <link rel="stylesheet" type="text/css" href="options.css">
     <style>
       * {
         margin: 0px;
         padding: 0px;
       }
 
-      #vimiumPopup { width: 400px; }
-
-      #excludeControls {
-        padding: 10px;
-      }
-
-      #popupPattern, #popupPassKeys {
-        margin: 5px;
-        width: 330px;
-        /* Match the corresponding font and font size used on the options page. */
-        /* TODO (smblott): Match other styles from the options page. */
-        font-family: Consolas, "Liberation Mono", Courier, monospace;
-        font-size: 14px;
-      }
-
-      #confirmationMessage {
-        display: inline-block;
-        width: 18px;
-        height: 13px;
-        background: url(icons/check.png) 3px 2px no-repeat;
-        display: none;
-      }
-
-      #popupRemove { margin: 5px; }
-      #popupExclude { margin: 5px; }
-
-      #popupMenu ul {
-        list-style: none;
-      }
-
-      #popupMenu li, #popupMenu a:active, #popupMenu a:visited {
-        color: #3F6EC2;
-        display: block;
-        border-top: 1px solid #DDDDDD;
-        padding: 3px;
-        padding-left: 10px;
-      }
-
-      #popupMenu a:hover {
-        background: #EEEEEE;
-      }
-
-      #optionsLink {
+      #helpText, #optionsLink, #state {
         font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
         font-size: 12px;
+      }
+
+      #helpText, #stateLine, #state { color: #979ca0; }
+      #exclusionAddButton { width: 80px; }
+
+      #saveOptions {
+        margin-top: 5px; /* Match #exclusionAddButton */
+        margin-left: 5px;
         float: right;
       }
-      #helpText {
-        color: #979ca0;
-        font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-        font-size: 12px;
-        float: left;
-        display: none;
+
+      #state {
+        padding-left: 5px;
+        background: #f5f5f5;
+        width: 100%;
+        border-bottom: 1px solid #979ca0;
+        margin: 0px;
       }
+
+      /* These are overridden from options.css. */
+
+      #endSpace, #footerWrapper { width: 500px; }
+      #footerWrapper { margin-left: 0px; }
+
+      /* Make exclusionScrollBox smaller than on the options page, because there are likely to be fewer
+         matching rules, and the popup obscures the underlying page.
+       */
+      #exclusionScrollBox {
+        max-height: 124px;
+        min-height: 124px;
+      }
+
+      #endSpace { /* Leave space for the fixed footer. */
+        min-height: 40px;
+        max-height: 40px;
+      }
+
     </style>
-    <script src="popup.js"></script>
+    <script src="options.js"></script>
   </head>
   <body>
-    <div id="vimiumPopup">
-      <div id="excludeControls">
-        <input id="popupPattern" placeholder="Pattern against which to match URLs..." type="text" /><br/>
-        <input id="popupPassKeys" placeholder="Only exclude these keys..." type="text" /><br/>
-        <input id="popupRemove" type="button" value="Remove Rule" />
-        <input id="popupExclude" type="button" value="Add or Update Rule" />
-        <span id="confirmationMessage">Text is added in popup.coffee.</span>
-      </div>
+    <div id="state"></div>
 
-      <div id="popupMenu">
-        <ul>
-          <li>
-             <span id="helpText">Type <strong>Ctrl-Enter</strong> to save and close.</span>
-             <a id="optionsLink" target="_blank">Options</a>
-          </li>
-        </ul>
+    <div id="exclusionScrollBox">
+      <!-- Populated from exclusions.html by options.coffee. -->
+    </div>
+
+    <!-- Some extra space which is hidden underneath the footer. -->
+    <div id="endSpace"/>
+
+    <div id="footer">
+      <div id="footerWrapper">
+        <table>
+          <tr>
+            <td id="stateLine" style="width: 99%">
+              <span id="helpText">These are the rules matching this page.</span>
+              <br/>
+              <a id="optionsLink" target="_blank" tabindex="99999">Options</a>
+            </td>
+            <td valign="top">
+              <button id="exclusionAddButton">Add Rule</button>
+            </td>
+            <td valign="top">
+              <button id="saveOptions" disabled="true">No Changes</button>
+            </td>
+          </tr>
+        </table>
       </div>
     </div>
   </body>
