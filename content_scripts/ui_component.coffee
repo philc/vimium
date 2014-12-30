@@ -2,8 +2,6 @@ class UIComponent
   iframeElement: null
   iframePort: null
   showing: null
-  showStyle: "display: block;"
-  hideStyle: "display: none;"
 
   constructor: (iframeUrl, className, @handleMessage) ->
     @iframeElement = document.createElement "iframe"
@@ -34,20 +32,21 @@ class UIComponent
     if @showing
       # NOTE(smblott) Experimental.  Not sure this is a great idea. If the iframe was already showing, then
       # the user gets no visual feedback when it is re-focused.  So flash its border.
-      borderWas = @iframeElement.style.border
-      @iframeElement.style.border = '5px solid yellow'
-      setTimeout((=> @iframeElement.style.border = borderWas), 200)
+      @iframeElement.classList.add "vimiumUIComponentReactivated"
+      setTimeout((=> @iframeElement.classList.remove "vimiumUIComponentReactivated"), 200)
     else
       @show()
     @iframeElement.focus()
 
   show: (message) ->
     @postMessage message if message?
-    @iframeElement.setAttribute "style", @showStyle
+    @iframeElement.classList.remove "vimiumUIComponentHidden"
+    @iframeElement.classList.add "vimiumUIComponentShowing"
     @showing = true
 
   hide: (focusWindow = true)->
-    @iframeElement.setAttribute "style", @hideStyle
+    @iframeElement.classList.remove "vimiumUIComponentShowing"
+    @iframeElement.classList.add "vimiumUIComponentHidden"
     window.focus() if focusWindow
     @showing = false
 
