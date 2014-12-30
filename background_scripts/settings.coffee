@@ -46,13 +46,19 @@ root.Settings = Settings =
   # this is a map that we use to store our search engines for use.
   searchEnginesMap: {}
 
-  # this parses the search engines settings and clears the old searchEngines and sets the new one
+  # Parse the custom search engines setting and cache it.
   parseSearchEngines: (searchEnginesText) ->
     @searchEnginesMap = {}
-    # find the split pairs by first splitting by line then splitting on the first `: `
-    split_pairs = ( pair.split( /: (.+)/, 2) for pair in searchEnginesText.split( /\n/ ) when pair[0] != "#" )
-    @searchEnginesMap[a[0]] = a[1] for a in split_pairs
-    @searchEnginesMap
+    for line in searchEnginesText.split /\n/
+      tokens = line.trim().split /\s+/
+      continue if tokens.length < 2 or tokens[0].startsWith('"') or tokens[0].startsWith("#")
+      keywords = tokens[0].split ":"
+      continue unless keywords.length == 2 and not keywords[1] # So, like: [ "w", "" ].
+      @searchEnginesMap[keywords[0]] =
+        url: tokens[1]
+        description: tokens[2..].join(" ")
+
+  # Fetch the search-engine map, building it if necessary.
   getSearchEngines: ->
     this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
     @searchEnginesMap
@@ -105,7 +111,7 @@ root.Settings = Settings =
     # default/fall back search engine
     searchUrl: "http://www.google.com/search?q="
     # put in an example search engine
-    searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
+    searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s wikipedia"
     newTabUrl: "chrome://newtab"
 
     settingsVersion: Utils.getCurrentVersion()

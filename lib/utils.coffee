@@ -26,11 +26,10 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:", "javascript:" ]
     (url) ->
-      if 0 < url.indexOf ":"
-        for prefix in chromePrefixes
-          return true if url.startsWith prefix
+      for prefix in chromePrefixes
+        return true if url.startsWith prefix
       false
 
   hasFullUrlPrefix: do ->
@@ -136,6 +135,11 @@ Utils =
       else if (a > b)
         return 1
     0
+
+  # True if the current Chrome version is at least the required version.
+  haveChromeVersion: (required) ->
+    chromeVersion = navigator.appVersion.match(/Chrome\/(.*?) /)?[1]
+    chromeVersion and 0 <= Utils.compareVersions chromeVersion, required
 
   # Zip two (or more) arrays:
   #   - Utils.zip([ [a,b], [1,2] ]) returns [ [a,1], [b,2] ]

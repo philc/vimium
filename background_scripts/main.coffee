@@ -19,6 +19,11 @@ namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 selectionChangedHandlers = []
 tabLoadedHandlers = {} # tabId -> function()
 
+# A secret, available only within the current instantiation of Vimium.  The secret is big, likely unguessable
+# in practice, but less than 2^31.
+chrome.storage.local.set
+  vimiumSecret: Math.floor Math.random() * 2000000000
+
 completionSources =
   bookmarks: new BookmarkCompleter()
   history: new HistoryCompleter()
@@ -609,24 +614,24 @@ portHandlers =
   filterCompleter: filterCompleter
 
 sendRequestHandlers =
-  getCompletionKeys: getCompletionKeysRequest,
-  getCurrentTabUrl: getCurrentTabUrl,
-  openUrlInNewTab: openUrlInNewTab,
-  openUrlInIncognito: openUrlInIncognito,
-  openUrlInCurrentTab: openUrlInCurrentTab,
-  openOptionsPageInNewTab: openOptionsPageInNewTab,
-  registerFrame: registerFrame,
-  unregisterFrame: unregisterFrame,
-  frameFocused: handleFrameFocused,
+  getCompletionKeys: getCompletionKeysRequest
+  getCurrentTabUrl: getCurrentTabUrl
+  openUrlInNewTab: openUrlInNewTab
+  openUrlInIncognito: openUrlInIncognito
+  openUrlInCurrentTab: openUrlInCurrentTab
+  openOptionsPageInNewTab: openOptionsPageInNewTab
+  registerFrame: registerFrame
+  unregisterFrame: unregisterFrame
+  frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
-  upgradeNotificationClosed: upgradeNotificationClosed,
-  updateScrollPosition: handleUpdateScrollPosition,
-  copyToClipboard: copyToClipboard,
-  isEnabledForUrl: isEnabledForUrl,
-  saveHelpDialogSettings: saveHelpDialogSettings,
-  selectSpecificTab: selectSpecificTab,
-  refreshCompleter: refreshCompleter,
-  createMark: Marks.create.bind(Marks),
+  upgradeNotificationClosed: upgradeNotificationClosed
+  updateScrollPosition: handleUpdateScrollPosition
+  copyToClipboard: copyToClipboard
+  isEnabledForUrl: isEnabledForUrl
+  saveHelpDialogSettings: saveHelpDialogSettings
+  selectSpecificTab: selectSpecificTab
+  refreshCompleter: refreshCompleter
+  createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
 
 # Convenience function for development use.

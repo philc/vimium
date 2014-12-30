@@ -10,6 +10,9 @@ root.chrome = {
       onMessage: {
         addListener: ->
       }
+      onDisconnect: {
+        addListener: ->
+      }
       postMessage: ->
     }
     onMessage: {
@@ -17,5 +20,10 @@ root.chrome = {
     }
     sendMessage: ->
     getManifest: ->
+    getURL: (url) -> "../../#{url}"
   }
+  storage:
+    local:
+      get: ->
+      set: ->
 }

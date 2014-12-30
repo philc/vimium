@@ -233,17 +233,24 @@ context "tab completer",
 
 context "search engines",
   setup ->
-    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s"
+    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
     Settings.set 'searchEngines', searchEngines
     @completer = new SearchEngineCompleter()
     # note, I couldn't just call @completer.refresh() here as I couldn't set root.Settings without errors
     # workaround is below, would be good for someone that understands the testing system better than me to improve
     @completer.searchEngines = Settings.getSearchEngines()
 
-  should "return search engine suggestion", ->
+  should "return search engine suggestion without description", ->
     results = filterCompleter(@completer, ["foo", "hello"])
     assert.arrayEqual ["bar?q=hello"], results.map (result) -> result.url
     assert.arrayEqual ["foo: hello"], results.map (result) -> result.title
+    assert.arrayEqual ["search"], results.map (result) -> result.type
+
+  should "return search engine suggestion with description", ->
+    results = filterCompleter(@completer, ["baz", "hello"])
+    assert.arrayEqual ["qux?q=hello"], results.map (result) -> result.url
+    assert.arrayEqual ["hello"], results.map (result) -> result.title
+    assert.arrayEqual ["baz description"], results.map (result) -> result.type
 
 context "suggestions",
   should "escape html in page titles", ->
