@@ -19,10 +19,18 @@ keyPort = null
 # are passed through to the underlying page.
 isEnabledForUrl = true
 passKeys = null
+splitPassKeys = []
 keyQueue = null
 # The user's operating system.
 currentCompletionKeys = null
+insertExitKeys = null
+insertExitPassKeys = null
 validFirstKeys = null
+
+# Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
+# This regular expression captures two groups: the first is a named key, the second is the remainder of
+# the string.
+namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)$/
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -149,7 +157,7 @@ installListener = (element, event, callback) ->
 installedListeners = false
 initializeWhenEnabled = (newPassKeys) ->
   isEnabledForUrl = true
-  passKeys = newPassKeys
+  setPassKeys newPassKeys
   if (!installedListeners)
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
@@ -165,7 +173,7 @@ initializeWhenEnabled = (newPassKeys) ->
 setState = (request) ->
   initializeWhenEnabled(request.passKeys) if request.enabled
   isEnabledForUrl = request.enabled
-  passKeys = request.passKeys
+  setPassKeys request.passKeys
 
 #
 # The backend needs to know which frame has focus.
@@ -345,8 +353,18 @@ extend window,
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
-isPassKey = ( keyChar ) ->
-  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
+isPassKey = (keyChar) ->
+  not keyQueue and splitPassKeys and 0 <= splitPassKeys.indexOf(keyChar)
+
+setPassKeys = (newPassKeys) ->
+  passKeys = newPassKeys
+  passKeyGroups = passKeys.split " "
+  splitPassKeys = []
+  for passKeyGroup in passKeyGroups
+    if namedKeyRegex.test passKeyGroup # The current space delimited group is a single named key.
+      splitPassKeys.push passKeyGroup # Push this to as a single key
+    else
+      splitPassKeys = splitPassKeys.concat passKeyGroup.split "" # Pass all the characters as seperate keys.
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
 # event.
@@ -435,16 +453,26 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
-    # Note that we can't programmatically blur out of Flash embeds from Javascript.
+  rawKeyChar = keyChar
+  if (KeyboardUtils.isEscape(event))
+    rawKeyChar = "<esc>"
+
+  rawKeyChar ||= KeyboardUtils.getKeyChar(event)
+
+  isInsertExitPassKey = (rawKeyChar in insertExitPassKeys)
+
+  if (isInsertMode() and (isInsertExitPassKey or rawKeyChar in insertExitKeys))
+    return undefined if (isPassKey rawKeyChar)
+    # We don't want to programmatically blur out of Flash embeds from Javascript.
     if (!isEmbed(event.srcElement))
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       if (isEditable(event.srcElement))
         event.srcElement.blur()
       exitInsertMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
+      unless isInsertExitPassKey
+        DomUtils.suppressEvent event
+        KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
@@ -473,6 +501,8 @@ onKeydown = (event) ->
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
+      if isPassKey keyChar
+        return undefined
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         KeydownEvents.push event
@@ -519,6 +549,8 @@ checkIfEnabledForUrl = ->
 refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
+    insertExitKeys = response.insertExitKeys || []
+    insertExitPassKeys = response.insertExitPassKeys || []
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
