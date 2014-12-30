@@ -1,3 +1,4 @@
+
 $ = (id) -> document.getElementById id
 bgUtils = chrome.extension.getBackgroundPage().Utils
 bgSettings = chrome.extension.getBackgroundPage().Settings
@@ -12,11 +13,9 @@ class Option
   # Static. Array of all options.
   @all = []
 
-  constructor: (field,enableSaveButton) ->
-    @field = field
-    @onUpdated = enableSaveButton
+  constructor: (@field,@onUpdated) ->
     @element = $(@field)
-    @element.addEventListener "change", enableSaveButton
+    @element.addEventListener "change", @onUpdated
     @fetch()
     Option.all.push @
 
@@ -57,16 +56,16 @@ class NumberOption extends Option
   readValueFromElement: -> parseFloat @element.value
 
 class TextOption extends Option
-  constructor: (field,enableSaveButton) ->
-    super(field,enableSaveButton)
-    @element.addEventListener "input", enableSaveButton
+  constructor: (args...) ->
+    super(args...)
+    @element.addEventListener "input", @onUpdated
   populateElement: (value) -> @element.value = value
   readValueFromElement: -> @element.value.trim()
 
 class NonEmptyTextOption extends Option
-  constructor: (field,enableSaveButton) ->
-    super(field,enableSaveButton)
-    @element.addEventListener "input", enableSaveButton
+  constructor: (args...) ->
+    super(args...)
+    @element.addEventListener "input", @onUpdated
 
   populateElement: (value) -> @element.value = value
   # If the new value is not empty, then return it. Otherwise, restore the default value.
@@ -77,8 +76,8 @@ class CheckBoxOption extends Option
   readValueFromElement: -> @element.checked
 
 class ExclusionRulesOption extends Option
-  constructor: (field, onUpdated) ->
-    super(field, onUpdated)
+  constructor: (args...) ->
+    super(args...)
     $("exclusionAddButton").addEventListener "click", (event) =>
       @addRule()
 
@@ -138,8 +137,8 @@ class ExclusionRulesOption extends Option
 # page popup.  This also differs from ExclusionRulesOption in that, on the page popup, there is always a URL
 # (@url) associated with the current tab.
 class ExclusionRulesOnPopupOption extends ExclusionRulesOption
-  constructor: (field, onUpdated, @url) ->
-    super field, onUpdated
+  constructor: (@url, args...) ->
+    super(args...)
 
   addRule: ->
     element = super @generateDefaultPattern()
@@ -157,7 +156,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
 
     haveMatch = false
     for element in elements
-      pattern = element.children[0].firstChild.value.trim()
+      pattern = @getPattern(element).value.trim()
       if 0 <= @url.search bgExclusions.RegexpCache.get pattern
         haveMatch = true
         @getPassKeys(element).focus()
@@ -165,7 +164,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
         element.style.display = 'none'
     @addRule() unless haveMatch
 
-  # Provide visual feedback when a pattern does not match the current page.
+  # Provide visual feedback (make it red) when a pattern does not match the current tab's URL.
   activatePatternWatcher: (element) ->
     patternElement = element.children[0].firstChild
     patternElement.addEventListener "keyup", =>
@@ -189,7 +188,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
       @url + "*"
 
 initOptionsPage = ->
-  enableSaveButton = ->
+  onUpdated = ->
     $("saveOptions").removeAttribute "disabled"
     $("saveOptions").innerHTML = "Save Changes"
 
@@ -264,7 +263,7 @@ initOptionsPage = ->
 
   # Populate options. The constructor adds each new object to "Option.all".
   for name, type of options
-    new type(name,enableSaveButton)
+    new type(name,onUpdated)
 
 initPopupPage = ->
   chrome.tabs.getSelected null, (tab) ->
@@ -302,7 +301,7 @@ initPopupPage = ->
         window.close()
 
     # Populate options. Just one, here.
-    exclusions = new ExclusionRulesOnPopupOption("exclusionRules", onUpdated, tab.url)
+    exclusions = new ExclusionRulesOnPopupOption(tab.url, "exclusionRules", onUpdated)
 
     updateState()
     document.addEventListener "keyup", updateState
