@@ -67,6 +67,7 @@ root.Settings = Settings =
     linkHintNumbers: "0123456789"
     filterLinkHints: false
     hideHud: false
+    captureAllKeys: false
     userDefinedLinkHintCss:
       """
       div > .vimiumHintMarker {

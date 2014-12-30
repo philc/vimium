@@ -49,7 +49,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "captureAllKeys"]
   isLoaded: false
   eventListeners: {}
 
@@ -405,6 +405,8 @@ onKeypress = (event) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
+  DomUtils.suppressEvent(event) if settings.get("captureAllKeys") and not isInsertMode()
+
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
 
@@ -497,6 +499,11 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
+
+  # Use suppressPropagation; if we don't we stop keypress from firing for appropriate keys.
+  if settings.get("captureAllKeys") and not isInsertMode()
+    DomUtils.suppressPropagation(event)
+    handledKeydownEvents.push event
 
 onKeyup = (event) ->
   handledKeydown = KeydownEvents.pop event

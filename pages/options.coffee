@@ -255,6 +255,7 @@ initOptionsPage = ->
     nextPatterns: NonEmptyTextOption
     previousPatterns: NonEmptyTextOption
     regexFindMode: CheckBoxOption
+    captureAllKeys: CheckBoxOption
     scrollStepSize: NumberOption
     smoothScroll: CheckBoxOption
     searchEngines: TextOption
