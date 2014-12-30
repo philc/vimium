@@ -131,6 +131,7 @@ LinkHints =
     tagName = element.tagName.toLowerCase()
     isClickable = false
     onlyHasTabIndex = false
+    visibleElements = []
 
     # Insert area elements that provide click functionality to an img.
     if tagName == "img"
@@ -183,12 +184,12 @@ LinkHints =
     unless isClickable or isNaN(tabIndex) or tabIndex < 0
       isClickable = onlyHasTabIndex = true
 
-    return null unless isClickable # The element isn't clickable.
-    clientRect = DomUtils.getVisibleClientRect element
-    if clientRect == null
-      null
-    else
-      {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
+    if isClickable
+      clientRect = DomUtils.getVisibleClientRect element
+      if clientRect != null
+        visibleElements.push {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
+
+    visibleElements
 
   #
   # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
@@ -208,7 +209,7 @@ LinkHints =
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
       visibleElement = @getVisibleClickable element
-      visibleElements.push visibleElement if visibleElement?
+      visibleElements.push visibleElement...
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
     #  * The document has a local stacking context.
