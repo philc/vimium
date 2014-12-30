@@ -149,10 +149,28 @@ openUrlInCurrentTab = (request) ->
 #
 openUrlInNewTab = (request) ->
   chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true }))
+    chrome.tabs.create
+      url: Utils.convertToUrl(request.url)
+      index: tab.index + 1
+      selected: request.selected
+  )
 
+#
+# Opens request.url in new window and focuses it if request.selected is true.
+#
+openUrlInNewWindow = (request) ->
+  chrome.windows.create
+    url: Utils.convertToUrl(request.url)
+    focused: request.selected
+
+#
+# Opens request.url in new incognito window and focuses it if request.selected is true.
+#
 openUrlInIncognito = (request) ->
-  chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
+  chrome.windows.create
+    url: Utils.convertToUrl(request.url)
+    incognito: true
+    focused: request.selected
 
 #
 # Called when the user has clicked the close icon on the "Vimium has been updated" message.
@@ -612,6 +630,7 @@ sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest,
   getCurrentTabUrl: getCurrentTabUrl,
   openUrlInNewTab: openUrlInNewTab,
+  openUrlInNewWindow: openUrlInNewWindow,
   openUrlInIncognito: openUrlInIncognito,
   openUrlInCurrentTab: openUrlInCurrentTab,
   openOptionsPageInNewTab: openOptionsPageInNewTab,
