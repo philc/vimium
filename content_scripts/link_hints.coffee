@@ -125,9 +125,9 @@ LinkHints =
     marker
 
   #
-  # Determine whether the element is visible and clickable. If it is, return the element and the rect bounding
-  # the element in the viewport.  There may be more than one part of element which is clickable (for example,
-  # if it's an image), therefore we return a list of element/rect pairs.
+  # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
+  # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
+  # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
   getVisibleClickable: (element) ->
     tagName = element.tagName.toLowerCase()
