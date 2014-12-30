@@ -38,15 +38,18 @@ class UIComponent
       @iframeElement.style.border = '5px solid yellow'
       setTimeout((=> @iframeElement.style.border = borderWas), 200)
     else
-      @iframeElement.setAttribute "style", @showStyle
-      @showing = true
+      @show()
     @iframeElement.focus()
 
+  show: (message) ->
+    @postMessage message if message?
+    @iframeElement.setAttribute "style", @showStyle
+    @showing = true
+
   hide: (focusWindow = true)->
-    if @showing
-      @iframeElement.setAttribute "style", @hideStyle
-      window.focus() if focusWindow
-      @showing = false
+    @iframeElement.setAttribute "style", @hideStyle
+    window.focus() if focusWindow
+    @showing = false
 
 root = exports ? window
 root.UIComponent = UIComponent
