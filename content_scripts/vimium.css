@@ -249,6 +249,20 @@ div.vimiumHUD {
 div.vimiumHUD span {
   display: none;
 }
+div.vimiumHUD span#hud-find-input {
+  display: inline;
+  outline: none;
+  white-space: nowrap;
+  overflow-y: hidden;
+}
+/* The user can paste newlines into the find HUD, and we can't stop them. Just making them invisible is easiest. */
+div.vimiumHUD span#hud-find-input br {
+    display: none;
+}
+div.vimiumHUD span#hud-find-input * {
+    display: inline;
+    white-space: nowrap;
+}
 div.vimiumHUD a:link, div.vimiumHUD a:hover {
   background: transparent;
   color: blue;
