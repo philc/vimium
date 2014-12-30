@@ -302,3 +302,16 @@ div#vimiumFlash {
   position: absolute;
   z-index: 2147483648;
 }
+
+/* UIComponent CSS */
+iframe.vimiumUIComponentHidden {
+  display: none;
+}
+
+iframe.vimiumUIComponentVisible {
+  display: block;
+}
+
+iframe.vimiumUIComponentReactivated {
+  border: 5px solid yellow;
+}
