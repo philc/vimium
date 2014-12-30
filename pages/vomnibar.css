@@ -3,7 +3,7 @@
 
 #vomnibar ol, #vomnibar ul {
   list-style: none;
-  display: block;
+  display: none;
 }
 
 #vomnibar {

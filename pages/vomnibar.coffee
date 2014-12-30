@@ -61,7 +61,7 @@ class VomnibarUI
     @reset()
 
   reset: ->
-    @completionList.style.display = "none"
+    @completionList.style.display = ""
     @input.value = ""
     @updateTimer = null
     @completions = []
@@ -151,7 +151,7 @@ class VomnibarUI
   populateUiWithCompletions: (completions) ->
     # update completion list with the new data
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
-    @completionList.style.display = if completions.length > 0 then "block" else "none"
+    @completionList.style.display = if completions.length > 0 then "block" else ""
     @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
     @updateSelection()
 
@@ -181,7 +181,7 @@ class VomnibarUI
     @input.addEventListener "input", @update
     @input.addEventListener "keydown", @onKeydown
     @completionList = @box.querySelector("ul")
-    @completionList.style.display = "none"
+    @completionList.style.display = ""
 
     window.addEventListener "focus", => @input.focus()
 
