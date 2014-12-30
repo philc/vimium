@@ -52,10 +52,19 @@
       "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start",
       "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_scripts/inject_script.js"],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "browser_action": {
     "default_icon": "icons/browser_action_disabled.png",
     "default_popup": "pages/popup.html"
-  }
+  },
+  "web_accessible_resources": [
+    "pages/addEventListener_hook.js"
+  ]
 }
