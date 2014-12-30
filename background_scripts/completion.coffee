@@ -324,11 +324,17 @@ class SearchEngineCompleter
   searchEngines: {}
 
   filter: (queryTerms, onComplete) ->
-    searchEngineMatch = this.getSearchEngineMatches(queryTerms[0])
+    {url: url, description: description} = this.getSearchEngineMatches(queryTerms[0])
     suggestions = []
-    if searchEngineMatch
-      searchEngineMatch = searchEngineMatch.replace(/%s/g, Utils.createSearchQuery queryTerms[1..])
-      suggestion = new Suggestion(queryTerms, "search", searchEngineMatch, queryTerms[0] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
+    if url
+      url = url.replace(/%s/g, Utils.createSearchQuery queryTerms[1..])
+      if description
+        type = description
+        query = queryTerms[1..].join " "
+      else
+        type = "search"
+        query = queryTerms[0] + ": " + queryTerms[1..].join(" ")
+      suggestion = new Suggestion(queryTerms, type, url, query, @computeRelevancy)
       suggestions.push(suggestion)
     onComplete(suggestions)
 
@@ -338,7 +344,7 @@ class SearchEngineCompleter
     this.searchEngines = root.Settings.getSearchEngines()
 
   getSearchEngineMatches: (queryTerm) ->
-    this.searchEngines[queryTerm]
+    this.searchEngines[queryTerm] || {}
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
