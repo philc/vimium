@@ -125,8 +125,10 @@ LinkHints =
     marker
 
   #
-  # Determine whether the element is visible and clickable. If it is, return the element and the rect
-  # bounding the element in the viewport.
+  # Determine whether the element is visible and clickable. If it is, return the element and the rect bounding
+  # the element in the viewport.  There may be more than one part of element which is clickable (for example,
+  # if it's an image), therefore we return a list of element/rect pairs.
+  #
   getVisibleClickable: (element) ->
     tagName = element.tagName.toLowerCase()
     isClickable = false
@@ -148,7 +150,7 @@ LinkHints =
     # Check aria properties to see if the element should be ignored.
     if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-      return null # This element should never have a link hint.
+      return [] # This element should never have a link hint.
 
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
@@ -187,7 +189,7 @@ LinkHints =
     if isClickable
       clientRect = DomUtils.getVisibleClientRect element
       if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, onlyHasTabIndex: onlyHasTabIndex}
+        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex}
 
     visibleElements
 
@@ -236,10 +238,11 @@ LinkHints =
         nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
       else
         # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect. Except for elements with tabIndex set; these are often more trouble than they're worth.
+        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
+        # than they're worth.
         # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
         # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement unless visibleElement.onlyHasTabIndex
+        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
     nonOverlappingElements
 
