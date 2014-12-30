@@ -37,12 +37,8 @@ Vomnibar =
 
   init: ->
     unless @vomnibarUI?
-      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", @handleMessage.bind this
-
-  handleMessage: (event) ->
-    if event.data == "hide"
-      @hide()
-
+      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", =>
+        @vomnibarUI.hide()
 
   # This function opens the vomnibar. It accepts options, a map with the values:
   #   completer   - The completer to fetch results from.
@@ -50,8 +46,6 @@ Vomnibar =
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
   open: (options) -> @vomnibarUI.activate options
-
-  hide: -> @vomnibarUI?.hide()
 
 root = exports ? window
 root.Vomnibar = Vomnibar

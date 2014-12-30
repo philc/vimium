@@ -19,7 +19,7 @@ Vomnibar =
   activate: (userOptions) ->
     options =
       completer: "omni"
-      query: null
+      query: ""
       newTab: false
       selectFirst: false
     extend options, userOptions
@@ -35,7 +35,7 @@ Vomnibar =
     @vomnibarUI.setCompleter(completer)
     @vomnibarUI.setRefreshInterval(options.refreshInterval)
     @vomnibarUI.setForceNewTab(options.newTab)
-    @vomnibarUI.setQuery(options.query) if options.query
+    @vomnibarUI.setQuery(options.query)
     @vomnibarUI.update()
 
 class VomnibarUI
@@ -57,8 +57,6 @@ class VomnibarUI
   setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
   hide: ->
-    @input.blur()
-    window.parent.focus()
     UIComponentServer.postMessage "hide"
     @reset()
 
