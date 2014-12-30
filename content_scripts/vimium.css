@@ -224,6 +224,7 @@ div.vimiumHUD {
   position: fixed;
   top: auto;
   left: auto;
+  right: 0px;
   bottom: 0px;
   color: black;
   height: 13px;
@@ -243,7 +244,6 @@ div.vimiumHUD {
   z-index: 2147483646;
   text-shadow: 0px 1px 2px #FFF;
   line-height: 1.0;
-  opacity: 0;
 }
 /* Hide the span between search box letters */
 div.vimiumHUD span {
@@ -272,6 +272,37 @@ div.vimiumHUD a.close-button:hover {
 
 body.vimiumFindMode ::selection {
   background: #ff9632;
+}
+
+/* HUD Frame CSS */
+
+iframe.vimiumHUDFrame, iframe.vimiumUpgradeFrame {
+  display: block;
+  background: none;
+  position: fixed;
+  top: auto;
+  left: auto;
+  bottom: 0px;
+  color: black;
+  height: 20px;
+  min-height: 20px;
+  width: 450px;
+  min-width: 150px;
+  text-align: left;
+  padding: 0px;
+  margin: 0;
+  /* One less than vimium's hint markers, so link hints can be shown e.g. for the HUD panel's close button. */
+  z-index: 2147483646;
+  line-height: 1.0;
+  opacity: 0;
+}
+
+iframe.vimiumHUDFrame {
+    right: 150px
+}
+
+iframe.vimiumUpgradeFrame {
+    right: 315px
 }
 
 /* Vomnibar Frame CSS */
@@ -311,6 +342,7 @@ iframe.vimiumUIComponentHidden {
 
 iframe.vimiumUIComponentVisible {
   display: block;
+  border: none;
 }
 
 iframe.vimiumUIComponentReactivated {

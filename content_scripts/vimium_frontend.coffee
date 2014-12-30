@@ -201,6 +201,7 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
   Vomnibar.init()
+  HUD.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -1003,107 +1004,92 @@ toggleHelpDialog = (html, fid) ->
 # Note: you cannot interact with the HUD until document.body is available.
 #
 HUD =
-  _tweenId: -1
-  _displayElement: null
-  _upgradeNotificationElement: null
+  showForDurationTimerId: -1
+  hudTween: null
+  upgradeTween: null
+  hudUI: null
+  upgradeUI: null
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
+  init: ->
+    @hudUI = new UIComponent "pages/HUD.html", "vimiumHUDFrame", ({data}) =>
+      this[data.name]? data
+    @upgradeUI = new UIComponent "pages/HUD.html", "vimiumUpgradeFrame", ({data}) =>
+      this[data.name]? data
+
+    @hudTween = new Tween ".vimiumHUDFrame.vimiumUIComponentVisible"
+    @upgradeTween = new Tween ".vimiumUpgradeFrame.vimiumUIComponentVisible"
+
   showForDuration: (text, duration) ->
-    HUD.show(text)
-    HUD._showForDurationTimerId = setTimeout((-> HUD.hide()), duration)
+    @show text
+    @showForDurationTimerId = setTimeout((=> @hide()), duration)
 
   show: (text) ->
-    return unless HUD.enabled()
-    clearTimeout(HUD._showForDurationTimerId)
-    HUD.displayElement().innerText = text
-    clearInterval(HUD._tweenId)
-    HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150)
-    HUD.displayElement().style.display = ""
-
-  showUpgradeNotification: (version) ->
-    HUD.upgradeNotificationElement().innerHTML = "Vimium has been upgraded to #{version}. See
-      <a class='vimiumReset' target='_blank'
-      href='https://github.com/philc/vimium#release-notes'>
-      what's new</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
-    links = HUD.upgradeNotificationElement().getElementsByTagName("a")
-    links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
-    links[1].addEventListener "click", (event) ->
-      event.preventDefault()
-      HUD.onUpdateLinkClicked()
-    Tween.fade(HUD.upgradeNotificationElement(), 1.0, 150)
-
-  onUpdateLinkClicked: (event) ->
-    HUD.hideUpgradeNotification()
-    chrome.runtime.sendMessage({ handler: "upgradeNotificationClosed" })
-
-  hideUpgradeNotification: (clickEvent) ->
-    Tween.fade(HUD.upgradeNotificationElement(), 0, 150,
-      -> HUD.upgradeNotificationElement().style.display = "none")
-
-  #
-  # Retrieves the HUD HTML element.
-  #
-  displayElement: ->
-    if (!HUD._displayElement)
-      HUD._displayElement = HUD.createHudElement()
-      # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
-      HUD._displayElement.style.right = "150px"
-    HUD._displayElement
-
-  upgradeNotificationElement: ->
-    if (!HUD._upgradeNotificationElement)
-      HUD._upgradeNotificationElement = HUD.createHudElement()
-      # Position this just to the left of our normal HUD.
-      HUD._upgradeNotificationElement.style.right = "315px"
-    HUD._upgradeNotificationElement
-
-  createHudElement: ->
-    element = document.createElement("div")
-    element.className = "vimiumReset vimiumHUD"
-    document.body.appendChild(element)
-    element
+    return unless @enabled()
+    clearTimeout @showForDurationTimerId
+    @hudUI.show {name: "show", text}
+    @hudTween.fade 1.0, 150
 
   hide: (immediate) ->
-    clearInterval(HUD._tweenId)
+    clearTimeout @showForDurationTimerId
     if (immediate)
-      HUD.displayElement().style.display = "none"
+      @hudUI.hide()
     else
-      HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
-        -> HUD.displayElement().style.display = "none")
+      @hudTween.fade 0, 150, => @hudUI.hide false
+
+  showUpgradeNotification: (version) ->
+    @upgradeUI.show {name: "upgrade", version}
+    @upgradeTween.fade 1.0, 150
+
+  hideUpgradeNotification: ->
+    @upgradeTween.fade 0, 150, => @upgradeUI.hide false
 
   isReady: -> document.body != null
 
   # A preference which can be toggled in the Options page. */
   enabled: -> !settings.get("hideHud")
 
-Tween =
-  #
-  # Fades an element's alpha. Returns a timer ID which can be used to stop the tween via clearInterval.
-  #
-  fade: (element, toAlpha, duration, onComplete) ->
-    state = {}
-    state.duration = duration
-    state.startTime = (new Date()).getTime()
-    state.from = parseInt(element.style.opacity) || 0
-    state.to = toAlpha
-    state.onUpdate = (value) ->
-      element.style.opacity = value
-      if (value == state.to && onComplete)
-        onComplete()
-    state.timerId = setInterval((-> Tween.performTweenStep(state)), 50)
-    state.timerId
+class Tween
+  opacity: 0
+  intervalId: -1
+  styleElement: null
 
-  performTweenStep: (state) ->
-    elapsed = (new Date()).getTime() - state.startTime
-    if (elapsed >= state.duration)
-      clearInterval(state.timerId)
-      state.onUpdate(state.to)
-    else
-      value = (elapsed / state.duration)  * (state.to - state.from) + state.from
-      state.onUpdate(value)
+  constructor: (@cssSelector) ->
+    @styleElement = document.createElement "style"
+    @styleElement.type = "text/css"
+    @styleElement.innerHTML = ""
+    document.documentElement.appendChild @styleElement
+
+  fade: (toAlpha, duration, onComplete) ->
+    clearInterval @intervalId
+    startTime = (new Date()).getTime()
+    fromAlpha = @opacity
+    alphaStep = toAlpha - fromAlpha
+
+    performStep = =>
+      elapsed = (new Date()).getTime() - startTime
+      if (elapsed >= duration)
+        clearInterval @intervalId
+        @updateStyle toAlpha
+        onComplete?()
+      else
+        value = (elapsed / duration) * alphaStep + fromAlpha
+        @updateStyle value
+
+    @updateStyle @opacity
+    @intervalId = setInterval performStep, 50
+
+  stop: -> clearInterval @intervalId
+
+  updateStyle: (@opacity) ->
+    @styleElement.innerHTML = """
+      #{@cssSelector} {
+        opacity: #{@opacity};
+      }
+    """
 
 CursorHider =
   #

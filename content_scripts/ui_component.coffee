@@ -41,11 +41,11 @@ class UIComponent
   show: (message) ->
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
-    @iframeElement.classList.add "vimiumUIComponentShowing"
+    @iframeElement.classList.add "vimiumUIComponentVisible"
     @showing = true
 
   hide: (focusWindow = true)->
-    @iframeElement.classList.remove "vimiumUIComponentShowing"
+    @iframeElement.classList.remove "vimiumUIComponentVisible"
     @iframeElement.classList.add "vimiumUIComponentHidden"
     window.focus() if focusWindow
     @showing = false
