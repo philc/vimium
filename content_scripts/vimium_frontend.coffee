@@ -49,7 +49,7 @@ settings =
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "enableCursorHider"]
   isLoaded: false
   eventListeners: {}
 
@@ -201,7 +201,7 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
-  CursorHider.init()
+  if settings.isLoaded then CursorHider.init() else settings.addEventListener "load", -> CursorHider.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -1124,9 +1124,11 @@ CursorHider =
     CursorHider.isScrolling = false
 
   init: ->
-    # Temporarily disabled pending consideration of #1359 (in particular, whether cursor hiding is too fragile
+    # Disabled by default pending consideration of #1359 (in particular, whether cursor hiding is too fragile
     # as to provide a consistent UX).
-    return
+    # NOTE(mrmr1993): This setting can be enabled manually by running Settings.set("enableCursorHider", true)
+    # from the background page.
+    return unless settings.get "enableCursorHider"
 
     # Disable cursor hiding for Chrome versions less than 39.0.2171.71 due to a suspected browser error.
     # See #1345 and #1348.
