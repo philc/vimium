@@ -23,15 +23,17 @@ root.Exclusions = Exclusions =
 
   rules: Settings.get("exclusionRules")
 
-  # Merge the matching rules for URL, or null. If rules are provided, match against those.
+  # Merge the matching rules for URL, or null.  In the normal case, we use the configured @rules; hence, this
+  # is the default.  However, when called from the page popup, we are testing what effect candidate new rules
+  # would have on the current tab.  In this case, the candidate rules are provided by the caller.
   getRule: (url, rules=@rules) ->
     matches = (rule for rule in rules when rule.pattern and 0 <= url.search(RegexpCache.get(rule.pattern)))
     # An absolute exclusion rule (with no passKeys) takes priority.
     for rule in matches
       return rule unless rule.passKeys
-    if matches.length
+    if 0 < matches.length
       pattern: (rule.pattern for rule in matches).join " | " # Not used; for debugging only.
-      passKeys: Utils.uniqueCharacters (rule.passKeys for rule in matches).join ""
+      passKeys: Utils.distinctCharacters (rule.passKeys for rule in matches).join ""
     else
       null
 

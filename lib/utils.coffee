@@ -111,7 +111,7 @@ Utils =
   isString: (obj) -> typeof obj == 'string' or obj instanceof String
 
   # Transform "zjkjkabz" into "abjkz".
-  uniqueCharacters: (str) ->
+  distinctCharacters: (str) ->
     unique = ""
     for char in str.split("").sort()
       unique += char unless 0 <= unique.indexOf char

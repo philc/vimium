@@ -86,11 +86,8 @@ class ExclusionRulesOption extends Option
   # options page, there is no current URL, so there is no initial pattern.  This is the default.  On the popup
   # page (see ExclusionRulesOnPopupOption), the pattern is pre-populated based on the current tab's URL.
   addRule: (pattern="") ->
-      @appendRule { pattern: pattern, passKeys: "" }
-      # Focus the pattern within the new rule.
-      element = @element.children[@element.children.length-1]
-      element.children[0].children[0].focus()
-      # Scroll the new rule into view.
+      element = @appendRule { pattern: pattern, passKeys: "" }
+      @getPattern(element).focus()
       exclusionScrollBox = $("exclusionScrollBox")
       exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
       @onUpdated()
@@ -100,7 +97,7 @@ class ExclusionRulesOption extends Option
     for rule in rules
       @appendRule rule
 
-  # Append a row for a new rule.
+  # Append a row for a new rule.  Return the newly-added element.
   appendRule: (rule) ->
     content = document.querySelector('#exclusionRuleTemplate').content
     row = document.importNode content, true
@@ -111,20 +108,19 @@ class ExclusionRulesOption extends Option
       for event in [ "input", "change" ]
         element.addEventListener event, @onUpdated
 
-    remove = row.querySelector ".exclusionRemoveButton"
-    remove.addEventListener "click", (event) =>
-      row = event.target.parentNode.parentNode
-      row.parentNode.removeChild row
+    @getRemoveButton(row).addEventListener "click", (event) =>
+      rule = event.target.parentNode.parentNode
+      rule.parentNode.removeChild rule
       @onUpdated()
 
     @element.appendChild row
+    @element.children[@element.children.length-1]
 
   readValueFromElement: ->
     rules =
       for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
-        pattern = element.children[0].firstChild.value.split(/\s+/).join ""
-        passKeys = element.children[1].firstChild.value.split(/\s+/).join ""
-        { pattern: pattern, passKeys: passKeys }
+        pattern: @getPattern(element).value.split(/\s+/).join ""
+        passKeys: @getPassKeys(element).value.split(/\s+/).join ""
     rules.filter (rule) -> rule.pattern
 
   areEqual: (a,b) ->
@@ -132,6 +128,11 @@ class ExclusionRulesOption extends Option
     # This is correct because patterns and passKeys cannot themselves contain newlines.
     flatten = (rule) -> if rule and rule.pattern then rule.pattern + "\n" + rule.passKeys else ""
     a.map(flatten).join("\n") == b.map(flatten).join("\n")
+
+  # Accessors for the three main sub-elements of an "exclusionRuleTemplateInstance".
+  getPattern: (element) -> element.querySelector(".pattern")
+  getPassKeys: (element) -> element.querySelector(".passKeys")
+  getRemoveButton: (element) -> element.querySelector(".exclusionRemoveButtonButton")
 
 # ExclusionRulesOnPopupOption is ExclusionRulesOption, extended with some UI tweeks suitable for use in the
 # page popup.  This also differs from ExclusionRulesOption in that, on the page popup, there is always a URL
@@ -144,8 +145,10 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
     element = super @generateDefaultPattern()
     @activatePatternWatcher element
     # ExclusionRulesOption.addRule()/super() has focused the pattern.  Here, focus the passKeys instead;
-    # because, in the popup, we already have a pattern.
-    element.children[1].children[0].focus()
+    # because, in the popup, we already have a pattern, so the user is more likely to edit the passKeys.
+    @getPassKeys(element).focus()
+    # Return element (for consistency with ExclusionRulesOption.addRule()).
+    element
 
   populateElement: (rules) ->
     super(rules)
@@ -157,7 +160,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
       pattern = element.children[0].firstChild.value.trim()
       if 0 <= @url.search bgExclusions.RegexpCache.get pattern
         haveMatch = true
-        element.children[1].firstChild.focus()
+        @getPassKeys(element).focus()
       else
         element.style.display = 'none'
     @addRule() unless haveMatch
@@ -172,8 +175,8 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
         patternElement.style.color = "red"
         patternElement.title = "Red text means that the pattern does not\nmatch the current URL."
 
-  # Generate a default exclusion-rule pattern from a URL.  This is used to pre-populate the pattern on the
-  # page popup.
+  # Generate a default exclusion-rule pattern from a URL.  This is then used to pre-populate the pattern on
+  # the page popup.
   generateDefaultPattern: ->
     if /^https?:\/\/./.test @url
       # The common use case is to disable Vimium at the domain level.
