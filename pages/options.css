@@ -1,0 +1,232 @@
+/* NOTE: This stylesheet is included in both options.html and popup.html.  So changes here affect
+   both of these. */
+body {
+  font: 14px "DejaVu Sans", "Arial", sans-serif;
+  color: #303942;
+  margin: 0 auto;
+}
+a, a:visited { color: #15c; }
+a:active { color: #052577; }
+div#wrapper, #footerWrapper {
+  width: 540px;
+  margin-left: 35px;
+}
+header {
+  font-size: 18px;
+  font-weight: normal;
+  border-bottom: 1px solid #eee;
+  padding: 20px 0 15px 0;
+  width: 100%;
+}
+button {
+  -webkit-user-select: none;
+  -webkit-appearance: none;
+  background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+  color: #444;
+  font: inherit;
+  text-shadow: 0 1px 0 #f0f0f0;
+  height: 24px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+button:hover {
+  background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  color: black;
+}
+button:active {
+  background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+  box-shadow: none;
+  text-shadow: none;
+}
+button[disabled], button[disabled]:hover, button[disabled]:active {
+  background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+  text-shadow: 0 1px 0 #f0f0f0;
+  color: #888;
+}
+input[type="checkbox"] {
+  -webkit-user-select: none;
+}
+label:hover {
+  color: black;
+}
+pre, code, .code {
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+pre {
+  margin: 5px;
+  border-left: 1px solid #eee;
+  padding-left: 5px;
+
+}
+input, textarea {
+  box-sizing: border-box;
+}
+textarea {
+  /* Horizontal resizing is pretty screwy-looking. */
+  resize: vertical;
+}
+table#options{
+  width: 100%;
+  font-size: 14px;
+  position: relative;
+  border-spacing: 0 23px;
+}
+.example {
+  font-size: 12px;
+  line-height: 16px;
+  color: #979ca0;
+  margin-left: 20px;
+}
+.info {
+  margin-left: 0px;
+}
+.caption {
+  margin-right: 10px;
+  min-width: 130px;
+  padding-top: 3px;
+  vertical-align: top;
+}
+td { padding: 0; }
+div#exampleKeyMapping {
+  margin-left: 10px;
+  margin-top: 5px;
+}
+input#linkHintCharacters {
+  width: 100%;
+}
+input#linkHintNumbers {
+  width: 100%;
+}
+input#linkHintCharacters {
+  width: 100%;
+}
+input#scrollStepSize {
+  width: 40px;
+  margin-right: 3px;
+}
+textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
+  width: 100%;;
+  min-height: 130px;
+  white-space: nowrap;
+}
+input#previousPatterns, input#nextPatterns {
+  width: 100%;
+}
+input#newTabUrl {
+  width: 100%;
+}
+input#searchUrl {
+  width: 100%;
+}
+#status {
+  margin-left: 10px;
+  font-size: 80%;
+}
+/* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
+.caption {
+  width: 1px;
+  white-space: nowrap;
+}
+#buttonsPanel { width: 100%; }
+#advancedOptions { display: none; }
+#advancedOptionsLink { line-height: 24px; }
+.help {
+  position: absolute;
+  right: -320px;
+  width: 320px;
+}
+input:read-only {
+  background-color: #eee;
+  color: #666;
+  pointer-events: none;
+  -webkit-user-select: none;
+}
+input[type="text"], textarea {
+  border: 1px solid #bfbfbf;
+  border-radius: 2px;
+  color: #444;
+  font: inherit;
+  padding: 3px;
+}
+button:focus, input[type="text"]:focus, textarea:focus {
+  -webkit-transition: border-color 200ms;
+  border-color: #4d90fe;
+  outline: none;
+}
+/* Boolean options have a tighter form representation than text options. */
+td.booleanOption { font-size: 12px; }
+/* Ids and classes for rendering exclusionRules */
+#exclusionScrollBox {
+  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Each exclusion rule is about 30px, so this allows 7 before scrolling */
+  max-height: 215px;
+  min-height: 75px;
+  border-radius: 2px;
+  color: #444;
+  width: 100%
+}
+#exclusionRules {
+  width: 100%;
+}
+.exclusionRulePassKeys {
+  width: 33%;
+}
+.exclusionRemoveButton {
+  width: 1px; /* 1px; smaller than the button itself. */
+}
+.exclusionRemoveButtonButton {
+  border: none;
+  background-color: #fff;
+  color: #979ca0;
+}
+.exclusionRemoveButtonButton:hover {
+  color: #444;
+}
+input.pattern, input.passKeys, .exclusionHeaderText {
+  width: 100%;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+  font-size: 14px;
+}
+.exclusionHeaderText {
+  padding-left: 3px;
+  color: #979ca0;
+}
+#exclusionAddButton {
+  float: right;
+  margin-right: 0px;
+  margin-top: 5px;
+}
+#footer {
+  background: #f5f5f5;
+  border-top: 1px solid #979ca0;
+  position: fixed;
+  bottom: 0px;
+  z-index: 10;
+}
+#footer, #footerTable, #footerTableData {
+  width: 100%;
+}
+#endSpace {
+  /* Leave space for the fixed footer. */
+  min-height: 30px;
+  max-height: 30px;
+}
+#helpText {
+  font-size: 12px;
+}
+#saveOptionsTableData {
+  float: right;
+}
+#saveOptions {
+  white-space: nowrap;
+  width: 110px;
+}
