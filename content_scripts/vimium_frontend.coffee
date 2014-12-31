@@ -221,7 +221,7 @@ unregisterFrame = ->
 # Enters insert mode if the currently focused element in the DOM is focusable.
 #
 enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
+  if (document.activeElement && isEditable(document.activeElement))
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
@@ -413,7 +413,7 @@ onKeypress = (event) ->
       return
 
     if (keyChar)
-      if (!isInsertMode() && !findMode)
+      if (!isInsertMode())
         if (isPassKey keyChar)
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
@@ -468,7 +468,7 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else if (!isInsertMode() && !findMode)
+  else if (!isInsertMode())
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
@@ -526,7 +526,7 @@ isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
-  if (isFocusable(event.target) && !findMode)
+  if (isFocusable(event.target))
     enterInsertModeWithoutShowingIndicator(event.target)
 
 onBlurCapturePhase = (event) ->
@@ -1022,6 +1022,13 @@ HUD =
     clearTimeout @showForDurationTimerId
     @hudUI.activate {name: "find"}
     @hudTween.fade 1.0, 150
+    # Refocus the HUD if the user focuses this window.
+    window.addEventListener "focus", @focusFindModeHUD, false
+    document.documentElement.addEventListener "mouseup", @focusFindModeHUD, false
+
+  focusFindModeHUD: ->
+    return unless findMode
+    HUD.hudUI.activate()
 
   search: (data) ->
     findModeQuery.rawQuery = data.query
