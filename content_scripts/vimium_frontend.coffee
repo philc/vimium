@@ -7,8 +7,8 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
-findMode = false
-findModeQuery = { rawQuery: "", matchCount: 0 }
+window.findMode = false
+window.findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
@@ -592,7 +592,7 @@ isInsertMode = ->
     enterInsertModeWithoutShowingIndicator document.activeElement
 
 # should be called whenever rawQuery is modified.
-updateFindModeQuery = ->
+window.updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
@@ -642,7 +642,7 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleEscapeForFindMode = ->
+window.handleEscapeForFindMode = ->
   exitFindMode()
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
@@ -654,20 +654,20 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-handleDeleteForFindMode = ->
+window.handleDeleteForFindMode = ->
   exitFindMode()
   performFindInPlace()
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-handleEnterForFindMode = ->
+window.handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
-performFindInPlace = ->
+window.performFindInPlace = ->
   cachedScrollX = window.scrollX
   cachedScrollY = window.scrollY
 
@@ -689,8 +689,8 @@ executeFind = (query, options) ->
 
   # rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
   # changes that find() induces.
-  oldFindMode = findMode
-  findMode = true
+  oldFindMode = window.findMode
+  window.findMode = true
 
   document.body.classList.add("vimiumFindMode")
 
@@ -701,7 +701,7 @@ executeFind = (query, options) ->
     -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
     0)
 
-  findMode = oldFindMode
+  window.findMode = oldFindMode
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
@@ -892,7 +892,7 @@ showFindModeHUDForQuery = ->
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
-updateFindModeHUDCount = ->
+window.updateFindModeHUDCount = ->
   count =
     if findModeQueryHasResults or findModeQuery.parsedQuery.length == 0
       findModeQuery.matchCount
@@ -902,11 +902,11 @@ updateFindModeHUDCount = ->
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
-  findMode = true
+  window.findMode = true
   HUD.showFindMode()
 
 exitFindMode = ->
-  findMode = false
+  window.findMode = false
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
@@ -969,129 +969,6 @@ toggleHelpDialog = (html, fid) ->
     hideHelpDialog()
   else
     showHelpDialog(html, fid)
-
-#
-# A heads-up-display (HUD) for showing Vimium page operations.
-# Note: you cannot interact with the HUD until document.body is available.
-#
-HUD =
-  showForDurationTimerId: -1
-  hudTween: null
-  upgradeTween: null
-  hudUI: null
-  upgradeUI: null
-
-  # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
-  # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
-  # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
-
-  init: ->
-    @hudUI = new UIComponent "pages/HUD.html", "vimiumHUDFrame", ({data}) =>
-      this[data.name]? data
-    @upgradeUI = new UIComponent "pages/HUD.html", "vimiumUpgradeFrame", ({data}) =>
-      this[data.name]? data
-
-    @hudTween = new Tween ".vimiumHUDFrame.vimiumUIComponentVisible"
-    @upgradeTween = new Tween ".vimiumUpgradeFrame.vimiumUIComponentVisible"
-
-  showForDuration: (text, duration) ->
-    @show text
-    @showForDurationTimerId = setTimeout((=> @hide()), duration)
-
-  show: (text) ->
-    return unless @enabled()
-    clearTimeout @showForDurationTimerId
-    @hudUI.show {name: "show", text}
-    @hudTween.fade 1.0, 150
-
-  hide: (immediate) ->
-    clearTimeout @showForDurationTimerId
-    if (immediate)
-      @hudUI.hide()
-    else
-      @hudTween.fade 0, 150, => @hudUI.hide false
-
-  showUpgradeNotification: (version) ->
-    @upgradeUI.show {name: "upgrade", version}
-    @upgradeTween.fade 1.0, 150
-
-  hideUpgradeNotification: ->
-    @upgradeTween.fade 0, 150, => @upgradeUI.hide false
-
-  showFindMode: ->
-    clearTimeout @showForDurationTimerId
-    @hudUI.activate {name: "find"}
-    @hudTween.fade 1.0, 150
-    # Refocus the HUD if the user focuses this window.
-    window.addEventListener "focus", @focusFindModeHUD, false
-    document.documentElement.addEventListener "mouseup", @focusFindModeHUD, false
-
-  focusFindModeHUD: ->
-    return unless findMode
-    HUD.hudUI.activate()
-
-  search: (data) ->
-    findModeQuery.rawQuery = data.query
-    updateFindModeQuery()
-    performFindInPlace()
-    updateFindModeHUDCount()
-
-  updateMatchesCount: (count) ->
-    @hudUI.postMessage {name: "updateMatchesCount", count}
-
-  hideFindMode: do ->
-    handlers =
-      esc: handleEscapeForFindMode
-      del: handleDeleteForFindMode
-      enter: handleEnterForFindMode
-    (data) ->
-      findModeQuery.rawQuery = data.query
-      handlers[data.type]?()
-      @hudUI.hide()
-
-  isReady: -> document.body != null
-
-  # A preference which can be toggled in the Options page. */
-  enabled: -> !settings.get("hideHud")
-
-class Tween
-  opacity: 0
-  intervalId: -1
-  styleElement: null
-
-  constructor: (@cssSelector) ->
-    @styleElement = document.createElement "style"
-    @styleElement.type = "text/css"
-    @styleElement.innerHTML = ""
-    document.documentElement.appendChild @styleElement
-
-  fade: (toAlpha, duration, onComplete) ->
-    clearInterval @intervalId
-    startTime = (new Date()).getTime()
-    fromAlpha = @opacity
-    alphaStep = toAlpha - fromAlpha
-
-    performStep = =>
-      elapsed = (new Date()).getTime() - startTime
-      if (elapsed >= duration)
-        clearInterval @intervalId
-        @updateStyle toAlpha
-        onComplete?()
-      else
-        value = (elapsed / duration) * alphaStep + fromAlpha
-        @updateStyle value
-
-    @updateStyle @opacity
-    @intervalId = setInterval performStep, 50
-
-  stop: -> clearInterval @intervalId
-
-  updateStyle: (@opacity) ->
-    @styleElement.innerHTML = """
-      #{@cssSelector} {
-        opacity: #{@opacity};
-      }
-    """
 
 CursorHider =
   #

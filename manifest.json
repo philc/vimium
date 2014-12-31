@@ -43,6 +43,7 @@
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
              "content_scripts/marks.js",
+             "content_scripts/hud_controller.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["content_scripts/vimium.css"],
