@@ -51,6 +51,7 @@ class VomnibarUI
   setCompleter: (completer) ->
     @completer = completer
     @reset()
+    @update(true)
 
   setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
 
@@ -66,7 +67,6 @@ class VomnibarUI
     @updateTimer = null
     @completions = []
     @selection = @initialSelectionValue
-    @update(true)
 
   updateSelection: ->
     # We have taken the option to add some global state here (previousCompletionType) to tell if a search
