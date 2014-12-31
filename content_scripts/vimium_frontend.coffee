@@ -4,7 +4,6 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
-window.handlerStack = new HandlerStack
 
 insertModeLock = null
 findMode = false
@@ -110,6 +109,8 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
+  nf = -> true
+  new Mode(onKeydown, onKeypress, onKeyup, nf)
   Scroller.init settings
 
   checkIfEnabledForUrl()
@@ -169,9 +170,11 @@ initializeWhenEnabled = (newPassKeys) ->
   if (!installedListeners)
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
-    installListener window, "keydown", onKeydown
-    installListener window, "keypress", onKeypress
-    installListener window, "keyup", onKeyup
+    for type in ["keydown", "keypress", "keyup"]
+      do (type) ->
+        installListener window, type, (event) ->
+          console.log type
+          handlerStack.bubbleEvent type, event
     installListener document, "focus", onFocusCapturePhase
     installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
@@ -398,8 +401,6 @@ KeydownEvents =
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
 onKeypress = (event) ->
-  return unless handlerStack.bubbleEvent('keypress', event)
-
   keyChar = ""
 
   # Ignore modifier keys by themselves.
@@ -424,8 +425,7 @@ onKeypress = (event) ->
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
 onKeydown = (event) ->
-  return unless handlerStack.bubbleEvent('keydown', event)
-
+  console.log "onKeydown"
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -518,11 +518,7 @@ onKeydown = (event) ->
     KeydownEvents.push event
 
 onKeyup = (event) ->
-  handledKeydown = KeydownEvents.pop event
-  return unless handlerStack.bubbleEvent("keyup", event)
-
-  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  DomUtils.suppressPropagation(event) if handledKeydown
+  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()

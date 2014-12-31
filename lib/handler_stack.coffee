@@ -5,6 +5,7 @@ class root.HandlerStack
   constructor: ->
     @stack = []
     @counter = 0
+    @passThrough = {}
 
   genId: -> @counter = ++@counter & 0xffff
 
@@ -18,6 +19,7 @@ class root.HandlerStack
   # propagation by returning a falsy value.
   bubbleEvent: (type, event) ->
     for i in [(@stack.length - 1)..0] by -1
+      console.log i, type
       handler = @stack[i]
       # We need to check for existence of handler because the last function call may have caused the release
       # of more than one handler.
@@ -27,6 +29,10 @@ class root.HandlerStack
         if not passThrough
           DomUtils.suppressEvent(event)
           return false
+        # If @passThrough is returned, then discontinue further bubbling and pass the event through to the
+        # underlying page.  The event is not suppresssed.
+        if passThrough == @passThrough
+          return false
     true
 
   remove: (id = @currentId) ->
@@ -35,3 +41,5 @@ class root.HandlerStack
       if handler.id == id
         @stack.splice(i, 1)
         break
+
+root.handlerStack = new HandlerStack
