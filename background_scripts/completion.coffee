@@ -344,7 +344,7 @@ class SearchEngineCompleter
     this.searchEngines = root.Settings.getSearchEngines()
 
   getSearchEngineMatches: (queryTerms) ->
-    if 1 < queryTerms.length and engine = @searchEngines[queryTerms[0]] then engine else {}
+    (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
