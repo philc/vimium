@@ -20,8 +20,8 @@ isEnabledForUrl = true
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = null
-validFirstKeys = null
+currentCompletionKeys = ""
+validFirstKeys = ""
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -109,9 +109,29 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  nf = -> true
-  new Mode(onKeydown, onKeypress, onKeyup, nf)
+  # Install normal mode. This will be at the bottom of both the mode stack and the handler stack, and is never
+  # deactivated.
+  new Mode
+    name: "normal"
+    keydown: onKeydown
+    keypress: onKeypress
+    keyup: onKeyup
+
+  # Initialize the scroller. The scroller installs key handlers, and these will be next on the handler stack,
+  # immediately above normal mode.
   Scroller.init settings
+
+  handlePassKeyEvent = (event) ->
+    for keyChar in [ KeyboardUtils.getKeyChar(event), String.fromCharCode(event.charCode) ]
+      return handlerStack.passThrough if keyChar and isPassKey keyChar
+    true
+
+  # Install passKeys mode. This mode is never deactivated.
+  new Mode
+    name: "passkeys"
+    keydown: handlePassKeyEvent
+    keypress: handlePassKeyEvent
+    keyup: -> true # Allow event to propagate.
 
   checkIfEnabledForUrl()
 
@@ -137,7 +157,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
+    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys, badge: Mode.getBadge() }
     setState: setState
     currentKeyQueue: (request) -> keyQueue = request.keyQueue
 
@@ -171,10 +191,7 @@ initializeWhenEnabled = (newPassKeys) ->
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
     for type in ["keydown", "keypress", "keyup"]
-      do (type) ->
-        installListener window, type, (event) ->
-          console.log type
-          handlerStack.bubbleEvent type, event
+      do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "focus", onFocusCapturePhase
     installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
@@ -192,7 +209,7 @@ setState = (request) ->
 window.addEventListener "focus", ->
   # settings may have changed since the frame last had focus
   settings.load()
-  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
+  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId, badge: Mode.getBadge() })
 
 #
 # Initialization tasks that must wait for the document to be ready.
@@ -410,22 +427,24 @@ onKeypress = (event) ->
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return
+      return Mode.propagate
 
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
-        DomUtils.suppressEvent(event)
+        return Mode.suppressPropagation
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
-          return undefined
+          return Mode.propagate
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
-          DomUtils.suppressEvent(event)
+          keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+          return Mode.suppressPropagation
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
+  return Mode.propagate
+
 onKeydown = (event) ->
-  console.log "onKeydown"
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -463,38 +482,39 @@ onKeydown = (event) ->
       event.srcElement.blur()
     exitInsertMode()
     DomUtils.suppressEvent event
-    handledKeydownEvents.push event
+    KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
-      DomUtils.suppressEvent event
       KeydownEvents.push event
+      return Mode.suppressPropagation
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
-      DomUtils.suppressEvent event
       KeydownEvents.push event
+      return Mode.suppressPropagation
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
-      DomUtils.suppressEvent event
       KeydownEvents.push event
+      return Mode.suppressPropagation
 
     else if (!modifiers)
-      DomUtils.suppressPropagation(event)
       KeydownEvents.push event
+      return Mode.suppressPropagation
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
-    DomUtils.suppressEvent event
     KeydownEvents.push event
+    return Mode.suppressPropagation
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
-        DomUtils.suppressEvent event
         KeydownEvents.push event
+        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        return Mode.suppressPropagation
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -502,7 +522,7 @@ onKeydown = (event) ->
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
-      return undefined
+      return Mode.propagate
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -514,11 +534,14 @@ onKeydown = (event) ->
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    DomUtils.suppressPropagation(event)
+    # Suppress chrome propagation of this event, but drop through, and continue handler-stack processing.
+    DomUtils.suppressPropagation event
     KeydownEvents.push event
 
+  return Mode.propagate
+
 onKeyup = (event) ->
-  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
+  if KeydownEvents.pop event then Mode.suppressPropagation else Mode.propagate
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -584,7 +607,7 @@ isEditable = (target) ->
 #
 window.enterInsertMode = (target) ->
   enterInsertModeWithoutShowingIndicator(target)
-  HUD.show("Insert mode")
+  # HUD.show("Insert mode") # With this proof-of-concept, visual feedback is given via badges on the browser popup.
 
 #
 # We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
@@ -594,15 +617,36 @@ window.enterInsertMode = (target) ->
 # leave insert mode when the user presses <ESC>.
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
+enterInsertModeWithoutShowingIndicator = (target) ->
+  insertModeLock = target
+  unless Mode.isInsert()
+    # Install insert-mode handler.  Hereafter, all key events will be passed directly to the underlying page.
+    # The current isInsertMode logic in the normal-mode handlers is now redundant..
+    new Mode
+      name: "insert"
+      badge: "I"
+      keydown: "pass"
+      keypress: "pass"
+      keyup: "pass"
+      onDeactivate: (event) ->
+        if isEditable(event.srcElement) or isEmbed(event.srcElement)
+          # Remove focus so the user can't just get himself back into insert mode by typing in the same input
+          # box.
+          # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
+          # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+          # games.  See discussion in #1211 and #1194.
+          event.srcElement.blur()
+        insertModeLock = null
+        HUD.hide()
 
 exitInsertMode = (target) ->
-  if (target == undefined || insertModeLock == target)
-    insertModeLock = null
-    HUD.hide()
+  #  This assumes that, if insert mode is active at all, then it *must* be the current mode. That is, we
+  #  cannot enter any other mode from insert mode.
+  if Mode.isInsert() and (target == null or target == insertModeLock)
+    Mode.popMode()
 
 isInsertMode = ->
-  return true if insertModeLock != null
+  return true if Mode.isInsert()
   # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
   # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check whether
   # the active element is contentEditable.

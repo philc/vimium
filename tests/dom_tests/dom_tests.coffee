@@ -178,6 +178,7 @@ context "Input focus",
     focusInput 1
     assert.equal "first", document.activeElement.id
     # deactivate the tabbing mode and its overlays
+    currentCompletionKeys = ""
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
     focusInput 100

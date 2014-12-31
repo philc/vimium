@@ -1,11 +1,11 @@
 root = exports ? window
 
-class root.HandlerStack
+class HandlerStack
 
   constructor: ->
     @stack = []
     @counter = 0
-    @passThrough = {}
+    @passThrough = new Object() # Used only as a constant, distinct from any other value.
 
   genId: -> @counter = ++@counter & 0xffff
 
@@ -19,7 +19,6 @@ class root.HandlerStack
   # propagation by returning a falsy value.
   bubbleEvent: (type, event) ->
     for i in [(@stack.length - 1)..0] by -1
-      console.log i, type
       handler = @stack[i]
       # We need to check for existence of handler because the last function call may have caused the release
       # of more than one handler.
@@ -29,8 +28,8 @@ class root.HandlerStack
         if not passThrough
           DomUtils.suppressEvent(event)
           return false
-        # If @passThrough is returned, then discontinue further bubbling and pass the event through to the
-        # underlying page.  The event is not suppresssed.
+        # If the constant @passThrough is returned, then discontinue further bubbling and pass the event
+        # through to the underlying page.  The event is not suppresssed.
         if passThrough == @passThrough
           return false
     true
@@ -42,4 +41,5 @@ class root.HandlerStack
         @stack.splice(i, 1)
         break
 
+root. HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack
