@@ -3,6 +3,8 @@ class Mode
   # Static members.
   @modes: []
   @current: -> Mode.modes[0]
+
+  # Constants. Static.
   @suppressPropagation = false
   @propagate = true
 
@@ -12,8 +14,6 @@ class Mode
   keydown: "suppress"  # A function, or "suppress" or "pass"; the latter are replaced with suitable functions.
   keypress: "suppress" # A function, or "suppress" or "pass"; the latter are replaced with suitable functions.
   keyup: "suppress"    # A function, or "suppress" or "pass"; the latter are replaced with suitable functions.
-  onDeactivate: ->     # Called when leaving this mode.
-  onReactivate: ->     # Called when this mode is reactivated.
 
   constructor: (options) ->
     extend @, options
@@ -22,10 +22,6 @@ class Mode
       keydown: @checkForBuiltInHandler "keydown", @keydown
       keypress: @checkForBuiltInHandler "keypress", @keypress
       keyup: @checkForBuiltInHandler "keyup", @keyup
-      reactivateMode: =>
-        @onReactivate()
-        Mode.setBadge()
-        return Mode.suppressPropagation
 
     Mode.modes.unshift @
     Mode.setBadge()
@@ -37,12 +33,12 @@ class Mode
       when "pass" then @generatePassThrough type
       else handler
 
-  # Generate a default handler which always passes through; except Esc, which pops the current mode.
+  # Generate a default handler which always passes through to the underlying page; except Esc, which pops the
+  # current mode.
   generatePassThrough: (type) ->
-    me = @
-    (event) ->
+    (event) =>
       if type == "keydown" and KeyboardUtils.isEscape event
-        me.popMode event
+        @exit()
         return Mode.suppressPropagation
       handlerStack.passThrough
 
@@ -51,19 +47,14 @@ class Mode
     handler = @generatePassThrough type
     (event) -> handler(event) and Mode.suppressPropagation # Always falsy.
 
-  # Leave the current mode; event may or may not be provide.  It is the responsibility of the creator of this
-  # object to know whether or not an event will be provided.  Bubble a "reactivateMode" event to notify the
-  # now-active mode that it is once again top dog.
-  popMode: (event) ->
-    Mode.modes = Mode.modes.filter (mode) => mode != @
+  exit: ->
     handlerStack.remove @handlerId
-    @onDeactivate event
-    handlerStack.bubbleEvent "reactivateMode", event
+    Mode.modes = Mode.modes.filter (mode) => mode != @
+    Mode.setBadge()
 
   # Set the badge on the browser popup to indicate the current mode; static method.
   @setBadge: ->
-    badge = Mode.getBadge()
-    chrome.runtime.sendMessage({ handler: "setBadge", badge: badge })
+    chrome.runtime.sendMessage({ handler: "setBadge", badge: Mode.getBadge() })
 
   # Static convenience methods.
   @is: (mode) -> Mode.current()?.name == mode

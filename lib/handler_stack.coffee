@@ -7,7 +7,7 @@ class HandlerStack
     @counter = 0
     @passThrough = new Object() # Used only as a constant, distinct from any other value.
 
-  genId: -> @counter = ++@counter & 0xffff
+  genId: -> @counter = ++@counter
 
   # Adds a handler to the stack. Returns a unique ID for that handler that can be used to remove it later.
   push: (handler) ->

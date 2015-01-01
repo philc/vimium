@@ -5,6 +5,7 @@
 # "domReady".
 #
 
+insertMode = null
 insertModeLock = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
@@ -133,6 +134,9 @@ initializePreDomReady = ->
     keypress: handlePassKeyEvent
     keyup: -> true # Allow event to propagate.
 
+  # Install insert mode.
+  insertMode = new InsertMode()
+
   checkIfEnabledForUrl()
 
   refreshCompletionKeys()
@@ -192,9 +196,11 @@ initializeWhenEnabled = (newPassKeys) ->
     # can't set handlers to grab the keys before us.
     for type in ["keydown", "keypress", "keyup"]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
-    installListener document, "focus", onFocusCapturePhase
+    # installListener document, "focus", onFocusCapturePhase # No longer needed.
     installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
+    installListener document, "focus", onFocus
+    installListener document, "blur", onBlur
     enterInsertModeIfElementIsFocused()
     installedListeners = true
 
@@ -244,6 +250,8 @@ enterInsertModeIfElementIsFocused = ->
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+onFocus = (event) -> handlerStack.bubbleEvent 'focus', event
+onBlur = (event) -> handlerStack.bubbleEvent 'blur', event
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -324,6 +332,9 @@ extend window,
       chrome.runtime.sendMessage { handler: "copyToClipboard", data: url }
 
     HUD.showForDuration("Yanked URL", 1000)
+
+  enterInsertMode: ->
+    insertMode?.activate()
 
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
@@ -602,14 +613,6 @@ isEditable = (target) ->
   focusableElements.indexOf(nodeName) >= 0
 
 #
-# Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
-# mode manually by pressing "i". In most cases we do not show any UI (enterInsertModeWithoutShowingIndicator)
-#
-window.enterInsertMode = (target) ->
-  enterInsertModeWithoutShowingIndicator(target)
-  # HUD.show("Insert mode") # With this proof-of-concept, visual feedback is given via badges on the browser popup.
-
-#
 # We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
 # causes element B to come into focus, we may get "B focus" before "A blur". Thus we only leave insert mode
 # when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
@@ -618,40 +621,13 @@ window.enterInsertMode = (target) ->
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
 enterInsertModeWithoutShowingIndicator = (target) ->
-  unless Mode.isInsert()
-    insertModeLock = target
-    # Install insert-mode handler.  Hereafter, all key events will be passed directly to the underlying page.
-    # The current isInsertMode logic in the normal-mode handlers is now redundant..
-    new Mode
-      name: "insert"
-      badge: "I"
-      keydown: "pass"
-      keypress: "pass"
-      keyup: "pass"
-      onDeactivate: (event) ->
-        if isEditable(event.srcElement) or isEmbed(event.srcElement)
-          # Remove focus so the user can't just get himself back into insert mode by typing in the same input
-          # box.
-          # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
-          # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
-          # games.  See discussion in #1211 and #1194.
-          event.srcElement.blur()
-        insertModeLock = null
-        HUD.hide()
+  return # Disabled.
 
 exitInsertMode = (target) ->
-  #  This assumes that, if insert mode is active at all, then it *must* be the current mode. That is, we
-  #  cannot enter any other mode from insert mode.
-  if Mode.isInsert() and (target == null or target == insertModeLock)
-    Mode.popMode()
+  return # Disabled.
 
 isInsertMode = ->
-  return true if Mode.isInsert()
-  # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
-  # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check whether
-  # the active element is contentEditable.
-  document.activeElement and document.activeElement.isContentEditable and
-    enterInsertModeWithoutShowingIndicator document.activeElement
+  return false # Disabled.
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -705,6 +681,7 @@ updateFindModeQuery = ->
     findModeQuery.matchCount = text.match(pattern)?.length
 
 handleKeyCharForFindMode = (keyChar) ->
+  console.log "xxxxxxxxxxxxxxx"
   findModeQuery.rawQuery += keyChar
   updateFindModeQuery()
   performFindInPlace()
