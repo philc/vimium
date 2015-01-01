@@ -417,6 +417,7 @@ KeydownEvents =
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
+
 onKeypress = (event) ->
   keyChar = ""
 
@@ -427,22 +428,21 @@ onKeypress = (event) ->
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return Mode.propagate
+      return true
 
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
-        return Mode.suppressPropagation
+        DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
-          return Mode.propagate
+          return handlerStack.passThrough
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
-          keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-          return Mode.suppressPropagation
+          DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-  return Mode.propagate
+  return true
 
 onKeydown = (event) ->
   keyChar = ""
@@ -482,39 +482,38 @@ onKeydown = (event) ->
       event.srcElement.blur()
     exitInsertMode()
     DomUtils.suppressEvent event
-    KeydownEvents.push event
+    handledKeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
+      DomUtils.suppressEvent event
       KeydownEvents.push event
-      return Mode.suppressPropagation
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
+      DomUtils.suppressEvent event
       KeydownEvents.push event
-      return Mode.suppressPropagation
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
+      DomUtils.suppressEvent event
       KeydownEvents.push event
-      return Mode.suppressPropagation
 
     else if (!modifiers)
+      DomUtils.suppressPropagation(event)
       KeydownEvents.push event
-      return Mode.suppressPropagation
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
+    DomUtils.suppressEvent event
     KeydownEvents.push event
-    return Mode.suppressPropagation
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+        DomUtils.suppressEvent event
         KeydownEvents.push event
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-        return Mode.suppressPropagation
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -522,7 +521,7 @@ onKeydown = (event) ->
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
-      return Mode.propagate
+      return undefined
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -534,14 +533,14 @@ onKeydown = (event) ->
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    # Suppress chrome propagation of this event, but drop through, and continue handler-stack processing.
-    DomUtils.suppressPropagation event
+    DomUtils.suppressPropagation(event)
     KeydownEvents.push event
 
-  return Mode.propagate
+  return true
 
 onKeyup = (event) ->
-  if KeydownEvents.pop event then Mode.suppressPropagation else Mode.propagate
+  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
+  return true
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
