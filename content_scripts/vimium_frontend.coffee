@@ -618,8 +618,8 @@ window.enterInsertMode = (target) ->
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
 enterInsertModeWithoutShowingIndicator = (target) ->
-  insertModeLock = target
   unless Mode.isInsert()
+    insertModeLock = target
     # Install insert-mode handler.  Hereafter, all key events will be passed directly to the underlying page.
     # The current isInsertMode logic in the normal-mode handlers is now redundant..
     new Mode

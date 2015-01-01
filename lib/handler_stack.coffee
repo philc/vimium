@@ -41,5 +41,5 @@ class HandlerStack
         @stack.splice(i, 1)
         break
 
-root. HandlerStack = HandlerStack
+root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack
