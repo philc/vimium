@@ -122,6 +122,7 @@ initializePreDomReady = ->
   Scroller.init settings
 
   handlePassKeyEvent = (event) ->
+    return true if findMode # This is necessary for legacy find mode; will not be necessary in future.
     for keyChar in [ KeyboardUtils.getKeyChar(event), String.fromCharCode(event.charCode) ]
       return handlerStack.passThrough if keyChar and isPassKey keyChar
     true
