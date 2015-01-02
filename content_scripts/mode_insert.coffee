@@ -9,7 +9,7 @@ class InsertMode extends Mode
     return true if element.isContentEditable
     nodeName = element.nodeName?.toLowerCase()
     # Use a blacklist instead of a whitelist because new form controls are still being implemented for html5.
-    if nodeName == "input" and element.type and not element.type in ["radio", "checkbox"]
+    if nodeName == "input" and element.type not in ["radio", "checkbox"]
       return true
     nodeName in ["textarea", "select"]
 
@@ -18,14 +18,17 @@ class InsertMode extends Mode
   isEmbed: (element) ->
     element.nodeName?.toLowerCase() in ["embed", "object"]
 
-  canEditElement: (element) ->
-    element and (@isEditable(element) or @isEmbed element)
+  isFocusable: (element) ->
+    (@isEditable(element) or @isEmbed element)
 
-  # Check whether insert mode is active.  Also, activate insert mode if the current element is editable.
+  # Check whether insert mode is active.  Also, activate insert mode if the current element is content
+  # editable.
   isActive: ->
     return true if @isInsertMode
-    # FIXME(smblott).  Is there a way to (safely) cache the results of these @canEditElement() calls?
-    @activate() if @canEditElement document.activeElement
+    # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
+    # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check
+    # whether the active element is contentEditable.
+    @activate() if document.activeElement?.isContentEditable
     @isInsertMode
 
   generateKeyHandler: (type) ->
@@ -33,7 +36,7 @@ class InsertMode extends Mode
       return Mode.propagate unless @isActive()
       return handlerStack.passDirectlyToPage unless type == "keydown" and KeyboardUtils.isEscape event
       # We're now exiting insert mode.
-      if @canEditElement event.srcElement
+      if @isEditable(event.srcElement) or @isEmbed event.srcElement
         # Remove the focus so the user can't just get himself back into insert mode by typing in the same input
         # box.
         # NOTE(smblott, 2014/12/22) Including embeds for .blur() here is experimental.  It appears to be the
@@ -45,19 +48,15 @@ class InsertMode extends Mode
       Mode.suppressPropagation
 
   activate: ->
-    @isInsertMode = true
-    Mode.updateBadge()
+    unless @isInsertMode
+      @isInsertMode = true
+      Mode.updateBadge()
 
   # Override (and re-use) updateBadgeForMode() from Mode.updateBadgeForMode().  Use insert-mode badge only if
   # we're active and no mode higher in stack has already inserted a badge.
   updateBadgeForMode: (badge) ->
     @badge = if @isActive() then "I" else ""
     super badge
-
-  checkModeState: ->
-    previousState = @isInsertMode
-    if @isActive() != previousState
-      Mode.updateBadge()
 
   constructor: ->
     super
@@ -68,9 +67,15 @@ class InsertMode extends Mode
       keyup: @generateKeyHandler "keyup"
 
     @handlers.push handlerStack.push
-      DOMActivate: => @checkModeState()
-      focus: => @checkModeState()
-      blur: => @checkModeState()
+      focus: (event) =>
+        handlerStack.alwaysPropagate =>
+          if not @isInsertMode and @isFocusable event.target
+            @activate()
+      blur: (event) =>
+        handlerStack.alwaysPropagate =>
+          if @isInsertMode and @isFocusable event.target
+            @isInsertMode = false
+            Mode.updateBadge()
 
     # We may already have been dropped into insert mode.  So check.
     Mode.updateBadge()

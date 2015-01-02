@@ -46,5 +46,10 @@ class HandlerStack
   isChromeEvent: (event) ->
     event?.preventDefault? and event?.stopImmediatePropagation?
 
+  # Convenience wrapper for handlers which always continue propagation.
+  alwaysPropagate: (handler) ->
+    handler()
+    true
+
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack

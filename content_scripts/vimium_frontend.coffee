@@ -126,6 +126,7 @@ initializePreDomReady = ->
     updateBadgeForMode: (badge) ->
       badge.badge ||= @badge
       badge.badge = "" unless isEnabledForUrl
+      Mode.propagate # Not really necessary, but makes intention clear and does no harm.
 
   # Initialize the scroller. The scroller install a key handler, and this is next on the handler stack,
   # immediately above normal mode.
