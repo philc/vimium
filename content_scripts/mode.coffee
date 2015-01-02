@@ -59,10 +59,15 @@ class Mode
     handlerStack.alwaysPropagate => badge.badge ||= @badge
 
   # Static method.  Used externally and internally to initiate bubbling of an updateBadgeForMode event.
+  # Do not update the badge:
+  #   - if this document does not have the focus, or
+  #   - if the document's body is a frameset
   @updateBadge: ->
-    badge = {badge: ""}
-    handlerStack.bubbleEvent "updateBadgeForMode", badge
-    Mode.sendBadge badge.badge
+    if document.hasFocus()
+      unless document.body?.tagName.toLowerCase() == "frameset"
+        badge = {badge: ""}
+        handlerStack.bubbleEvent "updateBadgeForMode", badge
+        Mode.sendBadge badge.badge
 
   # Static utility to update the browser-popup badge.
   @sendBadge: (badge) ->

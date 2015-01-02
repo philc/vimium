@@ -201,7 +201,7 @@ initializeWhenEnabled = (newPassKeys) ->
     # installListener document, "focus", onFocusCapturePhase # No longer needed.
     installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
-    installListener document, "focus", onFocus
+    installListener document, "focusin", onFocus
     installListener document, "blur", onBlur
     enterInsertModeIfElementIsFocused()
     installedListeners = true
@@ -281,6 +281,7 @@ window.focusThisFrame = (shouldHighlight) ->
     chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
     return
   window.focus()
+  Mode.updateBadge()
   if (document.body && shouldHighlight)
     borderWas = document.body.style.border
     document.body.style.border = '5px solid yellow'
