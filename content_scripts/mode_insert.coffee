@@ -31,6 +31,17 @@ class InsertMode extends Mode
     @activate() if document.activeElement?.isContentEditable
     @isInsertMode
 
+  activate: ->
+    unless @isInsertMode
+      @isInsertMode = true
+      @badge = "I"
+      Mode.updateBadge()
+
+  deactivate: ->
+    @isInsertMode = false
+    @badge = ""
+    Mode.updateBadge()
+
   generateKeyHandler: (type) ->
     (event) =>
       return Mode.propagate unless @isActive()
@@ -43,24 +54,12 @@ class InsertMode extends Mode
         # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
         # games.  See discussion in #1211 and #1194.
         event.srcElement.blur()
-      @isInsertMode = false
-      Mode.updateBadge()
+      @deactivate()
       Mode.suppressPropagation
-
-  activate: ->
-    unless @isInsertMode
-      @isInsertMode = true
-      Mode.updateBadge()
-
-  # Override updateBadgeForMode() from Mode.updateBadgeForMode().
-  updateBadgeForMode: (badge) ->
-    handlerStack.alwaysPropagate =>
-      super badge if @isActive()
 
   constructor: ->
     super
       name: "insert"
-      badge: "I"
       keydown: @generateKeyHandler "keydown"
       keypress: @generateKeyHandler "keypress"
       keyup: @generateKeyHandler "keyup"
@@ -73,8 +72,7 @@ class InsertMode extends Mode
       blur: (event) =>
         handlerStack.alwaysPropagate =>
           if @isInsertMode and @isFocusable event.target
-            @isInsertMode = false
-            Mode.updateBadge()
+            @deactivate()
 
     # We may already have been dropped into insert mode.  So check.
     Mode.updateBadge()

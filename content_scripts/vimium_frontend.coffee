@@ -106,6 +106,21 @@ frameId = Math.floor(Math.random()*999999999)
 
 hasModifiersRegex = /^<([amc]-)+.>/
 
+class NormalMode extends Mode
+  constructor: ->
+    super
+      name: "normal"
+      badge: "N"
+      keydown: onKeydown
+      keypress: onKeypress
+      keyup: onKeyup
+
+  updateBadgeForMode: (badge) ->
+    handlerStack.alwaysPropagate =>
+      # Idea...  Instead of an icon, we could show the keyQueue here (if it's non-empty).
+      super badge
+      badge.badge = "" unless isEnabledForUrl
+
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
@@ -115,20 +130,9 @@ initializePreDomReady = ->
 
   # Install normal mode. This is at the bottom of both the mode stack and the handler stack, and is never
   # deactivated.
-  new Mode
-    name: "normal"
-    badge: "N"
-    keydown: onKeydown
-    keypress: onKeypress
-    keyup: onKeyup
+  new NormalMode()
 
-    # Overriding updateBadgeForMode() from Mode.updateBadgeForMode().
-    updateBadgeForMode: (badge) ->
-      handlerStack.alwaysPropagate =>
-        badge.badge ||= if keyQueue then keyQueue else @badge
-        badge.badge = "" unless isEnabledForUrl
-
-  # Initialize the scroller. The scroller install a key handler, and this is next on the handler stack,
+  # Initialize the scroller. The scroller installs a key handler, and this is next on the handler stack,
   # immediately above normal mode.
   Scroller.init settings
 
