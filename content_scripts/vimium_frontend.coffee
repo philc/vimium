@@ -6,6 +6,7 @@
 #
 
 insertMode = null
+passKeysMode = null
 insertModeLock = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
@@ -110,7 +111,7 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  # Install normal mode. This will be at the bottom of both the mode stack and the handler stack, and is never
+  # Install normal mode. This is at the bottom of both the mode stack and the handler stack, and is never
   # deactivated.
   new Mode
     name: "normal"
@@ -118,7 +119,7 @@ initializePreDomReady = ->
     keypress: onKeypress
     keyup: onKeyup
 
-  # Initialize the scroller. The scroller installs key handlers, and these will be next on the handler stack,
+  # Initialize the scroller. The scroller install a key handler, and this is next on the handler stack,
   # immediately above normal mode.
   Scroller.init settings
 
@@ -127,14 +128,8 @@ initializePreDomReady = ->
       return handlerStack.passThrough if keyChar and isPassKey keyChar
     true
 
-  # Install passKeys mode. This mode is never deactivated.
-  new Mode
-    name: "passkeys"
-    keydown: handlePassKeyEvent
-    keypress: handlePassKeyEvent
-    keyup: -> true # Allow event to propagate.
-
-  # Install insert mode.
+  # Install passKeys and insert modes.  These too are permanently on the stack (although not always active).
+  passKeysMode = new PassKeysMode()
   insertMode = new InsertMode()
 
   checkIfEnabledForUrl()
@@ -163,7 +158,7 @@ initializePreDomReady = ->
     executePageCommand: executePageCommand
     getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys, badge: Mode.getBadge() }
     setState: setState
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    currentKeyQueue: (request) -> passKeysMode.setState request
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -208,6 +203,7 @@ setState = (request) ->
   initializeWhenEnabled(request.passKeys) if request.enabled
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
+  passKeysMode.setState request
 
 #
 # The backend needs to know which frame has focus.
@@ -395,6 +391,7 @@ extend window,
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
 isPassKey = ( keyChar ) ->
+  return false # Diabled.
   return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
@@ -557,6 +554,7 @@ checkIfEnabledForUrl = ->
   url = window.location.toString()
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
+    passKeysMode.setState response
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
       initializeWhenEnabled(response.passKeys)
