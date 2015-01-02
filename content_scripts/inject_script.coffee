@@ -27,7 +27,7 @@ for script in injectScripts
   # Also inject as a script, so that we can still catch any addEventListener call fired at/after
   # DOMContentLoaded.
   scriptEl = document.createElement "script"
-  scriptEl.src = chrome.runtime.getURL injectScripts[0]
+  scriptEl.src = chrome.runtime.getURL script
   document.documentElement.insertBefore scriptEl, firstDocumentElementChild
 
 # Clear our event listener and restore the original, if there was one.
@@ -35,7 +35,3 @@ if oldValue?
   document.documentElement.setAttribute listenerName, oldValue
 else
   document.documentElement.removeAttribute listenerName
-
-scriptEl = document.createElement "script"
-scriptEl.src = chrome.runtime.getURL injectScripts[0]
-document.documentElement.insertBefore scriptEl, document.documentElement.firstElementChild
