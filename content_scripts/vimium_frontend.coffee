@@ -8,7 +8,9 @@
 insertMode = null
 passKeysMode = null
 insertModeLock = null
-findMode = false
+# FIXME(smblott).  Temporary hack: attach findMode to the window (so passKeysMode can see it).  This will be
+# fixed when find mode is rationalized or #1401 is merged.
+window.findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
@@ -743,7 +745,7 @@ executeFind = (query, options) ->
   # rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
   # changes that find() induces.
   oldFindMode = findMode
-  findMode = true
+  window.findMode = true # Same hack, see comment at window.findMode definition.
 
   document.body.classList.add("vimiumFindMode")
 
@@ -756,7 +758,7 @@ executeFind = (query, options) ->
     -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
     0)
 
-  findMode = oldFindMode
+  window.findMode = oldFindMode # Same hack, see comment at window.findMode definition.
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
@@ -949,11 +951,11 @@ showFindModeHUDForQuery = ->
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
-  findMode = true
+  window.findMode = true # Same hack, see comment at window.findMode definition.
   HUD.show("/")
 
 exitFindMode = ->
-  findMode = false
+  window.findMode = false # Same hack, see comment at window.findMode definition.
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->

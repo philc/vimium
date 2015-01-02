@@ -7,6 +7,9 @@ class PassKeysMode extends Mode
   # passKeys if the keyQueue is not empty.  So, for example, if 't' is a passKey, then 'gt' and '99t' will
   # neverthless be handled by vimium.
   isPassKey: (keyChar) ->
+    # FIXME(smblott).  Temporary hack: attach findMode to the window (so passKeysMode can see it).  This will be
+    # fixed when find mode is rationalized or #1401 is merged.
+    return false if window.findMode
     not @keyQueue and 0 <= @passKeys.indexOf(keyChar)
 
   handlePassKeyEvent: (event) ->
