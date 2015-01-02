@@ -9,11 +9,11 @@ class Mode
   @propagate = true
 
   # Default values.
-  name: ""             # The name of this mode.
-  badge: ""            # A badge to display on the popup when this mode is active.
-  keydown: "suppress"  # A function, or "suppress" or "pass"; the latter are replaced with suitable functions.
-  keypress: "suppress" # A function, or "suppress" or "pass"; the latter are replaced with suitable functions.
-  keyup: "suppress"    # A function, or "suppress" or "pass"; the latter are replaced with suitable functions.
+  name: ""         # The name of this mode.
+  badge: ""        # A badge to display on the popup when this mode is active.
+  keydown: "pass"  # A function, or "suppress" or "pass"; the latter are replaced with suitable handlers.
+  keypress: "pass" # A function, or "suppress" or "pass"; the latter are replaced with suitable handlers.
+  keyup: "pass"    # A function, or "suppress" or "pass"; the latter are replaced with suitable handlers.
 
   constructor: (options) ->
     extend @, options
@@ -72,6 +72,12 @@ class Mode
   # Static utility to update the browser-popup badge.
   @sendBadge: (badge) ->
     chrome.runtime.sendMessage({ handler: "setBadge", badge: badge })
+
+  # Install a mode, call a function, and exit the mode again.
+  @runIn: (mode, func) ->
+    mode = new mode()
+    func()
+    mode.exit()
 
 root = exports ? window
 root.Mode = Mode

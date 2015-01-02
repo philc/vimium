@@ -7,9 +7,6 @@ class PassKeysMode extends Mode
   # passKeys if the keyQueue is not empty.  So, for example, if 't' is a passKey, then 'gt' and '99t' will
   # neverthless be handled by vimium.
   isPassKey: (keyChar) ->
-    # FIXME(smblott).  Temporary hack: attach findMode to the window (so passKeysMode can see it).  This will be
-    # fixed when find mode is rationalized or #1401 is merged.
-    return false if window.findMode
     not @keyQueue and 0 <= @passKeys.indexOf(keyChar)
 
   handlePassKeyEvent: (event) ->
@@ -24,12 +21,12 @@ class PassKeysMode extends Mode
   setState: (request) ->
     if request.isEnabledForUrl?
       @passKeys = (request.isEnabledForUrl and request.passKeys) or ""
+      Mode.updateBadge()
     if request.enabled?
       @passKeys = (request.enabled and request.passKeys) or ""
+      Mode.updateBadge()
     if request.keyQueue?
       @keyQueue = request.keyQueue
-    @badge = if @passKeys and not @keyQueue then "P" else ""
-    Mode.updateBadge()
 
   constructor: ->
     super
@@ -37,6 +34,10 @@ class PassKeysMode extends Mode
       keydown: (event) => @handlePassKeyEvent event
       keypress: (event) => @handlePassKeyEvent event
       keyup: -> Mode.propagate
+
+  updateBadgeForMode: (badge) ->
+    @badge = if @passKeys and not @keyQueue then "P" else ""
+    super badge
 
 root = exports ? window
 root.PassKeysMode = PassKeysMode

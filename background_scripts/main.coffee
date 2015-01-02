@@ -352,7 +352,7 @@ setBadge = (request) ->
 root.updateActiveState = updateActiveState = (tabId) ->
   enabledIcon = "icons/browser_action_enabled.png"
   disabledIcon = "icons/browser_action_disabled.png"
-  partialIcon = enabledIcon # Let's try diabling that while we're playing with badges... "icons/browser_action_partial.png"
+  partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get tabId, (tab) ->
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
       if response

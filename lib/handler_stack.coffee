@@ -6,6 +6,7 @@ class HandlerStack
     @stack = []
     @counter = 0
     @passDirectlyToPage = new Object() # Used only as a constant, distinct from any other value.
+    @eventConsumed = new Object() # Used only as a constant, distinct from any other value.
 
   genId: -> @counter = ++@counter
 
@@ -32,6 +33,10 @@ class HandlerStack
         # event through to the underlying page.  The event is not suppresssed.
         if passThrough == @passDirectlyToPage
           return false
+        # If the constant @eventConsumed is returned, then discontinue further bubbling and
+        # return false.
+        if passThrough == @eventConsumed
+          return false
     true
 
   remove: (id = @currentId) ->
@@ -50,6 +55,11 @@ class HandlerStack
   alwaysPropagate: (handler) ->
     handler()
     true
+
+  # Convenience wrapper for handlers which never continue propagation.
+  neverPropagate: (handler) ->
+    handler()
+    false
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack
