@@ -58,6 +58,28 @@ createGeneralHintTests = (isFilteredMode) ->
       assertStartPosition document.getElementsByTagName("a")[1], hintMarkers[1]
       LinkHints.deactivateMode()
 
+  # See here about jQuery delegated events: https://api.jquery.com/on/#direct-and-delegated-events
+  context "Link hints for jQuery delegated events",
+    setup ->
+      stub settings.values, "filterLinkHints", isFilteredMode
+      stub settings.values, "linkHintCharacters", "ab"
+
+      clickableSpan = "<span class='clickable'>Click me</span>" + "<span>Don't click me</span>"
+      document.getElementById("test-div").innerHTML = clickableSpan
+
+      $(document).on 'click', '.clickable', ( -> )
+
+      LinkHints.init()
+      LinkHints.activateMode()
+
+    tearDown ->
+      LinkHints.deactivateMode()
+      document.getElementById("test-div").innerHTML = ""
+
+    should "create links for elements, that have delegated event handler assigned", ->
+      assert.equal 1, getHintMarkers().length
+
+
 createGeneralHintTests false
 createGeneralHintTests true
 
