@@ -8,7 +8,7 @@ fetchFileContents = (extensionFileName) ->
 
 eventName = "reset"
 listenerName = "on#{eventName}"
-injectScripts = ["pages/addEventListener_hook.js"]
+injectScripts = ["pages/jQuery_delegatedEvents_hook.js", "pages/addEventListener_hook.js"]
 
 # Store the original value of the event listener if one exists, or null otherwise.
 oldValue =

@@ -125,6 +125,22 @@ LinkHints =
     marker
 
   #
+  # Find children elements that have delegated onclick event listener assigned,
+  # and mark them with `vimium-has-delegated-onclick-listener` attribute.
+  # This will make sure those elements are discovered during `getVisibleClickableElements` call.
+  #
+  markChildrenThatHaveDelegatedOnClickListener: (element) ->
+    return unless element.hasAttribute "vimium-jquery-delegated-events-selectors"
+
+    selectorsStr = element.getAttribute "vimium-jquery-delegated-events-selectors"
+    selectors = selectorsStr.split("|").filter (x) -> !!x
+
+    for selector in selectors
+      for child in element.querySelectorAll(selector)
+        unless child.hasAttribute "vimium-has-delegated-onclick-listener"
+          child.setAttribute "vimium-has-delegated-onclick-listener", ""
+
+  #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
@@ -156,8 +172,12 @@ LinkHints =
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"] or
-        element.hasAttribute("vimium-has-onclick-listener"))
+        element.hasAttribute("vimium-has-onclick-listener") or
+        element.hasAttribute("vimium-has-delegated-onclick-listener"))
       isClickable = true
+
+    # Dispose the attribute so next time it is not included, in case listener has been removed
+    element.removeAttribute "vimium-has-delegated-onclick-listener"
 
     # Check for jsaction event listeners on the element.
     if element.hasAttribute "jsaction"
@@ -198,6 +218,8 @@ LinkHints =
       if clientRect != null
         visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex}
 
+    @markChildrenThatHaveDelegatedOnClickListener element
+
     visibleElements
 
   #
@@ -208,6 +230,7 @@ LinkHints =
   # element.
   #
   getVisibleClickableElements: ->
+    @markChildrenThatHaveDelegatedOnClickListener document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
