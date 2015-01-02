@@ -68,6 +68,7 @@
   },
   "web_accessible_resources": [
     "pages/vomnibar.html",
+    "pages/jQuery_delegatedEvents_hook.js",
     "pages/addEventListener_hook.js"
   ]
 }
