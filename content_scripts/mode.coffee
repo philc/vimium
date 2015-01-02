@@ -40,7 +40,7 @@ class Mode
       if type == "keydown" and KeyboardUtils.isEscape event
         @exit()
         return Mode.suppressPropagation
-      handlerStack.passThrough
+      handlerStack.passDirectlyToPage
 
   # Generate a default handler which always suppresses propagation; except Esc, which pops the current mode.
   generateSuppressPropagation: (type) ->

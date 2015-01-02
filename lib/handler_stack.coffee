@@ -5,7 +5,7 @@ class HandlerStack
   constructor: ->
     @stack = []
     @counter = 0
-    @passThrough = new Object() # Used only as a constant, distinct from any other value.
+    @passDirectlyToPage = new Object() # Used only as a constant, distinct from any other value.
 
   genId: -> @counter = ++@counter
 
@@ -28,9 +28,9 @@ class HandlerStack
         if not passThrough
           DomUtils.suppressEvent(event)
           return false
-        # If the constant @passThrough is returned, then discontinue further bubbling and pass the event
-        # through to the underlying page.  The event is not suppresssed.
-        if passThrough == @passThrough
+        # If the constant @passDirectlyToPage is returned, then discontinue further bubbling and pass the
+        # event through to the underlying page.  The event is not suppresssed.
+        if passThrough == @passDirectlyToPage
           return false
     true
 

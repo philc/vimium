@@ -27,7 +27,7 @@ class InsertMode extends Mode
   generateKeyHandler: (type) ->
     (event) =>
       return Mode.propagate unless @isActive()
-      return handlerStack.passThrough unless type == "keydown" and KeyboardUtils.isEscape event
+      return handlerStack.passDirectlyToPage unless type == "keydown" and KeyboardUtils.isEscape event
       # We're now exiting insert mode.
       if @canEditElement event.srcElement
         # Remove the focus so the user can't just get himself back into insert mode by typing in the same input

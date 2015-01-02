@@ -11,8 +11,8 @@ class PassKeysMode extends Mode
 
   handlePassKeyEvent: (event) ->
     for keyChar in [KeyboardUtils.getKeyChar(event), String.fromCharCode(event.charCode)]
-      # A key is passed through to the underlying page by returning handlerStack.passThrough.
-      return handlerStack.passThrough if keyChar and @isPassKey keyChar
+      # A key is passed through to the underlying page by returning handlerStack.passDirectlyToPage.
+      return handlerStack.passDirectlyToPage if keyChar and @isPassKey keyChar
     true
 
   setState: (response) ->

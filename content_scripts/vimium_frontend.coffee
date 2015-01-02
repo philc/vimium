@@ -123,11 +123,6 @@ initializePreDomReady = ->
   # immediately above normal mode.
   Scroller.init settings
 
-  handlePassKeyEvent = (event) ->
-    for keyChar in [ KeyboardUtils.getKeyChar(event), String.fromCharCode(event.charCode) ]
-      return handlerStack.passThrough if keyChar and isPassKey keyChar
-    true
-
   # Install passKeys and insert modes.  These too are permanently on the stack (although not always active).
   passKeysMode = new PassKeysMode()
   insertMode = new InsertMode()
@@ -444,7 +439,7 @@ onKeypress = (event) ->
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
-          return handlerStack.passThrough
+          return handlerStack.passDirectlyToPage
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
 
