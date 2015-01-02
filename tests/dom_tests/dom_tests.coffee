@@ -29,8 +29,9 @@ createGeneralHintTests = (isFilteredMode) ->
     setup ->
       testContent = "<a>test</a>" + "<a>tress</a>"
       document.getElementById("test-div").innerHTML = testContent
-      stub settings.values, "filterLinkHints", false
+      stub settings.values, "filterLinkHints", isFilteredMode
       stub settings.values, "linkHintCharacters", "ab"
+      stub settings.values, "linkHintNumbers", "0123456789"
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
@@ -63,6 +64,7 @@ createGeneralHintTests = (isFilteredMode) ->
     setup ->
       stub settings.values, "filterLinkHints", isFilteredMode
       stub settings.values, "linkHintCharacters", "ab"
+      stub settings.values, "linkHintNumbers", "0123456789"
 
       clickableSpan = "<span class='clickable'>Click me</span>" + "<span>Don't click me</span>"
       document.getElementById("test-div").innerHTML = clickableSpan
