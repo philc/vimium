@@ -125,7 +125,7 @@ initializePreDomReady = ->
     # Overriding updateBadgeForMode() from Mode.updateBadgeForMode().
     updateBadgeForMode: (badge) ->
       handlerStack.alwaysPropagate =>
-        badge.badge ||= @badge
+        badge.badge ||= if keyQueue then keyQueue else @badge
         badge.badge = "" unless isEnabledForUrl
 
   # Initialize the scroller. The scroller install a key handler, and this is next on the handler stack,
@@ -165,7 +165,9 @@ initializePreDomReady = ->
       Mode.updateBadge()
       return { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
-    currentKeyQueue: (request) -> passKeysMode.setState request
+    currentKeyQueue: (request) ->
+      keyQueue = request.keyQueue
+      passKeysMode.setState request
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
