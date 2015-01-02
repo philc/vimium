@@ -124,9 +124,9 @@ initializePreDomReady = ->
 
     # Overriding updateBadgeForMode() from Mode.updateBadgeForMode().
     updateBadgeForMode: (badge) ->
-      badge.badge ||= @badge
-      badge.badge = "" unless isEnabledForUrl
-      Mode.propagate # Not really necessary, but makes intention clear and does no harm.
+      handlerStack.alwaysPropagate =>
+        badge.badge ||= @badge
+        badge.badge = "" unless isEnabledForUrl
 
   # Initialize the scroller. The scroller install a key handler, and this is next on the handler stack,
   # immediately above normal mode.
@@ -686,7 +686,6 @@ updateFindModeQuery = ->
     findModeQuery.matchCount = text.match(pattern)?.length
 
 handleKeyCharForFindMode = (keyChar) ->
-  console.log "xxxxxxxxxxxxxxx"
   findModeQuery.rawQuery += keyChar
   updateFindModeQuery()
   performFindInPlace()

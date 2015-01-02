@@ -373,6 +373,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
       else
         # We didn't get a response from the front end, so Vimium isn't running.
         setBrowserActionIcon(tabId,disabledIcon)
+        setBadge {badge: ""}
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)

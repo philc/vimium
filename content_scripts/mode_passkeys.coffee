@@ -33,14 +33,15 @@ class PassKeysMode extends Mode
   constructor: ->
     super
       name: "passkeys"
+      badge: "P"
       keydown: (event) => @handlePassKeyEvent event
       keypress: (event) => @handlePassKeyEvent event
       keyup: -> Mode.propagate
 
-  # Overriding and re-using updateBadgeForMode() from Mode.updateBadgeForMode().
+  # Overriding updateBadgeForMode() from Mode.updateBadgeForMode().
   updateBadgeForMode: (badge) ->
-    @badge = if @passKeys and not @keyQueue then "P" else ""
-    super badge
+    handlerStack.alwaysPropagate =>
+      super badge if @passKeys and not @keyQueue
 
 root = exports ? window
 root.PassKeysMode = PassKeysMode

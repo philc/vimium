@@ -52,11 +52,10 @@ class InsertMode extends Mode
       @isInsertMode = true
       Mode.updateBadge()
 
-  # Override (and re-use) updateBadgeForMode() from Mode.updateBadgeForMode().  Use insert-mode badge only if
-  # we're active and no mode higher in stack has already inserted a badge.
+  # Override updateBadgeForMode() from Mode.updateBadgeForMode().
   updateBadgeForMode: (badge) ->
-    @badge = if @isActive() then "I" else ""
-    super badge
+    handlerStack.alwaysPropagate =>
+      super badge if @isActive()
 
   constructor: ->
     super
