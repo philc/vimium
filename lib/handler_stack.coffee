@@ -5,8 +5,14 @@ class HandlerStack
   constructor: ->
     @stack = []
     @counter = 0
-    @passDirectlyToPage = new Object() # Used only as a constant, distinct from any other value.
-    @eventConsumed = new Object() # Used only as a constant, distinct from any other value.
+
+    # A handler should return this value to immediately discontinue bubbling and pass the event on to the
+    # underlying page.
+    @stopBubblingAndTrue = new Object()
+
+    # A handler should return this value to indicate that the event has been consumed, and no further
+    # processing should take place.
+    @stopBubblingAndFalse = new Object()
 
   genId: -> @counter = ++@counter
 
@@ -29,14 +35,8 @@ class HandlerStack
         if not passThrough
           DomUtils.suppressEvent(event) if @isChromeEvent event
           return false
-        # If the constant @passDirectlyToPage is returned, then discontinue further bubbling and pass the
-        # event through to the underlying page.  The event is not suppresssed.
-        if passThrough == @passDirectlyToPage
-          return false
-        # If the constant @eventConsumed is returned, then discontinue further bubbling and
-        # return false.
-        if passThrough == @eventConsumed
-          return false
+        return true if passThrough == @stopBubblingAndTrue
+        return false if passThrough == @stopBubblingAndFalse
     true
 
   remove: (id = @currentId) ->

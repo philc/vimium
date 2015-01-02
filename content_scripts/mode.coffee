@@ -4,16 +4,18 @@ class Mode
   @modes: []
   @current: -> Mode.modes[0]
 
-  # Constants. Static.
-  @suppressPropagation = false
-  @propagate = true
+  # Constants; readable shortcuts for event-handler return values.
+  continueBubbling: true
+  suppressEvent: false
+  stopBubblingAndTrue: handlerStack.stopBubblingAndTrue
+  stopBubblingAndFalse: handlerStack.stopBubblingAndFalse
 
   # Default values.
-  name: ""         # The name of this mode.
-  badge: ""        # A badge to display on the popup when this mode is active.
-  keydown: "pass"  # A function, or "suppress" or "pass"; the latter are replaced with suitable handlers.
-  keypress: "pass" # A function, or "suppress" or "pass"; the latter are replaced with suitable handlers.
-  keyup: "pass"    # A function, or "suppress" or "pass"; the latter are replaced with suitable handlers.
+  name: ""             # The name of this mode.
+  badge: ""            # A badge to display on the popup when this mode is active.
+  keydown: "suppress"  # A function, or "suppress", "bubble" or "pass"; see checkForBuiltInHandler().
+  keypress: "suppress" # A function, or "suppress", "bubble" or "pass"; see checkForBuiltInHandler().
+  keyup: "suppress"    # A function, or "suppress", "bubble" or "pass"; see checkForBuiltInHandler().
 
   constructor: (options) ->
     extend @, options
@@ -30,23 +32,18 @@ class Mode
   # Allow the strings "suppress" and "pass" to be used as proxies for the built-in handlers.
   checkForBuiltInHandler: (type, handler) ->
     switch handler
-      when "suppress" then @generateSuppressPropagation type
-      when "pass" then @generatePassThrough type
+      when "suppress" then @generateHandler type, @suppressEvent
+      when "bubble" then @generateHandler type, @continueBubbling
+      when "pass" then @generateHandler type, @stopBubblingAndTrue
       else handler
 
-  # Generate a default handler which always passes through to the underlying page; except Esc, which pops the
-  # current mode.
-  generatePassThrough: (type) ->
+  # Generate a default handler which always always yields the same result; except Esc, which pops the current
+  # mode.
+  generateHandler: (type, result) ->
     (event) =>
-      if type == "keydown" and KeyboardUtils.isEscape event
-        @exit()
-        return Mode.suppressPropagation
-      handlerStack.passDirectlyToPage
-
-  # Generate a default handler which always suppresses propagation; except Esc, which pops the current mode.
-  generateSuppressPropagation: (type) ->
-    handler = @generatePassThrough type
-    (event) -> handler(event) and Mode.suppressPropagation # Always falsy.
+      return result unless type == "keydown" and KeyboardUtils.isEscape event
+      @exit()
+      @suppressEvent
 
   exit: ->
     handlerStack.remove handlerId for handlerId in @handlers

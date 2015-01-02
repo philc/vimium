@@ -44,8 +44,8 @@ class InsertMode extends Mode
 
   generateKeyHandler: (type) ->
     (event) =>
-      return Mode.propagate unless @isActive()
-      return handlerStack.passDirectlyToPage unless type == "keydown" and KeyboardUtils.isEscape event
+      return @continueBubbling unless @isActive()
+      return @stopBubblingAndTrue unless type == "keydown" and KeyboardUtils.isEscape event
       # We're now exiting insert mode.
       if @isEditable(event.srcElement) or @isEmbed event.srcElement
         # Remove the focus so the user can't just get himself back into insert mode by typing in the same input
@@ -55,7 +55,7 @@ class InsertMode extends Mode
         # games.  See discussion in #1211 and #1194.
         event.srcElement.blur()
       @deactivate()
-      Mode.suppressPropagation
+      @suppressEvent
 
   constructor: ->
     super

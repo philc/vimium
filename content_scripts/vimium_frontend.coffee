@@ -456,7 +456,7 @@ onKeypress = (event) ->
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
-          return handlerStack.passDirectlyToPage
+          return handlerStack.stopBubblingAndTrue
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
 
@@ -737,17 +737,17 @@ class FindMode extends Mode
         if KeyboardUtils.isEscape event
           handleEscapeForFindMode()
           @exit()
-          Mode.suppressPropagation
+          @suppressEvent
         else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
           handleDeleteForFindMode()
-          Mode.suppressPropagation
+          @suppressEvent
         else if (event.keyCode == keyCodes.enter)
           handleEnterForFindMode()
           @exit()
-          Mode.suppressPropagation
+          @suppressEvent
         else
           DomUtils.suppressPropagation(event)
-          handlerStack.eventConsumed
+          handlerStack.stopBubblingAndFalse
 
       keypress: (event) ->
         handlerStack.neverPropagate ->

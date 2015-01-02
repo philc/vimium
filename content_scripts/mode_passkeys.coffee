@@ -11,12 +11,11 @@ class PassKeysMode extends Mode
 
   handlePassKeyEvent: (event) ->
     for keyChar in [KeyboardUtils.getKeyChar(event), String.fromCharCode(event.charCode)]
-      # A key is passed through to the underlying page by returning handlerStack.passDirectlyToPage.
-      return handlerStack.passDirectlyToPage if keyChar and @isPassKey keyChar
-    Mode.propagate
+      return @stopBubblingAndTrue if keyChar and @isPassKey keyChar
+    @continueBubbling
 
-  # This is called to set the pass-keys state with various types of request from various sources, so we handle
-  # all of these.
+  # This is called to set the pass-keys configuration and state with various types of request from various
+  # sources, so we handle several cases.
   # TODO(smblott) Rationalize this.
   setState: (request) ->
     if request.isEnabledForUrl?
@@ -33,7 +32,7 @@ class PassKeysMode extends Mode
       name: "passkeys"
       keydown: (event) => @handlePassKeyEvent event
       keypress: (event) => @handlePassKeyEvent event
-      keyup: -> Mode.propagate
+      keyup: => @continueBubbling
 
   updateBadgeForMode: (badge) ->
     @badge = if @passKeys and not @keyQueue then "P" else ""
