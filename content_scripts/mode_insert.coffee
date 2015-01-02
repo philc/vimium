@@ -1,6 +1,6 @@
 
 class InsertMode extends Mode
-  userActivated: false
+  isInsertMode: false
 
   # Input or text elements are considered focusable and able to receieve their own keyboard events, and will
   # enter insert mode if focused. Also note that the "contentEditable" attribute can be set on any element
@@ -11,7 +11,7 @@ class InsertMode extends Mode
     # Use a blacklist instead of a whitelist because new form controls are still being implemented for html5.
     if nodeName == "input" and element.type and not element.type in ["radio", "checkbox"]
       return true
-     nodeName in ["textarea", "select"]
+    nodeName in ["textarea", "select"]
 
   # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
   # unfocused.
@@ -21,8 +21,12 @@ class InsertMode extends Mode
   canEditElement: (element) ->
     element and (@isEditable(element) or @isEmbed element)
 
+  # Check whether insert mode is active.  Also, activate insert mode if the current element is editable.
   isActive: ->
-    @userActivated or @canEditElement document.activeElement
+    return true if @isInsertMode
+    # FIXME(smblott).  Is there a way to (safely) cache the results of these @canEditElement() calls?
+    @activate() if @canEditElement document.activeElement
+    @isInsertMode
 
   generateKeyHandler: (type) ->
     (event) =>
@@ -36,35 +40,40 @@ class InsertMode extends Mode
         # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
         # games.  See discussion in #1211 and #1194.
         event.srcElement.blur()
-      @userActivated = false
-      @updateBadge()
+      @isInsertMode = false
+      Mode.updateBadge()
       Mode.suppressPropagation
 
-  pickBadge: ->
-    if @isActive() then "I" else ""
-
-  updateBadge: ->
-    badge = @badge
-    @badge = @pickBadge()
-    Mode.setBadge() if badge != @badge
-    Mode.propagate
-
   activate: ->
-    @userActivated = true
-    @updateBadge()
+    @isInsertMode = true
+    Mode.updateBadge()
+
+  # Override (and re-use) updateBadgeForMode() from Mode.updateBadgeForMode().  Use insert-mode badge only if
+  # we're active and no mode higher in stack has already inserted a badge.
+  updateBadgeForMode: (badge) ->
+    @badge = if @isActive() then "I" else ""
+    super badge
+
+  checkModeState: ->
+    previousState = @isInsertMode
+    if @isActive() != previousState
+      Mode.updateBadge()
 
   constructor: ->
     super
       name: "insert"
-      badge: @pickBadge()
+      badge: "I"
       keydown: @generateKeyHandler "keydown"
       keypress: @generateKeyHandler "keypress"
       keyup: @generateKeyHandler "keyup"
 
-    handlerStack.push
-      DOMActivate: => @updateBadge()
-      focus: => @updateBadge()
-      blur: => @updateBadge()
+    @handlers.push handlerStack.push
+      DOMActivate: => @checkModeState()
+      focus: => @checkModeState()
+      blur: => @checkModeState()
+
+    # We may already have been dropped into insert mode.  So check.
+    Mode.updateBadge()
 
 root = exports ? window
 root.InsertMode = InsertMode

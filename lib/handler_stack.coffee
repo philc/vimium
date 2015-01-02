@@ -26,7 +26,7 @@ class HandlerStack
         @currentId = handler.id
         passThrough = handler[type].call(@, event)
         if not passThrough
-          DomUtils.suppressEvent(event)
+          DomUtils.suppressEvent(event) if @isChromeEvent event
           return false
         # If the constant @passDirectlyToPage is returned, then discontinue further bubbling and pass the
         # event through to the underlying page.  The event is not suppresssed.
@@ -40,6 +40,11 @@ class HandlerStack
       if handler.id == id
         @stack.splice(i, 1)
         break
+
+  # The handler stack handles chrome events (which may need to be suppressed) and internal (fake) events.
+  # This checks whether that the event at hand is a chrome event.
+  isChromeEvent: (event) ->
+    event?.preventDefault? and event?.stopImmediatePropagation?
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack

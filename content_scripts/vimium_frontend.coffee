@@ -115,15 +115,22 @@ initializePreDomReady = ->
   # deactivated.
   new Mode
     name: "normal"
+    badge: "N"
     keydown: onKeydown
     keypress: onKeypress
     keyup: onKeyup
+
+    # Overriding updateBadgeForMode() from Mode.updateBadgeForMode().
+    updateBadgeForMode: (badge) ->
+      badge.badge ||= @badge
+      badge.badge = "" unless isEnabledForUrl
 
   # Initialize the scroller. The scroller install a key handler, and this is next on the handler stack,
   # immediately above normal mode.
   Scroller.init settings
 
   # Install passKeys and insert modes.  These too are permanently on the stack (although not always active).
+  # Note.  There's no need to explicitly Mode.updateBadge().  The new InsertMode() updates the badge.
   passKeysMode = new PassKeysMode()
   insertMode = new InsertMode()
 
@@ -151,7 +158,9 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys, badge: Mode.getBadge() }
+    getActiveState: ->
+      Mode.updateBadge()
+      return { enabled: isEnabledForUrl, passKeys: passKeys }
     setState: setState
     currentKeyQueue: (request) -> passKeysMode.setState request
 
@@ -206,7 +215,7 @@ setState = (request) ->
 window.addEventListener "focus", ->
   # settings may have changed since the frame last had focus
   settings.load()
-  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId, badge: Mode.getBadge() })
+  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
 # Initialization tasks that must wait for the document to be ready.
@@ -549,13 +558,14 @@ checkIfEnabledForUrl = ->
   url = window.location.toString()
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
-    passKeysMode.setState response
     isEnabledForUrl = response.isEnabledForUrl
     if (isEnabledForUrl)
       initializeWhenEnabled(response.passKeys)
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
+    passKeysMode.setState response
+    Mode.updateBadge()
 
 refreshCompletionKeys = (response) ->
   if (response)

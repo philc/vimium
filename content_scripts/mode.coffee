@@ -18,13 +18,14 @@ class Mode
   constructor: (options) ->
     extend @, options
 
-    @handlerId = handlerStack.push
+    @handlers = []
+    @handlers.push handlerStack.push
       keydown: @checkForBuiltInHandler "keydown", @keydown
       keypress: @checkForBuiltInHandler "keypress", @keypress
       keyup: @checkForBuiltInHandler "keyup", @keyup
+      updateBadgeForMode: (badge) => @updateBadgeForMode badge
 
     Mode.modes.unshift @
-    Mode.setBadge()
 
   # Allow the strings "suppress" and "pass" to be used as proxies for the built-in handlers.
   checkForBuiltInHandler: (type, handler) ->
@@ -48,18 +49,25 @@ class Mode
     (event) -> handler(event) and Mode.suppressPropagation # Always falsy.
 
   exit: ->
-    handlerStack.remove @handlerId
+    handlerStack.remove handlerId for handlerId in @handlers
     Mode.modes = Mode.modes.filter (mode) => mode != @
-    Mode.setBadge()
+    Mode.updateBadge()
 
-  # Set the badge on the browser popup to indicate the current mode; static method.
-  @setBadge: ->
-    chrome.runtime.sendMessage({ handler: "setBadge", badge: Mode.getBadge() })
+  # Default updateBadgeForMode handler.  This is overridden by sub-classes.  The default is to install the
+  # current mode's badge, unless the bade is already set.
+  updateBadgeForMode: (badge) ->
+    badge.badge ||= @badge
+    Mode.propagate
 
-  # Static convenience methods.
-  @is: (mode) -> Mode.current()?.name == mode
-  @getBadge: -> Mode.current()?.badge || ""
-  @isInsert: -> Mode.is "insert"
+  # Static method.  Used externally and internally to initiate bubbling of an updateBadgeForMode event.
+  @updateBadge: ->
+    badge = {badge: ""}
+    handlerStack.bubbleEvent "updateBadgeForMode", badge
+    Mode.sendBadge badge.badge
+
+  # Static utility to update the browser-popup badge.
+  @sendBadge: (badge) ->
+    chrome.runtime.sendMessage({ handler: "setBadge", badge: badge })
 
 root = exports ? window
 root.Mode = Mode
