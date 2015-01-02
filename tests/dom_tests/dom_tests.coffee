@@ -66,20 +66,39 @@ createGeneralHintTests = (isFilteredMode) ->
       stub settings.values, "linkHintCharacters", "ab"
       stub settings.values, "linkHintNumbers", "0123456789"
 
-      clickableSpan = "<span class='clickable'>Click me</span>" + "<span>Don't click me</span>"
+      clickableSpan = "
+        <div id='container'>
+          <span class='clickable'>Click me</span>
+          <span>Don't click me</span>
+        </div>"
       document.getElementById("test-div").innerHTML = clickableSpan
 
-      $(document).on 'click', '.clickable', ( -> )
-
       LinkHints.init()
-      LinkHints.activateMode()
 
     tearDown ->
-      LinkHints.deactivateMode()
       document.getElementById("test-div").innerHTML = ""
 
-    should "create links for elements, that have delegated event handler assigned", ->
+    should "create link hints for elements, being listened through document element", ->
+      $(document).on 'click', '.clickable', ( -> )
+
+      LinkHints.activateMode()
       assert.equal 1, getHintMarkers().length
+      LinkHints.deactivateMode()
+
+    should "create link hints for elements, being listened through parent DOM element", ->
+      $("#container").on 'click', '.clickable', ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 1, getHintMarkers().length
+      LinkHints.deactivateMode()
+
+    should "create a link hint for parent if it has normal event listener assigned", ->
+      $("#container").on 'click', ( -> )
+      $("#container").on 'click', '.clickable', ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 2, getHintMarkers().length
+      LinkHints.deactivateMode()
 
 
 createGeneralHintTests false
