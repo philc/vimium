@@ -99,12 +99,29 @@ createGeneralHintTests = (isFilteredMode) ->
       assert.equal 1, getHintMarkers().length
       LinkHints.deactivateMode()
 
-    should "create a link hint for parent if it has normal event listener assigned", ->
+    should "create a link hint for parent if child has delegated event listener assigned", ->
+      $("#container").on 'click', '.clickable', ( -> )
+      $("#container").on 'click', ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 2, getHintMarkers().length
+      LinkHints.deactivateMode()
+
+    should "create a link hint for child if parent has normal event listener assigned", ->
       $("#container").on 'click', ( -> )
       $("#container").on 'click', '.clickable', ( -> )
 
       LinkHints.activateMode()
       assert.equal 2, getHintMarkers().length
+      LinkHints.deactivateMode()
+
+    should "create one link hint if multiple delegate events are listened on a single element", ->
+      $(document).on 'click', '.clickable', ( -> )
+      $("#container").on 'click', '.clickable', ( -> )
+      $("#container").on 'click', 'span.clickable', ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 1, getHintMarkers().length
       LinkHints.deactivateMode()
 
     should "create link hints for elements, being listened using deprecated `.live()` function", ->
