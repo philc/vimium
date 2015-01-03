@@ -92,6 +92,13 @@ createGeneralHintTests = (isFilteredMode) ->
       assert.equal 1, getHintMarkers().length
       LinkHints.deactivateMode()
 
+    should "create link hints for elements, attached with object syntax of `.on()`", ->
+      $(document).on 'click': ( -> ), '.clickable'
+
+      LinkHints.activateMode()
+      assert.equal 1, getHintMarkers().length
+      LinkHints.deactivateMode()
+
     should "create a link hint for parent if it has normal event listener assigned", ->
       $("#container").on 'click', ( -> )
       $("#container").on 'click', '.clickable', ( -> )
