@@ -100,6 +100,14 @@ createGeneralHintTests = (isFilteredMode) ->
       assert.equal 2, getHintMarkers().length
       LinkHints.deactivateMode()
 
+    should "create link hints for elements, being listened using deprecated `.live()` function", ->
+      # `.live()` is implemented via `.on()` since jQuery 1.7, so it should work without modifications
+      $('.clickable').live 'click', ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 1, getHintMarkers().length
+      LinkHints.deactivateMode()
+
 
 createGeneralHintTests false
 createGeneralHintTests true
