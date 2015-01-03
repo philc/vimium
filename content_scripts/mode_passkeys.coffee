@@ -17,7 +17,7 @@ class PassKeysMode extends Mode
   # This is called to set the pass-keys configuration and state with various types of request from various
   # sources, so we handle several cases.
   # TODO(smblott) Rationalize this.
-  setState: (request) ->
+  configure: (request) ->
     if request.isEnabledForUrl?
       @passKeys = (request.isEnabledForUrl and request.passKeys) or ""
       Mode.updateBadge()
