@@ -16,10 +16,13 @@ Object.defineProperty window, "jQuery",
     sep = "|"
 
     jQuery.fn.on = (evnt, selector, handlerFn) ->
-      element = if @[0] is document then document.documentElement else @[0]
+      element = if @[0] in [document, window] then document.documentElement else @[0]
 
-      hadOnClickListener = element.hasAttribute "vimium-has-onclick-listener"
+      hadOnClickListener = (element?.hasAttribute? "vimium-has-onclick-listener") ? yes
       result = _on.apply @, arguments
+
+      # Early return when no element exist, as there is nothing we can mark.
+      return result unless element
 
       if evnt is "click" and typeof selector is "string"
         selectors = element.getAttribute(attrKey) || sep
