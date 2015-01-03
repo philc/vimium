@@ -200,13 +200,9 @@ initializeWhenEnabled = (newPassKeys) ->
   if (!installedListeners)
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
-    for type in ["keydown", "keypress", "keyup"]
+    for type in ["keydown", "keypress", "keyup", "click", "focus", "blur"]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
-    # installListener document, "focus", onFocusCapturePhase # No longer needed.
-    installListener document, "blur", onBlurCapturePhase
     installListener document, "DOMActivate", onDOMActivate
-    installListener document, "focusin", onFocus
-    installListener document, "blur", onBlur
     enterInsertModeIfElementIsFocused()
     installedListeners = true
 
@@ -360,6 +356,13 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
+    # We need to make sure that the following .focus() actually does generate a "focus" event.  We need such
+    # an event:
+    #   - to trigger insert mode, and
+    #   - to kick any PostFindMode listeners out of the way.
+    # Unfortunately, if the element is already focused (as may happen following a find), then no "focus" event
+    # is generated.  So, here, we first generate a psuedo "focus" event.
+    PostFindMode.fakeFocus visibleInputs[selectedInputIndex].element
     visibleInputs[selectedInputIndex].element.focus()
 
     return if visibleInputs.length == 1
@@ -761,44 +764,56 @@ class FindMode extends Mode
 
     Mode.updateBadge()
 
-# If find lands in an editable element then:
-#   - "Esc" drops us into insert mode.
-#   - Subsequent command keypresses should not cause us to drop into insert mode.
-count = 0
+# Handle various special cases which arise when find finds a match within a focusable element.
 class PostFindMode extends SingletonMode
   constructor: ->
     element = document.activeElement
-    handleKeydownEscape = true
-    super PostFindMode,
-      keydown: (event) =>
-        if handleKeydownEscape and KeyboardUtils.isEscape event
-          DomUtils.simulateSelect document.activeElement
-          insertMode.activate element
-          @exit()
-          return @suppressEvent # we have "consumed" this event, so do not propagate
-        console.log "suppress", event
-        handleKeydownEscape = false
-        InsertMode.suppressKeydownTrigger event
-        # We can safely exit if element is contentEditable.  Keystrokes will never cause us to drop into
-        # insert mode anyway.
-        @exit() if element.isContentEditable
-        @continueBubbling
-      keypress: => @continueBubbling
-      keyup: => @continueBubbling
 
-    console.log ++count, "PostFindMode create"
+    # Special cases only arise if the active element is focusable.  So, exit immediately if it is not.
     canTakeInput = element and DomUtils.isSelectable(element) and isDOMDescendant findModeAnchorNode, element
     canTakeInput ||= element?.isContentEditable
-    return @exit() unless canTakeInput
+    return unless canTakeInput
 
+    super PostFindMode, {name: "post-find-mode"}
+
+    if element.isContentEditable
+      # Prevent InsertMode from activating on keydown.
+      @handlers.push handlerStack.push
+        keydown: (event) =>
+          InsertMode.suppressKeydownTrigger event
+          @continueBubbling
+
+    # If the next key is Esc, then drop into insert mode.
     @handlers.push handlerStack.push
-      DOMActive: (event) => @exit()
-      focus: (event) => @exit()
-      blur: (event) => @exit()
+      keydown: (event) ->
+        @remove()
+        return true unless KeyboardUtils.isEscape event
+        DomUtils.simulateSelect document.activeElement
+        insertMode.activate element
+        return false
 
-  exit: ->
-    console.log ++count, "exit PostFindMode"
-    super()
+    # We can stop watching on any change of focus or user click.
+    # FIXME(smblott).  This is broken.  If there is a text area, and the text area is focused with
+    # find, then clicking within that text area does *not* generate a useful event, and therefore does not
+    # disable PostFindMode mode, and therefore does not allow us to enter insert mode.
+    @handlers.push handlerStack.push
+      DOMActive: (event) => handlerStack.alwaysContinueBubbling =>
+        console.log "ACTIVATE"
+        @exit()
+      click: (event) =>
+        handlerStack.alwaysContinueBubbling =>
+          console.log "CLICK"
+          @exit()
+      focus: (event) => handlerStack.alwaysContinueBubbling =>
+        console.log "FOCUS"
+        @exit()
+      blur: (event) =>
+        console.log "BLUR"
+        handlerStack.alwaysContinueBubbling => @exit()
+
+  # This removes any PostFindMode modes on the stack and triggers a "focus" event for InsertMode.
+  @fakeFocus: (element) ->
+    handlerStack.bubbleEvent "focus", {target: element}
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -1015,7 +1030,9 @@ window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
   # window.findMode = true # Same hack, see comment at window.findMode definition.
   HUD.show("/")
+  console.log "aaa"
   new FindMode()
+  console.log "bbb"
 
 exitFindMode = ->
   window.findMode = false # Same hack, see comment at window.findMode definition.

@@ -1,4 +1,6 @@
 
+count = 0
+
 class Mode
   # Static members.
   @modes: []
@@ -20,6 +22,8 @@ class Mode
   constructor: (options) ->
     Mode.modes.unshift @
     extend @, options
+    @count = ++count
+    console.log @count, "create:", @name
 
     @handlers = []
     @handlers.push handlerStack.push
@@ -29,6 +33,7 @@ class Mode
       updateBadge: (badge) => handlerStack.alwaysContinueBubbling => @chooseBadge badge
 
   exit: ->
+    console.log @count, "exit:", @name
     handlerStack.remove handlerId for handlerId in @handlers
     Mode.modes = Mode.modes.filter (mode) => mode != @
     Mode.updateBadge()

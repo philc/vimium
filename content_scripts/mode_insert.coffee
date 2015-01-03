@@ -86,7 +86,7 @@ class InsertMode extends Mode
 # Activate this mode to prevent a focused, editable element from triggering insert mode.
 class InsertModeSuppressFocusTrigger extends Mode
   constructor: ->
-    super()
+    super {name: "suppress-focus-trigger"}
     @handlers.push handlerStack.push
       focus: => @suppressEvent
 
