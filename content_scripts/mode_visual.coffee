@@ -1,7 +1,4 @@
 
-# Use new VisualMode() to enter visual mode.
-# Use @exit() to leave visual mode.
-
 class VisualMode extends Mode
   constructor: ->
     super
@@ -9,6 +6,10 @@ class VisualMode extends Mode
       badge: "V"
 
       keydown: (event) =>
+        if KeyboardUtils.isEscape event
+          @exit()
+          return Mode.suppressEvent
+
         return Mode.suppressEvent
 
       keypress: (event) =>
@@ -16,6 +17,8 @@ class VisualMode extends Mode
 
       keyup: (event) =>
         return Mode.suppressEvent
+
+    Mode.updateBadge()
 
 root = exports ? window
 root.VisualMode = VisualMode

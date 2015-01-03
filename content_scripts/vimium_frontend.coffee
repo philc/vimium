@@ -340,6 +340,9 @@ extend window,
   enterInsertMode: ->
     insertMode?.activate()
 
+  enterVisualMode: =>
+    new VisualMode()
+
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
