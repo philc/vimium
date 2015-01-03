@@ -83,7 +83,26 @@ class MultiMode extends Mode
   exit: ->
     mode.exit() for mode in modes
 
+# When the user clicks anywhere outside of the given element, the mode is exited.
+class ConstrainedMode extends Mode
+  constructor: (@element, options) ->
+    options.name = if options.name? then "constrained-#{options.name}" else "constrained"
+    super options
+
+    @handlers.push handlerStack.push
+      "click": (event) =>
+        @exit() unless @isDOMDescendant @element, event.srcElement
+        @continueBubbling
+
+  isDOMDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
+
 root = exports ? window
 root.Mode = Mode
 root.SingletonMode = SingletonMode
 root.MultiMode = MultiMode
+root.ConstrainedMode = ConstrainedMode
