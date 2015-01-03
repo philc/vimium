@@ -1,6 +1,10 @@
 
 class VisualMode extends Mode
-  constructor: ->
+
+  # Proposal...  The visual selection must stay within element.  This will become relevant if we ever get so
+  # far as implementing a vim-like editing mode for text areas/content editable.
+  #
+  constructor: (element=document.body) ->
     super
       name: "Visual"
       badge: "V"
