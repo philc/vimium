@@ -1,11 +1,14 @@
 markHookSet = "vimium-hooked-delegated-onclick-listeners"
 return if document.documentElement.hasAttribute(markHookSet)
 
+_jQuery = undefined
 
 Object.defineProperty window, "jQuery",
   enumerable: yes
   configurable: yes
+  get: -> _jQuery
   set: (jQuery) ->
+    _jQuery = jQuery
     _on = jQuery.fn.on
 
     jQuery.fn.on = (evnt, selector, handlerFn) ->
