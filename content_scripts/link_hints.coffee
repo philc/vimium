@@ -125,19 +125,19 @@ LinkHints =
     marker
 
   #
-  # Find children elements that have delegated onclick event listener assigned,
+  # Find elements that have delegated onclick event listener assigned,
   # and mark them with `vimium-has-delegated-onclick-listener` attribute.
   # This will make sure those elements are discovered during `getVisibleClickableElements` call.
   #
-  markChildrenThatHaveDelegatedOnClickListener: (element) ->
-    return unless element.hasAttribute "vimium-jquery-delegated-events-selectors"
+  markElementsThatHaveDelegatedOnClickListener: ->
+    for element in document.querySelectorAll("*[vimium-jquery-delegated-events-selectors]")
+      selectorsStr = element.getAttribute "vimium-jquery-delegated-events-selectors"
+      continue unless selectorsStr
 
-    selectorsStr = element.getAttribute "vimium-jquery-delegated-events-selectors"
-    selectors = selectorsStr.split("|").filter (x) -> !!x
+      selectors = selectorsStr.split("|").filter (x) -> !!x
 
-    for selector in selectors
-      for child in element.querySelectorAll(selector)
-        unless child.hasAttribute "vimium-has-delegated-onclick-listener"
+      for selector in selectors
+        for child in element.querySelectorAll(selector)
           child.setAttribute "vimium-has-delegated-onclick-listener", ""
 
   #
@@ -172,12 +172,12 @@ LinkHints =
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"] or
-        element.hasAttribute("vimium-has-onclick-listener") or
-        element.hasAttribute("vimium-has-delegated-onclick-listener"))
+        element.hasAttribute("vimium-has-onclick-listener"))
       isClickable = true
-
-    # Dispose the attribute so next time it is not included, in case listener has been removed
-    element.removeAttribute "vimium-has-delegated-onclick-listener"
+    else if element.hasAttribute("vimium-has-delegated-onclick-listener")
+      isClickable = true
+      # Dispose the attribute so next time it is not included, in case listener has been removed
+      element.removeAttribute "vimium-has-delegated-onclick-listener"
 
     # Check for jsaction event listeners on the element.
     if element.hasAttribute "jsaction"
@@ -218,8 +218,6 @@ LinkHints =
       if clientRect != null
         visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex}
 
-    @markChildrenThatHaveDelegatedOnClickListener element
-
     visibleElements
 
   #
@@ -230,7 +228,7 @@ LinkHints =
   # element.
   #
   getVisibleClickableElements: ->
-    @markChildrenThatHaveDelegatedOnClickListener document.documentElement
+    @markElementsThatHaveDelegatedOnClickListener()
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
