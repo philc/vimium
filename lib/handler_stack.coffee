@@ -51,13 +51,12 @@ class HandlerStack
   isChromeEvent: (event) ->
     event?.preventDefault? and event?.stopImmediatePropagation?
 
-  # Convenience wrapper for handlers which always continue propagation.
-  alwaysPropagate: (handler) ->
+  # Convenience wrappers.
+  alwaysContinueBubbling: (handler) ->
     handler()
     true
 
-  # Convenience wrapper for handlers which never continue propagation.
-  neverPropagate: (handler) ->
+  neverContinueBubbling: (handler) ->
     handler()
     false
 

@@ -53,7 +53,7 @@ class Mode
   # Default updateBadgeForMode handler.  This is overridden by sub-classes.  The default is to install the
   # current mode's badge, unless the bade is already set.
   updateBadgeForMode: (badge) ->
-    handlerStack.alwaysPropagate => badge.badge ||= @badge
+    handlerStack.alwaysContinueBubbling => badge.badge ||= @badge
 
   # Static method.  Used externally and internally to initiate bubbling of an updateBadgeForMode event.
   # Do not update the badge:

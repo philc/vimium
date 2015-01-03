@@ -67,16 +67,25 @@ class InsertMode extends Mode
 
     @handlers.push handlerStack.push
       focus: (event) =>
-        handlerStack.alwaysPropagate =>
+        handlerStack.alwaysContinueBubbling =>
           if not @isInsertMode and @isFocusable event.target
             @activate event.target
       blur: (event) =>
-        handlerStack.alwaysPropagate =>
+        handlerStack.alwaysContinueBubbling =>
           if @isInsertMode and event.target == @insertModeLock
             @deactivate()
 
     # We may already have been dropped into insert mode.  So check.
     Mode.updateBadge()
 
+# Utility mode.
+# Activate this mode to prevent a focused, editable element from triggering insert mode.
+class FocusMustNotTriggerInsertMode extends Mode
+  constructor: ->
+    super()
+    @handlers.push handlerStack.push
+      focus: => @suppressEvent
+
 root = exports ? window
 root.InsertMode = InsertMode
+root.FocusMustNotTriggerInsertMode = FocusMustNotTriggerInsertMode
