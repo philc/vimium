@@ -10,12 +10,13 @@ Object.defineProperty window, "jQuery",
   set: (jQuery) ->
     _jQuery = jQuery
     _on = jQuery.fn.on
+    _off = jQuery.fn.off
+
+    attrKey = "vimium-jquery-delegated-events-selectors"
+    sep = "|"
 
     jQuery.fn.on = (evnt, selector, handlerFn) ->
       if evnt is "click" and typeof selector is "string"
-        attrKey = "vimium-jquery-delegated-events-selectors"
-        sep = "|"
-
         element = if @[0] is document then document.documentElement else @[0]
         selectors = element.getAttribute(attrKey) || sep
         if selectors.indexOf("#{sep}#{selector}#{sep}") < 0
@@ -26,6 +27,19 @@ Object.defineProperty window, "jQuery",
         element.setAttribute "vimium-skip-onclick-listener", skipCounter + 1
 
       return _on.apply @, arguments
+
+    jQuery.fn.off = (evnt, selector) ->
+      if evnt is "click" and typeof selector is "string"
+        element = if @[0] is document then document.documentElement else @[0]
+        selectors = element.getAttribute(attrKey) || sep
+        boundedSelector = "#{sep}#{selector}#{sep}"
+
+        if selector is "**" or selectors is boundedSelector
+          element.removeAttribute attrKey
+        else if selectors.indexOf(boundedSelector) > -1
+          element.setAttribute attrKey, selectors.replace(boundedSelector, "")
+
+      return _off.apply @, arguments
 
     return jQuery
 
