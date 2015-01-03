@@ -76,5 +76,21 @@ class Mode
     func()
     mode.exit()
 
+# A SingletonMode is a Mode of which there may be at most one instance of the same name (@singleton) active at
+# any one time.  New instances cancel previous instances on startup.
+class SingletonMode extends Mode
+  constructor: (@singleton, options) ->
+    @cancel @singleton
+    super options
+
+  @instances: {}
+
+  cancel: (instance) ->
+    SingletonMode[instance].exit() if SingletonMode[instance]
+
+  exit: ->
+    delete SingletonMode[@instance]
+    super()
+
 root = exports ? window
 root.Mode = Mode
