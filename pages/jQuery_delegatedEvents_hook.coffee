@@ -18,6 +18,10 @@ Object.defineProperty window, "jQuery",
         if selectors.indexOf("#{sep}#{selector}#{sep}") < 0
           element.setAttribute attrKey, selectors + selector + sep
 
+        # jQuery will use addEventListener, but we don't want to hook this particular call.
+        skipCounter = parseInt element.getAttribute("vimium-skip-onclick-listener") || "0"
+        element.setAttribute "vimium-skip-onclick-listener", skipCounter + 1
+
       return _on.apply @, arguments
 
     return jQuery
