@@ -74,14 +74,14 @@ class SingletonMode extends Mode
     SingletonMode.instances[@singleton] = @
     super options
 
-# MultiMode is a collection of modes which are installed or uninstalled together.
-class MultiMode extends Mode
-  constructor: (modes...) ->
-    @modes = (new mode() for mode in modes)
-    super {name: "multimode"}
-
-  exit: ->
-    mode.exit() for mode in modes
+# # MultiMode is a collection of modes which are installed or uninstalled together.
+# class MultiMode extends Mode
+#   constructor: (modes...) ->
+#     @modes = (new mode() for mode in modes)
+#     super {name: "multimode"}
+# 
+#   exit: ->
+#     mode.exit() for mode in modes
 
 # When the user clicks anywhere outside of the given element, the mode is exited.
 class ConstrainedMode extends Mode
@@ -100,6 +100,18 @@ class ConstrainedMode extends Mode
       return true if (node == parent)
       node = node.parentNode
     false
+
+# # The mode exits when the user hits Esc.
+# class ExitOnEscapeMode extends Mode
+#   constructor: (options) ->
+#     super options
+# 
+#     # This handler ends up above the mode's own handlers on the handler stack, so it takes priority.
+#     @handlers.push handlerStack.push
+#       "keydown": (event) =>
+#         return @continueBubbling unless KeyboardUtils.isEscape event
+#         @exit()
+#         @suppressEvent
 
 root = exports ? window
 root.Mode = Mode
