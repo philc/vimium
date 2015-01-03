@@ -1,6 +1,6 @@
 
 class InsertMode extends Mode
-  isInsertMode: false
+  insertModeActive: false
   insertModeLock: null
 
   # Input or text elements are considered focusable and able to receieve their own keyboard events, and will
@@ -14,34 +14,34 @@ class InsertMode extends Mode
       return true
     nodeName in ["textarea", "select"]
 
-  # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
-  # unfocused.
+  # Embedded elements like Flash and quicktime players can obtain focus.
   isEmbed: (element) ->
     element.nodeName?.toLowerCase() in ["embed", "object"]
 
   isFocusable: (element) ->
-    (@isEditable(element) or @isEmbed element)
+    @isEditable(element) or @isEmbed element
 
   # Check whether insert mode is active.  Also, activate insert mode if the current element is content
-  # editable.
-  isActive: ->
-    return true if @isInsertMode
+  # editable (and the event is not suppressed).
+  isActiveOrActivate: (event) ->
+    return true if @insertModeActive
+    return false if event.suppressKeydownTrigger
     # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
     # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check
     # whether the active element is contentEditable.
     @activate() if document.activeElement?.isContentEditable
-    @isInsertMode
+    @insertModeActive
 
   activate: (target=null) ->
-    unless @isInsertMode
-      @isInsertMode = true
+    unless @insertModeActive
+      @insertModeActive = true
       @insertModeLock = target
       @badge = "I"
       Mode.updateBadge()
 
   deactivate: ->
-    if @isInsertMode
-      @isInsertMode = false
+    if @insertModeActive
+      @insertModeActive = false
       @insertModeLock = null
       @badge = ""
       Mode.updateBadge()
@@ -50,38 +50,41 @@ class InsertMode extends Mode
     super
       name: "insert"
       keydown: (event) =>
-        return @continueBubbling if event.suppressInsertMode
-        return @continueBubbling unless @isActive()
+        return @continueBubbling unless @isActiveOrActivate event
         return @stopBubblingAndTrue unless KeyboardUtils.isEscape event
-        # We're now exiting insert mode.
-        if @isEditable(event.srcElement) or @isEmbed event.srcElement
-          # Remove the focus so the user can't just get himself back into insert mode by typing in the same input
-          # box.
+        # We're in insert mode, and now exiting.
+        if event.srcElement? and @isFocusable event.srcElement
+          # Remove the focus so the user can't just get himself back into insert mode by typing in the same
+          # input box.
           # NOTE(smblott, 2014/12/22) Including embeds for .blur() here is experimental.  It appears to be the
           # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
           # games.  See discussion in #1211 and #1194.
           event.srcElement.blur()
         @deactivate()
         @suppressEvent
-      keypress: => if @isInsertMode then @stopBubblingAndTrue else @continueBubbling
-      keyup: => if @isInsertMode then @stopBubblingAndTrue else @continueBubbling
+      keypress: => if @insertModeActive then @stopBubblingAndTrue else @continueBubbling
+      keyup: => if @insertModeActive then @stopBubblingAndTrue else @continueBubbling
 
     @handlers.push handlerStack.push
       focus: (event) =>
         handlerStack.alwaysContinueBubbling =>
-          if not @isInsertMode and @isFocusable event.target
+          if not @insertModeActive and @isFocusable event.target
             @activate event.target
       blur: (event) =>
         handlerStack.alwaysContinueBubbling =>
-          if @isInsertMode and event.target == @insertModeLock
+          if @insertModeActive and event.target == @insertModeLock
             @deactivate()
 
-    # We may already have been dropped into insert mode.  So check.
-    Mode.updateBadge()
+    # We may already have focussed something, so check, so check.
+    @activate document.activeElement if document.activeElement and @isFocusable document.activeElement
 
-# Utility mode.
+  # Used to prevent keydown events from triggering insert mode (following find).
+  # FIXME(smblott)  This is a hack.
+  @suppressKeydownTrigger: (event) ->
+    event.suppressKeydownTrigger = true
+
 # Activate this mode to prevent a focused, editable element from triggering insert mode.
-class FocusMustNotTriggerInsertMode extends Mode
+class InsertModeSuppressFocusTrigger extends Mode
   constructor: ->
     super()
     @handlers.push handlerStack.push
@@ -89,4 +92,4 @@ class FocusMustNotTriggerInsertMode extends Mode
 
 root = exports ? window
 root.InsertMode = InsertMode
-root.FocusMustNotTriggerInsertMode = FocusMustNotTriggerInsertMode
+root.InsertModeSuppressFocusTrigger = InsertModeSuppressFocusTrigger
