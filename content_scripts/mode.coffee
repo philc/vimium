@@ -66,12 +66,12 @@ class SingletonMode extends Mode
   @instances: {}
 
   exit: ->
-    delete SingletonMode[@singleton]
+    delete SingletonMode.instances[@singleton]
     super()
 
   constructor: (@singleton, options={}) ->
-    SingletonMode[@singleton].exit() if SingletonMode[@singleton]
-    SingletonMode[@singleton] = @
+    SingletonMode.instances[@singleton].exit() if SingletonMode.instances[@singleton]
+    SingletonMode.instances[@singleton] = @
     super options
 
 # MultiMode is a collection of modes which are installed or uninstalled together.
