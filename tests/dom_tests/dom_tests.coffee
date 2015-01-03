@@ -85,6 +85,13 @@ createGeneralHintTests = (isFilteredMode) ->
       assert.equal 1, getHintMarkers().length
       LinkHints.deactivateMode()
 
+    should "create link hints for elements, being listened through window element", ->
+      $(window).on 'click', '.clickable', ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 1, getHintMarkers().length
+      LinkHints.deactivateMode()
+
     should "create link hints for elements, being listened through parent DOM element", ->
       $("#container").on 'click', '.clickable', ( -> )
 
