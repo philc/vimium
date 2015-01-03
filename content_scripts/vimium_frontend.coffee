@@ -726,6 +726,8 @@ handleEnterForFindMode = ->
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
+  # If we have found an input element, the pressing <esc> immediately afterwards sends us into insert mode.
+  new PostFindMode()
 
 class FindMode extends Mode
   constructor: (badge="F") ->
@@ -758,6 +760,25 @@ class FindMode extends Mode
       keyup: (event) => @suppressEvent
 
     Mode.updateBadge()
+
+# If find lands in an editable element, then "Esc" drops us into insert mode.
+class PostFindMode extends Mode
+  constructor: (element) ->
+    super
+      keydown: (event) =>
+        @exit()
+        if (KeyboardUtils.isEscape(event))
+          DomUtils.simulateSelect(document.activeElement)
+          insertMode.activate()
+          return @suppressEvent # we have "consumed" this event, so do not propagate
+        event.suppressInsertMode = true
+        return @continueBubbling
+
+    elementCanTakeInput = document.activeElement &&
+      DomUtils.isSelectable(document.activeElement) &&
+      isDOMDescendant(findModeAnchorNode, document.activeElement)
+    elementCanTakeInput ||= document.activeElement?.isContentEditable
+    @exit() unless elementCanTakeInput
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -855,20 +876,7 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  elementCanTakeInput = document.activeElement &&
-    DomUtils.isSelectable(document.activeElement) &&
-    isDOMDescendant(findModeAnchorNode, document.activeElement)
-  if (elementCanTakeInput)
-    handlerStack.push({
-      keydown: (event) ->
-        @remove()
-        if (KeyboardUtils.isEscape(event))
-          DomUtils.simulateSelect(document.activeElement)
-          enterInsertModeWithoutShowingIndicator(document.activeElement)
-          insertMode.activate()
-          return false # we have "consumed" this event, so do not propagate
-        return true
-    })
+  new PostFindMode()
 
   focusFoundLink()
 

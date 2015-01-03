@@ -50,6 +50,7 @@ class InsertMode extends Mode
     super
       name: "insert"
       keydown: (event) =>
+        return @continueBubbling if event.suppressInsertMode
         return @continueBubbling unless @isActive()
         return @stopBubblingAndTrue unless KeyboardUtils.isEscape event
         # We're now exiting insert mode.
