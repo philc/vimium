@@ -115,6 +115,23 @@ createGeneralHintTests = (isFilteredMode) ->
       assert.equal 1, getHintMarkers().length
       LinkHints.deactivateMode()
 
+    should "not create link hints for elements, that have event listeners removed", ->
+      $(document).on 'click', '.clickable', ( -> )
+      $(document).off 'click', '.clickable'
+
+      LinkHints.activateMode()
+      assert.equal 0, getHintMarkers().length
+      LinkHints.deactivateMode()
+
+    should "not create link hints for elements, that have ALL event listeners removed", ->
+      $(document).on 'click', '.clickable', ( -> )
+      $(document).off 'click', '**'
+
+      LinkHints.activateMode()
+      assert.equal 0, getHintMarkers().length
+      LinkHints.deactivateMode()
+
+
 
 createGeneralHintTests false
 createGeneralHintTests true
