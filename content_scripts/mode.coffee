@@ -76,7 +76,9 @@ class Mode
 
   exit: ->
     console.log @count, "exit:", @name
-    handlerStack.remove handlerId for handlerId in @handlers
+    # We reverse @handlers, here.  That way, handlers are popped in the opposite order to that in which they
+    # were pushed.
+    handlerStack.remove handlerId for handlerId in @handlers.reverse()
     Mode.modes = Mode.modes.filter (mode) => mode != @
     Mode.updateBadge()
 
