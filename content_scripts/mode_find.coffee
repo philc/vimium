@@ -19,18 +19,13 @@ class PostFindMode extends SingletonMode
       name: "post-find"
 
     # If the very next key is Esc, then drop straight into insert mode.
-    do =>
-      self = @
-      @push
-        keydown: (event) ->
-          @remove()
-          if element == document.activeElement and KeyboardUtils.isEscape event
-            self.exit()
-            # NOTE(smblott).  The legacy code (2015/1/4) uses DomUtils.simulateSelect() here.  But this moves
-            # the selection.  It's better to leave the selection where it is.
-            insertMode.activate element
-            return false
-          true
+    @push
+      keydown: (event) ->
+        @remove()
+        if element == document.activeElement and KeyboardUtils.isEscape event
+          PostFindMode.exitModeAndEnterInsert insertMode, element
+          return false
+        true
 
     if element.isContentEditable
       # Prevent InsertMode from activating on keydown.
@@ -51,9 +46,9 @@ class PostFindMode extends SingletonMode
   # element is then (again) focused by focusInput, no new focus event is generated, so we don't drop into
   # InsertMode as expected.
   # This hack fixes this.
-  @exitModeAndEnterInsert: (element) ->
+  @exitModeAndEnterInsert: (insertMode, element) ->
     SingletonMode.kill PostFindMode
-    insertMode.activate element
+    insertMode.activate insertMode, element
 
 root = exports ? window
 root.PostFindMode = PostFindMode

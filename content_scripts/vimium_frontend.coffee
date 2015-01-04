@@ -361,7 +361,7 @@ extend window,
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
     # See the definition of PostFindMode.exitModeAndEnterInsert for an explanation of why this is needed.
-    PostFindMode.exitModeAndEnterInsert visibleInputs[selectedInputIndex].element
+    PostFindMode.exitModeAndEnterInsert insertMode, visibleInputs[selectedInputIndex].element
 
     visibleInputs[selectedInputIndex].element.focus()
 
