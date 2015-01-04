@@ -60,6 +60,10 @@ class Mode
     func()
     mode.exit()
 
+# We need to detect when the focused frame/tab changes, and update the badge.
+handlerStack.push
+  "focus": -> handlerStack.alwaysContinueBubbling -> Mode.updateBadge()
+
 # A SingletonMode is a Mode of which there may be at most one instance (of @singleton) active at any one time.
 # New instances cancel previous instances on startup.
 class SingletonMode extends Mode
@@ -116,5 +120,4 @@ class ConstrainedMode extends Mode
 root = exports ? window
 root.Mode = Mode
 root.SingletonMode = SingletonMode
-root.MultiMode = MultiMode
 root.ConstrainedMode = ConstrainedMode
