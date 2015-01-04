@@ -27,8 +27,14 @@
       }
     </style>
     <link rel="stylesheet" type="text/css" href="../../content_scripts/vimium.css" />
+
+    <!-- Simulate the load of injected hooks -->
+    <script type="text/javascript" src="../../pages/jQuery_delegatedEvents_hook.js"></script>
+    <script type="text/javascript" src="../../pages/addEventListener_hook.js"></script>
+
     <script type="text/javascript" src="bind.js"></script>
     <script type="text/javascript" src="chrome.js"></script>
+    <script type="text/javascript" src="jquery-1.8.3.min.js"></script>
     <script type="text/javascript" src="../../lib/utils.js"></script>
     <script type="text/javascript" src="../../lib/keyboard_utils.js"></script>
     <script type="text/javascript" src="../../lib/dom_utils.js"></script>

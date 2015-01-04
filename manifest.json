@@ -54,6 +54,12 @@
       "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start",
       "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_scripts/inject_script.js"],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "browser_action": {
@@ -61,6 +67,8 @@
     "default_popup": "pages/popup.html"
   },
   "web_accessible_resources": [
-    "pages/vomnibar.html"
+    "pages/vomnibar.html",
+    "pages/jQuery_delegatedEvents_hook.js",
+    "pages/addEventListener_hook.js"
   ]
 }

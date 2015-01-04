@@ -125,6 +125,22 @@ LinkHints =
     marker
 
   #
+  # Find elements that have delegated onclick event listener assigned,
+  # and mark them with `vimium-has-delegated-onclick-listener` attribute.
+  # This will make sure those elements are discovered during `getVisibleClickableElements` call.
+  #
+  markElementsThatHaveDelegatedOnClickListener: ->
+    for element in document.querySelectorAll("*[vimium-jquery-delegated-events-selectors]")
+      selectorsStr = element.getAttribute "vimium-jquery-delegated-events-selectors"
+      continue unless selectorsStr
+
+      selectors = selectorsStr.split("|").filter (x) -> !!x
+
+      for selector in selectors
+        for child in element.querySelectorAll(selector)
+          child.setAttribute "vimium-has-delegated-onclick-listener", ""
+
+  #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
@@ -155,9 +171,13 @@ LinkHints =
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
-        element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
-        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
+        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"] or
+        element.hasAttribute("vimium-has-onclick-listener"))
       isClickable = true
+    else if element.hasAttribute("vimium-has-delegated-onclick-listener")
+      isClickable = true
+      # Dispose the attribute so next time it is not included, in case listener has been removed
+      element.removeAttribute "vimium-has-delegated-onclick-listener"
 
     # Check for jsaction event listeners on the element.
     if element.hasAttribute "jsaction"
@@ -179,12 +199,19 @@ LinkHints =
       when "button", "select"
         isClickable ||= not element.disabled
 
-    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-    # citizens when it improves UX, so take special note of them.
-    tabIndexValue = element.getAttribute("tabindex")
-    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-    unless isClickable or isNaN(tabIndex) or tabIndex < 0
-      isClickable = onlyHasTabIndex = true
+
+    # If we didn't successfully hook addEventListener, fall back to older methods of detecting clickable
+    # elements.
+    if not isClickable and document.documentElement.hasAttribute "vimium-listening-for-onclick-listeners"
+      # Match the element if any of its classes contain "button".
+      isClickable = element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0
+
+      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+      # citizens when it improves UX, so take special note of them.
+      tabIndexValue = element.getAttribute("tabindex")
+      tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+      unless isClickable or isNaN(tabIndex) or tabIndex < 0
+        isClickable = onlyHasTabIndex = true
 
     if isClickable
       clientRect = DomUtils.getVisibleClientRect element
@@ -201,6 +228,7 @@ LinkHints =
   # element.
   #
   getVisibleClickableElements: ->
+    @markElementsThatHaveDelegatedOnClickListener()
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
