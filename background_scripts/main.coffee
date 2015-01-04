@@ -339,6 +339,13 @@ updateOpenTabs = (tab) ->
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
 
+# This color should match the blue of the Vimium browser popup (although it looks a little darker, to me?).
+chrome.browserAction.setBadgeBackgroundColor {color: [102, 176, 226, 255]}
+
+setBadge = (response) ->
+  badge = response?.badge || ""
+  chrome.browserAction.setBadgeText {text: badge}
+
 # Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
 # Also propagates new enabled/disabled/passkeys state to active window, if necessary.
 # This lets you disable Vimium on a page without needing to reload.
@@ -349,6 +356,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
   partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get tabId, (tab) ->
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
+      setBadge response
       if response
         isCurrentlyEnabled = response.enabled
         currentPasskeys = response.passKeys
@@ -602,6 +610,7 @@ unregisterFrame = (request, sender) ->
       frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
 
 handleFrameFocused = (request, sender) ->
+  setBadge request
   tabId = sender.tab.id
   if frameIdsForTab[tabId]?
     frameIdsForTab[tabId] =
@@ -633,6 +642,7 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
+  setBadge: setBadge
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))

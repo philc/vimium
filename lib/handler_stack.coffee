@@ -1,10 +1,11 @@
 root = exports ? window
 
-class root.HandlerStack
+class HandlerStack
 
   constructor: ->
     @stack = []
     @counter = 0
+    @passThrough = new Object() # Used only as a constant, distinct from any other value.
 
   genId: -> @counter = ++@counter & 0xffff
 
@@ -27,6 +28,10 @@ class root.HandlerStack
         if not passThrough
           DomUtils.suppressEvent(event)
           return false
+        # If the constant @passThrough is returned, then discontinue further bubbling and pass the event
+        # through to the underlying page.  The event is not suppresssed.
+        if passThrough == @passThrough
+          return false
     true
 
   remove: (id = @currentId) ->
@@ -35,3 +40,6 @@ class root.HandlerStack
       if handler.id == id
         @stack.splice(i, 1)
         break
+
+root.HandlerStack = HandlerStack
+root.handlerStack = new HandlerStack
