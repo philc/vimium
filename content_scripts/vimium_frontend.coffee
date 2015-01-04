@@ -463,7 +463,7 @@ onKeydown = (event) ->
       event.srcElement.blur()
     exitInsertMode()
     DomUtils.suppressEvent event
-    handledKeydownEvents.push event
+    KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
