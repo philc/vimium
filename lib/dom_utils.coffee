@@ -141,6 +141,13 @@ DomUtils =
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
         element.nodeName.toLowerCase() == "textarea"
 
+  isDOMDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
+
   simulateSelect: (element) ->
     element.focus()
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.

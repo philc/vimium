@@ -133,8 +133,6 @@ initializePreDomReady = ->
   Scroller.init settings
 
   # Install passKeys and insert modes.  These too are permanently on the stack (although not always active).
-  # Note.  There's no need to explicitly Mode.updateBadge().  The new InsertMode() updates the badge.
-  # Note.  There's no need to explicitly Mode.updateBadge().  The new InsertMode() updates the badge.
   passKeysMode = new PassKeysMode()
   insertMode = new InsertMode()
   Mode.updateBadge()
@@ -163,9 +161,7 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: ->
-      Mode.updateBadge()
-      return { enabled: isEnabledForUrl, passKeys: passKeys }
+    getActiveState: getActiveState
     setState: setState
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
@@ -210,7 +206,13 @@ setState = (request) ->
   initializeWhenEnabled(request.passKeys) if request.enabled
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
-  passKeysMode.configure request
+  handlerStack.bubbleEvent "registerStateChange",
+    enabled: request.enabled
+    passKeys: request.passKeys
+
+getActiveState = ->
+  Mode.updateBadge()
+  return { enabled: isEnabledForUrl, passKeys: passKeys }
 
 #
 # The backend needs to know which frame has focus.
@@ -281,7 +283,6 @@ window.focusThisFrame = (shouldHighlight) ->
     chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
     return
   window.focus()
-  Mode.updateBadge()
   if (document.body && shouldHighlight)
     borderWas = document.body.style.border
     document.body.style.border = '5px solid yellow'
@@ -359,13 +360,9 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    # We need to make sure that the following .focus() actually does generate a "focus" event.  We need such
-    # an event:
-    #   - to trigger insert mode, and
-    #   - to kick any PostFindMode listeners out of the way.
-    # Unfortunately, if the element is already focused (as may happen following a find), then no "focus" event
-    # is generated.  So, here, we first generate a psuedo "focus" event.
-    PostFindMode.fakeFocus visibleInputs[selectedInputIndex].element
+    # See the definition of PostFindMode.exitModeAndEnterInsert for an explanation of why this is needed.
+    PostFindMode.exitModeAndEnterInsert visibleInputs[selectedInputIndex].element
+
     visibleInputs[selectedInputIndex].element.focus()
 
     return if visibleInputs.length == 1
@@ -578,8 +575,9 @@ checkIfEnabledForUrl = ->
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
-    passKeysMode.configure response
-    Mode.updateBadge()
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: response.isEnabledForUrl
+      passKeys: response.passKeys
 
 refreshCompletionKeys = (response) ->
   if (response)
@@ -733,20 +731,16 @@ handleEnterForFindMode = ->
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
   # If we have found an input element, the pressing <esc> immediately afterwards sends us into insert mode.
-  new PostFindMode()
+  new PostFindMode insertMode, findModeAnchorNode
 
-class FindMode extends Mode
+class FindMode extends ExitOnEscapeMode
   constructor: (badge="F") ->
     super
       name: "find"
       badge: badge
 
       keydown: (event) =>
-        if KeyboardUtils.isEscape event
-          handleEscapeForFindMode()
-          @exit()
-          @suppressEvent
-        else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+        if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
           handleDeleteForFindMode()
           @suppressEvent
         else if event.keyCode == keyCodes.enter
@@ -767,56 +761,9 @@ class FindMode extends Mode
 
     Mode.updateBadge()
 
-# Handle various special cases which arise when find finds a match within a focusable element.
-class PostFindMode extends SingletonMode
-  constructor: ->
-    element = document.activeElement
-
-    # Special cases only arise if the active element is focusable.  So, exit immediately if it is not.
-    canTakeInput = element and DomUtils.isSelectable(element) and isDOMDescendant findModeAnchorNode, element
-    canTakeInput ||= element?.isContentEditable
-    return unless canTakeInput
-
-    super PostFindMode, {name: "post-find-mode"}
-
-    if element.isContentEditable
-      # Prevent InsertMode from activating on keydown.
-      @handlers.push handlerStack.push
-        keydown: (event) =>
-          InsertMode.suppressKeydownTrigger event
-          @continueBubbling
-
-    # If the next key is Esc, then drop into insert mode.
-    @handlers.push handlerStack.push
-      keydown: (event) ->
-        @remove()
-        return true unless KeyboardUtils.isEscape event
-        DomUtils.simulateSelect document.activeElement
-        insertMode.activate element
-        return false
-
-    # We can stop watching on any change of focus or user click.
-    # FIXME(smblott).  This is broken.  If there is a text area, and the text area is focused with
-    # find, then clicking within that text area does *not* generate a useful event, and therefore does not
-    # disable PostFindMode mode, and therefore does not allow us to enter insert mode.
-    @handlers.push handlerStack.push
-      DOMActive: (event) => handlerStack.alwaysContinueBubbling =>
-        console.log "ACTIVATE"
-        @exit()
-      click: (event) =>
-        handlerStack.alwaysContinueBubbling =>
-          console.log "CLICK"
-          @exit()
-      focus: (event) => handlerStack.alwaysContinueBubbling =>
-        console.log "FOCUS"
-        @exit()
-      blur: (event) =>
-        console.log "BLUR"
-        handlerStack.alwaysContinueBubbling => @exit()
-
-  # This removes any PostFindMode modes on the stack and triggers a "focus" event for InsertMode.
-  @fakeFocus: (element) ->
-    handlerStack.bubbleEvent "focus", {target: element, note: "generated by PostFindMode.fakeFocus()"}
+  exit: (event) ->
+    handleEscapeForFindMode() if event?.source == ExitOnEscapeMode
+    super()
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -863,13 +810,6 @@ focusFoundLink = ->
     link = getLinkFromSelection()
     link.focus() if link
 
-isDOMDescendant = (parent, child) ->
-  node = child
-  while (node != null)
-    return true if (node == parent)
-    node = node.parentNode
-  false
-
 selectFoundInputElement = ->
   # if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
@@ -877,7 +817,7 @@ selectFoundInputElement = ->
   # heuristic of checking that the last anchor node is an ancestor of our element.
   if (findModeQueryHasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
-      isDOMDescendant(findModeAnchorNode, document.activeElement))
+      DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
     enterInsertModeWithoutShowingIndicator(document.activeElement)
@@ -914,7 +854,7 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  new PostFindMode()
+  new PostFindMode insertMode, findModeAnchorNode
 
   focusFoundLink()
 
@@ -1033,9 +973,7 @@ window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
   # window.findMode = true # Same hack, see comment at window.findMode definition.
   HUD.show("/")
-  console.log "aaa"
   new FindMode()
-  console.log "bbb"
 
 exitFindMode = ->
   window.findMode = false # Same hack, see comment at window.findMode definition.

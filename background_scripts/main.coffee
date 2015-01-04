@@ -342,8 +342,13 @@ setBrowserActionIcon = (tabId,path) ->
 # This color should match the blue of the Vimium browser popup (although it looks a little darker, to me?).
 chrome.browserAction.setBadgeBackgroundColor {color: [102, 176, 226, 255]}
 
-setBadge = (request) ->
-  chrome.browserAction.setBadgeText {text: request.badge || ""}
+setBadge = do ->
+  current = ""
+  (request) ->
+    badge = request.badge
+    if badge? and badge != current
+      chrome.browserAction.setBadgeText {text: badge || ""}
+      current = badge
 
 # Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
 # Also propagates new enabled/disabled/passkeys state to active window, if necessary.

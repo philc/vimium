@@ -46,6 +46,18 @@ class InsertMode extends Mode
       @badge = ""
       Mode.updateBadge()
 
+  exit: (event) ->
+    if event?.source == ExitOnEscapeMode
+      element = event?.event?.srcElement
+      if element? and @isFocusable element
+        # Remove the focus so the user can't just get himself back into insert mode by typing in the same
+        # input box.
+        # NOTE(smblott, 2014/12/22) Including embeds for .blur() here is experimental.  It appears to be the
+        # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+        # games.  See discussion in #1211 and #1194.
+        element.blur()
+    @deactivate()
+
   constructor: ->
     super
       name: "insert"
@@ -65,7 +77,7 @@ class InsertMode extends Mode
       keypress: => if @insertModeActive then @stopBubblingAndTrue else @continueBubbling
       keyup: => if @insertModeActive then @stopBubblingAndTrue else @continueBubbling
 
-    @handlers.push handlerStack.push
+    @push
       focus: (event) =>
         handlerStack.alwaysContinueBubbling =>
           if not @insertModeActive and @isFocusable event.target
@@ -86,8 +98,8 @@ class InsertMode extends Mode
 # Activate this mode to prevent a focused, editable element from triggering insert mode.
 class InsertModeSuppressFocusTrigger extends Mode
   constructor: ->
-    super {name: "suppress-focus-trigger"}
-    @handlers.push handlerStack.push
+    super {name: "suppress-insert-mode-focus-trigger"}
+    @push
       focus: => @suppressEvent
 
 root = exports ? window

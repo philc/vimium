@@ -1,19 +1,13 @@
 
+# Note. ConstrainedMode extends extends ExitOnEscapeMode.  So exit-on-escape is handled there.
 class VisualMode extends ConstrainedMode
 
-  # Proposal...  The visual selection must stay within element.  This will become relevant if we ever get so
-  # far as implementing a vim-like editing mode for text areas/content editable.
-  #
   constructor: (element=document.body) ->
     super element,
       name: "visual"
       badge: "V"
 
       keydown: (event) =>
-        if KeyboardUtils.isEscape event
-          @exit()
-          return Mode.suppressEvent
-
         return Mode.suppressEvent
 
       keypress: (event) =>

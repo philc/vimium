@@ -1,20 +1,7 @@
 
-class PassKeysMode extends Mode
-  keyQueue: ""
-  passKeys: ""
-
-  # This is called to set the passKeys configuration and state with various types of request from various
-  # sources, so we handle several cases here.
-  # TODO(smblott) Rationalize this.
+class PassKeysMode extends StateMode
   configure: (request) ->
-    if request.isEnabledForUrl?
-      @passKeys = (request.isEnabledForUrl and request.passKeys) or ""
-      Mode.updateBadge()
-    if request.enabled?
-      @passKeys = (request.enabled and request.passKeys) or ""
-      Mode.updateBadge()
-    if request.keyQueue?
-      @keyQueue = request.keyQueue
+    @keyQueue = request.keyQueue if request.keyQueue?
 
   # Decide whether this event should be passed to the underlying page.  Keystrokes are *never* considered
   # passKeys if the keyQueue is not empty.  So, for example, if 't' is a passKey, then 'gt' and '99t' will
