@@ -61,6 +61,7 @@ class Mode
   constructor: (options={}) ->
     Mode.modes.unshift @
     extend @, options
+    @modeIsActive = true
     @count = ++count
     console.log @count, "create:", @name
 
@@ -75,12 +76,14 @@ class Mode
     @handlers.push handlerStack.push handlers
 
   exit: ->
-    console.log @count, "exit:", @name
-    # We reverse @handlers, here.  That way, handlers are popped in the opposite order to that in which they
-    # were pushed.
-    handlerStack.remove handlerId for handlerId in @handlers.reverse()
-    Mode.modes = Mode.modes.filter (mode) => mode != @
-    Mode.updateBadge()
+    if @modeIsActive
+      console.log @count, "exit:", @name
+      # We reverse @handlers, here.  That way, handlers are popped in the opposite order to that in which they
+      # were pushed.
+      handlerStack.remove handlerId for handlerId in @handlers.reverse()
+      Mode.modes = Mode.modes.filter (mode) => mode != @
+      Mode.updateBadge()
+      @modeIsActive = false
 
   # The badge is chosen by bubbling an "updateBadge" event down the handler stack allowing each mode the
   # opportunity to choose a badge.  chooseBadge, here, is the default: choose the current mode's badge unless
@@ -122,9 +125,9 @@ class SingletonMode extends Mode
     SingletonMode.instances[singleton].exit() if SingletonMode.instances[singleton]
 
 # The mode exits when the user hits Esc.
-class ExitOnEscapeMode extends Mode
-  constructor: (options) ->
-    super options
+class ExitOnEscapeMode extends SingletonMode
+  constructor: (singleton, options) ->
+    super singleton, options
 
     # This handler ends up above the mode's own key handlers on the handler stack, so it takes priority.
     @push
@@ -135,23 +138,17 @@ class ExitOnEscapeMode extends Mode
           event: event
         @suppressEvent
 
-# When the user clicks anywhere outside of the given element, the mode is exited.
+# When @element loses the focus.
 class ConstrainedMode extends ExitOnEscapeMode
-  constructor: (@element, options) ->
-    options.name = if options.name? then "constrained-#{options.name}" else "constrained"
-    super options
+  constructor: (@element, singleton, options) ->
+    super singleton, options
 
-    @push
-      "click": (event) =>
-        @exit() unless @isDOMDescendant @element, event.srcElement
-        @continueBubbling
-
-  isDOMDescendant: (parent, child) ->
-    node = child
-    while (node != null)
-      return true if (node == parent)
-      node = node.parentNode
-    false
+    if @element
+      @element.focus()
+      @push
+        "blur": (event) =>
+          handlerStack.alwaysContinueBubbling =>
+            @exit() if event.srcElement == @element
 
 # The state mode tracks the enabled state in @enabled and @passKeys, and its initialized state in
 # @initialized.  It calls @registerStateChange() whenever the state changes.

@@ -40,17 +40,12 @@ class HandlerStack
     true
 
   remove: (id = @currentId) ->
-    if 0 < @stack.length and @stack[@stack.length-1].id == id
-      # A common case is to remove the handler at the top of the stack.  And we can do this very efficiently.
-      # Tests suggest that this case arises more than half of the time.
-      @stack.pop().id = null
-    else
-      # Otherwise, we'll build a new stack.  This is better than splicing the existing stack since that can
-      # interfere with concurrent bubbleEvents.
-      @stack = @stack.filter (handler) ->
-        # Mark this handler as removed (for any active bubbleEvent call).
-        handler.id = null if handler.id == id
-        handler?.id?
+    # This is more expense than splicing @stack, but better because splicing can interfere with concurrent
+    # bubbleEvents.
+    @stack = @stack.filter (handler) ->
+      # Mark this handler as removed (to notify any concurrent bubbleEvent call).
+      if handler.id == id then handler.id = null
+      handler?.id?
 
   # The handler stack handles chrome events (which may need to be suppressed) and internal (fake) events.
   # This checks whether that the event at hand is a chrome event.
