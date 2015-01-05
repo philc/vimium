@@ -787,8 +787,6 @@ class FindMode extends ExitOnEscapeMode
 
       keyup: (event) => @suppressEvent
 
-    Mode.updateBadge()
-
   exit: (extra) ->
     handleEscapeForFindMode() if extra?.source == ExitOnEscapeMode
     super()

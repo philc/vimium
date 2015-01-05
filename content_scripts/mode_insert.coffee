@@ -27,8 +27,6 @@ class InsertMode extends ConstrainedMode
       keypress: (event) => @stopBubblingAndTrue
       keyup: (event) => @stopBubblingAndTrue
 
-    Mode.updateBadge()
-
   exit: (event=null) ->
     if event?.source == ExitOnEscapeMode and event?.event?.srcElement?
       element = event.event.srcElement

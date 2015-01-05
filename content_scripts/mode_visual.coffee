@@ -3,7 +3,7 @@
 class VisualMode extends ConstrainedMode
 
   constructor: (element=document.body) ->
-    super element,
+    super element, VisualMode,
       name: "visual"
       badge: "V"
 
@@ -15,8 +15,6 @@ class VisualMode extends ConstrainedMode
 
       keyup: (event) =>
         return Mode.suppressEvent
-
-    Mode.updateBadge()
 
 root = exports ? window
 root.VisualMode = VisualMode

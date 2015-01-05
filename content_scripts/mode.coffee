@@ -72,6 +72,8 @@ class Mode
       keyup: @keyup
       updateBadge: (badge) => handlerStack.alwaysContinueBubbling => @chooseBadge badge
 
+    Mode.updateBadge() if @badge
+
   push: (handlers) ->
     @handlers.push handlerStack.push handlers
 
