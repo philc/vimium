@@ -140,17 +140,17 @@ class ExitOnEscapeMode extends SingletonMode
           event: event
         @suppressEvent
 
-# When @element loses the focus.
+# Exit mode when @constrainingElement (if defined) loses the focus.
 class ConstrainedMode extends ExitOnEscapeMode
-  constructor: (@element, singleton, options) ->
+  constructor: (@constrainingElement, singleton, options) ->
     super singleton, options
 
-    if @element
-      @element.focus()
+    if @constrainingElement
+      @constrainingElement.focus()
       @push
         "blur": (event) =>
           handlerStack.alwaysContinueBubbling =>
-            @exit() if event.srcElement == @element
+            @exit() if event.srcElement == @constrainingElement
 
 # The state mode tracks the enabled state in @enabled and @passKeys, and its initialized state in
 # @initialized.  It calls @registerStateChange() whenever the state changes.

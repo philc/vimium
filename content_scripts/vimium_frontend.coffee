@@ -344,8 +344,6 @@ extend window,
     new VisualMode()
 
   focusInput: (count) ->
-    SingletonMode.kill PostFindMode
-
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
     # Pressing any other key will remove the overlays and the special tab behavior.
@@ -361,14 +359,14 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    element = visibleInputs[selectedInputIndex].element
-    element.focus()
+    element = visibleInputs[selectedInputIndex].element.focus()
 
-    # If PostFindMode is was previously active, then element may already have had the focus.  In this case,
-    # focus() does not generate a "focus" event.  So we now force insert mode.
-    new InsertMode element
-
-    return if visibleInputs.length == 1
+    if visibleInputs.length == 1
+      # If PostFindMode is was previously active, then element may already have had the focus.  In this case,
+      # focus(), above, will not have generated a "focus" event to trigger insert mode.  So we force insert
+      # mode now.
+      new InsertMode visibleInputs[selectedInputIndex].element
+      return
 
     hints = for tuple in visibleInputs
       hint = document.createElement("div")
@@ -402,16 +400,12 @@ extend window,
                 if ++selectedInputIndex == hints.length
                   selectedInputIndex = 0
               hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-              element = visibleInputs[selectedInputIndex].element
-              element.focus()
+              visibleInputs[selectedInputIndex].element.focus()
               false
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
               DomUtils.removeElement hintContainingDiv
               @exit()
-              new InsertMode element
-              return true
-          keypress: (event) -> false
-          keyup: (event) -> false
+              new InsertMode visibleInputs[selectedInputIndex].element
 
     new FocusSelector()
 
