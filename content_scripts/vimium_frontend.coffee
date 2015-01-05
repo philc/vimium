@@ -5,7 +5,6 @@
 # "domReady".
 #
 
-insertMode = null
 passKeysMode = null
 insertModeLock = null
 findMode = false
@@ -362,14 +361,12 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    # There's feature interference between PostFindMode, InsertMode and focusInput.  PostFindMode prevents
-    # InsertMode from triggering on focus events.  Therefore, an input element can already be focused, but
-    # InsertMode is not active.  When that element is then (again) focused by focusInput, below, no new focus
-    # event is generated, so we don't drop into InsertMode as expected.
-    # Therefore we blur() the element before focussing it.
     element = visibleInputs[selectedInputIndex].element
-    element.blur() if document.activeElement == element
     element.focus()
+
+    # If PostFindMode is was previously active, then element may already have had the focus.  In this case,
+    # focus() does not generate a "focus" event.  So we now force insert mode.
+    new InsertMode element
 
     return if visibleInputs.length == 1
 
@@ -390,23 +387,50 @@ extend window,
     hintContainingDiv = DomUtils.addElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
 
-    handlerStack.push keydown: (event) ->
-      if event.keyCode == KeyboardUtils.keyCodes.tab
-        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-        if event.shiftKey
-          if --selectedInputIndex == -1
-            selectedInputIndex = hints.length - 1
-        else
-          if ++selectedInputIndex == hints.length
-            selectedInputIndex = 0
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-        visibleInputs[selectedInputIndex].element.focus()
-      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-        DomUtils.removeElement hintContainingDiv
-        @remove()
-        return true
+    class FocusSelector extends InsertModeBlocker
+      constructor: ->
+        super InsertModeBlocker, null,
+          name: "focus-selector"
+          badge: "?"
+          keydown: (event) =>
+            if event.keyCode == KeyboardUtils.keyCodes.tab
+              hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+              if event.shiftKey
+                if --selectedInputIndex == -1
+                  selectedInputIndex = hints.length - 1
+              else
+                if ++selectedInputIndex == hints.length
+                  selectedInputIndex = 0
+              hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+              element = visibleInputs[selectedInputIndex].element
+              element.focus()
+              false
+            else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+              DomUtils.removeElement hintContainingDiv
+              @exit()
+              new InsertMode element
+              return true
+          keypress: (event) -> false
+          keyup: (event) -> false
 
-      false
+    new FocusSelector()
+
+    # handlerStack.push keydown: (event) ->
+    #   if event.keyCode == KeyboardUtils.keyCodes.tab
+    #     hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+    #     if event.shiftKey
+    #       if --selectedInputIndex == -1
+    #         selectedInputIndex = hints.length - 1
+    #     else
+    #       if ++selectedInputIndex == hints.length
+    #         selectedInputIndex = 0
+    #     hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+    #     visibleInputs[selectedInputIndex].element.focus()
+    #   else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+    #     DomUtils.removeElement hintContainingDiv
+    #     @remove()
+    #     return true
+
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a

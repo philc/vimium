@@ -10,8 +10,7 @@ class PostFindMode extends InsertModeBlocker
   constructor: (findModeAnchorNode) ->
     element = document.activeElement
 
-    super PostFindMode, element,
-      name: "post-find"
+    super PostFindMode, element, {name: "post-find"}
 
     return @exit() unless element and findModeAnchorNode
 

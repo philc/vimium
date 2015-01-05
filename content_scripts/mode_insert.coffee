@@ -27,12 +27,6 @@ class InsertMode extends ConstrainedMode
       keypress: (event) => @stopBubblingAndTrue
       keyup: (event) => @stopBubblingAndTrue
 
-    @push
-      focus: (event, extra) =>
-        handlerStack.alwaysContinueBubbling =>
-          # Inform InsertModeTrigger that InsertMode is already active.
-          extra.insertModeActive = true
-
     Mode.updateBadge()
 
   exit: (event=null) ->
