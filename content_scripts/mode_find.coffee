@@ -2,8 +2,8 @@
 
 # When we use find mode, the selection/focus can end up in a focusable/editable element.  In this situation,
 # PostFindMode handles two special cases:
-#   1. Suppress InsertModeTrigger.  This presents keyboard events from dropping us unintentionaly into insert
-#      mode.  Here, this is achieved by inheriting PostFindMode from InsertModeBlocker.
+#   1. Suppress InsertModeTrigger.  This prevents keyboard events from dropping us unintentionaly into insert
+#      mode.  Here, this is achieved by inheriting from InsertModeBlocker.
 #   2. If the very-next keystroke is Escape, then drop immediately into insert mode.
 #
 class PostFindMode extends InsertModeBlocker
@@ -31,11 +31,11 @@ class PostFindMode extends InsertModeBlocker
 
     # Install various ways in which we can leave this mode.
     @push
-      DOMActive: (event) => handlerStack.alwaysContinueBubbling => @exit()
-      click: (event) => handlerStack.alwaysContinueBubbling => @exit()
-      focus: (event) => handlerStack.alwaysContinueBubbling => @exit()
-      blur: (event) => handlerStack.alwaysContinueBubbling => @exit()
-      keydown: (event) => handlerStack.alwaysContinueBubbling => @exit() if document.activeElement != element
+      DOMActive: (event) => @alwaysContinueBubbling => @exit()
+      click: (event) => @alwaysContinueBubbling => @exit()
+      focus: (event) => @alwaysContinueBubbling => @exit()
+      blur: (event) => @alwaysContinueBubbling => @exit()
+      keydown: (event) => @alwaysContinueBubbling => @exit() if document.activeElement != element
 
 root = exports ? window
 root.PostFindMode = PostFindMode

@@ -359,12 +359,12 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    element = visibleInputs[selectedInputIndex].element.focus()
+    # If PostFindMode is active, then the target element may already have the focus, in which case, .focus()
+    # will not generate a "focus" event to trigger insert mode.  So we handle insert mode manually, here.
+    Mode.runIn InsertModeBlocker, ->
+      visibleInputs[selectedInputIndex].element.focus()
 
     if visibleInputs.length == 1
-      # If PostFindMode is was previously active, then element may already have had the focus.  In this case,
-      # focus(), above, will not have generated a "focus" event to trigger insert mode.  So we force insert
-      # mode now.
       new InsertMode visibleInputs[selectedInputIndex].element
       return
 
@@ -385,7 +385,7 @@ extend window,
     hintContainingDiv = DomUtils.addElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
 
-    class FocusSelector extends InsertModeBlocker
+    new class FocusSelector extends InsertModeBlocker
       constructor: ->
         super InsertModeBlocker, null,
           name: "focus-selector"
@@ -393,38 +393,15 @@ extend window,
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
               hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-              if event.shiftKey
-                if --selectedInputIndex == -1
-                  selectedInputIndex = hints.length - 1
-              else
-                if ++selectedInputIndex == hints.length
-                  selectedInputIndex = 0
+              selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+              selectedInputIndex %= hints.length
               hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
               visibleInputs[selectedInputIndex].element.focus()
               false
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-              DomUtils.removeElement hintContainingDiv
               @exit()
+              DomUtils.removeElement hintContainingDiv
               new InsertMode visibleInputs[selectedInputIndex].element
-
-    new FocusSelector()
-
-    # handlerStack.push keydown: (event) ->
-    #   if event.keyCode == KeyboardUtils.keyCodes.tab
-    #     hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-    #     if event.shiftKey
-    #       if --selectedInputIndex == -1
-    #         selectedInputIndex = hints.length - 1
-    #     else
-    #       if ++selectedInputIndex == hints.length
-    #         selectedInputIndex = 0
-    #     hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-    #     visibleInputs[selectedInputIndex].element.focus()
-    #   else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-    #     DomUtils.removeElement hintContainingDiv
-    #     @remove()
-    #     return true
-
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a

@@ -17,8 +17,8 @@ isEmbed =(element) ->
 isFocusable =(element) ->
   isEditable(element) or isEmbed element
 
+# This mode is installed when insert mode is active.
 class InsertMode extends ConstrainedMode
-
   constructor: (@insertModeLock=null) ->
     super @insertModeLock, InsertMode,
       name: "insert"
@@ -27,9 +27,9 @@ class InsertMode extends ConstrainedMode
       keypress: (event) => @stopBubblingAndTrue
       keyup: (event) => @stopBubblingAndTrue
 
-  exit: (event=null) ->
-    if event?.source == ExitOnEscapeMode and event?.event?.srcElement?
-      element = event.event.srcElement
+  exit: (extra=null) ->
+    if extra?.source == ExitOnEscapeMode and extra?.event?.srcElement?
+      element = extra.event.srcElement
       if isFocusable element
         # Remove the focus so the user can't just get himself back into insert mode by typing in the same
         # input box.
@@ -40,24 +40,26 @@ class InsertMode extends ConstrainedMode
     super()
 
 # Trigger insert mode:
-#   - On keydown event in a contentEditable element.
+#   - On a keydown event in a contentEditable element.
 #   - When a focusable element receives the focus.
 # Can be suppressed by setting extra.suppressInsertModeTrigger.
+#
+# This mode is permanently installed fairly low down on the handler stack.
 class InsertModeTrigger extends Mode
   constructor: ->
     super
       name: "insert-trigger"
       keydown: (event, extra) =>
-        handlerStack.alwaysContinueBubbling =>
+        @alwaysContinueBubbling =>
           unless extra.suppressInsertModeTrigger?
-            # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
-            # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to check
-            # whether the active element is contentEditable.
+            # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
+            # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
+            # check again whether the active element is contentEditable.
             new InsertMode() if document.activeElement?.isContentEditable
 
     @push
       focus: (event, extra) =>
-        handlerStack.alwaysContinueBubbling =>
+        @alwaysContinueBubbling =>
           unless extra.suppressInsertModeTrigger?
             new InsertMode event.target if isFocusable event.target
 
@@ -67,10 +69,9 @@ class InsertModeTrigger extends Mode
   @suppress: (extra) ->
     extra.suppressInsertModeTrigger = true
 
-# Disables InsertModeTrigger.  Used by find mode to prevent unintentionally dropping into insert mode on
-# focusable elements.
-# If @element is provided, then don't block focus events, and block keydown events only on the indicated
-# element.
+# Disables InsertModeTrigger.  Used by find mode and findFocus to prevent unintentionally dropping into insert
+# mode on focusable elements.
+# If @element is provided, then don't suppress focus events, and suppress keydown events only on @element.
 class InsertModeBlocker extends SingletonMode
   constructor: (singleton=InsertModeBlocker, @element=null, options={}) ->
     options.name ||= "insert-blocker"
@@ -79,13 +80,13 @@ class InsertModeBlocker extends SingletonMode
     unless @element?
       @push
         focus: (event, extra) =>
-          handlerStack.alwaysContinueBubbling =>
+          @alwaysContinueBubbling =>
             InsertModeTrigger.suppress extra
 
     if @element?.isContentEditable
       @push
         keydown: (event, extra) =>
-          handlerStack.alwaysContinueBubbling =>
+          @alwaysContinueBubbling =>
             InsertModeTrigger.suppress extra if event.srcElement == @element
 
 root = exports ? window

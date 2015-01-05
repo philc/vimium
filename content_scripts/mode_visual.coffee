@@ -1,20 +1,19 @@
 
 # Note. ConstrainedMode extends extends ExitOnEscapeMode.  So exit-on-escape is handled there.
 class VisualMode extends ConstrainedMode
-
   constructor: (element=document.body) ->
     super element, VisualMode,
       name: "visual"
       badge: "V"
 
       keydown: (event) =>
-        return Mode.suppressEvent
+        return @suppressEvent
 
       keypress: (event) =>
-        return Mode.suppressEvent
+        return @suppressEvent
 
       keyup: (event) =>
-        return Mode.suppressEvent
+        return @suppressEvent
 
 root = exports ? window
 root.VisualMode = VisualMode
