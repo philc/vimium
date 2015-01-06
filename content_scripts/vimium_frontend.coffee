@@ -460,13 +460,15 @@ onKeypress = (event) ->
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return handlerStack.stopBubblingAndTrue
-        if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar) or
-            # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
-            # element.  So we should also block other keystrokes (otherwise, it's weird).
-            InsertModeBlocker.isActive()
+        if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+
+  if InsertModeBlocker.isActive()
+    # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
+    # element.  So we should also block other keystrokes (otherwise, it's weird).
+    DomUtils.suppressEvent(event)
 
   return true
 
@@ -558,10 +560,12 @@ onKeydown = (event) ->
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event)) ||
-      # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
-      # element.  So we should also block other keystrokes (otherwise, it's weird).
-      InsertModeBlocker.isActive()))
+      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
+    DomUtils.suppressPropagation(event)
+    KeydownEvents.push event
+  else if InsertModeBlocker.isActive()
+    # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
+    # element.  So we should also block other keystrokes (otherwise, it's weird).
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
 
