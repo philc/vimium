@@ -391,15 +391,16 @@ extend window,
               false
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
               @exit()
+              @continueBubbling
 
         visibleInputs[selectedInputIndex].element.focus()
         @exit() if visibleInputs.length == 1
 
       exit: ->
         DomUtils.removeElement hintContainingDiv
+        visibleInputs[selectedInputIndex].element.focus()
         new InsertMode visibleInputs[selectedInputIndex].element
         super()
-        @continueBubbling
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
@@ -797,6 +798,12 @@ executeFind = (query, options) ->
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
+
+  # If the anchor node is outside of the active element, then blur the active element.  We don't want to leave
+  # behind an inappropriate active element. This fixes #1412.
+  if document.activeElement and not DomUtils.isDOMDescendant findModeAnchorNode, document.activeElement
+    document.activeElement.blur()
+
   result
 
 restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
