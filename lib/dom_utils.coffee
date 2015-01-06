@@ -185,5 +185,13 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
+  # Suppress the next keyup event for Escape.
+  suppressKeyupAfterEscape: (handlerStack) ->
+    handlerStack.push
+      keyup: (event) ->
+        return true unless KeyboardUtils.isEscape event
+        @remove()
+        false
+
 root = exports ? window
 root.DomUtils = DomUtils
