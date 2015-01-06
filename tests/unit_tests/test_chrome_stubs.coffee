@@ -42,6 +42,10 @@ exports.chrome =
     getAll: () -> true
 
   storage:
+    # chrome.storage.local
+    local:
+      set: ->
+
     # chrome.storage.onChanged
     onChanged:
       addListener: (func) -> @func = func

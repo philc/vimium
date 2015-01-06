@@ -1,0 +1,136 @@
+
+/* Vomnibar CSS */
+
+#vomnibar ol, #vomnibar ul {
+  list-style: none;
+  display: none;
+}
+
+#vomnibar {
+  display: block;
+  position: fixed;
+  width: calc(100% - 20px); /* adjusted to keep border radius and box-shadow visible*/
+  /*min-width: 400px;
+  top: 70px;
+  left: 50%;*/
+  top: 8px;
+  left: 8px;
+  /*margin: 0 0 0 -40%;*/
+  font-family: sans-serif;
+
+  background: #F1F1F1;
+  text-align: left;
+  border-radius: 4px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
+  border: 1px solid #aaa;
+  /* One less than hint markers and the help dialog. */
+  z-index: 2147483646;
+}
+
+#vomnibar input {
+  color: #000;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  height: 34px;
+  margin-bottom: 0;
+  padding: 4px;
+  background-color: white;
+  border-radius: 3px;
+  border: 1px solid #E8E8E8;
+  box-shadow: #444 0px 0px 1px;
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+}
+
+#vomnibar .vomnibarSearchArea {
+  display: block;
+  padding: 10px;
+  background-color: #F1F1F1;
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid #C6C9CE;
+}
+
+#vomnibar ul {
+  background-color: white;
+  border-radius: 0 0 4px 4px;
+  list-style: none;
+  padding: 10px 0;
+  padding-top: 0;
+}
+
+#vomnibar li {
+  border-bottom: 1px solid #ddd;
+  line-height: 1.1em;
+  padding: 7px 10px;
+  font-size: 16px;
+  color: black;
+  position: relative;
+  display: list-item;
+  margin: auto;
+}
+
+#vomnibar li:last-of-type {
+  border-bottom: none;
+}
+
+#vomnibar li .vomnibarTopHalf, #vomnibar li .vomnibarBottomHalf {
+  display: block;
+  overflow: hidden;
+}
+
+#vomnibar li .vomnibarBottomHalf {
+  font-size: 15px;
+  margin-top: 3px;
+  padding: 2px 0;
+}
+
+#vomnibar li .vomnibarIcon {
+  background-position-y: center;
+  background-size: 16px;
+  background-repeat: no-repeat;
+  padding-left: 20px;
+}
+
+#vomnibar li .vomnibarSource {
+  color: #777;
+  margin-right: 4px;
+}
+#vomnibar li .vomnibarRelevancy {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 5px;
+  background-color: white;
+  color: black;
+  font-family: monospace;
+  width: 100px;
+  overflow: hidden;
+}
+
+#vomnibar li .vomnibarUrl {
+  white-space: nowrap;
+  color: #224684;
+}
+
+#vomnibar li .vomnibarMatch {
+  font-weight: bold;
+  color: black;
+}
+
+#vomnibar li em, #vomnibar li .vomnibarTitle {
+  color: black;
+  margin-left: 4px;
+  font-weight: normal;
+}
+#vomnibar li em { font-style: italic; }
+#vomnibar li em .vomnibarMatch, #vomnibar li .vomnibarTitle .vomnibarMatch {
+  color: #333;
+  text-decoration: underline;
+}
+
+#vomnibar li.vomnibarSelected {
+  background-color: #BBCEE9;
+  font-weight: normal;
+}
+

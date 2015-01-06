@@ -57,6 +57,15 @@ settings =
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
 
+    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
+    # settings object so we don't keep trying to connect to the extension even though it's gone away.
+    @port.onDisconnect.addListener =>
+      @port = null
+      for own property, value of this
+        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
+        @[property] = (->) if "function" == typeof value and property != "get"
+
+
   get: (key) -> @values[key]
 
   set: (key, value) ->
@@ -109,6 +118,13 @@ initializePreDomReady = ->
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # If the port is closed, the background page has gone away (since we never close it ourselves). Disable all
+  # our event listeners, and stub out chrome.runtime.sendMessage/connect (to prevent errors).
+  # TODO(mrmr1993): Do some actual cleanup to free resources, hide UI, etc.
+  keyPort.onDisconnect.addListener ->
+    isEnabledForUrl = false
+    chrome.runtime.sendMessage = ->
+    chrome.runtime.connect = ->
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -183,6 +199,8 @@ initializeOnDomReady = ->
 
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+  CursorHider.init()
+  Vomnibar.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -436,15 +454,16 @@ onKeydown = (event) ->
         keyChar = "<" + keyChar + ">"
 
   if (isInsertMode() && KeyboardUtils.isEscape(event))
-    # Note that we can't programmatically blur out of Flash embeds from Javascript.
-    if (!isEmbed(event.srcElement))
+    if isEditable(event.srcElement) or isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
-      if (isEditable(event.srcElement))
-        event.srcElement.blur()
-      exitInsertMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
+      # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
+      # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+      # games.  See discussion in #1211 and #1194.
+      event.srcElement.blur()
+    exitInsertMode()
+    DomUtils.suppressEvent event
+    KeydownEvents.push event
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
@@ -1085,6 +1104,40 @@ Tween =
     else
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
+
+CursorHider =
+  #
+  # Hide the cursor when the browser scrolls, and prevent mouse from hovering while invisible.
+  #
+  cursorHideStyle: null
+  isScrolling: false
+
+  onScroll: (event) ->
+    CursorHider.isScrolling = true
+    unless CursorHider.cursorHideStyle.parentElement
+      document.head.appendChild CursorHider.cursorHideStyle
+
+  onMouseMove: (event) ->
+    if CursorHider.cursorHideStyle.parentElement and not CursorHider.isScrolling
+      CursorHider.cursorHideStyle.remove()
+    CursorHider.isScrolling = false
+
+  init: ->
+    # Temporarily disabled pending consideration of #1359 (in particular, whether cursor hiding is too fragile
+    # as to provide a consistent UX).
+    return
+
+    # Disable cursor hiding for Chrome versions less than 39.0.2171.71 due to a suspected browser error.
+    # See #1345 and #1348.
+    return unless Utils.haveChromeVersion "39.0.2171.71"
+
+    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle.innerHTML = """
+      body * {pointer-events: none !important; cursor: none !important;}
+      body, html {cursor: none !important;}
+    """
+    window.addEventListener "mousemove", @onMouseMove
+    window.addEventListener "scroll", @onScroll
 
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
