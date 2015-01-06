@@ -125,6 +125,10 @@ class SingletonMode extends Mode
       SingletonMode.instances[@singleton] = @
     super options
 
+  # Static method. Return whether the indicated mode (singleton) is currently active or not.
+  @isActive: (singleton) ->
+    @instances[singleton]?
+
   # Static method. If there's a singleton instance active, then kill it.
   @kill: (singleton) ->
     SingletonMode.instances[singleton].exit() if SingletonMode.instances[singleton]
