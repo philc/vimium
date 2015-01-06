@@ -44,7 +44,10 @@ class InsertMode extends ConstrainedMode
 # Trigger insert mode:
 #   - On a keydown event in a contentEditable element.
 #   - When a focusable element receives the focus.
-# Can be suppressed by setting extra.suppressInsertModeTrigger.
+#   - When an editable activeElement is clicked.  We cannot rely exclusively on focus events for triggering
+#     insert mode.  With find mode, an editable element can be active, but we're not in insert mode (see
+#     PostFindMode), and no focus event will be generated.  In this case, clicking on the element should
+#     activate insert mode (even if the insert-mode blocker is active).
 #
 # This mode is permanently installed fairly low down on the handler stack.
 class InsertModeTrigger extends Mode
@@ -53,53 +56,42 @@ class InsertModeTrigger extends Mode
       name: "insert-trigger"
       keydown: (event, extra) =>
         @alwaysContinueBubbling =>
-          unless extra.suppressInsertModeTrigger?
+          unless InsertModeBlocker.isActive()
             # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
             # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
             # check again whether the active element is contentEditable.
-            # NOTE.  There's no need to check InsertMode.isActive() here since, if insert mode *is* active,
-            # then we wouldn't be receiving this keyboard event.
             new InsertMode document.activeElement if document.activeElement?.isContentEditable
 
     @push
       focus: (event, extra) =>
         @alwaysContinueBubbling =>
-          unless InsertMode.isActive()
-            unless extra.suppressInsertModeTrigger?
-              new InsertMode event.target if isFocusable event.target
+          unless InsertMode.isActive() or InsertModeBlocker.isActive()
+            new InsertMode event.target if isFocusable event.target
 
       click: (event, extra) =>
         @alwaysContinueBubbling =>
           unless InsertMode.isActive()
-            # We cannot rely exclusively on focus events for triggering insert mode.  With find mode, an
-            # editable element can be active, but we're not in insert mode (see PostFindMode), and no focus
-            # event will be generated.  In this case, clicking on the element should activate insert mode.
-            if document.activeElement == event.target and isEditable event.target
-              new InsertMode event.target
+            # We cannot check InsertModeBlocker.isActive().  PostFindMode exits on clicks, so will already have
+            # gone.  So, instead, it sets an extra we can check.
+            if extra?.postFindModeExited
+              if document.activeElement == event.target and isEditable event.target
+                new InsertMode event.target
 
     # We may already have focussed something, so check.
     new InsertMode document.activeElement if document.activeElement and isFocusable document.activeElement
 
-  @suppress: (extra) ->
-    extra.suppressInsertModeTrigger = true
-
 # Disables InsertModeTrigger.  Used by find mode and findFocus to prevent unintentionally dropping into insert
 # mode on focusable elements.
-# If @element is provided, then don't suppress focus events, and suppress keydown events only on @element.
 class InsertModeBlocker extends SingletonMode
-  constructor: (@element=null, options={}) ->
+  constructor: (element, options={}) ->
     options.name ||= "insert-blocker"
     super InsertModeBlocker, options
 
-    unless @element?
-      @push
-        focus: (event, extra) => @alwaysContinueBubbling => InsertModeTrigger.suppress extra
+    @push
+      "blur": (event) => @alwaysContinueBubbling => @exit() if element? and event.srcElement == element
 
-    if @element?.isContentEditable
-      @push
-        keydown: (event, extra) =>
-          @alwaysContinueBubbling =>
-            InsertModeTrigger.suppress extra if event.srcElement == @element
+  # Static method. Return whether the insert-mode blocker is currently active or not.
+  @isActive: (singleton) -> SingletonMode.isActive InsertModeBlocker
 
 root = exports ? window
 root.InsertMode = InsertMode

@@ -32,11 +32,16 @@ class PostFindMode extends InsertModeBlocker
 
     # Install various ways in which we can leave this mode.
     @push
-      DOMActive: (event) => @alwaysContinueBubbling => @exit()
-      click: (event) => @alwaysContinueBubbling => @exit()
-      focus: (event) => @alwaysContinueBubbling => @exit()
-      blur: (event) => @alwaysContinueBubbling => @exit()
-      keydown: (event) => @alwaysContinueBubbling => @exit() if document.activeElement != element
+      DOMActive: (event, extra) => @alwaysContinueBubbling => @exit extra
+      click: (event, extra) => @alwaysContinueBubbling => @exit extra
+      focus: (event, extra) => @alwaysContinueBubbling => @exit extra
+      blur: (event, extra) => @alwaysContinueBubbling => @exit extra
+      keydown: (event, extra) => @alwaysContinueBubbling => @exit extra if document.activeElement != element
+
+  # Inform handlers further down the stack that PostFindMode exited on this event.
+  exit: (extra) ->
+    extra.postFindModeExited = true if extra
+    super()
 
 root = exports ? window
 root.PostFindMode = PostFindMode

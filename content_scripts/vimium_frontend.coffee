@@ -378,7 +378,7 @@ extend window,
 
     new class FocusSelector extends InsertModeBlocker
       constructor: ->
-        super InsertModeBlocker, null,
+        super null,
           name: "focus-selector"
           badge: "?"
           keydown: (event) =>
