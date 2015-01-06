@@ -46,8 +46,8 @@ class InsertMode extends ConstrainedMode
 #   - When a focusable element receives the focus.
 #   - When an editable activeElement is clicked.  We cannot rely exclusively on focus events for triggering
 #     insert mode.  With find mode, an editable element can be active, but we're not in insert mode (see
-#     PostFindMode), and no focus event will be generated.  In this case, clicking on the element should
-#     activate insert mode (even if the insert-mode blocker is active).
+#     PostFindMode), so no focus event will be generated.  In this case, clicking on the element should
+#     activate insert mode.
 #
 # This mode is permanently installed fairly low down on the handler stack.
 class InsertModeTrigger extends Mode
@@ -71,11 +71,8 @@ class InsertModeTrigger extends Mode
       click: (event, extra) =>
         @alwaysContinueBubbling =>
           unless InsertMode.isActive()
-            # We cannot check InsertModeBlocker.isActive().  PostFindMode exits on clicks, so will already have
-            # gone.  So, instead, it sets an extra we can check.
-            if extra?.postFindModeExited
-              if document.activeElement == event.target and isEditable event.target
-                new InsertMode event.target
+            if document.activeElement == event.target and isEditable event.target
+              new InsertMode event.target
 
     # We may already have focussed something, so check.
     new InsertMode document.activeElement if document.activeElement and isFocusable document.activeElement
