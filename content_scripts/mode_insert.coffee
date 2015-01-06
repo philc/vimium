@@ -87,9 +87,9 @@ class InsertModeTrigger extends Mode
 # mode on focusable elements.
 # If @element is provided, then don't suppress focus events, and suppress keydown events only on @element.
 class InsertModeBlocker extends SingletonMode
-  constructor: (singleton=InsertModeBlocker, @element=null, options={}) ->
+  constructor: (@element=null, options={}) ->
     options.name ||= "insert-blocker"
-    super singleton, options
+    super InsertModeBlocker, options
 
     unless @element?
       @push

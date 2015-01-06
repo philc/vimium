@@ -67,6 +67,8 @@ class Mode
     console.log @count, "create:", @name
 
     @handlers = []
+    @exitHandlers = []
+
     @push
       keydown: @keydown
       keypress: @keypress
@@ -78,9 +80,13 @@ class Mode
   push: (handlers) ->
     @handlers.push handlerStack.push handlers
 
+  onExit: (handler) ->
+    @exitHandlers.push handler
+
   exit: ->
     if @modeIsActive
       console.log @count, "exit:", @name
+      handler() for handler in @exitHandlers
       handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
       Mode.updateBadge()
