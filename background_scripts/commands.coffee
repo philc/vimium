@@ -285,7 +285,7 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
-  enterVisualMode: ["Enter visual mode", { noRepeat: true }]
+  enterVisualMode: ["Enter visual mode (not yet implemented)", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
