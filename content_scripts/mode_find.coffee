@@ -15,9 +15,10 @@ class PostFindMode extends InsertModeBlocker
 
     return @exit() unless element and findModeAnchorNode
 
-    # Special cases only arise if the active element is focusable.  So, exit immediately if it is not.
+    # Special cases only arise if the active element can take input.  So, exit immediately if it cannot not.
     canTakeInput = DomUtils.isSelectable(element) and DomUtils.isDOMDescendant findModeAnchorNode, element
     canTakeInput ||= element.isContentEditable
+    canTakeInput ||= findModeAnchorNode?.parentElement?.isContentEditable
     return @exit() unless canTakeInput
 
     self = @
