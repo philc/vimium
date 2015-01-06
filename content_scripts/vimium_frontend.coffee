@@ -359,15 +359,6 @@ extend window,
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
 
-    # If PostFindMode is active, then the target element may already have the focus, in which case, .focus()
-    # will not generate a "focus" event to trigger insert mode.  So we handle insert mode manually, here.
-    Mode.runIn InsertModeBlocker, ->
-      visibleInputs[selectedInputIndex].element.focus()
-
-    if visibleInputs.length == 1
-      new InsertMode visibleInputs[selectedInputIndex].element
-      return
-
     hints = for tuple in visibleInputs
       hint = document.createElement("div")
       hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
@@ -400,8 +391,15 @@ extend window,
               false
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
               @exit()
-              DomUtils.removeElement hintContainingDiv
-              new InsertMode visibleInputs[selectedInputIndex].element
+
+        visibleInputs[selectedInputIndex].element.focus()
+        @exit() if visibleInputs.length == 1
+
+      exit: ->
+        DomUtils.removeElement hintContainingDiv
+        new InsertMode visibleInputs[selectedInputIndex].element
+        super()
+        @continueBubbling
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
