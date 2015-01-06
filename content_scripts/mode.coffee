@@ -151,6 +151,11 @@ class ExitOnEscapeMode extends SingletonMode
         @exit
           source: ExitOnEscapeMode
           event: event
+        # Suppress the corresponding keyup event too.
+        handlerStack.push
+          keyup: (event) ->
+            @remove() if KeyboardUtils.isEscape event
+            @suppressEvent
         @suppressEvent
 
 # This mode exits when element (if defined) loses the focus.
