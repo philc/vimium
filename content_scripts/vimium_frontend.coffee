@@ -371,10 +371,9 @@ extend window,
 
       hint
 
-    hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-
-    hintContainingDiv = DomUtils.addElementList(hints,
-      { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
+    hintContainingDiv = DomUtils.addElementList hints,
+      id: "vimiumInputMarkerContainer"
+      className: "vimiumReset"
 
     new class FocusSelector extends InsertModeBlocker
       constructor: ->
@@ -394,11 +393,8 @@ extend window,
               @exit()
               @continueBubbling
 
-        # TODO. InsertModeBlocker is no longer a singleton.  Need to make this a singleton.  Fix once class
-        # hierarchy is removed.
-
-        visibleInputs[selectedInputIndex].element.focus()
         @exit() if visibleInputs.length == 1
+        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
       exit: ->
         DomUtils.removeElement hintContainingDiv
@@ -991,12 +987,10 @@ showFindModeHUDForQuery = ->
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
-  # window.findMode = true # Same hack, see comment at window.findMode definition.
   HUD.show("/")
   new FindMode()
 
 exitFindMode = ->
-  window.findMode = false # Same hack, see comment at window.findMode definition.
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
