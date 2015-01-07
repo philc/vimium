@@ -15,8 +15,10 @@ class HandlerStack
     @stopBubblingAndFalse = new Object()
 
   # Adds a handler to the stack. Returns a unique ID for that handler that can be used to remove it later.
+  # We use unshift (which is more expensive than push) so that bubbleEvent can just iterate over the stack in
+  # the normal order.
   push: (handler) ->
-    @stack.push handler
+    @stack.unshift handler
     handler.id = ++@counter
 
   # Called whenever we receive a key or other event. Each individual handler has the option to stop the
@@ -25,26 +27,28 @@ class HandlerStack
   bubbleEvent: (type, event) ->
     # extra is passed to each handler.  This allows handlers to pass information down the stack.
     extra = {}
-    for i in [(@stack.length - 1)..0] by -1
-      handler = @stack[i]
-      # We need to check for existence of handler because the last function call may have caused the release
-      # of more than one handler.
-      if handler and handler.id and handler[type]
+    for handler in @stack[..] # Take a copy of @stack, so that concurrent removes do not interfere.
+      # We need to check whether the handler has been removed (handler.id == null).
+      if handler and handler.id
         @currentId = handler.id
-        passThrough = handler[type].call @, event, extra
-        if not passThrough
-          DomUtils.suppressEvent(event) if @isChromeEvent event
-          return false
-        return true if passThrough == @stopBubblingAndTrue
-        return false if passThrough == @stopBubblingAndFalse
+        # A handler can register a handler for type "all", which will be invoked on all events.  Such an "all"
+        # handler will be invoked first.
+        for func in [ handler.all, handler[type] ]
+          if func
+            passThrough = func.call @, event, extra
+            if not passThrough
+              DomUtils.suppressEvent(event) if @isChromeEvent event
+              return false
+            return true if passThrough == @stopBubblingAndTrue
+            return false if passThrough == @stopBubblingAndFalse
     true
 
   remove: (id = @currentId) ->
     # This is more expense than splicing @stack, but better because splicing can interfere with concurrent
     # bubbleEvents.
     @stack = @stack.filter (handler) ->
-      # Mark this handler as removed (to notify any concurrent bubbleEvent call).
-      if handler.id == id then handler.id = null
+      # Mark this handler as removed (so concurrent bubbleEvents will know not to invoke it).
+      handler.id = null if handler.id == id
       handler?.id?
 
   # The handler stack handles chrome events (which may need to be suppressed) and internal (fake) events.

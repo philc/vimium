@@ -75,6 +75,7 @@ class Mode
       keyup: @keyup
       updateBadge: (badge) => @alwaysContinueBubbling => @chooseBadge badge
 
+    @registerSingleton options.singleton if options.singleton
     Mode.updateBadge() if @badge
 
   push: (handlers) ->
@@ -115,6 +116,17 @@ class Mode
     mode = new mode()
     func()
     mode.exit()
+
+  # Some modes are singletons: there may be at most one instance active at any one time.  A mode is a
+  # singleton if options.singleton is truthy.  The value of options.singleton should be the key which is
+  # required to be unique.  See PostFindMode for an example.
+  @singletons: {}
+  registerSingleton: (singleton) ->
+    singletons = Mode.singletons
+    singletons[singleton].exit() if singletons[singleton]
+    singletons[singleton] = @
+    @onExit =>
+      delete singletons[singleton] if singletons[singleton] == @
 
 # A SingletonMode is a Mode of which there may be at most one instance (of @singleton) active at any one time.
 # New instances cancel previously-active instances on startup.

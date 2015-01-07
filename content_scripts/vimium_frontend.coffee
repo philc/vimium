@@ -378,9 +378,10 @@ extend window,
 
     new class FocusSelector extends InsertModeBlocker
       constructor: ->
-        super null,
+        super
           name: "focus-selector"
           badge: "?"
+          singleton: FocusSelector
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
               hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
@@ -388,10 +389,13 @@ extend window,
               selectedInputIndex %= hints.length
               hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
               visibleInputs[selectedInputIndex].element.focus()
-              false
+              @suppressEvent
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
               @exit()
               @continueBubbling
+
+        # TODO. InsertModeBlocker is no longer a singleton.  Need to make this a singleton.  Fix once class
+        # hierarchy is removed.
 
         visibleInputs[selectedInputIndex].element.focus()
         @exit() if visibleInputs.length == 1
@@ -441,7 +445,7 @@ KeydownEvents =
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
 
-onKeypress = (event) ->
+onKeypress = (event, extra) ->
   keyChar = ""
 
   # Ignore modifier keys by themselves.
@@ -465,14 +469,15 @@ onKeypress = (event) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-  if InsertModeBlocker.isActive()
+  if InsertModeBlocker.isActive extra
     # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
-    # element.  So we should also block other keystrokes (otherwise, it's weird).
+    # element.  So we should also block other keystrokes (otherwise, it's weird).  There's some controversy as
+    # to whether this is the right thing to do.  See discussion in #1415.
     DomUtils.suppressEvent(event)
 
   return true
 
-onKeydown = (event) ->
+onKeydown = (event, extra) ->
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -563,9 +568,10 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
-  else if InsertModeBlocker.isActive()
+  else if InsertModeBlocker.isActive extra
     # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
-    # element.  So we should also block other keystrokes (otherwise, it's weird).
+    # element.  So we should also block other keystrokes (otherwise, it's weird).  There's some controversy as
+    # to whether this is the right thing to do.  See discussion in #1415.
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
 

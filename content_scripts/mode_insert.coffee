@@ -55,21 +55,23 @@ class InsertModeTrigger extends Mode
     super
       name: "insert-trigger"
       keydown: (event, extra) =>
-        @alwaysContinueBubbling =>
-          unless InsertModeBlocker.isActive()
-            # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
-            # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
-            # check again whether the active element is contentEditable.
-            new InsertMode document.activeElement if document.activeElement?.isContentEditable
+        return @continueBubbling if InsertModeBlocker.isActive extra
+        # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
+        # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
+        # check again whether the active element is contentEditable.
+        return @continueBubbling unless document.activeElement?.isContentEditable
+        new InsertMode document.activeElement
+        @stopBubblingAndTrue
 
     @push
       focus: (event, extra) =>
         @alwaysContinueBubbling =>
-          unless InsertMode.isActive() or InsertModeBlocker.isActive()
+          unless InsertMode.isActive() or InsertModeBlocker.isActive extra
             new InsertMode event.target if isFocusable event.target
 
       click: (event, extra) =>
         @alwaysContinueBubbling =>
+          # Do not check InsertModeBlocker.isActive() here.  A user click overrides the blocker.
           unless InsertMode.isActive()
             if document.activeElement == event.target and isEditable event.target
               new InsertMode event.target
@@ -79,16 +81,16 @@ class InsertModeTrigger extends Mode
 
 # Disables InsertModeTrigger.  Used by find mode and findFocus to prevent unintentionally dropping into insert
 # mode on focusable elements.
-class InsertModeBlocker extends SingletonMode
-  constructor: (element, options={}) ->
+class InsertModeBlocker extends Mode
+  constructor: (options={}) ->
     options.name ||= "insert-blocker"
-    super InsertModeBlocker, options
+    super options
 
     @push
-      "blur": (event) => @alwaysContinueBubbling => @exit() if element? and event.srcElement == element
+      "all": (event, extra) => @alwaysContinueBubbling => extra.isInsertModeBlockerActive = true
 
-  # Static method. Return whether the insert-mode blocker is currently active or not.
-  @isActive: (singleton) -> SingletonMode.isActive InsertModeBlocker
+  # Static method. Return whether an insert-mode blocker is currently active or not.
+  @isActive: (extra) -> extra?.isInsertModeBlockerActive
 
 root = exports ? window
 root.InsertMode = InsertMode
