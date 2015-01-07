@@ -27,7 +27,7 @@
 # provided below:
 #
 #   SingletonMode: ensures that at most one instance of the mode is active at any one time.
-#   ConstrainedMode: exits the mode if the an indicated element loses the focus.
+#   ExitOnBlur: exits the mode if the an indicated element loses the focus.
 #   ExitOnEscapeMode: exits the mode on escape.
 #   StateMode: tracks the current Vimium state in @enabled and @passKeys.
 #
@@ -155,12 +155,11 @@ class ExitOnEscapeMode extends SingletonMode
         @suppressEvent
 
 # This mode exits when element (if defined) loses the focus.
-class ConstrainedMode extends ExitOnEscapeMode
+class ExitOnBlur extends ExitOnEscapeMode
   constructor: (element, singleton=null, options={}) ->
     super singleton, options
 
-    if element?.focus?
-      element.focus()
+    if element?
       @push
         "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == element
 
@@ -205,6 +204,6 @@ new class BadgeMode extends StateMode
 root = exports ? window
 root.Mode = Mode
 root.SingletonMode = SingletonMode
-root.ConstrainedMode = ConstrainedMode
+root.ExitOnBlur = ExitOnBlur
 root.StateMode = StateMode
 root.ExitOnEscapeMode = ExitOnEscapeMode

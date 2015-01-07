@@ -18,7 +18,7 @@ isFocusable =(element) ->
   isEditable(element) or isEmbed element
 
 # This mode is installed when insert mode is active.
-class InsertMode extends ConstrainedMode
+class InsertMode extends ExitOnBlur
   constructor: (@insertModeLock=null) ->
     super @insertModeLock, InsertMode,
       name: "insert"

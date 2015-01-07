@@ -1,6 +1,6 @@
 
-# Note. ConstrainedMode extends extends ExitOnEscapeMode.  So exit-on-escape is handled there.
-class VisualMode extends ConstrainedMode
+# Note. ExitOnBlur extends extends ExitOnEscapeMode.  So exit-on-escape is handled there.
+class VisualMode extends ExitOnBlur
   constructor: (element=null) ->
     super element, null,
       name: "visual"
