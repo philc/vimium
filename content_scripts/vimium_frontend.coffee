@@ -469,7 +469,7 @@ onKeypress = (event, extra) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-  if InsertModeBlocker.isActive extra
+  if InsertModeTrigger.isDisabled extra
     # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
     # element.  So we should also block other keystrokes (otherwise, it's weird).  There's some controversy as
     # to whether this is the right thing to do.  See discussion in #1415.
@@ -568,7 +568,7 @@ onKeydown = (event, extra) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
-  else if InsertModeBlocker.isActive extra
+  else if InsertModeTrigger.isDisabled extra
     # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
     # element.  So we should also block other keystrokes (otherwise, it's weird).  There's some controversy as
     # to whether this is the right thing to do.  See discussion in #1415.
@@ -747,11 +747,12 @@ handleEnterForFindMode = ->
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
-class FindMode extends ExitOnEscapeMode
+class FindMode extends Mode
   constructor: ->
-    super FindMode,
+    super
       name: "find"
       badge: "/"
+      exitOnEscape: true
 
       keydown: (event) =>
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
@@ -773,9 +774,9 @@ class FindMode extends ExitOnEscapeMode
 
       keyup: (event) => @suppressEvent
 
-  exit: (extra) ->
-    handleEscapeForFindMode() if extra?.source == ExitOnEscapeMode
+  exit: (event) ->
     super()
+    handleEscapeForFindMode() if event and KeyboardUtils.isEscape event
     new PostFindMode findModeAnchorNode
 
 performFindInPlace = ->

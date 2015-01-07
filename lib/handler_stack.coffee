@@ -15,11 +15,10 @@ class HandlerStack
     @stopBubblingAndFalse = new Object()
 
   # Adds a handler to the stack. Returns a unique ID for that handler that can be used to remove it later.
-  # We use unshift (which is more expensive than push) so that bubbleEvent can just iterate over the stack in
-  # the normal order.
   push: (handler) ->
-    @stack.unshift handler
     handler.id = ++@counter
+    @stack.push handler
+    handler.id
 
   # Called whenever we receive a key or other event. Each individual handler has the option to stop the
   # event's propagation by returning a falsy value, or stop bubbling by returning @stopBubblingAndFalse or
@@ -27,8 +26,10 @@ class HandlerStack
   bubbleEvent: (type, event) ->
     # extra is passed to each handler.  This allows handlers to pass information down the stack.
     extra = {}
-    for handler in @stack[..] # Take a copy of @stack, so that concurrent removes do not interfere.
-      # We need to check whether the handler has been removed (handler.id == null).
+    # We take a copy of the array, here, in order to avoid interference from concurrent removes (for example,
+    # to avoid calling the same handler twice).
+    for handler in @stack[..].reverse()
+      # A handler may have been removed (handler.id == null).
       if handler and handler.id
         @currentId = handler.id
         # A handler can register a handler for type "all", which will be invoked on all events.  Such an "all"
@@ -44,12 +45,12 @@ class HandlerStack
     true
 
   remove: (id = @currentId) ->
-    # This is more expense than splicing @stack, but better because splicing can interfere with concurrent
-    # bubbleEvents.
-    @stack = @stack.filter (handler) ->
-      # Mark this handler as removed (so concurrent bubbleEvents will know not to invoke it).
-      handler.id = null if handler.id == id
-      handler?.id?
+    for i in [(@stack.length - 1)..0] by -1
+      handler = @stack[i]
+      if handler.id == id
+        handler.id = null
+        @stack.splice(i, 1)
+        break
 
   # The handler stack handles chrome events (which may need to be suppressed) and internal (fake) events.
   # This checks whether that the event at hand is a chrome event.

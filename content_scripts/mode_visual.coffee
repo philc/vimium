@@ -1,10 +1,11 @@
 
-# Note. ExitOnBlur extends extends ExitOnEscapeMode.  So exit-on-escape is handled there.
-class VisualMode extends ExitOnBlur
+class VisualMode extends Mode
   constructor: (element=null) ->
-    super element, null,
+    super
       name: "visual"
       badge: "V"
+      exitOnEscape: true
+      exitOnBlur: element
 
       keydown: (event) =>
         return @suppressEvent

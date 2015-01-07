@@ -1,50 +1,46 @@
-# Modes.
 #
 # A mode implements a number of keyboard event handlers which are pushed onto the handler stack when the mode
-# starts, and poped when the mode exits.  The Mode base class takes as single argument options which can
-# define:
+# is activated, and popped off when it is deactivated.  The Mode class constructor takes a single argument,
+# options, which can define (amongst other things):
 #
 # name:
 #   A name for this mode.
 #
 # badge:
-#   A badge (to appear on the browser popup) for this mode.
-#   Optional.  Define a badge is the badge is constant.  Otherwise, do not define a badge and override the
-#   chooseBadge method instead.  Or, if the mode *never* shows a badge, then do neither.
+#   A badge (to appear on the browser popup).
+#   Optional.  Define a badge if the badge is constant.  Otherwise, do not define a badge, but override
+#   instead the chooseBadge method.  Or, if the mode *never* shows a badge, then do neither.
 #
 # keydown:
 # keypress:
 # keyup:
 #   Key handlers.  Optional: provide these as required.  The default is to continue bubbling all key events.
 #
-# Additional handlers associated with the mode can be added by using the push method.  For example, if a mode
+# Further options are described in the constructor, below.
+#
+# Additional handlers associated with a mode can be added by using the push method.  For example, if a mode
 # responds to "focus" events, then push an additional handler:
 #   @push
 #     "focus": (event) => ....
-# Any such additional handlers are removed when the mode exits.
+# Any such handlers are removed when the mode is deactivated.
 #
-# New mode types are created by inheriting from Mode or one of its sub-classes.  Some generic cub-classes are
-# provided below:
-#
-#   SingletonMode: ensures that at most one instance of the mode is active at any one time.
-#   ExitOnBlur: exits the mode if the an indicated element loses the focus.
-#   ExitOnEscapeMode: exits the mode on escape.
-#   StateMode: tracks the current Vimium state in @enabled and @passKeys.
-#
-# To install and existing mode, use:
+# To activate a mode, use:
 #   myMode = new MyMode()
 #
-# To remove a mode, use:
-#   myMode.exit() # externally triggered.
+# Or (usually better) just:
+#   new MyMode()
+# It is usually not necessary to retain a reference to the mode object.
+#
+# To deactivate a mode, use:
 #   @exit()       # internally triggered (more common).
+#   myMode.exit() # externally triggered.
 #
 
 # For debug only; to be stripped out.
 count = 0
 
 class Mode
-  # Static.
-  @modes: []
+  @debug = true
 
   # Constants; readable shortcuts for event-handler return values.
   continueBubbling: true
@@ -52,31 +48,62 @@ class Mode
   stopBubblingAndTrue: handlerStack.stopBubblingAndTrue
   stopBubblingAndFalse: handlerStack.stopBubblingAndFalse
 
-  # Default values.
-  name: ""
-  badge: ""
-  keydown: null # null will be ignored by handlerStack (so it's a safe default).
-  keypress: null
-  keyup: null
-
   constructor: (options={}) ->
-    Mode.modes.unshift @
-    extend @, options
-    @modeIsActive = true
-    @count = ++count
-    console.log @count, "create:", @name
-
+    @options = options
     @handlers = []
     @exitHandlers = []
+    @modeIsActive = true
+    @badge = options.badge || ""
+    @name = options.name || "anonymous"
+
+    @count = ++count
+    console.log @count, "create:", @name if Mode.debug
 
     @push
-      keydown: @keydown
-      keypress: @keypress
-      keyup: @keyup
+      keydown: options.keydown || null
+      keypress: options.keypress || null
+      keyup: options.keyup || null
       updateBadge: (badge) => @alwaysContinueBubbling => @chooseBadge badge
 
+    # Some modes are singletons: there may be at most one instance active at any one time.  A mode is a
+    # singleton if options.singleton is truthy.  The value of options.singleton should be the key which is
+    # required to be unique.  See PostFindMode for an example.
+    # New instances deactivate existing instances as they themselves are activated.
     @registerSingleton options.singleton if options.singleton
+
+    # If options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.  The
+    # triggering keyboard event will be passed to the mode's @exit() method.
+    if options.exitOnEscape
+      # Note. This handler ends up above the mode's own key handlers on the handler stack, so it takes
+      # priority.
+      @push
+        "keydown": (event) =>
+          return @continueBubbling unless KeyboardUtils.isEscape event
+          @exit event
+          DomUtils.suppressKeyupAfterEscape handlerStack
+          @suppressEvent
+
+    # If options.exitOnBlur is truthy, then it should be an element.  The mode will exit when that element
+    # loses the focus.
+    if options.exitOnBlur
+      @push
+        "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == options.exitOnBlur
+
+    # If options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
+    # and calls @registerStateChange() (if defined) whenever the state changes.
+    if options.trackState
+      @enabled = false
+      @passKeys = ""
+      @push
+        "registerStateChange": ({enabled: enabled, passKeys: passKeys}) =>
+          @alwaysContinueBubbling =>
+            if enabled != @enabled or passKeys != @passKeys
+              @enabled = enabled
+              @passKeys = passKeys
+              @registerStateChange?()
+
     Mode.updateBadge() if @badge
+    # End of Mode.constructor().
 
   push: (handlers) ->
     @handlers.push handlerStack.push handlers
@@ -86,10 +113,9 @@ class Mode
 
   exit: ->
     if @modeIsActive
-      console.log @count, "exit:", @name
+      console.log @count, "exit:", @name if Mode.debug
       handler() for handler in @exitHandlers
       handlerStack.remove handlerId for handlerId in @handlers
-      Mode.modes = Mode.modes.filter (mode) => mode != @
       Mode.updateBadge()
       @modeIsActive = false
 
@@ -111,97 +137,30 @@ class Mode
         handler: "setBadge"
         badge: badge.badge
 
-  # Temporarily install a mode to call a function.
+  # Temporarily install a mode to protect a function call, then exit the mode.  For example, temporarily
+  # install an InsertModeBlocker.
   @runIn: (mode, func) ->
     mode = new mode()
     func()
     mode.exit()
 
-  # Some modes are singletons: there may be at most one instance active at any one time.  A mode is a
-  # singleton if options.singleton is truthy.  The value of options.singleton should be the key which is
-  # required to be unique.  See PostFindMode for an example.
-  @singletons: {}
-  registerSingleton: (singleton) ->
-    singletons = Mode.singletons
-    singletons[singleton].exit() if singletons[singleton]
-    singletons[singleton] = @
-    @onExit =>
-      delete singletons[singleton] if singletons[singleton] == @
+  registerSingleton: do ->
+    singletons = {} # Static.
+    (key) ->
+      singletons[key].exit() if singletons[key]
+      singletons[key] = @
 
-# A SingletonMode is a Mode of which there may be at most one instance (of @singleton) active at any one time.
-# New instances cancel previously-active instances on startup.
-class SingletonMode extends Mode
-  @instances: {}
+      @onExit => delete singletons[key] if singletons[key] == @
 
-  exit: ->
-    delete SingletonMode.instances[@singleton] if @singleton?
-    super()
-
-  constructor: (@singleton, options={}) ->
-    if @singleton?
-      SingletonMode.kill @singleton
-      SingletonMode.instances[@singleton] = @
-    super options
-
-  # Static method. Return whether the indicated mode (singleton) is currently active or not.
-  @isActive: (singleton) ->
-    @instances[singleton]?
-
-  # Static method. If there's a singleton instance active, then kill it.
-  @kill: (singleton) ->
-    SingletonMode.instances[singleton].exit() if SingletonMode.instances[singleton]
-
-# This mode exits when the user hits Esc.
-class ExitOnEscapeMode extends SingletonMode
-  constructor: (singleton, options) ->
-    super singleton, options
-
-    # NOTE. This handler ends up above the mode's own key handlers on the handler stack, so it takes priority.
-    @push
-      "keydown": (event) =>
-        return @continueBubbling unless KeyboardUtils.isEscape event
-        @exit
-          source: ExitOnEscapeMode
-          event: event
-        DomUtils.suppressKeyupAfterEscape handlerStack
-        @suppressEvent
-
-# This mode exits when element (if defined) loses the focus.
-class ExitOnBlur extends ExitOnEscapeMode
-  constructor: (element, singleton=null, options={}) ->
-    super singleton, options
-
-    if element?
-      @push
-        "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == element
-
-# The state mode tracks the enabled state in @enabled and @passKeys.  It calls @registerStateChange() whenever
-# the state changes.  The state is distributed by bubbling a "registerStateChange" event down the handler
-# stack.
-class StateMode extends Mode
-  constructor: (options) ->
-    @enabled = false
-    @passKeys = ""
-    super options
-
-    @push
-      "registerStateChange": ({enabled: enabled, passKeys: passKeys}) =>
-        @alwaysContinueBubbling =>
-          if enabled != @enabled or passKeys != @passKeys
-            @enabled = enabled
-            @passKeys = passKeys
-            @registerStateChange()
-
-  # Overridden by sub-classes.
-  registerStateChange: ->
-
-# BadgeMode is a psuedo mode for triggering badge updates on focus changes and state updates. It sits at the
+# BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
-# badge choices of all other modes.
-new class BadgeMode extends StateMode
+# badge choices of other modes.
+# Note.  We also create the the one-and-only instance, here.
+new class BadgeMode extends Mode
   constructor: (options) ->
     super
       name: "badge"
+      trackState: true
 
     @push
       "focus": => @alwaysContinueBubbling => Mode.updateBadge()
@@ -215,7 +174,3 @@ new class BadgeMode extends StateMode
 
 root = exports ? window
 root.Mode = Mode
-root.SingletonMode = SingletonMode
-root.ExitOnBlur = ExitOnBlur
-root.StateMode = StateMode
-root.ExitOnEscapeMode = ExitOnEscapeMode

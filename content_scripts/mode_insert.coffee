@@ -18,36 +18,35 @@ isFocusable =(element) ->
   isEditable(element) or isEmbed element
 
 # This mode is installed when insert mode is active.
-class InsertMode extends ExitOnBlur
-  constructor: (@insertModeLock=null) ->
-    super @insertModeLock, InsertMode,
+class InsertMode extends Mode
+  constructor: (@insertModeLock = null) ->
+    super
       name: "insert"
       badge: "I"
       keydown: (event) => @stopBubblingAndTrue
       keypress: (event) => @stopBubblingAndTrue
       keyup: (event) => @stopBubblingAndTrue
+      singleton: InsertMode
+      exitOnEscape: true
+      exitOnBlur: @insertModeLock
 
-  exit: (extra={}) ->
+  exit: (event = null) ->
     super()
-    if extra.source == ExitOnEscapeMode and extra.event?.srcElement?
-      if isFocusable extra.event.srcElement
+    if @insertModeLock and event?.srcElement == @insertModeLock
+      if isFocusable @insertModeLock
         # Remove the focus so the user can't just get himself back into insert mode by typing in the same
         # input box.
         # NOTE(smblott, 2014/12/22) Including embeds for .blur() here is experimental.  It appears to be the
         # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
         # games.  See discussion in #1211 and #1194.
-        extra.event.srcElement.blur()
+        @insertModeLock.blur()
 
-  # Static method. Return whether insert mode is currently active or not.
-  @isActive: (singleton) -> SingletonMode.isActive InsertMode
+  # Static method. Check whether insert mode is currently active.
+  @isActive: (extra) -> extra?.insertModeIsActive
 
 # Trigger insert mode:
 #   - On a keydown event in a contentEditable element.
 #   - When a focusable element receives the focus.
-#   - When an editable activeElement is clicked.  We cannot rely exclusively on focus events for triggering
-#     insert mode.  With find mode, an editable element can be active, but we're not in insert mode (see
-#     PostFindMode), so no focus event will be generated.  In this case, clicking on the element should
-#     activate insert mode.
 #
 # This mode is permanently installed fairly low down on the handler stack.
 class InsertModeTrigger extends Mode
@@ -55,7 +54,7 @@ class InsertModeTrigger extends Mode
     super
       name: "insert-trigger"
       keydown: (event, extra) =>
-        return @continueBubbling if InsertModeBlocker.isActive extra
+        return @continueBubbling if InsertModeTrigger.isDisabled extra
         # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
         # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
         # check again whether the active element is contentEditable.
@@ -66,31 +65,29 @@ class InsertModeTrigger extends Mode
     @push
       focus: (event, extra) =>
         @alwaysContinueBubbling =>
-          unless InsertMode.isActive() or InsertModeBlocker.isActive extra
-            new InsertMode event.target if isFocusable event.target
+          return @continueBubbling if InsertModeTrigger.isDisabled extra
+          return if not isFocusable event.target
+          new InsertMode event.target
 
-      click: (event, extra) =>
-        @alwaysContinueBubbling =>
-          # Do not check InsertModeBlocker.isActive() here.  A user click overrides the blocker.
-          unless InsertMode.isActive()
-            if document.activeElement == event.target and isEditable event.target
-              new InsertMode event.target
+    # We may already have focussed an input, so check.
+    new InsertMode document.activeElement if document.activeElement and isEditable document.activeElement
 
-    # We may already have focussed something, so check.
-    new InsertMode document.activeElement if document.activeElement and isFocusable document.activeElement
+  # Allow other modes to disable this trigger. Static.
+  @disable: (extra) -> extra.disableInsertModeTrigger = true
+  @isDisabled: (extra) -> extra?.disableInsertModeTrigger
 
-# Disables InsertModeTrigger.  Used by find mode and findFocus to prevent unintentionally dropping into insert
-# mode on focusable elements.
+# Disables InsertModeTrigger.  This is used by find mode and by findFocus to prevent unintentionally dropping
+# into insert mode on focusable elements.
 class InsertModeBlocker extends Mode
-  constructor: (options={}) ->
+  constructor: (options = {}) ->
     options.name ||= "insert-blocker"
     super options
 
     @push
-      "all": (event, extra) => @alwaysContinueBubbling => extra.isInsertModeBlockerActive = true
-
-  # Static method. Return whether an insert-mode blocker is currently active or not.
-  @isActive: (extra) -> extra?.isInsertModeBlockerActive
+      "focus": (event, extra) => @alwaysContinueBubbling -> InsertModeTrigger.disable extra
+      "keydown": (event, extra) => @alwaysContinueBubbling -> InsertModeTrigger.disable extra
+      "keypress": (event, extra) => @alwaysContinueBubbling -> InsertModeTrigger.disable extra
+      "keyup": (event, extra) => @alwaysContinueBubbling -> InsertModeTrigger.disable extra
 
 root = exports ? window
 root.InsertMode = InsertMode
