@@ -2,6 +2,8 @@ class UIComponent
   iframeElement: null
   iframePort: null
   showing: null
+  loaded: false
+  queuedActions: []
 
   constructor: (iframeUrl, className, @handleMessage) ->
     @iframeElement = document.createElement "iframe"
@@ -23,11 +25,30 @@ class UIComponent
     # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
     chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) =>
       @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
+      @loaded = true
+      @onLoad()
+
+  queueAction: (functionName, args) -> @queuedActions.push {functionName, args}
+
+  onLoad: ->
+    return unless @loaded
+    # Run queued actions.
+    for {functionName, args} in @queuedActions
+      this[functionName].apply this, args
+    @queuedActions = null # No more actions should get queued, so make @queuedActions.push error if we try.
 
   postMessage: (message) ->
+    unless @loaded
+      @queueAction "postMessage", arguments
+      return
+
     @iframePort.postMessage message
 
   activate: (message) ->
+    unless @loaded
+      @queueAction "activate", arguments
+      return
+
     @postMessage message if message?
     if @showing
       # NOTE(smblott) Experimental.  Not sure this is a great idea. If the iframe was already showing, then
@@ -39,12 +60,20 @@ class UIComponent
     @iframeElement.focus()
 
   show: (message) ->
+    unless @loaded
+      @queueAction "show", arguments
+      return
+
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
     @iframeElement.classList.add "vimiumUIComponentVisible"
     @showing = true
 
   hide: (focusWindow = true)->
+    unless @loaded
+      @queueAction "hide", arguments
+      return
+
     @iframeElement.classList.remove "vimiumUIComponentVisible"
     @iframeElement.classList.add "vimiumUIComponentHidden"
     window.focus() if focusWindow
