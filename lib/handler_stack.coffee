@@ -58,10 +58,10 @@ class HandlerStack
         @stack.splice(i, 1)
         break
 
-  # The handler stack handles chrome events (which may need to be suppressed) and internal (fake) events.
-  # This checks whether that the event at hand is a chrome event.
+  # The handler stack handles chrome events (which may need to be suppressed) and internal (pseudo) events.
+  # This checks whether the event at hand is a chrome event.
   isChromeEvent: (event) ->
-    event?.preventDefault? and event?.stopImmediatePropagation?
+    event?.preventDefault? or event?.stopImmediatePropagation?
 
   # Convenience wrappers.
   alwaysContinueBubbling: (handler) ->

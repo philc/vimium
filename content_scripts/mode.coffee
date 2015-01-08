@@ -8,8 +8,10 @@
 #
 # badge:
 #   A badge (to appear on the browser popup).
-#   Optional.  Define a badge if the badge is constant.  Otherwise, do not define a badge, but override
-#   instead the chooseBadge method.  Or, if the mode *never* shows a badge, then do neither.
+#   Optional.  Define a badge if the badge is constant; for example, in insert mode the badge is always "I".
+#   Otherwise, do not define a badge, but instead override the chooseBadge method; for example, in passkeys
+#   mode, the badge may be "P" or "", depending on the configuration state.  Or, if the mode *never* shows a
+#   badge, then do neither.
 #
 # keydown:
 # keypress:
@@ -40,6 +42,7 @@
 count = 0
 
 class Mode
+  # If this is true, then we generate a trace of modes being activated and deactivated on the console.
   @debug = true
 
   # Constants; readable shortcuts for event-handler return values.
@@ -48,32 +51,31 @@ class Mode
   stopBubblingAndTrue: handlerStack.stopBubblingAndTrue
   stopBubblingAndFalse: handlerStack.stopBubblingAndFalse
 
-  constructor: (options={}) ->
-    @options = options
+  constructor: (@options={}) ->
     @handlers = []
     @exitHandlers = []
     @modeIsActive = true
-    @badge = options.badge || ""
-    @name = options.name || "anonymous"
+    @badge = @options.badge || ""
+    @name = @options.name || "anonymous"
 
     @count = ++count
     console.log @count, "create:", @name if Mode.debug
 
     @push
-      keydown: options.keydown || null
-      keypress: options.keypress || null
-      keyup: options.keyup || null
+      keydown: @options.keydown || null
+      keypress: @options.keypress || null
+      keyup: @options.keyup || null
       updateBadge: (badge) => @alwaysContinueBubbling => @chooseBadge badge
 
     # Some modes are singletons: there may be at most one instance active at any one time.  A mode is a
-    # singleton if options.singleton is truthy.  The value of options.singleton should be the key which is
+    # singleton if @options.singleton is truthy.  The value of @options.singleton should be the key which is
     # required to be unique.  See PostFindMode for an example.
     # New instances deactivate existing instances as they themselves are activated.
-    @registerSingleton options.singleton if options.singleton
+    @registerSingleton @options.singleton if @options.singleton
 
-    # If options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.  The
+    # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.  The
     # triggering keyboard event will be passed to the mode's @exit() method.
-    if options.exitOnEscape
+    if @options.exitOnEscape
       # Note. This handler ends up above the mode's own key handlers on the handler stack, so it takes
       # priority.
       @push
@@ -83,36 +85,36 @@ class Mode
           DomUtils.suppressKeyupAfterEscape handlerStack
           @suppressEvent
 
-    # If options.exitOnBlur is truthy, then it should be an element.  The mode will exit when that element
+    # If @options.exitOnBlur is truthy, then it should be an element.  The mode will exit when that element
     # loses the focus.
-    if options.exitOnBlur
+    if @options.exitOnBlur
       @push
-        "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == options.exitOnBlur
+        "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == @options.exitOnBlur
 
-    # If options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
+    # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes.
-    if options.trackState
+    if @options.trackState
       @enabled = false
       @passKeys = ""
       @push
-        "registerStateChange": ({enabled: enabled, passKeys: passKeys}) =>
+        "registerStateChange": ({ enabled: enabled, passKeys: passKeys }) =>
           @alwaysContinueBubbling =>
             if enabled != @enabled or passKeys != @passKeys
               @enabled = enabled
               @passKeys = passKeys
               @registerStateChange?()
 
-    # If options.trapAllKeyboardEvents is truthy, then it should be an element.  All keyboard events on that
+    # If @options.trapAllKeyboardEvents is truthy, then it should be an element.  All keyboard events on that
     # element are suppressed *after* bubbling the event down the handler stack.  This prevents such events
     # from propagating to other extensions or the host page.
-    if options.trapAllKeyboardEvents
+    if @options.trapAllKeyboardEvents
       @unshift
-        keydown: (event) => @alwaysContinueBubbling ->
-          DomUtils.suppressPropagation event if event.srcElement == options.trapAllKeyboardEvents
-        keypress: (event) => @alwaysContinueBubbling ->
-          DomUtils.suppressEvent event if event.srcElement == options.trapAllKeyboardEvents
-        keyup: (event) => @alwaysContinueBubbling ->
-          DomUtils.suppressPropagation event if event.srcElement == options.trapAllKeyboardEvents
+        keydown: (event) => @alwaysContinueBubbling =>
+          DomUtils.suppressPropagation event if event.srcElement == @options.trapAllKeyboardEvents
+        keypress: (event) => @alwaysContinueBubbling =>
+          DomUtils.suppressEvent event if event.srcElement == @options.trapAllKeyboardEvents
+        keyup: (event) => @alwaysContinueBubbling =>
+          DomUtils.suppressPropagation event if event.srcElement == @options.trapAllKeyboardEvents
 
     Mode.updateBadge() if @badge
     # End of Mode.constructor().
@@ -139,9 +141,11 @@ class Mode
   chooseBadge: (badge) ->
     badge.badge ||= @badge
 
-  # Shorthand for an otherwise long name.  This allow us to write handlers which always yield the same value,
-  # without having to be concerned with the result of the handler itself.
-  alwaysContinueBubbling: (func) -> handlerStack.alwaysContinueBubbling func
+  # Shorthand for an otherwise long name.  This wraps a handler with an arbitrary return value, and always
+  # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common
+  # case), because they do not need to be concerned with their return value (which helps keep code concise and
+  # clear).
+  alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
 
   # User for sometimes suppressing badge updates.
   @badgeSuppressor: new Utils.Suppressor()
@@ -152,13 +156,13 @@ class Mode
   @updateBadge: ->
     @badgeSuppressor.unlessSuppressed ->
       if document.hasFocus()
-        handlerStack.bubbleEvent "updateBadge", badge = {badge: ""}
+        handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
         chrome.runtime.sendMessage
           handler: "setBadge"
           badge: badge.badge
 
   # Temporarily install a mode to protect a function call, then exit the mode.  For example, temporarily
-  # install an InsertModeBlocker.
+  # install an InsertModeBlocker, so that focus events don't unintentionally drop us into insert mode.
   @runIn: (mode, func) ->
     mode = new mode()
     func()
@@ -181,7 +185,7 @@ class Mode
 # badge choice of the other active modes.
 # Note.  We also create the the one-and-only instance, here.
 new class BadgeMode extends Mode
-  constructor: (options) ->
+  constructor: () ->
     super
       name: "badge"
       trackState: true

@@ -340,7 +340,8 @@ setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
 
 # This color should match the blue of the Vimium browser popup (although it looks a little darker, to me?).
-chrome.browserAction.setBadgeBackgroundColor {color: [102, 176, 226, 255]}
+chrome.browserAction.setBadgeBackgroundColor
+  color: [102, 176, 226, 255]
 
 setBadge = do ->
   current = ""

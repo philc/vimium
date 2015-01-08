@@ -1,22 +1,4 @@
 
-# Input or text elements are considered focusable and able to receieve their own keyboard events, and will
-# enter insert mode if focused. Also note that the "contentEditable" attribute can be set on any element
-# which makes it a rich text editor, like the notes on jjot.com.
-isEditable =(element) ->
-  return true if element.isContentEditable
-  nodeName = element.nodeName?.toLowerCase()
-  # Use a blacklist instead of a whitelist because new form controls are still being implemented for html5.
-  if nodeName == "input" and element.type not in ["radio", "checkbox"]
-    return true
-  nodeName in ["textarea", "select"]
-
-# Embedded elements like Flash and quicktime players can obtain focus.
-isEmbed =(element) ->
-  element.nodeName?.toLowerCase() in ["embed", "object"]
-
-isFocusable =(element) ->
-  isEditable(element) or isEmbed element
-
 # This mode is installed when insert mode is active.
 class InsertMode extends Mode
   constructor: (@insertModeLock = null) ->
@@ -33,7 +15,7 @@ class InsertMode extends Mode
   exit: (event = null) ->
     super()
     element = event?.srcElement
-    if element and isFocusable element
+    if element and DomUtils.isFocusable element
       # Remove the focus so the user can't just get himself back into insert mode by typing in the same
       # input box.
       # NOTE(smblott, 2014/12/22) Including embeds for .blur() here is experimental.  It appears to be the
@@ -63,11 +45,12 @@ class InsertModeTrigger extends Mode
     @push
       focus: (event) =>
         triggerSuppressor.unlessSuppressed =>
-          return if not isFocusable event.target
+          return unless DomUtils.isFocusable event.target
           new InsertMode event.target
 
     # We may already have focussed an input, so check.
-    new InsertMode document.activeElement if document.activeElement and isEditable document.activeElement
+    if document.activeElement and DomUtils.isEditable document.activeElement
+      new InsertMode document.activeElement
 
 # Used by InsertModeBlocker to suppress InsertModeTrigger; see below.
 triggerSuppressor = new Utils.Suppressor true

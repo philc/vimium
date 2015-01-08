@@ -123,15 +123,14 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  # Install normal mode. This is at the bottom of both the mode stack and the handler stack, and is never
-  # deactivated.
+  # Install normal mode. This is near the bottom of the handler stack, and is never deactivated.
   new NormalMode()
 
   # Initialize the scroller. The scroller installs a key handler, and this is next on the handler stack,
   # immediately above normal mode.
   Scroller.init settings
 
-  # Install passKeys and insert modes.  These too are permanently on the stack (although not always active).
+  # Install passKeys mode and the insert-mode trigger.  These too are permanently on the stack.
   passKeysMode = new PassKeysMode()
   new InsertModeTrigger()
   Mode.updateBadge()
