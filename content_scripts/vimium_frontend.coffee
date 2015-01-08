@@ -394,7 +394,8 @@ extend window,
               @exit()
               @continueBubbling
 
-        @exit() if visibleInputs.length == 1
+        visibleInputs[selectedInputIndex].element.focus()
+        return @exit() if visibleInputs.length == 1
         hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
       exit: ->
