@@ -143,15 +143,19 @@ class Mode
   # without having to be concerned with the result of the handler itself.
   alwaysContinueBubbling: (func) -> handlerStack.alwaysContinueBubbling func
 
+  # User for sometimes suppressing badge updates.
+  @badgeSuppressor: new Utils.Suppressor()
+
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
   # the resulting badge to the background page.  We only update the badge if this document (hence this frame)
   # has the focus.
   @updateBadge: ->
-    if document.hasFocus()
-      handlerStack.bubbleEvent "updateBadge", badge = {badge: ""}
-      chrome.runtime.sendMessage
-        handler: "setBadge"
-        badge: badge.badge
+    @badgeSuppressor.unlessSuppressed ->
+      if document.hasFocus()
+        handlerStack.bubbleEvent "updateBadge", badge = {badge: ""}
+        chrome.runtime.sendMessage
+          handler: "setBadge"
+          badge: badge.badge
 
   # Temporarily install a mode to protect a function call, then exit the mode.  For example, temporarily
   # install an InsertModeBlocker.
@@ -163,14 +167,18 @@ class Mode
   registerSingleton: do ->
     singletons = {} # Static.
     (key) ->
-      singletons[key].exit() if singletons[key]
+      # We're currently installing a new mode. So we'll be updating the badge shortly.  Therefore, we can
+      # suppress badge updates while exiting any existing active singleton.  This prevents the badge from
+      # flickering in some cases.
+      Mode.badgeSuppressor.runSuppresed =>
+        singletons[key].exit() if singletons[key]
       singletons[key] = @
 
       @onExit => delete singletons[key] if singletons[key] == @
 
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
-# badge choices of other modes.
+# badge choice of the other active modes.
 # Note.  We also create the the one-and-only instance, here.
 new class BadgeMode extends Mode
   constructor: (options) ->
@@ -179,7 +187,7 @@ new class BadgeMode extends Mode
       trackState: true
 
     @push
-      "focus": => @alwaysContinueBubbling => Mode.updateBadge()
+      "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
 
   chooseBadge: (badge) ->
     # If we're not enabled, then post an empty badge.

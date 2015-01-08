@@ -17,52 +17,6 @@ isEmbed =(element) ->
 isFocusable =(element) ->
   isEditable(element) or isEmbed element
 
-# Automatically trigger insert mode:
-#   - On a keydown event in a contentEditable element.
-#   - When a focusable element receives the focus.
-#
-# This mode is permanently installed fairly low down on the handler stack.
-class InsertModeTrigger extends Mode
-  constructor: ->
-    super
-      name: "insert-trigger"
-      keydown: (event) =>
-        return @continueBubbling if InsertModeTrigger.isSuppressed()
-        # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
-        # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
-        # check again whether the active element is contentEditable.
-        return @continueBubbling unless document.activeElement?.isContentEditable
-        new InsertMode document.activeElement
-        @stopBubblingAndTrue
-
-    @push
-      focus: (event) =>
-        @alwaysContinueBubbling =>
-          return @continueBubbling if InsertModeTrigger.isSuppressed()
-          return if not isFocusable event.target
-          new InsertMode event.target
-
-    # We may already have focussed an input, so check.
-    new InsertMode document.activeElement if document.activeElement and isEditable document.activeElement
-
-  # Allow other modes (notably InsertModeBlocker, below) to suppress this trigger. All static.
-  @suppressors: 0
-  @isSuppressed: -> 0 < @suppressors
-  @suppress: -> @suppressors += 1
-  @unsuppress: -> @suppressors -= 1
-
-# Suppresses InsertModeTrigger.  This is used by various modes (usually by inheritance) to prevent
-# unintentionally dropping into insert mode on focusable elements.
-class InsertModeBlocker extends Mode
-  constructor: (options = {}) ->
-    InsertModeTrigger.suppress()
-    options.name ||= "insert-blocker"
-    super options
-
-  exit: ->
-    super()
-    InsertModeTrigger.unsuppress()
-
 # This mode is installed when insert mode is active.
 class InsertMode extends Mode
   constructor: (@insertModeLock = null) ->
@@ -86,6 +40,46 @@ class InsertMode extends Mode
       # right thing to do for most common use cases.  However, it could also cripple flash-based sites and
       # games.  See discussion in #1211 and #1194.
       element.blur()
+
+# Automatically trigger insert mode:
+#   - On a keydown event in a contentEditable element.
+#   - When a focusable element receives the focus.
+#
+# The trigger can be suppressed via triggerSuppressor; see InsertModeBlocker, below.
+# This mode is permanently installed fairly low down on the handler stack.
+class InsertModeTrigger extends Mode
+  constructor: ->
+    super
+      name: "insert-trigger"
+      keydown: (event) =>
+        triggerSuppressor.unlessSuppressed =>
+          # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
+          # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
+          # check again whether the active element is contentEditable.
+          return @continueBubbling unless document.activeElement?.isContentEditable
+          new InsertMode document.activeElement
+          @stopBubblingAndTrue
+
+    @push
+      focus: (event) =>
+        triggerSuppressor.unlessSuppressed =>
+          return if not isFocusable event.target
+          new InsertMode event.target
+
+    # We may already have focussed an input, so check.
+    new InsertMode document.activeElement if document.activeElement and isEditable document.activeElement
+
+# Used by InsertModeBlocker to suppress InsertModeTrigger; see below.
+triggerSuppressor = new Utils.Suppressor true
+
+# Suppresses InsertModeTrigger.  This is used by various modes (usually by inheritance) to prevent
+# unintentionally dropping into insert mode on focusable elements.
+class InsertModeBlocker extends Mode
+  constructor: (options = {}) ->
+    triggerSuppressor.suppress()
+    options.name ||= "insert-blocker"
+    super options
+    @onExit -> triggerSuppressor.unsuppress()
 
 root = exports ? window
 root.InsertMode = InsertMode
