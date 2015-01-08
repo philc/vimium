@@ -6,12 +6,8 @@
 Vomnibar =
   vomnibarUI: null # the dialog instance for this window
   getUI: -> @vomnibarUI
-  completers: {}
 
-  getCompleter: (name) ->
-    if (!(name of @completers))
-      @completers[name] = new BackgroundCompleter(name)
-    @completers[name]
+  getCompleter: (name) -> new BackgroundCompleter(name)
 
   #
   # Activate the Vomnibox.
