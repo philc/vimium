@@ -49,6 +49,7 @@ class VomnibarUI
     @initialSelectionValue = initialSelectionValue
 
   setCompleter: (completer) ->
+    @completer?.closePort() # If we're reusing the UI, stop receiving responses from stale requests.
     @completer = completer
     @reset()
     @update(true)
@@ -213,6 +214,8 @@ class BackgroundCompleter
       callback(results)
 
     @filterPort.postMessage({ id: id, name: @name, query: query })
+
+  closePort: -> @filterPort.disconnect()
 
 extend BackgroundCompleter,
   #
