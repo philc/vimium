@@ -12,7 +12,7 @@ class VisualMode extends ExitOnBlur
         keyChar = KeyboardUtils.getKeyChar event
         if (keyChar.match(/^[0-9]$/) and not event.shiftKey) or # Number prefixes.
            (event.shiftKey and keyChar == "4") or # See #1417.
-           KeyboardUtils.getKeyChar(event) in ["h", "l", "k", "j", "e", "w", "0", "y"]
+           KeyboardUtils.getKeyChar(event) in ["h", "l", "k", "j", "b", "w", "0", "y"]
           DomUtils.suppressPropagation event
           @stopBubblingAndTrue
         else
