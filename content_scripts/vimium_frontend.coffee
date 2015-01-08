@@ -380,6 +380,8 @@ extend window,
         super
           name: "focus-selector"
           badge: "?"
+          # Be a singleton.  It doesn't make any sense to have two instances active at the same time; and that
+          # shouldn't happen anyway.  However, it does no harm to enforce it.
           singleton: FocusSelector
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab

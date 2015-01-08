@@ -1,7 +1,7 @@
 # NOTE(smblott).  Ultimately, all of the FindMode-related code should be moved to this file.
 
 # When we use find mode, the selection/focus can end up in a focusable/editable element.  In this situation,
-# PostFindMode handles three special cases:
+# special considerations apply.  We implement three special cases:
 #   1. Be an InsertModeBlocker.  This prevents keyboard events from dropping us unintentionally into insert
 #      mode. This is achieved by inheriting from InsertModeBlocker.
 #   2. Prevent all keyboard events on the active element from propagating.  This is achieved by setting the
@@ -16,12 +16,15 @@ class PostFindMode extends InsertModeBlocker
 
     super
       name: "post-find"
+      # Be a singleton.  That way, we don't have to keep track of any currently-active instance.  Such  an
+      # instance is automatically deactivated when a new instance is created.
       singleton: PostFindMode
       trapAllKeyboardEvents: element
 
     return @exit() unless element and findModeAnchorNode
 
-    # Special cases only arise if the active element can take input.  So, exit immediately if it cannot.
+    # Special considerations only arise if the active element can take input.  So, exit immediately if it
+    # cannot.
     canTakeInput = DomUtils.isSelectable(element) and DomUtils.isDOMDescendant findModeAnchorNode, element
     canTakeInput ||= element.isContentEditable
     canTakeInput ||= findModeAnchorNode.parentElement?.isContentEditable
