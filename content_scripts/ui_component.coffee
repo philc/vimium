@@ -14,7 +14,7 @@ class UIComponent
     document.documentElement.appendChild @iframeElement
     @showing = true # The iframe is visible now.
     # Hide the iframe, but don't interfere with the focus.
-    @hide false
+    @hide false, true
 
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->
@@ -69,8 +69,8 @@ class UIComponent
     @iframeElement.classList.add "vimiumUIComponentVisible"
     @showing = true
 
-  hide: (focusWindow = true)->
-    unless @loaded
+  hide: (focusWindow = true, forceImmediate = false) ->
+    unless @loaded or forceImmediate
       @queueAction "hide", arguments
       return
 
