@@ -3,6 +3,7 @@ node_js: 0.10
 before_install:
   - "npm install -g coffee-script"
   - "npm install path"
+  - "npm install util"
   - "cake build"
 script: "cake test"
 notifications:
