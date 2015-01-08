@@ -37,11 +37,12 @@ class VisualMode extends ExitOnBlur
             numberPrefix = 10 * numberPrefix + keyNum
           else
             numberPrefix ||= 1 # Make sure we don't do 0 repeats.
-            args = extendFocusArgs[keyChar] ? []
+            args = extendFocusArgs[keyChar]
             command =
               if args
                 "VisualCommand.extendFocus"
               else if keyChar == "y"
+                args = []
                 "VisualCommand.yank"
             Utils.invokeCommandString command, args for i in [0...numberPrefix]
             numberPrefix = 0 # Reset.
