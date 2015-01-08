@@ -14,11 +14,17 @@ class HandlerStack
     # processing should take place.
     @stopBubblingAndFalse = new Object()
 
-  # Adds a handler to the stack. Returns a unique ID for that handler that can be used to remove it later.
+  # Adds a handler to the top of the stack. Returns a unique ID for that handler that can be used to remove it
+  # later.
   push: (handler) ->
-    handler.id = ++@counter
     @stack.push handler
-    handler.id
+    handler.id = ++@counter
+
+  # Adds a handler to the bottom of the stack. Returns a unique ID for that handler that can be used to remove
+  # it later.
+  unshift: (handler) ->
+    @stack.unshift handler
+    handler.id = ++@counter
 
   # Called whenever we receive a key or other event. Each individual handler has the option to stop the
   # event's propagation by returning a falsy value, or stop bubbling by returning @stopBubblingAndFalse or

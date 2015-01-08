@@ -102,11 +102,26 @@ class Mode
               @passKeys = passKeys
               @registerStateChange?()
 
+    # If options.trapAllKeyboardEvents is truthy, then it should be an element.  All keyboard events on that
+    # element are suppressed *after* bubbling the event down the handler stack.  This prevents such events
+    # from propagating to other extensions or the host page.
+    if options.trapAllKeyboardEvents
+      @unshift
+        keydown: (event) => @alwaysContinueBubbling ->
+          DomUtils.suppressPropagation event if event.srcElement == options.trapAllKeyboardEvents
+        keypress: (event) => @alwaysContinueBubbling ->
+          DomUtils.suppressEvent event if event.srcElement == options.trapAllKeyboardEvents
+        keyup: (event) => @alwaysContinueBubbling ->
+          DomUtils.suppressPropagation event if event.srcElement == options.trapAllKeyboardEvents
+
     Mode.updateBadge() if @badge
     # End of Mode.constructor().
 
   push: (handlers) ->
     @handlers.push handlerStack.push handlers
+
+  unshift: (handlers) ->
+    @handlers.unshift handlerStack.push handlers
 
   onExit: (handler) ->
     @exitHandlers.push handler
@@ -124,7 +139,8 @@ class Mode
   chooseBadge: (badge) ->
     badge.badge ||= @badge
 
-  # Shorthand for a long name.
+  # Shorthand for an otherwise long name.  This allow us to write handlers which always yield the same value,
+  # without having to be concerned with the result of the handler itself.
   alwaysContinueBubbling: (func) -> handlerStack.alwaysContinueBubbling func
 
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send

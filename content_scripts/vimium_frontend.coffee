@@ -465,12 +465,6 @@ onKeypress = (event, extra) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-  if InsertModeTrigger.isDisabled extra
-    # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
-    # element.  So we should also block other keystrokes (otherwise, it's weird).  There's some controversy as
-    # to whether this is the right thing to do.  See discussion in #1415.
-    DomUtils.suppressEvent(event)
-
   return true
 
 onKeydown = (event, extra) ->
@@ -562,12 +556,6 @@ onKeydown = (event, extra) ->
   if (keyChar == "" && !isInsertMode() &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    DomUtils.suppressPropagation(event)
-    KeydownEvents.push event
-  else if InsertModeTrigger.isDisabled extra
-    # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
-    # element.  So we should also block other keystrokes (otherwise, it's weird).  There's some controversy as
-    # to whether this is the right thing to do.  See discussion in #1415.
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
 
