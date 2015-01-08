@@ -1,4 +1,3 @@
-
 # Note. ExitOnBlur extends extends ExitOnEscapeMode.  So exit-on-escape is handled there.
 class VisualMode extends ExitOnBlur
   constructor: (element=null) ->
@@ -18,7 +17,7 @@ class VisualMode extends ExitOnBlur
         else
           @suppressEvent
 
-      keypress: do ->
+      keypress: do =>
         extendFocusArgs =
           "h": ["backward"]
           "l": ["forward"]
@@ -38,12 +37,15 @@ class VisualMode extends ExitOnBlur
           else
             numberPrefix ||= 1 # Make sure we don't do 0 repeats.
             args = extendFocusArgs[keyChar]
-            command =
-              if args
-                "VisualCommand.extendFocus"
-              else if keyChar == "y"
-                args = []
-                "VisualCommand.yank"
+
+            if args
+              command = "VisualCommand.extendFocus"
+            else if keyChar == "y"
+              command = "VisualCommand.yank"
+              args = []
+              numberPrefix = 1 # No repeats
+              @exit()
+
             Utils.invokeCommandString command, args for i in [0...numberPrefix]
             numberPrefix = 0 # Reset.
 
