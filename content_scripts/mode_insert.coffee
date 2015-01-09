@@ -44,6 +44,7 @@ class InsertModeTrigger extends Mode
           # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
           # check again whether the active element is contentEditable.
           return @continueBubbling unless document.activeElement?.isContentEditable
+          console.log @count, @name, "fired (by keydown)"
           new InsertMode
             targetElement: document.activeElement
           @stopBubblingAndTrue
@@ -52,6 +53,7 @@ class InsertModeTrigger extends Mode
       focus: (event) =>
         triggerSuppressor.unlessSuppressed =>
           return unless DomUtils.isFocusable event.target
+          console.log @count, @name, "fired (by focus)"
           new InsertMode
             targetElement: event.target
 

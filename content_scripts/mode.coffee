@@ -175,7 +175,9 @@ class Mode
       # suppress badge updates while exiting any existing active singleton.  This prevents the badge from
       # flickering in some cases.
       Mode.badgeSuppressor.runSuppresed =>
-        singletons[key].exit() if singletons[key]
+        if singletons[key]
+          console.log singletons[key].count, "singleton:", @name, "(deactivating)"
+          singletons[key].exit()
       singletons[key] = @
 
       @onExit => delete singletons[key] if singletons[key] == @
