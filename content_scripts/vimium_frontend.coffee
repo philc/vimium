@@ -465,17 +465,20 @@ onKeypress = (event, extra) ->
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return true
+      return handlerStack.stopBubblingAndTrue
 
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
+        return handlerStack.stopBubblingAndTrue
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return handlerStack.stopBubblingAndTrue
         if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
           DomUtils.suppressEvent(event)
+          keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+          return handlerStack.stopBubblingAndTrue
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -520,37 +523,45 @@ onKeydown = (event, extra) ->
     exitInsertMode()
     DomUtils.suppressEvent event
     KeydownEvents.push event
+    return handlerStack.stopBubblingAndTrue
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
     else if (!modifiers)
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
     KeydownEvents.push event
+    return handlerStack.stopBubblingAndTrue
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         KeydownEvents.push event
+        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        return handlerStack.stopBubblingAndTrue
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -572,12 +583,14 @@ onKeydown = (event, extra) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
+    return handlerStack.stopBubblingAndTrue
 
   return true
 
 onKeyup = (event) ->
-  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
-  return true
+  return true unless KeydownEvents.pop event
+  DomUtils.suppressPropagation(event)
+  handlerStack.stopBubblingAndTrue
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
