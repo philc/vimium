@@ -29,4 +29,42 @@ context "Mode constructor",
     assert.equal true, testMode.isActive()
 
   context "Child modes",
-    should "", ->
+    should "Register a child mode from the parent", ->
+      class TestParentMode extends Mode
+        constructor: (name, childName) ->
+          super name
+          childMode = new Mode childName, {parent: this}
+
+      testModeParent = new TestParentMode "testParent", "testChild"
+
+      assert.isTrue testModeParent.modes.testChild instanceof Mode
+
+    should "Register a child mode via options", ->
+      testModeParent = new Mode "testParent"
+      testModeChild = new Mode "testChild", {parent: testModeParent}
+
+      assert.equal testModeParent.modes.testChild, testModeChild
+
+    should "Register a child mode via Mode.setMode", ->
+      testModeParent = new Mode "testParent"
+      testModeChild = new Mode "testChild", {noParent: true}
+
+      assert.equal testModeChild, (Mode.setMode "testParent.testChild", testModeChild)
+      assert.equal testModeChild, testModeParent.modes.testChild
+
+    should "Retrieve a child mode via Mode.getMode", ->
+      testModeParent = new Mode "testParent"
+      testModeChild1 = new Mode "testChild", {parent: testModeParent}
+      testModeChild2 = new Mode "testChild", {parent: testModeChild1}
+
+      assert.equal (Mode.getMode "testParent.testChild"), testModeChild1
+      assert.equal (Mode.getMode "testParent.testChild.testChild"), testModeChild2
+
+    should "Retrieve a child mode via parent.getMode", ->
+      testModeParent = new Mode "testParent"
+      testModeChild1 = new Mode "testChild", {parent: testModeParent}
+      testModeChild2 = new Mode "testChild", {parent: testModeChild1}
+
+      assert.equal (testModeParent.getMode "testChild"), testModeChild1
+      assert.equal (testModeParent.getMode "testChild.testChild"), testModeChild2
+      assert.equal (testModeChild1.getMode "testChild"), testModeChild2
