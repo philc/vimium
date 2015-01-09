@@ -614,14 +614,19 @@ window.enterInsertMode = (target) ->
 enterInsertModeWithoutShowingIndicator = (target) ->
   insertModeLock = target
   # normalModeForInput is a sub-mode of insert mode; it shouldn't be persisted across insert mode instances.
+  # We re-establish insert mode when the user clicks to fix #1414.
+  target?.addEventListener? "click", reestablishInputModeOnClick, false
   normalModeForInput = false
 
 exitInsertMode = (target) ->
   if (target == undefined || insertModeLock == target)
     # normalModeForInput is a sub-mode of insert mode; deactivate it if insert mode isn't active.
+    target?.removeEventListener? "click", reestablishInputModeOnClick, false
     normalModeForInput = false
     insertModeLock = null
     HUD.hide()
+
+reestablishInputModeOnClick = -> enterInsertModeWithoutShowingIndicator this
 
 isInsertMode = ->
   return true if insertModeLock != null
