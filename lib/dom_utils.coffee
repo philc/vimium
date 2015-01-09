@@ -141,6 +141,13 @@ DomUtils =
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
         element.nodeName.toLowerCase() == "textarea"
 
+  isDOMDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
+
   simulateSelect: (element) ->
     element.focus()
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
@@ -177,6 +184,14 @@ DomUtils =
   suppressEvent: (event) ->
     event.preventDefault()
     @suppressPropagation(event)
+
+  # Suppress the next keyup event for Escape.
+  suppressKeyupAfterEscape: (handlerStack) ->
+    handlerStack.push
+      keyup: (event) ->
+        return true unless KeyboardUtils.isEscape event
+        @remove()
+        false
 
 root = exports ? window
 root.DomUtils = DomUtils

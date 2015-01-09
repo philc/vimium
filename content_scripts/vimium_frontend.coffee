@@ -4,8 +4,8 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
-window.handlerStack = new HandlerStack
 
+passKeysMode = null
 insertModeLock = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
@@ -21,8 +21,8 @@ isEnabledForUrl = true
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = null
-validFirstKeys = null
+currentCompletionKeys = ""
+validFirstKeys = ""
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -103,6 +103,19 @@ frameId = Math.floor(Math.random()*999999999)
 
 hasModifiersRegex = /^<([amc]-)+.>/
 
+class NormalMode extends Mode
+  constructor: ->
+    super
+      name: "normal"
+      badge: "N"
+      keydown: onKeydown
+      keypress: onKeypress
+      keyup: onKeyup
+
+  chooseBadge: (badge) ->
+    super badge
+    badge.badge = "" unless isEnabledForUrl
+
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
@@ -110,7 +123,18 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
+  # Install normal mode. This is at the bottom of both the mode stack and the handler stack, and is never
+  # deactivated.
+  new NormalMode()
+
+  # Initialize the scroller. The scroller installs a key handler, and this is next on the handler stack,
+  # immediately above normal mode.
   Scroller.init settings
+
+  # Install passKeys and insert modes.  These too are permanently on the stack (although not always active).
+  passKeysMode = new PassKeysMode()
+  new InsertModeTrigger()
+  Mode.updateBadge()
 
   checkIfEnabledForUrl()
 
@@ -136,9 +160,11 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
+    getActiveState: getActiveState
     setState: setState
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    currentKeyQueue: (request) ->
+      keyQueue = request.keyQueue
+      passKeysMode.configure request
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -169,11 +195,8 @@ initializeWhenEnabled = (newPassKeys) ->
   if (!installedListeners)
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
-    installListener window, "keydown", onKeydown
-    installListener window, "keypress", onKeypress
-    installListener window, "keyup", onKeyup
-    installListener document, "focus", onFocusCapturePhase
-    installListener document, "blur", onBlurCapturePhase
+    for type in ["keydown", "keypress", "keyup", "click", "focus", "blur"]
+      do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", onDOMActivate
     enterInsertModeIfElementIsFocused()
     installedListeners = true
@@ -182,6 +205,13 @@ setState = (request) ->
   initializeWhenEnabled(request.passKeys) if request.enabled
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
+  handlerStack.bubbleEvent "registerStateChange",
+    enabled: request.enabled
+    passKeys: request.passKeys
+
+getActiveState = ->
+  Mode.updateBadge()
+  return { enabled: isEnabledForUrl, passKeys: passKeys }
 
 #
 # The backend needs to know which frame has focus.
@@ -224,6 +254,8 @@ enterInsertModeIfElementIsFocused = ->
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+onFocus = (event) -> handlerStack.bubbleEvent 'focus', event
+onBlur = (event) -> handlerStack.bubbleEvent 'blur', event
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -305,6 +337,12 @@ extend window,
 
     HUD.showForDuration("Yanked URL", 1000)
 
+  enterInsertMode: ->
+    new InsertMode()
+
+  enterVisualMode: =>
+    new VisualMode()
+
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
@@ -320,10 +358,6 @@ extend window,
     return if visibleInputs.length == 0
 
     selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
-
-    visibleInputs[selectedInputIndex].element.focus()
-
-    return if visibleInputs.length == 1
 
     hints = for tuple in visibleInputs
       hint = document.createElement("div")
@@ -342,28 +376,37 @@ extend window,
     hintContainingDiv = DomUtils.addElementList(hints,
       { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
 
-    handlerStack.push keydown: (event) ->
-      if event.keyCode == KeyboardUtils.keyCodes.tab
-        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-        if event.shiftKey
-          if --selectedInputIndex == -1
-            selectedInputIndex = hints.length - 1
-        else
-          if ++selectedInputIndex == hints.length
-            selectedInputIndex = 0
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-        visibleInputs[selectedInputIndex].element.focus()
-      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-        DomUtils.removeElement hintContainingDiv
-        @remove()
-        return true
+    new class FocusSelector extends InsertModeBlocker
+      constructor: ->
+        super null,
+          name: "focus-selector"
+          badge: "?"
+          keydown: (event) =>
+            if event.keyCode == KeyboardUtils.keyCodes.tab
+              hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+              selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+              selectedInputIndex %= hints.length
+              hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+              visibleInputs[selectedInputIndex].element.focus()
+              false
+            else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+              @exit()
+              @continueBubbling
 
-      false
+        visibleInputs[selectedInputIndex].element.focus()
+        @exit() if visibleInputs.length == 1
+
+      exit: ->
+        DomUtils.removeElement hintContainingDiv
+        visibleInputs[selectedInputIndex].element.focus()
+        new InsertMode visibleInputs[selectedInputIndex].element
+        super()
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
 isPassKey = ( keyChar ) ->
+  return false # Diabled.
   return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
@@ -397,9 +440,8 @@ KeydownEvents =
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
-onKeypress = (event) ->
-  return unless handlerStack.bubbleEvent('keypress', event)
 
+onKeypress = (event) ->
   keyChar = ""
 
   # Ignore modifier keys by themselves.
@@ -409,7 +451,7 @@ onKeypress = (event) ->
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return
+      return true
 
     if (keyChar)
       if (findMode)
@@ -417,15 +459,20 @@ onKeypress = (event) ->
         DomUtils.suppressEvent(event)
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
-          return undefined
-        if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+          return handlerStack.stopBubblingAndTrue
+        if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
           DomUtils.suppressEvent(event)
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-onKeydown = (event) ->
-  return unless handlerStack.bubbleEvent('keydown', event)
+  if InsertModeBlocker.isActive()
+    # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
+    # element.  So we should also block other keystrokes (otherwise, it's weird).
+    DomUtils.suppressEvent(event)
 
+  return true
+
+onKeydown = (event) ->
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -516,13 +563,17 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
+  else if InsertModeBlocker.isActive()
+    # If PostFindMode is active, then we're blocking vimium's keystrokes from going into an input
+    # element.  So we should also block other keystrokes (otherwise, it's weird).
+    DomUtils.suppressPropagation(event)
+    KeydownEvents.push event
+
+  return true
 
 onKeyup = (event) ->
-  handledKeydown = KeydownEvents.pop event
-  return unless handlerStack.bubbleEvent("keyup", event)
-
-  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  DomUtils.suppressPropagation(event) if handledKeydown
+  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
+  return true
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -534,6 +585,9 @@ checkIfEnabledForUrl = ->
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: response.isEnabledForUrl
+      passKeys: response.passKeys
 
 refreshCompletionKeys = (response) ->
   if (response)
@@ -583,14 +637,6 @@ isEditable = (target) ->
   focusableElements.indexOf(nodeName) >= 0
 
 #
-# Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
-# mode manually by pressing "i". In most cases we do not show any UI (enterInsertModeWithoutShowingIndicator)
-#
-window.enterInsertMode = (target) ->
-  enterInsertModeWithoutShowingIndicator(target)
-  HUD.show("Insert mode")
-
-#
 # We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
 # causes element B to come into focus, we may get "B focus" before "A blur". Thus we only leave insert mode
 # when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
@@ -598,20 +644,14 @@ window.enterInsertMode = (target) ->
 # leave insert mode when the user presses <ESC>.
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
+enterInsertModeWithoutShowingIndicator = (target) ->
+  return # Disabled.
 
 exitInsertMode = (target) ->
-  if (target == undefined || insertModeLock == target)
-    insertModeLock = null
-    HUD.hide()
+  return # Disabled.
 
 isInsertMode = ->
-  return true if insertModeLock != null
-  # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245); and
-  # unfortunately, isEditable() is called *before* the change is made.  Therefore, we need to re-check whether
-  # the active element is contentEditable.
-  document.activeElement and document.activeElement.isContentEditable and
-    enterInsertModeWithoutShowingIndicator document.activeElement
+  return false # Disabled.
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -701,6 +741,37 @@ handleEnterForFindMode = ->
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
+class FindMode extends ExitOnEscapeMode
+  constructor: ->
+    super FindMode,
+      name: "find"
+      badge: "/"
+
+      keydown: (event) =>
+        if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+          handleDeleteForFindMode()
+          @suppressEvent
+        else if event.keyCode == keyCodes.enter
+          handleEnterForFindMode()
+          @exit()
+          @suppressEvent
+        else
+          DomUtils.suppressPropagation(event)
+          handlerStack.stopBubblingAndFalse
+
+      keypress: (event) ->
+        handlerStack.neverContinueBubbling ->
+          if event.keyCode > 31
+            keyChar = String.fromCharCode event.charCode
+            handleKeyCharForFindMode keyChar if keyChar
+
+      keyup: (event) => @suppressEvent
+
+  exit: (extra) ->
+    handleEscapeForFindMode() if extra?.source == ExitOnEscapeMode
+    super()
+    new PostFindMode findModeAnchorNode
+
 performFindInPlace = ->
   cachedScrollX = window.scrollX
   cachedScrollY = window.scrollY
@@ -719,12 +790,8 @@ performFindInPlace = ->
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 executeFind = (query, options) ->
+  result = null
   options = options || {}
-
-  # rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
-  # changes that find() induces.
-  oldFindMode = findMode
-  findMode = true
 
   document.body.classList.add("vimiumFindMode")
 
@@ -732,15 +799,21 @@ executeFind = (query, options) ->
   HUD.hide(true)
   # ignore the selectionchange event generated by find()
   document.removeEventListener("selectionchange",restoreDefaultSelectionHighlight, true)
-  result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
+  Mode.runIn InsertModeBlocker, ->
+    result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
   setTimeout(
     -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
     0)
 
-  findMode = oldFindMode
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
+
+  # If the anchor node is outside of the active element, then blur the active element.  We don't want to leave
+  # behind an inappropriate active element. This fixes #1412.
+  if document.activeElement and not DomUtils.isDOMDescendant findModeAnchorNode, document.activeElement
+    document.activeElement.blur()
+
   result
 
 restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
@@ -750,13 +823,6 @@ focusFoundLink = ->
     link = getLinkFromSelection()
     link.focus() if link
 
-isDOMDescendant = (parent, child) ->
-  node = child
-  while (node != null)
-    return true if (node == parent)
-    node = node.parentNode
-  false
-
 selectFoundInputElement = ->
   # if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
@@ -764,7 +830,7 @@ selectFoundInputElement = ->
   # heuristic of checking that the last anchor node is an ancestor of our element.
   if (findModeQueryHasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
-      isDOMDescendant(findModeAnchorNode, document.activeElement))
+      DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
     enterInsertModeWithoutShowingIndicator(document.activeElement)
@@ -801,19 +867,7 @@ findAndFocus = (backwards) ->
 
   # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
   # mode
-  elementCanTakeInput = document.activeElement &&
-    DomUtils.isSelectable(document.activeElement) &&
-    isDOMDescendant(findModeAnchorNode, document.activeElement)
-  if (elementCanTakeInput)
-    handlerStack.push({
-      keydown: (event) ->
-        @remove()
-        if (KeyboardUtils.isEscape(event))
-          DomUtils.simulateSelect(document.activeElement)
-          enterInsertModeWithoutShowingIndicator(document.activeElement)
-          return false # we have "consumed" this event, so do not propagate
-        return true
-    })
+  new PostFindMode findModeAnchorNode
 
   focusFoundLink()
 
@@ -930,11 +984,12 @@ showFindModeHUDForQuery = ->
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
-  findMode = true
+  # window.findMode = true # Same hack, see comment at window.findMode definition.
   HUD.show("/")
+  new FindMode()
 
 exitFindMode = ->
-  findMode = false
+  window.findMode = false # Same hack, see comment at window.findMode definition.
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
