@@ -1,9 +1,14 @@
 class Mode
   @modes = {}
+
+  modes: {}
   active: true
 
-  constructor: (@name, @onKeydown, @onKeypress, @onKeyup) ->
-    Mode.modes[@name] = this if @name?
+  constructor: (@name, options, @onKeydown, @onKeypress, @onKeyup) ->
+    if @name?
+      modeParent = options?.parent ? Mode
+      modeParent.modes[@name]?.deactivate() # Deactivate the mode we're replacing, if any.
+      modeParent.modes[@name] = this
 
   isActive: -> @active
 
