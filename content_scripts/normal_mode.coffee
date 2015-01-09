@@ -80,5 +80,16 @@ class NormalMode extends NormalModeBase
   activate: -> true
   deactivate: -> true
 
+class NormalModeForInput extends NormalModeBase
+  constructor: ->
+    super "NORMAL", {parent: Mode.getMode "INSERT"}, (event) ->
+      if KeyboardUtils.isEscape event
+        @deactivate()
+        false
+      else
+        true
+
+
 root = exports ? window
 root.NormalMode = NormalMode
+root.NormalModeForInput = NormalModeForInput
