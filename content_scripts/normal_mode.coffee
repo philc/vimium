@@ -71,5 +71,14 @@ class NormalModeBase extends Mode
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
+class NormalMode extends NormalModeBase
+  constructor: ->
+    super "NORMAL"
+
+  # We never want to disable normal mode.
+  isActive: -> true
+  activate: -> true
+  deactivate: -> true
+
 root = exports ? window
-root.NormalModeBase = NormalModeBase
+root.NormalMode = NormalMode
