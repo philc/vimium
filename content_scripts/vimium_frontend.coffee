@@ -384,7 +384,9 @@ extend window,
           # shouldn't happen anyway.  However, it does no harm to enforce it.
           singleton: FocusSelector
           targetMode: targetMode
-          onClickMode: targetMode # For InsertModeBlocker super-class.
+          # For the InsertModeBlocker super-class (we'll always choose InsertMode on click).  See comment in
+          # InsertModeBlocker for an explanation of why this is needed.
+          onClickMode: targetMode
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
               hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
