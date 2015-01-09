@@ -221,7 +221,7 @@ unregisterFrame = ->
 # Enters insert mode if the currently focused element in the DOM is focusable.
 #
 enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement))
+  if (document.activeElement && DomUtils.isEditable(document.activeElement))
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
@@ -478,7 +478,7 @@ onKeydown = (event) ->
       KeydownEvents.push event
 
   else if (isInsertMode() && !normalModeForInput && KeyboardUtils.isEscape(event))
-    if isEditable(event.srcElement) or isEmbed(event.srcElement)
+    if DomUtils.isEditable(event.srcElement) or DomUtils.isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
       # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
@@ -564,39 +564,12 @@ isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
-  if (isFocusable(event.target))
+  if (DomUtils.isFocusable(event.target))
     enterInsertModeWithoutShowingIndicator(event.target)
 
 onBlurCapturePhase = (event) ->
-  if (isFocusable(event.target))
+  if (DomUtils.isFocusable(event.target))
     exitInsertMode(event.target)
-
-#
-# Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
-#
-isFocusable = (element) -> isEditable(element) || isEmbed(element)
-
-#
-# Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
-# unfocused.
-#
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) >= 0
-
-#
-# Input or text elements are considered focusable and able to receieve their own keyboard events,
-# and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
-# any element which makes it a rich text editor, like the notes on jjot.com.
-#
-isEditable = (target) ->
-  # Note: document.activeElement.isContentEditable is also rechecked in isInsertMode() dynamically.
-  return true if target.isContentEditable
-  nodeName = target.nodeName.toLowerCase()
-  # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
-  noFocus = ["radio", "checkbox"]
-  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
-    return true
-  focusableElements = ["textarea", "select"]
-  focusableElements.indexOf(nodeName) >= 0
 
 #
 # Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
