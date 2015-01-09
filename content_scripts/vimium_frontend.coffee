@@ -391,18 +391,21 @@ extend window,
               visibleInputs[selectedInputIndex].element.focus()
               @suppressEvent
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-              @exit()
+              @exit event
               @continueBubbling
 
         visibleInputs[selectedInputIndex].element.focus()
-        return @exit() if visibleInputs.length == 1
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        if visibleInputs.length == 1
+          @exit()
+        else
+          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
       exit: ->
-        DomUtils.removeElement hintContainingDiv
-        visibleInputs[selectedInputIndex].element.focus()
-        new InsertMode visibleInputs[selectedInputIndex].element
         super()
+        DomUtils.removeElement hintContainingDiv
+        if document.activeElement == visibleInputs[selectedInputIndex].element
+          # InsertModeBlocker handles the "click" case.
+          new InsertMode document.activeElement unless event?.type == "click"
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
@@ -733,7 +736,7 @@ handleEnterForFindMode = ->
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
-class FindMode extends Mode
+class FindMode extends InsertModeBlocker
   constructor: ->
     super
       name: "find"
@@ -762,8 +765,9 @@ class FindMode extends Mode
 
   exit: (event) ->
     super()
-    handleEscapeForFindMode() if event and KeyboardUtils.isEscape event
-    new PostFindMode findModeAnchorNode
+    handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
+    handleEscapeForFindMode() if event?.type == "click"
+    new PostFindMode findModeAnchorNode unless event?.type == "click"
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX

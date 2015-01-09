@@ -47,13 +47,5 @@ class PostFindMode extends InsertModeBlocker
       blur: (event) => @alwaysContinueBubbling => @exit()
       keydown: (event) => @alwaysContinueBubbling => @exit() if document.activeElement != element
 
-      # If element is selectable, then it's already focused.  If the user clicks on it, then there's no new
-      # focus event, so InsertModeTrigger doesn't fire and we don't drop automatically into insert mode.  So
-      # we have to handle this case separately.
-      click: (event) =>
-        @alwaysContinueBubbling =>
-          new InsertMode element if DomUtils.isDOMDescendant element, event.target
-          @exit()
-
 root = exports ? window
 root.PostFindMode = PostFindMode
