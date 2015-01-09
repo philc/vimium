@@ -35,7 +35,8 @@ class PostFindMode extends InsertModeBlocker
       keydown: (event) ->
         if element == document.activeElement and KeyboardUtils.isEscape event
           self.exit()
-          new InsertMode element
+          new InsertMode
+            targetElement: element
           DomUtils.suppressKeyupAfterEscape handlerStack
           return false
         @remove()

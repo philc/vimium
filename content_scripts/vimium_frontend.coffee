@@ -6,7 +6,7 @@
 #
 
 passKeysMode = null
-insertModeLock = null
+targetElement = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -342,10 +342,11 @@ extend window,
   enterVisualMode: =>
     new VisualMode()
 
-  focusInput: (count) ->
+  focusInput: (count, targetMode = InsertMode) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
     # Pressing any other key will remove the overlays and the special tab behavior.
+    # targetMode is the mode we want to enter.
     resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
     visibleInputs =
       for i in [0...resultSet.snapshotLength] by 1
@@ -382,6 +383,8 @@ extend window,
           # Be a singleton.  It doesn't make any sense to have two instances active at the same time; and that
           # shouldn't happen anyway.  However, it does no harm to enforce it.
           singleton: FocusSelector
+          targetMode: targetMode
+          onClickMode: targetMode # For InsertModeBlocker super-class.
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
               hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
@@ -404,8 +407,12 @@ extend window,
         super()
         DomUtils.removeElement hintContainingDiv
         if document.activeElement == visibleInputs[selectedInputIndex].element
-          # InsertModeBlocker handles the "click" case.
-          new InsertMode document.activeElement unless event?.type == "click"
+          # The InsertModeBlocker super-class  handles the "click" case.
+          unless event?.type == "click"
+            # In the legacy (and probably common) case, we're entering insert mode here.  However, it could be
+            # some other mode.
+            new @options.targetMode
+              targetElement: document.activeElement
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
@@ -634,8 +641,8 @@ isEditable = (target) ->
 #
 # We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
 # causes element B to come into focus, we may get "B focus" before "A blur". Thus we only leave insert mode
-# when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
-# If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
+# when the last editable element that came into focus -- which targetElement points to -- has been blurred.
+# If insert mode is entered manually (via pressing 'i'), then we set targetElement to 'undefined', and only
 # leave insert mode when the user presses <ESC>.
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
