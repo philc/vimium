@@ -7,7 +7,7 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
-normalModeForInput = false
+normalModeForInput = false # This is a sub-mode of insert mode for normal mode when an input is focused.
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -500,6 +500,9 @@ onKeydown = (event) ->
       normalModeForInput = false
 
     if (normalModeForInput && KeyboardUtils.isEscape(event))
+      # If we've focused an input, but are still providing the user with normal mode, we should drop into
+      # insert mode when they hit <esc>.
+      # NOTE(mrmr1993): This is purely to retain an old behaviour, and is not my design decision.
       normalModeForInput = false
       DomUtils.suppressEvent event
       KeydownEvents.push event
@@ -724,6 +727,8 @@ handleEnterForFindMode = ->
   # If an input is focused, we still want to drop the user back into normal mode. normalModeForInput is a
   # sub-mode of insert mode (and will exit if the insert mode focus changes, we exit insert mode, or were
   # never in insert mode to start with).
+  # NOTE(mrmr1993): We don't check isInsertMode here in case contentEditable is set dynamically (see comment
+  # in isInsertMode).
   normalModeForInput = true
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
