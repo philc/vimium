@@ -7,6 +7,7 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
+normalModeForInput = false
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
@@ -415,7 +416,10 @@ onKeypress = (event) ->
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
-      else if (!isInsertMode() && !findMode)
+      else if (!(isInsertMode() && !normalModeForInput) && !findMode)
+        if (normalModeForInput && !isInsertMode())
+          # normalModeForInput is a sub-mode of insert mode; deactivate it if insert mode isn't active.
+          normalModeForInput = false
         if (isPassKey keyChar)
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
@@ -473,7 +477,7 @@ onKeydown = (event) ->
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
 
-  else if (isInsertMode() && KeyboardUtils.isEscape(event))
+  else if (isInsertMode() && !normalModeForInput && KeyboardUtils.isEscape(event))
     if isEditable(event.srcElement) or isEmbed(event.srcElement)
       # Remove focus so the user can't just get himself back into insert mode by typing in the same input
       # box.
@@ -490,8 +494,17 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else if (!isInsertMode() && !findMode)
-    if (keyChar)
+  else if (!(isInsertMode() && !normalModeForInput) && !findMode)
+    if (normalModeForInput && !isInsertMode())
+      # normalModeForInput is a sub-mode of insert mode; deactivate it if insert mode isn't active.
+      normalModeForInput = false
+
+    if (normalModeForInput && KeyboardUtils.isEscape(event))
+      normalModeForInput = false
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+
+    else if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         KeydownEvents.push event
@@ -511,7 +524,7 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
+  if (keyChar == "" && !(isInsertMode() && !normalModeForInput) &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
@@ -598,10 +611,15 @@ window.enterInsertMode = (target) ->
 # leave insert mode when the user presses <ESC>.
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
+enterInsertModeWithoutShowingIndicator = (target) ->
+  insertModeLock = target
+  # normalModeForInput is a sub-mode of insert mode; it shouldn't be persisted across insert mode instances.
+  normalModeForInput = false
 
 exitInsertMode = (target) ->
   if (target == undefined || insertModeLock == target)
+    # normalModeForInput is a sub-mode of insert mode; deactivate it if insert mode isn't active.
+    normalModeForInput = false
     insertModeLock = null
     HUD.hide()
 
@@ -692,12 +710,16 @@ handleDeleteForFindMode = ->
     performFindInPlace()
     showFindModeHUDForQuery()
 
-# <esc> sends us into insert mode if possible, but <cr> does not.
+# <esc> sends us into insert mode if possible, but <cr> puts us in normal mode, even if an input is focused.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
 handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
+  # If an input is focused, we still want to drop the user back into normal mode. normalModeForInput is a
+  # sub-mode of insert mode (and will exit if the insert mode focus changes, we exit insert mode, or were
+  # never in insert mode to start with).
+  normalModeForInput = true
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
