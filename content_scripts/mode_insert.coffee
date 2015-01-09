@@ -64,6 +64,19 @@ class InsertModeBlocker extends Mode
     super options
     @onExit -> triggerSuppressor.unsuppress()
 
+    @push
+      "click": (event) =>
+        @alwaysContinueBubbling =>
+          # The user knows best; so, if the user clicks on something, we get out of the way.
+          @exit event
+          # However, there's a corner case.  If the active element is focusable, then we would have been in
+          # insert mode had we not been blocking the trigger.  Now, clicking on the element will not generate
+          # a new focus event, so the insert-mode trigger will not fire.  We have to handle this case
+          # specially.
+          if document.activeElement and
+              event.target == document.activeElement and DomUtils.isEditable document.activeElement
+            new InsertMode document.activeElement
+
 root = exports ? window
 root.InsertMode = InsertMode
 root.InsertModeTrigger = InsertModeTrigger
