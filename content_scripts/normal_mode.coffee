@@ -82,7 +82,7 @@ class NormalMode extends NormalModeBase
 
 class NormalModeForInput extends NormalModeBase
   constructor: ->
-    super "NORMAL", {parent: Mode.getMode "INSERT"}, (event) ->
+    super "INPUT_NORMAL", {parent: Mode.getMode "INSERT"}, (event) ->
       if KeyboardUtils.isEscape event
         @deactivate()
         false
