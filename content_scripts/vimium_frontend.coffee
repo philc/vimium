@@ -220,7 +220,7 @@ unregisterFrame = ->
 # Enters insert mode if the currently focused element in the DOM is focusable.
 #
 enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
+  if (document.activeElement && isEditable(document.activeElement))
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
@@ -548,7 +548,7 @@ isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 onFocusCapturePhase = (event) ->
-  if (isFocusable(event.target) && !findMode)
+  if (isFocusable(event.target))
     enterInsertModeWithoutShowingIndicator(event.target)
 
 onBlurCapturePhase = (event) ->
