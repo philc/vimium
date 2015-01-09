@@ -53,9 +53,10 @@ class InsertModeTrigger extends Mode
     @push
       focus: (event) =>
         triggerSuppressor.unlessSuppressed =>
-          return unless DomUtils.isFocusable event.target
-          new InsertMode
-            targetElement: event.target
+          @alwaysContinueBubbling =>
+            if DomUtils.isFocusable event.target
+              new InsertMode
+                targetElement: event.target
 
     # We may already have focussed an input, so check.
     if document.activeElement and DomUtils.isEditable document.activeElement
@@ -63,7 +64,7 @@ class InsertModeTrigger extends Mode
         targetElement: document.activeElement
 
 # Used by InsertModeBlocker to suppress InsertModeTrigger; see below.
-triggerSuppressor = new Utils.Suppressor true
+triggerSuppressor = new Utils.Suppressor true # Note: true == @continueBubbling
 
 # Suppresses InsertModeTrigger.  This is used by various modes (usually by inheritance) to prevent
 # unintentionally dropping into insert mode on focusable elements.
