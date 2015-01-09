@@ -30,14 +30,21 @@ class Mode
     @modes = {}
     if @name? and options.noParent != true
       modeParent = options.parent ? Mode
-      modeParent.modes[@name]?.deactivate() # Deactivate the mode we're replacing, if any.
+      modeParent.modes[@name]?.destructor() # Destroy the mode we're replacing, if any.
       modeParent.modes[@name] = this
+
+  destructor: -> mode.destructor() for modeName, mode of @modes
+
+  keydown: (event) -> @onKeydown? event
+  keypress: (event) -> @onKeypress? event
+  keyup: (event) -> @onKeyup? event
 
   getMode: Mode.getMode
   setMode: Mode.setMode
 
   isActive: -> @active
 
+  # activate/deactivate should return the same value as a call to isActive immediately after would.
   activate: -> @active = true
   deactivate: ->
     if @active

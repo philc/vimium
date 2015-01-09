@@ -11,9 +11,9 @@ context "Mode constructor",
     assert.equal testMode2, Mode.modes.test2
     assert.equal testMode3, Mode.modes.test3
 
-  should "Replace mode with the same name, deactivate old mode", ->
+  should "Replace mode with the same name, destroy replaced mode", ->
     testMode1 = new Mode "test",1
-    stub testMode1, "deactivate", ensureCalled testMode1.deactivate
+    stub testMode1, "destructor", ensureCalled testMode1.destructor
     assert.equal testMode1, Mode.modes.test
 
     testMode2 = new Mode "test",2
