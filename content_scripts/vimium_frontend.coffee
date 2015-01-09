@@ -554,7 +554,7 @@ checkIfEnabledForUrl = ->
 
 refreshCompletionKeys = (response) ->
   if (response)
-    currentCompletionKeys = response.completionKeys
+    window.currentCompletionKeys = response.completionKeys
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
@@ -1162,3 +1162,5 @@ root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
 root.KeydownEvents = KeydownEvents
+root.isValidFirstKey = isValidFirstKey
+root.isPassKey = isPassKey
