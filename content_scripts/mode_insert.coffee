@@ -15,8 +15,10 @@ class InsertMode extends Mode
     options = extend defaults, options
     options.exitOnBlur = options.targetElement || null
     super options
+    triggerSuppressor.suppress()
 
   exit: (event = null) ->
+    triggerSuppressor.unsuppress()
     super()
     if @options.blurOnExit
       element = event?.srcElement
@@ -44,7 +46,6 @@ class InsertModeTrigger extends Mode
           # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
           # check again whether the active element is contentEditable.
           return @continueBubbling unless document.activeElement?.isContentEditable
-          console.log @count, @name, "fired (by keydown)"
           new InsertMode
             targetElement: document.activeElement
           @stopBubblingAndTrue
@@ -53,7 +54,6 @@ class InsertModeTrigger extends Mode
       focus: (event) =>
         triggerSuppressor.unlessSuppressed =>
           return unless DomUtils.isFocusable event.target
-          console.log @count, @name, "fired (by focus)"
           new InsertMode
             targetElement: event.target
 
@@ -88,6 +88,36 @@ class InsertModeBlocker extends Mode
               event.target == document.activeElement and DomUtils.isEditable document.activeElement
             new @options.onClickMode
               targetElement: document.activeElement
+
+# There's some unfortunate feature interaction with chrome's content editable handling.  If the selection is
+# content editable and a descendant of the active element, then chrome focuses it on any unsuppressed keyboard
+# events.  This has the unfortunate effect of dropping us unintentally into insert mode.  See #1415.
+# This mode sits near the bottom of the handler stack and suppresses keyboard events if:
+#   - they haven't been handled by any other mode (so not by normal mode, passkeys mode, insert mode, and so
+#     on), and
+#   - the selection is content editable, and
+#   - the selection is a descendant of the active element.
+# This should rarely fire, typically only on fudged keypresses in normal mode.  And, even then, only in the
+# circumstances outlined above.  So it shouldn't normally block other extensions or the page itself from
+# handling keyboard events.
+new class ContentEditableTrap extends Mode
+  constructor: ->
+    super
+      name: "content-editable-trap"
+      keydown: (event) => @handle => DomUtils.suppressPropagation event
+      keypress: (event) => @handle => @suppressEvent
+      keyup: (event) => @handle => @suppressEvent
+
+  # True if the selection is content editable and a descendant of the active element.  In this situation,
+  # chrome unilaterally focuses the element containing the anchor, dropping us into insert mode.
+  isContentEditableFocused: ->
+    element = document.getSelection()?.anchorNode?.parentElement
+    return element?.isContentEditable? and
+             document.activeElement? and
+             DomUtils.isDOMDescendant document.activeElement, element
+
+  handle: (func) ->
+    if @isContentEditableFocused() then func() else @continueBubbling
 
 root = exports ? window
 root.InsertMode = InsertMode
