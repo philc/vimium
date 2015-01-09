@@ -202,6 +202,7 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
   Vomnibar.init()
+  new InsertMode null
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -1160,3 +1161,4 @@ root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
+root.KeydownEvents = KeydownEvents

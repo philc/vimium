@@ -33,6 +33,7 @@ class Mode
       modeParent.modes[@name]?.destructor() # Destroy the mode we're replacing, if any.
       modeParent.modes[@name] = this
 
+  # Do any cleanup here. This will be called when another mode of the same name has replaced this one.
   destructor: -> mode.destructor() for modeName, mode of @modes
 
   keydown: (event) -> @onKeydown? event

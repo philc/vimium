@@ -39,6 +39,7 @@
              "lib/handler_stack.js",
              "lib/clipboard.js",
              "content_scripts/modes.js",
+             "content_scripts/insert_mode.js",
              "content_scripts/ui_component.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
