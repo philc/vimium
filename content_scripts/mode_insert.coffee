@@ -121,7 +121,7 @@ new class ContentEditableTrap extends Mode
     element = document.getSelection()?.anchorNode?.parentElement
     return element?.isContentEditable and
              document.activeElement and
-             DomUtils. isPrintable event and
+             KeyboardUtils.isPrintable(event) and
              DomUtils.isDOMDescendant document.activeElement, element
 
 root = exports ? window

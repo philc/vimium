@@ -119,7 +119,7 @@ class Mode
       @unshift
         _name: "mode-#{@id}/suppressPrintableEvents"
         keypress: (event) =>
-          if DomUtils.isPrintable(event) and
+          if KeyboardUtils.isPrintable(event) and
             event.srcElement == @options.suppressPrintableEvents then @suppressEvent else @continueBubbling
 
     Mode.updateBadge() if @badge
