@@ -45,11 +45,12 @@ class Mode
   # If this is true, then we generate a trace of modes being activated and deactivated on the console.
   @debug = true
 
-  # Constants; readable shortcuts for event-handler return values.
+  # Constants; short, readable names for handlerStack event-handler return values.
   continueBubbling: true
   suppressEvent: false
   stopBubblingAndTrue: handlerStack.stopBubblingAndTrue
   stopBubblingAndFalse: handlerStack.stopBubblingAndFalse
+  restartBubbling: handlerStack.restartBubbling
 
   constructor: (@options={}) ->
     @handlers = []

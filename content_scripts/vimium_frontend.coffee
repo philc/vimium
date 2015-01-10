@@ -384,8 +384,8 @@ extend window,
           # shouldn't happen anyway.  However, it does no harm to enforce it.
           singleton: FocusSelector
           targetMode: targetMode
-          # For the InsertModeBlocker super-class (we'll always choose InsertMode on click).  See comment in
-          # InsertModeBlocker for an explanation of why this is needed.
+          # Set the target mode for when/if the active element is clicked.  Usually, the target is insert
+          # mode.  See comment in InsertModeBlocker for an explanation of why this is needed.
           onClickMode: targetMode
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -397,22 +397,22 @@ extend window,
               @suppressEvent
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
               @exit event
-              @continueBubbling
+              # In @exit(), we just pushed a new mode (usually insert mode).  Restart bubbling, so that the
+              # new mode can now see the event too.
+              @restartBubbling
 
         visibleInputs[selectedInputIndex].element.focus()
-        if visibleInputs.length == 1
-          @exit()
-        else
-          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        return @exit() if visibleInputs.length == 1
+
+        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
       exit: ->
         super()
         DomUtils.removeElement hintContainingDiv
         if document.activeElement == visibleInputs[selectedInputIndex].element
-          # The InsertModeBlocker super-class  handles the "click" case.
+          # The InsertModeBlocker super-class  handles "click" events, so we should skip it here.
           unless event?.type == "click"
-            # In the legacy (and probably common) case, we're entering insert mode here.  However, it could be
-            # some other mode.
+            # In most cases, we're entering insert mode here.  However, it could be some other mode.
             new @options.targetMode
               targetElement: document.activeElement
 
@@ -455,7 +455,7 @@ KeydownEvents =
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
 
-onKeypress = (event, extra) ->
+onKeypress = (event) ->
   keyChar = ""
 
   # Ignore modifier keys by themselves.
@@ -484,7 +484,7 @@ onKeypress = (event, extra) ->
 
   return true
 
-onKeydown = (event, extra) ->
+onKeydown = (event) ->
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -789,6 +789,7 @@ class FindMode extends InsertModeBlocker
     super()
     handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
     handleEscapeForFindMode() if event?.type == "click"
+    # If event?.type == "click", then the InsertModeBlocker super-class will be dropping us into insert mode.
     new PostFindMode findModeAnchorNode unless event?.type == "click"
 
 performFindInPlace = ->
