@@ -1,7 +1,7 @@
 class InsertMode extends Mode
   element: null
 
-  constructor: (element, showIndicator = true) ->
+  constructor: (element, showIndicator = false) ->
     # Register listeners before calling the constructor, in case a mode we replace changes focus.
     document.addEventListener "focus", @onFocusCapturePhase, true
     document.addEventListener "blur", @onBlurCapturePhase, true
@@ -51,7 +51,7 @@ class InsertMode extends Mode
     # whether the active element is contentEditable.
       (document.activeElement?.isContentEditable and @activate document.activeElement)
 
-  activate: (element, showIndicator = true) ->
+  activate: (element, showIndicator = false) ->
     if element? and not DomUtils.isFocusable element
       return false # This element isn't one that uses insert mode.
     else if showIndicator
