@@ -33,6 +33,7 @@ class PostFindMode extends InsertModeBlocker
 
     self = @
     @push
+      _name: "mode-#{@id}/handle-escape"
       keydown: (event) ->
         if element == document.activeElement and KeyboardUtils.isEscape event
           self.exit()

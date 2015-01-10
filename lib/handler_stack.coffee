@@ -3,6 +3,8 @@ root = exports ? window
 class HandlerStack
 
   constructor: ->
+    @debug = false
+    @eventNumber = 0
     @stack = []
     @counter = 0
 
@@ -22,8 +24,10 @@ class HandlerStack
   # Adds a handler to the top of the stack. Returns a unique ID for that handler that can be used to remove it
   # later.
   push: (handler) ->
-    @stack.push handler
     handler.id = ++@counter
+    handler._name ||= "anon-#{@counter}"
+    @stack.push handler
+    handler.id
 
   # Adds a handler to the bottom of the stack. Returns a unique ID for that handler that can be used to remove
   # it later.
@@ -35,6 +39,7 @@ class HandlerStack
   # event's propagation by returning a falsy value, or stop bubbling by returning @stopBubblingAndFalse or
   # @stopBubblingAndTrue.
   bubbleEvent: (type, event) ->
+    @eventNumber += 1
     # We take a copy of the array in order to avoid interference from concurrent removes (for example, to
     # avoid calling the same handler twice, because elements have been spliced out of the array by remove).
     for handler in @stack[..].reverse()
@@ -42,6 +47,7 @@ class HandlerStack
       if handler?.id and handler[type]
         @currentId = handler.id
         result = handler[type].call @, event
+        @logResult type, event, handler, result if @debug
         if not result
           DomUtils.suppressEvent(event) if @isChromeEvent event
           return false
@@ -74,6 +80,32 @@ class HandlerStack
   neverContinueBubbling: (handler) ->
     handler()
     false
+
+  # Debugging.
+  debugOn: -> @debug = true
+  debugOff: -> @debug = false
+
+  logResult: (type, event, handler, result) ->
+    # FIXME(smblott).  Badge updating is too noisy, so we filter it out.  However, we do need to look at how
+    # many badge update events are happening.  It seems to be more than necessary.
+    return if type == "updateBadge"
+    label =
+      switch result
+        when @stopBubblingAndTrue then "stop/true"
+        when @stopBubblingAndFalse then "stop/false"
+        when @restartBubbling then "rebubble"
+        when true then "continue"
+    label ||= if result then "continue/truthy" else "suppress"
+    @log @eventNumber, type, handler._name, label
+
+  logRecords: []
+  log: (args...) ->
+    line = args.join " "
+    @logRecords.push line
+    console.log line
+
+  clipLog: ->
+    Clipboard.copy logRecords.join "\n"
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack

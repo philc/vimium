@@ -396,10 +396,16 @@ extend window,
               visibleInputs[selectedInputIndex].element.focus()
               @suppressEvent
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-              @exit event
-              # In @exit(), we just pushed a new mode (usually insert mode).  Restart bubbling, so that the
-              # new mode can now see the event too.
-              @restartBubbling
+              mode = @exit event
+              if mode
+                # In @exit(), we just pushed a new mode (usually insert mode).  Restart bubbling, so that the
+                # new mode can now see the event too.
+                # Exception: If the new mode exits on Escape, and this key event is Escape, then rebubbling the
+                # event will just cause the mode to exit immediately.  So we suppress Escapes.
+                if mode.options.exitOnEscape and KeyboardUtils.isEscape event
+                  @suppressEvent
+                else
+                  @restartBubbling
 
         visibleInputs[selectedInputIndex].element.focus()
         return @exit() if visibleInputs.length == 1

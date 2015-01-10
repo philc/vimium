@@ -38,12 +38,14 @@
 #   myMode.exit() # externally triggered.
 #
 
-# For debug only; to be stripped out.
+# For debug only.
 count = 0
 
 class Mode
-  # If this is true, then we generate a trace of modes being activated and deactivated on the console.
-  @debug = true
+  # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
+  # with a list of the currently active modes.
+  debug: true
+  @modes: []
 
   # Constants; short, readable names for handlerStack event-handler return values.
   continueBubbling: true
@@ -60,7 +62,8 @@ class Mode
     @name = @options.name || "anonymous"
 
     @count = ++count
-    console.log @count, "create:", @name if Mode.debug
+    @id = "#{@name}-#{@count}"
+    @logger "activate:", @id if @debug
 
     @push
       keydown: @options.keydown || null
@@ -80,6 +83,7 @@ class Mode
       # Note. This handler ends up above the mode's own key handlers on the handler stack, so it takes
       # priority.
       @push
+        _name: "mode-#{@id}/exitOnEscape"
         "keydown": (event) =>
           return @continueBubbling unless KeyboardUtils.isEscape event
           @exit event
@@ -90,6 +94,7 @@ class Mode
     # loses the focus.
     if @options.exitOnBlur
       @push
+        _name: "mode-#{@id}/exitOnBlur"
         "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == @options.exitOnBlur
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
@@ -98,6 +103,7 @@ class Mode
       @enabled = false
       @passKeys = ""
       @push
+        _name: "mode-#{@id}/registerStateChange"
         "registerStateChange": ({ enabled: enabled, passKeys: passKeys }) =>
           @alwaysContinueBubbling =>
             if enabled != @enabled or passKeys != @passKeys
@@ -110,30 +116,38 @@ class Mode
     # from propagating to other extensions or the host page.
     if @options.trapAllKeyboardEvents
       @unshift
-        keydown: (event) => @alwaysContinueBubbling =>
-          DomUtils.suppressPropagation event if event.srcElement == @options.trapAllKeyboardEvents
-        keypress: (event) => @alwaysContinueBubbling =>
-          DomUtils.suppressEvent event if event.srcElement == @options.trapAllKeyboardEvents
-        keyup: (event) => @alwaysContinueBubbling =>
-          DomUtils.suppressPropagation event if event.srcElement == @options.trapAllKeyboardEvents
+        _name: "mode-#{@id}/trapAllKeyboardEvents"
+        keydown: (event) =>
+          if event.srcElement == @options.trapAllKeyboardEvents then @suppressEvent else @continueBubbling
+        keypress: (event) =>
+          if event.srcElement == @options.trapAllKeyboardEvents then @suppressEvent else @continueBubbling
+        keyup: (event) =>
+          if event.srcElement == @options.trapAllKeyboardEvents then @suppressEvent else @continueBubbling
 
     Mode.updateBadge() if @badge
-    # End of Mode.constructor().
+    Mode.modes.push @
+    @log() if @debug
+    handlerStack.debugOn()
+    # End of Mode constructor.
 
   push: (handlers) ->
+    handlers._name ||= "mode-#{@id}"
     @handlers.push handlerStack.push handlers
 
   unshift: (handlers) ->
-    @handlers.unshift handlerStack.push handlers
+    handlers._name ||= "mode-#{@id}"
+    handlers._name += "/unshifted"
+    @handlers.push handlerStack.unshift handlers
 
   onExit: (handler) ->
     @exitHandlers.push handler
 
   exit: ->
     if @modeIsActive
-      console.log @count, "exit:", @name if Mode.debug
+      @logger "deactivate:", @id if @debug
       handler() for handler in @exitHandlers
       handlerStack.remove handlerId for handlerId in @handlers
+      Mode.modes = Mode.modes.filter (mode) => mode != @
       Mode.updateBadge()
       @modeIsActive = false
 
@@ -177,11 +191,23 @@ class Mode
       # flickering in some cases.
       Mode.badgeSuppressor.runSuppresed =>
         if singletons[key]
-          console.log singletons[key].count, "singleton:", @name, "(deactivating)"
+          @logger "singleton:", "deactivating #{singletons[key].id}" if @debug
           singletons[key].exit()
       singletons[key] = @
 
       @onExit => delete singletons[key] if singletons[key] == @
+
+  # Debugging routines.
+  log: ->
+    if Mode.modes.length == 0
+      @logger "It looks like debugging is not enabled in modes.coffee."
+    else
+      @logger "active modes (top to bottom), current: #{@id}"
+      for mode in Mode.modes[..].reverse()
+        @logger " ",  mode.id
+
+  logger: (args...) ->
+    handlerStack.log args...
 
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
@@ -194,6 +220,7 @@ new class BadgeMode extends Mode
       trackState: true
 
     @push
+      _name: "mode-#{@id}/focus"
       "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
 
   chooseBadge: (badge) ->
