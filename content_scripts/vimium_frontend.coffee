@@ -22,7 +22,7 @@ isEnabledForUrl = true
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = null
+window.currentCompletionKeys = null
 validFirstKeys = null
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
