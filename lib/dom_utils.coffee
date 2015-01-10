@@ -206,6 +206,7 @@ DomUtils =
   # Suppress the next keyup event for Escape.
   suppressKeyupAfterEscape: (handlerStack) ->
     handlerStack.push
+      _name: "dom_utils/suppressKeyupAfterEscape"
       keyup: (event) ->
         return true unless KeyboardUtils.isEscape event
         @remove()

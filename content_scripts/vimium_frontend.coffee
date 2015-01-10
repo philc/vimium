@@ -384,8 +384,8 @@ extend window,
           # shouldn't happen anyway.  However, it does no harm to enforce it.
           singleton: FocusSelector
           targetMode: targetMode
-          # For the InsertModeBlocker super-class (we'll always choose InsertMode on click).  See comment in
-          # InsertModeBlocker for an explanation of why this is needed.
+          # Set the target mode for when/if the active element is clicked.  Usually, the target is insert
+          # mode.  See comment in InsertModeBlocker for an explanation of why this is needed.
           onClickMode: targetMode
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -396,23 +396,29 @@ extend window,
               visibleInputs[selectedInputIndex].element.focus()
               @suppressEvent
             else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-              @exit event
-              @continueBubbling
+              mode = @exit event
+              if mode
+                # In @exit(), we just pushed a new mode (usually insert mode).  Restart bubbling, so that the
+                # new mode can now see the event too.
+                # Exception: If the new mode exits on Escape, and this key event is Escape, then rebubbling the
+                # event will just cause the mode to exit immediately.  So we suppress Escapes.
+                if mode.options.exitOnEscape and KeyboardUtils.isEscape event
+                  @suppressEvent
+                else
+                  @restartBubbling
 
         visibleInputs[selectedInputIndex].element.focus()
-        if visibleInputs.length == 1
-          @exit()
-        else
-          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+        return @exit() if visibleInputs.length == 1
+
+        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
       exit: ->
         super()
         DomUtils.removeElement hintContainingDiv
         if document.activeElement == visibleInputs[selectedInputIndex].element
-          # The InsertModeBlocker super-class  handles the "click" case.
+          # The InsertModeBlocker super-class  handles "click" events, so we should skip it here.
           unless event?.type == "click"
-            # In the legacy (and probably common) case, we're entering insert mode here.  However, it could be
-            # some other mode.
+            # In most cases, we're entering insert mode here.  However, it could be some other mode.
             new @options.targetMode
               targetElement: document.activeElement
 
@@ -455,7 +461,8 @@ KeydownEvents =
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
 
-onKeypress = (event, extra) ->
+onKeypress = (event) ->
+  return true if event.vimium_suppress_normal_mode
   keyChar = ""
 
   # Ignore modifier keys by themselves.
@@ -465,23 +472,27 @@ onKeypress = (event, extra) ->
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return true
+      return handlerStack.stopBubblingAndTrue
 
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
+        return handlerStack.stopBubblingAndTrue
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
           return handlerStack.stopBubblingAndTrue
         if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
           DomUtils.suppressEvent(event)
+          keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+          return handlerStack.stopBubblingAndTrue
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
   return true
 
-onKeydown = (event, extra) ->
+onKeydown = (event) ->
+  return true if event.vimium_suppress_normal_mode
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -520,37 +531,45 @@ onKeydown = (event, extra) ->
     exitInsertMode()
     DomUtils.suppressEvent event
     KeydownEvents.push event
+    return handlerStack.stopBubblingAndTrue
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
     else if (!modifiers)
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
+      return handlerStack.stopBubblingAndTrue
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
     KeydownEvents.push event
+    return handlerStack.stopBubblingAndTrue
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         KeydownEvents.push event
+        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        return handlerStack.stopBubblingAndTrue
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -572,12 +591,14 @@ onKeydown = (event, extra) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
+    return handlerStack.stopBubblingAndTrue
 
   return true
 
 onKeyup = (event) ->
-  DomUtils.suppressPropagation(event) if KeydownEvents.pop event
-  return true
+  return true unless KeydownEvents.pop event
+  DomUtils.suppressPropagation(event)
+  handlerStack.stopBubblingAndTrue
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
@@ -776,6 +797,7 @@ class FindMode extends InsertModeBlocker
     super()
     handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
     handleEscapeForFindMode() if event?.type == "click"
+    # If event?.type == "click", then the InsertModeBlocker super-class will be dropping us into insert mode.
     new PostFindMode findModeAnchorNode unless event?.type == "click"
 
 performFindInPlace = ->

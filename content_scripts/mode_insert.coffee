@@ -1,5 +1,6 @@
 
-# This mode is installed when insert mode is active.
+# This mode is installed only when insert mode is active.  It is a singleton, so a newly-activated instance
+# displaces any active instance.
 class InsertMode extends Mode
   constructor: (options = {}) ->
     defaults =
@@ -11,12 +12,15 @@ class InsertMode extends Mode
       keyup: (event) => @stopBubblingAndTrue
       exitOnEscape: true
       blurOnExit: true
+      targetElement: null
 
-    options = extend defaults, options
-    options.exitOnBlur = options.targetElement || null
-    super options
+    # If options.targetElement blurs, we exit.
+    options.exitOnBlur ||= options.targetElement
+    super extend defaults, options
+    triggerSuppressor.suppress()
 
   exit: (event = null) ->
+    triggerSuppressor.unsuppress()
     super()
     if @options.blurOnExit
       element = event?.srcElement
@@ -32,8 +36,8 @@ class InsertMode extends Mode
 #   - On a keydown event in a contentEditable element.
 #   - When a focusable element receives the focus.
 #
-# The trigger can be suppressed via triggerSuppressor; see InsertModeBlocker, below.
-# This mode is permanently installed fairly low down on the handler stack.
+# The trigger can be suppressed via triggerSuppressor; see InsertModeBlocker, below.  This mode is permanently
+# installed (just above normal mode and passkeys mode) on the handler stack.
 class InsertModeTrigger extends Mode
   constructor: ->
     super
@@ -42,13 +46,14 @@ class InsertModeTrigger extends Mode
         triggerSuppressor.unlessSuppressed =>
           # Some sites (e.g. inbox.google.com) change the contentEditable attribute on the fly (see #1245);
           # and unfortunately, the focus event happens *before* the change is made.  Therefore, we need to
-          # check again whether the active element is contentEditable.
+          # check (on every keydown) whether the active element is contentEditable.
           return @continueBubbling unless document.activeElement?.isContentEditable
           new InsertMode
             targetElement: document.activeElement
           @stopBubblingAndTrue
 
     @push
+      _name: "mode-#{@id}/activate-on-focus"
       focus: (event) =>
         triggerSuppressor.unlessSuppressed =>
           @alwaysContinueBubbling =>
@@ -56,7 +61,7 @@ class InsertModeTrigger extends Mode
               new InsertMode
                 targetElement: event.target
 
-    # We may already have focussed an input, so check.
+    # We may have already focussed an input element, so check.
     if document.activeElement and DomUtils.isEditable document.activeElement
       new InsertMode
         targetElement: document.activeElement
@@ -64,27 +69,30 @@ class InsertModeTrigger extends Mode
 # Used by InsertModeBlocker to suppress InsertModeTrigger; see below.
 triggerSuppressor = new Utils.Suppressor true # Note: true == @continueBubbling
 
-# Suppresses InsertModeTrigger.  This is used by various modes (usually by inheritance) to prevent
+# Suppresses InsertModeTrigger.  This is used by various modes (usually via inheritance) to prevent
 # unintentionally dropping into insert mode on focusable elements.
 class InsertModeBlocker extends Mode
   constructor: (options = {}) ->
     triggerSuppressor.suppress()
     options.name ||= "insert-blocker"
+    # See "click" handler below for an explanation of options.onClickMode.
     options.onClickMode ||= InsertMode
     super options
     @onExit -> triggerSuppressor.unsuppress()
 
     @push
+      _name: "mode-#{@id}/bail-on-click"
       "click": (event) =>
         @alwaysContinueBubbling =>
-          # The user knows best; so, if the user clicks on something, we get out of the way.
+          # The user knows best; so, if the user clicks on something, the insert-mode blocker gets out of the
+          # way.
           @exit event
-          # However, there's a corner case.  If the active element is focusable, then we would have been in
-          # insert mode had we not been blocking the trigger.  Now, clicking on the element will not generate
-          # a new focus event, so the insert-mode trigger will not fire.  We have to handle this case
-          # specially.  @options.onClickMode is the mode to use.
+          # However, there's a corner case.  If the active element is focusable, then, had we not been
+          # blocking the trigger, we would already have been in insert mode.  Now, a click on that element
+          # will not generate a new focus event, so the insert-mode trigger will not fire.  We have to handle
+          # this case specially.  @options.onClickMode specifies the mode to use (by default, insert mode).
           if document.activeElement and
-              event.target == document.activeElement and DomUtils.isEditable document.activeElement
+             event.target == document.activeElement and DomUtils.isEditable document.activeElement
             new @options.onClickMode
               targetElement: document.activeElement
 
