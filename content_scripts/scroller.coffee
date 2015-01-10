@@ -124,7 +124,7 @@ CoreScroller =
     @keyIsDown = false
 
     handlerStack.push
-      _name: 'scroller/track-key-down/up'
+      _name: 'scroller/track-key-status'
       keydown: (event) =>
         handlerStack.alwaysContinueBubbling =>
           @keyIsDown = true

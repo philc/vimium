@@ -1,5 +1,6 @@
 
-# This mode is installed only when insert mode is active.
+# This mode is installed only when insert mode is active.  It is a singleton, so a newly-activated instance
+# displaces any active instance.
 class InsertMode extends Mode
   constructor: (options = {}) ->
     defaults =
@@ -13,6 +14,7 @@ class InsertMode extends Mode
       blurOnExit: true
       targetElement: null
 
+    # If options.targetElement blurs, we exit.
     options.exitOnBlur ||= options.targetElement
     super extend defaults, options
     triggerSuppressor.suppress()
