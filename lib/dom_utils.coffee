@@ -212,5 +212,8 @@ DomUtils =
         @remove()
         false
 
+  isPrintable: (event) ->
+    not (event.metaKey or event.ctrlKey or event.altKey)
+
 root = exports ? window
 root.DomUtils = DomUtils

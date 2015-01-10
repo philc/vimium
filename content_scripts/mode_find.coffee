@@ -1,10 +1,14 @@
 # NOTE(smblott).  Ultimately, all of the FindMode-related code should be moved to this file.
 
 # When we use find mode, the selection/focus can end up in a focusable/editable element.  In this situation,
-# special considerations apply.  We implement two special cases:
+# special considerations apply.  We implement three special cases:
 #   1. Prevent keyboard events from dropping us unintentionally into insert mode. This is achieved by
 #      inheriting from InsertModeBlocker.
-#   2. If the very-next keystroke is Escape, then drop immediately into insert mode.
+#   2. Prevent all printable keyboard events on the active element from propagating.  This is achieved by setting the
+#      suppressPrintableEvents option.  There's some controversy as to whether this is the right thing to do.
+#      See discussion in #1415. This implements Option 2 from there, although Option 3 would be a reasonable
+#      alternative.
+#   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 #
 class PostFindMode extends InsertModeBlocker
   constructor: (findModeAnchorNode) ->
@@ -16,6 +20,7 @@ class PostFindMode extends InsertModeBlocker
       # instance is automatically deactivated when a new instance is activated.
       singleton: PostFindMode
       exitOnBlur: element
+      suppressPrintableEvents: element
 
     return @exit() unless element and findModeAnchorNode
 

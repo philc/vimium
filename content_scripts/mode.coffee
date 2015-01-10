@@ -111,23 +111,21 @@ class Mode
               @passKeys = passKeys
               @registerStateChange?()
 
-    # If @options.trapAllKeyboardEvents is truthy, then it should be an element.  All keyboard events on that
-    # element are suppressed *after* bubbling the event down the handler stack.  This prevents such events
-    # from propagating to other extensions or the host page.
-    if @options.trapAllKeyboardEvents
+    # If @options.suppressPrintableEvents is truthy, then it should be an element.  All printable keyboard
+    # events on that element are suppressed, if necessary (that is, *after* bubbling down the handler stack).
+    # We only suppress keypress events.  This is used by PostFindMode to protect active, editable elements.
+    # Note: We use unshift here, not push, so the handler is installed at the bottom of the stack.
+    if @options.suppressPrintableEvents
       @unshift
-        _name: "mode-#{@id}/trapAllKeyboardEvents"
-        keydown: (event) =>
-          if event.srcElement == @options.trapAllKeyboardEvents then @suppressEvent else @continueBubbling
+        _name: "mode-#{@id}/suppressPrintableEvents"
         keypress: (event) =>
-          if event.srcElement == @options.trapAllKeyboardEvents then @suppressEvent else @continueBubbling
-        keyup: (event) =>
-          if event.srcElement == @options.trapAllKeyboardEvents then @suppressEvent else @continueBubbling
+          if DomUtils.isPrintable(event) and
+            event.srcElement == @options.suppressPrintableEvents then @suppressEvent else @continueBubbling
 
     Mode.updateBadge() if @badge
     Mode.modes.push @
     @log() if @debug
-    handlerStack.debugOn()
+    # handlerStack.debugOn()
     # End of Mode constructor.
 
   push: (handlers) ->
