@@ -94,35 +94,6 @@ class InsertModeBlocker extends Mode
             new @options.onClickMode
               targetElement: document.activeElement
 
-# There's some unfortunate feature interaction with chrome's contentEditable handling.  If the selection is
-# contentEditable and a descendant of the active element, then chrome focuses it on any unsuppressed keyboard
-# event.  This has the unfortunate effect of dropping us unintentally into insert mode.  See #1415.  A single
-# instance of this mode sits near the bottom of the handler stack and suppresses keyboard events if:
-#   - they haven't been handled by any other mode (so not by normal mode, passkeys, insert, ...),
-#   - the selection is content editable, and
-#   - the selection is a descendant of the active element.
-# This should rarely fire, typically only on fudged keypresses in normal mode.  And, even then, only in the
-# circumstances outlined above.  So, we shouldn't usually be blocking keyboard events for other extensions or
-# the page itself.
-# There's some controversy as to whether this is the right thing to do.  See discussion in #1415. This
-# implements Option 2 from there, although Option 3 would be a reasonable alternative.
-new class ContentEditableTrap extends Mode
-  constructor: ->
-    super
-      name: "content-editable-trap"
-      keydown: (event) => @handle => DomUtils.suppressPropagation event
-      keypress: (event) => @handle => @suppressEvent
-      keyup: (event) => @handle => @suppressEvent
-
-  handle: (func) -> if @wouldTriggerInsert() then func() else @continueBubbling
-
-  # True if the selection is content editable and a descendant of the active element.
-  wouldTriggerInsert: ->
-    element = document.getSelection()?.anchorNode?.parentElement
-    return element?.isContentEditable and
-             document.activeElement and
-             DomUtils.isDOMDescendant document.activeElement, element
-
 root = exports ? window
 root.InsertMode = InsertMode
 root.InsertModeTrigger = InsertModeTrigger
