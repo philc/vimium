@@ -111,16 +111,18 @@ class Mode
               @passKeys = passKeys
               @registerStateChange?()
 
-    # If @options.suppressPrintableEvents is truthy, then it should be an element.  All printable keyboard
-    # events on that element are suppressed, if necessary (that is, *after* bubbling down the handler stack).
-    # We only suppress keypress events.  This is used by PostFindMode to protect active, editable elements.
-    # Note: We use unshift here, not push, so the handler is installed at the bottom of the stack.
+    # If @options.suppressPrintableEvents is truthy, then it should be an element.  All printable keypress
+    # events on that element are suppressed, if necessary.  They are suppressed *after* bubbling down the
+    # handler stack and finding no handler.  This is used by PostFindMode to protect active, editable
+    # elements.
     if @options.suppressPrintableEvents
-      @unshift
+      @push
         _name: "mode-#{@id}/suppressPrintableEvents"
         keypress: (event) =>
-          if KeyboardUtils.isPrintable(event) and
-            event.srcElement == @options.suppressPrintableEvents then @suppressEvent else @continueBubbling
+          @alwaysContinueBubbling =>
+            if event.srcElement == @options.suppressPrintableEvents
+              if KeyboardUtils.isPrintable(event)
+                event.vimium_suppress_event = true
 
     Mode.updateBadge() if @badge
     Mode.modes.push @
@@ -217,6 +219,9 @@ new class BadgeMode extends Mode
       name: "badge"
       trackState: true
 
+    # FIXME(smblott) BadgeMode is currently triggering and updateBadge event on every focus event.  That's a
+    # lot, considerably more than is necessary.  Really, it only needs to trigger when we change frame, or
+    # when we change tab.
     @push
       _name: "mode-#{@id}/focus"
       "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
@@ -227,6 +232,20 @@ new class BadgeMode extends Mode
 
   registerStateChange: ->
     Mode.updateBadge()
+
+# KeySuppressor is a pseudo mode (near the bottom of the stack) which suppresses keyboard events tagged with
+# the "vimium_suppress_event" property.  This allows modes higher up in the stack to tag events for
+# suppression, but only after verifying that no other mode (notably, normal mode) wants to handle the event.
+# Note.  We also create the the one-and-only instance, here.
+new class KeySuppressor extends Mode
+  constructor: ->
+    super
+      name: "key-suppressor"
+      keydown: (event) => @handle event
+      keypress: (event) => @handle event
+      keyup: (event) => @handle event
+
+  handle: (event) -> if event.vimium_suppress_event then @suppressEvent else @continueBubbling
 
 root = exports ? window
 root.Mode = Mode

@@ -462,6 +462,7 @@ KeydownEvents =
 #
 
 onKeypress = (event) ->
+  return true if event.vimium_suppress_normal_mode
   keyChar = ""
 
   # Ignore modifier keys by themselves.
@@ -491,6 +492,7 @@ onKeypress = (event) ->
   return true
 
 onKeydown = (event) ->
+  return true if event.vimium_suppress_normal_mode
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
