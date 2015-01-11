@@ -8,13 +8,16 @@
 # In 'filter' mode, our link hints are numbers, and the user can narrow down the range of possibilities by
 # typing the text of the link itself.
 #
-OPEN_IN_CURRENT_TAB = {}
-OPEN_IN_NEW_BG_TAB = {}
-OPEN_IN_NEW_FG_TAB = {}
-OPEN_WITH_QUEUE = {}
-COPY_LINK_URL = {}
-OPEN_INCOGNITO = {}
-DOWNLOAD_LINK_URL = {}
+# The "name" property here is a short-form name to appear in the link-hints mode name.  Debugging only.  The
+# key appears in the mode's badge.
+# NOTE(smblott) The use of keys in badges is experimental. It may prove too noisy.
+OPEN_IN_CURRENT_TAB = { name: "curr-tab", key: "C" }
+OPEN_IN_NEW_BG_TAB = { name: "bg-tab", key: "B" }
+OPEN_IN_NEW_FG_TAB = { name: "fg-tab", key: "F" }
+OPEN_WITH_QUEUE = { name: "queue", key: "Q" }
+COPY_LINK_URL = { name: "link", key: "C" }
+OPEN_INCOGNITO = { name: "incognito", key: "I" }
+DOWNLOAD_LINK_URL = { name: "download", key: "D" }
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -62,13 +65,21 @@ LinkHints =
     @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
-    # handlerStack is declared by vimiumFrontend.js
-    @handlerId = handlerStack.push({
-      keydown: @onKeyDownInMode.bind(this, hintMarkers),
-      # trap all key events
-      keypress: -> false
-      keyup: -> false
-    })
+    @handlerMode =
+      new class HintMode extends Mode
+        constructor: ->
+          super
+            name: "hint/#{mode.name}"
+            badge: "?#{mode.key}"
+            exitOnEscape: true
+            keydown: (event) -> LinkHints.onKeyDownInMode hintMarkers, event
+            # trap all key events
+            keypress: => @stopBubblingAndFalse
+            keyup: => @stopBubblingAndFalse
+
+        exit: (delay, callback) =>
+          super()
+          LinkHints.deactivateMode delay, callback
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
@@ -267,13 +278,14 @@ LinkHints =
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
-      @deactivateMode()
+      # TODO(smblott). Now unreachable.  Clean up.  Left like this for now to keep the diff clean.
+      @handlerMode.exit()
     else
       keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
       linksMatched = keyResult.linksMatched
       delay = keyResult.delay ? 0
       if (linksMatched.length == 0)
-        @deactivateMode()
+        @handlerMode.exit()
       else if (linksMatched.length == 1)
         @activateLink(linksMatched[0], delay)
       else
@@ -291,7 +303,7 @@ LinkHints =
     clickEl = matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
-      @deactivateMode(delay, -> LinkHints.delayMode = false)
+      @handlerMode.exit delay, -> LinkHints.delayMode = false
     else
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" && clickEl.type != "button")
@@ -299,11 +311,11 @@ LinkHints =
       DomUtils.flashRect(matchedLink.rect)
       @linkActivator(clickEl)
       if @mode is OPEN_WITH_QUEUE
-        @deactivateMode delay, ->
+        @handlerMode.exit delay, ->
           LinkHints.delayMode = false
           LinkHints.activateModeWithQueue()
       else
-        @deactivateMode(delay, -> LinkHints.delayMode = false)
+        @handlerMode.exit delay, -> LinkHints.delayMode = false
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -330,7 +342,6 @@ LinkHints =
       if (LinkHints.hintMarkerContainingDiv)
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
-      handlerStack.remove @handlerId
       HUD.hide()
       @isActive = false
 
