@@ -8,12 +8,12 @@ mockKeyboardEvent = (keyChar) ->
   event.charCode = (if keyCodes[keyChar] isnt undefined then keyCodes[keyChar] else keyChar.charCodeAt(0))
   event.keyIdentifier = "U+00" + event.charCode.toString(16)
   event.keyCode = event.charCode
-  event.stopImmediatePropagation = (event) -> @suppressed = true
-  event.preventDefault = (event) -> @suppressed = true
+  event.stopImmediatePropagation = -> @suppressed = true
+  event.preventDefault = -> @suppressed = true
   event
 
 # Some of these tests have side effects on the handler stack and mode.  Therefore, we take backups and restore
-# them later.
+# them on tear down.
 backupStackState = ->
   Mode.backup = Mode.modes[..]
   handlerStack.backup = handlerStack.stack[..]
@@ -197,6 +197,21 @@ context "Input focus",
     assert.equal "third", document.activeElement.id
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
+  # This is the same as above, but also verifies that focusInput activates insert mode.
+  should "focus the right element, and activate insert mode", ->
+    focusInput 1
+    assert.equal "first", document.activeElement.id
+    # deactivate the tabbing mode and its overlays
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
+    focusInput 100
+    assert.equal "third", document.activeElement.id
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
 # a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
 # don't need to construct external state many times over just to test that.
@@ -262,13 +277,12 @@ createLinks = (n) ->
     link.textContent = "test"
     document.getElementById("test-div").appendChild link
 
-# For these tests, we use "m" as a mapped key, "p" ass a pass key, and "u" as an unmapped key.
+# For these tests, we use "m" as a mapped key, "p" as a pass key, and "u" as an unmapped key.
 context "Normal mode",
   setup ->
     backupStackState()
     refreshCompletionKeys
-      completionKeys: [ "m" ]
-      validFirstKeys: {}
+      completionKeys: "m"
 
   tearDown ->
     restoreStackState()
@@ -616,7 +630,7 @@ context "PostFindMode",
   should "enter insert mode on immediate escape", ->
 
     new PostFindMode @element
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "post-find"
     handlerStack.bubbleEvent "keydown", @escape
     assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
 

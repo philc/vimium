@@ -189,10 +189,9 @@ class Mode
       # We're currently installing a new mode. So we'll be updating the badge shortly.  Therefore, we can
       # suppress badge updates while exiting any existing active singleton.  This prevents the badge from
       # flickering in some cases.
-      Mode.badgeSuppressor.runSuppresed =>
-        if singletons[key]
-          @log "singleton:", "deactivating #{singletons[key].id}" if @debug
-          singletons[key].exit()
+      if singletons[key]
+        @log "singleton:", "deactivating #{singletons[key].id}" if @debug
+        Mode.badgeSuppressor.runSuppresed -> singletons[key].exit()
       singletons[key] = @
 
       @onExit => delete singletons[key] if singletons[key] == @
@@ -216,7 +215,7 @@ new class BadgeMode extends Mode
       name: "badge"
       trackState: true
 
-    # FIXME(smblott) BadgeMode is currently triggering and updateBadge event on every focus event.  That's a
+    # FIXME(smblott) BadgeMode is currently triggering an updateBadge event on every focus event.  That's a
     # lot, considerably more than is necessary.  Really, it only needs to trigger when we change frame, or
     # when we change tab.
     @push
