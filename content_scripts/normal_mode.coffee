@@ -63,11 +63,6 @@ class NormalModeBase extends Mode
     if (event.keyCode > 31)
       keyChar = String.fromCharCode(event.charCode)
 
-      # Enter insert mode when the user enables the native find interface.
-      if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
-        enterInsertModeWithoutShowingIndicator()
-        return false
-
       if (keyChar)
         if (isPassKey keyChar)
           return false
