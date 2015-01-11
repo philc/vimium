@@ -75,7 +75,7 @@ root.HUD =
       del: handleDeleteForFindMode
       enter: handleEnterForFindMode
     findModeQuery.rawQuery = data.query
-    handlers[data.type]?()
+    handlers[data.type]()
     @hudUI.hide()
 
   isReady: -> document.body != null

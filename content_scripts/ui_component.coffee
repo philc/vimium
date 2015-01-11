@@ -3,9 +3,9 @@ class UIComponent
   iframePort: null
   showing: null
   loaded: false
-  queuedActions: []
 
   constructor: (iframeUrl, className, @handleMessage) ->
+    @queuedActions = []
     @iframeElement = document.createElement "iframe"
     @iframeElement.className = className
     @iframeElement.seamless = "seamless"

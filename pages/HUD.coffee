@@ -33,7 +33,7 @@ enterFindMode = (data) ->
     # Strip newlines in case the user has pasted some.
     UIComponentServer.postMessage name: "search", query: inputElement.innerText.replace(/\r\n/g, "")
 
-  inputElement.addEventListener "keydown", (event) ->
+  document.addEventListener "keydown", (event) ->
     if KeyboardUtils.isEscape event
       eventType = "esc"
     else if event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]
