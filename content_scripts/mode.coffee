@@ -212,7 +212,7 @@ class Mode
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
 # badge choice of the other active modes.
-# Note.  We also create the the one-and-only instance, here.
+# Note.  We create the the one-and-only instance, here.
 new class BadgeMode extends Mode
   constructor: () ->
     super
@@ -236,7 +236,7 @@ new class BadgeMode extends Mode
 # KeySuppressor is a pseudo mode (near the bottom of the stack) which suppresses keyboard events tagged with
 # the "vimium_suppress_event" property.  This allows modes higher up in the stack to tag events for
 # suppression, but only after verifying that no other mode (notably, normal mode) wants to handle the event.
-# Note.  We also create the the one-and-only instance, here.
+# Note.  We create the the one-and-only instance, here.
 new class KeySuppressor extends Mode
   constructor: ->
     super

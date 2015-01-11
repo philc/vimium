@@ -12,8 +12,10 @@ class PassKeysMode extends Mode
   # passKeys if the keyQueue is not empty.  So, for example, if 't' is a passKey, then 'gt' and '99t' will
   # neverthless be handled by vimium.
   handleKeyChar: (keyChar) ->
-    @alwaysContinueBubbling =>
-      event.vimium_suppress_normal_mode = true if keyChar and not @keyQueue and 0 <= @passKeys.indexOf keyChar
+    if keyChar and not @keyQueue and 0 <= @passKeys.indexOf keyChar
+      @stopBubblingAndTrue
+    else
+      @continueBubbling
 
   configure: (request) ->
     @keyQueue = request.keyQueue if request.keyQueue?
