@@ -44,7 +44,7 @@ count = 0
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
   # with a list of the currently active modes.
-  debug: false
+  debug: true
   @modes: []
 
   # Constants; short, readable names for handlerStack event-handler return values.
@@ -205,10 +205,14 @@ class Mode
   log: (args...) ->
     console.log args...
 
+  # Return the name of the must-recently activated mode.
+  @top: ->
+    @modes[@modes.length-1]?.name
+
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
 # badge choice of the other active modes.
-# Note.  We create the the one-and-only instance, here.
+# Note.  We create the the one-and-only instance here.
 new class BadgeMode extends Mode
   constructor: () ->
     super
@@ -223,16 +227,18 @@ new class BadgeMode extends Mode
       "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
 
   chooseBadge: (badge) ->
-    # If we're not enabled, then post an empty badge.
+    # If we're not enabled, then post an empty badge.  BadgeMode is last, so this takes priority.
     badge.badge = "" unless @enabled
 
+  # When the registerStateChange event bubbles to the bottom of the stack, all modes have been notified.  So
+  # it's now time to update the badge.
   registerStateChange: ->
     Mode.updateBadge()
 
 # KeySuppressor is a pseudo mode (near the bottom of the stack) which suppresses keyboard events tagged with
 # the "vimium_suppress_event" property.  This allows modes higher up in the stack to tag events for
 # suppression, but only after verifying that no other mode (notably, normal mode) wants to handle the event.
-# Note.  We create the the one-and-only instance, here.
+# Note.  We create the the one-and-only instance here.
 new class KeySuppressor extends Mode
   constructor: ->
     super

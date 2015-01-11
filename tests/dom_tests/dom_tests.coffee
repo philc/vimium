@@ -12,8 +12,8 @@ mockKeyboardEvent = (keyChar) ->
   event.preventDefault = -> @suppressed = true
   event
 
-# Some of these tests have side effects on the handler stack and mode.  Therefore, we take backups and restore
-# them on tear down.
+# Some of these tests have side effects on the handler stack and active mode.  Therefore, we take backups and
+# restore them on tear down.
 backupStackState = ->
   Mode.backup = Mode.modes[..]
   handlerStack.backup = handlerStack.stack[..]
@@ -202,15 +202,15 @@ context "Input focus",
     focusInput 1
     assert.equal "first", document.activeElement.id
     # deactivate the tabbing mode and its overlays
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.top() != "insert"
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
     focusInput 100
     assert.equal "third", document.activeElement.id
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.top() != "insert"
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
 # a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
@@ -393,19 +393,19 @@ context "Insert-mode trigger",
       target:
         isContentEditable: true
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
   should "trigger insert mode on focus of text input", ->
     document.getElementById("first").focus()
     handlerStack.bubbleEvent "focus", { target: document.activeElement }
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
   should "trigger insert mode on focus of password input", ->
     document.getElementById("third").focus()
     handlerStack.bubbleEvent "focus", { target: document.activeElement }
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
   should "not trigger insert mode on focus of contentEditable elements", ->
     new InsertModeBlocker()
@@ -413,21 +413,21 @@ context "Insert-mode trigger",
       target:
         isContentEditable: true
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.top() != "insert"
 
   should "not trigger insert mode on focus of text input", ->
     new InsertModeBlocker()
     document.getElementById("first").focus()
     handlerStack.bubbleEvent "focus", { target: document.activeElement }
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.top() != "insert"
 
   should "not trigger insert mode on focus of password input", ->
     new InsertModeBlocker()
     document.getElementById("third").focus()
     handlerStack.bubbleEvent "focus", { target: document.activeElement }
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.top() != "insert"
 
 context "Mode utilities",
   setup ->
@@ -458,10 +458,11 @@ context "Mode utilities",
         super()
 
     assert.isTrue count == 0
-    new Test()
-    assert.isTrue count == 1
-    new Test()
-    assert.isTrue count == 1
+    for [1..10]
+      mode = new Test(); assert.isTrue count == 1
+
+    mode.exit()
+    assert.isTrue count == 0
 
   should "exit on escape", ->
     escape =
@@ -471,20 +472,47 @@ context "Mode utilities",
       exitOnEscape: true
       name: "test"
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "test"
+    assert.isTrue Mode.top() == "test"
     handlerStack.bubbleEvent "keydown", escape
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "test"
+    assert.isTrue Mode.top() != "test"
+
+  should "not exit on escape if not enabled", ->
+    escape =
+      keyCode: 27
+      keyIdentifier: ""
+      stopImmediatePropagation: ->
+
+    new Mode
+      exitOnEscape: false
+      name: "test"
+
+    assert.isTrue Mode.top() == "test"
+    handlerStack.bubbleEvent "keydown", escape
+    assert.isTrue Mode.top() == "test"
 
   should "exit on blur", ->
     element = document.getElementById("first")
+    element.focus()
 
     new Mode
       exitOnBlur: element
       name: "test"
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "test"
+    assert.isTrue Mode.top() == "test"
     handlerStack.bubbleEvent "blur", { srcElement: element }
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "test"
+    assert.isTrue Mode.top() != "test"
+
+  should "not exit on blur if not enabled", ->
+    element = document.getElementById("first")
+    element.focus()
+
+    new Mode
+      exitOnBlur: null
+      name: "test"
+
+    assert.isTrue Mode.top() == "test"
+    handlerStack.bubbleEvent "blur", { srcElement: element }
+    assert.isTrue Mode.top() == "test"
 
   should "register state change", ->
     enabled = null
@@ -623,21 +651,69 @@ context "PostFindMode",
   should "be clickable to focus", ->
     new PostFindMode @element
 
-    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    assert.isTrue Mode.top() != "insert"
     handlerStack.bubbleEvent "click", { target: document.activeElement }
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
   should "enter insert mode on immediate escape", ->
 
     new PostFindMode @element
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "post-find"
+    assert.isTrue Mode.top() == "post-find"
     handlerStack.bubbleEvent "keydown", @escape
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+    assert.isTrue Mode.top() == "insert"
 
   should "not enter insert mode on subsequent escape", ->
     new PostFindMode @element
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "post-find"
+    assert.isTrue Mode.top() == "post-find"
     handlerStack.bubbleEvent "keydown", mockKeyboardEvent "u"
     handlerStack.bubbleEvent "keydown", @escape
-    assert.isTrue Mode.modes[Mode.modes.length-1].name == "post-find"
+    assert.isTrue Mode.top() == "post-find"
+
+context "Mode badges",
+  setup ->
+    backupStackState()
+
+  tearDown ->
+    restoreStackState()
+
+  should "have an N badge without passKeys", ->
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: true
+      passKeys: ""
+
+    handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
+    assert.isTrue badge.badge == "N"
+
+  should "have an P badge with passKeys", ->
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: true
+      passKeys: "p"
+
+    handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
+    assert.isTrue badge.badge == "P"
+
+  should "have an I badge in insert mode", ->
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: true
+      passKeys: ""
+
+    handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
+    assert.isTrue badge.badge == "N"
+
+    insertMode = new InsertMode()
+    handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
+    assert.isTrue badge.badge == "I"
+
+    insertMode.exit()
+    handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
+    assert.isTrue badge.badge == "N"
+
+  should "have no badge when disabled", ->
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: false
+      passKeys: ""
+
+    new InsertMode()
+    handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
+    assert.isTrue badge.badge == ""
 

@@ -108,9 +108,9 @@ class NormalMode extends Mode
     super
       name: "normal"
       badge: "N"
-      keydown: onKeydown
-      keypress: onKeypress
-      keyup: onKeyup
+      keydown: (event) => onKeydown.call @, event
+      keypress: (event) => onKeypress.call @, event
+      keyup: (event) => onKeyup.call @, event
 
   chooseBadge: (badge) ->
     super badge
@@ -460,7 +460,7 @@ KeydownEvents =
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
-
+# @/this, here, is the the normal-mode Mode object.
 onKeypress = (event) ->
   keyChar = ""
 
@@ -471,25 +471,26 @@ onKeypress = (event) ->
     # Enter insert mode when the user enables the native find interface.
     if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
       enterInsertModeWithoutShowingIndicator()
-      return handlerStack.stopBubblingAndTrue
+      return @stopBubblingAndTrue
 
     if (keyChar)
       if (findMode)
         handleKeyCharForFindMode(keyChar)
         DomUtils.suppressEvent(event)
-        return handlerStack.stopBubblingAndTrue
+        return @stopBubblingAndTrue
       else if (!isInsertMode() && !findMode)
         if (isPassKey keyChar)
-          return handlerStack.stopBubblingAndTrue
+          return @stopBubblingAndTrue
         if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
           DomUtils.suppressEvent(event)
           keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-          return handlerStack.stopBubblingAndTrue
+          return @stopBubblingAndTrue
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-  return true
+  return @continueBubbling
 
+# @/this, here, is the the normal-mode Mode object.
 onKeydown = (event) ->
   keyChar = ""
 
@@ -529,37 +530,37 @@ onKeydown = (event) ->
     exitInsertMode()
     DomUtils.suppressEvent event
     KeydownEvents.push event
-    return handlerStack.stopBubblingAndTrue
+    return @stopBubblingAndTrue
 
   else if (findMode)
     if (KeyboardUtils.isEscape(event))
       handleEscapeForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
-      return handlerStack.stopBubblingAndTrue
+      return @stopBubblingAndTrue
 
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       handleDeleteForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
-      return handlerStack.stopBubblingAndTrue
+      return @stopBubblingAndTrue
 
     else if (event.keyCode == keyCodes.enter)
       handleEnterForFindMode()
       DomUtils.suppressEvent event
       KeydownEvents.push event
-      return handlerStack.stopBubblingAndTrue
+      return @stopBubblingAndTrue
 
     else if (!modifiers)
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
-      return handlerStack.stopBubblingAndTrue
+      return @stopBubblingAndTrue
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
     KeydownEvents.push event
-    return handlerStack.stopBubblingAndTrue
+    return @stopBubblingAndTrue
 
   else if (!isInsertMode() && !findMode)
     if (keyChar)
@@ -567,7 +568,7 @@ onKeydown = (event) ->
         DomUtils.suppressEvent event
         KeydownEvents.push event
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-        return handlerStack.stopBubblingAndTrue
+        return @stopBubblingAndTrue
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -589,14 +590,15 @@ onKeydown = (event) ->
       isValidFirstKey(KeyboardUtils.getKeyChar(event))))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
-    return handlerStack.stopBubblingAndTrue
+    return @stopBubblingAndTrue
 
-  return true
+  return @continueBubbling
 
+# @/this, here, is the the normal-mode Mode object.
 onKeyup = (event) ->
-  return true unless KeydownEvents.pop event
+  return @continueBubbling unless KeydownEvents.pop event
   DomUtils.suppressPropagation(event)
-  handlerStack.stopBubblingAndTrue
+  @stopBubblingAndTrue
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
