@@ -63,7 +63,7 @@ class Mode
 
     @count = ++count
     @id = "#{@name}-#{@count}"
-    @logger "activate:", @id if @debug
+    @log "activate:", @id if @debug
 
     @push
       keydown: @options.keydown || null
@@ -126,7 +126,7 @@ class Mode
 
     Mode.updateBadge() if @badge
     Mode.modes.push @
-    @log() if @debug
+    @logStack() if @debug
     # handlerStack.debugOn()
     # End of Mode constructor.
 
@@ -144,7 +144,7 @@ class Mode
 
   exit: ->
     if @modeIsActive
-      @logger "deactivate:", @id if @debug
+      @log "deactivate:", @id if @debug
       handler() for handler in @exitHandlers
       handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
@@ -191,23 +191,20 @@ class Mode
       # flickering in some cases.
       Mode.badgeSuppressor.runSuppresed =>
         if singletons[key]
-          @logger "singleton:", "deactivating #{singletons[key].id}" if @debug
+          @log "singleton:", "deactivating #{singletons[key].id}" if @debug
           singletons[key].exit()
       singletons[key] = @
 
       @onExit => delete singletons[key] if singletons[key] == @
 
   # Debugging routines.
-  log: ->
-    if Mode.modes.length == 0
-      @logger "It looks like debugging is not enabled in modes.coffee."
-    else
-      @logger "active modes (top to bottom), current: #{@id}"
-      for mode in Mode.modes[..].reverse()
-        @logger " ",  mode.id
+  logStack: ->
+    @log "active modes (top to bottom):"
+    for mode in Mode.modes[..].reverse()
+      @log " ",  mode.id
 
-  logger: (args...) ->
-    handlerStack.log args...
+  log: (args...) ->
+    console.log args...
 
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
@@ -245,7 +242,8 @@ new class KeySuppressor extends Mode
       keypress: (event) => @handle event
       keyup: (event) => @handle event
 
-  handle: (event) -> if event.vimium_suppress_event then @suppressEvent else @continueBubbling
+  handle: (event) ->
+    if event.vimium_suppress_event then @suppressEvent else @continueBubbling
 
 root = exports ? window
 root.Mode = Mode

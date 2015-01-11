@@ -82,9 +82,6 @@ class HandlerStack
     false
 
   # Debugging.
-  debugOn: -> @debug = true
-  debugOff: -> @debug = false
-
   logResult: (type, event, handler, result) ->
     # FIXME(smblott).  Badge updating is too noisy, so we filter it out.  However, we do need to look at how
     # many badge update events are happening.  It seems to be more than necessary.
@@ -96,11 +93,7 @@ class HandlerStack
         when @restartBubbling then "rebubble"
         when true then "continue"
     label ||= if result then "continue/truthy" else "suppress"
-    @log @eventNumber, type, handler._name, label
-
-  log: (args...) ->
-    line = args.join " "
-    console.log line
+    console.log "#{@eventNumber}", type, handler._name, label
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()

@@ -4,10 +4,9 @@
 # special considerations apply.  We implement three special cases:
 #   1. Prevent keyboard events from dropping us unintentionally into insert mode. This is achieved by
 #      inheriting from InsertModeBlocker.
-#   2. Prevent all printable keyboard events on the active element from propagating.  This is achieved by setting the
+#   2. Prevent all printable keypress events on the active element from propagating.  This is achieved by setting the
 #      suppressPrintableEvents option.  There's some controversy as to whether this is the right thing to do.
-#      See discussion in #1415. This implements Option 2 from there, although Option 3 would be a reasonable
-#      alternative.
+#      See discussion in #1415. This implements Option 2 from there.
 #   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 #
 class PostFindMode extends InsertModeBlocker
