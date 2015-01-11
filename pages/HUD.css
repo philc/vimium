@@ -1,0 +1,68 @@
+div.vimiumHUD {
+  display: block;
+  position: fixed;
+  top: auto;
+  left: auto;
+  right: 0px;
+  bottom: 0px;
+  color: black;
+  height: 13px;
+  min-height: 13px;
+  width: auto;
+  max-width: 400px;
+  min-width: 150px;
+  text-align: left;
+  background-color: #ebebeb;
+  padding: 3px 3px 2px 3px;
+  margin: 0;
+  border: 1px solid #b3b3b3;
+  border-radius: 4px 4px 0 0;
+  font-family: "Lucida Grande", "Arial", "Sans";
+  font-size: 12px;
+  /* One less than vimium's hint markers, so link hints can be shown e.g. for the HUD panel's close button. */
+  z-index: 2147483646;
+  text-shadow: 0px 1px 2px #FFF;
+  line-height: 1.0;
+}
+/* Hide the span between search box letters */
+div.vimiumHUD span {
+  display: none;
+}
+div.vimiumHUD span#hud-find-input {
+  display: inline;
+  outline: none;
+  white-space: nowrap;
+  overflow-y: hidden;
+}
+/* The user can paste newlines into the find HUD, and we can't stop them. Just making them invisible is easiest. */
+div.vimiumHUD span#hud-find-input br {
+    display: none;
+}
+div.vimiumHUD span#hud-find-input * {
+    display: inline;
+    white-space: nowrap;
+}
+div.vimiumHUD a:link, div.vimiumHUD a:hover {
+  background: transparent;
+  color: blue;
+  text-decoration: underline;
+}
+div.vimiumHUD a:link.close-button {
+  float:right;
+  font-family:courier new;
+  font-weight:bold;
+  color:#9C9A9A;
+  text-decoration:none;
+  padding-left:10px;
+  margin-top:-1px;
+  font-size:14px;
+}
+div.vimiumHUD a.close-button:hover {
+  color:#333333;
+  cursor:default;
+  -webkit-user-select:none;
+}
+
+body.vimiumFindMode ::selection {
+  background: #ff9632;
+}

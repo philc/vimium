@@ -7,8 +7,8 @@
 window.handlerStack = new HandlerStack
 
 insertModeLock = null
-findMode = false
-findModeQuery = { rawQuery: "", matchCount: 0 }
+window.findMode = false
+window.findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 isShowingHelpDialog = false
@@ -201,6 +201,7 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
   Vomnibar.init()
+  HUD.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -220,7 +221,7 @@ unregisterFrame = ->
 # Enters insert mode if the currently focused element in the DOM is focusable.
 #
 enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
+  if (document.activeElement && isEditable(document.activeElement))
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
@@ -412,10 +413,7 @@ onKeypress = (event) ->
       return
 
     if (keyChar)
-      if (findMode)
-        handleKeyCharForFindMode(keyChar)
-        DomUtils.suppressEvent(event)
-      else if (!isInsertMode() && !findMode)
+      if (!isInsertMode())
         if (isPassKey keyChar)
           return undefined
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
@@ -465,32 +463,12 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else if (findMode)
-    if (KeyboardUtils.isEscape(event))
-      handleEscapeForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      handleDeleteForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-
-    else if (event.keyCode == keyCodes.enter)
-      handleEnterForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-
-    else if (!modifiers)
-      DomUtils.suppressPropagation(event)
-      KeydownEvents.push event
-
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else if (!isInsertMode() && !findMode)
+  else if (!isInsertMode())
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
@@ -614,7 +592,7 @@ isInsertMode = ->
     enterInsertModeWithoutShowingIndicator document.activeElement
 
 # should be called whenever rawQuery is modified.
-updateFindModeQuery = ->
+window.updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
@@ -664,13 +642,7 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleKeyCharForFindMode = (keyChar) ->
-  findModeQuery.rawQuery += keyChar
-  updateFindModeQuery()
-  performFindInPlace()
-  showFindModeHUDForQuery()
-
-handleEscapeForFindMode = ->
+window.handleEscapeForFindMode = ->
   exitFindMode()
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
@@ -682,26 +654,20 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-handleDeleteForFindMode = ->
-  if (findModeQuery.rawQuery.length == 0)
-    exitFindMode()
-    performFindInPlace()
-  else
-    findModeQuery.rawQuery = findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
-    updateFindModeQuery()
-    performFindInPlace()
-    showFindModeHUDForQuery()
+window.handleDeleteForFindMode = ->
+  exitFindMode()
+  performFindInPlace()
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-handleEnterForFindMode = ->
+window.handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
-performFindInPlace = ->
+window.performFindInPlace = ->
   cachedScrollX = window.scrollX
   cachedScrollY = window.scrollY
 
@@ -723,13 +689,11 @@ executeFind = (query, options) ->
 
   # rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
   # changes that find() induces.
-  oldFindMode = findMode
-  findMode = true
+  oldFindMode = window.findMode
+  window.findMode = true
 
   document.body.classList.add("vimiumFindMode")
 
-  # prevent find from matching its own search query in the HUD
-  HUD.hide(true)
   # ignore the selectionchange event generated by find()
   document.removeEventListener("selectionchange",restoreDefaultSelectionHighlight, true)
   result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
@@ -737,7 +701,7 @@ executeFind = (query, options) ->
     -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
     0)
 
-  findMode = oldFindMode
+  window.findMode = oldFindMode
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
@@ -928,13 +892,21 @@ showFindModeHUDForQuery = ->
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
+window.updateFindModeHUDCount = ->
+  count =
+    if findModeQueryHasResults or findModeQuery.parsedQuery.length == 0
+      findModeQuery.matchCount
+    else
+      0
+  HUD.updateMatchesCount count
+
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
-  findMode = true
-  HUD.show("/")
+  window.findMode = true
+  HUD.showFindMode()
 
 exitFindMode = ->
-  findMode = false
+  window.findMode = false
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
@@ -997,113 +969,6 @@ toggleHelpDialog = (html, fid) ->
     hideHelpDialog()
   else
     showHelpDialog(html, fid)
-
-#
-# A heads-up-display (HUD) for showing Vimium page operations.
-# Note: you cannot interact with the HUD until document.body is available.
-#
-HUD =
-  _tweenId: -1
-  _displayElement: null
-  _upgradeNotificationElement: null
-
-  # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
-  # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
-  # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
-
-  showForDuration: (text, duration) ->
-    HUD.show(text)
-    HUD._showForDurationTimerId = setTimeout((-> HUD.hide()), duration)
-
-  show: (text) ->
-    return unless HUD.enabled()
-    clearTimeout(HUD._showForDurationTimerId)
-    HUD.displayElement().innerText = text
-    clearInterval(HUD._tweenId)
-    HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150)
-    HUD.displayElement().style.display = ""
-
-  showUpgradeNotification: (version) ->
-    HUD.upgradeNotificationElement().innerHTML = "Vimium has been upgraded to #{version}. See
-      <a class='vimiumReset' target='_blank'
-      href='https://github.com/philc/vimium#release-notes'>
-      what's new</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
-    links = HUD.upgradeNotificationElement().getElementsByTagName("a")
-    links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
-    links[1].addEventListener "click", (event) ->
-      event.preventDefault()
-      HUD.onUpdateLinkClicked()
-    Tween.fade(HUD.upgradeNotificationElement(), 1.0, 150)
-
-  onUpdateLinkClicked: (event) ->
-    HUD.hideUpgradeNotification()
-    chrome.runtime.sendMessage({ handler: "upgradeNotificationClosed" })
-
-  hideUpgradeNotification: (clickEvent) ->
-    Tween.fade(HUD.upgradeNotificationElement(), 0, 150,
-      -> HUD.upgradeNotificationElement().style.display = "none")
-
-  #
-  # Retrieves the HUD HTML element.
-  #
-  displayElement: ->
-    if (!HUD._displayElement)
-      HUD._displayElement = HUD.createHudElement()
-      # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
-      HUD._displayElement.style.right = "150px"
-    HUD._displayElement
-
-  upgradeNotificationElement: ->
-    if (!HUD._upgradeNotificationElement)
-      HUD._upgradeNotificationElement = HUD.createHudElement()
-      # Position this just to the left of our normal HUD.
-      HUD._upgradeNotificationElement.style.right = "315px"
-    HUD._upgradeNotificationElement
-
-  createHudElement: ->
-    element = document.createElement("div")
-    element.className = "vimiumReset vimiumHUD"
-    document.body.appendChild(element)
-    element
-
-  hide: (immediate) ->
-    clearInterval(HUD._tweenId)
-    if (immediate)
-      HUD.displayElement().style.display = "none"
-    else
-      HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
-        -> HUD.displayElement().style.display = "none")
-
-  isReady: -> document.body != null
-
-  # A preference which can be toggled in the Options page. */
-  enabled: -> !settings.get("hideHud")
-
-Tween =
-  #
-  # Fades an element's alpha. Returns a timer ID which can be used to stop the tween via clearInterval.
-  #
-  fade: (element, toAlpha, duration, onComplete) ->
-    state = {}
-    state.duration = duration
-    state.startTime = (new Date()).getTime()
-    state.from = parseInt(element.style.opacity) || 0
-    state.to = toAlpha
-    state.onUpdate = (value) ->
-      element.style.opacity = value
-      if (value == state.to && onComplete)
-        onComplete()
-    state.timerId = setInterval((-> Tween.performTweenStep(state)), 50)
-    state.timerId
-
-  performTweenStep: (state) ->
-    elapsed = (new Date()).getTime() - state.startTime
-    if (elapsed >= state.duration)
-      clearInterval(state.timerId)
-      state.onUpdate(state.to)
-    else
-      value = (elapsed / state.duration)  * (state.to - state.from) + state.from
-      state.onUpdate(value)
 
 CursorHider =
   #

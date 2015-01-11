@@ -43,6 +43,7 @@
              "content_scripts/vomnibar.js",
              "content_scripts/scroller.js",
              "content_scripts/marks.js",
+             "content_scripts/hud_controller.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["content_scripts/vimium.css"],
@@ -61,6 +62,7 @@
     "default_popup": "pages/popup.html"
   },
   "web_accessible_resources": [
-    "pages/vomnibar.html"
+    "pages/vomnibar.html",
+    "pages/HUD.html"
   ]
 }
