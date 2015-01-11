@@ -46,6 +46,14 @@ class NormalModeBase extends Mode
     else if isPassKey KeyboardUtils.getKeyChar(event)
       return false
 
+    # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium
+    # command.  The goal is to avoid the scenario where Google Instant Search uses every keydown event to
+    # dump us back into the search box. As a side effect, this should also prevent overriding by other sites.
+    #
+    # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in
+    # keypress).
+    #
+    # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
     else if (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
              isValidFirstKey(KeyboardUtils.getKeyChar(event)))
       DomUtils.suppressPropagation(event)
