@@ -62,7 +62,7 @@ class NormalModeBase extends Mode
 
     keyUnhandled
 
-  onKeypress: (event) ->
+  keypress: (event) ->
     return false if false == super event
     keyChar = ""
     keyUnhandled = true
