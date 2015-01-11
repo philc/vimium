@@ -44,7 +44,7 @@ count = 0
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
   # with a list of the currently active modes.
-  debug: true
+  debug: false
   @modes: []
 
   # Constants; short, readable names for handlerStack event-handler return values.
