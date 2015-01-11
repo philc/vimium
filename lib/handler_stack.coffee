@@ -102,13 +102,5 @@ class HandlerStack
     line = args.join " "
     console.log line
 
-  # Used by tests to get a duplicate copy of the initialized handler stack.
-  duplicate: ->
-    dup = new HandlerStack()
-    dup.stack = @stack[..]
-    for prop in [ "stopBubblingAndTrue", "stopBubblingAndFalse", "restartBubbling" ]
-      dup[prop] = @[prop]
-    dup
-
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()

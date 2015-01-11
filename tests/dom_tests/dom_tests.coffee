@@ -12,10 +12,16 @@ mockKeyboardEvent = (keyChar) ->
   event.preventDefault = (event) -> @suppressed = true
   event
 
-# Some of these tests have side effects on the handler stack.  Therefore, we take backups of the stack, and
-# restore them later.
-backupHandlerStack = -> handlerStack.backup = handlerStack.stack
-restoreHandlerStack = -> handlerStack.stack = handlerStack.backup
+# Some of these tests have side effects on the handler stack and mode.  Therefore, we take backups and restore
+# them later.
+backupStackState = ->
+  Mode.backup = Mode.modes[..]
+  handlerStack.backup = handlerStack.stack[..]
+restoreStackState = ->
+  for mode in Mode.modes
+    mode.exit() unless mode in Mode.backup
+  Mode.modes = Mode.backup
+  handlerStack.stack = handlerStack.backup
 
 #
 # Retrieve the hint markers as an array object.
@@ -175,11 +181,11 @@ context "Input focus",
     testContent = "<input type='text' id='first'/><input style='display:none;' id='second'/>
       <input type='password' id='third' value='some value'/>"
     document.getElementById("test-div").innerHTML = testContent
-    backupHandlerStack()
+    backupStackState()
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
-    restoreHandlerStack()
+    restoreStackState()
 
   should "focus the right element", ->
     focusInput 1
@@ -258,13 +264,13 @@ createLinks = (n) ->
 
 context "Normal mode",
   setup ->
-    backupHandlerStack()
+    backupStackState()
     refreshCompletionKeys
       completionKeys: "o"
       validFirstKeys: "o"
 
   tearDown ->
-    restoreHandlerStack()
+    restoreStackState()
 
   should "suppress mapped keys", ->
     for event in [ "keydown", "keypress", "keyup" ]
@@ -280,7 +286,7 @@ context "Normal mode",
 
 context "Passkeys mode",
   setup ->
-    backupHandlerStack()
+    backupStackState()
     refreshCompletionKeys
       completionKeys: "oj"
       validFirstKeys: "oj"
@@ -290,7 +296,7 @@ context "Passkeys mode",
       passKeys: "j"
 
   tearDown ->
-    restoreHandlerStack()
+    restoreStackState()
     handlerStack.bubbleEvent "registerStateChange",
       enabled: true
       passKeys: ""
@@ -310,13 +316,13 @@ context "Passkeys mode",
 
 context "Insert mode",
   setup ->
-    backupHandlerStack()
+    backupStackState()
     refreshCompletionKeys
       completionKeys: "o"
       validFirstKeys: "o"
 
   tearDown ->
-    backupHandlerStack()
+    backupStackState()
 
   should "not suppress mapped keys in insert mode", ->
     # First check normal-mode key (just to verify the framework).
@@ -336,21 +342,290 @@ context "Insert mode",
 
     insertMode.exit()
 
-    # Then check insert mode has been successfully removed.
+    # Then verify that insert mode has been successfully removed.
     for event in [ "keydown", "keypress", "keyup" ]
       key = mockKeyboardEvent "o"
       handlerStack.bubbleEvent event, key
       assert.isTrue key.suppressed
 
-context "Insert mode trigger",
+context "Insert-mode trigger",
   setup ->
-    backupHandlerStack()
+    backupStackState()
     refreshCompletionKeys
       completionKeys: "o"
       validFirstKeys: "o"
 
-  tearDown ->
-    backupHandlerStack()
+    testContent = "<input type='text' id='first'/>
+      <input style='display:none;' id='second'/>
+      <input type='password' id='third' value='some value'/>"
+    document.getElementById("test-div").innerHTML = testContent
 
-  should "trigger insert mode on input-focus events", ->
+  tearDown ->
+    restoreStackState()
+    document.getElementById("test-div").innerHTML = ""
+
+  should "trigger insert mode on focus of contentEditable elements", ->
+    handlerStack.bubbleEvent "focus",
+      target:
+        isContentEditable: true
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
+  should "trigger insert mode on focus of text input", ->
+    document.getElementById("first").focus()
+    handlerStack.bubbleEvent "focus", { target: document.activeElement }
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
+  should "trigger insert mode on focus of password input", ->
+    document.getElementById("third").focus()
+    handlerStack.bubbleEvent "focus", { target: document.activeElement }
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
+  should "not trigger insert mode on focus of contentEditable elements", ->
+    new InsertModeBlocker()
+    handlerStack.bubbleEvent "focus",
+      target:
+        isContentEditable: true
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+
+  should "not trigger insert mode on focus of text input", ->
+    new InsertModeBlocker()
+    document.getElementById("first").focus()
+    handlerStack.bubbleEvent "focus", { target: document.activeElement }
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+
+  should "not trigger insert mode on focus of password input", ->
+    new InsertModeBlocker()
+    document.getElementById("third").focus()
+    handlerStack.bubbleEvent "focus", { target: document.activeElement }
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+
+context "Mode utilities",
+  setup ->
+    backupStackState()
+    refreshCompletionKeys
+      completionKeys: "o"
+      validFirstKeys: "o"
+
+    testContent = "<input type='text' id='first'/>
+      <input style='display:none;' id='second'/>
+      <input type='password' id='third' value='some value'/>"
+    document.getElementById("test-div").innerHTML = testContent
+
+  tearDown ->
+    restoreStackState()
+    document.getElementById("test-div").innerHTML = ""
+
+  should "not have duplicate singletons", ->
+    count = 0
+
+    class Test extends Mode
+      constructor: ->
+        count += 1
+        super
+          singleton: Test
+
+      exit: ->
+        count -= 1
+        super()
+
+    assert.isTrue count == 0
+    new Test()
+    assert.isTrue count == 1
+    new Test()
+    assert.isTrue count == 1
+
+  should "exit on escape", ->
+    escape =
+      keyCode: 27
+
+    new Mode
+      exitOnEscape: true
+      name: "test"
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "test"
+    handlerStack.bubbleEvent "keydown", escape
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "test"
+
+  should "exit on blur", ->
+    element = document.getElementById("first")
+
+    new Mode
+      exitOnBlur: element
+      name: "test"
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "test"
+    handlerStack.bubbleEvent "blur", { srcElement: element }
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "test"
+
+  should "register state change", ->
+    enabled = null
+    passKeys = null
+
+    class Test extends Mode
+      constructor: ->
+        super
+          trackState: true
+
+      registerStateChange: ->
+        enabled = @enabled
+        passKeys = @passKeys
+
+    new Test()
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: "enabled"
+      passKeys: "passKeys"
+    assert.isTrue enabled == "enabled"
+    assert.isTrue passKeys == "passKeys"
+
+  should "suppress printable keys", ->
+    element = document.getElementById("first")
+
+    # Verify key is always passed through.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "A"
+      handlerStack.bubbleEvent event, key
+      assert.isFalse key.suppressed
+
+    new Mode
+      suppressPrintableEvents: element
+
+    # Verify key is now suppressed for keypress.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keypress",
+      extend key,
+         srcElement: element
+    assert.isTrue key.suppressed
+
+    # Verify key is not suppressed with Control key.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keypress",
+      extend key,
+         srcElement: element
+         ctrlKey: true
+    assert.isFalse key.suppressed
+
+    # Verify key is not suppressed with Meta key.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keypress",
+      extend key,
+         srcElement: element
+         metaKey: true
+    assert.isFalse key.suppressed
+
+    # Verify other keyboard events are not suppressed.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keydown",
+      extend key,
+         srcElement: element
+    assert.isFalse key.suppressed
+
+context "PostFindMode",
+  setup ->
+    backupStackState()
+    refreshCompletionKeys
+      completionKeys: "o"
+      validFirstKeys: "o"
+
+    testContent = "<input type='text' id='first'/>
+      <input style='display:none;' id='second'/>
+      <input type='password' id='third' value='some value'/>"
+    document.getElementById("test-div").innerHTML = testContent
+
+  tearDown ->
+    restoreStackState()
+    document.getElementById("test-div").innerHTML = ""
+
+  should "be a singleton", ->
+    element = document.getElementById("first")
+    element.focus()
+    count = 0
+
+    class Test extends PostFindMode
+      constructor: (element) ->
+        count += 1
+        super element
+
+      exit: ->
+        count -= 1
+        super()
+
+    assert.isTrue count == 0
+    new Test element
+    assert.isTrue count == 1
+    new Test element
+    assert.isTrue count == 1
+
+  should "suppress unmapped printable keypress events", ->
+    element = document.getElementById("first")
+    element.focus()
+
+    # Verify key is passed through.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "A"
+      handlerStack.bubbleEvent event, key
+      assert.isFalse key.suppressed
+
+    new PostFindMode element
+
+    # Verify key is now suppressed for keypress.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keypress",
+      extend key,
+         srcElement: element
+    assert.isTrue key.suppressed
+
+    # Verify other keyboard events are not suppressed.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keydown",
+      extend key,
+         srcElement: element
+    assert.isFalse key.suppressed
+
+    # Verify keyboard events on other elements are not suppressed.
+    key = mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keypress",
+      extend key,
+         srcElement: document.body
+    assert.isFalse key.suppressed
+
+  should "be clickable to focus", ->
+    element = document.getElementById("first")
+    element.focus()
+
+    new PostFindMode element
+
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    handlerStack.bubbleEvent "click", { target: document.activeElement }
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
+  should "enter insert mode on immediate escape", ->
+    escape =
+      keyCode: 27
+    element = document.getElementById("first")
+    element.focus()
+
+    new PostFindMode element
+    assert.isTrue Mode.modes[Mode.modes.length-1].name != "insert"
+    handlerStack.bubbleEvent "keydown", escape
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "insert"
+
+  should "enter not insert mode on subsequent escape", ->
+    escape =
+      keyCode: 27
+      keyIdentifier: ""
+      stopImmediatePropagation: ->
+    element = document.getElementById("first")
+    element.focus()
+
+    new PostFindMode element
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "post-find"
+    handlerStack.bubbleEvent "keydown", mockKeyboardEvent "A"
+    handlerStack.bubbleEvent "keydown", escape
+    assert.isTrue Mode.modes[Mode.modes.length-1].name == "post-find"
 

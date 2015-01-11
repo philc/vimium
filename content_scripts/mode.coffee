@@ -44,7 +44,7 @@ count = 0
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
   # with a list of the currently active modes.
-  debug: false
+  debug: true
   @modes: []
 
   # Constants; short, readable names for handlerStack event-handler return values.
@@ -121,7 +121,7 @@ class Mode
         keypress: (event) =>
           @alwaysContinueBubbling =>
             if event.srcElement == @options.suppressPrintableEvents
-              if KeyboardUtils.isPrintable(event)
+              if KeyboardUtils.isPrintable event
                 event.vimium_suppress_event = true
 
     Mode.updateBadge() if @badge
