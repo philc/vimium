@@ -4,6 +4,7 @@ class NormalModeBase extends Mode
 
   keydown: (event) ->
     return false if false == super event
+    keyUnhandled = true
     keyChar = ""
 
     # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -35,6 +36,7 @@ class NormalModeBase extends Mode
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
         KeydownEvents.push event
+        keyUnhandled = false
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -42,17 +44,20 @@ class NormalModeBase extends Mode
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
     else if isPassKey KeyboardUtils.getKeyChar(event)
-      return undefined
+      return false
 
     else if (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
              isValidFirstKey(KeyboardUtils.getKeyChar(event)))
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
+      keyUnhandled = false
+
+    keyUnhandled
 
   onKeypress: (event) ->
     return false if false == super event
-
     keyChar = ""
+    keyUnhandled = true
 
     # Ignore modifier keys by themselves.
     if (event.keyCode > 31)
@@ -61,15 +66,18 @@ class NormalModeBase extends Mode
       # Enter insert mode when the user enables the native find interface.
       if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
         enterInsertModeWithoutShowingIndicator()
-        return
+        return false
 
       if (keyChar)
         if (isPassKey keyChar)
-          return undefined
+          return false
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
+          keyUnhandled = false
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+
+      keyUnhandled
 
 class NormalMode extends NormalModeBase
   constructor: ->
