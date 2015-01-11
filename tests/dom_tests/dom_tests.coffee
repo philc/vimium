@@ -8,9 +8,14 @@ mockKeyboardEvent = (keyChar) ->
   event.charCode = (if keyCodes[keyChar] isnt undefined then keyCodes[keyChar] else keyChar.charCodeAt(0))
   event.keyIdentifier = "U+00" + event.charCode.toString(16)
   event.keyCode = event.charCode
-  event.stopImmediatePropagation = ->
-  event.preventDefault = ->
+  event.stopImmediatePropagation = (event) -> @suppressed = true
+  event.preventDefault = (event) -> @suppressed = true
   event
+
+# Some of these tests have side effects on the handler stack.  Therefore, we take backups of the stack, and
+# restore them later.
+backupHandlerStack = -> handlerStack.backup = handlerStack.stack
+restoreHandlerStack = -> handlerStack.stack = handlerStack.backup
 
 #
 # Retrieve the hint markers as an array object.
@@ -170,9 +175,11 @@ context "Input focus",
     testContent = "<input type='text' id='first'/><input style='display:none;' id='second'/>
       <input type='password' id='third' value='some value'/>"
     document.getElementById("test-div").innerHTML = testContent
+    backupHandlerStack()
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
+    restoreHandlerStack()
 
   should "focus the right element", ->
     focusInput 1
@@ -243,9 +250,107 @@ context "Find prev / next links",
     goNext()
     assert.equal '#first', window.location.hash
 
-
 createLinks = (n) ->
   for i in [0...n] by 1
     link = document.createElement("a")
     link.textContent = "test"
     document.getElementById("test-div").appendChild link
+
+context "Normal mode",
+  setup ->
+    backupHandlerStack()
+    refreshCompletionKeys
+      completionKeys: "o"
+      validFirstKeys: "o"
+
+  tearDown ->
+    restoreHandlerStack()
+
+  should "suppress mapped keys", ->
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "o"
+      handlerStack.bubbleEvent event, key
+      assert.isTrue key.suppressed
+
+  should "not suppress unmapped keys", ->
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "a"
+      handlerStack.bubbleEvent event, key
+      assert.isFalse key.suppressed
+
+context "Passkeys mode",
+  setup ->
+    backupHandlerStack()
+    refreshCompletionKeys
+      completionKeys: "oj"
+      validFirstKeys: "oj"
+
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: true
+      passKeys: "j"
+
+  tearDown ->
+    restoreHandlerStack()
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: true
+      passKeys: ""
+
+  should "not suppress passKeys", ->
+    # First check normal-mode key (just to verify the framework).
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "o"
+      handlerStack.bubbleEvent event, key
+      assert.isTrue key.suppressed
+
+    # Then check passKey.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "j"
+      handlerStack.bubbleEvent event, key
+      assert.isFalse key.suppressed
+
+context "Insert mode",
+  setup ->
+    backupHandlerStack()
+    refreshCompletionKeys
+      completionKeys: "o"
+      validFirstKeys: "o"
+
+  tearDown ->
+    backupHandlerStack()
+
+  should "not suppress mapped keys in insert mode", ->
+    # First check normal-mode key (just to verify the framework).
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "o"
+      handlerStack.bubbleEvent event, key
+      assert.isTrue key.suppressed
+
+    # Install insert mode.
+    insertMode = new InsertMode()
+
+    # Then verify insert mode.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "o"
+      handlerStack.bubbleEvent event, key
+      assert.isFalse key.suppressed
+
+    insertMode.exit()
+
+    # Then check insert mode has been successfully removed.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "o"
+      handlerStack.bubbleEvent event, key
+      assert.isTrue key.suppressed
+
+context "Insert mode trigger",
+  setup ->
+    backupHandlerStack()
+    refreshCompletionKeys
+      completionKeys: "o"
+      validFirstKeys: "o"
+
+  tearDown ->
+    backupHandlerStack()
+
+  should "trigger insert mode on input-focus events", ->
+

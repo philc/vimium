@@ -98,14 +98,17 @@ class HandlerStack
     label ||= if result then "continue/truthy" else "suppress"
     @log @eventNumber, type, handler._name, label
 
-  logRecords: []
   log: (args...) ->
     line = args.join " "
-    @logRecords.push line
     console.log line
 
-  clipLog: ->
-    Clipboard.copy logRecords.join "\n"
+  # Used by tests to get a duplicate copy of the initialized handler stack.
+  duplicate: ->
+    dup = new HandlerStack()
+    dup.stack = @stack[..]
+    for prop in [ "stopBubblingAndTrue", "stopBubblingAndFalse", "restartBubbling" ]
+      dup[prop] = @[prop]
+    dup
 
 root.HandlerStack = HandlerStack
-root.handlerStack = new HandlerStack
+root.handlerStack = new HandlerStack()

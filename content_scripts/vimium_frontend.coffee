@@ -612,7 +612,8 @@ checkIfEnabledForUrl = ->
       enabled: response.isEnabledForUrl
       passKeys: response.passKeys
 
-refreshCompletionKeys = (response) ->
+# Exported to window, but only for DOM tests.
+window.refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
 
