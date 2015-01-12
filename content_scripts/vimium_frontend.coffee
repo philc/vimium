@@ -401,11 +401,11 @@ onKeypress = (event) ->
   if Mode.isActive "FIND"
     Mode.getMode("FIND").keypress event
 
-  else if Mode.isActive "INSERT"
-    Mode.getMode("INSERT").keypress event
-
   else if Mode.isActive "VISUAL"
     Mode.getMode("VISUAL").keypress event
+
+  else if Mode.isActive "INSERT"
+    Mode.getMode("INSERT").keypress event
 
   else unless Mode.isActive("PASSKEY") and Mode.getMode("PASSKEY").keypress event
     undefined # Do nothing; we want to pass this key
@@ -419,11 +419,11 @@ onKeydown = (event) ->
   if Mode.isActive "FIND"
     Mode.getMode("FIND").keydown event
 
-  else if Mode.isActive "INSERT"
-    Mode.getMode("INSERT").keydown event
-
   else if Mode.isActive "VISUAL"
     Mode.getMode("VISUAL").keydown event
+
+  else if Mode.isActive "INSERT"
+    Mode.getMode("INSERT").keydown event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
