@@ -42,6 +42,7 @@
              "content_scripts/passkey_mode.js",
              "content_scripts/insert_mode.js",
              "content_scripts/normal_mode.js",
+             "content_scripts/find_mode.js",
              "content_scripts/ui_component.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",

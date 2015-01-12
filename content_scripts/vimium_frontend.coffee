@@ -397,12 +397,8 @@ KeydownEvents =
 onKeypress = (event) ->
   return unless handlerStack.bubbleEvent('keypress', event)
 
-  # Get the pressed key, unless it's a modifier key.
-  keyChar = if event.keyCode > 31 then String.fromCharCode(event.charCode) else ""
-
-  if findMode and keyChar
-    handleKeyCharForFindMode keyChar
-    DomUtils.suppressEvent event
+  if Mode.isActive "FIND"
+    Mode.getMode("FIND").keypress event
 
   else if Mode.isActive "INSERT"
     Mode.getMode("INSERT").keypress event
@@ -416,25 +412,8 @@ onKeypress = (event) ->
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
 
-  if findMode
-    if KeyboardUtils.isEscape event
-      handleEscapeForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-
-    else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-      handleDeleteForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-
-    else if event.keyCode == keyCodes.enter
-      handleEnterForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-
-    else unless event.metaKey or event.ctrlKey or event.altKey
-      DomUtils.suppressPropagation(event)
-      KeydownEvents.push event
+  if Mode.isActive "FIND"
+    Mode.getMode("FIND").keydown event
 
   else if Mode.isActive "INSERT"
     Mode.getMode("INSERT").keydown event
@@ -728,13 +707,13 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleKeyCharForFindMode = (keyChar) ->
+window.handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
   updateFindModeQuery()
   performFindInPlace()
   showFindModeHUDForQuery()
 
-handleEscapeForFindMode = ->
+window.handleEscapeForFindMode = ->
   exitFindMode()
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
@@ -746,7 +725,7 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-handleDeleteForFindMode = ->
+window.handleDeleteForFindMode = ->
   if (findModeQuery.rawQuery.length == 0)
     exitFindMode()
     performFindInPlace()
@@ -759,7 +738,7 @@ handleDeleteForFindMode = ->
 # <esc> sends us into insert mode if possible, but <cr> puts us in normal mode, even if an input is focused.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-handleEnterForFindMode = ->
+window.handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   # If an input is focused, we still want to drop the user back into normal mode. normalModeForInput is a
@@ -998,11 +977,11 @@ showFindModeHUDForQuery = ->
 
 window.enterFindMode = ->
   findModeQuery = { rawQuery: "" }
-  findMode = true
+  new FindMode()
   HUD.show("/")
 
 exitFindMode = ->
-  findMode = false
+  Mode.deactivate "FIND"
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
