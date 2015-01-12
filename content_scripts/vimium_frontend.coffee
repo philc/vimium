@@ -203,6 +203,7 @@ initializeOnDomReady = ->
   CursorHider.init()
   Vomnibar.init()
   new NormalMode()
+  new PasskeyMode()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -405,7 +406,10 @@ onKeypress = (event) ->
   else if Mode.getMode("INSERT")?.isActive()
     Mode.getMode("INSERT").keypress event
 
-  else if Mode.getMode("NORMAL")?.isActive()
+  else unless Mode.getMode("PASSKEY").keypress event
+    undefined # Do nothing; we want to pass this key
+
+  else if Mode.getMode("NORMAL").isActive()
     Mode.getMode("NORMAL").keypress event
 
 onKeydown = (event) ->
@@ -439,7 +443,10 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else if Mode.getMode("NORMAL")?.isActive()
+  else unless Mode.getMode("PASSKEY").keydown event
+    undefined # Do nothing; we want to pass this key
+
+  else if Mode.getMode("NORMAL").isActive()
     Mode.getMode("NORMAL").keydown event
 
 #

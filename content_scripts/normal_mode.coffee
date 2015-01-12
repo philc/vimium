@@ -43,9 +43,6 @@ class NormalModeBase extends Mode
     else if (KeyboardUtils.isEscape(event))
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
-    else if isPassKey KeyboardUtils.getKeyChar(event)
-      return false
-
     # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium
     # command.  The goal is to avoid the scenario where Google Instant Search uses every keydown event to
     # dump us back into the search box. As a side effect, this should also prevent overriding by other sites.
@@ -72,8 +69,6 @@ class NormalModeBase extends Mode
       keyChar = String.fromCharCode(event.charCode)
 
       if (keyChar)
-        if (isPassKey keyChar)
-          return false
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
           DomUtils.suppressEvent(event)
           keyUnhandled = false
