@@ -11,7 +11,7 @@
 # The "name" property here is a short-form name to appear in the link-hints mode name.  Debugging only.  The
 # key appears in the mode's badge.
 # NOTE(smblott) The use of keys in badges is experimental. It may prove too noisy.
-OPEN_IN_CURRENT_TAB = { name: "curr-tab", key: "C" }
+OPEN_IN_CURRENT_TAB = { name: "curr-tab", key: "" }
 OPEN_IN_NEW_BG_TAB = { name: "bg-tab", key: "B" }
 OPEN_IN_NEW_FG_TAB = { name: "fg-tab", key: "F" }
 OPEN_WITH_QUEUE = { name: "queue", key: "Q" }
@@ -70,7 +70,7 @@ LinkHints =
         constructor: ->
           super
             name: "hint/#{mode.name}"
-            badge: "?#{mode.key}"
+            badge: "#{mode.key}?"
             exitOnEscape: true
             keydown: (event) -> LinkHints.onKeyDownInMode hintMarkers, event
             # trap all key events
