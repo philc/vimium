@@ -404,13 +404,13 @@ onKeypress = (event) ->
     handleKeyCharForFindMode keyChar
     DomUtils.suppressEvent event
 
-  else if Mode.getMode("INSERT")?.isActive()
+  else if Mode.isActive "INSERT"
     Mode.getMode("INSERT").keypress event
 
   else unless Mode.getMode("PASSKEY").keypress event
     undefined # Do nothing; we want to pass this key
 
-  else if Mode.getMode("NORMAL").isActive()
+  else
     Mode.getMode("NORMAL").keypress event
 
 onKeydown = (event) ->
@@ -436,7 +436,7 @@ onKeydown = (event) ->
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
 
-  else if Mode.getMode("INSERT")?.isActive()
+  else if Mode.isActive "INSERT"
     Mode.getMode("INSERT").keydown event
 
   else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
@@ -447,7 +447,7 @@ onKeydown = (event) ->
   else unless Mode.getMode("PASSKEY").keydown event
     undefined # Do nothing; we want to pass this key
 
-  else if Mode.getMode("NORMAL").isActive()
+  else
     Mode.getMode("NORMAL").keydown event
 
 #
@@ -658,7 +658,7 @@ enterInsertModeWithoutShowingIndicator = (target) ->
   normalModeForInput = false
 
 exitInsertMode = (target) ->
-  Mode.getMode("INSERT")?.deactivate()
+  Mode.deactivate "INSERT"
   return
   if (target == undefined || insertModeLock == target)
     # normalModeForInput is a sub-mode of insert mode; deactivate it if insert mode isn't active.

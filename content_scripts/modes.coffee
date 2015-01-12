@@ -24,6 +24,10 @@ class Mode
     parentMode.modes[modeName] = mode
     mode
 
+  @isActive = (modeReference) -> @getMode(modeReference)?.isActive()
+  @activate = (modeReference) -> @getMode(modeReference)?.activate()
+  @deactivate = (modeReference) -> @getMode(modeReference)?.deactivate()
+
   active: true
 
   constructor: (@name, options = {}, @onKeydown, @onKeypress, @onKeyup) ->
