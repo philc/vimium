@@ -37,6 +37,7 @@ class Mode
       onKeypress: null
       onKeyup: null
       deactivateOnEsc: false
+      alwaysOn: false
     options = extend defaultOptions, options
 
     @modes = {}
@@ -45,6 +46,7 @@ class Mode
     @onKeypress = options.onKeypress
     @onKeyup = options.onKeyup
     @deactivateOnEsc = options.deactivateOnEsc
+    @alwaysOn = options.alwaysOn
 
     if options.name? and options.noParent != true
       modeParent = options.parent ? Mode
@@ -73,14 +75,25 @@ class Mode
   getMode: Mode.getMode
   setMode: Mode.setMode
 
-  isActive: -> @active
+  isActive: ->
+    if @alwaysOn
+      true
+    else
+      @active
 
   # activate/deactivate should return the same value as a call to isActive immediately after would.
-  activate: -> @active = true
+  activate: ->
+    if @alwaysOn
+      true
+    else
+      @active = true
   deactivate: ->
     if @active
       mode.deactivate() for modeName, mode of @modes
-      @active = false
+      if @alwaysOn
+        true
+      else
+        @active = false
 
 root = exports ? window
 root.Mode = Mode

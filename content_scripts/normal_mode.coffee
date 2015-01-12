@@ -79,12 +79,7 @@ class NormalModeBase extends Mode
 
 class NormalMode extends NormalModeBase
   constructor: ->
-    super {name: "NORMAL"}
-
-  # We never want to disable normal mode.
-  isActive: -> true
-  activate: -> true
-  deactivate: -> true
+    super {name: "NORMAL", alwaysOn: true}
 
 class NormalModeForInput extends NormalModeBase
   constructor: ->
