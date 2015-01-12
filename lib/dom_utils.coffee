@@ -2,10 +2,11 @@ DomUtils =
   #
   # Runs :callback if the DOM has loaded, otherwise runs it on load
   #
-  documentReady: do ->
-    loaded = false
-    window.addEventListener("DOMContentLoaded", -> loaded = true)
-    (callback) -> if loaded then callback() else window.addEventListener("DOMContentLoaded", callback)
+  documentReady: (func) ->
+    if document.readyState == "loading"
+      window.addEventListener "DOMContentLoaded", func
+    else
+      func()
 
   #
   # Adds a list of elements to a page.
@@ -177,13 +178,6 @@ DomUtils =
   suppressEvent: (event) ->
     event.preventDefault()
     @suppressPropagation(event)
-
-  # Calls func either now (if the DOM has already loaded), or when the DOM is loaded.
-  runWhenDOMLoaded: (func) ->
-    if document.readyState == "loading"
-      window.addEventListener "DOMContentLoaded", func
-    else
-      func()
 
 root = exports ? window
 root.DomUtils = DomUtils
