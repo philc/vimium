@@ -139,6 +139,14 @@ createGeneralHintTests = (isFilteredMode) ->
       assert.equal 1, getHintMarkers().length
       LinkHints.deactivateMode()
 
+    should "work with any jQuery selector, even if it is not supported by `querySelectorAll`", ->
+      document.getElementById("test-div").innerHTML = "<a href='#'>test</a>"
+      $(document).on "click", "a[href=#]", ( -> )
+
+      LinkHints.activateMode()
+      assert.equal 1, getHintMarkers().length
+      LinkHints.deactivateMode()
+
 
 createGeneralHintTests false
 createGeneralHintTests true
