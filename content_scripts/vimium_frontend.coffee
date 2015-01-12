@@ -766,6 +766,11 @@ performFindInPlace = ->
 
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
+  if document.activeElement and DomUtils.isSelectable(document.activeElement) and
+     not isDOMDescendant(findModeAnchorNode, document.activeElement)
+    # The document's active element doesn't contain the selection, so we should blur it.
+    document.activeElement.blur()
+
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 executeFind = (query, options) ->
   options = options || {}
@@ -848,21 +853,14 @@ findAndFocus = (backwards) ->
     HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
     return
 
-  # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
-  # mode
   elementCanTakeInput = document.activeElement &&
     DomUtils.isSelectable(document.activeElement) &&
     isDOMDescendant(findModeAnchorNode, document.activeElement)
   if (elementCanTakeInput)
-    handlerStack.push({
-      keydown: (event) ->
-        @remove()
-        if (KeyboardUtils.isEscape(event))
-          DomUtils.simulateSelect(document.activeElement)
-          enterInsertModeWithoutShowingIndicator(document.activeElement)
-          return false # we have "consumed" this event, so do not propagate
-        return true
-    })
+    new NormalModeForInput()
+  else if document.activeElement and DomUtils.isSelectable document.activeElement
+    # The document's active element doesn't contain the selection, so we should blur it.
+    document.activeElement.blur()
 
   focusFoundLink()
 
