@@ -20,7 +20,7 @@ keyPort = null
 # are passed through to the underlying page.
 isEnabledForUrl = true
 passKeys = null
-keyQueue = null
+window.keyQueue = null
 # The user's operating system.
 window.currentCompletionKeys = null
 validFirstKeys = null
@@ -129,7 +129,6 @@ initializePreDomReady = ->
 
   # Initialise modes.
   new NormalMode()
-  new PasskeyMode()
   new InsertMode null, false, false
 
   requestHandlers =
@@ -142,9 +141,9 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
+    getActiveState: -> { enabled: isEnabledForUrl, passKeys: Mode.isActive "PASSKEY" }
     setState: setState
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    currentKeyQueue: (request) -> window.keyQueue = request.keyQueue
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -171,7 +170,7 @@ installListener = (element, event, callback) ->
 installedListeners = false
 initializeWhenEnabled = (newPassKeys) ->
   isEnabledForUrl = true
-  passKeys = newPassKeys
+  new PasskeyMode newPassKeys
   if (!installedListeners)
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
@@ -405,7 +404,7 @@ onKeypress = (event) ->
   else if Mode.isActive "INSERT"
     Mode.getMode("INSERT").keypress event
 
-  else unless Mode.getMode("PASSKEY").keypress event
+  else unless Mode.isActive("PASSKEY") and Mode.getMode("PASSKEY").keypress event
     undefined # Do nothing; we want to pass this key
 
   else
@@ -425,7 +424,7 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else unless Mode.getMode("PASSKEY").keydown event
+  else unless Mode.isActive("PASSKEY") and Mode.getMode("PASSKEY").keydown event
     undefined # Do nothing; we want to pass this key
 
   else
@@ -1197,4 +1196,3 @@ root.handlerStack = handlerStack
 root.frameId = frameId
 root.KeydownEvents = KeydownEvents
 root.isValidFirstKey = isValidFirstKey
-root.isPassKey = isPassKey
