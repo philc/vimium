@@ -58,17 +58,24 @@ class InsertMode extends Mode
       HUD.show("Insert mode")
 
     @element = element
+    # We re-establish insert mode when the user clicks to fix #1414.
+    reshowIndicator = showIndicator
+    element?.addEventListener "click", reestablishInputModeOnClick, false
     true
 
   deactivate: (element) ->
     return unless @isActive
     # Only deactivate if the right element is given, or there's no element at all.
     if element == undefined or element == @element
+      element?.removeEventListener "click", reestablishInputModeOnClick, false
       @element = null
       HUD.hide()
       false
     else
       true
+
+reshowIndicator = false
+reestablishInputModeOnClick = -> new InsertMode event.target, reshowIndicator
 
 root = exports ? window
 root.InsertMode = InsertMode
