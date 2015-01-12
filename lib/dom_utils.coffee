@@ -178,5 +178,12 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
+  # Calls func either now (if the DOM has already loaded), or when the DOM is loaded.
+  runWhenDOMLoaded: (func) ->
+    if document.readyState == "loading"
+      window.addEventListener "DOMContentLoaded", func
+    else
+      func()
+
 root = exports ? window
 root.DomUtils = DomUtils

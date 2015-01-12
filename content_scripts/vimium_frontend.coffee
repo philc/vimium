@@ -1142,7 +1142,7 @@ CursorHider =
 initializePreDomReady()
 window.addEventListener("DOMContentLoaded", registerFrame)
 window.addEventListener("unload", unregisterFrame)
-window.addEventListener("DOMContentLoaded", initializeOnDomReady)
+DomUtils.runWhenDOMLoaded initializeOnDomReady
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(
