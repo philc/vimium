@@ -9,22 +9,22 @@ class FindMode extends Mode
   keydown: (event) ->
     if KeyboardUtils.isEscape event
       @handleEscapeForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
 
     else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
       @handleDeleteForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
 
     else if event.keyCode == keyCodes.enter
       @handleEnterForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
 
     else unless event.metaKey or event.ctrlKey or event.altKey
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
+      return Mode.handledEvent
+
+    else
+      return Mode.unhandledEvent
+
+    Mode.suppressEvent
 
   keypress: (event) ->
     # Get the pressed key, unless it's a modifier key.
@@ -32,7 +32,9 @@ class FindMode extends Mode
 
     if keyChar
       @handleKeyCharForFindMode keyChar
-      DomUtils.suppressEvent event
+      Mode.suppressEvent
+    else
+      Mode.unhandledEvent
 
   handleKeyCharForFindMode: (keyChar) ->
     @update findModeQuery.rawQuery + keyChar

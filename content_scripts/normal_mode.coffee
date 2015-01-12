@@ -4,7 +4,7 @@ class NormalModeBase extends Mode
 
   keydown: (event) ->
     return false if false == super event
-    keyUnhandled = true
+    keyHandled = false
     keyChar = ""
 
     # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -34,9 +34,7 @@ class NormalModeBase extends Mode
 
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
-        DomUtils.suppressEvent event
-        KeydownEvents.push event
-        keyUnhandled = false
+        keyHandled = true
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
@@ -55,14 +53,17 @@ class NormalModeBase extends Mode
              isValidFirstKey(KeyboardUtils.getKeyChar(event)))
       DomUtils.suppressPropagation(event)
       KeydownEvents.push event
-      keyUnhandled = false
+      return Mode.handledEvent
 
-    keyUnhandled
+    if keyHandled
+      Mode.suppressEvent
+    else
+      Mode.unhandledEvent
 
   keypress: (event) ->
     return false if false == super event
     keyChar = ""
-    keyUnhandled = true
+    keyHandled = false
 
     # Ignore modifier keys by themselves.
     if (event.keyCode > 31)
@@ -70,12 +71,14 @@ class NormalModeBase extends Mode
 
       if (keyChar)
         if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
-          DomUtils.suppressEvent(event)
-          keyUnhandled = false
+          keyHandled = true
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-      keyUnhandled
+    if keyHandled
+      Mode.suppressEvent
+    else
+      Mode.unhandledEvent
 
 class NormalMode extends NormalModeBase
   constructor: ->

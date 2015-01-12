@@ -11,9 +11,12 @@ class PasskeyMode extends Mode
     # Ignore modifier keys by themselves.
     if (event.keyCode > 31)
       keyChar = String.fromCharCode(event.charCode)
-      not @isPassKey keyChar
+      if @isPassKey keyChar
+        Mode.suppressEvent
+      else
+        Mode.unhandledEvent
     else
-      true
+      Mode.unhandledEvent
 
   # Decide whether this keyChar should be passed to the underlying page.
   # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a

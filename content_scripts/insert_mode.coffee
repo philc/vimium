@@ -18,9 +18,9 @@ class InsertMode extends Mode
     if @modes.INPUT_NORMAL?.isActive()
       # An input is focused, but we still want to handle keypresses as normal mode commands.
       @modes.INPUT_NORMAL.keydown event
-      return false
+      return Mode.handledEvent
     else unless KeyboardUtils.isEscape event
-      return false
+      return Mode.handledEvent
 
     # Remove focus so the user can't just get himself back into insert mode by typing in the same input box.
     # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be the
@@ -28,15 +28,13 @@ class InsertMode extends Mode
     # games.  See discussion in #1211 and #1194.
     event.srcElement.blur() if DomUtils.isFocusable(event.srcElement)
     @deactivate()
-    DomUtils.suppressEvent event
-    KeydownEvents.push event
-    false
+    Mode.suppressEvent
 
   keypress: (event) ->
     if @modes.INPUT_NORMAL?.isActive()
       # An input is focused, but we still want to handle keypresses as normal mode commands.
       @modes.INPUT_NORMAL.keypress event
-    return false
+    Mode.handledEvent
 
   onFocusCapturePhase: (event) =>
     @activate event.target

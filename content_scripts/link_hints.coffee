@@ -59,13 +59,10 @@ LinkHints =
     @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
-    trapAll = (event) ->
-      DomUtils.suppressEvent event
-      false
     new Mode
       name: "LINK_HINT"
       onKeydown: @onKeyDownInMode.bind(this, hintMarkers)
-      onKeypress: trapAll
+      onKeypress: (event) -> Mode.suppressEvent
 
     return # NOTE(mrmr1993): Using modes instead of handlerStack, the below code can be deleted.
 
@@ -257,10 +254,7 @@ LinkHints =
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
   #
   onKeyDownInMode: (hintMarkers, event) ->
-    if @delayMode
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-      return false
+    return Mode.suppressEvent if @delayMode
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
         (@mode == OPEN_IN_CURRENT_TAB or
@@ -291,9 +285,7 @@ LinkHints =
           @hideMarker(marker)
         for matched in linksMatched
           @showMarker(matched, @getMarkerMatcher().hintKeystrokeQueue.length)
-    DomUtils.suppressEvent event
-    KeydownEvents.push event
-    false # We've handled this key, so prevent propagation.
+    Mode.suppressEvent # We've handled this key, so prevent propagation.
 
   #
   # When only one link hint remains, this function activates it in the appropriate way.

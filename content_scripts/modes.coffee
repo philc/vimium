@@ -1,4 +1,8 @@
 class Mode
+  @handledEvent = {}
+  @unhandledEvent = {}
+  @suppressEvent = false
+
   @modes = {}
 
   # Gets a mode in the hierachy, with each parent mode name separated from its child by a ".".
@@ -58,10 +62,27 @@ class Mode
 
   keydown: (event) ->
     if @deactivateOnEsc
-      return false unless @handleEsc event
-    @onKeydown? event
-  keypress: (event) -> @onKeypress? event
-  keyup: (event) -> @onKeyup? event
+      return @handledEvent unless @handleEsc event
+    retVal = @onKeydown? event
+    if retVal == Mode.suppressEvent
+      DomUtils.suppressEvent event
+      Mode.handledEvent
+    else
+      retVal or Mode.unhandledEvent
+  keypress: (event) ->
+    retVal = @onKeypress? event
+    if retVal == Mode.suppressEvent
+      DomUtils.suppressEvent event
+      Mode.handledEvent
+    else
+      retVal or Mode.unhandledEvent
+  keyup: (event) ->
+    retVal = @onKeyup? event
+    if retVal == Mode.suppressEvent
+      DomUtils.suppressEvent event
+      Mode.handledEvent
+    else
+      retVal or Mode.unhandledEvent
 
   handleEsc = (event) ->
     if KeyboardUtils.isEscape event
