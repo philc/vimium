@@ -2,17 +2,21 @@ class PasskeyMode extends Mode
   passKeys: null
   constructor: (passKeys) ->
     super {name: "PASSKEY"}
-    if passKeys?
+    if passKeys? and passKeys != ""
       @passKeys = passKeys
     else
       @deactivate()
-  keydown: (event) -> not @isPassKey KeyboardUtils.getKeyChar(event)
+  keydown: (event) ->
+    if @isPassKey KeyboardUtils.getKeyChar(event)
+      Mode.handledEvent
+    else
+      Mode.unhandledEvent
   keypress: (event) ->
     # Ignore modifier keys by themselves.
     if (event.keyCode > 31)
       keyChar = String.fromCharCode(event.charCode)
       if @isPassKey keyChar
-        Mode.suppressEvent
+        Mode.handledEvent
       else
         Mode.unhandledEvent
     else
@@ -22,7 +26,7 @@ class PasskeyMode extends Mode
   # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
   # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
   isPassKey: (keyChar) ->
-    not keyQueue and @passKeys and 0 <= @passKeys.indexOf keyChar
+    not keyQueue and 0 <= @passKeys.indexOf keyChar
 
 root = exports ? window
 root.PasskeyMode = PasskeyMode

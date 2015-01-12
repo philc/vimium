@@ -410,7 +410,7 @@ onKeypress = (event) ->
   else if Mode.isActive "INSERT"
     Mode.getMode("INSERT").keypress event
 
-  else unless Mode.isActive("PASSKEY") and Mode.getMode("PASSKEY").keypress event
+  else if Mode.isActive("PASSKEY") and Mode.handledEvent == Mode.getMode("PASSKEY").keypress event
     undefined # Do nothing; we want to pass this key
 
   else
@@ -436,7 +436,7 @@ onKeydown = (event) ->
     DomUtils.suppressEvent event
     KeydownEvents.push event
 
-  else unless Mode.isActive("PASSKEY") and Mode.getMode("PASSKEY").keydown event
+  else if Mode.isActive("PASSKEY") and Mode.handledEvent == Mode.getMode("PASSKEY").keydown event
     undefined # Do nothing; we want to pass this key
 
   else
