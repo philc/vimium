@@ -66,12 +66,13 @@ LinkHints =
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
     @handlerMode =
-      new class HintMode extends Mode
+      new class HintMode extends InsertModeBlocker
         constructor: ->
           super
             name: "hint/#{mode.name}"
             badge: "#{mode.key}?"
             exitOnEscape: true
+            exitOnClick: true
             keydown: (event) -> LinkHints.onKeyDownInMode hintMarkers, event
             # trap all key events
             keypress: => @stopBubblingAndFalse

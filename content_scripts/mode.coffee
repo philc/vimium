@@ -97,6 +97,12 @@ class Mode
         _name: "mode-#{@id}/exitOnBlur"
         "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == @options.exitOnBlur
 
+    # If @options.exitOnClick is truthy, then the mode will exit on any click event.
+    if @options.exitOnClick
+      @push
+        _name: "mode-#{@id}/exitOnClick"
+        "click": (event) => @alwaysContinueBubbling => @exit()
+
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes.
     if @options.trackState
