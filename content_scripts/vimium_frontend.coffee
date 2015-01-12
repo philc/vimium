@@ -202,7 +202,7 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
   Vomnibar.init()
-  new InsertMode null
+  new NormalMode()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -392,6 +392,56 @@ KeydownEvents =
     delete @handledEvents[detailString]
     value
 
+onKeypress = (event) ->
+  return unless handlerStack.bubbleEvent('keypress', event)
+
+  # Get the pressed key, unless it's a modifier key.
+  keyChar = if event.keyCode > 31 then String.fromCharCode(event.charCode) else ""
+
+  if findMode and keyChar
+    handleKeyCharForFindMode keyChar
+    DomUtils.suppressEvent event
+
+  else if Mode.getMode("INSERT")?.isActive()
+    Mode.getMode("INSERT").keypress event
+
+  else if Mode.getMode("NORMAL")?.isActive()
+    Mode.getMode("NORMAL").keypress event
+
+onKeydown = (event) ->
+  return unless handlerStack.bubbleEvent('keydown', event)
+
+  if findMode
+    if KeyboardUtils.isEscape event
+      handleEscapeForFindMode()
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+
+    else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+      handleDeleteForFindMode()
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+
+    else if event.keyCode == keyCodes.enter
+      handleEnterForFindMode()
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+
+    else unless event.metaKey or event.ctrlKey or event.altKey
+      DomUtils.suppressPropagation(event)
+      KeydownEvents.push event
+
+  else if Mode.getMode("INSERT")?.isActive()
+    Mode.getMode("INSERT").keydown event
+
+  else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+    hideHelpDialog()
+    DomUtils.suppressEvent event
+    KeydownEvents.push event
+
+  else if Mode.getMode("NORMAL")?.isActive()
+    Mode.getMode("NORMAL").keydown event
+
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
 # insert mode which is local state to the page. The key will be are either a single ascii letter or a
@@ -399,7 +449,7 @@ KeydownEvents =
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
-onKeypress = (event) ->
+onKeypress_ = (event) ->
   return unless handlerStack.bubbleEvent('keypress', event)
 
   keyChar = ""
@@ -428,7 +478,7 @@ onKeypress = (event) ->
 
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
-onKeydown = (event) ->
+onKeydown_ = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
 
   keyChar = ""
@@ -577,6 +627,8 @@ onBlurCapturePhase = (event) ->
 # mode manually by pressing "i". In most cases we do not show any UI (enterInsertModeWithoutShowingIndicator)
 #
 window.enterInsertMode = (target) ->
+  new InsertMode target, true
+  return
   enterInsertModeWithoutShowingIndicator(target)
   HUD.show("Insert mode")
 
@@ -589,6 +641,8 @@ window.enterInsertMode = (target) ->
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
 enterInsertModeWithoutShowingIndicator = (target) ->
+  new InsertMode target
+  return
   insertModeLock = target
   # normalModeForInput is a sub-mode of insert mode; it shouldn't be persisted across insert mode instances.
   # We re-establish insert mode when the user clicks to fix #1414.
@@ -596,6 +650,8 @@ enterInsertModeWithoutShowingIndicator = (target) ->
   normalModeForInput = false
 
 exitInsertMode = (target) ->
+  Mode.getMode("INSERT")?.deactivate()
+  return
   if (target == undefined || insertModeLock == target)
     # normalModeForInput is a sub-mode of insert mode; deactivate it if insert mode isn't active.
     target?.removeEventListener? "click", reestablishInputModeOnClick, false
@@ -701,9 +757,7 @@ handleEnterForFindMode = ->
   # If an input is focused, we still want to drop the user back into normal mode. normalModeForInput is a
   # sub-mode of insert mode (and will exit if the insert mode focus changes, we exit insert mode, or were
   # never in insert mode to start with).
-  # NOTE(mrmr1993): We don't check isInsertMode here in case contentEditable is set dynamically (see comment
-  # in isInsertMode).
-  normalModeForInput = true
+  new NormalModeForInput()
   document.body.classList.add("vimiumFindMode")
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
