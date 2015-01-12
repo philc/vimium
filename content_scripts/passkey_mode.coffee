@@ -9,5 +9,10 @@ class PasskeyMode extends Mode
     else
       true
 
+  # We never want to disable passkey mode.
+  isActive: -> true
+  activate: -> true
+  deactivate: -> true
+
 root = exports ? window
 root.PasskeyMode = PasskeyMode
