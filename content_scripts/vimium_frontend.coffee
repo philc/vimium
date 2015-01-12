@@ -629,7 +629,7 @@ window.enterInsertMode = (target) ->
 # leave insert mode when the user presses <ESC>.
 # Note. This returns the truthiness of target, which is required by isInsertMode.
 #
-enterInsertModeWithoutShowingIndicator = (target) ->
+window.enterInsertModeWithoutShowingIndicator = (target) ->
   new InsertMode target
   return
   insertModeLock = target
@@ -709,13 +709,13 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-window.handleKeyCharForFindMode = (keyChar) ->
+handleKeyCharForFindMode = (keyChar) ->
   findModeQuery.rawQuery += keyChar
   updateFindModeQuery()
   performFindInPlace()
   showFindModeHUDForQuery()
 
-window.handleEscapeForFindMode = ->
+handleEscapeForFindMode = ->
   exitFindMode()
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
@@ -727,7 +727,7 @@ window.handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-window.handleDeleteForFindMode = ->
+handleDeleteForFindMode = ->
   if (findModeQuery.rawQuery.length == 0)
     exitFindMode()
     performFindInPlace()
@@ -740,7 +740,7 @@ window.handleDeleteForFindMode = ->
 # <esc> sends us into insert mode if possible, but <cr> puts us in normal mode, even if an input is focused.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-window.handleEnterForFindMode = ->
+handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   # If an input is focused, we still want to drop the user back into normal mode. normalModeForInput is a
@@ -857,9 +857,9 @@ findAndFocus = (backwards) ->
 
   focusFoundLink()
 
-window.performFind = -> findAndFocus()
+# window.performFind = -> findAndFocus()
 
-window.performBackwardsFind = -> findAndFocus(true)
+# window.performBackwardsFind = -> findAndFocus(true)
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
