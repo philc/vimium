@@ -99,6 +99,10 @@ class FindMode extends Mode
 
     focusFoundLink()
 
+  deactivate: ->
+    HUD.hide()
+    super()
+
   update: (query) ->
     return if query == findModeQuery.rawQuery
     if query == "" or query != findModeQuery.rawQuery
