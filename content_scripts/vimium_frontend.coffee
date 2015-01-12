@@ -127,8 +127,10 @@ initializePreDomReady = ->
     chrome.runtime.sendMessage = ->
     chrome.runtime.connect = ->
 
+  # Initialise modes.
   new NormalMode()
   new PasskeyMode()
+  new InsertMode null, false, false
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()

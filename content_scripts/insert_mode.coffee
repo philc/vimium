@@ -1,13 +1,14 @@
 class InsertMode extends Mode
   element: null
 
-  constructor: (element, showIndicator = false) ->
+  constructor: (element, showIndicator = false, activate = true) ->
     # Register listeners before calling the constructor, in case a mode we replace changes focus.
     document.addEventListener "focus", @onFocusCapturePhase, true
     document.addEventListener "blur", @onBlurCapturePhase, true
 
     super "INSERT", {}
-    @activate element, showIndicator unless element == null
+    if activate
+      @activate element, showIndicator unless element == null
 
   destructor: ->
     document.removeEventListener "focus", @onFocusCapturePhase, true
@@ -64,7 +65,7 @@ class InsertMode extends Mode
     true
 
   deactivate: (element) ->
-    return unless @isActive
+    return unless @isActive()
     # Only deactivate if the right element is given, or there's no element at all.
     if element == undefined or element == @element
       element?.removeEventListener "click", reestablishInputModeOnClick, false
