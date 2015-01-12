@@ -398,7 +398,10 @@ KeydownEvents =
 onKeypress = (event) ->
   return unless handlerStack.bubbleEvent('keypress', event)
 
-  if Mode.isActive "FIND"
+  if Mode.isActive "LINK_HINT"
+    Mode.getMode("LINK_HINT").keypress event
+
+  else if Mode.isActive "FIND"
     Mode.getMode("FIND").keypress event
 
   else if Mode.isActive "VISUAL"
@@ -416,7 +419,10 @@ onKeypress = (event) ->
 onKeydown = (event) ->
   return unless handlerStack.bubbleEvent('keydown', event)
 
-  if Mode.isActive "FIND"
+  if Mode.isActive "LINK_HINT"
+    Mode.getMode("LINK_HINT").keydown event
+
+  else if Mode.isActive "FIND"
     Mode.getMode("FIND").keydown event
 
   else if Mode.isActive "VISUAL"

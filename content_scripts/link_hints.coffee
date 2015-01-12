@@ -28,8 +28,6 @@ LinkHints =
   # loaded, so that we can retrieve the option setting.
   getMarkerMatcher: ->
     if settings.get("filterLinkHints") then filterHints else alphabetHints
-  # lock to ensure only one instance runs at a time
-  isActive: false
 
   #
   # To be called after linkHints has been generated from linkHintsBase.
@@ -48,9 +46,8 @@ LinkHints =
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
-    if @isActive
+    if Mode.isActive "LINK_HINT"
       return
-    @isActive = true
 
     @setOpenLinkMode(mode)
     hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
@@ -61,6 +58,13 @@ LinkHints =
     # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
     @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
+
+    trapAll = (event) ->
+      DomUtils.suppressEvent event
+      false
+    new Mode "LINK_HINT", {}, @onKeyDownInMode.bind(this, hintMarkers), trapAll, trapAll
+
+    return # NOTE(mrmr1993): Using modes instead of handlerStack, the below code can be deleted.
 
     # handlerStack is declared by vimiumFrontend.js
     @handlerId = handlerStack.push({
@@ -250,7 +254,7 @@ LinkHints =
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
   #
   onKeyDownInMode: (hintMarkers, event) ->
-    return if @delayMode
+    return false if @delayMode
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
         (@mode == OPEN_IN_CURRENT_TAB or
@@ -281,6 +285,7 @@ LinkHints =
           @hideMarker(marker)
         for matched in linksMatched
           @showMarker(matched, @getMarkerMatcher().hintKeystrokeQueue.length)
+    DomUtils.suppressEvent event
     false # We've handled this key, so prevent propagation.
 
   #
@@ -330,9 +335,8 @@ LinkHints =
       if (LinkHints.hintMarkerContainingDiv)
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
-      handlerStack.remove @handlerId
       HUD.hide()
-      @isActive = false
+      Mode.deactivate "LINK_HINT"
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
     # deactivateMode can be tested synchronously
