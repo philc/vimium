@@ -127,6 +127,9 @@ initializePreDomReady = ->
     chrome.runtime.sendMessage = ->
     chrome.runtime.connect = ->
 
+  new NormalMode()
+  new PasskeyMode()
+
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
@@ -202,8 +205,6 @@ initializeOnDomReady = ->
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
   Vomnibar.init()
-  new NormalMode()
-  new PasskeyMode()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
