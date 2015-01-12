@@ -767,7 +767,7 @@ performFindInPlace = ->
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
   if document.activeElement and DomUtils.isSelectable(document.activeElement) and
-     not isDOMDescendant(findModeAnchorNode, document.activeElement)
+     not DomUtils.isDescendant(findModeAnchorNode, document.activeElement)
     # The document's active element doesn't contain the selection, so we should blur it.
     document.activeElement.blur()
 
@@ -804,13 +804,6 @@ focusFoundLink = ->
     link = getLinkFromSelection()
     link.focus() if link
 
-isDOMDescendant = (parent, child) ->
-  node = child
-  while (node != null)
-    return true if (node == parent)
-    node = node.parentNode
-  false
-
 selectFoundInputElement = ->
   # if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
@@ -818,7 +811,7 @@ selectFoundInputElement = ->
   # heuristic of checking that the last anchor node is an ancestor of our element.
   if (findModeQueryHasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
-      isDOMDescendant(findModeAnchorNode, document.activeElement))
+      DomUtils.isDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
     enterInsertModeWithoutShowingIndicator(document.activeElement)
@@ -855,7 +848,7 @@ findAndFocus = (backwards) ->
 
   elementCanTakeInput = document.activeElement &&
     DomUtils.isSelectable(document.activeElement) &&
-    isDOMDescendant(findModeAnchorNode, document.activeElement)
+    DomUtils.isDescendant(findModeAnchorNode, document.activeElement)
   if (elementCanTakeInput)
     new NormalModeForInput()
   else if document.activeElement and DomUtils.isSelectable document.activeElement

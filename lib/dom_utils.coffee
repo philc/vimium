@@ -205,6 +205,13 @@ DomUtils =
     focusableElements = ["textarea", "select"]
     focusableElements.indexOf(nodeName) >= 0
 
+  isDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
+
 
 root = exports ? window
 root.DomUtils = DomUtils
