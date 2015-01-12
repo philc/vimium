@@ -30,9 +30,23 @@ class Mode
 
   active: true
 
-  constructor: (@name, options = {}, @onKeydown, @onKeypress, @onKeyup) ->
+  constructor: (options = {}) ->
+    defaultOptions =
+      parent: Mode
+      onKeydown: null
+      onKeypress: null
+      onKeyup: null
+      deactivateOnEsc: false
+    options = extend defaultOptions, options
+
     @modes = {}
-    if @name? and options.noParent != true
+    @name = options.name
+    @onKeydown = options.onKeydown
+    @onKeypress = options.onKeypress
+    @onKeyup = options.onKeyup
+    @deactivateOnEsc = options.deactivateOnEsc
+
+    if options.name? and options.noParent != true
       modeParent = options.parent ? Mode
       modeParent.modes[@name]?.destructor() # Destroy the mode we're replacing, if any.
       modeParent.modes[@name] = this
@@ -40,9 +54,21 @@ class Mode
   # Do any cleanup here. This will be called when another mode of the same name has replaced this one.
   destructor: -> mode.destructor() for modeName, mode of @modes
 
-  keydown: (event) -> @onKeydown? event
+  keydown: (event) ->
+    if @deactivateOnEsc
+      return false unless @handleEsc event
+    @onKeydown? event
   keypress: (event) -> @onKeypress? event
   keyup: (event) -> @onKeyup? event
+
+  handleEsc = (event) ->
+    if KeyboardUtils.isEscape event
+      @deactivate()
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+      false
+    else
+      true
 
   getMode: Mode.getMode
   setMode: Mode.setMode

@@ -6,7 +6,7 @@ class InsertMode extends Mode
     document.addEventListener "focus", @onFocusCapturePhase, true
     document.addEventListener "blur", @onBlurCapturePhase, true
 
-    super "INSERT", {}
+    super {name: "INSERT"}
     if activate
       @activate element, showIndicator unless element == null
 

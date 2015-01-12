@@ -4,7 +4,7 @@ findModeAnchorNode = null
 
 class FindMode extends Mode
   constructor: (query = "") ->
-    super "FIND"
+    super {name: "FIND"}
     @update query if query?
   keydown: (event) ->
     if KeyboardUtils.isEscape event

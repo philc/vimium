@@ -79,7 +79,7 @@ class NormalModeBase extends Mode
 
 class NormalMode extends NormalModeBase
   constructor: ->
-    super "NORMAL"
+    super {name: "NORMAL"}
 
   # We never want to disable normal mode.
   isActive: -> true
@@ -88,12 +88,10 @@ class NormalMode extends NormalModeBase
 
 class NormalModeForInput extends NormalModeBase
   constructor: ->
-    super "INPUT_NORMAL", {parent: Mode.getMode "INSERT"}, (event) ->
-      if KeyboardUtils.isEscape event
-        @deactivate()
-        false
-      else
-        true
+    super
+      name: "INPUT_NORMAL"
+      parent: Mode.getMode "INSERT"
+      deactivateOnEsc: true
 
 
 root = exports ? window

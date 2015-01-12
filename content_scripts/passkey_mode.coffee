@@ -1,7 +1,7 @@
 class PasskeyMode extends Mode
   passKeys: null
   constructor: (passKeys) ->
-    super "PASSKEY"
+    super {name: "PASSKEY"}
     if passKeys?
       @passKeys = passKeys
     else

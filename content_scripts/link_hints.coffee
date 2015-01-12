@@ -62,7 +62,10 @@ LinkHints =
     trapAll = (event) ->
       DomUtils.suppressEvent event
       false
-    new Mode "LINK_HINT", {}, @onKeyDownInMode.bind(this, hintMarkers), trapAll, trapAll
+    new Mode
+      name: "LINK_HINT"
+      onKeydown: @onKeyDownInMode.bind(this, hintMarkers)
+      onKeypress: trapAll
 
     return # NOTE(mrmr1993): Using modes instead of handlerStack, the below code can be deleted.
 
@@ -254,7 +257,10 @@ LinkHints =
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
   #
   onKeyDownInMode: (hintMarkers, event) ->
-    return false if @delayMode
+    if @delayMode
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+      return false
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
         (@mode == OPEN_IN_CURRENT_TAB or
@@ -286,6 +292,7 @@ LinkHints =
         for matched in linksMatched
           @showMarker(matched, @getMarkerMatcher().hintKeystrokeQueue.length)
     DomUtils.suppressEvent event
+    KeydownEvents.push event
     false # We've handled this key, so prevent propagation.
 
   #
