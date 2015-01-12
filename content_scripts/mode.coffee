@@ -114,15 +114,17 @@ class Mode
     # If @options.suppressPrintableEvents is truthy, then it should be an element.  All printable keypress
     # events on that element are suppressed, if necessary.  They are suppressed *after* bubbling down the
     # handler stack and finding no handler.  This is used by PostFindMode to protect active, editable
-    # elements.
+    # elements.  Note, this handler is installed with unshift (not push), so it ends is installed at the
+    # *bottom* of the handler stack, and sees keyboard events only after other modes (notably, normal mode)
+    # have not handled them.
     if @options.suppressPrintableEvents
-      @push
+      @unshift
         _name: "mode-#{@id}/suppressPrintableEvents"
         keypress: (event) =>
-          @alwaysContinueBubbling =>
-            if event.srcElement == @options.suppressPrintableEvents
-              if KeyboardUtils.isPrintable event
-                event.vimium_suppress_event = true
+          if event.srcElement == @options.suppressPrintableEvents and KeyboardUtils.isPrintable event
+            @suppressEvent
+          else
+            @continueBubbling
 
     Mode.updateBadge() if @badge
     Mode.modes.push @
@@ -234,21 +236,6 @@ new class BadgeMode extends Mode
   # it's now time to update the badge.
   registerStateChange: ->
     Mode.updateBadge()
-
-# KeySuppressor is a pseudo mode (near the bottom of the stack) which suppresses keyboard events tagged with
-# the "vimium_suppress_event" property.  This allows modes higher up in the stack to tag events for
-# suppression, but only after verifying that no other mode (notably, normal mode) wants to handle the event.
-# Note.  We create the the one-and-only instance here.
-new class KeySuppressor extends Mode
-  constructor: ->
-    super
-      name: "key-suppressor"
-      keydown: (event) => @handle event
-      keypress: (event) => @handle event
-      keyup: (event) => @handle event
-
-  handle: (event) ->
-    if event.vimium_suppress_event then @suppressEvent else @continueBubbling
 
 root = exports ? window
 root.Mode = Mode
