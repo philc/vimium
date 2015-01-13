@@ -160,7 +160,7 @@ class Mode
     else
       retVal or Mode.unhandledEvent
 
-  handleEsc = (event) ->
+  handleEsc: (event) ->
     if KeyboardUtils.isEscape event
       @deactivate()
       DomUtils.suppressEvent event
