@@ -191,13 +191,6 @@ class Mode
           handler: "setBadge"
           badge: badge.badge
 
-  # Temporarily install a mode to protect a function call, then exit the mode.  For example, temporarily
-  # install an InsertModeBlocker, so that focus events don't unintentionally drop us into insert mode.
-  @runIn: (mode, func) ->
-    mode = new mode()
-    func()
-    mode.exit()
-
   registerSingleton: do ->
     singletons = {} # Static.
     (key) ->

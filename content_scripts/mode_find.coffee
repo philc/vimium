@@ -2,14 +2,13 @@
 
 # When we use find mode, the selection/focus can end up in a focusable/editable element.  In this situation,
 # special considerations apply.  We implement three special cases:
-#   1. Prevent keyboard events from dropping us unintentionally into insert mode. This is achieved by
-#      inheriting from InsertModeBlocker.
+#   1. Prevent keyboard events from dropping us unintentionally into insert mode. This is achieved by...
 #   2. Prevent all printable keypress events on the active element from propagating.  This is achieved by setting the
 #      suppressPrintableEvents option.  There's some controversy as to whether this is the right thing to do.
 #      See discussion in #1415. This implements Option 2 from there.
 #   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 #
-class PostFindMode extends InsertModeBlocker
+class PostFindMode extends Mode
   constructor: (findModeAnchorNode) ->
     element = document.activeElement
     initialSelection = window.getSelection().toString()

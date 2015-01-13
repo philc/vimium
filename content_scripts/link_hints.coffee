@@ -66,7 +66,7 @@ LinkHints =
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
     @handlerMode =
-      new class HintMode extends InsertModeBlocker
+      new class HintMode extends Mode
         constructor: ->
           super
             name: "hint/#{mode.name}"

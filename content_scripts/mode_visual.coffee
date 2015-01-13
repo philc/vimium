@@ -1,5 +1,5 @@
 
-class VisualMode extends InsertModeBlocker
+class VisualMode extends Mode
   constructor: (element=null) ->
     super
       name: "visual"
