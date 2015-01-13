@@ -3,12 +3,12 @@ class VisualMode extends Mode
     super {name: "VISUAL"}
     HUD.show "Visual mode"
 
-  keydown: (event) ->
+  onKeydown: (event) ->
     if KeyboardUtils.isEscape event
       @deactivate()
-    false
-  keypress: (event) -> false
-  keyup: (event) -> false
+    Mode.suppressEvent
+  onKeypress: (event) -> Mode.suppressEvent
+  onKeyup: (event) -> Mode.suppressEvent
 
 
   deactivate: ->

@@ -40,7 +40,7 @@ class InsertMode extends Mode
     document.removeEventListener "focus", @onFocusCapturePhase, true
     document.removeEventListener "blur", @onBlurCapturePhase, true
 
-  keydown: (event) ->
+  onKeydown: (event) ->
     if @modes.INPUT_NORMAL?.isActive()
       # An input is focused, but we still want to handle keypresses as normal mode commands.
       @modes.INPUT_NORMAL.keydown event
@@ -56,7 +56,7 @@ class InsertMode extends Mode
     @deactivate()
     Mode.suppressEvent
 
-  keypress: (event) ->
+  onKeypress: (event) ->
     if @modes.INPUT_NORMAL?.isActive()
       # An input is focused, but we still want to handle keypresses as normal mode commands.
       @modes.INPUT_NORMAL.keypress event

@@ -2,8 +2,7 @@ keyPort = chrome.runtime.connect name: "keyDown"
 
 class NormalModeBase extends Mode
 
-  keydown: (event) ->
-    return false if false == super event
+  onKeydown: (event) ->
     keyHandled = false
     keyChar = ""
 
@@ -60,8 +59,7 @@ class NormalModeBase extends Mode
     else
       Mode.unhandledEvent
 
-  keypress: (event) ->
-    return false if false == super event
+  onKeypress: (event) ->
     keyChar = ""
     keyHandled = false
 

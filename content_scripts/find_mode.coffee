@@ -9,7 +9,7 @@ class FindMode extends Mode
     HUD.show("/") if query == ""
     @update query
 
-  keydown: (event) ->
+  onKeydown: (event) ->
     if KeyboardUtils.isEscape event
       @handleEscapeForFindMode()
 
@@ -29,7 +29,7 @@ class FindMode extends Mode
 
     Mode.suppressEvent
 
-  keypress: (event) ->
+  onKeypress: (event) ->
     # Get the pressed key, unless it's a modifier key.
     keyChar = if event.keyCode > 31 then String.fromCharCode(event.charCode) else ""
 

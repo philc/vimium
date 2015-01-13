@@ -122,9 +122,9 @@ class Mode
 
     @modes = {}
     @name = options.name
-    @onKeydown = options.onKeydown
-    @onKeypress = options.onKeypress
-    @onKeyup = options.onKeyup
+    @onKeydown ?= options.onKeydown
+    @onKeypress ?= options.onKeypress
+    @onKeyup ?= options.onKeyup
     @deactivateOnEsc = options.deactivateOnEsc
     @alwaysOn = options.alwaysOn
 

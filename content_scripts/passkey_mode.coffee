@@ -6,12 +6,12 @@ class PasskeyMode extends Mode
       @passKeys = passKeys
     else
       @deactivate()
-  keydown: (event) ->
+  onKeydown: (event) ->
     if @isPassKey KeyboardUtils.getKeyChar(event)
       Mode.handledEvent
     else
       Mode.unhandledEvent
-  keypress: (event) ->
+  onKeypress: (event) ->
     # Ignore modifier keys by themselves.
     if (event.keyCode > 31)
       keyChar = String.fromCharCode(event.charCode)
