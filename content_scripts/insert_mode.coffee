@@ -1,3 +1,28 @@
+# This implements insert mode.
+#
+# Insert mode can be activated in one of 2 ways:
+# * Automatically, by focusing an editable element.
+#   (NOTE: this requires that an inactive InsertMode instance is created when the document is loaded, via
+#     new InsertMode(null, false, false)      )
+# * By creating an instance of this class with
+#     new InsertMode()
+#
+# To exit insert mode, use Mode.deactivate:
+#   Mode.deactivate "INSERT"
+#
+# The constructor takes 3 arguments:
+#  element          the element that insert mode applies to, or null if the user triggered insert mode
+#                   manually
+#  showIndicator    whether the HUD should be shown for this instance of insert mode
+#  activate         whether this instance of insert mode should start activated.
+#                   (NOTE: this should only be used to set up the event listeners on document load)
+#
+# Insert mode is *always* active when an editable element is focused.
+# A mode that should only be active for an editable element can be implemented as a sub-mode of this, and
+# will be automatically deactivated when the element is blurred.
+# NOTE: The key{down,press,up} handlers for the sub-mode have to be explicitly called, and will not
+# automatically attach to the document.
+#
 class InsertMode extends Mode
   element: null
 
@@ -11,6 +36,7 @@ class InsertMode extends Mode
       @activate element, showIndicator unless element == null
 
   destructor: ->
+    # Clean up event listeners; this instance is being replaced by another.
     document.removeEventListener "focus", @onFocusCapturePhase, true
     document.removeEventListener "blur", @onBlurCapturePhase, true
 

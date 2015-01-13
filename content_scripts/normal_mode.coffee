@@ -80,10 +80,17 @@ class NormalModeBase extends Mode
     else
       Mode.unhandledEvent
 
+# This class implements normal mode. It should be instantiated once at document load, and left enabled.
 class NormalMode extends NormalModeBase
   constructor: ->
     super {name: "NORMAL", alwaysOn: true}
 
+# This class enables normal mode when an editable element is focused. The constructor takes no arguments, and
+# should be instantiated with
+#   new NormalModeForInput()
+#
+# This is currently used to leave the user in normal mode after they perform a find, even when the selection
+# is in an editable element.
 class NormalModeForInput extends NormalModeBase
   constructor: ->
     super
