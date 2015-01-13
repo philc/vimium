@@ -12,6 +12,7 @@
 class PostFindMode extends InsertModeBlocker
   constructor: (findModeAnchorNode) ->
     element = document.activeElement
+    initialSelection = window.getSelection().toString()
 
     super
       name: "post-find"
@@ -20,6 +21,15 @@ class PostFindMode extends InsertModeBlocker
       singleton: PostFindMode
       exitOnBlur: element
       suppressPrintableEvents: element
+      # If the selection changes (e.g. via paste, or the arrow keys), then the user is interacting with the
+      # element, so get out of the way and activate insert mode.  This implements 5c (without the input
+      # listener) as discussed in #1415.
+      keyup: =>
+        @alwaysContinueBubbling =>
+          if window.getSelection().toString() != initialSelection
+            @exit()
+            new InsertMode
+              targetElement: element
 
     return @exit() unless element and findModeAnchorNode
 
