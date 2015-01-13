@@ -1,6 +1,6 @@
 class VisualMode extends Mode
   constructor: ->
-    super "VISUAL"
+    super {name: "VISUAL"}
     HUD.show "Visual mode"
 
   keydown: (event) ->
