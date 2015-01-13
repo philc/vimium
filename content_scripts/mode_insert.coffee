@@ -73,12 +73,13 @@ triggerSuppressor = new Utils.Suppressor true # Note: true == @continueBubbling
 # unintentionally dropping into insert mode on focusable elements.
 class InsertModeBlocker extends Mode
   constructor: (options = {}) ->
+    defaults =
+      name: "insert-blocker"
+      # The user knows best; so, if the user clicks on something, the insert-mode blocker gets out of the way.
+      exitOnClick: true
+      onClickMode: InsertMode
+    super extend defaults, options
     triggerSuppressor.suppress()
-    options.name ||= "insert-blocker"
-    # See "click" handler below for an explanation of options.onClickMode.
-    options.onClickMode ||= InsertMode
-    super options
-    @onExit -> triggerSuppressor.unsuppress()
 
     @push
       _name: "mode-#{@id}/bail-on-click"
@@ -86,15 +87,17 @@ class InsertModeBlocker extends Mode
         @alwaysContinueBubbling =>
           # The user knows best; so, if the user clicks on something, the insert-mode blocker gets out of the
           # way.
-          @exit event
-          # However, there's a corner case.  If the active element is focusable, then, had we not been
-          # blocking the trigger, we would already have been in insert mode.  Now, a click on that element
-          # will not generate a new focus event, so the insert-mode trigger will not fire.  We have to handle
-          # this case specially.  @options.onClickMode specifies the mode to use (by default, insert mode).
-          if document.activeElement and
-             event.target == document.activeElement and DomUtils.isEditable document.activeElement
-            new @options.onClickMode
-              targetElement: document.activeElement
+
+  exit: ->
+    super()
+    # If the element associated with the event is focusable, then, had we not been blocking the trigger, we
+    # would already have been in insert mode.  Now, a click on that element will not generate a new focus
+    # event, so the insert-mode trigger will not fire.  We have to handle this case specially.
+    # @options.onClickMode specifies the mode to use (by default, insert mode).
+    if @clickEvent?.target? and DomUtils.isFocusable @clickEvent.target
+      new @options.onClickMode
+        targetElement: event.target
+    triggerSuppressor.unsuppress()
 
 root = exports ? window
 root.InsertMode = InsertMode

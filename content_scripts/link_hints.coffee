@@ -72,15 +72,14 @@ LinkHints =
             name: "hint/#{mode.name}"
             badge: "#{mode.key}?"
             exitOnEscape: true
-            exitOnClick: true
             keydown: (event) -> LinkHints.onKeyDownInMode hintMarkers, event
-            # trap all key events
+            # trap all other keyboard events
             keypress: => @stopBubblingAndFalse
             keyup: => @stopBubblingAndFalse
 
         exit: (delay, callback) =>
-          super()
           LinkHints.deactivateMode delay, callback
+          super()
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
