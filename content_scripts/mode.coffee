@@ -117,20 +117,25 @@ class Mode
               @passKeys = passKeys
               @registerStateChange?()
 
-    # If @options.suppressPrintableEvents is truthy, then it should be an element.  All printable keypress
+    # If @options.suppressPrintableEvents is truthy, then it should be an element.  All printable keyboard
     # events on that element are suppressed, if necessary.  They are suppressed *after* bubbling down the
     # handler stack and finding no handler.  This is used by PostFindMode to protect active, editable
     # elements.  Note, this handler is installed with unshift (not push), so it ends is installed at the
     # *bottom* of the handler stack, and sees keyboard events only after other modes (notably, normal mode)
     # have not handled them.
     if @options.suppressPrintableEvents
-      @unshift
-        _name: "mode-#{@id}/suppressPrintableEvents"
-        keypress: (event) =>
+      do =>
+        handler = (event) =>
           if event.srcElement == @options.suppressPrintableEvents and KeyboardUtils.isPrintable event
             @suppressEvent
           else
             @continueBubbling
+
+        @unshift
+          _name: "mode-#{@id}/suppressPrintableEvents"
+          keydown: handler
+          keypress: handler
+          keyup: handler
 
     Mode.updateBadge() if @badge
     Mode.modes.push @
