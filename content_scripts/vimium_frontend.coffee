@@ -980,13 +980,13 @@ showFindModeHUDForQuery = ->
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
 window.enterFindMode = ->
-  findModeQuery = { rawQuery: "" }
+  #findModeQuery = { rawQuery: "" }
   new FindMode()
-  HUD.show("/")
+  #HUD.show("/")
 
 exitFindMode = ->
   Mode.deactivate "FIND"
-  HUD.hide()
+  #HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)

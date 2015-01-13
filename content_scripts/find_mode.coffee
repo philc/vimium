@@ -5,7 +5,10 @@ findModeAnchorNode = null
 class FindMode extends Mode
   constructor: (query = "") ->
     super {name: "FIND"}
-    @update query if query?
+    # If this is a new search, show the HUD.
+    HUD.show("/") if query == ""
+    @update query
+
   keydown: (event) ->
     if KeyboardUtils.isEscape event
       @handleEscapeForFindMode()
