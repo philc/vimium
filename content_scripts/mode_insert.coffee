@@ -16,7 +16,7 @@ class InsertMode extends Mode
     @insertModeLock = if options.targetElement? then options.targetElement else null
 
     @push
-      "blur": => @alwaysContinueBubbling =>
+      "blur": (event) => @alwaysContinueBubbling =>
         if DomUtils.isFocusable event.target
           @exit event.target
           Mode.updateBadge()

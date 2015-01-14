@@ -44,7 +44,7 @@ count = 0
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
   # with a list of the currently active modes.
-  debug: true
+  debug: false
   @modes: []
 
   # Constants; short, readable names for handlerStack event-handler return values.
@@ -95,7 +95,7 @@ class Mode
     if @options.exitOnBlur
       @push
         _name: "mode-#{@id}/exitOnBlur"
-        "blur": (event) => @alwaysContinueBubbling => @exit() if event.srcElement == @options.exitOnBlur
+        "blur": (event) => @alwaysContinueBubbling => @exit() if event.target == @options.exitOnBlur
 
     # If @options.exitOnClick is truthy, then the mode will exit on any click event.
     if @options.exitOnClick
@@ -192,7 +192,7 @@ class Mode
 
   # Return the name of the must-recently activated mode.
   @top: ->
-    @modes[@modes.length-1]?.name
+    @modes[@modes.length-1]
 
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
