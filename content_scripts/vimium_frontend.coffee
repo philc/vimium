@@ -757,7 +757,7 @@ selectFoundInputElement = ->
   # heuristic of checking that the last anchor node is an ancestor of our element.
   if (findModeQueryHasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
-      DomUtils.isDescendant(findModeAnchorNode, document.activeElement))
+      DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
     # the element has already received focus via find(), so invoke insert mode manually
     enterInsertModeWithoutShowingIndicator(document.activeElement)
@@ -796,7 +796,7 @@ findAndFocus = (backwards) ->
   # mode
   elementCanTakeInput = document.activeElement &&
     DomUtils.isSelectable(document.activeElement) &&
-    DomUtils.isDescendant(findModeAnchorNode, document.activeElement)
+    DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement)
   if (elementCanTakeInput)
     handlerStack.push({
       keydown: (event) ->
