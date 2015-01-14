@@ -1140,9 +1140,9 @@ CursorHider =
     window.addEventListener "scroll", @onScroll
 
 initializePreDomReady()
-window.addEventListener("DOMContentLoaded", registerFrame)
-window.addEventListener("unload", unregisterFrame)
-window.addEventListener("DOMContentLoaded", initializeOnDomReady)
+DomUtils.documentReady initializeOnDomReady
+DomUtils.documentReady registerFrame
+window.addEventListener "unload", unregisterFrame
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(
