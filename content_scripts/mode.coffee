@@ -101,9 +101,7 @@ class Mode
     if @options.exitOnClick
       @push
         _name: "mode-#{@id}/exitOnClick"
-        "click": (event) => @alwaysContinueBubbling =>
-          @clickEvent = event
-          @exit()
+        "click": (event) => @alwaysContinueBubbling => @exit event
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes.

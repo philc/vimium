@@ -389,7 +389,6 @@ extend window,
 
         visibleInputs[selectedInputIndex].element.focus()
         return @exit() if visibleInputs.length == 1
-
         hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
       exit: ->
@@ -747,6 +746,7 @@ class FindMode extends Mode
       name: "find"
       badge: "/"
       exitOnEscape: true
+      exitOnClick: true
 
       keydown: (event) =>
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
@@ -772,8 +772,8 @@ class FindMode extends Mode
     super()
     handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
     handleEscapeForFindMode() if event?.type == "click"
-    # If event?.type == "click", then the InsertModeBlocker super-class will be dropping us into insert mode.
-    new PostFindMode findModeAnchorNode unless event?.type == "click"
+    if findModeQueryHasResults and event?.type != "click"
+      new PostFindMode findModeAnchorNode
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -863,15 +863,11 @@ findAndFocus = (backwards) ->
   findModeQueryHasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
 
-  if (!findModeQueryHasResults)
+  if findModeQueryHasResults
+    focusFoundLink()
+    new PostFindMode findModeAnchorNode if findModeQueryHasResults
+  else
     HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
-    return
-
-  # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
-  # mode
-  new PostFindMode findModeAnchorNode
-
-  focusFoundLink()
 
 window.performFind = -> findAndFocus()
 

@@ -1,6 +1,11 @@
 
 class InsertMode extends Mode
+  # There is one permanently-installed instance of InsertMode.  This allows PostFindMode to query its state.
+  @permanentInstance: null
+
   constructor: (options = {}) ->
+    InsertMode.permanentInstance ||= @
+
     defaults =
       name: "insert"
       keydown: (event) => @handleKeydownEvent event
@@ -51,12 +56,8 @@ class InsertMode extends Mode
 
   exit: (target)  ->
     if target == undefined or target == @insertModeLock
-      if @options.targetElement?
-        super()
-      else
-        # If @options.targetElement isn't set, then this is the permanently-installed instance from the front
-        # end.  So, we don't actually exit; instead, we just reset ourselves.
-        @insertModeLock = null
+      # If this is the permanently-installed instance, then we don't actually exit; instead, we just reset.
+      if @ == InsertMode.permanentInstance then @insertModeLock = null else super()
 
   chooseBadge: (badge) ->
     badge.badge ||= "I" if @isActive()
