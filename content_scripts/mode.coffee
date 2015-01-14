@@ -44,7 +44,7 @@ count = 0
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
   # with a list of the currently active modes.
-  debug: false
+  debug: true
   @modes: []
 
   # Constants; short, readable names for handlerStack event-handler return values.
@@ -86,7 +86,7 @@ class Mode
         _name: "mode-#{@id}/exitOnEscape"
         "keydown": (event) =>
           return @continueBubbling unless KeyboardUtils.isEscape event
-          @exit event
+          @exit event, event.srcElement
           DomUtils.suppressKeyupAfterEscape handlerStack
           @suppressEvent
 
@@ -117,8 +117,8 @@ class Mode
               @passKeys = passKeys
               @registerStateChange?()
 
-    Mode.updateBadge() if @badge
     Mode.modes.push @
+    Mode.updateBadge()
     @logStack() if @debug
     # End of Mode constructor.
 

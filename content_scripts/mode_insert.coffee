@@ -1,10 +1,12 @@
 
 class InsertMode extends Mode
-  # There is one permanently-installed instance of InsertMode.  This allows PostFindMode to query its state.
+  # There is one permanently-installed instance of InsertMode.  This allows PostFindMode to query the active
+  # element.
   @permanentInstance: null
 
   constructor: (options = {}) ->
     InsertMode.permanentInstance ||= @
+    @global = options.global
 
     defaults =
       name: "insert"
@@ -18,7 +20,7 @@ class InsertMode extends Mode
     @push
       "blur": (event) => @alwaysContinueBubbling =>
         if DomUtils.isFocusable event.target
-          @exit event.target
+          @exit event, event.target
           Mode.updateBadge()
       "focus": (event) => @alwaysContinueBubbling =>
         @insertModeLock = event.target if DomUtils.isFocusable event.target
@@ -28,7 +30,7 @@ class InsertMode extends Mode
       @insertModeLock = event.target if document.activeElement and DomUtils.isFocusable document.activeElement
 
   isActive: ->
-    return true if @insertModeLock != null
+    return true if @insertModeLock != null or @global
     # Some sites (e.g. inbox.google.com) change the contentEditable property on the fly (see #1245); and
     # unfortunately, the focus event fires *before* the change.  Therefore, we need to re-check whether the
     # active element is contentEditable.
@@ -39,14 +41,7 @@ class InsertMode extends Mode
     return @continueBubbling if event == InsertMode.suppressedEvent or not @isActive()
     return @stopBubblingAndTrue unless KeyboardUtils.isEscape event
     DomUtils.suppressKeyupAfterEscape handlerStack
-    if DomUtils.isFocusable event.srcElement
-      # Remove focus so the user can't just get himself back into insert mode by typing in the same input
-      # box.
-      # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
-      # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
-      # games.  See discussion in #1211 and #1194.
-      event.srcElement.blur()
-    @exit()
+    @exit event, event.srcElement
     Mode.updateBadge()
     @suppressEvent
 
@@ -54,10 +49,18 @@ class InsertMode extends Mode
   handleKeyEvent: (event) ->
     if @isActive() and event != InsertMode.suppressedEvent then @stopBubblingAndTrue else @continueBubbling
 
-  exit: (target)  ->
-    if target == undefined or target == @insertModeLock
-      # If this is the permanently-installed instance, then we don't actually exit; instead, we just reset.
-      if @ == InsertMode.permanentInstance then @insertModeLock = null else super()
+  exit: (_, target)  ->
+    if target and (target == @insertModeLock or @global) and DomUtils.isFocusable target
+      # Remove focus so the user can't just get himself back into insert mode by typing in the same input
+      # box.
+      # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
+      # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+      # games.  See discussion in #1211 and #1194.
+      target.blur()
+    if target == undefined or target == @insertModeLock or @global
+      @insertModeLock = null
+      # Now really exit, unless this is the permanently-installed instance.
+      super() unless @ == InsertMode.permanentInstance
 
   chooseBadge: (badge) ->
     badge.badge ||= "I" if @isActive()

@@ -6,7 +6,6 @@
 #
 
 passKeysMode = null
-insertMode = null
 targetElement = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
@@ -128,7 +127,7 @@ initializePreDomReady = ->
   new NormalMode()
   Scroller.init settings
   passKeysMode = new PassKeysMode()
-  insertMode = new InsertMode()
+  new InsertMode()
 
   checkIfEnabledForUrl()
 
@@ -332,7 +331,8 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   enterInsertMode: ->
-    new InsertMode()
+    new InsertMode
+      global: true
 
   enterVisualMode: =>
     new VisualMode()
@@ -394,6 +394,8 @@ extend window,
       exit: ->
         DomUtils.removeElement hintContainingDiv
         super()
+        new InsertMode
+          targetElement: visibleInputs[selectedInputIndex].element
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
