@@ -179,5 +179,40 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
+  #
+  # Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
+  #
+  isFocusable: (element) -> @isEditable(element) || @isEmbed(element)
+
+  #
+  # Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
+  # unfocused.
+  #
+  isEmbed: (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) >= 0
+
+  #
+  # Input or text elements are considered focusable and able to receieve their own keyboard events,
+  # and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
+  # any element which makes it a rich text editor, like the notes on jjot.com.
+  #
+  isEditable: (target) ->
+    # Note: document.activeElement.isContentEditable is also rechecked in isInsertMode() dynamically.
+    return true if target.isContentEditable
+    nodeName = target.nodeName.toLowerCase()
+    # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
+    noFocus = ["radio", "checkbox"]
+    if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
+      return true
+    focusableElements = ["textarea", "select"]
+    focusableElements.indexOf(nodeName) >= 0
+
+  isDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
+
+
 root = exports ? window
 root.DomUtils = DomUtils
