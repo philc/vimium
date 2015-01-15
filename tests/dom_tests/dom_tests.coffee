@@ -307,11 +307,17 @@ context "Passkeys mode",
       enabled: true
       passKeys: ""
 
+    handlerStack.bubbleEvent "registerKeyQueue",
+      keyQueue: ""
+
   tearDown ->
     restoreStackState()
     handlerStack.bubbleEvent "registerStateChange",
       enabled: true
       passKeys: ""
+
+    handlerStack.bubbleEvent "registerKeyQueue",
+      keyQueue: ""
 
   should "not suppress passKeys", ->
     # First check normal-mode key (just to verify the framework).
@@ -332,9 +338,30 @@ context "Passkeys mode",
       handlerStack.bubbleEvent event, key
       assert.isFalse key.suppressed
 
-    # And re-verify mapped key.
+    # And re-verify a mapped key.
     for event in [ "keydown", "keypress", "keyup" ]
       key = mockKeyboardEvent "m"
+      handlerStack.bubbleEvent event, key
+      assert.isTrue key.suppressed
+
+  should "suppress passKeys with a non-empty keyQueue", ->
+    # Install passKey.
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: true
+      passKeys: "p"
+
+    # First check the key is indeed not suppressed.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "p"
+      handlerStack.bubbleEvent event, key
+      assert.isFalse key.suppressed
+
+    handlerStack.bubbleEvent "registerKeyQueue",
+      keyQueue: "1"
+
+    # Now verify that the key is suppressed.
+    for event in [ "keydown", "keypress", "keyup" ]
+      key = mockKeyboardEvent "p"
       handlerStack.bubbleEvent event, key
       assert.isTrue key.suppressed
 

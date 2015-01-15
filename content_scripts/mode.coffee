@@ -1,14 +1,14 @@
 #
-# A mode implements a number of keyboard event handlers which are pushed onto the handler stack when the mode
-# is activated, and popped off when it is deactivated.  The Mode class constructor takes a single argument,
-# options, which can define (amongst other things):
+# A mode implements a number of keyboard (and possibly other) event handlers which are pushed onto the handler
+# stack when the mode is activated, and popped off when it is deactivated.  The Mode class constructor takes a
+# single argument "options" which can define (amongst other things):
 #
 # name:
 #   A name for this mode.
 #
 # badge:
 #   A badge (to appear on the browser popup).
-#   Optional.  Define a badge if the badge is constant; for example, in insert mode the badge is always "I".
+#   Optional.  Define a badge if the badge is constant; for example, in find mode the badge is always "/".
 #   Otherwise, do not define a badge, but instead override the chooseBadge method; for example, in passkeys
 #   mode, the badge may be "P" or "", depending on the configuration state.  Or, if the mode *never* shows a
 #   badge, then do neither.
@@ -26,35 +26,23 @@
 #     "focus": (event) => ....
 # Any such handlers are removed when the mode is deactivated.
 #
-# To activate a mode, use:
-#   myMode = new MyMode()
-#
-# Or (usually better) just:
-#   new MyMode()
-# It is usually not necessary to retain a reference to the mode object.
-#
-# To deactivate a mode, use:
-#   @exit()       # internally triggered (more common).
-#   myMode.exit() # externally triggered.
-#
 
-# For debug only.
+# Debug only.
 count = 0
 
 class Mode
-  # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console, along
-  # with a list of the currently active modes.
+  # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console.
   debug: true
   @modes: []
 
-  # Constants; short, readable names for handlerStack event-handler return values.
+  # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent.
   continueBubbling: true
   suppressEvent: false
   stopBubblingAndTrue: handlerStack.stopBubblingAndTrue
   stopBubblingAndFalse: handlerStack.stopBubblingAndFalse
   restartBubbling: handlerStack.restartBubbling
 
-  constructor: (@options={}) ->
+  constructor: (@options = {}) ->
     @handlers = []
     @exitHandlers = []
     @modeIsActive = true
@@ -71,14 +59,12 @@ class Mode
       keyup: @options.keyup || null
       updateBadge: (badge) => @alwaysContinueBubbling => @chooseBadge badge
 
-    # Some modes are singletons: there may be at most one instance active at any one time.  A mode is a
-    # singleton if @options.singleton is truthy.  The value of @options.singleton should be the key which is
-    # required to be unique.  See PostFindMode for an example.
-    # New instances deactivate existing instances as they themselves are activated.
+    # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
+    # if @options.singleton is truthy.  The value of @options.singleton should be the key which is required to
+    # be unique.  New instances deactivate existing instances.
     @registerSingleton @options.singleton if @options.singleton
 
-    # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.  The
-    # triggering keyboard event will be passed to the mode's @exit() method.
+    # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
     if @options.exitOnEscape
       # Note. This handler ends up above the mode's own key handlers on the handler stack, so it takes
       # priority.
@@ -110,12 +96,11 @@ class Mode
       @passKeys = ""
       @push
         _name: "mode-#{@id}/registerStateChange"
-        "registerStateChange": ({ enabled: enabled, passKeys: passKeys }) =>
-          @alwaysContinueBubbling =>
-            if enabled != @enabled or passKeys != @passKeys
-              @enabled = enabled
-              @passKeys = passKeys
-              @registerStateChange?()
+        "registerStateChange": ({ enabled: enabled, passKeys: passKeys }) => @alwaysContinueBubbling =>
+          if enabled != @enabled or passKeys != @passKeys
+            @enabled = enabled
+            @passKeys = passKeys
+            @registerStateChange?()
 
     Mode.modes.push @
     Mode.updateBadge()
@@ -150,11 +135,10 @@ class Mode
 
   # Shorthand for an otherwise long name.  This wraps a handler with an arbitrary return value, and always
   # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common
-  # case), because they do not need to be concerned with their return value (which helps keep code concise and
-  # clear).
+  # case), because they do not need to be concerned with the value they yield.
   alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
 
-  # User for sometimes suppressing badge updates.
+  # Used for sometimes suppressing badge updates.
   @badgeSuppressor: new Utils.Suppressor()
 
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
@@ -171,11 +155,11 @@ class Mode
   registerSingleton: do ->
     singletons = {} # Static.
     (key) ->
-      # We're currently installing a new mode. So we'll be updating the badge shortly.  Therefore, we can
-      # suppress badge updates while exiting any existing active singleton.  This prevents the badge from
-      # flickering in some cases.
       if singletons[key]
         @log "singleton:", "deactivating #{singletons[key].id}" if @debug
+        # We're currently installing a new mode. So we'll be updating the badge shortly.  Therefore, we can
+        # suppress badge updates while deactivating the existing singleton.  This prevents the badge from
+        # flickering in some cases.
         Mode.badgeSuppressor.runSuppresed -> singletons[key].exit()
       singletons[key] = @
 
@@ -184,28 +168,26 @@ class Mode
   # Debugging routines.
   logStack: ->
     @log "active modes (top to bottom):"
-    for mode in Mode.modes[..].reverse()
-      @log " ",  mode.id
+    @log " ", mode.id for mode in Mode.modes[..].reverse()
 
   log: (args...) ->
     console.log args...
 
-  # Return the name of the must-recently activated mode.
+  # Return the must-recently activated mode (only used in tests).
   @top: ->
     @modes[@modes.length-1]
 
-# UIMode is a mode for Vimium UI components.  They share a common singleton, so new UI components displace
-# previously-active UI components.  For example, the FocusSelector mode displaces PostFindMode.
-class UIMode extends Mode
+# InputController is a super-class for modes which control insert mode: PostFindMode and FocusSelector.  It's
+# a singleton, so no two instances may be active at the same time.
+class InputController extends Mode
   constructor: (options) ->
     defaults =
-      singleton: UIMode
+      singleton: InputController
     super extend defaults, options
 
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
-# badge choice of the other active modes.
-# Note.  We create the the one-and-only instance here.
+# badge choice of the other modes.  We create the the one-and-only instance here.
 new class BadgeMode extends Mode
   constructor: () ->
     super
@@ -213,14 +195,14 @@ new class BadgeMode extends Mode
       trackState: true
 
     # FIXME(smblott) BadgeMode is currently triggering an updateBadge event on every focus event.  That's a
-    # lot, considerably more than is necessary.  Really, it only needs to trigger when we change frame, or
-    # when we change tab.
+    # lot, considerably more than necessary.  Really, it only needs to trigger when we change frame, or when
+    # we change tab.
     @push
       _name: "mode-#{@id}/focus"
       "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
 
   chooseBadge: (badge) ->
-    # If we're not enabled, then post an empty badge.  BadgeMode is last, so this takes priority.
+    # If we're not enabled, then post an empty badge.
     badge.badge = "" unless @enabled
 
   # When the registerStateChange event bubbles to the bottom of the stack, all modes have been notified.  So
@@ -230,4 +212,4 @@ new class BadgeMode extends Mode
 
 root = exports ? window
 root.Mode = Mode
-root.UIMode = UIMode
+root.InputController = InputController

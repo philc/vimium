@@ -62,6 +62,7 @@ class InsertMode extends Mode
       super() unless @ == InsertMode.permanentInstance
 
   chooseBadge: (badge) ->
+    return if badge == InsertMode.suppressedEvent
     badge.badge ||= "I" if @isActive()
 
   # Static stuff to allow PostFindMode to suppress insert mode.

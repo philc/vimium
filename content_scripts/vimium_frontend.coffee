@@ -5,7 +5,6 @@
 # "domReady".
 #
 
-passKeysMode = null
 targetElement = null
 findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
@@ -103,19 +102,6 @@ frameId = Math.floor(Math.random()*999999999)
 
 hasModifiersRegex = /^<([amc]-)+.>/
 
-class NormalMode extends Mode
-  constructor: ->
-    super
-      name: "normal"
-      badge: "N"
-      keydown: (event) => onKeydown.call @, event
-      keypress: (event) => onKeypress.call @, event
-      keyup: (event) => onKeyup.call @, event
-
-  chooseBadge: (badge) ->
-    super badge
-    badge.badge = "" unless isEnabledForUrl
-
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
@@ -123,11 +109,20 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  # Install permanent modes and handlers.
-  new NormalMode()
+  class NormalMode extends Mode
+    constructor: ->
+      super
+        name: "normal"
+        keydown: (event) => onKeydown.call @, event
+        keypress: (event) => onKeypress.call @, event
+        keyup: (event) => onKeyup.call @, event
+
+  # Install the permanent modes and handlers.  The permanent insert mode operates only when focusable/editable
+  # elements have the focus.
+  new NormalMode
   Scroller.init settings
-  passKeysMode = new PassKeysMode()
-  new InsertMode()
+  new PassKeysMode
+  new InsertMode
 
   checkIfEnabledForUrl()
 
@@ -157,7 +152,7 @@ initializePreDomReady = ->
     setState: setState
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
-      passKeysMode.configure request
+      handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -369,7 +364,7 @@ extend window,
       id: "vimiumInputMarkerContainer"
       className: "vimiumReset"
 
-    new class FocusSelector extends UIMode
+    new class FocusSelector extends InputController
       constructor: ->
         super
           name: "focus-selector"
