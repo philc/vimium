@@ -369,7 +369,7 @@ extend window,
       id: "vimiumInputMarkerContainer"
       className: "vimiumReset"
 
-    new class FocusSelector extends Mode
+    new class FocusSelector extends UIMode
       constructor: ->
         super
           name: "focus-selector"
@@ -387,15 +387,12 @@ extend window,
               @exit()
               @continueBubbling
 
+        @onExit -> DomUtils.removeElement hintContainingDiv
         visibleInputs[selectedInputIndex].element.focus()
-        return @exit() if visibleInputs.length == 1
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-
-      exit: ->
-        DomUtils.removeElement hintContainingDiv
-        super()
-        new InsertMode
-          targetElement: visibleInputs[selectedInputIndex].element
+        if visibleInputs.length == 1
+          @exit()
+        else
+          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a

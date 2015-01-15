@@ -4,29 +4,29 @@
 # special considerations apply.  We implement three special cases:
 #   1. Prevent keyboard events from dropping us unintentionally into insert mode.
 #   2. Prevent all printable keypress events on the active element from propagating beyond normal mode.  See
-#   #1415. This implements Option 2 from there.
+#   #1415.
 #   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 #
-class PostFindMode extends Mode
+class PostFindMode extends UIMode
   constructor: (findModeAnchorNode) ->
-    # Locate the element we need to protect and focus it.  Usually, we can just rely on insert mode to have
-    # picked it up (when it received the focus).
+    # Locate the element we need to protect and focus it, if necessary.  Usually, we can just rely on insert
+    # mode to have picked it up (when it received the focus).
     element = InsertMode.permanentInstance.insertModeLock
     unless element?
-      # If insert mode hasn't picked up the element, then it could be content editable.  As a heuristic, we
-      # start at findModeAnchorNode and walk up the DOM, stopping at the last node encountered which is
-      # contentEditable.  If that node is a descendent of the active element, then we use it.
+      # For contentEditable elements, chrome does not leave them focused, so insert mode does not pick them
+      # up. We start at findModeAnchorNode and walk up the DOM, stopping at the last node encountered which is
+      # contentEditable.
       element = findModeAnchorNode
       element = element.parentElement while element?.parentElement?.isContentEditable
       return unless element?.isContentEditable
+      # The element might be disabled (and therefore unable to receive focus), we use the approximate
+      # heuristic of checking that element is an ancestor of the active element.
       return unless document.activeElement and DomUtils.isDOMDescendant document.activeElement, element
-    element.focus()
+      element.focus()
 
     super
       name: "post-find"
       badge: "N" # Pretend to be normal mode (because we don't want the insert-mode badge).
-      # Be a singleton.  That way, we don't have to keep track of any currently-active instance.
-      singleton: PostFindMode
       exitOnBlur: element
       exitOnClick: true
       keydown: (event) -> InsertMode.suppressEvent event # Truthy.
@@ -53,7 +53,7 @@ class PostFindMode extends Mode
           @remove()
           true # Continue bubbling.
 
-    # Prevent printable keyboard events from propagating to to the page; see Option 2 from #1415.
+    # Prevent printable keyboard events from propagating to to the page; see #1415.
     do =>
       handler = (event) =>
         if event.srcElement == element and KeyboardUtils.isPrintable event

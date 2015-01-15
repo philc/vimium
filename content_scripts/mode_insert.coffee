@@ -25,9 +25,8 @@ class InsertMode extends Mode
       "focus": (event) => @alwaysContinueBubbling =>
         @insertModeLock = event.target if DomUtils.isFocusable event.target
 
-    if @insertModeLock == null
-      # We may already have focused an input element, so check.
-      @insertModeLock = event.target if document.activeElement and DomUtils.isFocusable document.activeElement
+    # We may already have focused an input element, so check.
+    @insertModeLock = document.activeElement if document.activeElement and DomUtils.isEditable document.activeElement
 
   isActive: ->
     return true if @insertModeLock != null or @global

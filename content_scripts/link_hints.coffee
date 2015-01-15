@@ -271,6 +271,7 @@ LinkHints =
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
+      DomUtils.suppressKeyupAfterEscape handlerStack
       @deactivateMode()
     else
       keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)

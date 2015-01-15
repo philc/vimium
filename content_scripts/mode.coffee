@@ -194,6 +194,14 @@ class Mode
   @top: ->
     @modes[@modes.length-1]
 
+# UIMode is a mode for Vimium UI components.  They share a common singleton, so new UI components displace
+# previously-active UI components.  For example, the FocusSelector mode displaces PostFindMode.
+class UIMode extends Mode
+  constructor: (options) ->
+    defaults =
+      singleton: UIMode
+    super extend defaults, options
+
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
 # badge choice of the other active modes.
@@ -222,3 +230,4 @@ new class BadgeMode extends Mode
 
 root = exports ? window
 root.Mode = Mode
+root.UIMode = UIMode
