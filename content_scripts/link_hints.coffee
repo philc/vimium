@@ -139,10 +139,7 @@ LinkHints =
       document.addEventListener "vimium-jquery-delegated-events-mark-complete", ->
         document.removeEventListener "vimium-jquery-delegated-events-mark-complete", arguments.callee
         callback()
-
-      event = document.createEvent "CustomEvent"
-      event.initCustomEvent "vimium-jquery-delegated-events-mark"
-      document.dispatchEvent event
+      document.dispatchEvent new CustomEvent "vimium-jquery-delegated-events-mark"
 
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in

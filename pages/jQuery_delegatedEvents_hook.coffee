@@ -59,9 +59,7 @@ document.addEventListener "vimium-jquery-delegated-events-mark", ->
       for child in $(element).find(selector)
         child.setAttribute "vimium-has-delegated-onclick-listener", ""
 
-  event = document.createEvent "CustomEvent"
-  event.initCustomEvent "vimium-jquery-delegated-events-mark-complete"
-  document.dispatchEvent event
+  document.dispatchEvent new CustomEvent "vimium-jquery-delegated-events-mark-complete"
 
 
 document.documentElement.setAttribute markHookSet, ""
