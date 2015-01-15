@@ -364,11 +364,14 @@ extend window,
       id: "vimiumInputMarkerContainer"
       className: "vimiumReset"
 
-    new class FocusSelector extends InputController
+    new class FocusSelector extends Mode
       constructor: ->
         super
           name: "focus-selector"
           badge: "?"
+          # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
+          # PostFindMode.
+          singleton: PostFindMode
           exitOnClick: true
           keydown: (event) =>
             if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -805,10 +808,12 @@ executeFind = (query, options) ->
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
 
-  # If the anchor node is outside of the active element, then blur the active element.  We don't want to leave
-  # behind an inappropriate active element. This fixes #1412.
-  if document.activeElement and not DomUtils.isDOMDescendant findModeAnchorNode, document.activeElement
-    document.activeElement.blur()
+  # TODO(smblott). Disabled. This is the wrong test.  Should be reinstated when we have the right test, which
+  # looks like it should be "isSelected" from #1431.
+  # # If the anchor node not a descendent of the active element, then blur the active element.  We don't want to
+  # # leave behind an inappropriate active element. This fixes #1412.
+  # if document.activeElement and not DomUtils.isDOMDescendant document.activeElement, findModeAnchorNode
+  #   document.activeElement.blur()
 
   result
 

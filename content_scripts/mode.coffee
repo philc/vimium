@@ -177,14 +177,6 @@ class Mode
   @top: ->
     @modes[@modes.length-1]
 
-# InputController is a super-class for modes which control insert mode: PostFindMode and FocusSelector.  It's
-# a singleton, so no two instances may be active at the same time.
-class InputController extends Mode
-  constructor: (options) ->
-    defaults =
-      singleton: InputController
-    super extend defaults, options
-
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
 # badge choice of the other modes.  We create the the one-and-only instance here.
@@ -212,4 +204,3 @@ new class BadgeMode extends Mode
 
 root = exports ? window
 root.Mode = Mode
-root.InputController = InputController
