@@ -46,4 +46,22 @@ Object.defineProperty window, "jQuery",
     return jQuery
 
 
+document.addEventListener "vimium-jquery-delegated-events-mark", ->
+  for element in document.querySelectorAll("*[vimium-jquery-delegated-events-selectors]")
+    selectorsStr = element.getAttribute "vimium-jquery-delegated-events-selectors"
+    continue unless selectorsStr
+
+    selectors = selectorsStr.split("|").filter (x) -> !!x
+
+    for selector in selectors
+      # To avoid differences in querying same selector with different instruments,
+      # it is important to query using the Query, defined on the page.
+      for child in $(element).find(selector)
+        child.setAttribute "vimium-has-delegated-onclick-listener", ""
+
+  event = document.createEvent "CustomEvent"
+  event.initCustomEvent "vimium-jquery-delegated-events-mark-complete"
+  document.dispatchEvent event
+
+
 document.documentElement.setAttribute markHookSet, ""

@@ -53,22 +53,23 @@ LinkHints =
     @isActive = true
 
     @setOpenLinkMode(mode)
-    hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
-    @getMarkerMatcher().fillInMarkers(hintMarkers)
+    @getVisibleClickableElements (elements) =>
+      hintMarkers = (@createMarkerFor(el) for el in elements)
+      @getMarkerMatcher().fillInMarkers(hintMarkers)
 
-    # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
-    # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
-    # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
-    @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
-      { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
+      # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
+      # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
+      # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
+      @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
+        { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
-    # handlerStack is declared by vimiumFrontend.js
-    @handlerId = handlerStack.push({
-      keydown: @onKeyDownInMode.bind(this, hintMarkers),
-      # trap all key events
-      keypress: -> false
-      keyup: -> false
-    })
+      # handlerStack is declared by vimiumFrontend.js
+      @handlerId = handlerStack.push({
+        keydown: @onKeyDownInMode.bind(this, hintMarkers),
+        # trap all key events
+        keypress: -> false
+        keyup: -> false
+      })
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
@@ -129,16 +130,19 @@ LinkHints =
   # and mark them with `vimium-has-delegated-onclick-listener` attribute.
   # This will make sure those elements are discovered during `getVisibleClickableElements` call.
   #
-  markElementsThatHaveDelegatedOnClickListener: ->
-    for element in document.querySelectorAll("*[vimium-jquery-delegated-events-selectors]")
-      selectorsStr = element.getAttribute "vimium-jquery-delegated-events-selectors"
-      continue unless selectorsStr
+  markElementsThatHaveDelegatedOnClickListener: (callback) ->
+    delegatedEvents = document.querySelectorAll("*[vimium-jquery-delegated-events-selectors]")
 
-      selectors = selectorsStr.split("|").filter (x) -> !!x
+    if delegatedEvents.length == 0
+      callback()
+    else
+      document.addEventListener "vimium-jquery-delegated-events-mark-complete", ->
+        document.removeEventListener "vimium-jquery-delegated-events-mark-complete", arguments.callee
+        callback()
 
-      for selector in selectors
-        for child in element.querySelectorAll(selector)
-          child.setAttribute "vimium-has-delegated-onclick-listener", ""
+      event = document.createEvent "CustomEvent"
+      event.initCustomEvent "vimium-jquery-delegated-events-mark"
+      document.dispatchEvent event
 
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -227,52 +231,52 @@ LinkHints =
   # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
   # element.
   #
-  getVisibleClickableElements: ->
-    @markElementsThatHaveDelegatedOnClickListener()
-    elements = document.documentElement.getElementsByTagName "*"
-    visibleElements = []
+  getVisibleClickableElements: (callback) ->
+    @markElementsThatHaveDelegatedOnClickListener =>
+      elements = document.documentElement.getElementsByTagName "*"
+      visibleElements = []
 
-    # The order of elements here is important; they should appear in the order they are in the DOM, so that
-    # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
-    # is the sensible, efficient way to ensure this happens.
-    # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
-    # this, so it's necessary to check whether elements are clickable in order, as we do below.
-    for element in elements
-      visibleElement = @getVisibleClickable element
-      visibleElements.push visibleElement...
+      # The order of elements here is important; they should appear in the order they are in the DOM, so that
+      # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
+      # is the sensible, efficient way to ensure this happens.
+      # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
+      # this, so it's necessary to check whether elements are clickable in order, as we do below.
+      for element in elements
+        visibleElement = @getVisibleClickable element
+        visibleElements.push visibleElement...
 
-    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
-    #  * The document has a local stacking context.
-    #  * An element with z-index specified
-    #    - sets its z-order position in the containing stacking context, and
-    #    - creates a local stacking context containing its children.
-    #  * An element (1) is shown above another element (2) if either
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
-    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
-    #        + the ancestors of (1) and (2) have equal z-index, and
-    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
-    #
-    # Remove rects from elements where another clickable element lies above it.
-    nonOverlappingElements = []
-    # Traverse the DOM from first to last, since later elements show above earlier elements.
-    visibleElements = visibleElements.reverse()
-    while visibleElement = visibleElements.pop()
-      rects = [visibleElement.rect]
-      for {rect: negativeRect} in visibleElements
-        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
-        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
-      if rects.length > 0
-        nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
-      else
-        # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
-        # than they're worth.
-        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
-        # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+      # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
+      #  * The document has a local stacking context.
+      #  * An element with z-index specified
+      #    - sets its z-order position in the containing stacking context, and
+      #    - creates a local stacking context containing its children.
+      #  * An element (1) is shown above another element (2) if either
+      #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
+      #      ancestor of (1) has a higher z-index than the ancestor of (2); or
+      #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
+      #        + the ancestors of (1) and (2) have equal z-index, and
+      #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
+      #
+      # Remove rects from elements where another clickable element lies above it.
+      nonOverlappingElements = []
+      # Traverse the DOM from first to last, since later elements show above earlier elements.
+      visibleElements = visibleElements.reverse()
+      while visibleElement = visibleElements.pop()
+        rects = [visibleElement.rect]
+        for {rect: negativeRect} in visibleElements
+          # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
+          rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
+        if rects.length > 0
+          nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
+        else
+          # Every part of the element is covered by some other element, so just insert the whole element's
+          # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
+          # than they're worth.
+          # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
+          # click some elements that we could click before.
+          nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
-    nonOverlappingElements
+      callback nonOverlappingElements
 
   #
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
