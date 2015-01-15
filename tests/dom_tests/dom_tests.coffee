@@ -675,7 +675,7 @@ context "Mode badges",
       passKeys: ""
 
     handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
-    assert.isTrue badge.badge == "N"
+    assert.isTrue badge.badge == ""
 
   should "have an P badge with passKeys", ->
     handlerStack.bubbleEvent "registerStateChange",
