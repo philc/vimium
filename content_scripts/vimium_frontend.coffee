@@ -118,7 +118,7 @@ initializePreDomReady = ->
         keyup: (event) => onKeyup.call @, event
 
   # Install the permanent modes and handlers.  The permanent insert mode operates only when focusable/editable
-  # elements have the focus.
+  # elements are active.
   new NormalMode
   Scroller.init settings
   new PassKeysMode
@@ -360,10 +360,6 @@ extend window,
 
       hint
 
-    hintContainingDiv = DomUtils.addElementList hints,
-      id: "vimiumInputMarkerContainer"
-      className: "vimiumReset"
-
     new class FocusSelector extends Mode
       constructor: ->
         super
@@ -386,6 +382,10 @@ extend window,
               @continueBubbling
 
         @onExit -> DomUtils.removeElement hintContainingDiv
+        hintContainingDiv = DomUtils.addElementList hints,
+          id: "vimiumInputMarkerContainer"
+          className: "vimiumReset"
+
         visibleInputs[selectedInputIndex].element.focus()
         if visibleInputs.length == 1
           @exit()
@@ -396,7 +396,7 @@ extend window,
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
 # passKey, then 'gt' and '99t' will neverthless be handled by vimium.
 isPassKey = ( keyChar ) ->
-  return false # Diabled.
+  return false # Disabled.
   return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup

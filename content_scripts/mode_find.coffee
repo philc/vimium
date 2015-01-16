@@ -5,6 +5,7 @@ class SuppressPrintable extends Mode
   constructor: (options) ->
     super options
     handler = (event) => if KeyboardUtils.isPrintable event then @suppressEvent else @continueBubbling
+    type = document.getSelection().type
 
     # We use unshift here, so we see events after normal mode, so we only see unmapped keys.
     @unshift
@@ -12,13 +13,9 @@ class SuppressPrintable extends Mode
       keydown: handler
       keypress: handler
       keyup: (event) =>
-        # If the selection is no longer a range, then the user is interacting with the input element, so we
-        # get out of the way.  See discussion of option 5c from #1415.
-        if document.getSelection().type != "Range"
-          console.log "aaa", @options.targetElement
-          @exit()
-        else
-          handler event
+        # If the selection types has changed (usually, no longer "Range"), then the user is interacting with
+        # the input element, so we get out of the way.  See discussion of option 5c from #1415.
+        if document.getSelection().type != type then @exit() else handler event
 
 # When we use find mode, the selection/focus can land in a focusable/editable element.  In this situation,
 # special considerations apply.  We implement three special cases:
@@ -56,7 +53,7 @@ class PostFindMode extends SuppressPrintable
           true # Continue bubbling.
 
   # If PostFindMode is active, then we suppress the "I" badge from insert mode.
-  chooseBadge: (badge) -> InsertMode.suppressEvent badge
+  updateBadge: (badge) -> InsertMode.suppressEvent badge
 
 root = exports ? window
 root.PostFindMode = PostFindMode

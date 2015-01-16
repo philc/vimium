@@ -152,24 +152,6 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
-  # Utility class.  This can help different software components to interact without having to share much logic
-  # and/or state.  See InsertModeTrigger for an example.
-  # suppressedResult is the value to be returned when a function call is suppressed.
-  Suppressor: class Suppressor
-    constructor: (@suppressedResult = null)->
-      @count = 0
-
-    suppress: -> @count += 1
-    unsuppress: -> @count -= 1
-
-    runSuppresed: (func) ->
-      @suppress()
-      func()
-      @unsuppress()
-
-    unlessSuppressed: (func) ->
-      if 0 < @count then @suppressedResult else func()
-
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->

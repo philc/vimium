@@ -9,7 +9,7 @@
 # badge:
 #   A badge (to appear on the browser popup).
 #   Optional.  Define a badge if the badge is constant; for example, in find mode the badge is always "/".
-#   Otherwise, do not define a badge, but instead override the chooseBadge method; for example, in passkeys
+#   Otherwise, do not define a badge, but instead override the updateBadge method; for example, in passkeys
 #   mode, the badge may be "P" or "", depending on the configuration state.  Or, if the mode *never* shows a
 #   badge, then do neither.
 #
@@ -51,18 +51,13 @@ class Mode
 
     @count = ++count
     @id = "#{@name}-#{@count}"
-    @log "activate:", @id if @debug
+    @log "activate:", @id
 
     @push
       keydown: @options.keydown || null
       keypress: @options.keypress || null
       keyup: @options.keyup || null
-      updateBadge: (badge) => @alwaysContinueBubbling => @chooseBadge badge
-
-    # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
-    # if @options.singleton is truthy.  The value of @options.singleton should be the key which is required to
-    # be unique.  New instances deactivate existing instances.
-    @registerSingleton @options.singleton if @options.singleton
+      updateBadge: (badge) => @alwaysContinueBubbling => @updateBadge badge
 
     # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
     if @options.exitOnEscape
@@ -72,8 +67,8 @@ class Mode
         _name: "mode-#{@id}/exitOnEscape"
         "keydown": (event) =>
           return @continueBubbling unless KeyboardUtils.isEscape event
-          @exit event, event.srcElement
           DomUtils.suppressKeyupAfterEscape handlerStack
+          @exit event, event.srcElement
           @suppressEvent
 
     # If @options.exitOnBlur is truthy, then it should be an element.  The mode will exit when that element
@@ -89,22 +84,40 @@ class Mode
         _name: "mode-#{@id}/exitOnClick"
         "click": (event) => @alwaysContinueBubbling => @exit event
 
+    # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
+    # if @options.singleton is truthy.  The value of @options.singleton should be the which is intended to
+    # be unique.  New instances deactivate existing instances.
+    if @options.singleton
+      do =>
+        singletons = Mode.singletons ||= {}
+        key = @options.singleton
+        @onExit => delete singletons[key] if singletons[key] == @
+        if singletons[key]
+          @log "singleton:", "deactivating #{singletons[key].id}"
+          # We're currently installing a new mode, so we'll be updating the badge shortly.  Therefore, we can
+          # suppress badge updates while deactivating the existing singleton.  This can prevent badge flicker.
+          singletons[key].exit()
+        singletons[key] = @
+
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
-    # and calls @registerStateChange() (if defined) whenever the state changes.
+    # and calls @registerStateChange() (if defined) whenever the state changes. The mode also tracks the
+    # keyQueue in @keyQueue.
     if @options.trackState
       @enabled = false
       @passKeys = ""
+      @keyQueue = ""
       @push
         _name: "mode-#{@id}/registerStateChange"
-        "registerStateChange": ({ enabled: enabled, passKeys: passKeys }) => @alwaysContinueBubbling =>
+        registerStateChange: ({ enabled: enabled, passKeys: passKeys }) => @alwaysContinueBubbling =>
           if enabled != @enabled or passKeys != @passKeys
             @enabled = enabled
             @passKeys = passKeys
             @registerStateChange?()
+        registerKeyQueue: ({ keyQueue: keyQueue }) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
     Mode.modes.push @
     Mode.updateBadge()
-    @logStack() if @debug
+    @logStack()
     # End of Mode constructor.
 
   push: (handlers) ->
@@ -121,7 +134,7 @@ class Mode
 
   exit: ->
     if @modeIsActive
-      @log "deactivate:", @id if @debug
+      @log "deactivate:", @id
       handler() for handler in @exitHandlers
       handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
@@ -129,8 +142,8 @@ class Mode
       @modeIsActive = false
 
   # The badge is chosen by bubbling an "updateBadge" event down the handler stack allowing each mode the
-  # opportunity to choose a badge.  chooseBadge, here, is the default. It is overridden in sub-classes.
-  chooseBadge: (badge) ->
+  # opportunity to choose a badge. This is overridden in sub-classes.
+  updateBadge: (badge) ->
     badge.badge ||= @badge
 
   # Shorthand for an otherwise long name.  This wraps a handler with an arbitrary return value, and always
@@ -138,40 +151,24 @@ class Mode
   # case), because they do not need to be concerned with the value they yield.
   alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
 
-  # Used for sometimes suppressing badge updates.
-  @badgeSuppressor: new Utils.Suppressor()
-
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
   # the resulting badge to the background page.  We only update the badge if this document (hence this frame)
   # has the focus.
   @updateBadge: ->
-    @badgeSuppressor.unlessSuppressed ->
-      if document.hasFocus()
-        handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
-        chrome.runtime.sendMessage
-          handler: "setBadge"
-          badge: badge.badge
-
-  registerSingleton: do ->
-    singletons = {} # Static.
-    (key) ->
-      if singletons[key]
-        @log "singleton:", "deactivating #{singletons[key].id}" if @debug
-        # We're currently installing a new mode. So we'll be updating the badge shortly.  Therefore, we can
-        # suppress badge updates while deactivating the existing singleton.  This prevents the badge from
-        # flickering in some cases.
-        Mode.badgeSuppressor.runSuppresed -> singletons[key].exit()
-      singletons[key] = @
-
-      @onExit => delete singletons[key] if singletons[key] == @
+    if document.hasFocus()
+      handlerStack.bubbleEvent "updateBadge", badge = badge: ""
+      chrome.runtime.sendMessage
+        handler: "setBadge"
+        badge: badge.badge
 
   # Debugging routines.
   logStack: ->
-    @log "active modes (top to bottom):"
-    @log " ", mode.id for mode in Mode.modes[..].reverse()
+    if @debug
+      @log "active modes (top to bottom):"
+      @log " ", mode.id for mode in Mode.modes[..].reverse()
 
   log: (args...) ->
-    console.log args...
+    console.log args... if @debug
 
   # Return the must-recently activated mode (only used in tests).
   @top: ->
@@ -193,7 +190,7 @@ new class BadgeMode extends Mode
       _name: "mode-#{@id}/focus"
       "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
 
-  chooseBadge: (badge) ->
+  updateBadge: (badge) ->
     # If we're not enabled, then post an empty badge.
     badge.badge = "" unless @enabled
 

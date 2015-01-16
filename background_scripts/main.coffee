@@ -339,17 +339,29 @@ updateOpenTabs = (tab) ->
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
 
-# This color should match the blue of the Vimium browser popup (although it looks a little darker, to me?).
 chrome.browserAction.setBadgeBackgroundColor
-  color: [102, 176, 226, 255]
+  # This is Vimium blue (from the icon).
+  # color: [102, 176, 226, 255]
+  # This is a slightly darker blue. It makes the badge more striking in the corner of the eye, and the symbol
+  # easier to read.
+  color: [82, 156, 206, 255]
 
 setBadge = do ->
   current = ""
+  timer = null
+  updateBadge = (badge) -> -> chrome.browserAction.setBadgeText text: badge
   (request) ->
     badge = request.badge
     if badge? and badge != current
-      chrome.browserAction.setBadgeText {text: badge || ""}
       current = badge
+      clearTimeout timer if timer
+      if badge == ""
+        # We set an empty badge immediately. This is the common case when changing tabs.
+        updateBadge(badge)()
+      else
+        # We wait a few milliseconds before setting any other badge.  This avoids badge flicker when there are
+        # rapid changes (e.g. InsertMode is activated by find, followed almost immediately by PostFindMode).
+        timer = setTimeout updateBadge(badge), 50
 
 # Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
 # Also propagates new enabled/disabled/passkeys state to active window, if necessary.
