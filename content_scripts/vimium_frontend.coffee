@@ -11,6 +11,7 @@ findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
+findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
@@ -702,11 +703,8 @@ handleEnterForFindMode = ->
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
 performFindInPlace = ->
+  findModeRestoreSelection()
   query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-
-  selection = window.getSelection()
-  selection.collapseToStart() if selection.type == "Range"
-
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
@@ -920,7 +918,27 @@ showFindModeHUDForQuery = ->
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
+getCurrentRange = ->
+  selection = getSelection()
+  if selection.type == "None"
+    range = document.createRange()
+    range.setStart document.body, 0
+    range.setEnd document.body, 0
+    range
+  else
+    selection.collapseToStart() if selection.type == "Range"
+    range = selection.getRangeAt 0
+
+findModeSaveSelection = ->
+  findModeInitialRange = getCurrentRange()
+
+findModeRestoreSelection = (range = findModeInitialRange) ->
+  selection = getSelection()
+  selection.removeAllRanges()
+  selection.addRange range
+
 window.enterFindMode = ->
+  findModeSaveSelection()
   findModeQuery = { rawQuery: "" }
   findMode = true
   HUD.show("/")
