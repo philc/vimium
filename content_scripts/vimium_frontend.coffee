@@ -702,18 +702,10 @@ handleEnterForFindMode = ->
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
 performFindInPlace = ->
-  cachedScrollX = window.scrollX
-  cachedScrollY = window.scrollY
-
   query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
 
-  # Search backwards first to "free up" the current word as eligible for the real forward search. This allows
-  # us to search in place without jumping around between matches as the query grows.
-  executeFind(query, { backwards: true, caseSensitive: !findModeQuery.ignoreCase })
-
-  # We need to restore the scroll position because we might've lost the right position by searching
-  # backwards.
-  window.scrollTo(cachedScrollX, cachedScrollY)
+  selection = window.getSelection()
+  selection.collapseToStart() if selection.type == "Range"
 
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
