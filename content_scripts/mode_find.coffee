@@ -1,20 +1,24 @@
 # NOTE(smblott).  Ultimately, all of the FindMode-related code should be moved to this file.
 
-# This is Used as a sub-class to PostFindMode.  It prevents printable characters from being passed through to
-# underlying input element; see #1415.  Note, also, that the "Range" condition in the keyup handler
-# implmements option 5c from #1415.
+# This prevents printable characters from being passed through to underlying page; see #1415.
 class SuppressPrintable extends Mode
   constructor: (options) ->
     super options
     handler = (event) => if KeyboardUtils.isPrintable event then @suppressEvent else @continueBubbling
 
-    # Note: we use unshift here. We see events *after* normal mode, so we only see unmapped keys.
+    # We use unshift here, so we see events after normal mode, so we only see unmapped keys.
     @unshift
       _name: "mode-#{@id}/suppressPrintableEvents"
       keydown: handler
       keypress: handler
       keyup: (event) =>
-        if document.getSelection().type.toLowerCase() != "range" then @exit() else handler event
+        # If the selection is no longer a range, then the user is interacting with the input element, so we
+        # get out of the way.  See discussion of option 5c from #1415.
+        if document.getSelection().type != "Range"
+          console.log "aaa", @options.targetElement
+          @exit()
+        else
+          handler event
 
 # When we use find mode, the selection/focus can land in a focusable/editable element.  In this situation,
 # special considerations apply.  We implement three special cases:
@@ -25,9 +29,9 @@ class SuppressPrintable extends Mode
 #   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 #
 class PostFindMode extends SuppressPrintable
-  constructor: (findModeAnchorNode) ->
+  constructor: ->
+    return unless document.activeElement and DomUtils.isEditable document.activeElement
     element = document.activeElement
-    return unless element and DomUtils.isEditable element
 
     super
       name: "post-find"

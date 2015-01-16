@@ -202,7 +202,7 @@ context "Input focus",
   # This is the same as above, but also verifies that focusInput activates insert mode.
   should "activate insert mode", ->
     focusInput 1
-    handlerStack.bubbleEvent 'focus', { target: document. activeElement }
+    handlerStack.bubbleEvent 'focus', { target: document.activeElement }
     assert.isTrue InsertMode.permanentInstance.isActive()
 
     focusInput 100
@@ -384,7 +384,7 @@ context "Insert mode",
 
     # Install insert mode.
     insertMode = new InsertMode
-      targetElement: document.body
+      global: true
 
     # Then verify insert mode.
     for event in [ "keydown", "keypress", "keyup" ]

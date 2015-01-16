@@ -770,7 +770,7 @@ class FindMode extends Mode
     handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
     handleEscapeForFindMode() if event?.type == "click"
     if findModeQueryHasResults and event?.type != "click"
-      new PostFindMode findModeAnchorNode
+      new PostFindMode
 
 performFindInPlace = ->
   cachedScrollX = window.scrollX
@@ -864,7 +864,7 @@ findAndFocus = (backwards) ->
 
   if findModeQueryHasResults
     focusFoundLink()
-    new PostFindMode findModeAnchorNode if findModeQueryHasResults
+    new PostFindMode() if findModeQueryHasResults
   else
     HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
 
