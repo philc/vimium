@@ -703,6 +703,8 @@ handleEnterForFindMode = ->
   settings.set("findModeRawQuery", findModeQuery.rawQuery)
 
 performFindInPlace = ->
+  # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
+  # match as the user adds matching characters, or removes previously-matched characters. See #1434.
   findModeRestoreSelection()
   query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
@@ -927,7 +929,7 @@ getCurrentRange = ->
     range
   else
     selection.collapseToStart() if selection.type == "Range"
-    range = selection.getRangeAt 0
+    selection.getRangeAt 0
 
 findModeSaveSelection = ->
   findModeInitialRange = getCurrentRange()
@@ -938,6 +940,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
   selection.addRange range
 
 window.enterFindMode = ->
+  # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = { rawQuery: "" }
   findMode = true
