@@ -257,26 +257,22 @@ LinkHints =
          @mode == OPEN_WITH_QUEUE or
          @mode == OPEN_IN_NEW_BG_TAB or
          @mode == OPEN_IN_NEW_FG_TAB))
-      # Toggle whether to open link in a new or current tab.
-      prev_mode = @mode
+      # Toggle whether to open the link in a new or current tab.
+      previousMode = @mode
+      keyCode = event.keyCode
 
-      if event.keyCode == keyCodes.shiftKey
-        @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
+      switch keyCode
+        when keyCodes.shiftKey
+          @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
+        when keyCodes.ctrlKey
+          @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
-        handlerStack.push
-          keyup: (event) =>
-            return if (event.keyCode != keyCodes.shiftKey)
-            @setOpenLinkMode prev_mode if @isActive
-            handlerStack.remove()
-
-      else # event.keyCode == keyCodes.ctrlKey
-        @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
-
-        handlerStack.push
-          keyup: (event) =>
-            return if (event.keyCode != keyCodes.ctrlKey)
-            @setOpenLinkMode prev_mode if @isActive
-            handlerStack.remove()
+      handlerStack.push
+        keyup: (event) =>
+          return true if (event.keyCode != keyCode)
+          @setOpenLinkMode previousMode if @isActive
+          handlerStack.remove()
+          true
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
