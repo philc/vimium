@@ -269,9 +269,9 @@ LinkHints =
 
       handlerStack.push
         keyup: (event) =>
-          return true if (event.keyCode != keyCode)
-          @setOpenLinkMode previousMode if @isActive
-          handlerStack.remove()
+          if event.keyCode == keyCode
+            @setOpenLinkMode previousMode if @isActive
+            handlerStack.remove()
           true
 
     # TODO(philc): Ignore keys that have modifiers.
