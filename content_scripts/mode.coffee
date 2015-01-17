@@ -85,8 +85,8 @@ class Mode
         "click": (event) => @alwaysContinueBubbling => @exit event
 
     # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
-    # if @options.singleton is truthy.  The value of @options.singleton should be the which is intended to
-    # be unique.  New instances deactivate existing instances.
+    # if @options.singleton is truthy.  The value of @options.singleton should be the key the which is
+    # intended to be unique.  New instances deactivate existing instances with the same key.
     if @options.singleton
       do =>
         singletons = Mode.singletons ||= {}
@@ -94,8 +94,6 @@ class Mode
         @onExit => delete singletons[key] if singletons[key] == @
         if singletons[key]
           @log "singleton:", "deactivating #{singletons[key].id}"
-          # We're currently installing a new mode, so we'll be updating the badge shortly.  Therefore, we can
-          # suppress badge updates while deactivating the existing singleton.  This can prevent badge flicker.
           singletons[key].exit()
         singletons[key] = @
 

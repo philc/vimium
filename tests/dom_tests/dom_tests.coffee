@@ -669,7 +669,7 @@ context "Mode badges",
   tearDown ->
     restoreStackState()
 
-  should "have an N badge without passKeys", ->
+  should "have no badge without passKeys", ->
     handlerStack.bubbleEvent "registerStateChange",
       enabled: true
       passKeys: ""
@@ -677,13 +677,13 @@ context "Mode badges",
     handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
     assert.isTrue badge.badge == ""
 
-  should "have an P badge with passKeys", ->
+  should "have no badge with passKeys", ->
     handlerStack.bubbleEvent "registerStateChange",
       enabled: true
       passKeys: "p"
 
     handlerStack.bubbleEvent "updateBadge", badge = { badge: "" }
-    assert.isTrue badge.badge == "P"
+    assert.isTrue badge.badge == ""
 
   should "have no badge when disabled", ->
     handlerStack.bubbleEvent "registerStateChange",

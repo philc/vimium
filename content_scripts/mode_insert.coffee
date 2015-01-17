@@ -1,14 +1,14 @@
 
 class InsertMode extends Mode
-  # There is one permanently-installed instance of InsertMode.  It watches for focus changes and
-  # activates/deactivates itself accordingly.
+  # There is one permanently-installed instance of InsertMode.  It tracks focus changes and
+  # activates/deactivates itself (by setting @insertModeLock) accordingly.
   @permanentInstance: null
 
   constructor: (options = {}) ->
     InsertMode.permanentInstance ||= @
     @permanent = (@ == InsertMode.permanentInstance)
 
-    # If truthy, then options.global indicates that we were activated by the user (with "i").
+    # If truthy, then we were activated by the user (with "i").
     @global = options.global
 
     defaults =
@@ -21,7 +21,7 @@ class InsertMode extends Mode
 
     @insertModeLock =
       if document.activeElement and DomUtils.isEditable document.activeElement
-        #  An input element is already active, so use it.
+        # An input element is already active, so use it.
         document.activeElement
       else
         null
@@ -30,9 +30,9 @@ class InsertMode extends Mode
       "blur": (event) => @alwaysContinueBubbling =>
         target = event.target
         # We can't rely on focus and blur events arriving in the expected order.  When the active element
-        # changes, we might get "blur" before "focus".  We track the active element in @insertModeLock, and
+        # changes, we might get "focus" before "blur".  We track the active element in @insertModeLock, and
         # exit only when that element blurs.
-        @exit event, target if target == @insertModeLock and DomUtils.isFocusable target
+        @exit event, target if target == @insertModeLock
       "focus": (event) => @alwaysContinueBubbling =>
         if @insertModeLock != event.target and DomUtils.isFocusable event.target
           @insertModeLock = event.target
@@ -44,7 +44,7 @@ class InsertMode extends Mode
     # Some sites (e.g. inbox.google.com) change the contentEditable property on the fly (see #1245); and
     # unfortunately, the focus event fires *before* the change.  Therefore, we need to re-check whether the
     # active element is contentEditable.
-    if document.activeElement?.isContentEditable and @insertModeLock != document.activeElement
+    if @insertModeLock != document.activeElement and document.activeElement?.isContentEditable
       @insertModeLock = document.activeElement
       Mode.updateBadge()
     @insertModeLock != null
@@ -75,7 +75,7 @@ class InsertMode extends Mode
   updateBadge: (badge) ->
     badge.badge ||= "I" if @isActive badge
 
-  # Static stuff. This allows PostFindMode to suppress insert mode.
+  # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.
   @suppressedEvent: null
   @suppressEvent: (event) -> @suppressedEvent = event
 

@@ -16,8 +16,9 @@ class PassKeysMode extends Mode
     else
       @continueBubbling
 
-  updateBadge: (badge) ->
-    badge.badge ||= "P" if @passKeys and not @keyQueue
+  # Disabled, pending experimentation with how/whether to use badges (smblott, 2015/01/17).
+  # updateBadge: (badge) ->
+  #   badge.badge ||= "P" if @passKeys and not @keyQueue
 
 root = exports ? window
 root.PassKeysMode = PassKeysMode
