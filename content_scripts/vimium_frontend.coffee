@@ -342,7 +342,7 @@ getFocusedElementIndexByRecency = do ->
   window.resetFocusInputFocusedElement = ->
     focusedElement = null
 
-  (elements = null) ->
+  (elements) ->
     Math.max 0, elements.indexOf focusedElement
 
 extend window,
