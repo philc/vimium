@@ -176,6 +176,11 @@ DomUtils =
       element.selectionStart? and element.selectionEnd? and element.selectionStart != element.selectionEnd
 
   simulateSelect: (element) ->
+    # If element == document.activeElement, then we won't get a new focus event.  So, we pretend (to any
+    # active modes which care, e.g. PostFindMode) that element has been clicked.
+    if element == document.activeElement and DomUtils.isEditable document.activeElement
+      handlerStack.bubbleEvent "click", target: element
+
     element.focus()
     unless @isSelected element
       # When focusing a textbox, put the selection caret at the end of the textbox's contents.
