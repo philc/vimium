@@ -338,7 +338,11 @@ getFocusedElementIndexByRecency = do ->
   installListener window, "focus", (event) ->
     focusedElement = event.target if DomUtils.isEditable event.target
 
-  (elements) ->
+  # Only for tests.
+  window.resetFocusInputFocusedElement = ->
+    focusedElement = null
+
+  (elements = null) ->
     Math.max 0, elements.indexOf focusedElement
 
 extend window,

@@ -184,10 +184,12 @@ context "Input focus",
       <input type='password' id='third' value='some value'/>"
     document.getElementById("test-div").innerHTML = testContent
     backupStackState()
+    resetFocusInputFocusedElement()
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
     restoreStackState()
+    resetFocusInputFocusedElement()
 
   should "focus the right element", ->
     focusInput 1
@@ -204,10 +206,25 @@ context "Input focus",
     focusInput 1
     handlerStack.bubbleEvent 'focus', { target: document.activeElement }
     assert.isTrue InsertMode.permanentInstance.isActive()
+    # deactivate the tabbing mode and its overlays
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
     focusInput 100
     handlerStack.bubbleEvent 'focus', { target: document. activeElement }
     assert.isTrue InsertMode.permanentInstance.isActive()
+    # deactivate the tabbing mode and its overlays
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
+
+  should "select the previously-focused input when count is 1", ->
+    focusInput 100
+    assert.equal "third", document.activeElement.id
+    # deactivate the tabbing mode and its overlays
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
+
+    focusInput 1
+    assert.equal "third", document.activeElement.id
+    # deactivate the tabbing mode and its overlays
+    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
 # a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
