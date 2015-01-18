@@ -332,21 +332,23 @@ extend window,
     new VisualMode()
 
   focusInput: do ->
-    # Track the most-recently focused input element.
-    focusedElement = null
+    # Track the most recently focused input element.
+    recentlyFocusedElement = null
     handlerStack.push
+      _name: "focus-input-tracker"
       focus: (event) ->
-        focusedElement = event.target if DomUtils.isEditable event.target
+        recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+        true
 
     (count) ->
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with
       # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
       # Pressing any other key will remove the overlays and the special tab behavior.
-      resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+      resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
       visibleInputs =
         for i in [0...resultSet.snapshotLength] by 1
-          element = resultSet.snapshotItem(i)
-          rect = DomUtils.getVisibleClientRect(element)
+          element = resultSet.snapshotItem i
+          rect = DomUtils.getVisibleClientRect element
           continue if rect == null
           { element: element, rect: rect }
 
@@ -354,13 +356,14 @@ extend window,
 
       selectedInputIndex =
         if count == 1
+          # As the starting index, we pick that of the most recently focused input element (or 0).
           elements = visibleInputs.map (visibleInput) -> visibleInput.element
-          Math.max 0, elements.indexOf focusedElement
+          Math.max 0, elements.indexOf recentlyFocusedElement
         else
           Math.min(count, visibleInputs.length) - 1
 
       hints = for tuple in visibleInputs
-        hint = document.createElement("div")
+        hint = document.createElement "div"
         hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
         # minus 1 for the border
