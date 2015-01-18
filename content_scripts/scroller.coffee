@@ -124,12 +124,15 @@ CoreScroller =
     @keyIsDown = false
 
     handlerStack.push
+      _name: 'scroller/track-key-status'
       keydown: (event) =>
-        @keyIsDown = true
-        @lastEvent = event
+        handlerStack.alwaysContinueBubbling =>
+          @keyIsDown = true
+          @lastEvent = event
       keyup: =>
-        @keyIsDown = false
-        @time += 1
+        handlerStack.alwaysContinueBubbling =>
+          @keyIsDown = false
+          @time += 1
 
   # Return true if CoreScroller would not initiate a new scroll right now.
   wouldNotInitiateScroll: -> @lastEvent?.repeat and @settings.get "smoothScroll"
@@ -205,7 +208,9 @@ CoreScroller =
 # Scroller contains the two main scroll functions (scrollBy and scrollTo) which are exported to clients.
 Scroller =
   init: (frontendSettings) ->
-    handlerStack.push DOMActivate: -> activatedElement = event.target
+    handlerStack.push
+      _name: 'scroller/active-element'
+      DOMActivate: (event) -> handlerStack.alwaysContinueBubbling -> activatedElement = event.target
     CoreScroller.init frontendSettings
 
   # scroll the active element in :direction by :amount * :factor.

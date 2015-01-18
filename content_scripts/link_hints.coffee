@@ -8,13 +8,16 @@
 # In 'filter' mode, our link hints are numbers, and the user can narrow down the range of possibilities by
 # typing the text of the link itself.
 #
-OPEN_IN_CURRENT_TAB = {}
-OPEN_IN_NEW_BG_TAB = {}
-OPEN_IN_NEW_FG_TAB = {}
-OPEN_WITH_QUEUE = {}
-COPY_LINK_URL = {}
-OPEN_INCOGNITO = {}
-DOWNLOAD_LINK_URL = {}
+# The "name" property below is a short-form name to appear in the link-hints mode name.  Debugging only.  The
+# key appears in the mode's badge.
+#
+OPEN_IN_CURRENT_TAB = { name: "curr-tab", key: "" }
+OPEN_IN_NEW_BG_TAB = { name: "bg-tab", key: "B" }
+OPEN_IN_NEW_FG_TAB = { name: "fg-tab", key: "F" }
+OPEN_WITH_QUEUE = { name: "queue", key: "Q" }
+COPY_LINK_URL = { name: "link", key: "C" }
+OPEN_INCOGNITO = { name: "incognito", key: "I" }
+DOWNLOAD_LINK_URL = { name: "download", key: "D" }
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -62,13 +65,13 @@ LinkHints =
     @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
 
-    # handlerStack is declared by vimiumFrontend.js
-    @handlerId = handlerStack.push({
+    @hintMode = new Mode
+      name: "hint/#{mode.name}"
+      badge: "#{mode.key}?"
       keydown: @onKeyDownInMode.bind(this, hintMarkers),
       # trap all key events
       keypress: -> false
       keyup: -> false
-    })
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
@@ -276,6 +279,7 @@ LinkHints =
 
     # TODO(philc): Ignore keys that have modifiers.
     if (KeyboardUtils.isEscape(event))
+      DomUtils.suppressKeyupAfterEscape handlerStack
       @deactivateMode()
     else if (event.keyCode != keyCodes.shiftKey and event.keyCode != keyCodes.ctrlKey)
       keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
@@ -339,7 +343,7 @@ LinkHints =
       if (LinkHints.hintMarkerContainingDiv)
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
-      handlerStack.remove @handlerId
+      @hintMode.exit()
       HUD.hide()
       @isActive = false
 

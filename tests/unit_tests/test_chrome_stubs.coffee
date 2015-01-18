@@ -41,6 +41,8 @@ exports.chrome =
       addListener: () -> true
     getAll: () -> true
 
+  browserAction:
+    setBadgeBackgroundColor: ->
   storage:
     # chrome.storage.local
     local:

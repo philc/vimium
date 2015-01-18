@@ -142,6 +142,39 @@ DomUtils =
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
         element.nodeName.toLowerCase() == "textarea"
 
+  # Input or text elements are considered focusable and able to receieve their own keyboard events, and will
+  # enter insert mode if focused. Also note that the "contentEditable" attribute can be set on any element
+  # which makes it a rich text editor, like the notes on jjot.com.
+  isEditable: (element) ->
+    return true if element.isContentEditable
+    nodeName = element.nodeName?.toLowerCase()
+    # Use a blacklist instead of a whitelist because new form controls are still being implemented for html5.
+    if nodeName == "input" and element.type not in ["radio", "checkbox"]
+      return true
+    nodeName in ["textarea", "select"]
+
+  # Embedded elements like Flash and quicktime players can obtain focus.
+  isEmbed: (element) ->
+    element.nodeName?.toLowerCase() in ["embed", "object"]
+
+  isFocusable: (element) ->
+    @isEditable(element) or @isEmbed element
+
+  isDOMDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
+
+  # True if element contains the active selection range.
+  isSelected: (element) ->
+    if element.isContentEditable
+      node = document.getSelection()?.anchorNode
+      node and @isDOMDescendant element, node
+    else
+      element.selectionStart? and element.selectionEnd? and element.selectionStart != element.selectionEnd
+
   simulateSelect: (element) ->
     element.focus()
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.
@@ -178,6 +211,15 @@ DomUtils =
   suppressEvent: (event) ->
     event.preventDefault()
     @suppressPropagation(event)
+
+  # Suppress the next keyup event for Escape.
+  suppressKeyupAfterEscape: (handlerStack) ->
+    handlerStack.push
+      _name: "dom_utils/suppressKeyupAfterEscape"
+      keyup: (event) ->
+        return true unless KeyboardUtils.isEscape event
+        @remove()
+        false
 
 root = exports ? window
 root.DomUtils = DomUtils
