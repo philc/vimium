@@ -142,11 +142,20 @@ DomUtils =
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
         element.nodeName.toLowerCase() == "textarea"
 
+  isSelected: (element) ->
+    sel = document.getSelection()
+    if sel.type == "Range"
+      range = sel.getRangeAt 0
+      @isDOMDescendant element, range.commonAncestorContainer
+    else
+      false
+
   simulateSelect: (element) ->
     element.focus()
-    # When focusing a textbox, put the selection caret at the end of the textbox's contents.
-    # For some HTML5 input types (eg. date) we can't position the caret, so we wrap this with a try.
-    try element.setSelectionRange(element.value.length, element.value.length)
+    unless @isSelected element
+      # When focusing a textbox, put the selection caret at the end of the textbox's contents.
+      # For some HTML5 input types (eg. date) we can't position the caret, so we wrap this with a try.
+      try element.setSelectionRange(element.value.length, element.value.length)
 
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
@@ -178,6 +187,13 @@ DomUtils =
   suppressEvent: (event) ->
     event.preventDefault()
     @suppressPropagation(event)
+
+  isDOMDescendant: (parent, child) ->
+    node = child
+    while (node != null)
+      return true if (node == parent)
+      node = node.parentNode
+    false
 
 root = exports ? window
 root.DomUtils = DomUtils
