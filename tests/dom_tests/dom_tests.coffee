@@ -194,8 +194,6 @@ context "Input focus",
   should "focus the right element", ->
     focusInput 1
     assert.equal "first", document.activeElement.id
-    # deactivate the tabbing mode and its overlays
-    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
     focusInput 100
     assert.equal "third", document.activeElement.id
@@ -204,13 +202,13 @@ context "Input focus",
   # This is the same as above, but also verifies that focusInput activates insert mode.
   should "activate insert mode", ->
     focusInput 1
-    handlerStack.bubbleEvent 'focus', { target: document.activeElement }
+    handlerStack.bubbleEvent 'focus', target: document.activeElement
     assert.isTrue InsertMode.permanentInstance.isActive()
     # deactivate the tabbing mode and its overlays
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
     focusInput 100
-    handlerStack.bubbleEvent 'focus', { target: document. activeElement }
+    handlerStack.bubbleEvent 'focus', target: document. activeElement
     assert.isTrue InsertMode.permanentInstance.isActive()
     # deactivate the tabbing mode and its overlays
     handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
