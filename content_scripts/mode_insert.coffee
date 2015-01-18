@@ -15,6 +15,13 @@ class InsertMode extends Mode
       return @continueBubbling unless @isActive event
       return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
       DomUtils.suppressKeyupAfterEscape handlerStack
+      target = event.srcElement
+      if target and DomUtils.isFocusable target
+        # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
+        # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
+        # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
+        # games.  See discussion in #1211 and #1194.
+        target.blur()
       @exit event, event.srcElement
       @suppressEvent
 
@@ -63,12 +70,6 @@ class InsertMode extends Mode
     if (target and target == @insertModeLock) or @global or target == undefined
       @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
       @insertModeLock = null
-      if target and DomUtils.isFocusable target
-        # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
-        # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
-        # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
-        # games.  See discussion in #1211 and #1194.
-        target.blur()
       # Exit, but only if this isn't the permanently-installed instance.
       if @permanent then Mode.updateBadge() else super()
 
