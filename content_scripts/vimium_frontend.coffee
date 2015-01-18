@@ -10,6 +10,7 @@ findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
+findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
@@ -771,19 +772,10 @@ class FindMode extends Mode
       new PostFindMode
 
 performFindInPlace = ->
-  cachedScrollX = window.scrollX
-  cachedScrollY = window.scrollY
-
+  # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
+  # match as the user adds matching characters, or removes previously-matched characters. See #1434.
+  findModeRestoreSelection()
   query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-
-  # Search backwards first to "free up" the current word as eligible for the real forward search. This allows
-  # us to search in place without jumping around between matches as the query grows.
-  executeFind(query, { backwards: true, caseSensitive: !findModeQuery.ignoreCase })
-
-  # We need to restore the scroll position because we might've lost the right position by searching
-  # backwards.
-  window.scrollTo(cachedScrollX, cachedScrollY)
-
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
@@ -976,7 +968,28 @@ showFindModeHUDForQuery = ->
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
+getCurrentRange = ->
+  selection = getSelection()
+  if selection.type == "None"
+    range = document.createRange()
+    range.setStart document.body, 0
+    range.setEnd document.body, 0
+    range
+  else
+    selection.collapseToStart() if selection.type == "Range"
+    selection.getRangeAt 0
+
+findModeSaveSelection = ->
+  findModeInitialRange = getCurrentRange()
+
+findModeRestoreSelection = (range = findModeInitialRange) ->
+  selection = getSelection()
+  selection.removeAllRanges()
+  selection.addRange range
+
 window.enterFindMode = ->
+  # Save the selection, so performFindInPlace can restore it.
+  findModeSaveSelection()
   findModeQuery = { rawQuery: "" }
   HUD.show("/")
   new FindMode()
