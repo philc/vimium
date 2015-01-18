@@ -124,7 +124,7 @@ initializePreDomReady = ->
   # activates/deactivates itself accordingly.
   new NormalMode
   new PassKeysMode
-  new InsertMode
+  new InsertMode permanent: true
 
   checkIfEnabledForUrl()
 

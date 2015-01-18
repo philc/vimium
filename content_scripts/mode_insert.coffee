@@ -1,12 +1,9 @@
 
 class InsertMode extends Mode
-  # There is one permanently-installed instance of InsertMode.  It tracks focus changes and
-  # activates/deactivates itself (by setting @insertModeLock) accordingly.
-  @permanentInstance: null
-
   constructor: (options = {}) ->
-    InsertMode.permanentInstance ||= @
-    @permanent = (@ == InsertMode.permanentInstance)
+    # There is one permanently-installed instance of InsertMode.  It tracks focus changes and
+    # activates/deactivates itself (by setting @insertModeLock) accordingly.
+    @permanent = options.permanent
 
     # If truthy, then we were activated by the user (with "i").
     @global = options.global
@@ -50,6 +47,9 @@ class InsertMode extends Mode
       "focus": (event) => @alwaysContinueBubbling =>
         if @insertModeLock != event.target and DomUtils.isFocusable event.target
           @activateOnElement event.target
+
+    # Only for tests.  This gives us a hook to test the status of the permanent instance.
+    InsertMode.permanentInstance = @ if @permanent
 
   isActive: (event) ->
     return false if event == InsertMode.suppressedEvent
