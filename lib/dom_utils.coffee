@@ -166,6 +166,14 @@ DomUtils =
       node = node.parentNode
     false
 
+  # True if element contains the active selection range.
+  isSelected: (element) ->
+    if element.isContentEditable
+      node = document.getSelection()?.anchorNode
+      node and @isDOMDescendant element, node
+    else
+      element.selectionStart? and element.selectionEnd? and element.selectionStart != element.selectionEnd
+
   simulateSelect: (element) ->
     element.focus()
     # When focusing a textbox, put the selection caret at the end of the textbox's contents.

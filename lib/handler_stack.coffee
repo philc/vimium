@@ -13,25 +13,24 @@ class HandlerStack
     @stopBubblingAndTrue = new Object()
 
     # A handler should return this value to indicate that the event has been consumed, and no further
-    # processing should take place.
+    # processing should take place.  The event does not propagate to the underlying page.
     @stopBubblingAndFalse = new Object()
 
     # A handler should return this value to indicate that bubbling should be restarted.  Typically, this is
-    # used when, while bubbling an event, a new mode is pushed onto the stack.  See `focusInput` for an
-    # example.
+    # used when, while bubbling an event, a new mode is pushed onto the stack.
     @restartBubbling = new Object()
 
   # Adds a handler to the top of the stack. Returns a unique ID for that handler that can be used to remove it
   # later.
   push: (handler) ->
-    handler.id = ++@counter
     handler._name ||= "anon-#{@counter}"
     @stack.push handler
-    handler.id
+    handler.id = ++@counter
 
-  # Adds a handler to the bottom of the stack. Returns a unique ID for that handler that can be used to remove
-  # it later.
+  # As above, except the new handler is added to the bottom of the stack.
   unshift: (handler) ->
+    handler._name ||= "anon-#{@counter}"
+    handler._name += "/unshift"
     @stack.unshift handler
     handler.id = ++@counter
 
@@ -84,8 +83,9 @@ class HandlerStack
   # Debugging.
   logResult: (type, event, handler, result) ->
     # FIXME(smblott).  Badge updating is too noisy, so we filter it out.  However, we do need to look at how
-    # many badge update events are happening.  It seems to be more than necessary.
-    return if type == "updateBadge"
+    # many badge update events are happening.  It seems to be more than necessary. We also filter out
+    # registerKeyQueue as unnecessarily noisy and not particularly helpful.
+    return if type in [ "updateBadge", "registerKeyQueue" ]
     label =
       switch result
         when @stopBubblingAndTrue then "stop/true"

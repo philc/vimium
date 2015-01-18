@@ -10,7 +10,6 @@
 #
 # The "name" property below is a short-form name to appear in the link-hints mode name.  Debugging only.  The
 # key appears in the mode's badge.
-# NOTE(smblott) The use of keys in badges is experimental. It may prove too noisy.
 #
 OPEN_IN_CURRENT_TAB = { name: "curr-tab", key: "" }
 OPEN_IN_NEW_BG_TAB = { name: "bg-tab", key: "B" }

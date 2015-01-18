@@ -11,11 +11,18 @@ class InsertMode extends Mode
     # If truthy, then we were activated by the user (with "i").
     @global = options.global
 
+    handleKeyEvent = (event) =>
+      return @continueBubbling unless @isActive event
+      return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
+      DomUtils.suppressKeyupAfterEscape handlerStack
+      @exit event, event.srcElement
+      @suppressEvent
+
     defaults =
       name: "insert"
-      keydown: (event) => @handleKeydownEvent event
-      keypress: (event) => @handleKeyEvent event
-      keyup: (event) => @handleKeyEvent event
+      keypress: handleKeyEvent
+      keyup: handleKeyEvent
+      keydown: handleKeyEvent
 
     super extend defaults, options
 
@@ -32,11 +39,10 @@ class InsertMode extends Mode
         # We can't rely on focus and blur events arriving in the expected order.  When the active element
         # changes, we might get "focus" before "blur".  We track the active element in @insertModeLock, and
         # exit only when that element blurs.
-        @exit event, target if target == @insertModeLock
+        @exit event, target if @insertModeLock and target == @insertModeLock
       "focus": (event) => @alwaysContinueBubbling =>
         if @insertModeLock != event.target and DomUtils.isFocusable event.target
-          @insertModeLock = event.target
-          Mode.updateBadge()
+          @activateOnElement event.target
 
   isActive: (event) ->
     return false if event == InsertMode.suppressedEvent
@@ -44,24 +50,18 @@ class InsertMode extends Mode
     # Some sites (e.g. inbox.google.com) change the contentEditable property on the fly (see #1245); and
     # unfortunately, the focus event fires *before* the change.  Therefore, we need to re-check whether the
     # active element is contentEditable.
-    if @insertModeLock != document.activeElement and document.activeElement?.isContentEditable
-      @insertModeLock = document.activeElement
-      Mode.updateBadge()
+    @activateOnElement document.activeElement if document.activeElement?.isContentEditable
     @insertModeLock != null
 
-  handleKeydownEvent: (event) ->
-    return @continueBubbling unless @isActive event
-    return @stopBubblingAndTrue unless KeyboardUtils.isEscape event
-    DomUtils.suppressKeyupAfterEscape handlerStack
-    @exit event, event.srcElement
-    @suppressEvent
-
-  # Handles keypress and keyup events.
-  handleKeyEvent: (event) ->
-    if @isActive event then @stopBubblingAndTrue else @continueBubbling
+  activateOnElement: (element) ->
+    @log "#{@id}: activating (permanent)" if @debug and @permanent
+    @insertModeLock = element
+    Mode.updateBadge()
 
   exit: (_, target)  ->
+    # Note: target == undefined, here, is required only for tests.
     if (target and target == @insertModeLock) or @global or target == undefined
+      @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
       @insertModeLock = null
       if target and DomUtils.isFocusable target
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.

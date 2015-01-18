@@ -24,8 +24,10 @@
 # responds to "focus" events, then push an additional handler:
 #   @push
 #     "focus": (event) => ....
-# Any such handlers are removed when the mode is deactivated.
+# Such handlers are removed when the mode is deactivated.
 #
+# The following events can be handled:
+#   keydown, keypress, keyup, click, focus and blur
 
 # Debug only.
 count = 0
@@ -85,8 +87,8 @@ class Mode
         "click": (event) => @alwaysContinueBubbling => @exit event
 
     # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
-    # if @options.singleton is truthy.  The value of @options.singleton should be the key the which is
-    # intended to be unique.  New instances deactivate existing instances with the same key.
+    # if @options.singleton is truthy.  The value of @options.singleton should be the key which is intended to
+    # be unique.  New instances deactivate existing instances with the same key.
     if @options.singleton
       do =>
         singletons = Mode.singletons ||= {}
@@ -99,7 +101,7 @@ class Mode
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes. The mode also tracks the
-    # keyQueue in @keyQueue.
+    # current keyQueue in @keyQueue.
     if @options.trackState
       @enabled = false
       @passKeys = ""
@@ -115,7 +117,7 @@ class Mode
 
     Mode.modes.push @
     Mode.updateBadge()
-    @logStack()
+    @logModes()
     # End of Mode constructor.
 
   push: (handlers) ->
@@ -124,7 +126,6 @@ class Mode
 
   unshift: (handlers) ->
     handlers._name ||= "mode-#{@id}"
-    handlers._name += "/unshifted"
     @handlers.push handlerStack.unshift handlers
 
   onExit: (handler) ->
@@ -160,7 +161,7 @@ class Mode
         badge: badge.badge
 
   # Debugging routines.
-  logStack: ->
+  logModes: ->
     if @debug
       @log "active modes (top to bottom):"
       @log " ", mode.id for mode in Mode.modes[..].reverse()

@@ -33,6 +33,8 @@ class PostFindMode extends SuppressPrintable
 
     super
       name: "post-find"
+      # We show a "?" badge, but only while an Escape activates insert mode.
+      badge: "?"
       singleton: PostFindMode
       exitOnBlur: element
       exitOnClick: true
@@ -42,20 +44,23 @@ class PostFindMode extends SuppressPrintable
 
     # If the very-next keydown is Escape, then exit immediately, thereby passing subsequent keys to the
     # underlying insert-mode instance.
-    self = @
     @push
       _name: "mode-#{@id}/handle-escape"
-      keydown: (event) ->
+      keydown: (event) =>
         if KeyboardUtils.isEscape event
           DomUtils.suppressKeyupAfterEscape handlerStack
-          self.exit()
-          false # Suppress event.
+          @exit()
+          @suppressEvent
         else
-          @remove()
-          true # Continue bubbling.
+          handlerStack.remove()
+          @badge = ""
+          Mode.updateBadge()
+          @continueBubbling
 
-  # If PostFindMode is active, then we suppress the "I" badge from insert mode.
-  updateBadge: (badge) -> InsertMode.suppressEvent badge # Always truthy.
+  updateBadge: (badge) ->
+    badge.badge ||= @badge
+    # Suppress the "I" badge from insert mode.
+    InsertMode.suppressEvent badge # Always truthy.
 
 root = exports ? window
 root.PostFindMode = PostFindMode

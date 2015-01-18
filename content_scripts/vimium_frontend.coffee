@@ -117,10 +117,11 @@ initializePreDomReady = ->
         keypress: (event) => onKeypress.call @, event
         keyup: (event) => onKeyup.call @, event
 
-  # Install the permanent modes and handlers.  The permanent insert mode operates only when focusable/editable
-  # elements are active.
+      Scroller.init settings
+
+  # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
+  # activates/deactivates itself accordingly.
   new NormalMode
-  Scroller.init settings
   new PassKeysMode
   new InsertMode
 
@@ -242,8 +243,6 @@ enterInsertModeIfElementIsFocused = ->
     enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-onFocus = (event) -> handlerStack.bubbleEvent 'focus', event
-onBlur = (event) -> handlerStack.bubbleEvent 'blur', event
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -326,8 +325,7 @@ extend window,
     HUD.showForDuration("Yanked URL", 1000)
 
   enterInsertMode: ->
-    new InsertMode
-      global: true
+    new InsertMode global: true
 
   enterVisualMode: =>
     new VisualMode()
@@ -804,17 +802,16 @@ executeFind = (query, options) ->
     -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
     0)
 
+  # We are either in normal mode ("n"), or find mode ("/").  We are not in insert mode.  Nevertheless, if a
+  # previous find landed in an editable element, then that element may still be activated.  In this case, we
+  # don't want to leave it behind (see #1412).
+  if document.activeElement and DomUtils.isEditable document.activeElement
+    if not DomUtils.isSelected document.activeElement
+      document.activeElement.blur()
+
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
-
-  # TODO(smblott). Disabled. This is the wrong test.  Should be reinstated when we have the right test, which
-  # looks like it should be "isSelected" from #1431.
-  # # If the anchor node not a descendent of the active element, then blur the active element.  We don't want to
-  # # leave behind an inappropriate active element. This fixes #1412.
-  # if document.activeElement and not DomUtils.isDOMDescendant document.activeElement, findModeAnchorNode
-  #   document.activeElement.blur()
-
   result
 
 restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
