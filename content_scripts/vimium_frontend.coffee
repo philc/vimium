@@ -331,84 +331,77 @@ extend window,
   enterVisualMode: =>
     new VisualMode()
 
-# Track the most-recently focused input element. This is used by focusInput to decide which input to initially
-# highlight.
-getFocusedElementIndexByRecency = do ->
-  focusedElement = null
-  installListener window, "focus", (event) ->
-    focusedElement = event.target if DomUtils.isEditable event.target
-
-  # Only for tests.
-  window.resetFocusInputFocusedElement = ->
+  focusInput: do ->
+    # Track the most-recently focused input element.
     focusedElement = null
+    handlerStack.push
+      focus: (event) ->
+        focusedElement = event.target if DomUtils.isEditable event.target
 
-  (elements) ->
-    Math.max 0, elements.indexOf focusedElement
+    (count) ->
+      # Focus the first input element on the page, and create overlays to highlight all the input elements, with
+      # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
+      # Pressing any other key will remove the overlays and the special tab behavior.
+      resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
+      visibleInputs =
+        for i in [0...resultSet.snapshotLength] by 1
+          element = resultSet.snapshotItem(i)
+          rect = DomUtils.getVisibleClientRect(element)
+          continue if rect == null
+          { element: element, rect: rect }
 
-extend window,
-  focusInput: (count) ->
-    # Focus the first input element on the page, and create overlays to highlight all the input elements, with
-    # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
-    # Pressing any other key will remove the overlays and the special tab behavior.
-    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
-    visibleInputs =
-      for i in [0...resultSet.snapshotLength] by 1
-        element = resultSet.snapshotItem(i)
-        rect = DomUtils.getVisibleClientRect(element)
-        continue if rect == null
-        { element: element, rect: rect }
+      return if visibleInputs.length == 0
 
-    return if visibleInputs.length == 0
-
-    selectedInputIndex =
-      if count == 1
-        getFocusedElementIndexByRecency visibleInputs.map (visibleInput) -> visibleInput.element
-      else
-        Math.min(count, visibleInputs.length) - 1
-
-    hints = for tuple in visibleInputs
-      hint = document.createElement("div")
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
-
-      # minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-      hint.style.width = tuple.rect.width + "px"
-      hint.style.height = tuple.rect.height + "px"
-
-      hint
-
-    new class FocusSelector extends Mode
-      constructor: ->
-        super
-          name: "focus-selector"
-          badge: "?"
-          # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
-          # PostFindMode.
-          singleton: PostFindMode
-          exitOnClick: true
-          keydown: (event) =>
-            if event.keyCode == KeyboardUtils.keyCodes.tab
-              hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-              selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
-              selectedInputIndex %= hints.length
-              hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-              visibleInputs[selectedInputIndex].element.focus()
-              @suppressEvent
-            else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-              @exit()
-              @continueBubbling
-
-        @onExit -> DomUtils.removeElement hintContainingDiv
-        hintContainingDiv = DomUtils.addElementList hints,
-          id: "vimiumInputMarkerContainer"
-          className: "vimiumReset"
-
-        visibleInputs[selectedInputIndex].element.focus()
-        if visibleInputs.length == 1
-          @exit()
+      selectedInputIndex =
+        if count == 1
+          elements = visibleInputs.map (visibleInput) -> visibleInput.element
+          Math.max 0, elements.indexOf focusedElement
         else
-          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+          Math.min(count, visibleInputs.length) - 1
+
+      hints = for tuple in visibleInputs
+        hint = document.createElement("div")
+        hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+
+        # minus 1 for the border
+        hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+        hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+        hint.style.width = tuple.rect.width + "px"
+        hint.style.height = tuple.rect.height + "px"
+
+        hint
+
+      new class FocusSelector extends Mode
+        constructor: ->
+          super
+            name: "focus-selector"
+            badge: "?"
+            # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
+            # PostFindMode.
+            singleton: PostFindMode
+            exitOnClick: true
+            keydown: (event) =>
+              if event.keyCode == KeyboardUtils.keyCodes.tab
+                hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+                selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+                selectedInputIndex %= hints.length
+                hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+                visibleInputs[selectedInputIndex].element.focus()
+                @suppressEvent
+              else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+                @exit()
+                @continueBubbling
+
+          @onExit -> DomUtils.removeElement hintContainingDiv
+          hintContainingDiv = DomUtils.addElementList hints,
+            id: "vimiumInputMarkerContainer"
+            className: "vimiumReset"
+
+          visibleInputs[selectedInputIndex].element.focus()
+          if visibleInputs.length == 1
+            @exit()
+          else
+            hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
