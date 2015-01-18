@@ -331,6 +331,17 @@ extend window,
   enterVisualMode: =>
     new VisualMode()
 
+# Track the most-recently focused input element. This is used by focusInput to decide which input to initially
+# highlight.
+getFocusedElementIndexByRecency = do ->
+  focusedElement = null
+  installListener window, "focus", (event) ->
+    focusedElement = event.target if DomUtils.isEditable event.target
+
+  (elements) ->
+    Math.max 0, elements.indexOf focusedElement
+
+extend window,
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
@@ -345,7 +356,11 @@ extend window,
 
     return if visibleInputs.length == 0
 
-    selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
+    selectedInputIndex =
+      if count == 1
+        getFocusedElementIndexByRecency visibleInputs.map (visibleInput) -> visibleInput.element
+      else
+        Math.min(count, visibleInputs.length) - 1
 
     hints = for tuple in visibleInputs
       hint = document.createElement("div")
