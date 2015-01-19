@@ -3,6 +3,9 @@
 #
 
 root = exports ? window
+root.chromeMessages = []
+
+document.hasFocus = -> true
 
 root.chrome = {
   runtime: {
@@ -18,7 +21,7 @@ root.chrome = {
     onMessage: {
       addListener: ->
     }
-    sendMessage: ->
+    sendMessage: (message) -> chromeMessages.unshift message
     getManifest: ->
     getURL: (url) -> "../../#{url}"
   }
