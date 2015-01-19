@@ -95,5 +95,8 @@ class HandlerStack
     label ||= if result then "continue/truthy" else "suppress"
     console.log "#{@eventNumber}", type, handler._name, label
 
+  reset: ->
+    @stack = []
+
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()

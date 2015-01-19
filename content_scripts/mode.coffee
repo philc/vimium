@@ -169,14 +169,19 @@ class Mode
   log: (args...) ->
     console.log args... if @debug
 
-  # Return the must-recently activated mode (only used in tests).
+  # For tests only.
   @top: ->
     @modes[@modes.length-1]
 
+  # For tests only.
+  @reset: ->
+    mode.exit() for mode in @modes
+    @modes = []
+
 # BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
 # bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
-# badge choice of the other modes.  We create the the one-and-only instance here.
-new class BadgeMode extends Mode
+# badge choice of the other modes.
+class BadgeMode extends Mode
   constructor: () ->
     super
       name: "badge"
@@ -200,3 +205,4 @@ new class BadgeMode extends Mode
 
 root = exports ? window
 root.Mode = Mode
+root.BadgeMode = BadgeMode
