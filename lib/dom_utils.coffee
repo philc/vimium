@@ -140,7 +140,7 @@ DomUtils =
   isSelectable: (element) ->
     unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset", "submit"]
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
-        element.nodeName.toLowerCase() == "textarea"
+        element.nodeName.toLowerCase() == "textarea" || element.isContentEditable
 
   # Input or text elements are considered focusable and able to receieve their own keyboard events, and will
   # enter insert mode if focused. Also note that the "contentEditable" attribute can be set on any element
