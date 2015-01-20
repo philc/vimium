@@ -173,20 +173,23 @@ DomUtils =
       node = document.getSelection()?.anchorNode
       node and @isDOMDescendant element, node
     else
-      element.selectionStart? and element.selectionEnd? and element.selectionStart != element.selectionEnd
+      # Note.  This makes the wrong decision if the user has placed the caret at the start of element.  We
+      # cannot distinguish that case from the user having made no selection.
+      element.selectionStart? and element.selectionEnd? and element.selectionEnd != 0
 
   simulateSelect: (element) ->
-    isSelected = @isSelected element
-    # If element == document.activeElement, then we won't get a new focus event.  So, we pretend (to any
-    # active modes which care, e.g. PostFindMode) that element has been clicked.
+    # If element is already active, then we don't move the selection.  However, we also won't get a new focus
+    # event.  So, instead we pretend (to any active modes which care, e.g. PostFindMode) that element has been
+    # clicked.
     if element == document.activeElement and DomUtils.isEditable document.activeElement
       handlerStack.bubbleEvent "click", target: element
-
-    element.focus()
-    unless isSelected
-      # When focusing a textbox, put the selection caret at the end of the textbox's contents.
-      # For some HTML5 input types (eg. date) we can't position the caret, so we wrap this with a try.
-      try element.setSelectionRange(element.value.length, element.value.length)
+    else
+      element.focus()
+      unless @isSelected element
+        # When focusing a textbox (without an existing selection), put the selection caret at the end of the
+        # textbox's contents.  For some HTML5 input types (eg. date) we can't position the caret, so we wrap
+        # this with a try.
+        try element.setSelectionRange(element.value.length, element.value.length)
 
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
