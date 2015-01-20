@@ -48,7 +48,7 @@ class InsertMode extends Mode
         if @insertModeLock != event.target and DomUtils.isFocusable event.target
           @activateOnElement event.target
 
-    # Only for tests.  This gives us a hook to test the status of the permanent instance.
+    # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = @ if @permanent
 
   isActive: (event) ->
