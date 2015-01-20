@@ -331,65 +331,80 @@ extend window,
   enterVisualMode: =>
     new VisualMode()
 
-  focusInput: (count) ->
-    # Focus the first input element on the page, and create overlays to highlight all the input elements, with
-    # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
-    # Pressing any other key will remove the overlays and the special tab behavior.
-    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
-    visibleInputs =
-      for i in [0...resultSet.snapshotLength] by 1
-        element = resultSet.snapshotItem(i)
-        rect = DomUtils.getVisibleClientRect(element)
-        continue if rect == null
-        { element: element, rect: rect }
+  focusInput: do ->
+    # Track the most recently focused input element.
+    recentlyFocusedElement = null
+    handlerStack.push
+      _name: "focus-input-tracker"
+      focus: (event) ->
+        recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+        true
 
-    return if visibleInputs.length == 0
+    (count) ->
+      # Focus the first input element on the page, and create overlays to highlight all the input elements, with
+      # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
+      # Pressing any other key will remove the overlays and the special tab behavior.
+      resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
+      visibleInputs =
+        for i in [0...resultSet.snapshotLength] by 1
+          element = resultSet.snapshotItem i
+          rect = DomUtils.getVisibleClientRect element
+          continue if rect == null
+          { element: element, rect: rect }
 
-    selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
+      return if visibleInputs.length == 0
 
-    hints = for tuple in visibleInputs
-      hint = document.createElement("div")
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
-
-      # minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-      hint.style.width = tuple.rect.width + "px"
-      hint.style.height = tuple.rect.height + "px"
-
-      hint
-
-    new class FocusSelector extends Mode
-      constructor: ->
-        super
-          name: "focus-selector"
-          badge: "?"
-          # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
-          # PostFindMode.
-          singleton: PostFindMode
-          exitOnClick: true
-          keydown: (event) =>
-            if event.keyCode == KeyboardUtils.keyCodes.tab
-              hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-              selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
-              selectedInputIndex %= hints.length
-              hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-              visibleInputs[selectedInputIndex].element.focus()
-              @suppressEvent
-            else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-              @exit()
-              @continueBubbling
-
-        @onExit -> DomUtils.removeElement hintContainingDiv
-        hintContainingDiv = DomUtils.addElementList hints,
-          id: "vimiumInputMarkerContainer"
-          className: "vimiumReset"
-
-        visibleInputs[selectedInputIndex].element.focus()
-        if visibleInputs.length == 1
-          @exit()
+      selectedInputIndex =
+        if count == 1
+          # As the starting index, we pick that of the most recently focused input element (or 0).
+          elements = visibleInputs.map (visibleInput) -> visibleInput.element
+          Math.max 0, elements.indexOf recentlyFocusedElement
         else
-          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+          Math.min(count, visibleInputs.length) - 1
+
+      hints = for tuple in visibleInputs
+        hint = document.createElement "div"
+        hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+
+        # minus 1 for the border
+        hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+        hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+        hint.style.width = tuple.rect.width + "px"
+        hint.style.height = tuple.rect.height + "px"
+
+        hint
+
+      new class FocusSelector extends Mode
+        constructor: ->
+          super
+            name: "focus-selector"
+            badge: "?"
+            # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
+            # PostFindMode.
+            singleton: PostFindMode
+            exitOnClick: true
+            keydown: (event) =>
+              if event.keyCode == KeyboardUtils.keyCodes.tab
+                hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+                selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+                selectedInputIndex %= hints.length
+                hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+                visibleInputs[selectedInputIndex].element.focus()
+                @suppressEvent
+              else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+                @exit()
+                @continueBubbling
+
+          @onExit -> DomUtils.removeElement hintContainingDiv
+          hintContainingDiv = DomUtils.addElementList hints,
+            id: "vimiumInputMarkerContainer"
+            className: "vimiumReset"
+
+          visibleInputs[selectedInputIndex].element.focus()
+          if visibleInputs.length == 1
+            @exit()
+          else
+            hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a

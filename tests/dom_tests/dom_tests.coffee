@@ -207,6 +207,12 @@ context "Input focus",
     handlerStack.bubbleEvent 'focus', target: document. activeElement
     assert.isTrue InsertMode.permanentInstance.isActive()
 
+  should "select the previously-focused input when count is 1", ->
+    focusInput 100
+    handlerStack.bubbleEvent 'focus', target: document. activeElement
+    focusInput 1
+    assert.equal "third", document.activeElement.id
+
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
 # a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
 # don't need to construct external state many times over just to test that.
