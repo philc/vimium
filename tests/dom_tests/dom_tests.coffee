@@ -218,12 +218,6 @@ context "Input focus",
     focusInput 100
     assert.isTrue InsertMode.permanentInstance.isActive()
 
-  should "select the previously-focused input when count is 1", ->
-    document.getElementById("third").focus()
-    document.getElementById("third").blur()
-    focusInput 1
-    assert.equal "third", document.activeElement.id
-
   should "not trigger insert if there are no inputs", ->
     document.getElementById("test-div").innerHTML = ""
     focusInput 1
