@@ -218,6 +218,11 @@ context "Input focus",
     focusInput 100
     assert.isTrue InsertMode.permanentInstance.isActive()
 
+  should "activate the most recently-selected input if the count is 1", ->
+    focusInput 3
+    focusInput 1
+    assert.equal "third", document.activeElement.id
+
   should "not trigger insert if there are no inputs", ->
     document.getElementById("test-div").innerHTML = ""
     focusInput 1

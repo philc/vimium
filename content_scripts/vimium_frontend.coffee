@@ -337,11 +337,9 @@ extend window,
   focusInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null
-    handlerStack.push
-      _name: "focus-input-tracker"
-      focus: (event) ->
-        recentlyFocusedElement = event.target if DomUtils.isEditable event.target
-        true
+    window.addEventListener "focus",
+      (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+    , true
 
     (count) ->
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with
