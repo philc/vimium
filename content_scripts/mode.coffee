@@ -34,7 +34,7 @@ count = 0
 
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console.
-  debug: false
+  debug: true
   @modes: []
 
   # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent.

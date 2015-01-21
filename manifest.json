@@ -48,6 +48,7 @@
              "content_scripts/mode_passkeys.js",
              "content_scripts/mode_find.js",
              "content_scripts/mode_visual.js",
+             "content_scripts/mode_edit.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["content_scripts/vimium.css"],

@@ -328,8 +328,11 @@ extend window,
   enterInsertMode: ->
     new InsertMode global: true
 
-  enterVisualMode: =>
+  enterVisualMode: ->
     new VisualMode()
+
+  enterEditMode: ->
+    @focusInput 1, EditMode
 
   focusInput: do ->
     # Track the most recently focused input element.
@@ -340,10 +343,11 @@ extend window,
         recentlyFocusedElement = event.target if DomUtils.isEditable event.target
         true
 
-    (count) ->
+    (count, mode = InsertMode) ->
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with
       # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
       # Pressing any other key will remove the overlays and the special tab behavior.
+      # If mode is provided, then enter that mode on exit.  Otherwise, just let insert mode take over.
       resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
       visibleInputs =
         for i in [0...resultSet.snapshotLength] by 1
@@ -395,8 +399,7 @@ extend window,
                 @exit()
                 @continueBubbling
 
-          @onExit -> DomUtils.removeElement hintContainingDiv
-          hintContainingDiv = DomUtils.addElementList hints,
+          @hintContainingDiv = DomUtils.addElementList hints,
             id: "vimiumInputMarkerContainer"
             className: "vimiumReset"
 
@@ -405,6 +408,13 @@ extend window,
             @exit()
           else
             hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+
+        exit: ->
+          super()
+          DomUtils.removeElement @hintContainingDiv
+          if mode and DomUtils.isEditable document.activeElement
+            new mode
+              singleton: document.activeElement
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
