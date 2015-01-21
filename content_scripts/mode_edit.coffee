@@ -1,11 +1,12 @@
 
-class EditMode extends Mode
+class EditMode extends Movement
   @activeElements = []
 
   constructor: (options = {}) ->
     defaults =
       name: "edit"
       exitOnEscape: true
+      alterMethod: "move"
       keydown: (event) => if @isActive() then @handleKeydown event else @continueBubbling
       keypress: (event) => if @isActive() then @handleKeypress event else @continueBubbling
       keyup: (event) => if @isActive() then @handleKeyup event else @continueBubbling
@@ -14,9 +15,12 @@ class EditMode extends Mode
     if @element and DomUtils.isEditable @element
       super extend defaults, options
 
-  handleKeydown: (event) -> @suppressEvent
-  handleKeypress: (event) -> @suppressEvent
-  handleKeyup: (event) -> @suppressEvent
+  handleKeydown: (event) ->
+    @stopBubblingAndTrue
+  handleKeypress: (event) ->
+    @suppressEvent
+  handleKeyup: (event) ->
+    @stopBubblingAndTrue
 
   isActive: ->
     document.activeElement and DomUtils.isDOMDescendant @element, document.activeElement
