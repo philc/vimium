@@ -50,26 +50,60 @@ class MaintainCount extends SuppressPrintable
 # This implements movement commands with count prefixes (using MaintainCount) for visual and edit modes.
 class Movement extends MaintainCount
 
+  other:
+    forward: "backward"
+    backward: "forward"
+
+  # Try to move one character in "direction".  Return 1, -1 or 0, indicating that the selection got bigger or
+  # smaller, or is unchanged.
+  moveInDirection: (direction, selection = window.getSelection()) ->
+    length = selection.toString().length
+    selection.modify "extend", direction, "character"
+    selection.toString().length - length
+
   # Get the direction of the selection, either "forward" or "backward".
   # FIXME(smblott).  There has to be a better way!
-  getDirection: (selection) ->
-    length = selection.toString().length
+  getDirection: (selection = window.getSelection()) ->
     # Try to move the selection forward, then check whether it got bigger or smaller (then restore it).
-    selection.modify "extend", "forward", "character"
-    if length != selection.toString().length
-      direction = if selection.toString().length < length then "backward" else "forward"
-      selection.modify "extend", "backward", "character"
-      direction
-    else
-      # If we can't move forward, we could be at the end of the document, so try moving backward instead.
-      selection.modify "extend", "backward", "character"
-      if length != selection.toString().length
-        direction = if selection.toString().length < length then "forward" else "backward"
-        selection.modify "extend", "forward", "character"
-        direction
-      else
-        # Surely one of those has to work.  What now?
-        "unknown"
+    success = @moveInDirection "forward", selection
+    if success
+      @moveInDirection "backward", selection
+      return if success < 0 then "backward" else "forward"
+
+    # If we can't move forward, we could be at the end of the document, so try moving backward instead.
+    success = @moveInDirection "backward", selection
+    if success
+      @moveInDirection "forward", selection
+      return if success < 0 then "forward" else "backward"
+
+    "none"
+
+  nextCharacter: (direction) ->
+    if @moveInDirection direction
+      text = window.getSelection().toString()
+      @moveInDirection @other[direction]
+      console.log text.charAt(if direction == "forward" then text.length - 1 else 0)
+      text.charAt(if @getDirection() == "forward" then text.length - 1 else 0)
+
+  moveByWord: (direction) ->
+    # We go to the end of the next word, then come back to the start of it.
+    movements = [ "#{direction} word", "#{@other[direction]} word" ]
+    # If we're in the middle of a word, then we need to first skip over it.
+    console.log @nextCharacter direction
+    switch direction
+      when "forward"
+        movements.unshift "#{direction} word" unless /\s/.test @nextCharacter direction
+      when "backward"
+        movements.push "#{direction} word" unless /\s/.test @nextCharacter direction
+    console.log movements
+    @runMovements movements
+
+  runMovement: (movement) ->
+    window.getSelection().modify @alterMethod, movement.split(" ")...
+
+  runMovements: (movements) ->
+    for movement in movements
+      @runMovement movement
 
   movements:
     "l": "forward character"
@@ -86,6 +120,9 @@ class Movement extends MaintainCount
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "g": "backward documentboundary"
+
+    "w": -> @moveByWord "forward"
+    "W": -> @moveByWord "backward"
 
     "o": ->
       selection = window.getSelection()
@@ -113,7 +150,7 @@ class Movement extends MaintainCount
               @runCountPrefixTimes =>
                 switch typeof @movements[keyChar]
                   when "string"
-                    window.getSelection().modify @alterMethod, @movements[keyChar].split(" ")...
+                    @runMovement @movements[keyChar]
                   when "function"
                     @movements[keyChar].call @
 
