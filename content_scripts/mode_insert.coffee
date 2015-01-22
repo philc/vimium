@@ -10,10 +10,11 @@ class InsertMode extends Mode
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
+      console.log "key", String.fromCharCode(event.charCode) if event.type == 'keypress'
       return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
       DomUtils.suppressKeyupAfterEscape handlerStack
       target = event.srcElement
-      if target and DomUtils.isFocusable target
+      if target and DomUtils.isFocusable(target) and @options.blurOnEscape
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
         # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
         # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
@@ -27,6 +28,7 @@ class InsertMode extends Mode
       keypress: handleKeyEvent
       keyup: handleKeyEvent
       keydown: handleKeyEvent
+      blurOnEscape: true
 
     super extend defaults, options
 
@@ -38,6 +40,7 @@ class InsertMode extends Mode
         null
 
     @push
+      _name: "mode-#{@id}-focus"
       "blur": (event) => @alwaysContinueBubbling =>
         target = event.target
         # We can't rely on focus and blur events arriving in the expected order.  When the active element
@@ -74,6 +77,7 @@ class InsertMode extends Mode
       if @permanent then Mode.updateBadge() else super()
 
   updateBadge: (badge) ->
+    badge.badge ||= @badge if @badge
     badge.badge ||= "I" if @isActive badge
 
   # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.

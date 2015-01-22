@@ -7,8 +7,12 @@ class SuppressPrintable extends Mode
     handler = (event) =>
       if KeyboardUtils.isPrintable event
         if event.type == "keydown"
-          DomUtils.suppressPropagation
-          @stopBubblingAndFalse
+          # Completely suppress Backspace and Delete.
+          if event.keyCode in [ 8, 46 ]
+            @suppressEvent
+          else
+            DomUtils.suppressPropagation
+            @stopBubblingAndFalse
         else
           false
       else
@@ -59,6 +63,13 @@ class Movement extends MaintainCount
     forward: backward
     backward: forward
 
+  # Call a function.  Return true if the selection changed.
+  selectionChanged: (func) ->
+    r = @selection.getRangeAt(0).cloneRange()
+    func()
+    rr = @selection.getRangeAt(0)
+    not (r.compareBoundaryPoints(Range.END_TO_END, rr) and r.compareBoundaryPoints Range.START_TO_START, rr)
+
   # Try to move one character in "direction".  Return 1, -1 or 0, indicating that the selection got bigger, or
   # smaller, or is unchanged.
   moveInDirection: (direction) ->
@@ -84,19 +95,19 @@ class Movement extends MaintainCount
       text.charAt if @getDirection() == forward then text.length - 1 else 0
 
   moveByWord: (direction) ->
-    # We go to the end of the next word, then come back to the start of it.
-    movements = [ "#{direction} word", "#{@opposite[direction]} word" ]
-    # If we're in the middle of a word, then we also need to skip over that one.
-    movements.unshift "#{direction} word" unless /\s/.test @nextCharacter direction
-    @runMovements movements
+    @runMovement "#{direction} word" unless /\s/.test @nextCharacter direction
+    while /\s/.test @nextCharacter direction
+      break unless @selectionChanged =>
+        @runMovement "#{direction} character"
 
-  # Run a movement command.  Return true if the length of the selection changed, false otherwise.
+  # Run a movement command.
   runMovement: (movement) ->
     length = @selection.toString().length
     @selection.modify @alterMethod, movement.split(" ")...
-    @selection.toString().length != length
+    @alterMethod == "move" or @selection.toString().length != length
 
   runMovements: (movements) ->
+    console.log movements
     for movement in movements
       break unless @runMovement movement
 
@@ -107,6 +118,7 @@ class Movement extends MaintainCount
     "k": "backward line"
     "e": "forward word"
     "b": "backward word"
+    "B": "backward word"
     ")": "forward sentence"
     "(": "backward sentence"
     "}": "forward paragraph"
@@ -115,44 +127,16 @@ class Movement extends MaintainCount
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "g": "backward documentboundary"
-
     "w": -> @moveByWord forward
-    "W": -> @moveByWord backward
+    "W": -> @moveByWord forward
 
     "o": ->
-      # Swap the anchor and focus.
+      # Swap the anchor and focus.  This is too slow if the selection is large.
+      direction = @getDirection()
       length = @selection.toString().length
-      switch @getDirection()
-        when forward
-          @selection.collapseToEnd()
-          # FIXME(smblott). This is super slow if the selection is large.
-          @selection.modify "extend", backward, character for [0...length]
-        when backward
-          @selection.collapseToStart()
-          @selection.modify "extend", forward, character for [0...length]
-          # Faster, but doesn't always work...
-          # @selection.extend @selection.anchorNode, length
-      return
-      # Note(smblott). I can't find an efficient approach which works for all cases, so we have to implement
-      # each case separately.
-      # FIXME: This is broken if the selection is in an input area.
-      original = @selection.getRangeAt 0
-      switch @getDirection()
-        when forward
-          range = original.cloneRange()
-          range.collapse false
-          @selection.removeAllRanges()
-          @selection.addRange range
-          @selection.extend original.startContainer, original.startOffset
-        when backward
-          range = document.createRange()
-          range.setStart @selection.focusNode, @selection.focusOffset
-          range.setEnd @selection.anchorNode, @selection.anchorOffset
-          @selection.removeAllRanges()
-          @selection.addRange range
-      return
+      @selection[if direction == forward then "collapseToEnd" else "collapseToStart"]()
+      @selection.modify "extend", @opposite[direction], character for [0...length]
 
-  # TODO(smblott). What do we do if there is no initial selection?  Or multiple ranges?
   constructor: (options) ->
     @alterMethod = options.alterMethod || "extend"
     super options
@@ -171,10 +155,7 @@ class Movement extends MaintainCount
                     @runMovement @movements[keyChar]
                   when "function"
                     @movements[keyChar].call @
-              # Try to scroll the leading end of the selection into view.  getLeadingElement() seems to work
-              # most, but not all, of the time.
-              leadingElement = @getLeadingElement @selection
-              Scroller.scrollIntoView leadingElement if leadingElement
+              @scrollIntoView()
 
   # Adapted from: http://roysharon.com/blog/37.
   # I have no idea how this works (smblott, 2015/1/22).
@@ -189,6 +170,21 @@ class Movement extends MaintainCount
     o = o.previousSibling while o and o.nodeType != 1
     t = o || t?.parentNode
     t
+
+  # Try to scroll the leading end of the selection into view.
+  scrollIntoView: ->
+    if document.activeElement and DomUtils.isEditable document.activeElement
+      element = document.activeElement
+      if element.clientHeight < element.scrollHeight
+        if element.isContentEditable
+          # How do we do this?
+        else
+          coords = DomUtils.getCaretCoordinates element, element.selectionStart
+          Scroller.scrollToPosition element, coords.top, coords.left
+    else
+      # getLeadingElement() seems to work most, but not all, of the time.
+      leadingElement = @getLeadingElement @selection
+      Scroller.scrollIntoView leadingElement if leadingElement
 
 class VisualMode extends Movement
   constructor: (options = {}) ->
@@ -207,7 +203,6 @@ class VisualMode extends Movement
       name: "visual"
       badge: "V"
       exitOnEscape: true
-      exitOnBlur: options.targetElement
       alterMethod: "extend"
 
       keypress: (event) =>
@@ -220,16 +215,18 @@ class VisualMode extends Movement
                   handler: "copyToClipboard"
                   data: text
                 @exit()
-                handlerStack.push keyup: => false
                 length = text.length
                 suffix = if length == 1 then "" else "s"
                 text = text[...12] + "..." if 15 < length
+                text = text.replace /\n/g, " "
                 HUD.showForDuration "Yanked #{length} character#{suffix}: \"#{text}\".", 2500
 
     super extend defaults, options
     @debug = true
 
-    # FIXME(smblott).
+    # FIXME(smblott).  We can't handle the selection changing with the mouse while while visual-mode is
+    # active.  This "fix" doesn't work.
+    # work.
     # onMouseUp = (event) =>
     #   @alwaysContinueBubbling =>
     #     if event.which == 1
@@ -249,33 +246,42 @@ class EditMode extends Movement
   constructor: (options = {}) ->
     defaults =
       name: "edit"
+      badge: "E"
       exitOnEscape: true
       alterMethod: "move"
-      keydown: (event) => if @isActive() then @handleKeydown event else @continueBubbling
-      keypress: (event) => if @isActive() then @handleKeypress event else @continueBubbling
-      keyup: (event) => if @isActive() then @handleKeyup event else @continueBubbling
 
+    @debug = true
     @element = document.activeElement
-    if @element and DomUtils.isEditable @element
-      super extend defaults, options
+    return unless @element and DomUtils.isEditable @element
+    super extend defaults, options
+    handlerStack.debug = true
 
-  handleKeydown: (event) ->
-    @stopBubblingAndTrue
-  handleKeypress: (event) ->
-    @suppressEvent
-  handleKeyup: (event) ->
-    @stopBubblingAndTrue
-
-  isActive: ->
-    document.activeElement and DomUtils.isDOMDescendant @element, document.activeElement
+    extend @movements,
+      "i": => @enterInsertMode()
+      "a": => @enterInsertMode()
+      "o": => @openLine forward
+      "O": => @openLine backward
 
   exit: (event, target) ->
     super()
     @element.blur() if target? and DomUtils.isDOMDescendant @element, target
     EditMode.activeElements = EditMode.activeElements.filter (element) => element != @element
 
-  updateBadge: (badge) ->
-    badge.badge = "E" if @isActive()
+  enterInsertMode: ->
+    new InsertMode
+      badge: "I"
+      blurOnEscape: false
+
+  openLine: (direction) ->
+    @runMovement "#{direction} lineboundary"
+    @enterInsertMode()
+    @simulateTextEntry "\n"
+    @runMovement "backward character" if direction == backward
+
+  simulateTextEntry: (text) ->
+    event = document.createEvent "TextEvent"
+    event.initTextEvent "textInput", true, true, null, text
+    document.activeElement.dispatchEvent event
 
 root = exports ? window
 root.VisualMode = VisualMode

@@ -397,7 +397,8 @@ extend window,
                 @suppressEvent
               else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
                 @exit()
-                @continueBubbling
+                # Give the new mode the opportunity to handle the event.
+                @restartBubbling
 
           @hintContainingDiv = DomUtils.addElementList hints,
             id: "vimiumInputMarkerContainer"

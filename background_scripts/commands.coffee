@@ -198,7 +198,10 @@ defaultKeyMappings =
 
   "i": "enterInsertMode"
   "v": "enterVisualMode"
+  # NOTE(smblott).  We'll try two default bindings for enterEditMode, and see which ends up feeling mode
+  # natural.
   "gv": "enterEditMode"
+  "e": "enterEditMode"
 
   "H": "goBack"
   "L": "goForward"

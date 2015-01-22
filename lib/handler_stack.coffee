@@ -39,6 +39,7 @@ class HandlerStack
   # @stopBubblingAndTrue.
   bubbleEvent: (type, event) ->
     @eventNumber += 1
+    eventNumber = @eventNumber
     # We take a copy of the array in order to avoid interference from concurrent removes (for example, to
     # avoid calling the same handler twice, because elements have been spliced out of the array by remove).
     for handler in @stack[..].reverse()
@@ -46,7 +47,7 @@ class HandlerStack
       if handler?.id and handler[type]
         @currentId = handler.id
         result = handler[type].call @, event
-        @logResult type, event, handler, result if @debug
+        @logResult eventNumber, type, event, handler, result if @debug
         if not result
           DomUtils.suppressEvent event  if @isChromeEvent event
           return false
@@ -81,7 +82,7 @@ class HandlerStack
     false
 
   # Debugging.
-  logResult: (type, event, handler, result) ->
+  logResult: (eventNumber, type, event, handler, result) ->
     # FIXME(smblott).  Badge updating is too noisy, so we filter it out.  However, we do need to look at how
     # many badge update events are happening.  It seems to be more than necessary. We also filter out
     # registerKeyQueue as unnecessarily noisy and not particularly helpful.
@@ -93,7 +94,12 @@ class HandlerStack
         when @restartBubbling then "rebubble"
         when true then "continue"
     label ||= if result then "continue/truthy" else "suppress"
-    console.log "#{@eventNumber}", type, handler._name, label
+    console.log "#{eventNumber}", type, handler._name, label
+
+  show: ->
+    console.log "#{@eventNumber}:"
+    for handler in @stack[..].reverse()
+      console.log "  ", handler._name
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()

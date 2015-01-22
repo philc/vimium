@@ -254,5 +254,18 @@ Scroller =
     else if window.innerHeight < rect.bottom
       CoreScroller.scroll activatedElement, "y", 50 + rect.bottom - window.innerHeight, false
 
+  scrollToPosition: (element, top, left) ->
+    padding = 20
+    bottom = top + padding
+    right = left + padding
+
+    element.scrollTop = top if top <= element.scrollTop
+    element.scrollLeft = left if left <= element.scrollLeft
+
+    if element.scrollTop + element.clientHeight <= bottom
+      element.scrollTop = bottom - element.clientHeight
+    if element.scrollLeft + element.clientWidth <= right
+      element.scrollLeft = right - element.clientWidth
+
 root = exports ? window
 root.Scroller = Scroller
