@@ -71,5 +71,63 @@ class Movement extends MaintainCount
                 else if "function" == typeof @movements[keyChar]
                   @movements[keyChar]()
 
+class VisualMode extends Movement
+  constructor: (options = {}) ->
+    defaults =
+      name: "visual"
+      badge: "V"
+      exitOnEscape: true
+      exitOnBlur: options.targetElement
+      alterMethod: "extend"
+
+      keypress: (event) =>
+        @alwaysContinueBubbling =>
+          unless event.metaKey or event.ctrlKey or event.altKey
+            switch String.fromCharCode event.charCode
+              when "y"
+                chrome.runtime.sendMessage
+                  handler: "copyToClipboard"
+                  data: window.getSelection().toString()
+                @exit()
+                # TODO(smblott). Suppress next keyup.
+
+    super extend defaults, options
+    @debug = true
+
+class EditMode extends Movement
+  @activeElements = []
+
+  constructor: (options = {}) ->
+    defaults =
+      name: "edit"
+      exitOnEscape: true
+      alterMethod: "move"
+      keydown: (event) => if @isActive() then @handleKeydown event else @continueBubbling
+      keypress: (event) => if @isActive() then @handleKeypress event else @continueBubbling
+      keyup: (event) => if @isActive() then @handleKeyup event else @continueBubbling
+
+    @element = document.activeElement
+    if @element and DomUtils.isEditable @element
+      super extend defaults, options
+
+  handleKeydown: (event) ->
+    @stopBubblingAndTrue
+  handleKeypress: (event) ->
+    @suppressEvent
+  handleKeyup: (event) ->
+    @stopBubblingAndTrue
+
+  isActive: ->
+    document.activeElement and DomUtils.isDOMDescendant @element, document.activeElement
+
+  exit: (event, target) ->
+    super()
+    @element.blur() if target? and DomUtils.isDOMDescendant @element, target
+    EditMode.activeElements = EditMode.activeElements.filter (element) => element != @element
+
+  updateBadge: (badge) ->
+    badge.badge = "E" if @isActive()
+
 root = exports ? window
-root.Movement = Movement
+root.VisualMode = VisualMode
+root.EditMode = EditMode
