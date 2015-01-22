@@ -121,8 +121,21 @@ class Movement extends MaintainCount
 
     "o": ->
       # Swap the anchor and focus.
-      # Note(smblott). I can't find an approach which works for both cases, so we have to implement each case
-      # separately.
+      length = @selection.toString().length
+      switch @getDirection()
+        when forward
+          @selection.collapseToEnd()
+          # FIXME(smblott). This is super slow if the selection is large.
+          @selection.modify "extend", backward, character for [0...length]
+        when backward
+          @selection.collapseToStart()
+          @selection.modify "extend", forward, character for [0...length]
+          # Faster, but doesn't always work...
+          # @selection.extend @selection.anchorNode, length
+      return
+      # Note(smblott). I can't find an efficient approach which works for all cases, so we have to implement
+      # each case separately.
+      # FIXME: This is broken if the selection is in an input area.
       original = @selection.getRangeAt 0
       switch @getDirection()
         when forward
@@ -137,6 +150,7 @@ class Movement extends MaintainCount
           range.setEnd @selection.anchorNode, @selection.anchorOffset
           @selection.removeAllRanges()
           @selection.addRange range
+      return
 
   # TODO(smblott). What do we do if there is no initial selection?  Or multiple ranges?
   constructor: (options) ->
@@ -186,7 +200,7 @@ class VisualMode extends Movement
       return
 
     # Try to start with a visible selection.
-    if type == "Caret" or @selection.isCollapsed
+    if type == "Caret" # or @selection.isCollapsed (broken if selection is in and input)
       @moveInDirection(forward) or @moveInDirection backward
 
     defaults =
