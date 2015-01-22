@@ -146,7 +146,7 @@ CoreScroller =
   calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, or too fast.
 
   # Scroll element by a relative amount (a number) in some direction.
-  scroll: (element, direction, amount) ->
+  scroll: (element, direction, amount, continuous = true) ->
     return unless amount
 
     unless @settings.get "smoothScroll"
@@ -202,6 +202,10 @@ CoreScroller =
         # We're done.
         checkVisibility element
 
+    # If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test always
+    # fails.
+    ++@time unless continuous
+
     # Launch animator.
     requestAnimationFrame animate
 
@@ -241,6 +245,14 @@ Scroller =
     element = findScrollableElement activatedElement, direction, pos, 1
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
+
+  scrollIntoView: (element) ->
+    activatedElement ||= document.body and firstScrollableElement()
+    rect = element.getBoundingClientRect()
+    if rect.top < 0
+      CoreScroller.scroll activatedElement, "y", rect.top - 50, false
+    else if window.innerHeight < rect.bottom
+      CoreScroller.scroll activatedElement, "y", 50 + rect.bottom - window.innerHeight, false
 
 root = exports ? window
 root.Scroller = Scroller

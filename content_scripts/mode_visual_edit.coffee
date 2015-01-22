@@ -8,9 +8,9 @@ class SuppressPrintable extends Mode
       if KeyboardUtils.isPrintable event
         if event.type == "keydown"
           DomUtils.suppressPropagation
-          @stopBubblingAndTrue
+          @stopBubblingAndFalse
         else
-          @suppressEvent
+          false
       else
         @stopBubblingAndTrue
 
@@ -25,7 +25,7 @@ class SuppressPrintable extends Mode
     super options
     @onExit => handlerStack.remove @suppressPrintableHandlerId
 
-# This watches keyboard events and maintains @countPrefix as count and other keys are pressed.
+# This watches keyboard events and maintains @countPrefix as number and other keys are pressed.
 class MaintainCount extends SuppressPrintable
   constructor: (options) ->
     @countPrefix = ""
@@ -47,63 +47,57 @@ class MaintainCount extends SuppressPrintable
     count = if 0 < @countPrefix.length then parseInt @countPrefix else 1
     func() for [0...count]
 
-# This implements movement commands with count prefixes (using MaintainCount) for visual and edit modes.
+forward = "forward"
+backward = "backward"
+character = "character"
+
+# This implements movement commands with count prefixes (using MaintainCount) for both visual mode and edit
+# mode.
 class Movement extends MaintainCount
 
-  other:
-    forward: "backward"
-    backward: "forward"
+  opposite:
+    forward: backward
+    backward: forward
 
-  # Try to move one character in "direction".  Return 1, -1 or 0, indicating that the selection got bigger or
+  # Try to move one character in "direction".  Return 1, -1 or 0, indicating that the selection got bigger, or
   # smaller, or is unchanged.
-  moveInDirection: (direction, selection = window.getSelection()) ->
-    length = selection.toString().length
-    selection.modify "extend", direction, "character"
-    selection.toString().length - length
+  moveInDirection: (direction) ->
+    length = @selection.toString().length
+    @selection.modify "extend", direction, character
+    @selection.toString().length - length
 
-  # Get the direction of the selection, either "forward" or "backward".
+  # Get the direction of the selection, either forward or backward.
   # FIXME(smblott).  There has to be a better way!
-  getDirection: (selection = window.getSelection()) ->
-    # Try to move the selection forward, then check whether it got bigger or smaller (then restore it).
-    success = @moveInDirection "forward", selection
-    if success
-      @moveInDirection "backward", selection
-      return if success < 0 then "backward" else "forward"
-
-    # If we can't move forward, we could be at the end of the document, so try moving backward instead.
-    success = @moveInDirection "backward", selection
-    if success
-      @moveInDirection "forward", selection
-      return if success < 0 then "forward" else "backward"
-
-    "none"
+  getDirection: ->
+    # Try to move the selection forward or backward, then check whether it got bigger or smaller (then restore
+    # it).
+    for type in [ forward, backward ]
+      if success = @moveInDirection type
+        @moveInDirection @opposite[type]
+        return if 0 < success then type else @opposite[type]
 
   nextCharacter: (direction) ->
     if @moveInDirection direction
-      text = window.getSelection().toString()
-      @moveInDirection @other[direction]
-      console.log text.charAt(if direction == "forward" then text.length - 1 else 0)
-      text.charAt(if @getDirection() == "forward" then text.length - 1 else 0)
+      text = @selection.toString()
+      @moveInDirection @opposite[direction]
+      text.charAt if @getDirection() == forward then text.length - 1 else 0
 
   moveByWord: (direction) ->
     # We go to the end of the next word, then come back to the start of it.
-    movements = [ "#{direction} word", "#{@other[direction]} word" ]
-    # If we're in the middle of a word, then we need to first skip over it.
-    console.log @nextCharacter direction
-    switch direction
-      when "forward"
-        movements.unshift "#{direction} word" unless /\s/.test @nextCharacter direction
-      when "backward"
-        movements.push "#{direction} word" unless /\s/.test @nextCharacter direction
-    console.log movements
+    movements = [ "#{direction} word", "#{@opposite[direction]} word" ]
+    # If we're in the middle of a word, then we also need to skip over that one.
+    movements.unshift "#{direction} word" unless /\s/.test @nextCharacter direction
     @runMovements movements
 
+  # Run a movement command.  Return true if the length of the selection changed, false otherwise.
   runMovement: (movement) ->
-    window.getSelection().modify @alterMethod, movement.split(" ")...
+    length = @selection.toString().length
+    @selection.modify @alterMethod, movement.split(" ")...
+    @selection.toString().length != length
 
   runMovements: (movements) ->
     for movement in movements
-      @runMovement movement
+      break unless @runMovement movement
 
   movements:
     "l": "forward character"
@@ -121,19 +115,19 @@ class Movement extends MaintainCount
     "G": "forward documentboundary"
     "g": "backward documentboundary"
 
-    "w": -> @moveByWord "forward"
-    "W": -> @moveByWord "backward"
+    "w": -> @moveByWord forward
+    "W": -> @moveByWord backward
 
     "o": ->
-      selection = window.getSelection()
-      length = selection.toString().length
-      switch @getDirection selection
-        when "forward"
-          selection.collapseToEnd()
-          selection.modify "extend", "backward", "character" for [0...length]
-        when "backward"
-          selection.collapseToStart()
-          selection.modify "extend", "forward", "character" for [0...length]
+      # FIXME(smblott).  This is super slow if the selection is large.
+      length = @selection.toString().length
+      switch @getDirection()
+        when forward
+          @selection.collapseToEnd()
+          @selection.modify "extend", backward, character for [0...length]
+        when backward
+          @selection.collapseToStart()
+          @selection.modify "extend", forward, character for [0...length]
 
   # TODO(smblott). What do we do if there is no initial selection?  Or multiple ranges?
   constructor: (options) ->
@@ -147,15 +141,45 @@ class Movement extends MaintainCount
           unless event.metaKey or event.ctrlKey or event.altKey
             keyChar = String.fromCharCode event.charCode
             if @movements[keyChar]
+              @selection = window.getSelection()
               @runCountPrefixTimes =>
                 switch typeof @movements[keyChar]
                   when "string"
                     @runMovement @movements[keyChar]
                   when "function"
                     @movements[keyChar].call @
+              # Try to scroll the leading end of the selection into view.  getLeadingElement() seems to work
+              # most, but not all, of the time.
+              leadingElement = @getLeadingElement @selection
+              Scroller.scrollIntoView leadingElement if leadingElement
+
+  # Adapted from: http://roysharon.com/blog/37.
+  # I have no idea how this works (smblott, 2015/1/22).
+  getLeadingElement: (selection) ->
+    r = t = selection.getRangeAt 0
+    if selection.type == "Range"
+      r = t.cloneRange()
+      r.collapse @getDirection() == backward
+    t = r.startContainer
+    t = t.childNodes[r.startOffset] if t.nodeType == 1
+    o = t
+    o = o.previousSibling while o and o.nodeType != 1
+    t = o || t?.parentNode
+    t
 
 class VisualMode extends Movement
   constructor: (options = {}) ->
+    @selection = window.getSelection()
+    type = @selection.type
+
+    if type == "None"
+      HUD.showForDuration "An initial selection is required for visual mode.", 2500
+      return
+
+    # Try to start with a visible selection.
+    if type == "Caret" or @selection.isCollapsed
+      @moveInDirection(forward) or @moveInDirection backward
+
     defaults =
       name: "visual"
       badge: "V"
@@ -168,14 +192,33 @@ class VisualMode extends Movement
           unless event.metaKey or event.ctrlKey or event.altKey
             switch String.fromCharCode event.charCode
               when "y"
+                text = window.getSelection().toString()
                 chrome.runtime.sendMessage
                   handler: "copyToClipboard"
-                  data: window.getSelection().toString()
+                  data: text
                 @exit()
-                # TODO(smblott). Suppress next keyup.
+                handlerStack.push keyup: => false
+                length = text.length
+                suffix = if length == 1 then "" else "s"
+                text = text[...12] + "..." if 15 < length
+                HUD.showForDuration "Yanked #{length} character#{suffix}: \"#{text}\".", 2500
 
     super extend defaults, options
     @debug = true
+
+    # FIXME(smblott).
+    # onMouseUp = (event) =>
+    #   @alwaysContinueBubbling =>
+    #     if event.which == 1
+    #       window.removeEventListener onMouseUp
+    #       new VisualMode @options
+    # window.addEventListener "mouseup", onMouseUp, true
+
+  exit: ->
+    super()
+    unless @options.underEditMode
+      if document.activeElement and DomUtils. isEditable document.activeElement
+        document.activeElement.blur()
 
 class EditMode extends Movement
   @activeElements = []

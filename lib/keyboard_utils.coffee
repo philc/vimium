@@ -59,7 +59,12 @@ KeyboardUtils =
   # identify any of chrome's own keyboard shortcuts as printable.
   isPrintable: (event) ->
     return false if event.metaKey or event.ctrlKey or event.altKey
-    @getKeyChar(event)?.length == 1
+    keyChar =
+      if event.type == "keypress"
+        String.fromCharCode event.charCode
+      else
+        @getKeyChar event
+    keyChar.length == 1
 
 KeyboardUtils.init()
 
