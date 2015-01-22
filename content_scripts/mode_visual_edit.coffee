@@ -68,6 +68,7 @@ class Movement extends MaintainCount
 
   # Get the direction of the selection, either forward or backward.
   # FIXME(smblott).  There has to be a better way!
+  # NOTE(smblott).  There is. See here: https://dom.spec.whatwg.org/#interface-range.
   getDirection: ->
     # Try to move the selection forward or backward, then check whether it got bigger or smaller (then restore
     # it).
@@ -119,15 +120,23 @@ class Movement extends MaintainCount
     "W": -> @moveByWord backward
 
     "o": ->
-      # FIXME(smblott).  This is super slow if the selection is large.
-      length = @selection.toString().length
+      # Swap the anchor and focus.
+      # Note(smblott). I can't find an approach which works for both cases, so we have to implement each case
+      # separately.
+      original = @selection.getRangeAt 0
       switch @getDirection()
         when forward
-          @selection.collapseToEnd()
-          @selection.modify "extend", backward, character for [0...length]
+          range = original.cloneRange()
+          range.collapse false
+          @selection.removeAllRanges()
+          @selection.addRange range
+          @selection.extend original.startContainer, original.startOffset
         when backward
-          @selection.collapseToStart()
-          @selection.modify "extend", forward, character for [0...length]
+          range = document.createRange()
+          range.setStart @selection.focusNode, @selection.focusOffset
+          range.setEnd @selection.anchorNode, @selection.anchorOffset
+          @selection.removeAllRanges()
+          @selection.addRange range
 
   # TODO(smblott). What do we do if there is no initial selection?  Or multiple ranges?
   constructor: (options) ->
