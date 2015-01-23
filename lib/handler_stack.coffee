@@ -54,6 +54,8 @@ class HandlerStack
         return true if result == @stopBubblingAndTrue
         return false if result == @stopBubblingAndFalse
         return @bubbleEvent type, event if result == @restartBubbling
+      else
+        @logResult eventNumber, type, event, handler, "skip" if @debug
     true
 
   remove: (id = @currentId) ->
@@ -92,6 +94,7 @@ class HandlerStack
         when @stopBubblingAndTrue then "stop/true"
         when @stopBubblingAndFalse then "stop/false"
         when @restartBubbling then "rebubble"
+        when "skip" then "skip"
         when true then "continue"
     label ||= if result then "continue/truthy" else "suppress"
     console.log "#{eventNumber}", type, handler._name, label

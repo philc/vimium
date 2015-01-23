@@ -246,26 +246,38 @@ Scroller =
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
 
+  # FIXME(smblott). Implement scroll in the "x" dimension.
   scrollIntoView: (element) ->
     activatedElement ||= document.body and firstScrollableElement()
     rect = element.getBoundingClientRect()
+    direction = "y"
     if rect.top < 0
-      CoreScroller.scroll activatedElement, "y", rect.top - 50, false
+      amount = rect.top - 10
+      element = findScrollableElement element, direction, amount, 1
+      CoreScroller.scroll element, direction, amount, false
     else if window.innerHeight < rect.bottom
-      CoreScroller.scroll activatedElement, "y", 50 + rect.bottom - window.innerHeight, false
+      amount = rect.bottom - window.innerHeight + 10
+      element = findScrollableElement element, direction, amount, 1
+      CoreScroller.scroll element, direction, amount, false
 
   scrollToPosition: (element, top, left) ->
-    padding = 20
-    bottom = top + padding
-    right = left + padding
+    activatedElement ||= document.body and firstScrollableElement()
 
-    element.scrollTop = top if top <= element.scrollTop
-    element.scrollLeft = left if left <= element.scrollLeft
+    # Scroll down, "y".
+    amount = top + 20 - (element.clientHeight + element.scrollTop)
+    CoreScroller.scroll element, "y", amount, false if 0 < amount
 
-    if element.scrollTop + element.clientHeight <= bottom
-      element.scrollTop = bottom - element.clientHeight
-    if element.scrollLeft + element.clientWidth <= right
-      element.scrollLeft = right - element.clientWidth
+    # Scroll up, "y".
+    amount = top - (element.scrollTop) - 5
+    CoreScroller.scroll element, "y", amount, false if amount < 0
+
+    # Scroll down, "x".
+    amount = left + 20 - (element.clientWidth + element.scrollLeft)
+    CoreScroller.scroll element, "x", amount, false if 0 < amount
+
+    # Scroll up, "x".
+    amount = left - (element.scrollLeft) - 5
+    CoreScroller.scroll element, "x", amount, false if amount < 0
 
 root = exports ? window
 root.Scroller = Scroller

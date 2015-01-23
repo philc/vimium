@@ -20,7 +20,7 @@ class SuppressPrintable extends Mode
     # This is pushed onto the handler stack before calling super().  Therefore, it ends up underneath (or
     # after) all of the other handlers associated with the mode.
     @suppressPrintableHandlerId = handlerStack.push
-      _name: "movement/suppress-printable"
+      _name: "#{@id}/suppress-printable"
       keydown: handler
       keypress: handler
       keyup: handler
@@ -31,17 +31,20 @@ class SuppressPrintable extends Mode
 # This watches keyboard events and maintains @countPrefix as number keys and other keys are pressed.
 class MaintainCount extends SuppressPrintable
   constructor: (options) ->
-    @countPrefix = ""
+    @countPrefix = options.initialCount || ""
     super options
 
     @push
-      _name: "movement/maintain-count"
+      _name: "#{@id}/maintain-count"
       keypress: (event) =>
         @alwaysContinueBubbling =>
           unless event.metaKey or event.ctrlKey or event.altKey
             keyChar = String.fromCharCode event.charCode
             @countPrefix =
               if keyChar and keyChar.length == 1 and "0" <= keyChar <= "9"
+                if @options.initialCount
+                  @countPrefix = ""
+                  delete @options.initialCount
                 @countPrefix + keyChar
               else
                 ""
@@ -112,17 +115,16 @@ class Movement extends MaintainCount
     "k": "backward line"
     "e": "forward word"
     "b": "backward word"
-    "B": "backward word"
+    "w": -> @moveForwardWord()
     ")": "forward sentence"
     "(": "backward sentence"
     "}": "forward paragraph"
     "{": "backward paragraph"
     "$": "forward lineboundary"
     "0": "backward lineboundary"
-    "w": -> @moveForwardWord()
-    "o": -> @swapFocusAndAnchor()
     "G": "forward documentboundary"
     "gg": "backward documentboundary"
+    "o": -> @swapFocusAndAnchor()
 
   constructor: (options) ->
     @movements = extend {}, @movements
@@ -130,25 +132,37 @@ class Movement extends MaintainCount
     @alterMethod = options.alterMethod || "extend"
     @keyQueue = ""
     @yankedText = ""
-    super extend options,
+    super extend options
+
+    @push
+      _name: "#{@id}/keypress"
       keypress: (event) =>
-        @alwaysContinueBubbling =>
-          unless event.metaKey or event.ctrlKey or event.altKey
-            @keyQueue += String.fromCharCode event.charCode
-            @keyQueue = @keyQueue.slice Math.max 0, @keyQueue.length - 3
-            for keyChar in (@keyQueue[i..] for i in [0...@keyQueue.length])
-              if @movements[keyChar] or @commands[keyChar]
-                @keyQueue = ""
-                if @commands[keyChar]
-                  @commands[keyChar].call @
-                else if @movements[keyChar]
-                  @selection = window.getSelection()
-                  @runCountPrefixTimes =>
-                    switch typeof @movements[keyChar]
-                      when "string" then @runMovement @movements[keyChar]
-                      when "function" then @movements[keyChar].call @
-                  @scrollIntoView()
-                break
+        unless event.metaKey or event.ctrlKey or event.altKey
+          @keyQueue += String.fromCharCode event.charCode
+          # We allow at most three characters for a command or movement mapping.
+          @keyQueue = @keyQueue.slice Math.max 0, @keyQueue.length - 3
+          # Try each possible multi-character keyChar sequence, from longest to shortest.
+          for keyChar in (@keyQueue[i..] for i in [0...@keyQueue.length])
+            if @movements[keyChar] or @commands[keyChar]
+              @keyQueue = ""
+              @selection = window.getSelection()
+
+              if @commands[keyChar]
+                @commands[keyChar].call @
+                @scrollIntoView()
+                return @suppressEvent
+
+              else if @movements[keyChar]
+                @runCountPrefixTimes =>
+                  switch typeof @movements[keyChar]
+                    when "string" then @runMovement @movements[keyChar]
+                    when "function" then @movements[keyChar].call @
+                @scrollIntoView()
+                if @options.singleMovement
+                  @yank()
+                  return @suppressEvent
+
+        @continueBubbling
 
     # Aliases.
     @movements.B = @movements.b
@@ -156,6 +170,7 @@ class Movement extends MaintainCount
 
   yank: (args = {}) ->
     @yankedText = text = window.getSelection().toString()
+    console.log "yank:", text
     @selection.deleteFromDocument() if args.deleteFromDocument
     @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
     @yankedText
@@ -165,6 +180,9 @@ class Movement extends MaintainCount
       @runMovement "#{direction} lineboundary"
       @swapFocusAndAnchor()
     @lastYankedLine = @yank()
+
+  enterInsertMode: ->
+    new InsertMode { badge: "I", blurOnEscape: false }
 
   # Adapted from: http://roysharon.com/blog/37.
   # I have no idea how this works (smblott, 2015/1/22).
@@ -224,28 +242,31 @@ class VisualMode extends Movement
     if @options.underEditMode
       extend @commands,
         "d": => @yank deleteFromDocument: true
+        "c": => @yank deleteFromDocument: true; @enterInsertMode()
 
   yank: (args...) ->
     text = super args...
-    unless @options.underEditMode
-      length = text.length
-      text = text.replace /\s+/g, " "
-      text = text[...12] + "..." if 15 < length
-      HUD.showForDuration "Yanked #{length} character#{if length == 1 then "" else "s"}: \"#{text}\".", 2500
+    length = text.length
+    text = text.replace /\s+/g, " "
+    text = text[...12] + "..." if 15 < length
+    HUD.showForDuration "Yanked #{length} character#{if length == 1 then "" else "s"}: \"#{text}\".", 2500
     @exit()
 
   exit: (event) ->
     super()
-    if @options.underEditMode
-      direction = @getDirection()
-      @selection[if direction == backward then "collapseToEnd" else "collapseToStart"]()
-    else
+    unless @options.underEditMode
       if document.activeElement and DomUtils.isEditable document.activeElement
         document.activeElement.blur()
-    # Now we set the clipboard.  No operations which maniplulate the selection should follow this.
-    console.log "yank:", @yankedText.length, @yankedText
+    # Now set the clipboard.  No operations which maniplulate the selection should follow this.
     chrome.runtime.sendMessage { handler: "copyToClipboard", data: @yankedText } if @yankedText
 
+class VisualModeForEdit extends VisualMode
+  constructor: (options = {}) ->
+    super extend options, underEditMode: true
+
+  exit: (args...) ->
+    @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
+    super args...
 
 class EditMode extends Movement
   constructor: (options = {}) ->
@@ -266,11 +287,15 @@ class EditMode extends Movement
       "O": => @openLine backward
       "p": => @pasteClipboard forward
       "P": => @pasteClipboard backward
-      "v": -> new VisualMode underEditMode: true
-      "yy": => @withRangeSelection => @yankLine()
+      "v": -> new VisualModeForEdit
+      "Y": => @withRangeSelection => @yankLine()
+      "y": =>
+        new VisualModeForEdit
+          singleMovement: true
+          initialCount: @countPrefix
 
-    # Aliases.
-    @commands.Y = @commands.yy
+    # # Aliases.
+    # @commands.Y = @commands.yy
 
   pasteClipboard: (direction) ->
     text = Clipboard.paste @element
@@ -286,9 +311,6 @@ class EditMode extends Movement
     @enterInsertMode()
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement "backward character" if direction == backward
-
-  enterInsertMode: ->
-    new InsertMode { badge: "I", blurOnEscape: false }
 
   withRangeSelection: (func) ->
     @alterMethod = "extend"
