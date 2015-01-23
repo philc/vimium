@@ -231,6 +231,11 @@ DomUtils =
         @remove()
         false
 
+  simulateTextEntry: (element, text) ->
+    event = document.createEvent "TextEvent"
+    event.initTextEvent "textInput", true, true, null, text
+    element.dispatchEvent event
+
 extend DomUtils,
   # From: https://github.com/component/textarea-caret-position/blob/master/index.js
   getCaretCoordinates: do ->

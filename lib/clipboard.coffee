@@ -15,13 +15,15 @@ Clipboard =
     document.execCommand("Copy")
     document.body.removeChild(textArea)
 
-  paste: ->
+  paste: (refocusElement = null) ->
     textArea = @._createTextArea()
     document.body.appendChild(textArea)
     textArea.focus()
     document.execCommand("Paste")
     value = textArea.value
     document.body.removeChild(textArea)
+    # The caller wants this element refocused.
+    refocusElement.focus() if refocusElement
     value
 
 
