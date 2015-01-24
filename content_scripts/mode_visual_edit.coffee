@@ -1,4 +1,12 @@
 
+# To do:
+# - handle edit-mode losing the focus
+# - line-visual mode
+# - definition of a line.
+# - better implementation of `o`
+# - caret mode
+# - yy
+
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
 class SuppressPrintable extends Mode
@@ -19,14 +27,14 @@ class SuppressPrintable extends Mode
 
     # This is pushed onto the handler stack before calling super().  Therefore, it ends up underneath (or
     # after) all of the other handlers associated with the mode.
-    @suppressPrintableHandlerId = handlerStack.push
+    handlerId = handlerStack.push
       _name: "#{@id}/suppress-printable"
       keydown: handler
       keypress: handler
       keyup: handler
 
     super options
-    @onExit => handlerStack.remove @suppressPrintableHandlerId
+    @handlers.push handlerId
 
 # This watches keyboard events and maintains @countPrefix as number keys and other keys are pressed.
 class MaintainCount extends SuppressPrintable
@@ -41,17 +49,13 @@ class MaintainCount extends SuppressPrintable
           unless event.metaKey or event.ctrlKey or event.altKey
             keyChar = String.fromCharCode event.charCode
             @countPrefix =
-              if keyChar and keyChar.length == 1 and "0" <= keyChar <= "9"
+              if keyChar?.length == 1 and "0" <= keyChar <= "9" and @countPrefix + keyChar != "0"
                 if @options.initialCount
                   @countPrefix = ""
                   delete @options.initialCount
                 @countPrefix + keyChar
               else
                 ""
-
-  runCountPrefixTimes: (func) ->
-    count = if 0 < @countPrefix.length then parseInt @countPrefix else 1
-    func() for [0...count]
 
 # Some symbolic names.
 forward = "forward"
@@ -75,9 +79,12 @@ class Movement extends MaintainCount
   # Call a function.  Return true if the selection changed, false otherwise.
   selectionChanged: (func) ->
     r = @selection.getRangeAt(0).cloneRange()
+    length = @selection.toString().length
     func()
-    rr = @selection.getRangeAt(0)
-    not (r.compareBoundaryPoints(Range.END_TO_END, rr) or r.compareBoundaryPoints Range.START_TO_START, rr)
+    rr = @selection.getRangeAt 0
+    rr.startContainer != r.startContainer or
+      rr. startOffset != r.startOffset or
+      @selection.toString().length != length
 
   # Try to move one character in "direction".  Return 1, -1 or 0, indicating whether the selection got bigger,
   # or smaller, or is unchanged.
@@ -146,7 +153,7 @@ class Movement extends MaintainCount
     "$": "forward lineboundary"
     "0": "backward lineboundary"
     "G": "forward documentboundary"
-    "gg": "backward documentboundary"
+    "g": "backward documentboundary"
     "Y": -> @selectLine()
     "o": -> @swapFocusAndAnchor()
 
@@ -195,18 +202,21 @@ class Movement extends MaintainCount
                   @yank()
                   return @suppressEvent
 
-                @scrollIntoView()
                 break
 
         @continueBubbling
 
   handleMovementKeyChar: (keyChar) ->
+    # We need to copy the count prefix immediately, because protectClipboard is asynchronous.
+    count = if 0 < @countPrefix.length then parseInt @countPrefix else 1
+    @countPrefix = ""
     if @movements[keyChar]
       @protectClipboard =>
-        @runCountPrefixTimes =>
+        for [0...count]
           switch typeof @movements[keyChar]
             when "string" then @runMovement @movements[keyChar]
             when "function" then @movements[keyChar].call @
+        @scrollIntoView()
 
   yank: (args = {}) ->
     @yankedText = window.getSelection().toString()
@@ -237,10 +247,11 @@ class Movement extends MaintainCount
     for direction in [ forward, backward ]
       @runMovement "#{direction} lineboundary"
       @swapFocusAndAnchor()
+    Movement.lastLineSelection = @selection.toString()
+    console.log "lastLineSelection:", Movement.lastLineSelection
 
   yankLine: ->
     @selectLine()
-    @lastYankedLine = @yank()
 
   # Adapted from: http://roysharon.com/blog/37.
   # I have no idea how this works (smblott, 2015/1/22).
@@ -329,7 +340,7 @@ class EditMode extends Movement
       "v": -> new VisualModeForEdit
 
       "Y": -> @runInVisualMode runMovement: "Y"
-      "y": => @runInVisualMode()
+      "y": => @runInVisualMode {}
       "d": => @runInVisualMode deleteFromDocument: true
       "c": => @runInVisualMode
         deleteFromDocument: true
@@ -352,11 +363,12 @@ class EditMode extends Movement
     @protectClipboard =>
       @paste (text) =>
         if text
-          if text == @lastYankedLine
-            text += "\n"
+          lineOriented = text == Movement.lastLineSelection
+          if lineOriented
             @runMovement "#{direction} lineboundary"
-            @runMovement "#{direction} character" if direction == forward
+            text = if direction == forward then "\n" + text else text + "\n"
           DomUtils.simulateTextEntry @element, text
+          @runMovement "backward line" if lineOriented
 
   openLine: (direction) ->
     @runMovement "#{direction} lineboundary"
