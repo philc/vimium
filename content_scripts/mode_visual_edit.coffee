@@ -1,8 +1,7 @@
 
 # To do:
-# - handle edit-mode losing the focus
+# - edit-mode losing the focus
 # - line-visual mode
-# - definition of a line.
 # - better implementation of `o`
 # - caret mode
 # - yy
@@ -122,7 +121,7 @@ class Movement extends MaintainCount
       if @alterMethod == "move" and not locked
         locked = true
         @paste (text) =>
-          result = func()
+          result = func text
           @copy text
           locked = false
           result
@@ -131,7 +130,25 @@ class Movement extends MaintainCount
 
   # Run a movement command.  Return true if the selection changed, false otherwise.
   runMovement: (movement) ->
-    @selectionChanged => @selection.modify @alterMethod, movement.split(" ")...
+    @selectionChanged =>
+      movement = movement.split(" ")
+      if movement[0] == forward and movement[1] == "lineboundary" and @alterMethod == "extend"
+        # Special case.  When we move forward to a line boundary, we're often just moving to the point at
+        # which the text wraps, which is of no particular use.  Instead, we keep advancing until we find a
+        # newline character.  This trailing newline character is included in the selection.
+        atEndOfLine = =>
+          if @selectionChanged(=> @selection.modify @alterMethod, "forward", "character")
+            text = @selection.toString()
+            console.log text[text.length - 1] != "\n", text.length, text
+            text[text.length - 1] == "\n"
+          else
+            true
+
+        @selection.modify @alterMethod, movement...
+        @selection.modify @alterMethod, movement... while not atEndOfLine()
+      else
+        # Normal case.
+        @selection.modify @alterMethod, movement...
 
   # Run a sequence of movements; bail immediately on any failure to change the selection.
   runMovements: (movements) ->
@@ -188,7 +205,6 @@ class Movement extends MaintainCount
               @keyQueue = ""
               @selection = window.getSelection()
 
-              # If there's matching a command *and* a matching movement, then choose the command.
               if @commands[keyChar]
                 @commands[keyChar].call @
                 @scrollIntoView()
@@ -244,14 +260,10 @@ class Movement extends MaintainCount
     @copy @yankedText if @yankedText
 
   selectLine: ->
-    for direction in [ forward, backward ]
+    direction = @getDirection()
+    for direction in [ @opposite[direction], direction ]
       @runMovement "#{direction} lineboundary"
       @swapFocusAndAnchor()
-    Movement.lastLineSelection = @selection.toString()
-    console.log "lastLineSelection:", Movement.lastLineSelection
-
-  yankLine: ->
-    @selectLine()
 
   # Adapted from: http://roysharon.com/blog/37.
   # I have no idea how this works (smblott, 2015/1/22).
@@ -305,14 +317,12 @@ class VisualMode extends Movement
       underEditMode: false
     super extend defaults, options
 
-    extend @commands,
-      "y": @yank
-      "Y": @yankLine
+    extend @commands, "y": @yank
 
     if @options.underEditMode
       extend @commands,
-        "d": => @yank deleteFromDocument: true
-        "c": => @yank deleteFromDocument: true; enterInsertMode()
+        "d": @yank
+        "c": -> @yank(); enterInsertMode()
 
 class VisualModeForEdit extends VisualMode
   constructor: (options = {}) ->
@@ -360,15 +370,17 @@ class EditMode extends Movement
     @countPrefix = ""
 
   pasteClipboard: (direction) ->
-    @protectClipboard =>
-      @paste (text) =>
-        if text
-          lineOriented = text == Movement.lastLineSelection
-          if lineOriented
-            @runMovement "#{direction} lineboundary"
-            text = if direction == forward then "\n" + text else text + "\n"
-          DomUtils.simulateTextEntry @element, text
-          @runMovement "backward line" if lineOriented
+    @protectClipboard (text) =>
+      if text
+        # We use the heuristic that the paste is line oriented if the last character is a newline.  This is
+        # consistent with the way runMovement selects text in visual mode for "forward lineboundary".
+        lineOriented = /\n$/.test text
+        if lineOriented
+          @runMovement "#{direction} lineboundary"
+          @runMovement "#{direction} character" if direction == forward
+        DomUtils.simulateTextEntry @element, text
+        # Slow!  Expensive!  Better way?
+        @runMovement "backward character" for [0...text.length] if lineOriented
 
   openLine: (direction) ->
     @runMovement "#{direction} lineboundary"
