@@ -63,7 +63,16 @@ character = "character"
 class Movement extends MaintainCount
   opposite: { forward: backward, backward: forward }
 
-  # Call a function.  Return true if the selection changed.
+  copy: (text) ->
+    chrome.runtime.sendMessage
+      handler: "copyToClipboard"
+      data: text
+
+  paste: (callback) ->
+    chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) ->
+      callback response
+
+  # Call a function.  Return true if the selection changed, false otherwise.
   selectionChanged: (func) ->
     r = @selection.getRangeAt(0).cloneRange()
     func()
@@ -99,6 +108,20 @@ class Movement extends MaintainCount
     @selection[if direction == forward then "collapseToEnd" else "collapseToStart"]()
     @selection.modify "extend", @opposite[direction], character for [0...length]
 
+  protectClipboard: do ->
+    locked = false
+
+    (func) ->
+      if @alterMethod == "move" and not locked
+        locked = true
+        @paste (text) =>
+          result = func()
+          @copy text
+          locked = false
+          result
+      else
+        func()
+
   # Run a movement command.  Return true if the selection changed, false otherwise.
   runMovement: (movement) ->
     @selectionChanged => @selection.modify @alterMethod, movement.split(" ")...
@@ -124,15 +147,26 @@ class Movement extends MaintainCount
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "gg": "backward documentboundary"
+    "Y": -> @selectLine()
     "o": -> @swapFocusAndAnchor()
 
   constructor: (options) ->
+    @selection = window.getSelection()
     @movements = extend {}, @movements
     @commands = {}
     @alterMethod = options.alterMethod || "extend"
     @keyQueue = ""
     @yankedText = ""
     super extend options
+
+    # Aliases.
+    @movements.B = @movements.b
+    @movements.W = @movements.w
+
+    if @options.runMovement
+      @handleMovementKeyChar @options.runMovement
+      @yank()
+      return
 
     @push
       _name: "#{@id}/keypress"
@@ -147,42 +181,66 @@ class Movement extends MaintainCount
               @keyQueue = ""
               @selection = window.getSelection()
 
+              # If there's matching a command *and* a matching movement, then choose the command.
               if @commands[keyChar]
                 @commands[keyChar].call @
                 @scrollIntoView()
                 return @suppressEvent
 
               else if @movements[keyChar]
-                @runCountPrefixTimes =>
-                  switch typeof @movements[keyChar]
-                    when "string" then @runMovement @movements[keyChar]
-                    when "function" then @movements[keyChar].call @
-                @scrollIntoView()
-                if @options.singleMovement
+                @handleMovementKeyChar keyChar
+
+                if @options.onYank or @options.oneMovementOnly
+                  @scrollIntoView()
                   @yank()
                   return @suppressEvent
 
+                @scrollIntoView()
+                break
+
         @continueBubbling
 
-    # Aliases.
-    @movements.B = @movements.b
-    @movements.W = @movements.w
+  handleMovementKeyChar: (keyChar) ->
+    if @movements[keyChar]
+      @protectClipboard =>
+        @runCountPrefixTimes =>
+          switch typeof @movements[keyChar]
+            when "string" then @runMovement @movements[keyChar]
+            when "function" then @movements[keyChar].call @
 
   yank: (args = {}) ->
-    @yankedText = text = window.getSelection().toString()
-    console.log "yank:", text
-    @selection.deleteFromDocument() if args.deleteFromDocument
-    @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
+    @yankedText = window.getSelection().toString()
+    @selection.deleteFromDocument() if args.deleteFromDocument or @options.deleteFromDocument
+    console.log "yank:", @yankedText
+
+    text = @yankedText.replace /\s+/g, " "
+    length = text.length
+    text = text[...12] + "..." if 15 < length
+    HUD.showForDuration "Yanked #{length} character#{if length == 1 then "" else "s"}: \"#{text}\".", 2500
+
+    @exit()
     @yankedText
 
-  yankLine: ->
+  exit: (event) ->
+    super()
+    unless @options.underEditMode
+      if document.activeElement and DomUtils.isEditable document.activeElement
+        document.activeElement.blur()
+    if 0 < @selection.toString().length
+      @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
+    @options.onYank.call @ if @options.onYank
+    # Because the various selection operations can mess with the clipboard, this must be the very-last thing
+    # we do.
+    @copy @yankedText if @yankedText
+
+  selectLine: ->
     for direction in [ forward, backward ]
       @runMovement "#{direction} lineboundary"
       @swapFocusAndAnchor()
-    @lastYankedLine = @yank()
 
-  enterInsertMode: ->
-    new InsertMode { badge: "I", blurOnEscape: false }
+  yankLine: ->
+    @selectLine()
+    @lastYankedLine = @yank()
 
   # Adapted from: http://roysharon.com/blog/37.
   # I have no idea how this works (smblott, 2015/1/22).
@@ -202,26 +260,27 @@ class Movement extends MaintainCount
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
-    if document.activeElement and DomUtils.isEditable document.activeElement
+    @protectClipboard =>
       element = document.activeElement
-      if element.clientHeight < element.scrollHeight
-        if element.isContentEditable
-          # How do we do this?
-        else
-          coords = DomUtils.getCaretCoordinates element, element.selectionStart
-          Scroller.scrollToPosition element, coords.top, coords.left
-    else
-      # getElementWithFocus() seems to work most (but not all) of the time.
-      leadingElement = @getElementWithFocus @selection
-      Scroller.scrollIntoView leadingElement if leadingElement
+      if element and DomUtils.isEditable element
+        if element.clientHeight < element.scrollHeight
+          if element.isContentEditable
+            # How do we do this?
+          else
+            position = if @getDirection() == backward then element.selectionStart else element.selectionEnd
+            coords = DomUtils.getCaretCoordinates element, position
+            Scroller.scrollToPosition element, coords.top, coords.left
+      else
+        # getElementWithFocus() seems to work most (but not all) of the time.
+        leadingElement = @getElementWithFocus @selection
+        Scroller.scrollIntoView leadingElement if leadingElement
 
 class VisualMode extends Movement
   constructor: (options = {}) ->
     @selection = window.getSelection()
-
     switch @selection.type
       when "None"
-        HUD.showForDuration "An initial selection is required for visual mode.", 2500
+        HUD.showForDuration "Create a selection before entering visual mode.", 2500
         return
       when "Caret"
         # Try to start with a visible selection.
@@ -242,31 +301,11 @@ class VisualMode extends Movement
     if @options.underEditMode
       extend @commands,
         "d": => @yank deleteFromDocument: true
-        "c": => @yank deleteFromDocument: true; @enterInsertMode()
-
-  yank: (args...) ->
-    text = super args...
-    length = text.length
-    text = text.replace /\s+/g, " "
-    text = text[...12] + "..." if 15 < length
-    HUD.showForDuration "Yanked #{length} character#{if length == 1 then "" else "s"}: \"#{text}\".", 2500
-    @exit()
-
-  exit: (event) ->
-    super()
-    unless @options.underEditMode
-      if document.activeElement and DomUtils.isEditable document.activeElement
-        document.activeElement.blur()
-    # Now set the clipboard.  No operations which maniplulate the selection should follow this.
-    chrome.runtime.sendMessage { handler: "copyToClipboard", data: @yankedText } if @yankedText
+        "c": => @yank deleteFromDocument: true; enterInsertMode()
 
 class VisualModeForEdit extends VisualMode
   constructor: (options = {}) ->
     super extend options, underEditMode: true
-
-  exit: (args...) ->
-    @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
-    super args...
 
 class EditMode extends Movement
   constructor: (options = {}) ->
@@ -280,49 +319,59 @@ class EditMode extends Movement
       alterMethod: "move"
 
     extend @commands,
-      "i": @enterInsertMode
-      "a": @enterInsertMode
-      "A": => @runMovement "forward lineboundary"; @enterInsertMode()
+      "i": enterInsertMode
+      "a": enterInsertMode
+      "A": => @runMovement "forward lineboundary"; enterInsertMode()
       "o": => @openLine forward
       "O": => @openLine backward
       "p": => @pasteClipboard forward
       "P": => @pasteClipboard backward
       "v": -> new VisualModeForEdit
-      "Y": => @withRangeSelection => @yankLine()
-      "y": =>
-        new VisualModeForEdit
-          singleMovement: true
-          initialCount: @countPrefix
+
+      "Y": -> @runInVisualMode runMovement: "Y"
+      "y": => @runInVisualMode()
+      "d": => @runInVisualMode deleteFromDocument: true
+      "c": => @runInVisualMode
+        deleteFromDocument: true
+        onYank: -> new InsertMode { badge: "I", blurOnEscape: false }
+
+      "D": => @runInVisualMode runMovement: "$", deleteFromDocument: true
+      "C": => @runInVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
 
     # # Aliases.
     # @commands.Y = @commands.yy
 
+  runInVisualMode: (options = {}) ->
+    defaults =
+      initialCount: @countPrefix
+      oneMovementOnly: true
+    new VisualModeForEdit extend defaults, options
+    @countPrefix = ""
+
   pasteClipboard: (direction) ->
-    text = Clipboard.paste @element
-    if text
-      if text == @lastYankedLine
-        text += "\n"
-        @runMovement "#{direction} lineboundary"
-        @runMovement "#{direction} character" if direction == forward
-      DomUtils.simulateTextEntry @element, text
+    @protectClipboard =>
+      @paste (text) =>
+        if text
+          if text == @lastYankedLine
+            text += "\n"
+            @runMovement "#{direction} lineboundary"
+            @runMovement "#{direction} character" if direction == forward
+          DomUtils.simulateTextEntry @element, text
 
   openLine: (direction) ->
     @runMovement "#{direction} lineboundary"
-    @enterInsertMode()
+    enterInsertMode()
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement "backward character" if direction == backward
-
-  withRangeSelection: (func) ->
-    @alterMethod = "extend"
-    func.call @
-    @alterMethod = "move"
-    @selection.collapseToStart()
 
   exit: (event, target) ->
     super()
     if event?.type = "keydown" and KeyboardUtils.isEscape event
       if target? and DomUtils.isDOMDescendant @element, target
         @element.blur()
+
+enterInsertMode = ->
+  new InsertMode { badge: "I", blurOnEscape: false }
 
 root = exports ? window
 root.VisualMode = VisualMode
