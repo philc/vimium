@@ -4,7 +4,6 @@
 # - line-visual mode
 # - better implementation of `o`
 # - caret mode
-# - yy
 
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
@@ -262,6 +261,7 @@ class Movement extends MaintainCount
   selectLine: ->
     direction = @getDirection()
     for direction in [ @opposite[direction], direction ]
+      console.log direction
       @runMovement "#{direction} lineboundary"
       @swapFocusAndAnchor()
 
@@ -317,7 +317,11 @@ class VisualMode extends Movement
       underEditMode: false
     super extend defaults, options
 
-    extend @commands, "y": @yank
+    extend @commands,
+      "y": ->
+        # Special case: "yy" (the first from edit mode, and now the second).
+        @selectLine() if @options.expectImmediateY and @keyQueue == ""
+        @yank()
 
     if @options.underEditMode
       extend @commands,
@@ -350,7 +354,7 @@ class EditMode extends Movement
       "v": -> new VisualModeForEdit
 
       "Y": -> @runInVisualMode runMovement: "Y"
-      "y": => @runInVisualMode {}
+      "y": => @runInVisualMode expectImmediateY: true
       "d": => @runInVisualMode deleteFromDocument: true
       "c": => @runInVisualMode
         deleteFromDocument: true
