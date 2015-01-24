@@ -246,7 +246,7 @@ Scroller =
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
 
-  # FIXME(smblott). Implement scroll in the "x" dimension.
+  # FIXME(smblott). We should also scroll in the "x" dimension.
   scrollIntoView: (element) ->
     activatedElement ||= document.body and firstScrollableElement()
     rect = element.getBoundingClientRect()

@@ -331,6 +331,9 @@ extend window,
   enterVisualMode: ->
     new VisualMode()
 
+  enterVisualLineMode: ->
+    new VisualLineMode
+
   enterEditMode: ->
     @focusInput 1, EditMode
 

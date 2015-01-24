@@ -1,9 +1,8 @@
 
 # To do:
-# - edit-mode losing the focus
-# - line-visual mode
 # - better implementation of `o`
 # - caret mode
+# - find operations
 
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
@@ -74,15 +73,9 @@ class Movement extends MaintainCount
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) ->
       callback response
 
-  # Call a function.  Return true if the selection changed, false otherwise.
-  selectionChanged: (func) ->
-    r = @selection.getRangeAt(0).cloneRange()
-    length = @selection.toString().length
-    func()
-    rr = @selection.getRangeAt 0
-    rr.startContainer != r.startContainer or
-      rr. startOffset != r.startOffset or
-      @selection.toString().length != length
+  # Run a movement command.
+  runMovement: (movement) ->
+    @selection.modify @alterMethod, movement.split(" ")...
 
   # Try to move one character in "direction".  Return 1, -1 or 0, indicating whether the selection got bigger,
   # or smaller, or is unchanged.
@@ -96,63 +89,29 @@ class Movement extends MaintainCount
   # NOTE(smblott). Could be better, see: https://dom.spec.whatwg.org/#interface-range.
   getDirection: ->
     # Try to move the selection forward or backward, check whether it got bigger or smaller (then restore it).
-    for type in [ forward, backward ]
-      if success = @moveInDirection type
-        @moveInDirection @opposite[type]
-        return if 0 < success then type else @opposite[type]
+    for direction in [ forward, backward ]
+      if success = @moveInDirection direction
+        @moveInDirection @opposite[direction]
+        return if 0 < success then direction else @opposite[direction]
+    forward
 
+  # An approximation of the vim "w" movement.
   moveForwardWord: (direction) ->
-    # We use two forward words and one backword so that we end up at the end of the word if we are at the end
-    # of the text.  Currently broken if the very-next characters is whitespace.
-    movements = [ "forward word", "forward word", "forward character", "backward character", "backward word" ]
-    @runMovements movements
+    # This is broken:
+    # - On the very last word in the text.
+    # - When the next character is not a word character.
+    # However, it works well for the common cases, and the additional complexity of fixing these broken cases
+    # is probably unwarranted right now (smblott, 2015/1/25).
+    movements = [ "forward word", "forward word", "backward word" ]
+    @runMovement movement for movement in movements
 
-  swapFocusAndAnchor: ->
+  # Swap the focus and anchor.
+  # FIXME(smblott). This implementation is rediculously inefficient if the selection is large.
+  reverseSelection: ->
     direction = @getDirection()
     length = @selection.toString().length
     @selection[if direction == forward then "collapseToEnd" else "collapseToStart"]()
     @selection.modify "extend", @opposite[direction], character for [0...length]
-
-  protectClipboard: do ->
-    locked = false
-
-    (func) ->
-      if @alterMethod == "move" and not locked
-        locked = true
-        @paste (text) =>
-          result = func text
-          @copy text
-          locked = false
-          result
-      else
-        func()
-
-  # Run a movement command.  Return true if the selection changed, false otherwise.
-  runMovement: (movement) ->
-    @selectionChanged =>
-      movement = movement.split(" ")
-      if movement[0] == forward and movement[1] == "lineboundary" and @alterMethod == "extend"
-        # Special case.  When we move forward to a line boundary, we're often just moving to the point at
-        # which the text wraps, which is of no particular use.  Instead, we keep advancing until we find a
-        # newline character.  This trailing newline character is included in the selection.
-        atEndOfLine = =>
-          if @selectionChanged(=> @selection.modify @alterMethod, "forward", "character")
-            text = @selection.toString()
-            console.log text[text.length - 1] != "\n", text.length, text
-            text[text.length - 1] == "\n"
-          else
-            true
-
-        @selection.modify @alterMethod, movement...
-        @selection.modify @alterMethod, movement... while not atEndOfLine()
-      else
-        # Normal case.
-        @selection.modify @alterMethod, movement...
-
-  # Run a sequence of movements; bail immediately on any failure to change the selection.
-  runMovements: (movements) ->
-    for movement in movements
-      break unless @runMovement movement
 
   movements:
     "l": "forward character"
@@ -161,7 +120,6 @@ class Movement extends MaintainCount
     "k": "backward line"
     "e": "forward word"
     "b": "backward word"
-    "w": -> @moveForwardWord()
     ")": "forward sentence"
     "(": "backward sentence"
     "}": "forward paragraph"
@@ -170,8 +128,9 @@ class Movement extends MaintainCount
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "g": "backward documentboundary"
+    "w": -> @moveForwardWord()
     "Y": -> @selectLine()
-    "o": -> @swapFocusAndAnchor()
+    "o": -> @reverseSelection()
 
   constructor: (options) ->
     @selection = window.getSelection()
@@ -180,13 +139,14 @@ class Movement extends MaintainCount
     @alterMethod = options.alterMethod || "extend"
     @keyQueue = ""
     @yankedText = ""
-    super extend options
+    super options
 
     # Aliases.
     @movements.B = @movements.b
     @movements.W = @movements.w
 
     if @options.runMovement
+      # This instance has been created just to run a single movement.
       @handleMovementKeyChar @options.runMovement
       @yank()
       return
@@ -198,22 +158,22 @@ class Movement extends MaintainCount
           @keyQueue += String.fromCharCode event.charCode
           # We allow at most three characters for a command or movement mapping.
           @keyQueue = @keyQueue.slice Math.max 0, @keyQueue.length - 3
-          # Try each possible multi-character keyChar sequence, from longest to shortest.
-          for keyChar in (@keyQueue[i..] for i in [0...@keyQueue.length])
-            if @movements[keyChar] or @commands[keyChar]
-              @keyQueue = ""
+          # Try each possible multi-character keyChar sequence, from longest to shortest (e.g. with "abc", we
+          # try "abc", "bc" and "c").
+          for command in (@keyQueue[i..] for i in [0...@keyQueue.length])
+            if @movements[command] or @commands[command]
               @selection = window.getSelection()
+              @keyQueue = ""
 
-              if @commands[keyChar]
-                @commands[keyChar].call @
+              if @commands[command]
+                @commands[command].call @
                 @scrollIntoView()
                 return @suppressEvent
 
-              else if @movements[keyChar]
-                @handleMovementKeyChar keyChar
+              else if @movements[command]
+                @handleMovementKeyChar command
 
-                if @options.onYank or @options.oneMovementOnly
-                  @scrollIntoView()
+                if @options.oneMovementOnly
                   @yank()
                   return @suppressEvent
 
@@ -222,7 +182,8 @@ class Movement extends MaintainCount
         @continueBubbling
 
   handleMovementKeyChar: (keyChar) ->
-    # We need to copy the count prefix immediately, because protectClipboard is asynchronous.
+    # We grab the count prefix immediately, because protectClipboard may be asynchronous (edit mode), and
+    # @countPrefix may be reset if we wait.
     count = if 0 < @countPrefix.length then parseInt @countPrefix else 1
     @countPrefix = ""
     if @movements[keyChar]
@@ -233,53 +194,36 @@ class Movement extends MaintainCount
             when "function" then @movements[keyChar].call @
         @scrollIntoView()
 
+  # Yank the selection.  Always exits.  Returns the yanked text.
   yank: (args = {}) ->
-    @yankedText = window.getSelection().toString()
+    @yankedText = @selection.toString()
     @selection.deleteFromDocument() if args.deleteFromDocument or @options.deleteFromDocument
     console.log "yank:", @yankedText
 
-    text = @yankedText.replace /\s+/g, " "
-    length = text.length
-    text = text[...12] + "..." if 15 < length
-    HUD.showForDuration "Yanked #{length} character#{if length == 1 then "" else "s"}: \"#{text}\".", 2500
+    message = @yankedText.replace /\s+/g, " "
+    length = message.length
+    message = message[...12] + "..." if 15 < length
+    plural = if length == 1 then "" else "s"
+    HUD.showForDuration "Yanked #{length} character#{plural}: \"#{message}\".", 2500
 
+    @options.onYank.call @ @yankedText if @options.onYank
     @exit()
     @yankedText
 
-  exit: (event) ->
-    super()
+  exit: (event, target) ->
+    super event, target
     unless @options.underEditMode
       if document.activeElement and DomUtils.isEditable document.activeElement
         document.activeElement.blur()
-    if 0 < @selection.toString().length
-      @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
-    @options.onYank.call @ if @options.onYank
-    # Because the various selection operations can mess with the clipboard, this must be the very-last thing
-    # we do.
+    unless event?.type == "keydown" and KeyboardUtils.isEscape event
+      if 0 < @selection.toString().length
+        @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
     @copy @yankedText if @yankedText
 
   selectLine: ->
-    direction = @getDirection()
-    for direction in [ @opposite[direction], direction ]
-      console.log direction
+    for direction in [ backward, forward ]
+      @reverseSelection()
       @runMovement "#{direction} lineboundary"
-      @swapFocusAndAnchor()
-
-  # Adapted from: http://roysharon.com/blog/37.
-  # I have no idea how this works (smblott, 2015/1/22).
-  # The intention is to find the element containing the focus.  That's the element we need to scroll into
-  # view.
-  getElementWithFocus: (selection) ->
-    r = t = selection.getRangeAt 0
-    if selection.type == "Range"
-      r = t.cloneRange()
-      r.collapse(@getDirection() == backward)
-    t = r.startContainer
-    t = t.childNodes[r.startOffset] if t.nodeType == 1
-    o = t
-    o = o.previousSibling while o and o.nodeType != 1
-    t = o || t?.parentNode
-    t
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -294,9 +238,24 @@ class Movement extends MaintainCount
             coords = DomUtils.getCaretCoordinates element, position
             Scroller.scrollToPosition element, coords.top, coords.left
       else
-        # getElementWithFocus() seems to work most (but not all) of the time.
-        leadingElement = @getElementWithFocus @selection
-        Scroller.scrollIntoView leadingElement if leadingElement
+        elementWithFocus = @getElementWithFocus @selection
+        Scroller.scrollIntoView elementWithFocus if elementWithFocus
+
+  # Adapted from: http://roysharon.com/blog/37.
+  # I have no idea how this works (smblott, 2015/1/22).
+  # The intention is to find the element containing the focus.  That's the element we need to scroll into
+  # view. It seems to work most (but not all) of the time.
+  getElementWithFocus: (selection) ->
+    r = t = selection.getRangeAt 0
+    if selection.type == "Range"
+      r = t.cloneRange()
+      r.collapse(@getDirection() == backward)
+    t = r.startContainer
+    t = t.childNodes[r.startOffset] if t.nodeType == 1
+    o = t
+    o = o.previousSibling while o and o.nodeType != 1
+    t = o || t?.parentNode
+    t
 
 class VisualMode extends Movement
   constructor: (options = {}) ->
@@ -314,7 +273,6 @@ class VisualMode extends Movement
       badge: "V"
       exitOnEscape: true
       alterMethod: "extend"
-      underEditMode: false
     super extend defaults, options
 
     extend @commands,
@@ -325,12 +283,27 @@ class VisualMode extends Movement
 
     if @options.underEditMode
       extend @commands,
-        "d": @yank
+        "d": -> @yank deleteFromDocument: true
         "c": -> @yank(); enterInsertMode()
 
-class VisualModeForEdit extends VisualMode
+    @clipboardContents = ""
+    @paste (text) => @clipboardContents = text
+
+  protectClipboard: (func) ->
+    func()
+    @copy @clipboardContents
+
+  copy: (text) ->
+    super @clipboardContents = text
+
+class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
-    super extend options, underEditMode: true
+    super options
+    @selectLine()
+
+  handleMovementKeyChar: (keyChar) ->
+    super keyChar
+    @runMovement "#{@getDirection()} lineboundary", true
 
 class EditMode extends Movement
   constructor: (options = {}) ->
@@ -351,40 +324,29 @@ class EditMode extends Movement
       "O": => @openLine backward
       "p": => @pasteClipboard forward
       "P": => @pasteClipboard backward
-      "v": -> new VisualModeForEdit
+      "v": -> new VisualMode underEditMode: true
 
-      "Y": -> @runInVisualMode runMovement: "Y"
-      "y": => @runInVisualMode expectImmediateY: true
-      "d": => @runInVisualMode deleteFromDocument: true
-      "c": => @runInVisualMode
+      "Y": -> @enterVisualMode runMovement: "Y"
+      "y": => @enterVisualMode expectImmediateY: true
+      "d": => @enterVisualMode deleteFromDocument: true
+      "c": => @enterVisualMode
         deleteFromDocument: true
         onYank: -> new InsertMode { badge: "I", blurOnEscape: false }
 
-      "D": => @runInVisualMode runMovement: "$", deleteFromDocument: true
-      "C": => @runInVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
+      "D": => @enterVisualMode runMovement: "$", deleteFromDocument: true
+      "C": => @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
 
-    # # Aliases.
-    # @commands.Y = @commands.yy
-
-  runInVisualMode: (options = {}) ->
+  enterVisualMode: (options = {}) ->
     defaults =
+      underEditMode: true
       initialCount: @countPrefix
       oneMovementOnly: true
-    new VisualModeForEdit extend defaults, options
+    new VisualMode extend defaults, options
     @countPrefix = ""
 
   pasteClipboard: (direction) ->
-    @protectClipboard (text) =>
-      if text
-        # We use the heuristic that the paste is line oriented if the last character is a newline.  This is
-        # consistent with the way runMovement selects text in visual mode for "forward lineboundary".
-        lineOriented = /\n$/.test text
-        if lineOriented
-          @runMovement "#{direction} lineboundary"
-          @runMovement "#{direction} character" if direction == forward
-        DomUtils.simulateTextEntry @element, text
-        # Slow!  Expensive!  Better way?
-        @runMovement "backward character" for [0...text.length] if lineOriented
+    @paste (text) =>
+      DomUtils.simulateTextEntry @element, text if text
 
   openLine: (direction) ->
     @runMovement "#{direction} lineboundary"
@@ -394,13 +356,31 @@ class EditMode extends Movement
 
   exit: (event, target) ->
     super()
-    if event?.type = "keydown" and KeyboardUtils.isEscape event
+    if event?.type == "keydown" and KeyboardUtils.isEscape event
       if target? and DomUtils.isDOMDescendant @element, target
         @element.blur()
+
+  # Backup the clipboard, then call a function (which may affect the selection text, and hence the
+  # clipboard too), then restore the clipboard.
+  protectClipboard: do ->
+    locked = false
+    clipboard = ""
+
+    (func) ->
+      if locked
+        func()
+      else
+        locked = true
+        @paste (text) =>
+          clipboard = text
+          func()
+          @copy clipboard
+          locked = false
 
 enterInsertMode = ->
   new InsertMode { badge: "I", blurOnEscape: false }
 
 root = exports ? window
 root.VisualMode = VisualMode
+root.VisualLineMode = VisualLineMode
 root.EditMode = EditMode
