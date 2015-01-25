@@ -4,6 +4,9 @@
 # - caret mode
 # - find operations (needs better implementation?)
 
+enterInsertMode = ->
+  new InsertMode { badge: "I", blurOnEscape: false }
+
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
 class SuppressPrintable extends Mode
@@ -211,7 +214,7 @@ class Movement extends MaintainCount
   yank: (args = {}) ->
     @yankedText = @selection.toString()
     @selection.deleteFromDocument() if args.deleteFromDocument or @options.deleteFromDocument
-    console.log "yank:", @yankedText
+    console.log "yank:", @yankedText if @debug
 
     message = @yankedText.replace /\s+/g, " "
     length = message.length
@@ -219,15 +222,15 @@ class Movement extends MaintainCount
     plural = if length == 1 then "" else "s"
     HUD.showForDuration "Yanked #{length} character#{plural}: \"#{message}\".", 2500
 
-    @options.onYank.call @ @yankedText if @options.onYank
+    @options.onYank.call @, @yankedText if @options.onYank
     @exit()
     @yankedText
 
   exit: (event, target) ->
     super event, target
-    unless @options.underEditMode
-      if document.activeElement and DomUtils.isEditable document.activeElement
-        document.activeElement.blur()
+    # unless @options.underEditMode
+    #   if document.activeElement and DomUtils.isEditable document.activeElement
+    #     document.activeElement.blur()
     unless event?.type == "keydown" and KeyboardUtils.isEscape event
       if 0 < @selection.toString().length
         @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
@@ -348,11 +351,13 @@ class EditMode extends Movement
     @element = document.activeElement
     return unless @element and DomUtils.isEditable @element
 
-    super
+    defaults =
       name: "edit"
       badge: "E"
       exitOnEscape: true
+      exitOnBlur: @element
       alterMethod: "move"
+    super extend defaults, options
 
     extend @commands,
       "i": enterInsertMode
@@ -397,12 +402,6 @@ class EditMode extends Movement
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement "backward character" if direction == backward
 
-  exit: (event, target) ->
-    super()
-    if event?.type == "keydown" and KeyboardUtils.isEscape event
-      if target? and DomUtils.isDOMDescendant @element, target
-        @element.blur()
-
   # Backup the clipboard, then call a function (which may affect the selection text, and hence the
   # clipboard too), then restore the clipboard.
   protectClipboard: do ->
@@ -420,8 +419,35 @@ class EditMode extends Movement
           @copy clipboard
           locked = false
 
-enterInsertMode = ->
-  new InsertMode { badge: "I", blurOnEscape: false }
+  exit: (event, target) ->
+    super()
+    if event?.type == "keydown" and KeyboardUtils.isEscape event
+      if target? and DomUtils.isDOMDescendant @element, target
+        @element.blur()
+    if event?.type == "blur"
+      new BlurredEditMode @options
+
+# In edit mode, the input blurs if the user changes tabs or clicks outside of the element.  In the former
+# case, the user expects to remain in edit mode.  In the latter case, they may just be copying some text with
+# the mouse/Ctrl-C, and again they expect to remain in edit mode when they return.  BlurredEditMode monitors
+# various events and tries to either exit completely or re-enter edit mode as appropriate.
+class BlurredEditMode extends Mode
+  constructor: (originalOptions) ->
+    super
+      name: "blurred-edit"
+      singleton: originalOptions.singleton
+
+    @push
+      _name: "#{@id}/focus"
+      focus: (event) =>
+        @alwaysContinueBubbling =>
+          if event?.target == originalOptions.singleton
+            console.log "#{@id}: reactivating edit mode" if @debug
+            new EditMode originalOptions
+      keypress: (event) =>
+        @alwaysContinueBubbling =>
+          @exit() unless event.metaKey or event.ctrlKey or event.altKey
+
 
 root = exports ? window
 root.VisualMode = VisualMode

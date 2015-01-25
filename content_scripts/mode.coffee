@@ -78,7 +78,7 @@ class Mode
     if @options.exitOnBlur
       @push
         _name: "mode-#{@id}/exitOnBlur"
-        "blur": (event) => @alwaysContinueBubbling => @exit() if event.target == @options.exitOnBlur
+        "blur": (event) => @alwaysContinueBubbling => @exit event if event.target == @options.exitOnBlur
 
     # If @options.exitOnClick is truthy, then the mode will exit on any click event.
     if @options.exitOnClick

@@ -416,7 +416,7 @@ extend window,
         exit: ->
           super()
           DomUtils.removeElement @hintContainingDiv
-          if mode and DomUtils.isEditable document.activeElement
+          if mode and document.activeElement and DomUtils.isEditable document.activeElement
             new mode
               singleton: document.activeElement
 
