@@ -276,8 +276,9 @@ class VisualMode extends Movement
     @selection = window.getSelection()
     switch @selection.type
       when "None"
-        HUD.showForDuration "Create a selection before entering visual mode.", 2500
-        return
+        unless @establishInitialSelection()
+          HUD.showForDuration "Create a selection before entering visual mode.", 2500
+          return
       when "Caret"
         # Try to start with a visible selection.
         @moveInDirection(forward) or @moveInDirection backward unless options.underEditMode
@@ -295,7 +296,7 @@ class VisualMode extends Movement
         # Special case: "yy" (the first from edit mode, and now the second).
         @selectLine() if @options.yYanksLine
         @yank()
-      "V": -> new VisualLineMode @options
+      "V": -> new VisualLineMode extend @options, initialRange: @selection.getRangeAt(0).cloneRange()
 
     if @options.underEditMode
       extend @commands,
@@ -348,11 +349,33 @@ class VisualMode extends Movement
       "n": -> executeFind false
       "N": -> executeFind true
 
+  establishInitialSelection: ->
+    nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
+    while node = nodes.nextNode()
+      if node.nodeType == 3 and 50 <= node.data.trim().length
+        element = node.parentElement
+        if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
+          range = document.createRange()
+          text = node.data
+          trimmed = text.replace /^\s+/, ""
+          offset = text.length - trimmed.length
+          range.setStart node, offset
+          range.setEnd node, offset + 1
+          @selection.removeAllRanges()
+          @selection.addRange range
+          @scrollIntoView()
+          return true
+    false
+
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
     options.name = "visual/line"
     super options
-    @selectLine() unless @selection?.type == "None"
+    unless @selection?.type == "None"
+      if options.initialRange
+        @selection.removeAllRanges()
+        @selection.addRange options.initialRange
+      @selectLine()
 
   handleMovementKeyChar: (keyChar) ->
     super keyChar
