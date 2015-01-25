@@ -73,6 +73,27 @@ class Movement extends MaintainCount
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) ->
       callback response
 
+  # Swap the anchor node/offset and the focus node/offset.
+  reverseSelection: ->
+    element = document.activeElement
+    if element and DomUtils.isEditable(element) and not element. isContentEditable
+      # Note(smblott). This implementation is unacceptably inefficient if the selection is large.  We only use
+      # it if we have to.  However, the normal method does not work for input elements.
+      direction = @getDirection()
+      length = @selection.toString().length
+      @selection[if direction == forward then "collapseToEnd" else "collapseToStart"]()
+      @selection.modify "extend", @opposite[direction], character for [0...length]
+    else
+      # Normal method.
+      direction = @getDirection()
+      original = @selection.getRangeAt(0).cloneRange()
+      range = original.cloneRange()
+      range.collapse direction == backward
+      @selection.removeAllRanges()
+      @selection.addRange range
+      which = if direction == forward then "start" else "end"
+      @selection.extend original["#{which}Container"], original["#{which}Offset"],
+
   # Run a movement command.
   runMovement: (movement) ->
     @selection.modify @alterMethod, movement.split(" ")...
@@ -104,14 +125,6 @@ class Movement extends MaintainCount
     # is probably unwarranted right now (smblott, 2015/1/25).
     movements = [ "forward word", "forward word", "backward word" ]
     @runMovement movement for movement in movements
-
-  # Swap the focus and anchor.
-  # FIXME(smblott). This implementation is rediculously inefficient if the selection is large.
-  reverseSelection: ->
-    direction = @getDirection()
-    length = @selection.toString().length
-    @selection[if direction == forward then "collapseToEnd" else "collapseToStart"]()
-    @selection.modify "extend", @opposite[direction], character for [0...length]
 
   movements:
     "l": "forward character"
@@ -322,7 +335,7 @@ class VisualMode extends Movement
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
     super options
-    @selectLine()
+    @selectLine() unless @selection?.type == "None"
 
   handleMovementKeyChar: (keyChar) ->
     super keyChar
