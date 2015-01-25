@@ -144,6 +144,7 @@ class Movement extends MaintainCount
     @commands = {}
     @alterMethod = options.alterMethod || "extend"
     @keyQueue = ""
+    @keyPressCount = 0
     @yankedText = ""
     super options
 
@@ -160,6 +161,7 @@ class Movement extends MaintainCount
     @push
       _name: "#{@id}/keypress"
       keypress: (event) =>
+        @keyPressCount += 1
         unless event.metaKey or event.ctrlKey or event.altKey
           @keyQueue += String.fromCharCode event.charCode
           # We allow at most three characters for a command or movement mapping.
@@ -274,6 +276,7 @@ class VisualMode extends Movement
       when "Caret"
         # Try to start with a visible selection.
         @moveInDirection(forward) or @moveInDirection backward unless options.underEditMode
+        @scrollIntoView() if @selection.type == "Range"
 
     defaults =
       name: "visual"
@@ -284,25 +287,33 @@ class VisualMode extends Movement
     super extend defaults, options
 
     extend @commands,
+      "V": -> new VisualLineMode extend @options, initialRange: @selection.getRangeAt(0).cloneRange()
       "y": ->
         # Special case: "yy" (the first from edit mode, and now the second).
-        @selectLine() if @options.yYanksLine
+        @selectLine() if @options.yYanksLine and @keyPressCount == 1
         @yank()
-      "V": -> new VisualLineMode extend @options, initialRange: @selection.getRangeAt(0).cloneRange()
 
     if @options.underEditMode
       extend @commands,
-        "d": -> @yank deleteFromDocument: true
         "c": -> @yank(); enterInsertMode()
-    else
+        "d": ->
+          # Special case: "dd" (the first from edit mode, and now the second).
+          @selectLine() if @options.dYanksLine and @keyPressCount == 1
+          @yank deleteFromDocument: true
+
+    unless @options.underEditMode
       @installFindMode()
 
+    # Grab the initial clipboard contents.  We'll try to keep them intact until we get an explicit yank.
     @clipboardContents = ""
-    @paste (text) => @clipboardContents = text
+    @paste (text) =>
+      @clipboardContents = text if text
+    #
+    # End of VisualMode constructor.
 
   protectClipboard: (func) ->
     func()
-    @copy @clipboardContents
+    @copy @clipboardContents if @clipboardContents
 
   copy: (text) ->
     super @clipboardContents = text
@@ -399,10 +410,8 @@ class EditMode extends Movement
 
       "Y": -> @enterVisualMode runMovement: "Y"
       "y": => @enterVisualMode yYanksLine: true
-      "d": => @enterVisualMode deleteFromDocument: true
-      "c": => @enterVisualMode
-        deleteFromDocument: true
-        onYank: enterInsertMode
+      "d": => @enterVisualMode deleteFromDocument: true, dYanksLine: true
+      "c": => @enterVisualMode deleteFromDocument: true, onYank: enterInsertMode
 
       "D": => @enterVisualMode runMovement: "$", deleteFromDocument: true
       "C": => @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
@@ -420,6 +429,7 @@ class EditMode extends Movement
 
   enterVisualMode: (options = {}) ->
     defaults =
+      badge: ""
       underEditMode: true
       initialCount: @countPrefix
       oneMovementOnly: true
