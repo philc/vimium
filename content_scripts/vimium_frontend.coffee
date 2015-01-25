@@ -864,6 +864,12 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
   findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
 
+window.getFindModeQuery  = ->
+  if findModeQuery.isRegex
+    getNextQueryFromRegexMatches(if backwards then -1 else 1)
+  else
+    findModeQuery.parsedQuery
+
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
   mostRecentQuery = settings.get("findModeRawQuery") || ""
@@ -871,11 +877,7 @@ findAndFocus = (backwards) ->
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
 
-  query =
-    if findModeQuery.isRegex
-      getNextQueryFromRegexMatches(if backwards then -1 else 1)
-    else
-      findModeQuery.parsedQuery
+  query = getFindModeQuery()
 
   findModeQueryHasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })

@@ -2,7 +2,7 @@
 # To do:
 # - better implementation of `o`
 # - caret mode
-# - find operations
+# - find operations (needs better implementation?)
 
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
@@ -285,6 +285,29 @@ class VisualMode extends Movement
       extend @commands,
         "d": -> @yank deleteFromDocument: true
         "c": -> @yank(); enterInsertMode()
+
+    # Map "n" and "N" for poor-man's find.
+    unless @options.underEditMode
+      do =>
+        findBackwards = false
+        query = getFindModeQuery()
+        return unless query
+
+        executeFind = => @protectClipboard =>
+          initialRange = @selection.getRangeAt(0).cloneRange()
+          caseSensitive = /[A-Z]/.test query
+          if query
+            window.find query, caseSensitive, findBackwards, true, false, true, false
+            newRange = @selection.getRangeAt(0).cloneRange()
+            range = document.createRange()
+            range.setStart initialRange.startContainer, initialRange.startOffset
+            range.setEnd newRange.endContainer, newRange.endOffset
+            @selection.removeAllRanges()
+            @selection.addRange range
+
+        extend @movements,
+          "n": -> executeFind()
+          "N": -> findBackwards = not findBackwards; executeFind()
 
     @clipboardContents = ""
     @paste (text) => @clipboardContents = text
