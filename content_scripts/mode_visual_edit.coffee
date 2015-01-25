@@ -372,6 +372,11 @@ class EditMode extends Movement
       "D": => @enterVisualMode runMovement: "$", deleteFromDocument: true
       "C": => @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
 
+      "x": =>
+        if 0 < @selection.toString().length
+          @copy @selection.toString()
+          @selection.deleteFromDocument()
+
   enterVisualMode: (options = {}) ->
     defaults =
       underEditMode: true
