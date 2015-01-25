@@ -284,6 +284,7 @@ class VisualMode extends Movement
     defaults =
       name: "visual"
       badge: "V"
+      singleton: VisualMode
       exitOnEscape: true
       alterMethod: "extend"
     super extend defaults, options
@@ -293,6 +294,7 @@ class VisualMode extends Movement
         # Special case: "yy" (the first from edit mode, and now the second).
         @selectLine() if @options.expectImmediateY and @keyQueue == ""
         @yank()
+      "V": -> new VisualLineMode @options
 
     if @options.underEditMode
       extend @commands,
