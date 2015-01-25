@@ -1,7 +1,4 @@
 
-# To do:
-# - caret mode
-
 enterInsertMode = ->
   new InsertMode { badge: "I", blurOnEscape: false }
 
@@ -95,7 +92,8 @@ class Movement extends MaintainCount
       which = if direction == forward then "start" else "end"
       @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
-  # Run a movement command.
+  # Run a movement command.  The movement should be a string of the form "direction amount", e.g. "forward
+  # word".
   runMovement: (movement) ->
     @selection.modify @alterMethod, movement.split(" ")...
 
@@ -119,13 +117,7 @@ class Movement extends MaintainCount
 
   # An approximation of the vim "w" movement.
   moveForwardWord: (direction) ->
-    # This is broken:
-    # - On the very last word in the text.
-    # - When the next character is not a word character.
-    # However, it works well for the common cases, and the additional complexity of fixing these broken cases
-    # is probably unwarranted right now (smblott, 2015/1/25).
-    movements = [ "forward word", "forward word", "backward word" ]
-    @runMovement movement for movement in movements
+    @runMovement movement for movement in [ "forward word", "forward word", "backward word" ]
 
   movements:
     "l": "forward character"
@@ -352,6 +344,7 @@ class VisualMode extends Movement
   establishInitialSelection: ->
     nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
     while node = nodes.nextNode()
+      # Try not to pick really small nodes.  They're likely to be part of a banner.
       if node.nodeType == 3 and 50 <= node.data.trim().length
         element = node.parentElement
         if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
@@ -418,6 +411,12 @@ class EditMode extends Movement
         if 0 < @selection.toString().length
           @copy @selection.toString()
           @selection.deleteFromDocument()
+
+      # If the input is empty, then enter insert mode immediately
+      unless @element.isContentEditable
+        if @element.value.trim() == ""
+          enterInsertMode()
+          HUD.showForDuration "Input empty, entered insert mode directly.", 3500
 
   enterVisualMode: (options = {}) ->
     defaults =
