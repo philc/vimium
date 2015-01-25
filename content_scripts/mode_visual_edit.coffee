@@ -1,8 +1,6 @@
 
 # To do:
-# - better implementation of `o`
 # - caret mode
-# - find operations (needs better implementation?)
 
 enterInsertMode = ->
   new InsertMode { badge: "I", blurOnEscape: false }
@@ -95,7 +93,7 @@ class Movement extends MaintainCount
       @selection.removeAllRanges()
       @selection.addRange range
       which = if direction == forward then "start" else "end"
-      @selection.extend original["#{which}Container"], original["#{which}Offset"],
+      @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
   # Run a movement command.
   runMovement: (movement) ->
@@ -117,7 +115,7 @@ class Movement extends MaintainCount
       if success = @moveInDirection direction
         @moveInDirection @opposite[direction]
         return if 0 < success then direction else @opposite[direction]
-    forward
+    backward
 
   # An approximation of the vim "w" movement.
   moveForwardWord: (direction) ->
@@ -265,7 +263,7 @@ class Movement extends MaintainCount
     r = t = selection.getRangeAt 0
     if selection.type == "Range"
       r = t.cloneRange()
-      r.collapse(@getDirection() == backward)
+      r.collapse @getDirection() == backward
     t = r.startContainer
     t = t.childNodes[r.startOffset] if t.nodeType == 1
     o = t
@@ -295,7 +293,7 @@ class VisualMode extends Movement
     extend @commands,
       "y": ->
         # Special case: "yy" (the first from edit mode, and now the second).
-        @selectLine() if @options.expectImmediateY and @keyQueue == ""
+        @selectLine() if @options.yYanksLine
         @yank()
       "V": -> new VisualLineMode @options
 
@@ -303,29 +301,8 @@ class VisualMode extends Movement
       extend @commands,
         "d": -> @yank deleteFromDocument: true
         "c": -> @yank(); enterInsertMode()
-
-    # Map "n" and "N" for poor-man's find.
-    unless @options.underEditMode
-      do =>
-        findBackwards = false
-        query = getFindModeQuery()
-        return unless query
-
-        executeFind = => @protectClipboard =>
-          initialRange = @selection.getRangeAt(0).cloneRange()
-          caseSensitive = /[A-Z]/.test query
-          if query
-            window.find query, caseSensitive, findBackwards, true, false, true, false
-            newRange = @selection.getRangeAt(0).cloneRange()
-            range = document.createRange()
-            range.setStart initialRange.startContainer, initialRange.startOffset
-            range.setEnd newRange.endContainer, newRange.endOffset
-            @selection.removeAllRanges()
-            @selection.addRange range
-
-        extend @movements,
-          "n": -> executeFind()
-          "N": -> findBackwards = not findBackwards; executeFind()
+    else
+      @installFindMode()
 
     @clipboardContents = ""
     @paste (text) => @clipboardContents = text
@@ -337,8 +314,43 @@ class VisualMode extends Movement
   copy: (text) ->
     super @clipboardContents = text
 
+  installFindMode: ->
+    previousFindRange = null
+
+    executeFind = (findBackwards) =>
+      query = getFindModeQuery()
+      if query
+        caseSensitive = Utils.hasUpperCase query
+        @protectClipboard =>
+          initialRange = @selection.getRangeAt(0).cloneRange()
+          direction = @getDirection()
+          which = if direction == forward then "start" else "end"
+
+          if previousFindRange
+            @selection.removeAllRanges()
+            @selection.addRange previousFindRange
+
+          window.find query, caseSensitive, findBackwards, true, false, true, false
+          previousFindRange = newFindRange = @selection.getRangeAt(0).cloneRange()
+
+          range = document.createRange()
+          range.setStart initialRange["#{which}Container"], initialRange["#{which}Offset"]
+          range.setEnd newFindRange.endContainer, newFindRange.endOffset
+          @selection.removeAllRanges()
+          @selection.addRange range
+
+          if @getDirection() == backward or @selection.toString().length == 0
+            range.setStart newFindRange.startContainer, newFindRange.startOffset
+            @selection.removeAllRanges()
+            @selection.addRange range
+
+    extend @movements,
+      "n": -> executeFind false
+      "N": -> executeFind true
+
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
+    options.name = "visual/line"
     super options
     @selectLine() unless @selection?.type == "None"
 
@@ -370,11 +382,11 @@ class EditMode extends Movement
       "v": -> new VisualMode underEditMode: true
 
       "Y": -> @enterVisualMode runMovement: "Y"
-      "y": => @enterVisualMode expectImmediateY: true
+      "y": => @enterVisualMode yYanksLine: true
       "d": => @enterVisualMode deleteFromDocument: true
       "c": => @enterVisualMode
         deleteFromDocument: true
-        onYank: -> new InsertMode { badge: "I", blurOnEscape: false }
+        onYank: enterInsertMode
 
       "D": => @enterVisualMode runMovement: "$", deleteFromDocument: true
       "C": => @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
