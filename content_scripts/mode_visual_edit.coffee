@@ -239,15 +239,14 @@ class Movement extends MaintainCount
   # Try to scroll the focus into view.
   scrollIntoView: ->
     @protectClipboard =>
-      element = document.activeElement
-      if element and DomUtils.isEditable element
-        if element.clientHeight < element.scrollHeight
-          if element.isContentEditable
-            # How do we do this?
+      if @element and DomUtils.isEditable @element
+        if @element.clientHeight < @element.scrollHeight
+          if @element.isContentEditable
+            # How do we do this?  This case matters for gmail and Google's inbox.
           else
-            position = if @getDirection() == backward then element.selectionStart else element.selectionEnd
-            coords = DomUtils.getCaretCoordinates element, position
-            Scroller.scrollToPosition element, coords.top, coords.left
+            position = if @getDirection() == backward then @element.selectionStart else @element.selectionEnd
+            coords = DomUtils.getCaretCoordinates @element, position
+            Scroller.scrollToPosition @element, coords.top, coords.left
       else
         elementWithFocus = @getElementWithFocus @selection
         Scroller.scrollIntoView elementWithFocus if elementWithFocus
