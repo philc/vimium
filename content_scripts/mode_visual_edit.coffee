@@ -262,19 +262,15 @@ class VisualMode extends Movement
   constructor: (options = {}) ->
     @selection = window.getSelection()
 
-    if options.initialRange
-      @selection.removeAllRanges()
-      @selection.addRange options.initialRange
-    else
-      switch @selection.type
-        when "None"
-          unless @establishInitialSelection()
-            HUD.showForDuration "Create a selection before entering visual mode.", 2500
-            return
-        when "Caret"
-          # Try to start with a visible selection.
-          @moveInDirection(forward) or @moveInDirection backward unless options.editModeParent
-          @scrollIntoView() if @selection.type == "Range"
+    switch @selection.type
+      when "None"
+        unless @establishInitialSelection()
+          HUD.showForDuration "Create a selection before entering visual mode.", 2500
+          return
+      when "Caret"
+        # Try to start with a visible selection.
+        @moveInDirection(forward) or @moveInDirection backward unless options.editModeParent
+        @scrollIntoView() if @selection.type == "Range"
 
     defaults =
       name: "visual"
@@ -285,7 +281,7 @@ class VisualMode extends Movement
     super extend defaults, options
 
     extend @commands,
-      "V": -> new VisualLineMode initialRange: @selection.getRangeAt(0).cloneRange()
+      "V": -> new VisualLineMode
       "y": ->
         # Special case: "yy" (the first from edit mode, and now the second).
         @selectLexicalEntity "lineboundary" if @options.yYanksLine and @keyPressCount == 1
