@@ -1,4 +1,8 @@
 
+# Todo:
+# Fix word movement, particularly for "a word".
+# Konami code?
+
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
 class SuppressPrintable extends Mode
@@ -280,28 +284,38 @@ class VisualMode extends Movement
       alterMethod: "extend"
     super extend defaults, options
 
-    extend @commands,
-      "V": -> new VisualLineMode
-      "y": ->
-        # Special case: "yy" (the first from edit mode, and now the second).
-        @selectLexicalEntity "lineboundary" if @options.yYanksLine and @keyPressCount == 1
-        @yank()
+    unless @options.oneMovementOnly
+      extend @commands,
+        "V": -> new VisualLineMode
+        "y": -> @yank()
 
+    # Additional commands when run under edit mode.
     if @options.editModeParent and not @options.oneMovementOnly
       extend @commands,
         "c": -> @yank deleteFromDocument: true; @options.editModeParent.enterInsertMode()
         "x": -> @yank deleteFromDocument: true
-        "d": ->
-          # Special case: "dd" (the first from edit mode, and now the second).
-          @selectLexicalEntity "lineboundary" if @options.dYanksLine and @keyPressCount == 1
+        "d": -> @yank deleteFromDocument: true
+
+    # For "yy".
+    if @options.yYanksLine
+      @commands.y = ->
+        if @keyPressCount == 1
+          @selectLexicalEntity "lineboundary"
+          @yank()
+
+    # For "dd".
+    if @options.dYanksLine
+      @commands.d = ->
+        if @keyPressCount == 1
+          @selectLexicalEntity "lineboundary"
           @yank deleteFromDocument: true
 
+    # For "daw", "das", "dap", "caw", "cas", "cap".
     if @options.oneMovementOnly
-      extend @commands,
-        "a": ->
-          if @keyPressCount == 1
-            for entity in [ "word", "sentence", "paragraph" ]
-              do (entity) => @movements[entity.charAt 0] = -> @selectLexicalEntity entity
+      @commands.a = ->
+        if @keyPressCount == 1
+          for entity in [ "word", "sentence", "paragraph" ]
+            do (entity) => @movements[entity.charAt 0] = -> @selectLexicalEntity entity
 
     unless @options.editModeParent
       @installFindMode()
@@ -395,7 +409,7 @@ class VisualMode extends Movement
 
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
-    options.name = "visual/line"
+    options.name ||= "visual/line"
     super options
     unless @selection?.type == "None"
       @selectLexicalEntity "lineboundary"
@@ -427,14 +441,14 @@ class EditMode extends Movement
       "P": -> @pasteClipboard backward
       "v": -> @launchSubMode VisualMode
 
-      "Y": -> @enterVisualMode runMovement: "Y"
-      "x": -> @enterVisualMode runMovement: "h", deleteFromDocument: true
-      "y": -> @enterVisualMode yYanksLine: true
-      "d": -> @enterVisualMode deleteFromDocument: true, dYanksLine: true
-      "c": -> @enterVisualMode deleteFromDocument: true, onYank: => @enterInsertMode()
+      "Y": -> @enterVisualModeForMovement runMovement: "Y"
+      "x": -> @enterVisualModeForMovement runMovement: "h", deleteFromDocument: true
+      "y": -> @enterVisualModeForMovement yYanksLine: true
+      "d": -> @enterVisualModeForMovement deleteFromDocument: true, dYanksLine: true
+      "c": -> @enterVisualModeForMovement deleteFromDocument: true, onYank: => @enterInsertMode()
 
-      "D": -> @enterVisualMode runMovement: "$", deleteFromDocument: true
-      "C": -> @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
+      "D": -> @enterVisualModeForMovement runMovement: "$", deleteFromDocument: true
+      "C": -> @enterVisualModeForMovement runMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
 
       # Disabled as potentially confusing.
       # # If the input is empty, then enter insert mode immediately
@@ -443,13 +457,12 @@ class EditMode extends Movement
       #     @enterInsertMode()
       #     HUD.showForDuration "Input empty, entered insert mode directly.", 3500
 
-  enterVisualMode: (options = {}) ->
-    defaults =
-      badge: ""
+  enterVisualModeForMovement: (options = {}) ->
+    @launchSubMode VisualMode, extend options,
+      badge: "M"
       initialCount: @countPrefix
       oneMovementOnly: true
     @countPrefix = ""
-    @launchSubMode VisualMode, extend defaults, options
 
   enterInsertMode: () ->
     @launchSubMode InsertMode,
