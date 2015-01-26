@@ -419,6 +419,7 @@ extend window,
           if mode and document.activeElement and DomUtils.isEditable document.activeElement
             new mode
               singleton: document.activeElement
+              targetElement: document.activeElement
 
 # Decide whether this keyChar should be passed to the underlying page.
 # Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a

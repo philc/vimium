@@ -13,7 +13,7 @@ class InsertMode extends Mode
       return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
       DomUtils.suppressKeyupAfterEscape handlerStack
       target = event.srcElement
-      if target and DomUtils.isFocusable(target) and @options.blurOnEscape
+      if target and DomUtils.isFocusable target
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
         # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
         # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
@@ -27,12 +27,14 @@ class InsertMode extends Mode
       keypress: handleKeyEvent
       keyup: handleKeyEvent
       keydown: handleKeyEvent
-      blurOnEscape: true
 
     super extend defaults, options
 
     @insertModeLock =
-      if document.activeElement and DomUtils.isEditable document.activeElement
+      if options.targetElement and DomUtils.isEditable options.targetElement
+        # The caller has told us which element to activate on.
+        options.targetElement
+      else if document.activeElement and DomUtils.isEditable document.activeElement
         # An input element is already active, so use it.
         document.activeElement
       else
@@ -69,7 +71,6 @@ class InsertMode extends Mode
     Mode.updateBadge()
 
   exit: (_, target)  ->
-    # Note: target == undefined, here, is required only for tests.
     if (target and target == @insertModeLock) or @global or target == undefined
       @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
       @insertModeLock = null

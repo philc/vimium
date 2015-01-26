@@ -456,12 +456,14 @@ class EditMode extends Movement
     @launchSubMode VisualMode, extend defaults, options
 
   enterInsertMode: () ->
-    @launchSubMode InsertMode, badge: "I", blurOnEscape: false
+    @launchSubMode InsertMode,
+      exitOnEscape: true
+      targetElement: @options.targetElement
 
   launchSubMode: (mode, options = {}) ->
     @lastSubMode =
       mode: mode
-      instance: new mode extend options, editModeParent: @
+      instance: Mode.cloneMode mode, extend options, editModeParent: @
 
   pasteClipboard: (direction) ->
     @paste (text) =>
@@ -521,8 +523,9 @@ class SuspendedEditMode extends Mode
         @alwaysContinueBubbling =>
           if event?.target == editModeOptions.singleton
             console.log "#{@id}: reactivating edit mode" if @debug
-            editMode = new EditMode editModeOptions
-            editMode.launchSubMode lastSubMode.mode, lastSubMode.instance.options if lastSubMode
+            editMode = Mode.cloneMode EditMode, editModeOptions
+            if lastSubMode
+              editMode.launchSubMode lastSubMode.mode, lastSubMode.instance.options
       keypress: (event) =>
         @alwaysContinueBubbling =>
           @exit() unless event.metaKey or event.ctrlKey or event.altKey

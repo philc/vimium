@@ -160,6 +160,12 @@ class Mode
         handler: "setBadge"
         badge: badge.badge
 
+  # Activate a mode, but first remove any keyboard-event handlers which may be in its options.  This allows us
+  # to re-activate (or clone) a previously-active mode.
+  @cloneMode: (mode, options) ->
+    delete options[type] for type in [ "keydown", "keypress", "keyup" ]
+    new mode options
+
   # Debugging routines.
   logModes: ->
     if @debug
