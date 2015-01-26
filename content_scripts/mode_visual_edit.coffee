@@ -92,10 +92,11 @@ class Movement extends MaintainCount
       which = if direction == forward then "start" else "end"
       @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
-  # Run a movement command.  The movement should be a string of the form "direction amount", e.g. "forward
-  # word".
+  # Run a movement command.  The single movement argument can be a string of the form "direction amount", e.g.
+  # "forward word", or a list, e.g. [ "forward", "word" ].
   runMovement: (movement) ->
-    @selection.modify @alterMethod, movement.split(" ")...
+    movement = movement.split(" ") if typeof movement == "string"
+    @selection.modify @alterMethod, movement...
 
   # Try to move one character in "direction".  Return 1, -1 or 0, indicating whether the selection got bigger,
   # or smaller, or is unchanged.
@@ -135,7 +136,7 @@ class Movement extends MaintainCount
     "G": "forward documentboundary"
     "g": "backward documentboundary"
     "w": -> @moveForwardWord()
-    "Y": -> @selectLine()
+    "Y": -> @selectLexicalEntity "lineboundary"
     "o": -> @reverseSelection()
 
   constructor: (options) ->
@@ -228,10 +229,12 @@ class Movement extends MaintainCount
         @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
     @copy @yankedText if @yankedText
 
-  selectLine: ->
+  # Select a lexical entity, such as a word, a line, or a sentence. The argument should be a movement target,
+  # such as "word" or "lineboundary".
+  selectLexicalEntity: (entity) ->
     for direction in [ backward, forward ]
       @reverseSelection()
-      @runMovement "#{direction} lineboundary"
+      @runMovement [ direction, entity ]
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -290,16 +293,24 @@ class VisualMode extends Movement
       "V": -> new VisualLineMode extend @options, initialRange: @selection.getRangeAt(0).cloneRange()
       "y": ->
         # Special case: "yy" (the first from edit mode, and now the second).
-        @selectLine() if @options.yYanksLine and @keyPressCount == 1
+        @selectLexicalEntity "lineboundary" if @options.yYanksLine and @keyPressCount == 1
         @yank()
 
-    if @options.underEditMode
+    if @options.underEditMode and not @options.oneMovementOnly
       extend @commands,
         "c": -> @yank(); enterInsertMode()
+        "x": -> @yank deleteFromDocument: true
         "d": ->
           # Special case: "dd" (the first from edit mode, and now the second).
-          @selectLine() if @options.dYanksLine and @keyPressCount == 1
+          @selectLexicalEntity "lineboundary" if @options.dYanksLine and @keyPressCount == 1
           @yank deleteFromDocument: true
+
+    if @options.oneMovementOnly
+      extend @commands,
+        "a": ->
+          if @keyPressCount == 1
+            for entity in [ "word", "sentence", "paragraph" ]
+              do (entity) => @movements[entity.charAt 0] = -> @selectLexicalEntity entity
 
     unless @options.underEditMode
       @installFindMode()
@@ -379,7 +390,7 @@ class VisualLineMode extends VisualMode
       if options.initialRange
         @selection.removeAllRanges()
         @selection.addRange options.initialRange
-      @selectLine()
+      @selectLexicalEntity "lineboundary"
 
   handleMovementKeyChar: (keyChar) ->
     super keyChar
@@ -409,6 +420,7 @@ class EditMode extends Movement
       "v": -> new VisualMode underEditMode: true
 
       "Y": -> @enterVisualMode runMovement: "Y"
+      "x": -> @enterVisualMode runMovement: "h", deleteFromDocument: true
       "y": => @enterVisualMode yYanksLine: true
       "d": => @enterVisualMode deleteFromDocument: true, dYanksLine: true
       "c": => @enterVisualMode deleteFromDocument: true, onYank: enterInsertMode
@@ -416,16 +428,12 @@ class EditMode extends Movement
       "D": => @enterVisualMode runMovement: "$", deleteFromDocument: true
       "C": => @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
 
-      "x": =>
-        if 0 < @selection.toString().length
-          @copy @selection.toString()
-          @selection.deleteFromDocument()
-
-      # If the input is empty, then enter insert mode immediately
-      unless @element.isContentEditable
-        if @element.value.trim() == ""
-          enterInsertMode()
-          HUD.showForDuration "Input empty, entered insert mode directly.", 3500
+      # Disabled as potentially confusing.
+      # # If the input is empty, then enter insert mode immediately
+      # unless @element.isContentEditable
+      #   if @element.value.trim() == ""
+      #     enterInsertMode()
+      #     HUD.showForDuration "Input empty, entered insert mode directly.", 3500
 
   enterVisualMode: (options = {}) ->
     defaults =
