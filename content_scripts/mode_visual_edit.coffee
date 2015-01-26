@@ -1,7 +1,4 @@
 
-enterInsertMode = ->
-  new InsertMode { badge: "I", blurOnEscape: false }
-
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
 class SuppressPrintable extends Mode
@@ -120,6 +117,10 @@ class Movement extends MaintainCount
   moveForwardWord: (direction) ->
     @runMovement movement for movement in [ "forward word", "forward word", "backward word" ]
 
+  collapseSelection: ->
+    if 0 < @selection.toString().length
+      @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
+
   movements:
     "l": "forward character"
     "h": "backward character"
@@ -219,16 +220,6 @@ class Movement extends MaintainCount
     @exit()
     @yankedText
 
-  exit: (event, target) ->
-    super event, target
-    # unless @options.underEditMode
-    #   if document.activeElement and DomUtils.isEditable document.activeElement
-    #     document.activeElement.blur()
-    unless event?.type == "keydown" and KeyboardUtils.isEscape event
-      if 0 < @selection.toString().length
-        @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
-    @copy @yankedText if @yankedText
-
   # Select a lexical entity, such as a word, a line, or a sentence. The argument should be a movement target,
   # such as "word" or "lineboundary".
   selectLexicalEntity: (entity) ->
@@ -270,15 +261,20 @@ class Movement extends MaintainCount
 class VisualMode extends Movement
   constructor: (options = {}) ->
     @selection = window.getSelection()
-    switch @selection.type
-      when "None"
-        unless @establishInitialSelection()
-          HUD.showForDuration "Create a selection before entering visual mode.", 2500
-          return
-      when "Caret"
-        # Try to start with a visible selection.
-        @moveInDirection(forward) or @moveInDirection backward unless options.underEditMode
-        @scrollIntoView() if @selection.type == "Range"
+
+    if options.initialRange
+      @selection.removeAllRanges()
+      @selection.addRange options.initialRange
+    else
+      switch @selection.type
+        when "None"
+          unless @establishInitialSelection()
+            HUD.showForDuration "Create a selection before entering visual mode.", 2500
+            return
+        when "Caret"
+          # Try to start with a visible selection.
+          @moveInDirection(forward) or @moveInDirection backward unless options.editModeParent
+          @scrollIntoView() if @selection.type == "Range"
 
     defaults =
       name: "visual"
@@ -289,15 +285,15 @@ class VisualMode extends Movement
     super extend defaults, options
 
     extend @commands,
-      "V": -> new VisualLineMode extend @options, initialRange: @selection.getRangeAt(0).cloneRange()
+      "V": -> new VisualLineMode initialRange: @selection.getRangeAt(0).cloneRange()
       "y": ->
         # Special case: "yy" (the first from edit mode, and now the second).
         @selectLexicalEntity "lineboundary" if @options.yYanksLine and @keyPressCount == 1
         @yank()
 
-    if @options.underEditMode and not @options.oneMovementOnly
+    if @options.editModeParent and not @options.oneMovementOnly
       extend @commands,
-        "c": -> @yank(); enterInsertMode()
+        "c": -> @yank deleteFromDocument: true; @options.editModeParent.enterInsertMode()
         "x": -> @yank deleteFromDocument: true
         "d": ->
           # Special case: "dd" (the first from edit mode, and now the second).
@@ -311,7 +307,7 @@ class VisualMode extends Movement
             for entity in [ "word", "sentence", "paragraph" ]
               do (entity) => @movements[entity.charAt 0] = -> @selectLexicalEntity entity
 
-    unless @options.underEditMode
+    unless @options.editModeParent
       @installFindMode()
 
     # Grab the initial clipboard contents.  We'll try to keep them intact until we get an explicit yank.
@@ -327,6 +323,26 @@ class VisualMode extends Movement
 
   copy: (text) ->
     super @clipboardContents = text
+
+  exit: (event, target) ->
+    if @options.editModeParent
+      if event?.type == "keydown" and KeyboardUtils.isEscape event
+        # Return to a caret for edit mode.
+        @collapseSelection()
+
+    @collapseSelection() if @yankedText
+
+    unless @options.editModeParent
+      # Don't leave the user in insert mode just because they happen to have selected text within an input
+      # element.
+      if document.activeElement and DomUtils.isEditable document.activeElement
+        document.activeElement.blur()
+
+    super event, target
+    # Copying the yanked text to the clipboard must be the very last thing we do, because other operations
+    # (like collapsing the selection) interfere with the clipboard.
+    @copy @yankedText if @yankedText
+
 
   installFindMode: ->
     previousFindRange = null
@@ -386,9 +402,6 @@ class VisualLineMode extends VisualMode
     options.name = "visual/line"
     super options
     unless @selection?.type == "None"
-      if options.initialRange
-        @selection.removeAllRanges()
-        @selection.addRange options.initialRange
       @selectLexicalEntity "lineboundary"
 
   handleMovementKeyChar: (keyChar) ->
@@ -409,39 +422,46 @@ class EditMode extends Movement
     super extend defaults, options
 
     extend @commands,
-      "i": enterInsertMode
-      "a": enterInsertMode
-      "A": => @runMovement "forward lineboundary"; enterInsertMode()
-      "o": => @openLine forward
-      "O": => @openLine backward
-      "p": => @pasteClipboard forward
-      "P": => @pasteClipboard backward
-      "v": -> new VisualMode underEditMode: true
+      "i": -> @enterInsertMode()
+      "a": -> @enterInsertMode()
+      "A": -> @runMovement "forward lineboundary"; @enterInsertMode()
+      "o": -> @openLine forward
+      "O": -> @openLine backward
+      "p": -> @pasteClipboard forward
+      "P": -> @pasteClipboard backward
+      "v": -> @launchSubMode VisualMode
 
       "Y": -> @enterVisualMode runMovement: "Y"
       "x": -> @enterVisualMode runMovement: "h", deleteFromDocument: true
-      "y": => @enterVisualMode yYanksLine: true
-      "d": => @enterVisualMode deleteFromDocument: true, dYanksLine: true
-      "c": => @enterVisualMode deleteFromDocument: true, onYank: enterInsertMode
+      "y": -> @enterVisualMode yYanksLine: true
+      "d": -> @enterVisualMode deleteFromDocument: true, dYanksLine: true
+      "c": -> @enterVisualMode deleteFromDocument: true, onYank: => @enterInsertMode()
 
-      "D": => @enterVisualMode runMovement: "$", deleteFromDocument: true
-      "C": => @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: enterInsertMode
+      "D": -> @enterVisualMode runMovement: "$", deleteFromDocument: true
+      "C": -> @enterVisualMode runMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
 
       # Disabled as potentially confusing.
       # # If the input is empty, then enter insert mode immediately
       # unless @element.isContentEditable
       #   if @element.value.trim() == ""
-      #     enterInsertMode()
+      #     @enterInsertMode()
       #     HUD.showForDuration "Input empty, entered insert mode directly.", 3500
 
   enterVisualMode: (options = {}) ->
     defaults =
       badge: ""
-      underEditMode: true
       initialCount: @countPrefix
       oneMovementOnly: true
-    new VisualMode extend defaults, options
     @countPrefix = ""
+    @launchSubMode VisualMode, extend defaults, options
+
+  enterInsertMode: () ->
+    @launchSubMode InsertMode, badge: "I", blurOnEscape: false
+
+  launchSubMode: (mode, options = {}) ->
+    @lastSubMode =
+      mode: mode
+      instance: new mode extend options, editModeParent: @
 
   pasteClipboard: (direction) ->
     @paste (text) =>
@@ -449,7 +469,7 @@ class EditMode extends Movement
 
   openLine: (direction) ->
     @runMovement "#{direction} lineboundary"
-    enterInsertMode()
+    @enterInsertMode()
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement "backward character" if direction == backward
 
@@ -471,34 +491,41 @@ class EditMode extends Movement
           locked = false
 
   exit: (event, target) ->
-    super()
+    super event, target
+
+    lastSubMode =
+      if @lastSubMode?.instance.modeIsActive
+        @lastSubMode.instance.exit event, target
+        @lastSubMode
+
     if event?.type == "keydown" and KeyboardUtils.isEscape event
       if target? and DomUtils.isDOMDescendant @element, target
         @element.blur()
+
     if event?.type == "blur"
-      new BlurredEditMode @options
+      new SuspendedEditMode @options, lastSubMode
 
 # In edit mode, the input blurs if the user changes tabs or clicks outside of the element.  In the former
 # case, the user expects to remain in edit mode.  In the latter case, they may just be copying some text with
-# the mouse/Ctrl-C, and again they expect to remain in edit mode when they return.  BlurredEditMode monitors
+# the mouse/Ctrl-C, and again they expect to remain in edit mode when they return.  SuspendedEditMode monitors
 # various events and tries to either exit completely or re-enter edit mode as appropriate.
-class BlurredEditMode extends Mode
-  constructor: (originalOptions) ->
+class SuspendedEditMode extends Mode
+  constructor: (editModeOptions, lastSubMode = null) ->
     super
-      name: "blurred-edit"
-      singleton: originalOptions.singleton
+      name: "suspended-edit"
+      singleton: editModeOptions.singleton
 
     @push
       _name: "#{@id}/focus"
       focus: (event) =>
         @alwaysContinueBubbling =>
-          if event?.target == originalOptions.singleton
+          if event?.target == editModeOptions.singleton
             console.log "#{@id}: reactivating edit mode" if @debug
-            new EditMode originalOptions
+            editMode = new EditMode editModeOptions
+            editMode.launchSubMode lastSubMode.mode, lastSubMode.instance.options if lastSubMode
       keypress: (event) =>
         @alwaysContinueBubbling =>
           @exit() unless event.metaKey or event.ctrlKey or event.altKey
-
 
 root = exports ? window
 root.VisualMode = VisualMode
