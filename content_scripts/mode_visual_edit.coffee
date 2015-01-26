@@ -2,6 +2,7 @@
 # Todo:
 # Fix word movement, particularly for "a word".
 # Konami code?
+# p/P.
 
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
 # through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
@@ -289,6 +290,16 @@ class VisualMode extends Movement
         "V": -> new VisualLineMode
         "y": -> @yank()
 
+    # "P" and "p" to copy-and-go (but not under edit mode).
+    unless @options.editModeParent
+      do =>
+        yankAndOpenAsUrl = (handler) =>
+          chrome.runtime.sendMessage handler: handler, url: @yank()
+
+        extend @commands,
+          "p": -> yankAndOpenAsUrl "openUrlInCurrentTab"
+          "P": -> yankAndOpenAsUrl "openUrlInNewTab"
+
     # Additional commands when run under edit mode.
     if @options.editModeParent and not @options.oneMovementOnly
       extend @commands,
@@ -517,9 +528,9 @@ class EditMode extends Movement
       new SuspendedEditMode @options, lastSubMode
 
 # In edit mode, the input blurs if the user changes tabs or clicks outside of the element.  In the former
-# case, the user expects to remain in edit mode.  In the latter case, they may just be copying some text with
-# the mouse/Ctrl-C, and again they expect to remain in edit mode when they return.  SuspendedEditMode monitors
-# various events and tries to either exit completely or re-enter edit mode as appropriate.
+# case, the user expects to remain in edit mode when they return.  In the latter case, they may just be
+# copying some text with the mouse/Ctrl-C, and again they expect to remain in edit mode.  SuspendedEditMode
+# monitors various events and tries to either exit completely or re-enter edit mode, as appropriate.
 class SuspendedEditMode extends Mode
   constructor: (editModeOptions, lastSubMode = null) ->
     super
@@ -527,10 +538,10 @@ class SuspendedEditMode extends Mode
       singleton: editModeOptions.singleton
 
     @push
-      _name: "#{@id}/focus"
+      _name: "#{@id}/monitor"
       focus: (event) =>
         @alwaysContinueBubbling =>
-          if event?.target == editModeOptions.singleton
+          if event?.target == editModeOptions.targetElement
             console.log "#{@id}: reactivating edit mode" if @debug
             editMode = Mode.cloneMode EditMode, editModeOptions
             if lastSubMode
