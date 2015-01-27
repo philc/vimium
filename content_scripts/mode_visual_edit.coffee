@@ -2,10 +2,10 @@
 # Todo:
 # Fix word movement, particularly for "a word".
 # Konami code?
-# p/P.
+# Use find as a mode.
 
 # This prevents printable characters from being passed through to underlying page.  It should, however, allow
-# through chrome keyboard shortcuts.  It's a backstop for all of the modes following.
+# through chrome keyboard shortcuts.  It's a keyboard-event backstop for all of the following modes.
 class SuppressPrintable extends Mode
   constructor: (options) ->
     handler = (event) =>
@@ -18,7 +18,7 @@ class SuppressPrintable extends Mode
             DomUtils.suppressPropagation
             @stopBubblingAndFalse
         else
-          false
+          @suppressEvent
       else
         @stopBubblingAndTrue
 
@@ -65,13 +65,10 @@ class Movement extends MaintainCount
   opposite: { forward: backward, backward: forward }
 
   copy: (text) ->
-    chrome.runtime.sendMessage
-      handler: "copyToClipboard"
-      data: text
+    chrome.runtime.sendMessage handler: "copyToClipboard", data: text if text
 
   paste: (callback) ->
-    chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) ->
-      callback response
+    chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) -> callback response
 
   # Swap the anchor node/offset and the focus node/offset.
   reverseSelection: ->
@@ -375,21 +372,26 @@ class VisualMode extends Movement
         @protectClipboard =>
           initialRange = @selection.getRangeAt(0).cloneRange()
           direction = @getDirection()
-          which = if direction == forward then "start" else "end"
 
+          # Start by re-selecting the previous match, if any.  This tells Chrome where to start from.
           if previousFindRange
             @selection.removeAllRanges()
             @selection.addRange previousFindRange
 
           window.find query, caseSensitive, findBackwards, true, false, true, false
           previousFindRange = newFindRange = @selection.getRangeAt(0).cloneRange()
+          # FIXME(smblott).  What if there were no matches?
 
+          # Now, install a range from the original selection to the new match.
           range = document.createRange()
+          which = if direction == forward then "start" else "end"
           range.setStart initialRange["#{which}Container"], initialRange["#{which}Offset"]
           range.setEnd newFindRange.endContainer, newFindRange.endOffset
           @selection.removeAllRanges()
           @selection.addRange range
 
+          # If we're going backwards (or if the election ended up empty), then extend the selection again,
+          # this time to include the match itself.
           if @getDirection() == backward or @selection.toString().length == 0
             range.setStart newFindRange.startContainer, newFindRange.startOffset
             @selection.removeAllRanges()
