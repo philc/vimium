@@ -91,13 +91,15 @@ class Mode
     # be unique.  New instances deactivate existing instances with the same key.
     if @options.singleton
       do =>
-        singletons = Mode.singletons ||= {}
         key = @options.singleton
-        @onExit => delete singletons[key] if singletons[key] == @
-        if singletons[key]
-          @log "singleton:", "deactivating #{singletons[key].id}"
-          singletons[key].exit()
-        singletons[key] = @
+        Mode.singletons ||= []
+        @onExit => Mode.singletons = Mode.singletons.filter (active) => active.key != key
+        for active in Mode.singletons
+          if active.key == key
+            console.log "singleton, deactivating:", active.mode.id if @debug
+            active.mode.exit()
+        Mode.singletons.push key: key, mode: @
+        console.log "singletons:", (Mode.singletons.map (active) -> active.mode.id)... if @debug
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes. The mode also tracks the
@@ -150,6 +152,11 @@ class Mode
   # case), because they do not need to be concerned with the value they yield.
   alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
 
+  # Get a copy of the configuration options for this mode (that is, excluding the main keyboard-event
+  # handlers).
+  getConfigurationOptions: ->
+    extend (extend {}, @options), keydown: null, keypress: null, keyup: null
+
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
   # the resulting badge to the background page.  We only update the badge if this document (hence this frame)
   # has the focus.
@@ -159,12 +166,6 @@ class Mode
       chrome.runtime.sendMessage
         handler: "setBadge"
         badge: badge.badge
-
-  # Activate a mode, but first remove any keyboard-event handlers which may be in its options.  This allows us
-  # to re-activate (or clone) a previously-active mode.
-  @cloneMode: (mode, options) ->
-    delete options[type] for type in [ "keydown", "keypress", "keyup" ]
-    new mode options
 
   # Debugging routines.
   logModes: ->
