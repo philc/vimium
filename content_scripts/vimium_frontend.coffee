@@ -350,7 +350,7 @@ extend window,
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with
       # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
       # Pressing any other key will remove the overlays and the special tab behavior.
-      # If mode is provided, then enter that mode on exit.  Otherwise, just let insert mode take over.
+      # The mode argument is the mode to enter once an input is selected.
       resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
       visibleInputs =
         for i in [0...resultSet.snapshotLength] by 1
@@ -386,9 +386,6 @@ extend window,
           super
             name: "focus-selector"
             badge: "?"
-            # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
-            # PostFindMode.
-            singleton: PostFindMode
             exitOnClick: true
             keydown: (event) =>
               if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -396,6 +393,8 @@ extend window,
                 selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
                 selectedInputIndex %= hints.length
                 hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+                # Deactivate any other modes on this element.
+                @deactivateSingleton visibleInputs[selectedInputIndex].element
                 visibleInputs[selectedInputIndex].element.focus()
                 @suppressEvent
               else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
@@ -407,9 +406,12 @@ extend window,
             id: "vimiumInputMarkerContainer"
             className: "vimiumReset"
 
+          # Deactivate any other modes on this element.
+          @deactivateSingleton visibleInputs[selectedInputIndex].element
           visibleInputs[selectedInputIndex].element.focus()
           if visibleInputs.length == 1
             @exit()
+            return
           else
             hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 

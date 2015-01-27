@@ -2,10 +2,11 @@
 # Todo:
 # Konami code?
 # Use find as a mode.
-# Refactor visual/movement modes.
+# Perhaps refactor visual/movement modes.
+# FocusInput selector is currently broken.
 
 # This prevents printable characters from being passed through to the underlying page.  It should, however,
-# allow through chrome keyboard shortcuts.  It's a keyboard-event backstop for visual mode and edit mode.
+# allow through Chrome keyboard shortcuts.  It's a keyboard-event backstop for visual mode and edit mode.
 class SuppressPrintable extends Mode
   constructor: (options = {}) ->
     handler = (event) =>
@@ -28,7 +29,7 @@ class SuppressPrintable extends Mode
       keyup: handler
 
 # This watches keyboard events and maintains @countPrefix as number keys and other keys are pressed.
-class MaintainCount extends SuppressPrintable
+class CountPrefix extends SuppressPrintable
   constructor: (options) ->
     super options
 
@@ -61,9 +62,9 @@ forward = "forward"
 backward = "backward"
 character = "character"
 
-# This implements movement commands with count prefixes (using MaintainCount) for both visual mode and edit
+# This implements movement commands with count prefixes (using CountPrefix) for both visual mode and edit
 # mode.
-class Movement extends MaintainCount
+class Movement extends CountPrefix
   opposite: forward: backward, backward: forward
 
   copy: (text) ->
