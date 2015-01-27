@@ -1,13 +1,13 @@
 
 # Todo:
-# Fix word movement, particularly for "a word".
 # Konami code?
 # Use find as a mode.
+# Refactor visual/movement modes.
 
-# This prevents printable characters from being passed through to underlying page.  It should, however, allow
-# through chrome keyboard shortcuts.  It's a keyboard-event backstop for all of the following modes.
+# This prevents printable characters from being passed through to the underlying page.  It should, however,
+# allow through chrome keyboard shortcuts.  It's a keyboard-event backstop for visual mode and edit mode.
 class SuppressPrintable extends Mode
-  constructor: (options) ->
+  constructor: (options = {}) ->
     handler = (event) =>
       if KeyboardUtils.isPrintable event
         if event.type == "keydown"
@@ -22,22 +22,19 @@ class SuppressPrintable extends Mode
       else
         @stopBubblingAndTrue
 
-    # This is pushed onto the handler stack before calling super().  Therefore, it ends up underneath (or
-    # after) all of the other handlers associated with the mode.
-    handlerId = handlerStack.push
-      _name: "#{@id}/suppress-printable"
+    super extend options,
       keydown: handler
       keypress: handler
       keyup: handler
 
-    super options
-    @handlers.push handlerId
-
 # This watches keyboard events and maintains @countPrefix as number keys and other keys are pressed.
 class MaintainCount extends SuppressPrintable
   constructor: (options) ->
-    @countPrefix = options.initialCount || ""
     super options
+
+    @countPrefix = ""
+    @countPrefixFactor = 1
+    @countPrefixFactor = @getCountPrefix options.initialCountPrefix if options.initialCountPrefix
 
     @push
       _name: "#{@id}/maintain-count"
@@ -47,14 +44,19 @@ class MaintainCount extends SuppressPrintable
             keyChar = String.fromCharCode event.charCode
             @countPrefix =
               if keyChar?.length == 1 and "0" <= keyChar <= "9" and @countPrefix + keyChar != "0"
-                if @options.initialCount
-                  @countPrefix = ""
-                  delete @options.initialCount
                 @countPrefix + keyChar
               else
                 ""
 
-# Some symbolic names.
+  # This handles both "d3w" and "3dw". Also, "3d2w" deletes six words.
+  getCountPrefix: (prefix = @countPrefix) ->
+    prefix = prefix.toString() if typeof prefix == "number"
+    count = @countPrefixFactor * if 0 < prefix?.length then parseInt prefix else 1
+    @countPrefix = ""
+    @countPrefixFactor = 1
+    count
+
+# Some symbolic names for widely-used strings.
 forward = "forward"
 backward = "backward"
 character = "character"
@@ -62,7 +64,7 @@ character = "character"
 # This implements movement commands with count prefixes (using MaintainCount) for both visual mode and edit
 # mode.
 class Movement extends MaintainCount
-  opposite: { forward: backward, backward: forward }
+  opposite: forward: backward, backward: forward
 
   copy: (text) ->
     chrome.runtime.sendMessage handler: "copyToClipboard", data: text if text
@@ -71,22 +73,24 @@ class Movement extends MaintainCount
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) -> callback response
 
   # Return a value which changes whenever the selection changes, regardless of whether the selection is
-  # collapsed or not.
+  # collapsed.
   hashSelection: ->
     [ @element?.selectionStart, @selection.toString().length ].join "/"
 
-  # Call a function.  Return true if the selection changed as a side effect, false otherwise.
+  # Call a function; return true if the selection changed.
   selectionChanged: (func) ->
-    before = @hashSelection()
-    func()
-    console.log before, @hashSelection()
-    @hashSelection() != before
+    before = @hashSelection(); func(); @hashSelection() != before
 
-  # Run a movement.  The single movement argument can be a string of the form "direction amount", e.g.
-  # "forward word", or a list, e.g. [ "forward", "word" ].
-  runMovement: (movement) ->
-    movement = movement.split(" ") if typeof movement == "string"
-    console.log movement.join " "
+  # Run a movement.  The arguments can be one of the following forms:
+  #   - "forward word" (one argument, a string)
+  #   - [ "forward", "word" ] (one argument, not a string)
+  #   - "forward", "word" (two arguments)
+  runMovement: (args...) ->
+    movement =
+      if typeof(args[0]) == "string" and args.length == 1
+        args[0].trim().split /\s+/
+      else
+        if args.length == 1 then args[0] else args[...2]
     @selection.modify @alterMethod, movement...
 
   # Run a sequence of movements, stopping if a movement fails to change the selection.
@@ -98,13 +102,13 @@ class Movement extends MaintainCount
   # Swap the anchor node/offset and the focus node/offset.
   reverseSelection: ->
     element = document.activeElement
-    if element and DomUtils.isEditable(element) and not element. isContentEditable
+    if element and DomUtils.isEditable(element) and not element.isContentEditable
       # Note(smblott). This implementation is unacceptably inefficient if the selection is large.  We only use
-      # it if we have to.  However, the normal method does not work for input elements.
+      # it if we have to.  However, the normal method (below) does not work for input elements.
       direction = @getDirection()
       length = @selection.toString().length
-      @selection[if direction == forward then "collapseToEnd" else "collapseToStart"]()
-      @selection.modify "extend", @opposite[direction], character for [0...length]
+      @collapseSelectionToFocus()
+      @runMovement @opposite[direction], character for [0...length]
     else
       # Normal method.
       direction = @getDirection()
@@ -116,9 +120,9 @@ class Movement extends MaintainCount
       which = if direction == forward then "start" else "end"
       @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
-  # Try to move one character in "direction".  Return 1, -1 or 0, indicating whether the selection got bigger,
-  # or smaller, or is unchanged.
-  moveInDirection: (direction) ->
+  # Try to extend the selection one character in "direction".  Return 1, -1 or 0, indicating whether the
+  # selection got bigger, or smaller, or is unchanged.
+  extendByOneCharacter: (direction) ->
     length = @selection.toString().length
     @selection.modify "extend", direction, character
     @selection.toString().length - length
@@ -129,22 +133,26 @@ class Movement extends MaintainCount
   getDirection: ->
     # Try to move the selection forward or backward, check whether it got bigger or smaller (then restore it).
     for direction in [ forward, backward ]
-      if success = @moveInDirection direction
-        @moveInDirection @opposite[direction]
-        return if 0 < success then direction else @opposite[direction]
-    backward
+      if change = @extendByOneCharacter direction
+        @extendByOneCharacter @opposite[direction]
+        return if 0 < change then direction else @opposite[direction]
+    forward
 
-  # An approximation of the vim "w" movement; only ever used in the forward direction.  The extra character
-  # movements at the end allow us to also get to the end of the very-last word.
+  # An approximation of the vim "w" movement; only ever used in the forward direction.  The last two character
+  # movements allow us to also get to the end of the very-last word.
   moveForwardWord: () ->
     # First, move to the end of the preceding word...
     if @runMovements "forward character", "backward word", "forward word"
       # And then to the start of the following word...
       @runMovements "forward word", "forward character", "backward character", "backward word"
 
-  collapseSelection: ->
+  collapseSelectionToAnchor: ->
     if 0 < @selection.toString().length
       @selection[if @getDirection() == backward then "collapseToEnd" else "collapseToStart"]()
+
+  collapseSelectionToFocus: ->
+    if 0 < @selection.toString().length
+      @selection[if @getDirection() == forward then "collapseToEnd" else "collapseToStart"]()
 
   movements:
     "l": "forward character"
@@ -169,9 +177,8 @@ class Movement extends MaintainCount
     @selection = window.getSelection()
     @movements = extend {}, @movements
     @commands = {}
-    @alterMethod = options.alterMethod || "extend"
     @keyQueue = ""
-    @keyPressCount = 0
+    @keypressCount = 0
     @yankedText = ""
     super options
 
@@ -179,16 +186,16 @@ class Movement extends MaintainCount
     @movements.B = @movements.b
     @movements.W = @movements.w
 
-    if @options.runMovement
-      # This instance has been created just to run a single movement.
-      @handleMovementKeyChar @options.runMovement
+    if @options.singleMovementOnly
+      # This instance has been created just to run a single movement only and then yank the result.
+      @handleMovementKeyChar @options.singleMovementOnly
       @yank()
       return
 
     @push
       _name: "#{@id}/keypress"
       keypress: (event) =>
-        @keyPressCount += 1
+        @keypressCount += 1
         unless event.metaKey or event.ctrlKey or event.altKey
           @keyQueue += String.fromCharCode event.charCode
           # We allow at most three characters for a command or movement mapping.
@@ -207,20 +214,14 @@ class Movement extends MaintainCount
 
               else if @movements[command]
                 @handleMovementKeyChar command
-
-                if @options.oneMovementOnly
-                  @yank()
-                  return @suppressEvent
-
-                break
+                break unless @options.oneMovementOnly
+                @yank()
+                return @suppressEvent
 
         @continueBubbling
 
   handleMovementKeyChar: (keyChar) ->
-    # We grab the count prefix immediately, because protectClipboard may be asynchronous (edit mode), and
-    # @countPrefix may be reset if we wait.
-    count = if 0 < @countPrefix.length then parseInt @countPrefix else 1
-    @countPrefix = ""
+    count = @getCountPrefix()
     if @movements[keyChar]
       @protectClipboard =>
         for [0...count]
@@ -229,14 +230,14 @@ class Movement extends MaintainCount
             when "function" then @movements[keyChar].call @
         @scrollIntoView()
 
-  # Yank the selection.  Always exits.  Returns the yanked text.
+  # Yank the selection; always exits; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
     @selection.deleteFromDocument() if args.deleteFromDocument or @options.deleteFromDocument
     console.log "yank:", @yankedText if @debug
 
     message = @yankedText.replace /\s+/g, " "
-    length = message.length
+    length = @yankedText.length
     message = message[...12] + "..." if 15 < length
     plural = if length == 1 then "" else "s"
     HUD.showForDuration "Yanked #{length} character#{plural}: \"#{message}\".", 2500
@@ -245,12 +246,14 @@ class Movement extends MaintainCount
     @exit()
     @yankedText
 
-  # Select a lexical entity, such as a word, a line, or a sentence. The argument should be a movement target,
-  # such as "word" or "lineboundary".
+  # Select a lexical entity, such as a word, a line, or a sentence. The entity should be a Chrome movement
+  # type, such as "word" or "lineboundary".  This assumes that the selection is initially collapsed.
   selectLexicalEntity: (entity) ->
-    for direction in [ backward, forward ]
-      @reverseSelection()
-      @runMovement [ direction, entity ]
+    @runMovement forward, entity
+    @selection.collapseToEnd()
+    @runMovement backward, entity
+    # Move the end of the preceding entity.
+    @runMovements [ backward, entity ], [ forward, entity ]
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -270,7 +273,7 @@ class Movement extends MaintainCount
   # Adapted from: http://roysharon.com/blog/37.
   # I have no idea how this works (smblott, 2015/1/22).
   # The intention is to find the element containing the focus.  That's the element we need to scroll into
-  # view. It seems to work most (but not all) of the time.
+  # view.
   getElementWithFocus: (selection) ->
     r = t = selection.getRangeAt 0
     if selection.type == "Range"
@@ -286,6 +289,7 @@ class Movement extends MaintainCount
 class VisualMode extends Movement
   constructor: (options = {}) ->
     @selection = window.getSelection()
+    @alterMethod = "extend"
 
     switch @selection.type
       when "None"
@@ -294,7 +298,7 @@ class VisualMode extends Movement
           return
       when "Caret"
         # Try to start with a visible selection.
-        @moveInDirection(forward) or @moveInDirection backward unless options.editModeParent
+        @extendByOneCharacter(forward) or @extendByOneCharacter backward unless options.editModeParent
         @scrollIntoView() if @selection.type == "Range"
 
     defaults =
@@ -302,7 +306,6 @@ class VisualMode extends Movement
       badge: "V"
       singleton: VisualMode
       exitOnEscape: true
-      alterMethod: "extend"
     super extend defaults, options
 
     unless @options.oneMovementOnly
@@ -330,21 +333,21 @@ class VisualMode extends Movement
     # For "yy".
     if @options.yYanksLine
       @commands.y = ->
-        if @keyPressCount == 1
+        if @keypressCount == 1
           @selectLexicalEntity "lineboundary"
           @yank()
 
     # For "dd".
     if @options.dYanksLine
       @commands.d = ->
-        if @keyPressCount == 1
+        if @keypressCount == 1
           @selectLexicalEntity "lineboundary"
           @yank deleteFromDocument: true
 
     # For "daw", "das", "dap", "caw", "cas", "cap".
     if @options.oneMovementOnly
       @commands.a = ->
-        if @keyPressCount == 1
+        if @keypressCount == 1
           for entity in [ "word", "sentence", "paragraph" ]
             do (entity) => @movements[entity.charAt 0] = -> @selectLexicalEntity entity
 
@@ -366,12 +369,7 @@ class VisualMode extends Movement
     super @clipboardContents = text
 
   exit: (event, target) ->
-    if @options.editModeParent
-      if event?.type == "keydown" and KeyboardUtils.isEscape event
-        # Return to a caret for edit mode.
-        @collapseSelection()
-
-    @collapseSelection() if @yankedText
+    @collapseSelectionToAnchor() if @yankedText or @options.editModeParent
 
     unless @options.editModeParent
       # Don't leave the user in insert mode just because they happen to have selected text within an input
@@ -448,15 +446,19 @@ class VisualLineMode extends VisualMode
     options.name ||= "visual/line"
     super options
     unless @selection?.type == "None"
-      @selectLexicalEntity "lineboundary"
+      initialDirection = @getDirection()
+      for direction in [ initialDirection, @opposite[initialDirection] ]
+        @runMovement direction, "lineboundary"
+        @reverseSelection()
 
   handleMovementKeyChar: (keyChar) ->
     super keyChar
-    @runMovement "#{@getDirection()} lineboundary", true
+    @runMovement @getDirection(), "lineboundary"
 
 class EditMode extends Movement
   constructor: (options = {}) ->
     @element = document.activeElement
+    @alterMethod = "move"
     return unless @element and DomUtils.isEditable @element
 
     defaults =
@@ -464,7 +466,6 @@ class EditMode extends Movement
       badge: "E"
       exitOnEscape: true
       exitOnBlur: @element
-      alterMethod: "move"
     super extend defaults, options
 
     extend @commands,
@@ -477,14 +478,14 @@ class EditMode extends Movement
       "P": -> @pasteClipboard backward
       "v": -> @launchSubMode VisualMode
 
-      "Y": -> @enterVisualModeForMovement runMovement: "Y"
-      "x": -> @enterVisualModeForMovement runMovement: "h", deleteFromDocument: true
+      "Y": -> @enterVisualModeForMovement singleMovementOnly: "Y"
+      "x": -> @enterVisualModeForMovement singleMovementOnly: "h", deleteFromDocument: true
       "y": -> @enterVisualModeForMovement yYanksLine: true
       "d": -> @enterVisualModeForMovement deleteFromDocument: true, dYanksLine: true
       "c": -> @enterVisualModeForMovement deleteFromDocument: true, onYank: => @enterInsertMode()
 
-      "D": -> @enterVisualModeForMovement runMovement: "$", deleteFromDocument: true
-      "C": -> @enterVisualModeForMovement runMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
+      "D": -> @enterVisualModeForMovement singleMovementOnly: "$", deleteFromDocument: true
+      "C": -> @enterVisualModeForMovement singleMovementOnly: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
 
       # Disabled as potentially confusing.
       # # If the input is empty, then enter insert mode immediately
@@ -496,9 +497,8 @@ class EditMode extends Movement
   enterVisualModeForMovement: (options = {}) ->
     @launchSubMode VisualMode, extend options,
       badge: "M"
-      initialCount: @countPrefix
+      initialCountPrefix: @getCountPrefix()
       oneMovementOnly: true
-    @countPrefix = ""
 
   enterInsertMode: () ->
     @launchSubMode InsertMode,
@@ -515,7 +515,7 @@ class EditMode extends Movement
       DomUtils.simulateTextEntry @element, text if text
 
   openLine: (direction) ->
-    @runMovement "#{direction} lineboundary"
+    @runMovement direction, "lineboundary"
     @enterInsertMode()
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement "backward character" if direction == backward
