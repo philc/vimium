@@ -70,6 +70,31 @@ class Movement extends MaintainCount
   paste: (callback) ->
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) -> callback response
 
+  # Return a value which changes whenever the selection changes, regardless of whether the selection is
+  # collapsed or not.
+  hashSelection: ->
+    [ @element?.selectionStart, @selection.toString().length ].join "/"
+
+  # Call a function.  Return true if the selection changed as a side effect, false otherwise.
+  selectionChanged: (func) ->
+    before = @hashSelection()
+    func()
+    console.log before, @hashSelection()
+    @hashSelection() != before
+
+  # Run a movement.  The single movement argument can be a string of the form "direction amount", e.g.
+  # "forward word", or a list, e.g. [ "forward", "word" ].
+  runMovement: (movement) ->
+    movement = movement.split(" ") if typeof movement == "string"
+    console.log movement.join " "
+    @selection.modify @alterMethod, movement...
+
+  # Run a sequence of movements, stopping if a movement fails to change the selection.
+  runMovements: (movements...) ->
+    for movement in movements
+      return false unless @selectionChanged => @runMovement movement
+    true
+
   # Swap the anchor node/offset and the focus node/offset.
   reverseSelection: ->
     element = document.activeElement
@@ -91,12 +116,6 @@ class Movement extends MaintainCount
       which = if direction == forward then "start" else "end"
       @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
-  # Run a movement command.  The single movement argument can be a string of the form "direction amount", e.g.
-  # "forward word", or a list, e.g. [ "forward", "word" ].
-  runMovement: (movement) ->
-    movement = movement.split(" ") if typeof movement == "string"
-    @selection.modify @alterMethod, movement...
-
   # Try to move one character in "direction".  Return 1, -1 or 0, indicating whether the selection got bigger,
   # or smaller, or is unchanged.
   moveInDirection: (direction) ->
@@ -115,9 +134,13 @@ class Movement extends MaintainCount
         return if 0 < success then direction else @opposite[direction]
     backward
 
-  # An approximation of the vim "w" movement.
-  moveForwardWord: (direction) ->
-    @runMovement movement for movement in [ "forward word", "forward word", "backward word" ]
+  # An approximation of the vim "w" movement; only ever used in the forward direction.  The extra character
+  # movements at the end allow us to also get to the end of the very-last word.
+  moveForwardWord: () ->
+    # First, move to the end of the preceding word...
+    if @runMovements "forward character", "backward word", "forward word"
+      # And then to the start of the following word...
+      @runMovements "forward word", "forward character", "backward character", "backward word"
 
   collapseSelection: ->
     if 0 < @selection.toString().length
