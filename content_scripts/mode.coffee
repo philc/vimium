@@ -91,7 +91,6 @@ class Mode
     # be unique.  New instances deactivate existing instances with the same key.
     if @options.singleton
       do =>
-        console.log @options.singleton
         @deactivateSingleton @options.singleton
         @onExit => Mode.singletons = Mode.singletons.filter (active) => active.key != @options.singleton
         Mode.singletons.push key: @options.singleton, mode: @

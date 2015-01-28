@@ -3,32 +3,27 @@
 # Konami code?
 # Use find as a mode.
 # Perhaps refactor visual/movement modes.
-# FocusInput selector is currently broken.
+# Exit on Ctrl-Enter.
+# Scroll is broken (again).  Seems to be after dd.
 
 # This prevents printable characters from being passed through to the underlying page.  It should, however,
 # allow through Chrome keyboard shortcuts.  It's a keyboard-event backstop for visual mode and edit mode.
 class SuppressPrintable extends Mode
   constructor: (options = {}) ->
     handler = (event) =>
-      if KeyboardUtils.isPrintable event
-        if event.type == "keydown"
-          # Completely suppress Backspace and Delete.
-          if event.keyCode in [ 8, 46 ]
-            @suppressEvent
-          else
-            DomUtils.suppressPropagation
-            @stopBubblingAndFalse
-        else
-          @suppressEvent
-      else
-        @stopBubblingAndTrue
+      return @stopBubblingAndTrue unless KeyboardUtils.isPrintable event
+      return @suppressEvent unless event.type == "keydown"
+      # Completely suppress Backspace and Delete.
+      return @suppressEvent if event.keyCode in [ 8, 46 ]
+      DomUtils.suppressPropagation event
+      @stopBubblingAndFalse
 
     super extend options,
       keydown: handler
       keypress: handler
       keyup: handler
 
-# This watches keyboard events and maintains @countPrefix as number keys and other keys are pressed.
+# This watches keypresses and maintains the count prefix as number keys and other keys are pressed.
 class CountPrefix extends SuppressPrintable
   constructor: (options) ->
     super options
@@ -57,13 +52,12 @@ class CountPrefix extends SuppressPrintable
     @countPrefixFactor = 1
     count
 
-# Some symbolic names for widely-used strings.
+# Some symbolic names for frequently-used strings.
 forward = "forward"
 backward = "backward"
 character = "character"
 
-# This implements movement commands with count prefixes (using CountPrefix) for both visual mode and edit
-# mode.
+# This implements movement commands with count prefixes for both visual mode and edit mode.
 class Movement extends CountPrefix
   opposite: forward: backward, backward: forward
 
@@ -73,8 +67,7 @@ class Movement extends CountPrefix
   paste: (callback) ->
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) -> callback response
 
-  # Return a value which changes whenever the selection changes, regardless of whether the selection is
-  # collapsed.
+  # Return a value which changes whenever the selection changes.
   hashSelection: ->
     [ @element?.selectionStart, @selection.toString().length ].join "/"
 
@@ -82,10 +75,10 @@ class Movement extends CountPrefix
   selectionChanged: (func) ->
     before = @hashSelection(); func(); @hashSelection() != before
 
-  # Run a movement.  The arguments can be one of the following forms:
-  #   - "forward word" (one argument, a string)
-  #   - [ "forward", "word" ] (one argument, not a string)
-  #   - "forward", "word" (two arguments)
+  # Run a movement.  For convenience, the following three forms can be used:
+  #   @runMovement "forward word"
+  #   @runMovement [ "forward", "word" ]
+  #   @runMovement "forward", "word"
   runMovement: (args...) ->
     movement =
       if typeof(args[0]) == "string" and args.length == 1
@@ -103,16 +96,15 @@ class Movement extends CountPrefix
   # Swap the anchor node/offset and the focus node/offset.
   reverseSelection: ->
     element = document.activeElement
+    direction = @getDirection()
     if element and DomUtils.isEditable(element) and not element.isContentEditable
       # Note(smblott). This implementation is unacceptably inefficient if the selection is large.  We only use
-      # it if we have to.  However, the normal method (below) does not work for input elements.
-      direction = @getDirection()
+      # it if we have to.  However, the normal method (below) does not work for simple text inputs.
       length = @selection.toString().length
       @collapseSelectionToFocus()
       @runMovement @opposite[direction], character for [0...length]
     else
       # Normal method.
-      direction = @getDirection()
       original = @selection.getRangeAt(0).cloneRange()
       range = original.cloneRange()
       range.collapse direction == backward
@@ -138,12 +130,21 @@ class Movement extends CountPrefix
         return if 0 < change then direction else @opposite[direction]
     forward
 
-  # An approximation of the vim "w" movement; only ever used in the forward direction.  The last two character
-  # movements allow us to also get to the end of the very-last word.
-  moveForwardWord: () ->
+  # An approximation of the vim "w" movement; only ever used in the forward direction.
+  moveForwardWord: ->
+    # First, move to the start of the current word...
+    @runMovement forward, character
+    @runMovement backward, "word"
+    # And then to the start of the next word...
+    @selectLexicalEntity "word"
+    return
+    # Previous version...
+    # This works in normal text inputs, but not in some contentEditable elements (notably the compose window
+    # on Google's Inbox).
     # First, move to the end of the preceding word...
     if @runMovements "forward character", "backward word", "forward word"
       # And then to the start of the following word...
+      # The two character movements allow us to also get to the end of the very-last word.
       @runMovements "forward word", "forward character", "backward character", "backward word"
 
   collapseSelectionToAnchor: ->
@@ -173,8 +174,8 @@ class Movement extends CountPrefix
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "g": "backward documentboundary"
-    "w": -> @moveForwardWord()
     "Y": -> @selectLexicalEntity "lineboundary"
+    "w": -> @moveForwardWord()
     "o": -> @reverseSelection()
 
   constructor: (options) ->
@@ -230,11 +231,14 @@ class Movement extends CountPrefix
       action() for [0...count]
       @scrollIntoView()
 
-  # Yank the selection; always exits; returns the yanked text.
+  # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
-    @selection.deleteFromDocument() if args.deleteFromDocument or @options.deleteFromDocument
     console.log "yank:", @yankedText if @debug
+    if args.deleteFromDocument or @options.deleteFromDocument
+      @selection.deleteFromDocument()
+    else
+      @collapseSelectionToAnchor()
 
     message = @yankedText.replace /\s+/g, " "
     length = @yankedText.length
@@ -246,14 +250,18 @@ class Movement extends CountPrefix
     @exit()
     @yankedText
 
-  # Select a lexical entity, such as a word, a line, or a sentence. The entity should be a Chrome movement
-  # type, such as "word" or "lineboundary".  This assumes that the selection is initially collapsed.
-  selectLexicalEntity: (entity) ->
+  # Select a lexical entity, such as a word, or a sentence. The entity should be a Chrome movement type, such
+  # as "word" or "lineboundary".
+  selectLexicalEntity: (entity, count = 1) ->
+    # Locate the start of the current entity.
     @runMovement forward, entity
-    @selection.collapseToEnd()
     @runMovement backward, entity
-    # Move the end of the preceding entity.
-    @runMovements [ backward, entity ], [ forward, entity ]
+    @collapseSelectionToFocus() if @options.oneMovementOnly
+    for [0...count]
+      @runMovement forward, entity
+      @runMovement forward, character
+    @runMovement forward, entity
+    @runMovement backward, entity
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -325,20 +333,22 @@ class VisualMode extends Movement
 
     # For "yy" and "dd".
     if @options.yankLineCharacter
-      @commands[@options.yankLineCharacter] = ->
+      @commands[@options.yankLineCharacter] = (count) ->
         if @keypressCount == 1
-          @selectLexicalEntity "lineboundary"
+          @selectLexicalEntity "lineboundary", count
           @yank()
 
     # For "daw", "cas", and so on.
     if @options.oneMovementOnly
-      @commands.a = ->
+      @commands.a = (count) ->
         if @keypressCount == 1
+          # We do not include "paragraph", here.  Chrome's paragraph movements seem to be asymmetrical,
+          # meaning "dap" ends up deleting the wrong text.
           for entity in [ "word", "sentence", "paragraph" ]
             do (entity) =>
-              @movements[entity.charAt 0] = ->
+              @commands[entity.charAt 0] = ->
                 if @keypressCount == 2
-                  @selectLexicalEntity entity
+                  @selectLexicalEntity entity, count
                   @yank()
 
     unless @options.editModeParent
@@ -361,8 +371,6 @@ class VisualMode extends Movement
     super @clipboardContents = text
 
   exit: (event, target) ->
-    @collapseSelectionToAnchor() if @yankedText or @options.editModeParent
-
     unless @options.editModeParent
       # Don't leave the user in insert mode just because they happen to have selected text within an input
       # element.
@@ -464,15 +472,15 @@ class EditMode extends Movement
       P: -> @pasteClipboard backward
       v: -> @launchSubMode VisualMode
 
-      Y: -> @enterVisualModeForMovement immediateMovement: "Y"
-      x: -> @enterVisualModeForMovement immediateMovement: "h", deleteFromDocument: true
-      X: -> @enterVisualModeForMovement immediateMovement: "l", deleteFromDocument: true
-      y: -> @enterVisualModeForMovement yankLineCharacter: "y"
-      d: -> @enterVisualModeForMovement yankLineCharacter: "d", deleteFromDocument: true
-      c: -> @enterVisualModeForMovement deleteFromDocument: true, onYank: => @enterInsertMode()
+      Y: (count) -> @enterVisualModeForMovement 1, immediateMovement: "Y"
+      x: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true
+      X: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true
+      y: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "y"
+      d: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "d", deleteFromDocument: true
+      c: (count) -> @enterVisualModeForMovement count, deleteFromDocument: true, onYank: => @enterInsertMode()
 
-      D: -> @enterVisualModeForMovement immediateMovement: "$", deleteFromDocument: true
-      C: -> @enterVisualModeForMovement immediateMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
+      D: (count) -> @enterVisualModeForMovement 1, immediateMovement: "$", deleteFromDocument: true
+      C: (count) -> @enterVisualModeForMovement 1, immediateMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
 
     # Disabled as potentially confusing.
     # # If the input is empty, then enter insert mode immediately.
@@ -481,10 +489,10 @@ class EditMode extends Movement
     #     @enterInsertMode()
     #     HUD.showForDuration "Input empty, entered insert mode directly.", 3500
 
-  enterVisualModeForMovement: (options = {}) ->
+  enterVisualModeForMovement: (count, options = {}) ->
     @launchSubMode VisualMode, extend options,
       badge: "M"
-      initialCountPrefix: @getCountPrefix()
+      initialCountPrefix: count
       oneMovementOnly: true
 
   enterInsertMode: () ->
@@ -538,23 +546,19 @@ class EditMode extends Movement
 
     if event?.type == "blur"
       # This instance of edit mode has now been entirely removed from the handler stack.  It is inactive.
-      # However, the user may return.  For example, we get a blur event when we change tabs.  Or, the user may
+      # However, the user may return.  For example, we get a blur event when we change tab.  Or, the user may
       # be copying text with the mouse.   When the user does return, they expect to still be in edit mode.  We
       # leave behind a "suspended-edit" mode which watches for focus events and activates a new edit-mode
       # instance if required.
       #
       # How this gets cleaned up is a bit tricky.  The suspended-edit mode remains active on the current input
-      # element indefinately.  However, the only way to enter edit mode is via focusInput.  And all modes
+      # element indefinitely.  However, the only way to enter edit mode is via focusInput.  And all modes
       # launched by focusInput on a particular input element share a singleton (the element itself).  In
       # addition, the new mode below shares the same singleton.  So a newly-activated insert-mode or
       # edit-mode instance on this target element (the singleton) displaces any previously-active mode
       # (including any suspended-edit mode).  PostFindMode shares the same singleton.
       #
-      suspendedEditmode = new Mode
-        name: "#{@id}-suspended"
-        singleton: @options.singleton
-
-      suspendedEditmode.push
+      (new Mode name: "#{@id}-suspended", singleton: @options.singleton).push
         _name: "suspended-edit/#{@id}/focus"
         focus: (event) =>
           @alwaysContinueBubbling =>
