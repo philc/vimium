@@ -236,6 +236,20 @@ DomUtils =
     event.initTextEvent "textInput", true, true, null, text
     element.dispatchEvent event
 
+  # Adapted from: http://roysharon.com/blog/37.
+  # This finds the element containing the selection focus.
+  getElementWithFocus: (selection, backwards) ->
+    r = t = selection.getRangeAt 0
+    if selection.type == "Range"
+      r = t.cloneRange()
+      r.collapse backwards
+    t = r.startContainer
+    t = t.childNodes[r.startOffset] if t.nodeType == 1
+    o = t
+    o = o.previousSibling while o and o.nodeType != 1
+    t = o || t?.parentNode
+    t
+
 extend DomUtils,
   # From: https://github.com/component/textarea-caret-position/blob/master/index.js
   getCaretCoordinates: do ->
