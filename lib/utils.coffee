@@ -152,19 +152,16 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
-  # Allow a function call to be suppressed.  Use Utils.suppress.unlessSuppressed to call a function, unless it
-  # is suppressed via the given key.  Use Utils.suppressor.suppress to call a function while suppressing the
-  # given key.
-  suppressor: do ->
-    suppressed = {}
+  # Give objects (including elements) distinct identities.
+  getIdentity: do ->
+    identities = []
 
-    suppress: (key, func) ->
-      suppressed[key] = if suppressed[key]? then suppressed[key] + 1 else 1
-      func()
-      suppressed[key] -= 1
-
-    unlessSuppressed: (key, func) ->
-      func() unless suppressed[key]? and 0 < suppressed[key]
+    (obj) ->
+      index = identities.indexOf obj
+      if index < 0
+        index = identities.length
+        identities.push obj
+      "identity-" + index
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.

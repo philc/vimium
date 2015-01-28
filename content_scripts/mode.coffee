@@ -91,10 +91,11 @@ class Mode
     # be unique.  New instances deactivate existing instances with the same key.
     if @options.singleton
       do =>
+        singletons = Mode.singletons ||= {}
+        key = Utils.getIdentity @options.singleton
+        @onExit -> delete singletons[key]
         @deactivateSingleton @options.singleton
-        @onExit => Mode.singletons = Mode.singletons.filter (active) => active.key != @options.singleton
-        Mode.singletons.push key: @options.singleton, mode: @
-        console.log "singletons:", (Mode.singletons.map (active) -> active.mode.id)... if @debug
+        singletons[key] = @
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes. The mode also tracks the
@@ -137,12 +138,8 @@ class Mode
       Mode.updateBadge()
       @modeIsActive = false
 
-  deactivateSingleton: (key) ->
-    Mode.singletons ||= []
-    for active in Mode.singletons
-      if active.key == key and active.mode.modeIsActive
-        console.log "singleton, deactivating:", active.mode.id if @debug
-        active.mode.exit()
+  deactivateSingleton: (singleton) ->
+    Mode.singletons?[Utils.getIdentity singleton]?.exit()
 
   # The badge is chosen by bubbling an "updateBadge" event down the handler stack allowing each mode the
   # opportunity to choose a badge. This is overridden in sub-classes.

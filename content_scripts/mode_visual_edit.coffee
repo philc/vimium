@@ -29,8 +29,7 @@ class CountPrefix extends SuppressPrintable
     super options
 
     @countPrefix = ""
-    @countPrefixFactor = 1
-    @countPrefixFactor = @getCountPrefix options.initialCountPrefix if options.initialCountPrefix
+    @countPrefixFactor = options.initialCountPrefix || 1
 
     @push
       _name: "#{@id}/maintain-count"
@@ -46,7 +45,6 @@ class CountPrefix extends SuppressPrintable
 
   # This handles both "d3w" and "3dw". Also, "3d2w" deletes six words.
   getCountPrefix: (prefix = @countPrefix) ->
-    prefix = prefix.toString() if typeof prefix == "number"
     count = @countPrefixFactor * if 0 < prefix?.length then parseInt prefix else 1
     @countPrefix = ""
     @countPrefixFactor = 1
@@ -131,12 +129,12 @@ class Movement extends CountPrefix
     forward
 
   # An approximation of the vim "w" movement; only ever used in the forward direction.
-  moveForwardWord: ->
+  moveForwardWord: (count = 1) ->
     # First, move to the start of the current word...
     @runMovement forward, character
     @runMovement backward, "word"
     # And then to the start of the next word...
-    @selectLexicalEntity "word"
+    @selectLexicalEntity "word", count
     return
     # Previous version...
     # This works in normal text inputs, but not in some contentEditable elements (notably the compose window
@@ -174,9 +172,9 @@ class Movement extends CountPrefix
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "g": "backward documentboundary"
-    "Y": -> @selectLexicalEntity "lineboundary"
-    "w": -> @moveForwardWord()
-    "o": -> @reverseSelection()
+    "Y": (count) -> @selectLexicalEntity "lineboundary", count
+    "w": (count) -> @moveForwardWord count
+    "o": (count) -> @reverseSelection()
 
   constructor: (options) ->
     @selection = window.getSelection()
@@ -192,8 +190,8 @@ class Movement extends CountPrefix
     @movements.W = @movements.w
 
     if @options.immediateMovement
-      # This instance has been created just to run a single movement only and then yank the result.
-      @handleMovementKeyChar @options.immediateMovement
+      # This instance has been created just to run a single movement then yank the result.
+      @handleMovementKeyChar @options.immediateMovement, @getCountPrefix()
       @yank()
       return
 
@@ -221,14 +219,17 @@ class Movement extends CountPrefix
                 return @suppressEvent
 
         @continueBubbling
+    #
+    # End of Movement constructor.
 
   handleMovementKeyChar: (keyChar, count = 1) ->
-    action =
-      switch typeof @movements[keyChar]
-        when "string" then => @runMovement @movements[keyChar]
-        when "function" then => @movements[keyChar].call @
+    console.log "xxx", keyChar, count
     @protectClipboard =>
-      action() for [0...count]
+      switch typeof @movements[keyChar]
+        when "string"
+          @runMovement @movements[keyChar] for [0...count]
+        when "function"
+          @movements[keyChar].call @, count
       @scrollIntoView()
 
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
@@ -306,7 +307,7 @@ class VisualMode extends Movement
           return
       when "Caret"
         # Try to start with a visible selection.
-        @extendByOneCharacter(forward) or @extendByOneCharacter backward unless options.editModeParent
+        @extendByOneCharacter(forward) or @extendByOneCharacter backward unless options.parentMode
         @scrollIntoView() if @selection.type == "Range"
 
     defaults =
@@ -319,17 +320,21 @@ class VisualMode extends Movement
     # Additional commands when not being run only for movement.
     unless @options.oneMovementOnly
       @commands.y = -> @yank()
-      @commands.V = -> new VisualLineMode
       @commands.p = -> chrome.runtime.sendMessage handler: "openUrlInCurrentTab", url: @yank()
       @commands.P = -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
+      @commands.V = ->
+        if @options.parentMode
+          @options.parentMode.launchSubMode VisualLineMode
+        else
+          new VisualLineMode
 
-    # Additional commands when run under edit mode (but not just for movement).
-    if @options.editModeParent and not @options.oneMovementOnly
+    # Additional commands when run under edit mode (except if only for one movement).
+    if @options.parentMode and not @options.oneMovementOnly
         @commands.x = -> @yank deleteFromDocument: true
         @commands.d = -> @yank deleteFromDocument: true
         @commands.c = ->
           @yank deleteFromDocument: true
-          @options.editModeParent.enterInsertMode()
+          @options.parentMode.enterInsertMode()
 
     # For "yy" and "dd".
     if @options.yankLineCharacter
@@ -351,7 +356,7 @@ class VisualMode extends Movement
                   @selectLexicalEntity entity, count
                   @yank()
 
-    unless @options.editModeParent
+    unless @options.parentMode
       @installFindMode()
 
     # Grab the initial clipboard contents.  We try to keep them intact until we get an explicit yank.
@@ -371,7 +376,7 @@ class VisualMode extends Movement
     super @clipboardContents = text
 
   exit: (event, target) ->
-    unless @options.editModeParent
+    unless @options.parentMode
       # Don't leave the user in insert mode just because they happen to have selected text within an input
       # element.
       if document.activeElement and DomUtils.isEditable document.activeElement
@@ -412,8 +417,8 @@ class VisualMode extends Movement
             range.setStart newFindRange.startContainer, newFindRange.startOffset
             @selectRange range
 
-    @movements.n = -> executeFind false
-    @movements.N = -> executeFind true
+    @movements.n = (count) -> executeFind false
+    @movements.N = (count) -> executeFind true
 
   # When visual mode starts and there's no existing selection, we try to establish one.  As a heuristic, we
   # pick the first non-whitespace character of the first visible text node which seems to be long enough to be
@@ -438,6 +443,12 @@ class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
     super extend { name: "visual/line" }, options
     @extendSelection()
+
+    @commands.v = ->
+      if @options.parentMode
+        @options.parentMode.launchSubMode VisualMode
+      else
+        new VisualMode
 
   handleMovementKeyChar: (keyChar) ->
     super keyChar
@@ -471,9 +482,10 @@ class EditMode extends Movement
       p: -> @pasteClipboard forward
       P: -> @pasteClipboard backward
       v: -> @launchSubMode VisualMode
+      V: -> @launchSubMode VisualLineMode
 
-      Y: (count) -> @enterVisualModeForMovement 1, immediateMovement: "Y"
-      x: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true
+      Y: (count) -> @enterVisualModeForMovement count, immediateMovement: "Y"
+      x: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true
       X: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true
       y: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "y"
       d: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "d", deleteFromDocument: true
@@ -501,9 +513,11 @@ class EditMode extends Movement
       targetElement: @options.targetElement
 
   launchSubMode: (mode, options = {}) ->
-    @lastSubMode =
+    @activeSubMode?.instance.exit()
+    @activeSubMode =
       mode: mode
-      instance: new mode extend options, editModeParent: @
+      instance: new mode extend options, parentMode: @
+    @activeSubMode.instance.onExit => @activeSubMode = null
 
   pasteClipboard: (direction) ->
     @paste (text) =>
@@ -535,10 +549,9 @@ class EditMode extends Movement
   exit: (event, target) ->
     super event, target
 
-    @lastSubMode =
-      if @lastSubMode?.instance.modeIsActive
-        @lastSubMode.instance.exit event, target
-        @lastSubMode
+    # Deactivate any active sub-mode. Any such mode will clear @activeSubMode on exit, so we grab a copy now.
+    activeSubMode = @activeSubMode
+    activeSubMode?.instance.exit()
 
     if event?.type == "keydown" and KeyboardUtils.isEscape event
       if target? and DomUtils.isDOMDescendant @element, target
@@ -565,8 +578,8 @@ class EditMode extends Movement
             if event?.target == @options.targetElement
               console.log "#{@id}: reactivating edit mode" if @debug
               editMode = new EditMode @getConfigurationOptions()
-              if @lastSubMode
-                editMode.launchSubMode @lastSubMode.mode, @lastSubMode.instance.getConfigurationOptions()
+              if activeSubMode
+                editMode.launchSubMode activeSubMode.mode, activeSubMode.instance.getConfigurationOptions()
 
 root = exports ? window
 root.VisualMode = VisualMode

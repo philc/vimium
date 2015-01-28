@@ -35,7 +35,7 @@ class PostFindMode extends SuppressPrintable
       name: "post-find"
       # We show a "?" badge, but only while an Escape activates insert mode.
       badge: "?"
-      # Important. PostFindMode shares a singleton with the modes launched by focusInput.
+      # PostFindMode shares a singleton with the modes launched by focusInput; each displaces the other.
       singleton: element
       exitOnBlur: element
       exitOnClick: true

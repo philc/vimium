@@ -393,7 +393,7 @@ extend window,
                 selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
                 selectedInputIndex %= hints.length
                 hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-                # Deactivate any other modes on this element.
+                # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
                 @deactivateSingleton visibleInputs[selectedInputIndex].element
                 visibleInputs[selectedInputIndex].element.focus()
                 @suppressEvent
@@ -406,7 +406,7 @@ extend window,
             id: "vimiumInputMarkerContainer"
             className: "vimiumReset"
 
-          # Deactivate any other modes on this element.
+          # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
           @deactivateSingleton visibleInputs[selectedInputIndex].element
           visibleInputs[selectedInputIndex].element.focus()
           if visibleInputs.length == 1
