@@ -96,12 +96,11 @@ class Movement extends CountPrefix
       else
         if args.length == 1 then args[0] else args[...2]
 
-    console.log "movement:", movement
-
     # Perform the movement.
     # We use the pseudo-granularity "vimword" to implement vim's "w" movement (which is not supported
     # natively).
     if movement[1] == "vimword" and movement[0] == forward
+      x = @nextCharacter()
       if /\s/.test @nextCharacter()
         @runMovements [ forward, "word" ], [ backward, "word" ]
       else
@@ -113,9 +112,21 @@ class Movement extends CountPrefix
     else
       @selection.modify @alterMethod, movement...
 
-  # Return a simple camparable value which will be different for different selections.
-  hashSelection: ->
-    [ @element?.selectionStart, @selection.toString().length ].join "/"
+  # # Return a simple camparable value which will be different for different selections.
+  # hashSelection: ->
+  #   [ @element?.selectionStart, @selection.toString().length ].join "/"
+
+  # Return a simple camparable value which depends on various aspects of the selection which may change when
+  # the selection changes.  This is used to detect, after a movement, whether the selection has changed.
+  hashSelection: (debug) ->
+    range = @selection.getRangeAt(0)
+    [ @element?.selectionStart
+      @selection.toString().length
+      range.anchorOffset
+      range.focusOffset
+      @selection.extentOffset
+      @selection.baseOffset
+    ].join "/"
 
   # Call a function; return true if the selection changed.
   selectionChanged: (func) ->
@@ -255,7 +266,7 @@ class Movement extends CountPrefix
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
-    console.log "yank:", @yankedText if @debug
+    console.log "yank:", @yankedText if @debug  This is used to detect, after a movement, whether the selection has changed.
 
     if args.deleteFromDocument or @options.deleteFromDocument
       @selection.deleteFromDocument()
@@ -567,7 +578,16 @@ class EditMode extends Movement
 
   pasteClipboard: (direction) ->
     @paste (text) =>
-      DomUtils.simulateTextEntry @element, text if text
+      if text
+        # We use the following heuristic: if the text ends in a newline character, then it's a line-oriented
+        # paste, and should be pasted in at a line break.
+        if /\n$/.test text
+          @runMovement backward, "lineboundary"
+          @runMovement forward, "line" if direction == forward
+          DomUtils.simulateTextEntry @element, text
+          @runMovement backward, "line"
+        else
+          DomUtils.simulateTextEntry @element, text
 
   openLine: (direction) ->
     @runMovement direction, "lineboundary"
@@ -576,21 +596,17 @@ class EditMode extends Movement
     @enterInsertMode()
 
   # This used whenever manipulating the selection may, as a side effect, change the clipboard contents.  We
-  # always restore the original clipboard contents when we're done. Note, this may be asynchronous.  We use
-  # this approach (as opposed to the simpler, synchronous method used by Visual mode) because the user may
-  # wish to select text with the mouse (while edit mode is active) to later paste with "p" or "P".
+  # restore the original clipboard contents when we're done. Note, this may be asynchronous.  We use this
+  # approach (as opposed to the simpler, synchronous method used by Visual mode) because the user may wish to
+  # select text with the mouse (while edit mode is active), and then paste with "p" or "P".
   protectClipboard: do ->
     locked = false
 
     (func) ->
-      if locked
-        func()
+      if locked then func()
       else
         locked = true
-        @paste (text) =>
-          func()
-          @copy text
-          locked = false
+        @paste (text) => func(); @copy text; locked = false
 
   exit: (event, target) ->
     super event, target
