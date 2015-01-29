@@ -58,7 +58,7 @@ Commands =
 
     for line in lines
       continue if (line[0] == "\"" || line[0] == "#")
-      splitLine = line.split(/\s+/)
+      splitLine = line.replace(/\s+$/, "").split(/\s+/)
 
       lineCommand = splitLine[0]
 
