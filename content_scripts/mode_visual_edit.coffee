@@ -112,10 +112,6 @@ class Movement extends CountPrefix
     else
       @selection.modify @alterMethod, movement...
 
-  # # Return a simple camparable value which will be different for different selections.
-  # hashSelection: ->
-  #   [ @element?.selectionStart, @selection.toString().length ].join "/"
-
   # Return a simple camparable value which depends on various aspects of the selection which may change when
   # the selection changes.  This is used to detect, after a movement, whether the selection has changed.
   hashSelection: (debug) ->
@@ -266,7 +262,7 @@ class Movement extends CountPrefix
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
-    console.log "yank:", @yankedText if @debug  This is used to detect, after a movement, whether the selection has changed.
+    console.log "yank:", @yankedText if @debug
 
     if args.deleteFromDocument or @options.deleteFromDocument
       @selection.deleteFromDocument()
