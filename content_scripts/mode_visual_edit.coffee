@@ -19,7 +19,7 @@ class SuppressPrintable extends Mode
           if event.keyCode in [ 8, 46 ]
             @suppressEvent
           else
-            DomUtils.suppressPropagation
+            DomUtils.suppressPropagation event
             @stopBubblingAndFalse
         else
           @suppressEvent
