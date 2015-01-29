@@ -151,10 +151,11 @@ class Mode
   # case), because they do not need to be concerned with the value they yield.
   alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
 
-  # Get a copy of the configuration options for this mode (that is, excluding the main keyboard-event
-  # handlers).
+  # Get a copy of the configuration options for this mode, but excluding the main keyboard-event handlers.
   getConfigurationOptions: ->
-    extend (extend {}, @options), keydown: null, keypress: null, keyup: null
+    options = extend {}, @options
+    delete options[key] for key in [ "keydown", "keypress", "keyup" ]
+    options
 
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
   # the resulting badge to the background page.  We only update the badge if this document (hence this frame)
