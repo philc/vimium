@@ -48,7 +48,7 @@ class InsertMode extends Mode
         # changes, we might get "focus" before "blur".  We track the active element in @insertModeLock, and
         # exit only when that element blurs.
         # We don't exit if we're running under edit mode.  Edit mode itself will handles that case.
-        @exit event, target if @insertModeLock and target == @insertModeLock and not @options.editModeParent
+        @exit event, target if @insertModeLock and target == @insertModeLock and not @options.parentMode
       "focus": (event) => @alwaysContinueBubbling =>
         if @insertModeLock != event.target and DomUtils.isFocusable event.target
           @activateOnElement event.target
