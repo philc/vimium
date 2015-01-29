@@ -13,18 +13,13 @@
 class SuppressPrintable extends Mode
   constructor: (options = {}) ->
     handler = (event) =>
-      if KeyboardUtils.isPrintable event
-        if event.type == "keydown"
-          # Completely suppress Backspace and Delete, they change the selection.
-          if event.keyCode in [ 8, 46 ]
-            @suppressEvent
-          else
-            DomUtils.suppressPropagation event
-            @stopBubblingAndFalse
-        else
-          @suppressEvent
-      else
-        @stopBubblingAndTrue
+      return @stopBubblingAndTrue if not KeyboardUtils.isPrintable event
+      return @suppressEvent if event.type != "keydown"
+      # Completely suppress Backspace and Delete, they change the selection.
+      @suppressEvent if event.keyCode in [ 8, 46 ]
+      # Suppress propagation (but not preventDefault) for keydown, printable events.
+      DomUtils.suppressPropagation event
+      @stopBubblingAndFalse
 
     super extend options,
       keydown: handler
@@ -67,11 +62,28 @@ vimword = "vimword"
 class Movement extends CountPrefix
   opposite: forward: backward, backward: forward
 
-  copy: (text) ->
-    chrome.runtime.sendMessage handler: "copyToClipboard", data: text if text
-
   paste: (callback) ->
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) -> callback response
+
+  copy: (text, isFinalUserCopy = false) ->
+    chrome.runtime.sendMessage handler: "copyToClipboard", data: text
+    # If isFinalUserCopy is set, then we're copying the final text selected by the user (and exiting).
+    # However, we may be called from within @protectClipboard, which will later try to restore the clipboard's
+    # contents.  Therefore, we disable copy so that subsequent calls will not be propagated.
+    @copy = (->) if isFinalUserCopy
+
+  # This used whenever manipulating the selection may, as a side effect, change the clipboard's contents.  We
+  # restore the original clipboard contents when we're done. May be asynchronous.  We use a lock so that calls
+  # can be nested.
+  protectClipboard: do ->
+    locked = false
+
+    (func) ->
+      if locked then func()
+      else
+        locked = true
+        @paste (text) =>
+          func(); @copy text; locked = false
 
   # Return the character following the focus, and leave the selection unchanged.
   nextCharacter: ->
@@ -210,7 +222,6 @@ class Movement extends CountPrefix
     @commands = {}
     @keyQueue = ""
     @keypressCount = 0
-    @yankedText = ""
     super options
 
     # Aliases.
@@ -218,9 +229,7 @@ class Movement extends CountPrefix
     @movements.W = @movements.w
 
     if @options.immediateMovement
-      # Run a single movement then yank the result (note, yank() exits).
       @handleMovementKeyChar @options.immediateMovement, @getCountPrefix()
-      @yank()
       return
 
     @push
@@ -243,7 +252,6 @@ class Movement extends CountPrefix
 
               else if @movements[command]
                 @handleMovementKeyChar command, @getCountPrefix()
-                @yank() if @options.oneMovementOnly
                 return @suppressEvent
 
         @continueBubbling
@@ -258,11 +266,11 @@ class Movement extends CountPrefix
         when "function"
           @movements[keyChar].call @, count
       @scrollIntoView()
+      @yank() if @options.oneMovementOnly
 
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
-    console.log "yank:", @yankedText if @debug
 
     if args.deleteFromDocument or @options.deleteFromDocument
       @selection.deleteFromDocument()
@@ -371,11 +379,6 @@ class VisualMode extends Movement
 
     unless @options.parentMode
       @installFindMode()
-
-    # Grab the initial clipboard contents.  We try to keep them intact until we get an explicit yank.
-    @clipboardContents = ""
-    @paste (text) =>
-      @clipboardContents = text if text
     #
     # End of VisualMode constructor.
 
@@ -387,22 +390,16 @@ class VisualMode extends Movement
         document.activeElement.blur()
 
     super event, target
-    @copy @yankedText if @yankedText
+    if @yankedText? and not @options.noCopyToClipboard
+      console.log "yank:", @yankedText if @debug
+      @copy @yankedText, true
 
   selectLine: (count, collapse) ->
     @runMovement backward, "lineboundary"
     @collapseSelectionToFocus() if collapse
     @runMovement forward, "line" for [0...count]
 
-  # This is used whenever manipulating the selection may, as a side effect, change the clipboard contents.  It
-  # reinstalls the original clipboard contents when we're done.
-  protectClipboard: (func) ->
-    func()
-    @copy @clipboardContents if @clipboardContents
-
-  copy: (text) ->
-    super @clipboardContents = text
-
+  # This installs a basic binding for find mode, "n" and "N".
   # FIXME(smblott).  This is a mess, it needs to be reworked.  Ideally, incorporate FindMode.
   installFindMode: ->
     previousFindRange = null
@@ -505,8 +502,8 @@ class EditMode extends Movement
       V: -> @launchSubMode VisualLineMode
 
       Y: (count) -> @enterVisualModeForMovement count, immediateMovement: "Y"
-      x: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true
-      X: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true
+      x: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true, noCopyToClipboard: true
+      X: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true, noCopyToClipboard: true
       y: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "y"
       d: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "d", deleteFromDocument: true
       c: (count) -> @enterVisualModeForMovement count, deleteFromDocument: true, onYank: => @enterInsertMode()
@@ -517,17 +514,18 @@ class EditMode extends Movement
       J: (count) ->
         for [0...count]
           @runMovement forward, "lineboundary"
-          @enterVisualModeForMovement 1, immediateMovement: "w", deleteFromDocument: true
+          @enterVisualModeForMovement 1, immediateMovement: "w", deleteFromDocument: true, noCopyToClipboard: true
           DomUtils.simulateTextEntry @element, " "
 
       r: (count) ->
         handlerStack.push
           _name: "repeat-character"
-          keydown: (event) =>
+          keydown: (event) => DomUtils.suppressPropagation event; @stopBubblingAndFalse
+          keypress: (event) =>
             handlerStack.remove()
-            if KeyboardUtils.isPrintable event
-              keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
-              @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true
+            keyChar = String.fromCharCode event.charCode
+            if keyChar.length == 1
+              @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true, noCopyToClipboard: true
               DomUtils.simulateTextEntry @element, [0...count].map(-> keyChar).join ""
             @suppressEvent
 
@@ -545,6 +543,7 @@ class EditMode extends Movement
     @enterVisualModeForMovement count,
       immediateMovement: if immediate then "l" else null
       deleteFromDocument: true
+      noCopyToClipboard: true
       onYank: (text) =>
         chars =
           for char in text.split ""
@@ -590,19 +589,6 @@ class EditMode extends Movement
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement backward, character if direction == backward
     @enterInsertMode()
-
-  # This used whenever manipulating the selection may, as a side effect, change the clipboard contents.  We
-  # restore the original clipboard contents when we're done. Note, this may be asynchronous.  We use this
-  # approach (as opposed to the simpler, synchronous method used by Visual mode) because the user may wish to
-  # select text with the mouse (while edit mode is active), and then paste with "p" or "P".
-  protectClipboard: do ->
-    locked = false
-
-    (func) ->
-      if locked then func()
-      else
-        locked = true
-        @paste (text) => func(); @copy text; locked = false
 
   exit: (event, target) ->
     super event, target
