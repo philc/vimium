@@ -85,6 +85,13 @@ class Movement extends CountPrefix
         @paste (text) =>
           func(); @copy text; locked = false
 
+  changeMode: (mode, options = {}) ->
+    @exit()
+    if @options.parentMode
+      @options.parentMode.launchSubMode mode, options
+    else
+      new mode
+
   # Return the character following the focus, and leave the selection unchanged.
   nextCharacter: ->
     beforeText = @selection.toString()
@@ -229,7 +236,7 @@ class Movement extends CountPrefix
     @movements.W = @movements.w
 
     if @options.immediateMovement
-      @handleMovementKeyChar @options.immediateMovement, @getCountPrefix()
+      @runMovementKeyChar @options.immediateMovement, @getCountPrefix()
       return
 
     @push
@@ -251,22 +258,24 @@ class Movement extends CountPrefix
                 return @suppressEvent
 
               else if @movements[command]
-                @handleMovementKeyChar command, @getCountPrefix()
+                @runMovementKeyChar command, @getCountPrefix()
                 return @suppressEvent
 
         @continueBubbling
+
     #
     # End of Movement constructor.
 
+  runMovementKeyChar: (args...) ->
+    @protectClipboard => @handleMovementKeyChar args...
+
   handleMovementKeyChar: (keyChar, count = 1) ->
-    @protectClipboard =>
-      switch typeof @movements[keyChar]
-        when "string"
-          @runMovement @movements[keyChar] for [0...count]
-        when "function"
-          @movements[keyChar].call @, count
-      @scrollIntoView()
-      @yank() if @options.oneMovementOnly
+    switch typeof @movements[keyChar]
+      when "string"
+        @runMovement @movements[keyChar] for [0...count]
+      when "function"
+        @movements[keyChar].call @, count
+    @scrollIntoView()
 
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
@@ -322,16 +331,6 @@ class VisualMode extends Movement
     @selection = window.getSelection()
     @alterMethod = "extend"
 
-    switch @selection.type
-      when "None"
-        unless @establishInitialSelection()
-          HUD.showForDuration "Create a selection before entering visual mode.", 2500
-          return
-      when "Caret"
-        # Try to make the selection visible (unless we're under a parent mode, such as edit mode).
-        @extendByOneCharacter(forward) or @extendByOneCharacter backward unless options.parentMode
-        @scrollIntoView() if @selection.type == "Range"
-
     defaults =
       name: "visual"
       badge: "V"
@@ -339,17 +338,27 @@ class VisualMode extends Movement
       exitOnEscape: true
     super extend defaults, options
 
+    switch @selection.type
+      when "None"
+        return @changeMode CaretMode
+      when "Caret"
+        @selection.modify "extend", forward, character
+
+    # Yank on <Enter>.
+    @push
+      _name: "#{@id}/enter"
+      keypress: (event) =>
+        if event.keyCode == keyCodes.enter and not (event.metaKey or event.ctrlKey or event.altKey)
+          @yank(); @suppressEvent
+        else @continueBubbling
+
     # Visual-mode commands.
     unless @options.oneMovementOnly
       @commands.y = -> @yank()
       @commands.p = -> chrome.runtime.sendMessage handler: "openUrlInCurrentTab", url: @yank()
       @commands.P = -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
-      @commands.V = ->
-        @exit()
-        if @options.parentMode
-          @options.parentMode.launchSubMode VisualLineMode
-        else
-          new VisualLineMode
+      @commands.V = -> @changeMode VisualLineMode
+      @commands.c = -> @changeMode CaretMode
 
     # Additional commands when run under edit mode (except if only for one movement).
     if @options.parentMode and not @options.oneMovementOnly
@@ -394,6 +403,10 @@ class VisualMode extends Movement
       console.log "yank:", @yankedText if @debug
       @copy @yankedText, true
 
+  handleMovementKeyChar: (args...) ->
+    super args...
+    @yank() if @options.oneMovementOnly
+
   selectLine: (count, collapse) ->
     @runMovement backward, "lineboundary"
     @collapseSelectionToFocus() if collapse
@@ -435,36 +448,11 @@ class VisualMode extends Movement
     @movements.n = (count) -> executeFind false
     @movements.N = (count) -> executeFind true
 
-  # When visual mode starts and there's no existing selection, we try to establish one.  As a heuristic, we
-  # pick the first non-whitespace character of the first visible text node which seems to be long enough to be
-  # interesting.
-  establishInitialSelection: ->
-    nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
-    while node = nodes.nextNode()
-      # Don't pick really short texts; they're likely to be part of a banner.
-      if node.nodeType == 3 and 50 <= node.data.trim().length
-        element = node.parentElement
-        if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
-          offset = node.data.length - node.data.replace(/^\s+/, "").length
-          range = document.createRange()
-          range.setStart node, offset
-          range.setEnd node, offset + 1
-          @selectRange range
-          @scrollIntoView()
-          return true
-    false
-
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
     super extend { name: "visual/line" }, options
     @extendSelection()
-
-    @commands.v = ->
-      @exit()
-      if @options.parentMode
-        @options.parentMode.launchSubMode VisualMode
-      else
-        new VisualMode
+    @commands.v = -> @changeMode VisualMode
 
   handleMovementKeyChar: (args...) ->
     super args...
@@ -475,6 +463,58 @@ class VisualLineMode extends VisualMode
     for direction in [ initialDirection, @opposite[initialDirection] ]
       @runMovement direction, "lineboundary"
       @reverseSelection()
+
+class CaretMode extends Movement
+  constructor: (options = {}) ->
+    @alterMethod = "move"
+
+    defaults =
+      name: "caret"
+      badge: "C"
+      singleton: VisualMode
+      exitOnEscape: true
+    super extend defaults, options
+
+    if @selection.type == "None"
+      @establishInitialSelection()
+
+    switch @selection.type
+      when "None"
+        HUD.showForDuration "Create a selection before entering visual mode.", 2500
+        @exit()
+        return
+      when "Range"
+        @collapseSelectionToFocus()
+
+    @selection.modify "extend", forward, character
+    @scrollIntoView()
+
+    extend @commands,
+      v: -> @changeMode VisualMode
+      V: -> @changeMode VisualLineMode
+
+  handleMovementKeyChar: (args...) ->
+    @collapseSelectionToAnchor()
+    super args...
+    @selection.modify "extend", forward, character
+
+  # When visual mode starts and there's no existing selection, we launch CaretMode and try to establish a
+  # selection.  As a heuristic, we pick the first non-whitespace character of the first visible text node
+  # which seems to be long enough to be interesting.
+  establishInitialSelection: ->
+    nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
+    while node = nodes.nextNode()
+      # Don't pick really short texts; they're likely to be part of a banner.
+      if node.nodeType == 3 and 50 <= node.data.trim().length
+        element = node.parentElement
+        if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
+          offset = node.data.length - node.data.replace(/^\s+/, "").length
+          range = document.createRange()
+          range.setStart node, offset
+          range.setEnd node, offset+1
+          @selectRange range
+          return true
+    false
 
 class EditMode extends Movement
   constructor: (options = {}) ->
