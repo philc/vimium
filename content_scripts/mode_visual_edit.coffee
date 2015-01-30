@@ -16,7 +16,7 @@ class SuppressPrintable extends Mode
       return @stopBubblingAndTrue if not KeyboardUtils.isPrintable event
       return @suppressEvent if event.type != "keydown"
       # Completely suppress Backspace and Delete, they change the selection.
-      @suppressEvent if event.keyCode in [ 8, 46 ]
+      return @suppressEvent if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       # Suppress propagation (but not preventDefault) for keydown, printable events.
       DomUtils.suppressPropagation event
       @stopBubblingAndFalse
