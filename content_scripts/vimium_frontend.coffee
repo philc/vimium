@@ -1021,6 +1021,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
   selection.removeAllRanges()
   selection.addRange range
 
+# Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()

@@ -266,7 +266,7 @@ class Movement extends CountPrefix
 
         @continueBubbling
 
-    # Install basic bindings for find mode, "n" and "N".  We do not install these bindings if the is a
+    # Install basic bindings for find mode, "n" and "N".  We do not install these bindings if this is a
     # sub-mode of edit mode, because we cannot (yet) guarantee that the selection will remain within the
     # active element.
     unless @options.parentMode or options.oneMovementOnly
@@ -283,7 +283,9 @@ class Movement extends CountPrefix
 
         @movements.n = (count) -> executeFind count, false
         @movements.N = (count) -> executeFind count, true
-        @movements["/"] = -> enterFindMode()
+        @movements["/"] = ->
+          @findMode = enterFindMode()
+          @findMode.onExit => new VisualMode
     #
     # End of Movement constructor.
 
@@ -361,6 +363,7 @@ class VisualMode extends Movement
 
     switch @selection.type
       when "None"
+        HUD.showForDuration "No selection, entering caret mode first.", 2500
         return @changeMode CaretMode
       when "Caret"
         @selection.modify "extend", forward, character unless @options.oneMovementOnly
