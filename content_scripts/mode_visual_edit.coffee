@@ -105,7 +105,7 @@ class Movement extends CountPrefix
       new mode
 
   # Return the character following the focus, and leave the selection unchanged.
-  nextCharacter: ->
+  getNextForwardCharacter: ->
     beforeText = @selection.toString()
     if beforeText.length == 0 or @getDirection() == forward
       @selection.modify "extend", forward, character
@@ -116,10 +116,22 @@ class Movement extends CountPrefix
     else
       beforeText[0]
 
+  # Return the character preceding the focus, and leave the selection unchanged.
+  getNextBackwardCharacter: ->
+    beforeText = @selection.toString()
+    if beforeText.length == 0 or @getDirection() == backward
+      @selection.modify "extend", backward, character
+      afterText = @selection.toString()
+      if beforeText != afterText
+        @selection.modify "extend", forward, character
+        afterText[0]
+    else
+      beforeText[beforeText.length - 1]
+
   # Test whether the character following the focus is a word character.  Leave the selection unchanged.
   nextCharacterIsWordCharacter: do ->
     regexp = /[A-Za-z0-9_]/
-    -> regexp.test @nextCharacter()
+    -> regexp.test @getNextForwardCharacter()
 
   # Run a movement.  For convenience, the following three argument forms are available:
   #   @runMovement "forward word"
@@ -350,9 +362,10 @@ class Movement extends CountPrefix
     @exit()
     @yankedText
 
-  # For "daw", "2das", and so on.  We select a lexical entity (a word, a sentence or a paragraph).
-  # Note(smblott).  Chrome's paragraph movements are asymmetrical, so we don't support those.  So, just words
-  # and sentences, for now.
+  # For "daw", "das", and so on.  We select a lexical entity (a word, a sentence or a paragraph).
+  # Note(smblott).  It would be nice if the entities could be handled symmetrically.  Unfortunately, they
+  # cannot, and we have to handle each case individually.
+  # Note(smblott). We currently ignore count.
   selectLexicalEntity: (entity, count = 1) ->
     if entity == word
       if @nextCharacterIsWordCharacter()
@@ -366,6 +379,20 @@ class Movement extends CountPrefix
       @runMovement backward, sentence
       @collapseSelectionToFocus()
       @runMovements ([0...count].map -> [ forward, sentence ])...
+    else if entity == paragraph
+      # Chrome's paragraph movements are weird: they're not symmetrical, and they tend to stop in odd places
+      # (like mid-paragraph, for example).  Here, we define a paragraph as a new-line delimited entity,
+      # including the terminating newline.
+      char = @getNextBackwardCharacter()
+      while char and char != "\n"
+        return unless @runMovements [ backward, character ], [ backward, lineboundary ]
+        char = @getNextBackwardCharacter()
+      @collapseSelectionToFocus()
+      char = @getNextForwardCharacter()
+      while char and char != "\n"
+        return unless @runMovements [ forward, character ], [ forward, lineboundary ]
+        char = @getNextForwardCharacter()
+      @runMovement forward, character
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -437,7 +464,7 @@ class VisualMode extends Movement
     # For edit mode's "daw", "cas", and so on.
     if @options.oneMovementOnly
       @commands.a = (count) ->
-        for entity in [ word, sentence ] # , paragraph ] # Note(smblott).  Paragraphs don't work.
+        for entity in [ word, sentence, paragraph ]
           do (entity) =>
             @commands[entity.charAt 0] = ->
               @selectLexicalEntity entity, count; @yank()
