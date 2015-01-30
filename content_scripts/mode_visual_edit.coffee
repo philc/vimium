@@ -393,14 +393,15 @@ class VisualMode extends Movement
       exitOnEscape: true
     super extend defaults, options
 
-    if @options.parentMode and @selection.type == "Caret"
-      # We're being called from edit mode, so establish an intial visible selection.
-      @extendByOneCharacter(forward) or @extendByOneCharacter backward
-    else if @selection.type in [ "None", "Caret" ]
-      unless @options.oneMovementOnly or options.immediateMovement
-        HUD.showForDuration "No selection, entering caret mode first..", 2500
-        @changeMode CaretMode
-        return
+    unless @options.oneMovementOnly or options.immediateMovement
+      if @options.parentMode and @selection.type == "Caret"
+        # We're being called from edit mode, so establish an intial visible selection.
+        @extendByOneCharacter(forward) or @extendByOneCharacter backward
+      else if @selection.type in [ "None", "Caret" ]
+        unless @options.oneMovementOnly or options.immediateMovement
+          HUD.showForDuration "No selection, entering caret mode first..", 2500
+          @changeMode CaretMode
+          return
 
     # Yank on <Enter>.
     @push
