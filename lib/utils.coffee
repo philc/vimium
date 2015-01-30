@@ -163,6 +163,12 @@ Utils =
         identities.push obj
       "identity-" + index
 
+  # Return a copy of object, but with some of its properties omitted.
+  copyObjectOmittingProperties: (obj, properties...) ->
+    obj = extend {}, obj
+    delete obj[property] for property in properties
+    obj
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->

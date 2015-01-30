@@ -7,6 +7,9 @@
 # Paste of whole lines.
 # Arrow keys.
 # J
+# Fix Y for edit mode.
+# Fix sentence movements.
+# Change how we get the options for submodes.
 
 # This prevents printable characters from being passed through to the underlying page.  It should, however,
 # allow through Chrome keyboard shortcuts.
@@ -56,6 +59,10 @@ class CountPrefix extends SuppressPrintable
 forward = "forward"
 backward = "backward"
 character = "character"
+word = "word"
+line = "line"
+sentence = "sentence"
+paragraph = "paragraph"
 vimword = "vimword"
 lineboundary= "lineboundary"
 
@@ -69,13 +76,16 @@ class Movement extends CountPrefix
   copy: (text, isFinalUserCopy = false) ->
     chrome.runtime.sendMessage handler: "copyToClipboard", data: text
     # If isFinalUserCopy is set, then we're copying the final text selected by the user (and exiting).
-    # However, we may be called from within @protectClipboard, which will later try to restore the clipboard's
-    # contents.  Therefore, we disable copy so that subsequent calls will not be propagated.
+    # However, we may be called again from within @protectClipboard, which will later try to restore the
+    # original clipboard contents.  Therefore, we disable copy so that subsequent copies will not propagate.
     @copy = (->) if isFinalUserCopy
 
-  # This used whenever manipulating the selection may, as a side effect, change the clipboard's contents.  We
-  # restore the original clipboard contents when we're done. May be asynchronous.  We use a lock so that calls
-  # can be nested.
+  # This s used whenever manipulating the selection may, as a side effect, change the clipboard's contents.
+  # We restore the original clipboard contents when we're done. May be asynchronous.  We use a lock so that
+  # calls can be nested.
+  #
+  # We do this primarily for edit mode, where the user does not expect caret movements to change the clipboard
+  # contents.
   protectClipboard: do ->
     locked = false
 
@@ -86,6 +96,7 @@ class Movement extends CountPrefix
         @paste (text) =>
           func(); @copy text; locked = false
 
+  # Replace the current mode with another.  For example, replace visual mode with visual-line mode.
   changeMode: (mode, options = {}) ->
     @exit()
     if @options.parentMode
@@ -99,13 +110,16 @@ class Movement extends CountPrefix
     if beforeText.length == 0 or @getDirection() == forward
       @selection.modify "extend", forward, character
       afterText = @selection.toString()
-      @selection.modify "extend", backward, character unless beforeText == afterText
-      afterText[afterText.length - 1]
+      if beforeText != afterText
+        @selection.modify "extend", backward, character
+        afterText[afterText.length - 1]
     else
       beforeText[0]
 
-  nextCharacterIsWordCharacter: ->
-    /[A-Za-z0-9_]/.test @nextCharacter()
+  # Test whether the character following the focus is a word character.  Leave the selection unchanged.
+  nextCharacterIsWordCharacter: do ->
+    regexp = /[A-Za-z0-9_]/
+    -> regexp.test @nextCharacter()
 
   # Run a movement.  For convenience, the following three argument forms are available:
   #   @runMovement "forward word"
@@ -113,7 +127,7 @@ class Movement extends CountPrefix
   #   @runMovement "forward", "word"
   #
   # The granularities are word, "line", "lineboundary", "sentence" and "paragraph".  In addition, we implement
-  # the pseudo granularity "vimword", which implements vim-like word movement, for "w".
+  # the pseudo granularity "vimword", which implements vim-like word movement (for "w").
   #
   runMovement: (args...) ->
     # Normalize the various argument forms (to an array of two strings: direction and granularity).
@@ -126,29 +140,24 @@ class Movement extends CountPrefix
     # Perform the movement.
     if movement[1] == vimword and movement[0] == forward
       if @nextCharacterIsWordCharacter()
-        @runMovements [ forward, "word" ], [ forward, vimword ]
+        @runMovements [ forward, word ], [ forward, vimword ]
       else
-        @runMovements [ forward, "word" ], [ backward, "word" ]
+        @runMovements [ forward, word ], [ backward, word ]
 
     else if movement[1] == vimword
-      @selection.modify @alterMethod, backward, "word"
+      @selection.modify @alterMethod, backward, word
 
     else
       @selection.modify @alterMethod, movement...
 
-  # Return a simple camparable value which depends on various aspects of the selection which may change when
-  # the selection changes.  This is used to detect, after a movement, whether the selection has changed.
+  # Return a simple camparable value which depends on various aspects of the selection.  This is used to
+  # detect, after a movement, whether the selection has changed.
   hashSelection: (debug) ->
     range = @selection.getRangeAt(0)
-    [ @element?.selectionStart
-      @selection.toString().length
-      range.anchorOffset
-      range.focusOffset
-      @selection.extentOffset
-      @selection.baseOffset
-    ].join "/"
+    [ @element?.selectionStart, @selection.toString().length, range.anchorOffset, range.focusOffset,
+      @selection.extentOffset, @selection.baseOffset ].join "/"
 
-  # Call a function; return true if the selection changed.
+  # Call a function; return true if the selection changed, false otherwise.
   selectionChanged: (func) ->
     before = @hashSelection(); func(); @hashSelection() != before
 
@@ -158,22 +167,23 @@ class Movement extends CountPrefix
       return false unless @selectionChanged => @runMovement movement
     true
 
-  # Swap the anchor node/offset and the focus node/offset (which implements "o" for visual mode).
+  # Swap the anchor node/offset and the focus node/offset.  This allows us to work with both ends of the
+  # selection, and implements "o" for visual mode.
   reverseSelection: ->
     element = document.activeElement
     direction = @getDirection()
     if element and DomUtils.isEditable(element) and not element.isContentEditable
       # Note(smblott). This implementation is unacceptably expensive if the selection is large.  We only use
-      # it when we have to.  However, the normal method (below) does not work for simple text inputs.
+      # it here because the normal method (below) does not work for simple text inputs.
       length = @selection.toString().length
       @collapseSelectionToFocus()
       @runMovement @opposite[direction], character for [0...length]
     else
-      # Normal method.
+      # Normal method (efficient).
       original = @selection.getRangeAt(0).cloneRange()
       range = original.cloneRange()
       range.collapse direction == backward
-      @selectRange range
+      @setSelectionRange range
       which = if direction == forward then "start" else "end"
       @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
@@ -186,7 +196,8 @@ class Movement extends CountPrefix
 
   # Get the direction of the selection.  The selection is "forward" if the focus is at or after the anchor,
   # and "backward" otherwise.
-  # NOTE(smblott). Could be better, see: https://dom.spec.whatwg.org/#interface-range.
+  # NOTE(smblott). Could be better, see: https://dom.spec.whatwg.org/#interface-range (although that probably
+  # won't work for text inputs).
   getDirection: ->
     # Try to move the selection forward or backward, check whether it got bigger or smaller (then restore it).
     for direction in [ forward, backward ]
@@ -203,12 +214,12 @@ class Movement extends CountPrefix
     if 0 < @selection.toString().length
       @selection[if @getDirection() == forward then "collapseToEnd" else "collapseToStart"]()
 
-  selectRange: (range) ->
+  setSelectionRange: (range) ->
     @selection.removeAllRanges()
     @selection.addRange range
 
   # A movement can be a string (which will be passed to @runMovement() count times), or a function (which will
-  # be called once with count as its argument.
+  # be called once with count as its argument).
   movements:
     "l": "forward character"
     "h": "backward character"
@@ -225,13 +236,37 @@ class Movement extends CountPrefix
     "$": "forward lineboundary"
     "G": "forward documentboundary"
     "gg": "backward documentboundary"
+    "Y": (count) -> @selectLine count; @yank()
 
+  runMovementKeyChar: (args...) ->
+    @protectClipboard => @handleMovementKeyChar args...
+
+  # Handle a single movement keyChar.  This is extended by super-classes.
+  handleMovementKeyChar: (keyChar, count = 1) ->
+    switch typeof @movements[keyChar]
+      when "string" then @runMovement @movements[keyChar] for [0...count]
+      when "function" then @movements[keyChar].call @, count
+    @scrollIntoView()
+
+  # Options for tweaking the behavior of movement mode and its sub-classes:
+  #   - options.parentMode (a mode)
+  #     This instance is a sub-mode of edit mode.
+  #   - options.oneMovementOnly (truthy/falsy)
+  #     This instance is created for one movement only, and then it yanks and exits.
+  #   - options.immediateMovement (a string)
+  #     This instance is created for one movement only, and this options specifies the movement (e.g. "j").
+  #   - options.deleteFromDocument (truthy/falsy)
+  #     When yanking text, also delete it from the document.
+  #   - options.onYank (a function)
+  #     When yanking text, also call this function, passing the yanked text as an argument.
+  #   - options.noCopyToClipboard (truthy/falsy)
+  #     When yanking, do not copy the yanked text to the clipboard.
+  #
   constructor: (options) ->
     @selection = window.getSelection()
     @movements = extend {}, @movements
     @commands = {}
     @keyQueue = ""
-    @keypressCount = 0
     super options
 
     # Aliases.
@@ -239,16 +274,17 @@ class Movement extends CountPrefix
     @movements.W = @movements.w
 
     if @options.immediateMovement
+      # This instance has been created to execute a single, given movement.
       @runMovementKeyChar @options.immediateMovement, @getCountPrefix()
       return
 
+    # This is the main keyboard-event handler for movements and commands.
     @push
       _name: "#{@id}/keypress"
       keypress: (event) =>
-        @keypressCount += 1
         unless event.metaKey or event.ctrlKey or event.altKey
           @keyQueue += String.fromCharCode event.charCode
-          # Keep at most two characters in the key queue.
+          # Keep at most two keyChars in the queue.
           @keyQueue = @keyQueue.slice Math.max 0, @keyQueue.length - 2
           for command in [ @keyQueue, @keyQueue[1..] ]
             if command and (@movements[command] or @commands[command])
@@ -256,8 +292,8 @@ class Movement extends CountPrefix
               @keyQueue = ""
 
               # We need to treat "0" specially.  It can be either a movement, or a continutation of a count
-              # prefix.  Don't treat it as a movement if we already have a count prefix.
-              return @continueBubbling if command == "0" and 0 < @countPrefix
+              # prefix.  Don't treat it as a movement if we already have an initial count prefix.
+              return @continueBubbling if command == "0" and 0 < @countPrefix.length
 
               if @commands[command]
                 @commands[command].call @, @getCountPrefix()
@@ -271,8 +307,8 @@ class Movement extends CountPrefix
         @continueBubbling
 
     # Install basic bindings for find mode, "n" and "N".  We do not install these bindings if this is a
-    # sub-mode of edit mode, because we cannot (yet) guarantee that the selection will remain within the
-    # active element.
+    # sub-mode of edit mode (because we cannot guarantee that the selection will remain within the active
+    # element), or if this instance has been created to execute only a single movement.
     unless @options.parentMode or options.oneMovementOnly
       do =>
         executeFind = (count, findBackwards) =>
@@ -281,9 +317,12 @@ class Movement extends CountPrefix
             for [0...count]
               unless window.find query, Utils.hasUpperCase(query), findBackwards, true, false, true, false
                 HUD.showForDuration "Yanked #{@yankedText.length} character#{plural}: \"#{message}\".", 2500
-                @selectRange initialRange
+                @setSelectionRange initialRange
                 @scrollIntoView()
-                break
+                return
+            # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
+            # drop back into visual mode.
+            @changeMode VisualMode if @name == "caret" and 0 < @selection.toString().length
 
         @movements.n = (count) -> executeFind count, false
         @movements.N = (count) -> executeFind count, true
@@ -293,22 +332,11 @@ class Movement extends CountPrefix
     #
     # End of Movement constructor.
 
-  runMovementKeyChar: (args...) ->
-    @protectClipboard => @handleMovementKeyChar args...
-
-  handleMovementKeyChar: (keyChar, count = 1) ->
-    switch typeof @movements[keyChar]
-      when "string"
-        @runMovement @movements[keyChar] for [0...count]
-      when "function"
-        @movements[keyChar].call @, count
-    @scrollIntoView()
-
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
 
-    if args.deleteFromDocument or @options.deleteFromDocument
+    if @options.deleteFromDocument or args.deleteFromDocument
       @selection.deleteFromDocument()
     else
       @collapseSelectionToAnchor()
@@ -332,10 +360,10 @@ class Movement extends CountPrefix
     # Move over count entities.
     for [0...count]
       return unless @runMovements [ forward, entity ]
-      # Also consume the next character. For "lineboundary", this consumes the following newline, allowing us
-      # to move on to the next line (for "3dd", "3yy", etc).
-      @runMovement forward, character
-    # Move to the start of the subsequent entity
+      # For "lineboundary", we consume the following newline, allowing us to move on to the next line (for
+      # "3dd", "3yy", etc).
+      @runMovement forward, character if entity == lineboundary
+    # Move to the start of the subsequent entity.
     @runMovements [ forward, entity ], [ backward, entity ]
 
   # Try to scroll the focus into view.
@@ -344,7 +372,7 @@ class Movement extends CountPrefix
       if @element and DomUtils.isEditable @element
         if @element.clientHeight < @element.scrollHeight
           if @element.isContentEditable
-            # How do we do this?  This case matters for gmail and Google's inbox.
+            # Help(smblott). How do we do this?  This case matters for gmail and Google's inbox.
           else
             position = if @getDirection() == backward then @element.selectionStart else @element.selectionEnd
             coords = DomUtils.getCaretCoordinates @element, position
@@ -365,20 +393,24 @@ class VisualMode extends Movement
       exitOnEscape: true
     super extend defaults, options
 
-    switch @selection.type
-      when "None"
-        HUD.showForDuration "No selection, entering caret mode first.", 2500
-        return @changeMode CaretMode
-      when "Caret"
-        @selection.modify "extend", forward, character unless @options.oneMovementOnly
+    if @options.parentMode and @selection.type == "Caret"
+      # We're being called from edit mode, so establish an intial visible selection.
+      @extendByOneCharacter(forward) or @extendByOneCharacter backward
+    else if @selection.type in [ "None", "Caret" ]
+      unless @options.oneMovementOnly or options.immediateMovement
+        HUD.showForDuration "No selection, entering caret mode first..", 2500
+        @changeMode CaretMode
+        return
 
     # Yank on <Enter>.
     @push
       _name: "#{@id}/enter"
       keypress: (event) =>
-        if event.keyCode == keyCodes.enter and not (event.metaKey or event.ctrlKey or event.altKey)
-          @yank(); @suppressEvent
-        else @continueBubbling
+        if event.keyCode == keyCodes.enter
+          unless event.metaKey or event.ctrlKey or event.altKey or event.shiftKey
+            @yank()
+            return @suppressEvent
+        @continueBubbling
 
     # Visual-mode commands.
     unless @options.oneMovementOnly
@@ -388,7 +420,6 @@ class VisualMode extends Movement
       @commands.V = -> @changeMode VisualLineMode
       @commands.c = -> @changeMode CaretMode
       @commands.o = -> @reverseSelection()
-      @commands.Y = (count) -> @selectLine count; @yank()
 
       # Additional commands when run under edit mode.
       if @options.parentMode
@@ -399,20 +430,15 @@ class VisualMode extends Movement
     # For edit mode's "yy" and "dd".
     if @options.yankLineCharacter
       @commands[@options.yankLineCharacter] = (count) ->
-        if @keypressCount == 1
-          @selectLine count
-          @yank()
+        @selectLine count; @yank()
 
     # For edit mode's "daw", "cas", and so on.
     if @options.oneMovementOnly
       @commands.a = (count) ->
-        if @keypressCount == 1
-          for entity in [ "word", "sentence", "paragraph" ]
-            do (entity) =>
-              @commands[entity.charAt 0] = ->
-                if @keypressCount == 2
-                  @selectLexicalEntity entity, count
-                  @yank()
+        for entity in [ word, sentence, paragraph ]
+          do (entity) =>
+            @commands[entity.charAt 0] = ->
+              @selectLexicalEntity entity, count; @yank()
     #
     # End of VisualMode constructor.
 
@@ -431,13 +457,13 @@ class VisualMode extends Movement
 
   handleMovementKeyChar: (args...) ->
     super args...
-    @yank() if @options.oneMovementOnly
+    @yank() if @options.oneMovementOnly or @options.immediateMovement
 
   selectLine: (count) ->
     @reverseSelection() if @getDirection() == forward
     @runMovement backward, lineboundary
     @reverseSelection()
-    @runMovement forward, "line" for [1...count]
+    @runMovement forward, line for [1...count]
     @runMovement forward, lineboundary
     @runMovement forward, character
 
@@ -492,7 +518,7 @@ class CaretMode extends Movement
 
   # When visual mode starts and there's no existing selection, we launch CaretMode and try to establish a
   # selection.  As a heuristic, we pick the first non-whitespace character of the first visible text node
-  # which seems to be long enough to be interesting.
+  # which seems to be big enough to be interesting.
   establishInitialSelectionAnchor: ->
     nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
     while node = nodes.nextNode()
@@ -500,11 +526,12 @@ class CaretMode extends Movement
       if node.nodeType == 3 and 50 <= node.data.trim().length
         element = node.parentElement
         if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
+          # Start at the offset of the first non-whitespace character.
           offset = node.data.length - node.data.replace(/^\s+/, "").length
           range = document.createRange()
           range.setStart node, offset
           range.setEnd node, offset
-          @selectRange range
+          @setSelectionRange range
           return true
     false
 
@@ -524,8 +551,8 @@ class EditMode extends Movement
     extend @commands,
       i: -> @enterInsertMode()
       a: -> @enterInsertMode()
-      I: -> @runMovement "backward lineboundary"; @enterInsertMode()
-      A: -> @runMovement "forward lineboundary"; @enterInsertMode()
+      I: -> @runMovement backward, lineboundary; @enterInsertMode()
+      A: -> @runMovement forward, lineboundary; @enterInsertMode()
       o: -> @openLine forward
       O: -> @openLine backward
       p: -> @pasteClipboard forward
@@ -533,6 +560,7 @@ class EditMode extends Movement
       v: -> @launchSubMode VisualMode
       V: -> @launchSubMode VisualLineMode
 
+      # FIXME(smblott).  "Y" is no longer a movement, it's a command.  This needs to be implemented.
       Y: (count) -> @enterVisualModeForMovement count, immediateMovement: "Y"
       x: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true, noCopyToClipboard: true
       X: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true, noCopyToClipboard: true
@@ -570,7 +598,10 @@ class EditMode extends Movement
     #   if @element.value.trim() == ""
     #     @enterInsertMode()
     #     HUD.showForDuration "Input empty, entered insert mode directly.", 3500
+    #
+    # End of edit-mode constructor.
 
+  # For "~", "3~", "g~3w", "g~e", and so on.
   swapCase: (count, immediate) ->
     @enterVisualModeForMovement count,
       immediateMovement: if immediate then "l" else null
@@ -585,6 +616,29 @@ class EditMode extends Movement
               char.toLowerCase()
         DomUtils.simulateTextEntry @element, chars.join ""
 
+  # For "p" and "P".
+  pasteClipboard: (direction) ->
+    @paste (text) =>
+      if text
+        # We use the following heuristic: if the text ends with a newline character, then it's a line-oriented
+        # paste, and should be pasted in at a line break.
+        if /\n$/.test text
+          @runMovement backward, lineboundary
+          @runMovement forward, line if direction == forward
+          DomUtils.simulateTextEntry @element, text
+          @runMovement backward, line
+        else
+          DomUtils.simulateTextEntry @element, text
+
+  # For "o" and "O".
+  openLine: (direction) ->
+    @runMovement direction, lineboundary
+    DomUtils.simulateTextEntry @element, "\n"
+    @runMovement backward, character if direction == backward
+    @enterInsertMode()
+
+  # This lanches a visual-mode instance for one movement only, (usually) yanks the resulting selected text,
+  # and (possibly) deletes it.
   enterVisualModeForMovement: (count, options = {}) ->
     @launchSubMode VisualMode, extend options,
       badge: "M"
@@ -600,27 +654,9 @@ class EditMode extends Movement
     @activeSubMode?.instance.exit()
     @activeSubMode =
       mode: mode
+      options: options
       instance: new mode extend options, parentMode: @
     @activeSubMode.instance.onExit => @activeSubMode = null
-
-  pasteClipboard: (direction) ->
-    @paste (text) =>
-      if text
-        # We use the following heuristic: if the text ends in a newline character, then it's a line-oriented
-        # paste, and should be pasted in at a line break.
-        if /\n$/.test text
-          @runMovement backward, lineboundary
-          @runMovement forward, "line" if direction == forward
-          DomUtils.simulateTextEntry @element, text
-          @runMovement backward, "line"
-        else
-          DomUtils.simulateTextEntry @element, text
-
-  openLine: (direction) ->
-    @runMovement direction, lineboundary
-    DomUtils.simulateTextEntry @element, "\n"
-    @runMovement backward, character if direction == backward
-    @enterInsertMode()
 
   exit: (event, target) ->
     super event, target
@@ -635,16 +671,16 @@ class EditMode extends Movement
 
     if event?.type == "blur"
       # This instance of edit mode has now been entirely removed from the handler stack.  It is inactive.
-      # However, the user may return.  For example, we get a blur event when we change tab.  Or, the user may
-      # be copying text with the mouse.   When the user does return, they expect to still be in edit mode.  We
-      # leave behind a "suspended-edit" mode which watches for focus events and activates a new edit-mode
-      # instance if required.
+      # However, the user hasn't asked to leave edit mode, and may return.  For example, we get a blur event
+      # when we change tab.  Or, the user may be copying text with the mouse.   When the user does return,
+      # they expect to still be in edit mode.  We leave behind a "suspended-edit" mode which watches for focus
+      # events and activates a new edit-mode instance if required.
       #
-      # How this gets cleaned up is a bit tricky.  The suspended-edit mode remains active on the current input
-      # element indefinitely.  However, the only way to enter edit mode is via focusInput.  And all modes
-      # launched by focusInput on a particular input element share a singleton (the element itself).  In
-      # addition, the new mode below shares the same singleton.  So any new insert-mode or edit-mode instance
-      # on this target element (the singleton) displaces any previously-active mode (including any
+      # How does this get cleaned up?  It's a bit tricky.  The suspended-edit mode remains active on the
+      # current input element indefinitely.  However, the only way to enter edit mode is via focusInput.  And
+      # all modes launched by focusInput on a particular input element share a singleton (the element itself).
+      # In addition, the new mode below shares the same singleton.  So any new insert-mode or edit-mode
+      # instance on this target element (the singleton) displaces any previously-active mode (including any
       # suspended-edit mode).  PostFindMode shares the same singleton.
       #
       (new Mode name: "#{@id}-suspended", singleton: @options.singleton).push
@@ -652,9 +688,8 @@ class EditMode extends Movement
         focus: (event) =>
           @alwaysContinueBubbling =>
             if event?.target == @options.targetElement
-              editMode = new EditMode @getConfigurationOptions()
-              if activeSubMode
-                editMode.launchSubMode activeSubMode.mode, activeSubMode.instance.getConfigurationOptions()
+              editMode = new EditMode Utils.copyObjectOmittingProperties @options, "keydown", "keypress", "keyup"
+              editMode.launchSubMode activeSubMode.mode, activeSubMode.options if activeSubMode
 
 root = exports ? window
 root.VisualMode = VisualMode
