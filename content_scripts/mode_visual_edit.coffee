@@ -221,8 +221,8 @@ class Movement extends CountPrefix
     "(": "backward sentence"
     "}": "forward paragraph"
     "{": "backward paragraph"
-    "$": "forward lineboundary"
     "0": "backward lineboundary"
+    "$": "forward lineboundary"
     "G": "forward documentboundary"
     "gg": "backward documentboundary"
 
@@ -254,6 +254,10 @@ class Movement extends CountPrefix
             if command and (@movements[command] or @commands[command])
               @selection = window.getSelection()
               @keyQueue = ""
+
+              # We need to treat "0" specially.  It can be either a movement, or a continutation of a count
+              # prefix.  Don't treat it as a movement if we already have a count prefix.
+              return @continueBubbling if command == "0" and 0 < @countPrefix
 
               if @commands[command]
                 @commands[command].call @, @getCountPrefix()
