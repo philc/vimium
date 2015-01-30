@@ -52,11 +52,12 @@ class CountPrefix extends SuppressPrintable
     @countPrefixFactor = 1
     count
 
-# Some symbolic names for common strings.
+# Symbolic names for some common strings.
 forward = "forward"
 backward = "backward"
 character = "character"
 vimword = "vimword"
+lineboundary= "lineboundary"
 
 # This implements movement commands with count prefixes for both visual mode and edit mode.
 class Movement extends CountPrefix
@@ -103,10 +104,17 @@ class Movement extends CountPrefix
     else
       beforeText[0]
 
+  nextCharacterIsWordCharacter: ->
+    /[A-Za-z0-9_]/.test @nextCharacter()
+
   # Run a movement.  For convenience, the following three argument forms are available:
   #   @runMovement "forward word"
   #   @runMovement [ "forward", "word" ]
   #   @runMovement "forward", "word"
+  #
+  # The granularities are word, "line", "lineboundary", "sentence" and "paragraph".  In addition, we implement
+  # the pseudo granularity "vimword", which implements vim-like word movement, for "w".
+  #
   runMovement: (args...) ->
     # Normalize the various argument forms (to an array of two strings: direction and granularity).
     movement =
@@ -116,16 +124,13 @@ class Movement extends CountPrefix
         if args.length == 1 then args[0] else args[...2]
 
     # Perform the movement.
-    # We use the pseudo-granularity "vimword" to implement vim's "w" movement (which is not supported
-    # natively).
-    if movement[1] == "vimword" and movement[0] == forward
-      x = @nextCharacter()
-      if /\s/.test @nextCharacter()
-        @runMovements [ forward, "word" ], [ backward, "word" ]
-      else
+    if movement[1] == vimword and movement[0] == forward
+      if @nextCharacterIsWordCharacter()
         @runMovements [ forward, "word" ], [ forward, vimword ]
+      else
+        @runMovements [ forward, "word" ], [ backward, "word" ]
 
-    else if movement[1] == "vimword"
+    else if movement[1] == vimword
       @selection.modify @alterMethod, backward, "word"
 
     else
@@ -220,8 +225,6 @@ class Movement extends CountPrefix
     "0": "backward lineboundary"
     "G": "forward documentboundary"
     "gg": "backward documentboundary"
-    "Y": (count) -> @selectLine count, false
-    "o": -> @reverseSelection()
 
   constructor: (options) ->
     @selection = window.getSelection()
@@ -263,6 +266,24 @@ class Movement extends CountPrefix
 
         @continueBubbling
 
+    # Install basic bindings for find mode, "n" and "N".  We do not install these bindings if the is a
+    # sub-mode of edit mode, because we cannot (yet) guarantee that the selection will remain within the
+    # active element.
+    unless @options.parentMode or options.oneMovementOnly
+      do =>
+        executeFind = (count, findBackwards) =>
+          if query = getFindModeQuery()
+            initialRange = @selection.getRangeAt(0).cloneRange()
+            for [0...count]
+              unless window.find query, Utils.hasUpperCase(query), findBackwards, true, false, true, false
+                HUD.showForDuration "Yanked #{@yankedText.length} character#{plural}: \"#{message}\".", 2500
+                @selectRange initialRange
+                @scrollIntoView()
+                break
+
+        @movements.n = (count) -> executeFind count, false
+        @movements.N = (count) -> executeFind count, true
+        @movements["/"] = -> enterFindMode()
     #
     # End of Movement constructor.
 
@@ -342,7 +363,7 @@ class VisualMode extends Movement
       when "None"
         return @changeMode CaretMode
       when "Caret"
-        @selection.modify "extend", forward, character
+        @selection.modify "extend", forward, character unless @options.oneMovementOnly
 
     # Yank on <Enter>.
     @push
@@ -359,20 +380,20 @@ class VisualMode extends Movement
       @commands.P = -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
       @commands.V = -> @changeMode VisualLineMode
       @commands.c = -> @changeMode CaretMode
+      @commands.o = -> @reverseSelection()
+      @commands.Y = (count) -> @selectLine count; @yank()
 
-    # Additional commands when run under edit mode (except if only for one movement).
-    if @options.parentMode and not @options.oneMovementOnly
-        @commands.x = -> @yank deleteFromDocument: true
-        @commands.d = -> @yank deleteFromDocument: true
-        @commands.c = ->
-          @yank deleteFromDocument: true
-          @options.parentMode.enterInsertMode()
+      # Additional commands when run under edit mode.
+      if @options.parentMode
+          @commands.x = -> @yank deleteFromDocument: true
+          @commands.d = -> @yank deleteFromDocument: true
+          @commands.c = -> @yank deleteFromDocument: true; @options.parentMode.enterInsertMode()
 
     # For edit mode's "yy" and "dd".
     if @options.yankLineCharacter
       @commands[@options.yankLineCharacter] = (count) ->
         if @keypressCount == 1
-          @selectLine count, true
+          @selectLine count
           @yank()
 
     # For edit mode's "daw", "cas", and so on.
@@ -385,9 +406,6 @@ class VisualMode extends Movement
                 if @keypressCount == 2
                   @selectLexicalEntity entity, count
                   @yank()
-
-    unless @options.parentMode
-      @installFindMode()
     #
     # End of VisualMode constructor.
 
@@ -399,54 +417,22 @@ class VisualMode extends Movement
         document.activeElement.blur()
 
     super event, target
-    if @yankedText? and not @options.noCopyToClipboard
-      console.log "yank:", @yankedText if @debug
-      @copy @yankedText, true
+    if @yankedText?
+      unless @options.noCopyToClipboard
+        console.log "yank:", @yankedText if @debug
+        @copy @yankedText, true
 
   handleMovementKeyChar: (args...) ->
     super args...
     @yank() if @options.oneMovementOnly
 
-  selectLine: (count, collapse) ->
-    @runMovement backward, "lineboundary"
-    @collapseSelectionToFocus() if collapse
-    @runMovement forward, "line" for [0...count]
-
-  # This installs a basic binding for find mode, "n" and "N".
-  # FIXME(smblott).  This is a mess, it needs to be reworked.  Ideally, incorporate FindMode.
-  installFindMode: ->
-    previousFindRange = null
-
-    executeFind = (findBackwards) =>
-      query = getFindModeQuery()
-      if query
-        caseSensitive = Utils.hasUpperCase query
-        @protectClipboard =>
-          initialRange = @selection.getRangeAt(0).cloneRange()
-          direction = @getDirection()
-
-          # Re-select the previous match, if any; this tells Chrome where to start.
-          @selectRange previousFindRange if previousFindRange
-
-          window.find query, caseSensitive, findBackwards, true, false, true, false
-          previousFindRange = newFindRange = @selection.getRangeAt(0).cloneRange()
-          # FIXME(smblott).  What if there are no matches?
-
-          # Install a new range from the original selection anchor to the end of the new match.
-          range = document.createRange()
-          which = if direction == forward then "start" else "end"
-          range.setStart initialRange["#{which}Container"], initialRange["#{which}Offset"]
-          range.setEnd newFindRange.endContainer, newFindRange.endOffset
-          @selectRange range
-
-          # If we're now going backwards (or if the selection is empty), then extend the selection to include
-          # the match itself.
-          if @getDirection() == backward or @selection.toString().length == 0
-            range.setStart newFindRange.startContainer, newFindRange.startOffset
-            @selectRange range
-
-    @movements.n = (count) -> executeFind false
-    @movements.N = (count) -> executeFind true
+  selectLine: (count) ->
+    @reverseSelection() if @getDirection() == forward
+    @runMovement backward, lineboundary
+    @reverseSelection()
+    @runMovement forward, "line" for [1...count]
+    @runMovement forward, lineboundary
+    @runMovement forward, character
 
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
@@ -461,7 +447,7 @@ class VisualLineMode extends VisualMode
   extendSelection: ->
     initialDirection = @getDirection()
     for direction in [ initialDirection, @opposite[initialDirection] ]
-      @runMovement direction, "lineboundary"
+      @runMovement direction, lineboundary
       @reverseSelection()
 
 class CaretMode extends Movement
@@ -475,14 +461,13 @@ class CaretMode extends Movement
       exitOnEscape: true
     super extend defaults, options
 
-    if @selection.type == "None"
-      @establishInitialSelection()
-
     switch @selection.type
       when "None"
-        HUD.showForDuration "Create a selection before entering visual mode.", 2500
-        @exit()
-        return
+        @establishInitialSelectionAnchor()
+        if @selection.type == "None"
+          HUD.showForDuration "Create a selection before entering visual mode.", 2500
+          @exit()
+          return
       when "Range"
         @collapseSelectionToFocus()
 
@@ -501,17 +486,17 @@ class CaretMode extends Movement
   # When visual mode starts and there's no existing selection, we launch CaretMode and try to establish a
   # selection.  As a heuristic, we pick the first non-whitespace character of the first visible text node
   # which seems to be long enough to be interesting.
-  establishInitialSelection: ->
+  establishInitialSelectionAnchor: ->
     nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
     while node = nodes.nextNode()
-      # Don't pick really short texts; they're likely to be part of a banner.
+      # Don't choose short text nodes; they're likely to be part of a banner.
       if node.nodeType == 3 and 50 <= node.data.trim().length
         element = node.parentElement
         if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
           offset = node.data.length - node.data.replace(/^\s+/, "").length
           range = document.createRange()
           range.setStart node, offset
-          range.setEnd node, offset+1
+          range.setEnd node, offset
           @selectRange range
           return true
     false
@@ -553,7 +538,7 @@ class EditMode extends Movement
 
       J: (count) ->
         for [0...count]
-          @runMovement forward, "lineboundary"
+          @runMovement forward, lineboundary
           @enterVisualModeForMovement 1, immediateMovement: "w", deleteFromDocument: true, noCopyToClipboard: true
           DomUtils.simulateTextEntry @element, " "
 
@@ -617,7 +602,7 @@ class EditMode extends Movement
         # We use the following heuristic: if the text ends in a newline character, then it's a line-oriented
         # paste, and should be pasted in at a line break.
         if /\n$/.test text
-          @runMovement backward, "lineboundary"
+          @runMovement backward, lineboundary
           @runMovement forward, "line" if direction == forward
           DomUtils.simulateTextEntry @element, text
           @runMovement backward, "line"
@@ -625,7 +610,7 @@ class EditMode extends Movement
           DomUtils.simulateTextEntry @element, text
 
   openLine: (direction) ->
-    @runMovement direction, "lineboundary"
+    @runMovement direction, lineboundary
     DomUtils.simulateTextEntry @element, "\n"
     @runMovement backward, character if direction == backward
     @enterInsertMode()
