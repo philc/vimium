@@ -148,6 +148,7 @@ class Movement extends CountPrefix
       @selection.modify @alterMethod, backward, word
 
     else
+      console.log movement...
       @selection.modify @alterMethod, movement...
 
   # Return a simple camparable value which depends on various aspects of the selection.  This is used to
@@ -350,21 +351,22 @@ class Movement extends CountPrefix
     @exit()
     @yankedText
 
-  # Select a lexical entity, such as a word, or a sentence. The entity should be a movement granularity such
-  # as "word" or "lineboundary".
+  # For "daw", "2das", and so on.  We select a lexical entity (a word, a sentence or a paragraph).
+  # Note(smblott).  Chrome's paragraph movements are asymmetrical, so we don't support those.  So, just words
+  # and sentences, for now.
   selectLexicalEntity: (entity, count = 1) ->
-    # Locate the start of the current entity.
-    @runMovement forward, entity
-    @runMovement backward, entity
-    @collapseSelectionToFocus() if @options.oneMovementOnly
-    # Move over count entities.
-    for [0...count]
-      return unless @runMovements [ forward, entity ]
-      # For "lineboundary", we consume the following newline, allowing us to move on to the next line (for
-      # "3dd", "3yy", etc).
-      @runMovement forward, character if entity == lineboundary
-    # Move to the start of the subsequent entity.
-    @runMovements [ forward, entity ], [ backward, entity ]
+    if entity == word
+      if @nextCharacterIsWordCharacter()
+        @runMovements [ forward, character ], [ backward, word ]
+        @collapseSelectionToFocus()
+        @runMovements ([0...count].map -> [ forward, word ])..., [ forward, word ], [ backward, word ]
+      else
+        @runMovements [ forward, word ], [ backward, word ], ([0...count].map -> [ forward, word ])...
+    else if entity == sentence
+      @runMovement forward, character
+      @runMovement backward, sentence
+      @collapseSelectionToFocus()
+      @runMovements ([0...count].map -> [ forward, sentence ])...
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -436,7 +438,7 @@ class VisualMode extends Movement
     # For edit mode's "daw", "cas", and so on.
     if @options.oneMovementOnly
       @commands.a = (count) ->
-        for entity in [ word, sentence, paragraph ]
+        for entity in [ word, sentence ] # , paragraph ] # Note(smblott).  Paragraphs don't work.
           do (entity) =>
             @commands[entity.charAt 0] = ->
               @selectLexicalEntity entity, count; @yank()
