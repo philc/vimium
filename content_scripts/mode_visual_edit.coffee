@@ -148,7 +148,6 @@ class Movement extends CountPrefix
       @selection.modify @alterMethod, backward, word
 
     else
-      console.log movement...
       @selection.modify @alterMethod, movement...
 
   # Return a simple camparable value which depends on various aspects of the selection.  This is used to
@@ -468,7 +467,7 @@ class VisualMode extends Movement
     @reverseSelection()
     @runMovement forward, line for [1...count]
     @runMovement forward, lineboundary
-    @runMovement forward, character
+    @runMovement forward, character unless @nextCharacterIsWordCharacter()
 
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
