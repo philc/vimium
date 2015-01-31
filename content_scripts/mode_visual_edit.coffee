@@ -449,15 +449,20 @@ class VisualMode extends Movement
           @changeMode CaretMode
           return
 
-    # Yank on <Enter>.
     @push
-      _name: "#{@id}/enter"
+      _name: "#{@id}/enter/click"
+      # Yank on <Enter>.
       keypress: (event) =>
         if event.keyCode == keyCodes.enter
           unless event.metaKey or event.ctrlKey or event.altKey or event.shiftKey
             @yank()
             return @suppressEvent
         @continueBubbling
+      # Click in a focusable element exits.
+      click: (event) =>
+        @alwaysContinueBubbling =>
+          unless @options.parentMode
+            @exit event, event.target if DomUtils.isFocusable event.target
 
     # Visual-mode commands.
     unless @options.oneMovementOnly
@@ -494,7 +499,7 @@ class VisualMode extends Movement
       # Don't leave the user in insert mode just because they happen to have selected text within an input
       # element.
       if document.activeElement and DomUtils.isEditable document.activeElement
-        document.activeElement.blur()
+        document.activeElement.blur() unless event?.type == "click"
 
     super event, target
     if @yankedText?
@@ -553,6 +558,13 @@ class CaretMode extends Movement
 
     @selection.modify "extend", forward, character
     @scrollIntoView()
+
+    @push
+      _name: "#{@id}/click"
+      # Click in a focusable element exits.
+      click: (event) =>
+        @alwaysContinueBubbling =>
+          @exit event, event.target if DomUtils.isFocusable event.target
 
     extend @commands,
       v: -> @changeMode VisualMode
