@@ -124,8 +124,10 @@ class Movement extends CountPrefix
       beforeText[beforeText.length - 1]
 
   # Test whether the character following the focus is a word character.  Leave the selection unchanged.
+  # We include "." as a word character here.  With this, "w" sometimes jumps one word too far.  However, it's
+  # better than leaving it out, in which case "w" jumps backwards!
   nextCharacterIsWordCharacter: do ->
-    regexp = /[A-Za-z0-9_]/
+    regexp = /[A-Za-z0-9_]|\./
     -> regexp.test @getNextForwardCharacter()
 
   # Run a movement.  For convenience, the following three argument forms are available:
@@ -147,7 +149,7 @@ class Movement extends CountPrefix
     # Perform the movement.
     if movement[1] == vimword and movement[0] == forward
       if @nextCharacterIsWordCharacter()
-        @runMovements [ forward, word ], [ forward, vimword ]
+        @runMovements [ forward, word ], [ forward, word ], [ backward, word ]
       else
         @runMovements [ forward, word ], [ backward, word ]
 
