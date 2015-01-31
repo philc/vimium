@@ -1,15 +1,10 @@
 
 # Todo:
 # Konami code?
-# Use find as a mode.
-# Exit on Ctrl-Enter.
 # Scroll is broken (again).  Seems to be after dd.
 # Paste of whole lines.
 # Arrow keys.
 # J
-# Fix Y for edit mode.
-# Fix sentence movements.
-# Change how we get the options for submodes.
 
 # This prevents printable characters from being passed through to the underlying page.  It should, however,
 # allow through Chrome keyboard shortcuts.
@@ -347,6 +342,7 @@ class Movement extends CountPrefix
   # Yank the selection; always exits; either deletes the selection or collapses it; returns the yanked text.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
+    console.log "text:", @yankedText
 
     if @options.deleteFromDocument or args.deleteFromDocument
       @selection.deleteFromDocument()
@@ -363,36 +359,39 @@ class Movement extends CountPrefix
     @yankedText
 
   # For "daw", "das", and so on.  We select a lexical entity (a word, a sentence or a paragraph).
-  # Note(smblott).  It would be nice if the entities could be handled symmetrically.  Unfortunately, they
+  # Note(smblott).  It would be better if the entities could be handled symmetrically.  Unfortunately, they
   # cannot, and we have to handle each case individually.
-  # Note(smblott). We currently ignore count.
   selectLexicalEntity: (entity, count = 1) ->
-    if entity == word
-      if @nextCharacterIsWordCharacter()
-        @runMovements [ forward, character ], [ backward, word ]
+
+    switch entity
+      when word
+        if @nextCharacterIsWordCharacter()
+          @runMovements [ forward, character ], [ backward, word ]
+          @collapseSelectionToFocus()
+          @runMovements ([0...count].map -> [ forward, word ])..., [ forward, word ], [ backward, word ]
+        else
+          @runMovements [ forward, word ], [ backward, word ], ([0...count].map -> [ forward, word ])...
+
+      when sentence
+        @runMovements [ forward, character ], [ backward, sentence ]
         @collapseSelectionToFocus()
-        @runMovements ([0...count].map -> [ forward, word ])..., [ forward, word ], [ backward, word ]
-      else
-        @runMovements [ forward, word ], [ backward, word ], ([0...count].map -> [ forward, word ])...
-    else if entity == sentence
-      @runMovement forward, character
-      @runMovement backward, sentence
-      @collapseSelectionToFocus()
-      @runMovements ([0...count].map -> [ forward, sentence ])...
-    else if entity == paragraph
-      # Chrome's paragraph movements are weird: they're not symmetrical, and they tend to stop in odd places
-      # (like mid-paragraph, for example).  Here, we define a paragraph as a new-line delimited entity,
-      # including the terminating newline.
-      char = @getNextBackwardCharacter()
-      while char and char != "\n"
-        return unless @runMovements [ backward, character ], [ backward, lineboundary ]
+        @runMovements ([0...count].map -> [ forward, sentence ])...
+
+      when paragraph
+        # Chrome's paragraph movements are weird: they're not symmetrical, and tend to stop in odd places
+        # (like mid-paragraph, for example).  Here, we define a paragraph as a new-line delimited entity,
+        # including the terminating newline.
+        # Note(smblott).  This does not currently use the count.
         char = @getNextBackwardCharacter()
-      @collapseSelectionToFocus()
-      char = @getNextForwardCharacter()
-      while char and char != "\n"
-        return unless @runMovements [ forward, character ], [ forward, lineboundary ]
+        while char? and char != "\n"
+          return unless @runMovements [ backward, character ], [ backward, lineboundary ]
+          char = @getNextBackwardCharacter()
+        @collapseSelectionToFocus()
         char = @getNextForwardCharacter()
-      @runMovement forward, character
+        while char? and char != "\n"
+          @runMovements [ forward, character ], [ forward, lineboundary ]
+          char = @getNextForwardCharacter()
+        @runMovement forward, character
 
   # Try to scroll the focus into view.
   scrollIntoView: ->
@@ -589,7 +588,6 @@ class EditMode extends Movement
       v: -> @launchSubMode VisualMode
       V: -> @launchSubMode VisualLineMode
 
-      # FIXME(smblott).  "Y" is no longer a movement, it's a command.  This needs to be implemented.
       Y: (count) -> @enterVisualModeForMovement count, immediateMovement: "Y"
       x: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true, noCopyToClipboard: true
       X: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true, noCopyToClipboard: true
@@ -600,11 +598,12 @@ class EditMode extends Movement
       D: (count) -> @enterVisualModeForMovement 1, immediateMovement: "$", deleteFromDocument: true
       C: (count) -> @enterVisualModeForMovement 1, immediateMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
 
-      J: (count) ->
-        for [0...count]
-          @runMovement forward, lineboundary
-          @enterVisualModeForMovement 1, immediateMovement: "w", deleteFromDocument: true, noCopyToClipboard: true
-          DomUtils.simulateTextEntry @element, " "
+      # Disabled.  Doesn't work.
+      # J: (count) ->
+      #   for [0...count]
+      #     @runMovement forward, lineboundary
+      #     @enterVisualModeForMovement 1, immediateMovement: "w", deleteFromDocument: true, noCopyToClipboard: true
+      #     DomUtils.simulateTextEntry @element, " "
 
       r: (count) ->
         handlerStack.push
