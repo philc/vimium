@@ -75,11 +75,7 @@ doesScroll = (element, direction, amount, factor) ->
   # definitely scrolling backwards, so a delta of -1 will do.  For absolute scrolls, factor is always 1.
   delta = factor * getDimension(element, direction, amount) || -1
   delta = getSign delta # 1 or -1
-  for change in [ delta, -delta ]
-    if performScroll element, direction, change
-      performScroll element, direction, -change
-      return true
-  false
+  performScroll(element, direction, delta) and performScroll(element, direction, -delta)
 
 # From element and its parents, find the first which we should scroll and which does scroll.
 findScrollableElement = (element, direction, amount, factor) ->
