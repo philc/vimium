@@ -424,9 +424,20 @@ class VisualMode extends Movement
       if @options.parentMode and @selection.type == "Caret"
         # We're being called from edit mode, so establish an intial visible selection.
         @extendByOneCharacter(forward) or @extendByOneCharacter backward
-      else if @selection.type in [ "None", "Caret" ]
-        unless @options.oneMovementOnly or options.immediateMovement
-          HUD.showForDuration "No selection, entering caret mode first..", 2500
+      else
+        if @selection.type in [ "Caret", "Range" ]
+          elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
+          if DomUtils.getVisibleClientRect elementWithFocus
+            if @selection.type == "Caret"
+              # Make the selection visible.
+              @extendByOneCharacter(forward) or @extendByOneCharacter backward
+          else
+            # If the selection is outside of the viewport, we clear it.  We guess that the user has moved on,
+            # and is more likely to be interested in visible content.
+            @selection.removeAllRanges()
+
+        if @selection.type != "Range"
+          HUD.showForDuration "Entering caret mode first..", 2500
           @changeMode CaretMode
           return
 
@@ -530,7 +541,7 @@ class CaretMode extends Movement
           @exit()
           return
       when "Range"
-        @collapseSelectionToFocus()
+        @collapseSelectionToAnchor()
 
     @selection.modify "extend", forward, character
     @scrollIntoView()
