@@ -500,7 +500,7 @@ class VisualMode extends Movement
       @commands.p = -> chrome.runtime.sendMessage handler: "openUrlInCurrentTab", url: @yank()
       @commands.P = -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
       @commands.V = -> @changeMode VisualLineMode
-      @commands.c = -> @changeMode CaretMode
+      @commands.c = -> @collapseSelectionToFocus(); @changeMode CaretMode
       @commands.o = -> @reverseSelection()
 
       # Additional commands when run under edit mode.
