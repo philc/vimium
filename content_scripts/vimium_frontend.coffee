@@ -762,10 +762,7 @@ handleDeleteForFindMode = ->
     exitFindMode()
     performFindInPlace()
   else
-    findModeQuery.rawQuery = findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
-    updateFindModeQuery()
-    performFindInPlace()
-    showFindModeHUDForQuery()
+    updateQueryForFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
