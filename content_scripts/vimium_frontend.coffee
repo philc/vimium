@@ -779,6 +779,7 @@ handleEnterForFindMode = ->
 class FindMode extends Mode
   constructor: ->
     @historyIndex = -1
+    @partialQuery = ""
     super
       name: "find"
       badge: "/"
@@ -796,11 +797,12 @@ class FindMode extends Mode
         else if event.keyCode == keyCodes.upArrow
           if rawQuery = FindModeHistory.getQuery @historyIndex + 1
             @historyIndex += 1
+            @partialQuery = findModeQuery.rawQuery if @historyIndex == 0
             updateQueryForFindMode rawQuery
           @suppressEvent
         else if event.keyCode == keyCodes.downArrow
           @historyIndex = Math.max -1, @historyIndex - 1
-          rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else ""
+          rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
           updateQueryForFindMode rawQuery
           @suppressEvent
         else
