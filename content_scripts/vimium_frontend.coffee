@@ -103,13 +103,8 @@ frameId = Math.floor(Math.random()*999999999)
 
 hasModifiersRegex = /^<([amc]-)+.>/
 
-#
-# Complete initialization work that sould be done prior to DOMReady.
-#
-initializePreDomReady = ->
-  settings.addEventListener("load", LinkHints.init.bind(LinkHints))
-  settings.load()
-
+# Only exported for tests.
+window.initializeModes = ->
   class NormalMode extends Mode
     constructor: ->
       super
@@ -122,12 +117,20 @@ initializePreDomReady = ->
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
+  new BadgeMode
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
 
-  checkIfEnabledForUrl()
+#
+# Complete initialization work that sould be done prior to DOMReady.
+#
+initializePreDomReady = ->
+  settings.addEventListener("load", LinkHints.init.bind(LinkHints))
+  settings.load()
 
+  initializeModes()
+  checkIfEnabledForUrl()
   refreshCompletionKeys()
 
   # Send the key to the key handler in the background page.
@@ -179,7 +182,7 @@ installListener = (element, event, callback) ->
 # Run this as early as possible, so the page can't register any event handlers before us.
 #
 installedListeners = false
-initializeWhenEnabled = (newPassKeys) ->
+window.initializeWhenEnabled = (newPassKeys) ->
   isEnabledForUrl = true
   passKeys = newPassKeys
   if (!installedListeners)
@@ -334,11 +337,9 @@ extend window,
   focusInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null
-    handlerStack.push
-      _name: "focus-input-tracker"
-      focus: (event) ->
-        recentlyFocusedElement = event.target if DomUtils.isEditable event.target
-        true
+    window.addEventListener "focus",
+      (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+    , true
 
     (count) ->
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with

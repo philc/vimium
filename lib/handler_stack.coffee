@@ -1,7 +1,6 @@
 root = exports ? window
 
 class HandlerStack
-
   constructor: ->
     @debug = false
     @eventNumber = 0
@@ -94,6 +93,10 @@ class HandlerStack
         when true then "continue"
     label ||= if result then "continue/truthy" else "suppress"
     console.log "#{@eventNumber}", type, handler._name, label
+
+  # For tests only.
+  reset: ->
+    @stack = []
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()
