@@ -9,7 +9,7 @@
 # SuppressPrintable and CountPrefix are shared utility base classes.
 # Movement is a shared vim-like movement base class.
 #
-# The inheritance hierarchy is:
+# The class inheritance hierarchy is:
 # - Mode, SuppressPrintable, CountPrefix, Movement, [ VisualMode | CaretMode | EditMode ]
 # - Mode, SuppressPrintable, CountPrefix, Movement, VisualMode, VisualLineMode
 #
@@ -111,7 +111,7 @@ class Movement extends CountPrefix
     if @options.parentMode
       @options.parentMode.launchSubMode mode, options
     else
-      new mode options
+      new mode extend options, initialRangeOnLaunch: @initialRangeOnLaunch
 
   # Return the character following (to the right of) the focus, and leave the selection unchanged.  Returns
   # undefined if there is no such character.
@@ -309,6 +309,11 @@ class Movement extends CountPrefix
       @runMovementKeyChar @options.immediateMovement, @getCountPrefix()
       return
 
+    # Track the initial selection range.  We'll restore it if the user exits with Escape.
+    unless @options.parentMode
+      @initialRangeOnLaunch = options.initialRangeOnLaunch ||
+        (if @selection.type == "None" then "None" else @selection.getRangeAt 0)
+
     # This is the main keyboard-event handler for movements and commands.
     @push
       _name: "#{@id}/keypress"
@@ -348,7 +353,7 @@ class Movement extends CountPrefix
             for [0...count]
               unless window.find query, Utils.hasUpperCase(query), findBackwards, true, false, true, false
                 @setSelectionRange initialRange
-                HUD.showForDuration "No matches.", 1500
+                HUD.showForDuration("No matches for '" + query + "'", 1000)
                 return
             # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
             # drop back into visual mode.
@@ -358,9 +363,21 @@ class Movement extends CountPrefix
         @movements.N = (count) -> executeFind count, true
         @movements["/"] = ->
           @findMode = enterFindMode()
-          @findMode.onExit => new VisualMode
+          @findMode.onExit => @changeMode VisualMode
     #
     # End of Movement constructor.
+
+  exit: (event, target) ->
+    super event, target
+
+    unless @options.parentMode
+      # When the user exits via Escape, we reinstall the pre-launch selection (or, if there was none, just
+      # collapse the selection to the current anchor).
+      if @initialRangeOnLaunch? and event?.type == "keydown" and KeyboardUtils.isEscape event
+        if @initialRangeOnLaunch == "None"
+          @collapseSelectionToAnchor()
+        else
+          @setSelectionRange @initialRangeOnLaunch unless @initialRangeOnLaunch == "None"
 
   # Yank the selection; always exits; either deletes the selection or collapses it; set @yankedText and
   # returns it.
