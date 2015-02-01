@@ -673,8 +673,8 @@ FindModeHistory =
 
   recordQuery: (query) ->
     @migration()
-    recentQueries = settings.get "findModeRawQueryList"
-    if 0 < query?.length
+    if 0 < query.length
+      recentQueries = settings.get "findModeRawQueryList"
       settings.set "findModeRawQueryList", ([ query ].concat recentQueries.filter (q) -> q != query)[0..50]
 
   # Migration (from 1.49, 2015/2/1).
