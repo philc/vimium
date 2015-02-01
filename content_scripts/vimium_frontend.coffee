@@ -1015,7 +1015,8 @@ window.goNext = ->
 
 showFindModeHUDForQuery = ->
   if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Matches)")
+    plural = if findModeQuery.matchCount == 1 then "" else "es"
+    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Match#{plural})")
   else
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
 
