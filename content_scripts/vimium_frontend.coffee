@@ -48,7 +48,7 @@ settings =
   values: {}
   loadedValues: 0
   valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
-    "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
+    "previousPatterns", "nextPatterns", "findModeRawQuery", "findModeRawQueryList", "regexFindMode", "userDefinedLinkHintCss",
     "helpDialog_showAdvancedCommands", "smoothScroll"]
   isLoaded: false
   eventListeners: {}
@@ -663,6 +663,28 @@ exitInsertMode = (target) ->
 isInsertMode = ->
   return false # Disabled.
 
+# This implements a find-mode query history (using the "findModeRawQueryList" setting) as a list of raw
+# queries, most recent first.
+FindModeHistory =
+  getQuery: (index = 0) ->
+    @migration()
+    recentQueries = settings.get "findModeRawQueryList"
+    if index < recentQueries.length then recentQueries[index] else ""
+
+  recordQuery: (query) ->
+    @migration()
+    recentQueries = settings.get "findModeRawQueryList"
+    if 0 < query?.length
+      settings.set "findModeRawQueryList", ([ query ].concat recentQueries.filter (q) -> q != query)[0..50]
+
+  # Migration (from 1.49, 2015/2/1).
+  # Legacy setting: findModeRawQuery (a string).
+  # New setting: findModeRawQueryList (a list of strings).
+  migration: ->
+    unless settings.get "findModeRawQueryList"
+      rawQuery = settings.get "findModeRawQuery"
+      settings.set "findModeRawQueryList", (if rawQuery then [ rawQuery ] else [])
+
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
@@ -714,11 +736,14 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleKeyCharForFindMode = (keyChar) ->
-  findModeQuery.rawQuery += keyChar
+updateQueryForFindMode = (rawQuery) ->
+  findModeQuery.rawQuery = rawQuery
   updateFindModeQuery()
   performFindInPlace()
   showFindModeHUDForQuery()
+
+handleKeyCharForFindMode = (keyChar) ->
+  updateQueryForFindMode findModeQuery.rawQuery + keyChar
 
 handleEscapeForFindMode = ->
   exitFindMode()
@@ -749,10 +774,11 @@ handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  settings.set("findModeRawQuery", findModeQuery.rawQuery)
+  FindModeHistory.recordQuery findModeQuery.rawQuery
 
 class FindMode extends Mode
   constructor: ->
+    @historyIndex = -1
     super
       name: "find"
       badge: "/"
@@ -766,6 +792,16 @@ class FindMode extends Mode
         else if event.keyCode == keyCodes.enter
           handleEnterForFindMode()
           @exit()
+          @suppressEvent
+        else if event.keyCode == keyCodes.upArrow
+          if rawQuery = FindModeHistory.getQuery @historyIndex + 1
+            @historyIndex += 1
+            updateQueryForFindMode rawQuery
+          @suppressEvent
+        else if event.keyCode == keyCodes.downArrow
+          @historyIndex = Math.max -1, @historyIndex - 1
+          rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else ""
+          updateQueryForFindMode rawQuery
           @suppressEvent
         else
           DomUtils.suppressPropagation(event)
@@ -852,7 +888,7 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
 findAndFocus = (backwards) ->
   # check if the query has been changed by a script in another frame
-  mostRecentQuery = settings.get("findModeRawQuery") || ""
+  mostRecentQuery = FindModeHistory.getQuery()
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
