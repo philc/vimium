@@ -1014,11 +1014,13 @@ window.goNext = ->
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
-  if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
+  if findModeQuery.rawQuery and (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
     plural = if findModeQuery.matchCount == 1 then "" else "es"
     HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Match#{plural})")
-  else
+  else if findModeQuery.rawQuery
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
+  else
+    HUD.show("/")
 
 getCurrentRange = ->
   selection = getSelection()
