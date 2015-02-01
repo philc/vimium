@@ -733,15 +733,18 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
+# Return if character deleted, false otherwise.
 handleDeleteForFindMode = ->
   if (findModeQuery.rawQuery.length == 0)
     exitFindMode()
     performFindInPlace()
+    false
   else
     findModeQuery.rawQuery = findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
     updateFindModeQuery()
     performFindInPlace()
     showFindModeHUDForQuery()
+    true
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
@@ -762,7 +765,7 @@ class FindMode extends Mode
 
       keydown: (event) =>
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-          handleDeleteForFindMode()
+          @exit() unless handleDeleteForFindMode()
           @suppressEvent
         else if event.keyCode == keyCodes.enter
           handleEnterForFindMode()
