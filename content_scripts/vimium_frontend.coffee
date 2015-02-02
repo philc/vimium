@@ -353,7 +353,9 @@ extend window,
           continue if rect == null
           { element: element, rect: rect }
 
-      return if visibleInputs.length == 0
+      if visibleInputs.length == 0
+        HUD.showForDuration("There are no inputs to focus.", 1000)
+        return
 
       selectedInputIndex =
         if count == 1
