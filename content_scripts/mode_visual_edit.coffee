@@ -111,7 +111,7 @@ class Movement extends CountPrefix
     if @options.parentMode
       @options.parentMode.launchSubMode mode, options
     else
-      new mode extend options, initialRangeOnLaunch: @initialRangeOnLaunch
+      new mode options
 
   # Return the character following (to the right of) the focus, and leave the selection unchanged.  Returns
   # undefined if there is no such character.
@@ -309,11 +309,6 @@ class Movement extends CountPrefix
       @runMovementKeyChar @options.immediateMovement, @getCountPrefix()
       return
 
-    # Track the initial selection range.  We'll restore it if the user exits with Escape.
-    unless @options.parentMode
-      @initialRangeOnLaunch = options.initialRangeOnLaunch ||
-        (if @selection.type == "None" then "None" else @selection.getRangeAt 0)
-
     # This is the main keyboard-event handler for movements and commands.
     @push
       _name: "#{@id}/keypress"
@@ -369,15 +364,6 @@ class Movement extends CountPrefix
 
   exit: (event, target) ->
     super event, target
-
-    unless @options.parentMode
-      # When the user exits via Escape, we reinstall the pre-launch selection (or, if there was none, just
-      # collapse the selection to the current anchor).
-      if @initialRangeOnLaunch? and event?.type == "keydown" and KeyboardUtils.isEscape event
-        if @initialRangeOnLaunch == "None"
-          @collapseSelectionToAnchor()
-        else
-          @setSelectionRange @initialRangeOnLaunch unless @initialRangeOnLaunch == "None"
 
   # Yank the selection; always exits; either deletes the selection or collapses it; set @yankedText and
   # returns it.
