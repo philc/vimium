@@ -426,11 +426,10 @@ class Movement extends CountPrefix
             # WIP...
             elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
             console.log elementWithFocus.innerHTML
-            position = elementWithFocus.getClientRects()[0].top - @element.getClientRects()[0].top
-            console.log "top", position
-            Scroller.scrollToPosition @element, position, 0
-            position = elementWithFocus.getClientRects()[0].bottom - @element.getClientRects()[0].top
-            console.log "bottom", position
+            # position = @element.getClientRects()[0].top - elementWithFocus.getClientRects()[0].top
+            # console.log "top", position
+            # Scroller.scrollToPosition @element, position, 0
+            position = elementWithFocus.getClientRects()[0].bottom - @element.getClientRects()[0].top - @element.clientHeight + @element.scrollTop
             Scroller.scrollToPosition @element, position, 0
           else
             position = if @getDirection() == backward then @element.selectionStart else @element.selectionEnd
