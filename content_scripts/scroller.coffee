@@ -265,10 +265,12 @@ Scroller =
 
     # Scroll down, "y".
     amount = top + 20 - (element.clientHeight + element.scrollTop)
+    console.log "y down", amount, 0 < amount
     CoreScroller.scroll element, "y", amount, false if 0 < amount
 
     # Scroll up, "y".
     amount = top - (element.scrollTop) - 5
+    console.log "y up", amount, amount < 0
     CoreScroller.scroll element, "y", amount, false if amount < 0
 
     # Scroll down, "x".

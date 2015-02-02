@@ -437,7 +437,15 @@ class Movement extends CountPrefix
       if @element and DomUtils.isEditable @element
         if @element.clientHeight < @element.scrollHeight
           if @element.isContentEditable
-            # Help(smblott)! How do we do this?  This case matters for Gmail and Google's inbox.
+            # WIP...
+            elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
+            console.log elementWithFocus.innerHTML
+            position = elementWithFocus.getClientRects()[0].top - @element.getClientRects()[0].top
+            console.log "top", position
+            Scroller.scrollToPosition @element, position, 0
+            position = elementWithFocus.getClientRects()[0].bottom - @element.getClientRects()[0].top
+            console.log "bottom", position
+            Scroller.scrollToPosition @element, position, 0
           else
             position = if @getDirection() == backward then @element.selectionStart else @element.selectionEnd
             coords = DomUtils.getCaretCoordinates @element, position
