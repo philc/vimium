@@ -362,9 +362,6 @@ class Movement extends CountPrefix
     #
     # End of Movement constructor.
 
-  exit: (event, target) ->
-    super event, target
-
   # Yank the selection; always exits; either deletes the selection or collapses it; set @yankedText and
   # returns it.
   yank: (args = {}) ->
@@ -383,6 +380,26 @@ class Movement extends CountPrefix
     @options.onYank.call @, @yankedText if @options.onYank
     @exit()
     @yankedText
+
+  exit: (event, target) ->
+    unless @options.parentMode or @options.oneMovementOnly
+      # If we're exiting on escape and there is a range selection, then we leave it in place.  However, an
+      # immediately-following Escape clears the selection.  See #1441.
+      if @selection.type == "Range" and event?.type == "keydown" and KeyboardUtils.isEscape event
+        handlerStack.push
+          _name: "visual/range/escape"
+          click: -> handlerStack.remove()
+          focus: -> handlerStack.remove()
+          keydown: (event) =>
+            handlerStack.remove()
+            if @selection.type == "Range" and event.type == "keydown" and KeyboardUtils.isEscape event
+              @collapseSelectionToFocus()
+              DomUtils.suppressKeyupAfterEscape handlerStack
+              @suppressEvent
+            else
+              @continueBubbling
+
+    super event, target
 
   # For "daw", "das", and so on.  We select a lexical entity (a word, a sentence or a paragraph).
   # Note(smblott).  It would be better if the entities could be handled symmetrically.  Unfortunately, they
