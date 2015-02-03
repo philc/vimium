@@ -388,8 +388,8 @@ class Movement extends CountPrefix
       if @selection.type == "Range" and event?.type == "keydown" and KeyboardUtils.isEscape event
         handlerStack.push
           _name: "visual/range/escape"
-          click: -> handlerStack.remove()
-          focus: -> handlerStack.remove()
+          click: -> handlerStack.remove(); @continueBubbling
+          focus: -> handlerStack.remove(); @continueBubbling
           keydown: (event) =>
             handlerStack.remove()
             if @selection.type == "Range" and event.type == "keydown" and KeyboardUtils.isEscape event
