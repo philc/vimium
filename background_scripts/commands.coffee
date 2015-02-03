@@ -200,7 +200,6 @@ defaultKeyMappings =
   "i": "enterInsertMode"
   "v": "enterVisualMode"
   "V": "enterVisualLineMode"
-  "e": "enterEditMode"
   "gv": "enterEditMode"
 
   "H": "goBack"
