@@ -619,25 +619,32 @@ class CaretMode extends Movement
     @selection.modify "extend", forward, character
 
   # When visual mode starts and there's no existing selection, we launch CaretMode and try to establish a
-  # selection.  As a heuristic, we pick the first non-whitespace character of the first visible text node
-  # which seems to be big enough to be interesting.
-  # TODO(smblott).  It might be better to do something similar to Clearly or Readability; that is, try to find
-  # the start of the page's main textual content.
+  # selection.  As a heuristic, we score visible text nodes by their visible area and the number of
+  # non-whitespace characters they contain.  We pick the first non-whitespece character in the highest scoring
+  # node.
   establishInitialSelectionAnchor: ->
     nodes = document.createTreeWalker document.body, NodeFilter.SHOW_TEXT
-    while node = nodes.nextNode()
-      # Don't choose short text nodes; they're likely to be part of a banner.
-      if node.nodeType == 3 and 50 <= node.data.trim().length
+
+    # Find and score candidate text nodes.
+    candidates =
+      for node in (n while n = nodes.nextNode())
+        continue unless node.nodeType == 3 and 0 < node.data.trim().length
         element = node.parentElement
-        if DomUtils.getVisibleClientRect(element) and not DomUtils.isEditable element
-          # Start at the offset of the first non-whitespace character.
-          offset = node.data.length - node.data.replace(/^\s+/, "").length
-          range = document.createRange()
-          range.setStart node, offset
-          range.setEnd node, offset
-          @setSelectionRange range
-          return true
-    false
+        rect = DomUtils.getVisibleClientRect element
+        continue unless rect and not DomUtils.isEditable element
+        area = (rect.bottom - rect.top) * (rect.right - rect.left)
+        chars = node.data.split(/\s+/).join().length
+        { node: node, score: chars * area }
+
+    if 0 < candidates.length
+      node = (candidates.sort (a,b) -> b.score - a.score)[0].node
+      # Start at the offset of the first non-whitespace character.
+      offset = node.data.length - node.data.replace(/^\s+/, "").length
+      range = document.createRange()
+      range.setStart node, offset
+      range.setEnd node, offset
+      @setSelectionRange range
+      return range
 
 class EditMode extends Movement
   constructor: (options = {}) ->
