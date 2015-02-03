@@ -11,6 +11,8 @@ findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 findModeInitialRange = null
+findModeInitialScrollTop = null
+findModeInitialScrollLeft = null
 isShowingHelpDialog = false
 keyPort = null
 # Users can disable Vimium on URL patterns via the settings page.  The following two variables
@@ -1002,11 +1004,15 @@ getCurrentRange = ->
 
 findModeSaveSelection = ->
   findModeInitialRange = getCurrentRange()
+  findModeInitialScrollTop = document.body?.scrollTop
+  findModeInitialScrollLeft = document.body?.scrollLeft
 
 findModeRestoreSelection = (range = findModeInitialRange) ->
   selection = getSelection()
   selection.removeAllRanges()
   selection.addRange range
+  document.body.scrollTop = findModeInitialScrollTop if findModeInitialScrollTop
+  document.body.scrollLeft = findModeInitialScrollLeft if findModeInitialScrollLeft
 
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.
