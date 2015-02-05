@@ -383,21 +383,24 @@ class Movement extends CountPrefix
 
   exit: (event, target) ->
     unless @options.parentMode or @options.oneMovementOnly
-      # If we're exiting on escape and there is a range selection, then we leave it in place.  However, an
-      # immediately-following Escape clears the selection.  See #1441.
-      if @selection.type == "Range" and event?.type == "keydown" and KeyboardUtils.isEscape event
-        handlerStack.push
-          _name: "visual/range/escape"
-          click: -> handlerStack.remove(); @continueBubbling
-          focus: -> handlerStack.remove(); @continueBubbling
-          keydown: (event) =>
-            handlerStack.remove()
-            if @selection.type == "Range" and event.type == "keydown" and KeyboardUtils.isEscape event
-              @collapseSelectionToFocus()
-              DomUtils.suppressKeyupAfterEscape handlerStack
-              @suppressEvent
-            else
-              @continueBubbling
+      @selection.removeAllRanges() if event?.type == "keydown" and KeyboardUtils.isEscape event
+
+      # Disabled, pending discussion of fine-tuning the UX.  Simpler alternative is implemented above.
+      # # If we're exiting on escape and there is a range selection, then we leave it in place.  However, an
+      # # immediately-following Escape clears the selection.  See #1441.
+      # if @selection.type == "Range" and event?.type == "keydown" and KeyboardUtils.isEscape event
+      #   handlerStack.push
+      #     _name: "visual/range/escape"
+      #     click: -> handlerStack.remove(); @continueBubbling
+      #     focus: -> handlerStack.remove(); @continueBubbling
+      #     keydown: (event) =>
+      #       handlerStack.remove()
+      #       if @selection.type == "Range" and event.type == "keydown" and KeyboardUtils.isEscape event
+      #         @collapseSelectionToFocus()
+      #         DomUtils.suppressKeyupAfterEscape handlerStack
+      #         @suppressEvent
+      #       else
+      #         @continueBubbling
 
     super event, target
 
