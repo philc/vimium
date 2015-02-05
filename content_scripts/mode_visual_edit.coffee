@@ -367,6 +367,7 @@ class Movement extends CountPrefix
   yank: (args = {}) ->
     @yankedText = @selection.toString()
     @selection.deleteFromDocument() if @options.deleteFromDocument or args.deleteFromDocument
+    @selection.removeAllRanges()
 
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length
@@ -378,10 +379,8 @@ class Movement extends CountPrefix
     @yankedText
 
   exit: (event, target) ->
-    @selection.removeAllRanges() unless @options.parentMode or @options.oneMovementOnly
-    # Disabled.  We'll go with always removing the selection (as above), for now.
-    # unless @options.parentMode or @options.oneMovementOnly
-    #   @selection.removeAllRanges() if event?.type == "keydown" and KeyboardUtils.isEscape event
+    unless @options.parentMode or @options.oneMovementOnly
+      @selection.removeAllRanges() if event?.type == "keydown" and KeyboardUtils.isEscape event
 
       # Disabled, pending discussion of fine-tuning the UX.  Simpler alternative is implemented above.
       # # If we're exiting on escape and there is a range selection, then we leave it in place.  However, an
