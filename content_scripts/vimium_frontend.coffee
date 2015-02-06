@@ -5,18 +5,12 @@
 # "domReady".
 #
 
-targetElement = null
-findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
-# Users can disable Vimium on URL patterns via the settings page.  The following two variables
-# (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
-# "passKeys" are keys which would normally be handled by Vimium, but are disabled on this tab, and therefore
-# are passed through to the underlying page.
 isEnabledForUrl = true
 passKeys = null
 keyQueue = null
@@ -101,8 +95,6 @@ settings =
 #
 frameId = Math.floor(Math.random()*999999999)
 
-hasModifiersRegex = /^<([amc]-)+.>/
-
 # Only exported for tests.
 window.initializeModes = ->
   class NormalMode extends Mode
@@ -182,25 +174,22 @@ installListener = (element, event, callback) ->
 # Run this as early as possible, so the page can't register any event handlers before us.
 #
 installedListeners = false
-window.initializeWhenEnabled = (newPassKeys) ->
-  isEnabledForUrl = true
-  passKeys = newPassKeys
-  if (!installedListeners)
+window.initializeWhenEnabled = ->
+  unless installedListeners
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
     for type in ["keydown", "keypress", "keyup", "click", "focus", "blur"]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
-    installListener document, "DOMActivate", onDOMActivate
-    enterInsertModeIfElementIsFocused()
+    installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
 
 setState = (request) ->
-  initializeWhenEnabled(request.passKeys) if request.enabled
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
+  initializeWhenEnabled() if isEnabledForUrl
   handlerStack.bubbleEvent "registerStateChange",
-    enabled: request.enabled
-    passKeys: request.passKeys
+    enabled: isEnabledForUrl
+    passKeys: passKeys
 
 getActiveState = ->
   Mode.updateBadge()
@@ -218,8 +207,6 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  enterInsertModeIfElementIsFocused() if isEnabledForUrl
-
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
@@ -238,15 +225,6 @@ unregisterFrame = ->
     handler: "unregisterFrame"
     frameId: frameId
     tab_is_closing: window.top == window.self
-
-#
-# Enters insert mode if the currently focused element in the DOM is focusable.
-#
-enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
-    enterInsertModeWithoutShowingIndicator(document.activeElement)
-
-onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -409,13 +387,6 @@ extend window,
           else
             hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
 
-# Decide whether this keyChar should be passed to the underlying page.
-# Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
-# passKey, then 'gt' and '99t' will neverthless be handled by vimium.
-isPassKey = ( keyChar ) ->
-  return false # Disabled.
-  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
-
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
 # event.
 KeydownEvents =
@@ -455,25 +426,13 @@ onKeypress = (event) ->
   if (event.keyCode > 31)
     keyChar = String.fromCharCode(event.charCode)
 
-    # Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
-      enterInsertModeWithoutShowingIndicator()
-      return @stopBubblingAndTrue
-
     if (keyChar)
-      if (findMode)
-        handleKeyCharForFindMode(keyChar)
+      if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
         DomUtils.suppressEvent(event)
-        return @stopBubblingAndTrue
-      else if (!isInsertMode() && !findMode)
-        if (isPassKey keyChar)
-          return @stopBubblingAndTrue
-        if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
-          DomUtils.suppressEvent(event)
-          keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-          return @stopBubblingAndTrue
-
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        return @stopBubblingAndTrue
+
+      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
   return @continueBubbling
 
@@ -506,50 +465,13 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
-    if isEditable(event.srcElement) or isEmbed(event.srcElement)
-      # Remove focus so the user can't just get himself back into insert mode by typing in the same input
-      # box.
-      # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
-      # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
-      # games.  See discussion in #1211 and #1194.
-      event.srcElement.blur()
-    exitInsertMode()
-    DomUtils.suppressEvent event
-    KeydownEvents.push event
-    return @stopBubblingAndTrue
-
-  else if (findMode)
-    if (KeyboardUtils.isEscape(event))
-      handleEscapeForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-      return @stopBubblingAndTrue
-
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      handleDeleteForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-      return @stopBubblingAndTrue
-
-    else if (event.keyCode == keyCodes.enter)
-      handleEnterForFindMode()
-      DomUtils.suppressEvent event
-      KeydownEvents.push event
-      return @stopBubblingAndTrue
-
-    else if (!modifiers)
-      DomUtils.suppressPropagation(event)
-      KeydownEvents.push event
-      return @stopBubblingAndTrue
-
-  else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+  if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
     KeydownEvents.push event
     return @stopBubblingAndTrue
 
-  else if (!isInsertMode() && !findMode)
+  else
     if (keyChar)
       if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
@@ -562,9 +484,6 @@ onKeydown = (event) ->
     else if (KeyboardUtils.isEscape(event))
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
 
-    else if isPassKey KeyboardUtils.getKeyChar(event)
-      return undefined
-
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
   # back into the search box. As a side effect, this should also prevent overriding by other sites.
@@ -572,9 +491,9 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
+  if keyChar == "" &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
+      isValidFirstKey(KeyboardUtils.getKeyChar(event)))
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
     return @stopBubblingAndTrue
@@ -592,14 +511,14 @@ checkIfEnabledForUrl = ->
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
-    if (isEnabledForUrl)
-      initializeWhenEnabled(response.passKeys)
+    passKeys = request.passKeys
+    initializeWhenEnabled() if isEnabledForUrl
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
     handlerStack.bubbleEvent "registerStateChange",
-      enabled: response.isEnabledForUrl
-      passKeys: response.passKeys
+      enabled: isEnabledForUrl
+      passKeys: passKeys
 
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->
@@ -613,58 +532,6 @@ window.refreshCompletionKeys = (response) ->
 
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
-
-onFocusCapturePhase = (event) ->
-  if (isFocusable(event.target) && !findMode)
-    enterInsertModeWithoutShowingIndicator(event.target)
-
-onBlurCapturePhase = (event) ->
-  if (isFocusable(event.target))
-    exitInsertMode(event.target)
-
-#
-# Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
-#
-isFocusable = (element) -> isEditable(element) || isEmbed(element)
-
-#
-# Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
-# unfocused.
-#
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) >= 0
-
-#
-# Input or text elements are considered focusable and able to receieve their own keyboard events,
-# and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
-# any element which makes it a rich text editor, like the notes on jjot.com.
-#
-isEditable = (target) ->
-  # Note: document.activeElement.isContentEditable is also rechecked in isInsertMode() dynamically.
-  return true if target.isContentEditable
-  nodeName = target.nodeName.toLowerCase()
-  # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
-  noFocus = ["radio", "checkbox"]
-  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
-    return true
-  focusableElements = ["textarea", "select"]
-  focusableElements.indexOf(nodeName) >= 0
-
-#
-# We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
-# causes element B to come into focus, we may get "B focus" before "A blur". Thus we only leave insert mode
-# when the last editable element that came into focus -- which targetElement points to -- has been blurred.
-# If insert mode is entered manually (via pressing 'i'), then we set targetElement to 'undefined', and only
-# leave insert mode when the user presses <ESC>.
-# Note. This returns the truthiness of target, which is required by isInsertMode.
-#
-enterInsertModeWithoutShowingIndicator = (target) ->
-  return # Disabled.
-
-exitInsertMode = (target) ->
-  return # Disabled.
-
-isInsertMode = ->
-  return false # Disabled.
 
 # This implements a find-mode query history (using the "findModeRawQueryList" setting) as a list of raw
 # queries, most recent first.
@@ -881,8 +748,6 @@ selectFoundInputElement = ->
       DomUtils.isSelectable(document.activeElement) &&
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
-    # the element has already received focus via find(), so invoke insert mode manually
-    enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 getNextQueryFromRegexMatches = (stepSize) ->
   # find()ing an empty query always returns false
