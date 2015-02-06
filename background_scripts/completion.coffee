@@ -21,6 +21,8 @@ class Suggestion
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
   constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
     @title ||= ""
+    # When @autoSelect is truthy, the suggestion is automatically pre-selected in the vomnibar.
+    @autoSelect = false
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
@@ -335,6 +337,7 @@ class SearchEngineCompleter
         type = "search"
         query = queryTerms[0] + ": " + queryTerms[1..].join(" ")
       suggestion = new Suggestion(queryTerms, type, url, query, @computeRelevancy)
+      suggestion.autoSelect = true
       suggestions.push(suggestion)
     onComplete(suggestions)
 
