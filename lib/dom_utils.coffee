@@ -250,99 +250,50 @@ DomUtils =
     t = o || t?.parentNode
     t
 
-extend DomUtils,
+  # This calculates the caret coordinates within an input element.  It is used by edit mode to calculate the
+  # caret position for scrolling.  It creates a hidden div contain a mirror of element, and all of the text
+  # from element up to position, then calculates the scroll position.
   # From: https://github.com/component/textarea-caret-position/blob/master/index.js
   getCaretCoordinates: do ->
-    # The properties that we copy into a mirrored div.
-    # Note that some browsers, such as Firefox,
-    # do not concatenate properties, i.e. padding-top, bottom etc. -> padding,
-    # so we have to do every single property specifically.
+    # The properties that we copy to the mirrored div.
     properties = [
-      'direction',  # RTL support
-      'boxSizing',
-      'width',  # on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
-      'height',
-      'overflowX',
-      'overflowY',  # copy the scrollbar for IE
+      'direction', 'boxSizing', 'width', 'height', 'overflowX', 'overflowY',
+      'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+      'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+      'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'fontSizeAdjust',
+      'lineHeight', 'fontFamily',
+      'textAlign', 'textTransform', 'textIndent', 'textDecoration',
+      'letterSpacing', 'wordSpacing' ]
 
-      'borderTopWidth',
-      'borderRightWidth',
-      'borderBottomWidth',
-      'borderLeftWidth',
+    (element, position) ->
+      div = document.createElement "div"
+      div.id = "vimium-input-textarea-caret-position-mirror-div"
+      document.body.appendChild div
 
-      'paddingTop',
-      'paddingRight',
-      'paddingBottom',
-      'paddingLeft',
+      style = div.style
+      computed = getComputedStyle element
 
-      # https://developer.mozilla.org/en-US/docs/Web/CSS/font
-      'fontStyle',
-      'fontVariant',
-      'fontWeight',
-      'fontStretch',
-      'fontSize',
-      'fontSizeAdjust',
-      'lineHeight',
-      'fontFamily',
+      style.whiteSpace = "pre-wrap"
+      style.wordWrap = "break-word" if element.nodeName.toLowerCase() != "input"
+      style.position = "absolute"
+      style.visibility = "hidden"
+      style[prop] = computed[prop] for prop in properties
+      style.overflow = "hidden"
 
-      'textAlign',
-      'textTransform',
-      'textIndent',
-      'textDecoration',  # might not make a difference, but better be safe
+      div.textContent = element.value.substring 0, position
+      if element.nodeName.toLowerCase() == "input"
+        div.textContent = div.textContent.replace /\s/g, "\u00a0"
 
-      'letterSpacing',
-      'wordSpacing'
-    ]
+      span = document.createElement "span"
+      span.textContent = element.value.substring(position) || "."
+      div.appendChild span
 
-    `function (element, position, recalculate) {
-      // mirrored div
-      var div = document.createElement('div');
-      div.id = 'input-textarea-caret-position-mirror-div';
-      document.body.appendChild(div);
+      coordinates =
+        top: span.offsetTop + parseInt computed["borderTopWidth"]
+        left: span.offsetLeft + parseInt computed["borderLeftWidth"]
 
-      var style = div.style;
-      var computed = window.getComputedStyle? getComputedStyle(element) : element.currentStyle;  // currentStyle for IE < 9
-
-      // default textarea styles
-      style.whiteSpace = 'pre-wrap';
-      if (element.nodeName !== 'INPUT')
-        style.wordWrap = 'break-word';  // only for textarea-s
-
-      // position off-screen
-      style.position = 'absolute';  // required to return coordinates properly
-      style.visibility = 'hidden';  // not 'display: none' because we want rendering
-
-      // transfer the element's properties to the div
-      properties.forEach(function (prop) {
-        style[prop] = computed[prop];
-      });
-
-      style.overflow = 'hidden';  // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
-
-      div.textContent = element.value.substring(0, position);
-      // the second special handling for input type="text" vs textarea: spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
-      if (element.nodeName === 'INPUT')
-        div.textContent = div.textContent.replace(/\s/g, "\u00a0");
-
-      var span = document.createElement('span');
-      // Wrapping must be replicated *exactly*, including when a long word gets
-      // onto the next line, with whitespace at the end of the line before (#7).
-      // The  *only* reliable way to do that is to copy the *entire* rest of the
-      // textarea's content into the <span> created at the caret position.
-      // for inputs, just '.' would be enough, but why bother?
-      span.textContent = element.value.substring(position) || '.';  // || because a completely empty faux span doesn't render at all
-      div.appendChild(span);
-
-      var coordinates = {
-        top: span.offsetTop + parseInt(computed['borderTopWidth']),
-        left: span.offsetLeft + parseInt(computed['borderLeftWidth'])
-      };
-
-      document.body.removeChild(div);
-
-      return coordinates;
-    }
-    `
+      document.body.removeChild div
+      coordinates
 
 root = exports ? window
 root.DomUtils = DomUtils

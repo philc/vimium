@@ -209,7 +209,7 @@ CoreScroller =
     # Launch animator.
     requestAnimationFrame animate
 
-# Scroller contains the two main scroll functions (scrollBy and scrollTo) which are exported to clients.
+# Scroller contains the two main scroll functions which are used by clients.
 Scroller =
   init: (frontendSettings) ->
     handlerStack.push
@@ -246,31 +246,43 @@ Scroller =
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
 
-  # FIXME(smblott). We should also scroll in the "x" dimension.
+  # Scroll the top, bottom, left and right of element into view.  The is used by visual mode to ensure the
+  # focus remains visible.
   scrollIntoView: (element) ->
     activatedElement ||= document.body and firstScrollableElement()
-    rect = element.getBoundingClientRect()
-    direction = "y"
-    if rect.top < 0
-      amount = rect.top - 10
-      element = findScrollableElement element, direction, amount, 1
-      CoreScroller.scroll element, direction, amount, false
-    else if window.innerHeight < rect.bottom
-      amount = rect.bottom - window.innerHeight + 10
-      element = findScrollableElement element, direction, amount, 1
-      CoreScroller.scroll element, direction, amount, false
+    rect = element. getClientRects()?[0]
+    if rect?
+      # Scroll y axis.
+      if rect.top < 0
+        amount = rect.top - 10
+        element = findScrollableElement element, "y", amount, 1
+        CoreScroller.scroll element, "y", amount, false
+      else if window.innerHeight < rect.bottom
+        amount = rect.bottom - window.innerHeight + 10
+        element = findScrollableElement element, "y", amount, 1
+        CoreScroller.scroll element, "y", amount, false
 
+      # Scroll x axis.
+      if rect.left < 0
+        amount = rect.left - 10
+        element = findScrollableElement element, "x", amount, 1
+        CoreScroller.scroll element, "x", amount, false
+      else if window.innerWidth < rect.right
+        amount = rect.right - window.innerWidth + 10
+        element = findScrollableElement element, "x", amount, 1
+        CoreScroller.scroll element, "x", amount, false
+
+  # Scroll element to position top, left.  This is used by edit mode to ensure that the caret remains visible
+  # in text inputs (not contentEditable).
   scrollToPosition: (element, top, left) ->
     activatedElement ||= document.body and firstScrollableElement()
 
     # Scroll down, "y".
     amount = top + 20 - (element.clientHeight + element.scrollTop)
-    console.log "y down", amount, 0 < amount
     CoreScroller.scroll element, "y", amount, false if 0 < amount
 
     # Scroll up, "y".
     amount = top - (element.scrollTop) - 5
-    console.log "y up", amount, amount < 0
     CoreScroller.scroll element, "y", amount, false if amount < 0
 
     # Scroll down, "x".

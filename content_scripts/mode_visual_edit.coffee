@@ -26,7 +26,7 @@
 # - ..., EditMode, VisualLineMode
 #
 
-# This prevents printable characters from being passed through to underlying modes or to the underlying page.
+# This prevents printable characters from being passed through to underlying modes or the underlying page.
 class SuppressPrintable extends Mode
   constructor: (options = {}) ->
     handler = (event) =>
@@ -44,7 +44,8 @@ class SuppressPrintable extends Mode
 class CountPrefix extends SuppressPrintable
   constructor: (options) ->
     @countPrefix = ""
-    # This allows us to implement both "d3w" and "3dw". Also, "3d2w" deletes six words.
+    # This is an initial multiplier for the first count.  It allows edit mode to implement both "d3w" and
+    # "3dw". Also, "3d2w" deletes six words.
     @countPrefixFactor = options.initialCountPrefix || 1
     super options
 
@@ -61,9 +62,8 @@ class CountPrefix extends SuppressPrintable
                 ""
 
   getCountPrefix: ->
-    count = @countPrefixFactor * if 0 < @countPrefix?.length then parseInt @countPrefix else 1
-    @countPrefix = ""
-    @countPrefixFactor = 1
+    count = @countPrefixFactor * (if 0 < @countPrefix.length then parseInt @countPrefix else 1)
+    @countPrefix = ""; @countPrefixFactor = 1
     count
 
 # Symbolic names for some common strings.
@@ -81,9 +81,11 @@ lineboundary= "lineboundary"
 class Movement extends CountPrefix
   opposite: forward: backward, backward: forward
 
+  # Paste from clipboard.
   paste: (callback) ->
     chrome.runtime.sendMessage handler: "pasteFromClipboard", (response) -> callback response
 
+  # Copy to clipboard.
   copy: (text, isFinalUserCopy = false) ->
     chrome.runtime.sendMessage handler: "copyToClipboard", data: text
     # If isFinalUserCopy is set, then we're copying the final text selected by the user (and exiting).
@@ -105,7 +107,8 @@ class Movement extends CountPrefix
         @paste (text) =>
           func(); @copy text; locked = false
 
-  # Replace the current mode with another.  For example, replace visual mode with visual-line mode.
+  # Replace the current mode with another. For example, replace caret mode with visual mode, or replace visual
+  # mode with visual-line mode.
   changeMode: (mode, options = {}) ->
     @exit()
     if @options.parentMode
@@ -114,7 +117,7 @@ class Movement extends CountPrefix
       new mode options
 
   # Return the character following (to the right of) the focus, and leave the selection unchanged.  Returns
-  # undefined if there is no such character.
+  # undefined if no such character exists.
   getNextForwardCharacter: ->
     beforeText = @selection.toString()
     if beforeText.length == 0 or @getDirection() == forward
@@ -124,7 +127,7 @@ class Movement extends CountPrefix
         @selection.modify "extend", backward, character
         afterText[afterText.length - 1]
     else
-      beforeText[0]
+      beforeText[0] # Existing range selection is backwards.
 
   # As above, but backwards.
   getNextBackwardCharacter: ->
@@ -136,9 +139,9 @@ class Movement extends CountPrefix
         @selection.modify "extend", forward, character
         afterText[0]
     else
-      beforeText[beforeText.length - 1]
+      beforeText[beforeText.length - 1] # Existing range selection is forwards.
 
-  # Test whether the character following the focus is a word character.  Leave the selection unchanged.
+  # Test whether the character following the focus is a word character (and leave the selection unchanged).
   nextCharacterIsWordCharacter: do ->
     regexp = /[A-Za-z0-9_]/; -> regexp.test @getNextForwardCharacter()
 
@@ -148,8 +151,8 @@ class Movement extends CountPrefix
   #   @runMovement [ "forward", "word" ]
   #   @runMovement "forward", "word"
   #
-  # The granularities are word, "line", "lineboundary", "sentence" and "paragraph".  In addition, we implement
-  # the pseudo granularity "vimword", which implements vim-like word movement (for "w").
+  # The granularities are word, "character", "line", "lineboundary", "sentence" and "paragraph".  In addition,
+  # we implement the pseudo granularity "vimword", which implements vim-like word movement (for "w").
   #
   runMovement: (args...) ->
     # Normalize the various argument forms.
@@ -217,8 +220,8 @@ class Movement extends CountPrefix
       which = if direction == forward then "start" else "end"
       @selection.extend original["#{which}Container"], original["#{which}Offset"]
 
-  # Try to extend the selection one character in direction.  Return 1, -1 or 0, indicating whether the
-  # selection got bigger, or smaller, or is unchanged.
+  # Try to extend the selection one character in direction.  Return positive, negative or 0, indicating
+  # whether the selection got bigger, or smaller, or is unchanged.
   extendByOneCharacter: (direction) ->
     length = @selection.toString().length
     @selection.modify "extend", direction, character
@@ -226,8 +229,8 @@ class Movement extends CountPrefix
 
   # Get the direction of the selection.  The selection is "forward" if the focus is at or after the anchor,
   # and "backward" otherwise.
-  # NOTE(smblott). This could be better, see: https://dom.spec.whatwg.org/#interface-range (haowever, that probably
-  # wouldn't work for text inputs).
+  # NOTE(smblott). This could be better, see: https://dom.spec.whatwg.org/#interface-range (however, that
+  # probably wouldn't work for text inputs).
   getDirection: ->
     # Try to move the selection forward or backward, check whether it got bigger or smaller (then restore it).
     for direction in [ forward, backward ]
@@ -248,8 +251,8 @@ class Movement extends CountPrefix
     @selection.removeAllRanges()
     @selection.addRange range
 
-  # A movement can be a string (which will be passed to @runMovement count times), or a function (which will
-  # be called once with count as its argument).
+  # A movement can be either a string (which will be passed to @runMovement count times), or a function (which
+  # will be called once with count as its argument).
   movements:
     "l": "forward character"
     "h": "backward character"
@@ -309,7 +312,8 @@ class Movement extends CountPrefix
       @runMovementKeyChar @options.immediateMovement, @getCountPrefix()
       return
 
-    # This is the main keyboard-event handler for movements and commands.
+    # This is the main keyboard-event handler for movements and commands for all user modes (visual,
+    # visual-line, caret and edit).
     @push
       _name: "#{@id}/keypress"
       keypress: (event) =>
@@ -357,24 +361,24 @@ class Movement extends CountPrefix
         @movements.n = (count) -> executeFind count, false
         @movements.N = (count) -> executeFind count, true
         @movements["/"] = ->
-          @findMode = enterFindMode()
+          @findMode = window.enterFindMode()
           @findMode.onExit => @changeMode VisualMode
     #
     # End of Movement constructor.
 
-  # Yank the selection; always exits; either deletes the selection or collapses it; set @yankedText and
-  # returns it.
+  # Yank the selection; always exits; either deletes the selection or removes it; set @yankedText and return
+  # it.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
     @selection.deleteFromDocument() if @options.deleteFromDocument or args.deleteFromDocument
-    @selection.removeAllRanges()
+    @selection.removeAllRanges() unless @options.parentMode
 
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length
     plural = if @yankedText.length == 1 then "" else "s"
     HUD.showForDuration "Yanked #{@yankedText.length} character#{plural}: \"#{message}\".", 2500
 
-    @options.onYank.call @, @yankedText if @options.onYank
+    @options.onYank?.call @, @yankedText
     @exit()
     @yankedText
 
@@ -434,15 +438,14 @@ class Movement extends CountPrefix
           char = @getNextForwardCharacter()
         @runMovement forward, character
 
-  # Try to scroll the focus into view.
+  # Scroll the focus into view.
   scrollIntoView: ->
     @protectClipboard =>
       if @element and DomUtils.isEditable @element
         if @element.clientHeight < @element.scrollHeight
           if @element.isContentEditable
-            # WIP...
+            # WIP (edit mode only)...
             elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
-            console.log elementWithFocus.innerHTML
             # position = @element.getClientRects()[0].top - elementWithFocus.getClientRects()[0].top
             # console.log "top", position
             # Scroller.scrollToPosition @element, position, 0
@@ -547,6 +550,7 @@ class VisualMode extends Movement
         console.log "yank:", @yankedText if @debug
         @copy @yankedText, true
 
+  # Call sub-class; then yank, if we've only been created for a single movement.
   handleMovementKeyChar: (args...) ->
     super args...
     @yank() if @options.oneMovementOnly or @options.immediateMovement
