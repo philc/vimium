@@ -537,23 +537,13 @@ isValidFirstKey = (keyChar) ->
 # queries, most recent first.
 FindModeHistory =
   getQuery: (index = 0) ->
-    @migration()
     recentQueries = settings.get "findModeRawQueryList"
     if index < recentQueries.length then recentQueries[index] else ""
 
   recordQuery: (query) ->
-    @migration()
     if 0 < query.length
       recentQueries = settings.get "findModeRawQueryList"
       settings.set "findModeRawQueryList", ([ query ].concat recentQueries.filter (q) -> q != query)[0..50]
-
-  # Migration (from 1.49, 2015/2/1).
-  # Legacy setting: findModeRawQuery (a string).
-  # New setting: findModeRawQueryList (a list of strings).
-  migration: ->
-    unless settings.get "findModeRawQueryList"
-      rawQuery = settings.get "findModeRawQuery"
-      settings.set "findModeRawQueryList", (if rawQuery then [ rawQuery ] else [])
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->

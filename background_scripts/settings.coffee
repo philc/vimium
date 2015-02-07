@@ -7,6 +7,15 @@ root.Settings = Settings =
   init: ->
     # Start pulling changes from synchronized storage.
     Sync.init()
+
+    # Reset or migrate findModeRawQueryList for find-mode history.
+    unless @has "findModeRawQueryList"
+      # Migration (from 1.49, 2015/2/1).
+      # Legacy setting: findModeRawQuery (a string).
+      # New setting: findModeRawQueryList (a list of strings).
+      @set "findModeRawQueryList", (if @has "findModeRawQuery" then [ @get "findModeRawQuery" ] else [])
+      @clear "findModeRawQuery"
+
     # Reset findModeRawQueryList to contain only the most recent query (so "n" still works, but all earlier
     # history is cleared).
     @set "findModeRawQueryList", @get("findModeRawQueryList")?[0..0] or []
