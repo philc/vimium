@@ -21,7 +21,7 @@ root = exports ? window
 root.Sync = Sync =
 
   storage: chrome.storage.sync
-  doNotSync: ["settingsVersion", "previousVersion"]
+  doNotSync: [ "settingsVersion", "previousVersion", "findModeRawQueryList" ]
 
   # This is called in main.coffee.
   init: ->
