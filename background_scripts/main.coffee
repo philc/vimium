@@ -189,6 +189,10 @@ handleSettings = (args, port) ->
     port.postMessage({ key: args.key, value: value })
   else # operation == "set"
     Settings.set(args.key, args.value)
+    # For some settings, we propagate changes to all tabs immediately.
+    # In the case of findModeRawQueryList, this allows each tab to accurately track the find-mode history.
+    if args.key in [ "findModeRawQueryList" ]
+      sendRequestToAllTabs extend args, name: "updateSettings"
 
 refreshCompleter = (request) -> completers[request.name].refresh()
 

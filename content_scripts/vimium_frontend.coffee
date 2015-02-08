@@ -64,6 +64,12 @@ settings =
 
   get: (key) -> @values[key]
 
+  # This is used when an updated value is received from the background page.
+  update: (key, value) ->
+    @values[key] = value
+    @postUpdateHooks[key]? value
+
+  # This is used when the current tab sets a new value for a setting.
   set: (key, value) ->
     @init() unless @port
 
@@ -78,11 +84,7 @@ settings =
 
   receiveMessage: (args) ->
     # not using 'this' due to issues with binding on callback
-    settingChanged = settings.values[args.key] != args.value
-    settings.values[args.key] = args.value
-    # Settings values are refreshed every time the tab/focus changes.  We only call any post-update hook if
-    # the setting's value has in fact changed.
-    settings.postUpdateHooks[args.key]? args.value if settingChanged
+    settings.update args.key, args.value
     # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
     # for equality so initializeOnReady only runs once
     if (++settings.loadedValues == settings.valuesToLoad.length)
@@ -156,6 +158,9 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
+    updateSettings: (request) ->
+      settings.update request.key, request.value
+      FindModeHistory.updateFindModeHistory request.value if request.key = "findModeRawQueryList"
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -548,20 +553,29 @@ FindModeHistory =
   rawQueryList: null
 
   postUpdateHook: do ->
-    settings.postUpdateHooks.findModeRawQueryList = ( rawQueryList ) -> FindModeHistory.postUpdateHook rawQueryList
-    (rawQueryList) ->
-      @rawQueryList ||= rawQueryList
-      @updateRawQueryList rawQueryList[0] if rawQueryList[0]?
+    # This update path is only used to initialize @rawQueryList.  Thereafter, we use updateFindModeHistory to
+    # track the history.
+    settings.postUpdateHooks.findModeRawQueryList = (args...) -> FindModeHistory.postUpdateHook args...
+    (rawQueryList) -> @rawQueryList ||= rawQueryList
 
+  # This is called when we receive an updateSettings message from the background page.  It is called
+  # synchronously with the update from another tab.  Therefore, we know that only the most-recent query can
+  # have changed.
+  updateFindModeHistory: (rawQueryList) ->
+    @updateRawQueryList rawQueryList[0] if rawQueryList[0]?
+
+  # Register query as the most-recent query, removing any existing occurrences.  Note: this is idempotent when
+  # called repeatedly with the same argument.
   updateRawQueryList: (query) ->
     @rawQueryList = ([ query ].concat @rawQueryList.filter (q) => q != query)[0..@max]
 
   getQuery: (index = 0) ->
-    if @rawQueryList and index < @rawQueryList.length then @rawQueryList[index] else ""
+    @rawQueryList?[index] or ""
 
   saveQuery: (query) ->
-    @updateRawQueryList query if 0 < query.length
-    settings.set "findModeRawQueryList", @rawQueryList unless isIncognitoMode
+    if 0 < query.length
+      @updateRawQueryList query
+      settings.set "findModeRawQueryList", @rawQueryList unless isIncognitoMode
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
