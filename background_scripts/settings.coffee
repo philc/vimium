@@ -4,6 +4,22 @@
 
 root = exports ? window
 root.Settings = Settings =
+  init: ->
+    # Start pulling changes from synchronized storage.
+    Sync.init()
+
+    # Reset or migrate findModeRawQueryList for find-mode history.
+    unless @has "findModeRawQueryList"
+      # Migration (from 1.49, 2015/2/1).
+      # Legacy setting: findModeRawQuery (a string).
+      # New setting: findModeRawQueryList (a list of strings).
+      @set "findModeRawQueryList", (if @has "findModeRawQuery" then [ @get "findModeRawQuery" ] else [])
+      @clear "findModeRawQuery"
+
+    # Reset findModeRawQueryList to contain only the most recent query (so "n" still works, but all earlier
+    # history is cleared).
+    @set "findModeRawQueryList", @get("findModeRawQueryList")?[0..0] or []
+
   get: (key) ->
     if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
@@ -63,8 +79,6 @@ root.Settings = Settings =
     this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
     @searchEnginesMap
 
-  # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
-  # or strings
   defaults:
     scrollStepSize: 60
     smoothScroll: true

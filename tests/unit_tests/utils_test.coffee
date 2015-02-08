@@ -4,7 +4,7 @@ extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.43'
 extend(global, require "../../background_scripts/sync.js")
 extend(global, require "../../background_scripts/settings.js")
-Sync.init()
+Settings.init()
 
 context "isUrl",
   should "accept valid URLs", ->
