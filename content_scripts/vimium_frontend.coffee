@@ -123,6 +123,12 @@ window.initializeModes = ->
   new InsertMode permanent: true
 
 #
+# Called if we learn that this frame is in incognito mode.
+#
+goIncognito = ->
+  FindModeHistory.goIncognito()
+
+#
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
@@ -197,6 +203,7 @@ window.initializeWhenEnabled = ->
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
+  goIncognito() if request.incognito and not isIncognitoMode
   isIncognitoMode = request.incognito
   initializeWhenEnabled() if isEnabledForUrl
   handlerStack.bubbleEvent "registerStateChange",
@@ -556,7 +563,7 @@ FindModeHistory =
     # This update path is only used to initialize @rawQueryList.  Thereafter, we use updateFindModeHistory to
     # track the history.
     settings.postUpdateHooks.findModeRawQueryList = (args...) -> FindModeHistory.postUpdateHook args...
-    (rawQueryList) -> @rawQueryList ||= rawQueryList
+    (rawQueryList) -> @rawQueryList = rawQueryList unless @rawQueryList?
 
   # This is called when we receive an updateSettings message from the background page.  It is called
   # synchronously with the update from another tab.  Therefore, we know that only the most-recent query can
@@ -576,6 +583,11 @@ FindModeHistory =
     if 0 < query.length
       @updateRawQueryList query
       settings.set "findModeRawQueryList", @rawQueryList
+
+  goIncognito: ->
+    # In incognito mode, we try to fetch the query history from another incognito tab.  See #1465.
+    chrome.runtime.sendMessage { handler: "getIncognitoRawQueryList" }, (response) =>
+      @rawQueryList = response if response
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->

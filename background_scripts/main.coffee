@@ -193,6 +193,15 @@ handleSettings = (args, port) ->
     # In the case of findModeRawQueryList, this allows each tab to accurately track the find-mode history.
     if args.key in [ "findModeRawQueryList" ]
       sendRequestToAllTabs extend args, name: "updateSettings"
+    # We also track the incognito find-mode history setting in the tabInfoMap for all incognito tabs.
+    if args.incognito and args.key == "findModeRawQueryList"
+      for own _, map of tabInfoMap
+        map.findModeRawQueryList = args.value if map.incognito
+
+# Search through the active tab map for an up-to-date find-mode history for an incognito-mode tab.
+getIncognitoRawQueryList = ->
+  for own id, map of tabInfoMap
+    return map.findModeRawQueryList if map.findModeRawQueryList
 
 refreshCompleter = (request) -> completers[request.name].refresh()
 
@@ -337,6 +346,8 @@ updateOpenTabs = (tab) ->
     scrollX: null
     scrollY: null
     deletor: null
+    incognito: tab.incognito
+    findModeRawQueryList: null
   # Frames are recreated on refresh
   delete frameIdsForTab[tab.id]
 
@@ -661,6 +672,7 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setBadge: setBadge
+  getIncognitoRawQueryList: getIncognitoRawQueryList
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
