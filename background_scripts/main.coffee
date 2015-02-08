@@ -382,7 +382,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
           setBrowserActionIcon(tabId,disabledIcon)
         # Propagate the new state only if it has changed.
         if (isCurrentlyEnabled != enabled || currentPasskeys != passKeys)
-          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys })
+          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys, incognito: tab.incognito })
       else
         # We didn't get a response from the front end, so Vimium isn't running.
         setBrowserActionIcon(tabId,disabledIcon)

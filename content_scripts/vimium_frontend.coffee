@@ -12,6 +12,7 @@ findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
+isIncognitoMode = false
 passKeys = null
 keyQueue = null
 # The user's operating system.
@@ -186,6 +187,8 @@ window.initializeWhenEnabled = ->
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
+  isIncognitoMode = request.incognito
+  console.log "isIncognitoMode", isIncognitoMode
   initializeWhenEnabled() if isEnabledForUrl
   handlerStack.bubbleEvent "registerStateChange",
     enabled: isEnabledForUrl
@@ -536,14 +539,16 @@ isValidFirstKey = (keyChar) ->
 # This implements a find-mode query history (using the "findModeRawQueryList" setting) as a list of raw
 # queries, most recent first.
 FindModeHistory =
-  getQuery: (index = 0) ->
-    recentQueries = settings.get "findModeRawQueryList"
-    if index < recentQueries.length then recentQueries[index] else ""
+  rawQueryList: null
 
-  recordQuery: (query) ->
+  getQuery: (index = 0) ->
+    @rawQueryList = settings.get "findModeRawQueryList" unless @rawQueryList
+    if index < @rawQueryList.length then @rawQueryList[index] else ""
+
+  saveQuery: (query) ->
+    @rawQueryList = settings.get "findModeRawQueryList" unless @rawQueryList
     if 0 < query.length
-      recentQueries = settings.get "findModeRawQueryList"
-      settings.set "findModeRawQueryList", ([ query ].concat recentQueries.filter (q) -> q != query)[0..50]
+      @rawQueryList = ([ query ].concat @rawQueryList.filter (q) -> q != query)[0..50]
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -637,7 +642,7 @@ handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  FindModeHistory.recordQuery findModeQuery.rawQuery
+  FindModeHistory.saveQuery findModeQuery.rawQuery
 
 class FindMode extends Mode
   constructor: ->
