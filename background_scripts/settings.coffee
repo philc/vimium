@@ -121,3 +121,11 @@ root.Settings = Settings =
 if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
   Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
 Settings.set("settingsVersion", Utils.getCurrentVersion())
+
+# Migration (after 1.49, 2015/2/1).
+# Legacy setting: findModeRawQuery (a string).
+# New setting: findModeRawQueryList (a list of strings).
+unless Settings.has "findModeRawQueryList"
+  rawQuery = Settings.get "findModeRawQuery"
+  Settings.set "findModeRawQueryList", (if rawQuery then [ rawQuery ] else [])
+
