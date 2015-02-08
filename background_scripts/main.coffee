@@ -170,7 +170,7 @@ upgradeNotificationClosed = (request) ->
 #
 # Copies some data (request.data) to the clipboard.
 #
-copyToClipboard = (request) -> Clipboard.copy(request.data)
+copyToClipboard = (request) -> Clipboard.copy(request.data); null
 
 #
 # Selects the tab with the ID specified in request.id
