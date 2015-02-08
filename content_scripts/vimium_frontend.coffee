@@ -515,7 +515,8 @@ checkIfEnabledForUrl = ->
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     passKeys = response.passKeys
-    initializeWhenEnabled() if isEnabledForUrl
+    if isEnabledForUrl
+      initializeWhenEnabled()
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
