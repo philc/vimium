@@ -47,6 +47,7 @@ settings =
     "userDefinedLinkHintCss", "helpDialog_showAdvancedCommands", "smoothScroll" ]
   isLoaded: false
   eventListeners: {}
+  postUpdateHooks: {}
 
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
@@ -77,7 +78,11 @@ settings =
 
   receiveMessage: (args) ->
     # not using 'this' due to issues with binding on callback
+    settingChanged = settings.values[args.key] != args.value
     settings.values[args.key] = args.value
+    # Settings values are refreshed every time the tab/focus changes.  We only call any post-update hook if
+    # the setting's value has in fact changed.
+    settings.postUpdateHooks[args.key]? args.value if settingChanged
     # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
     # for equality so initializeOnReady only runs once
     if (++settings.loadedValues == settings.valuesToLoad.length)
@@ -188,7 +193,6 @@ setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
   isIncognitoMode = request.incognito
-  console.log "isIncognitoMode", isIncognitoMode
   initializeWhenEnabled() if isEnabledForUrl
   handlerStack.bubbleEvent "registerStateChange",
     enabled: isEnabledForUrl
@@ -537,19 +541,27 @@ window.refreshCompletionKeys = (response) ->
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
-# This implements a find-mode query history (using the "findModeRawQueryList" setting) as a list of raw
-# queries, most recent first.
+# This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
+# most recent first.
 FindModeHistory =
+  max: 50
   rawQueryList: null
 
+  postUpdateHook: do ->
+    settings.postUpdateHooks.findModeRawQueryList = ( rawQueryList ) -> FindModeHistory.postUpdateHook rawQueryList
+    (rawQueryList) ->
+      @rawQueryList ||= rawQueryList
+      @updateRawQueryList rawQueryList[0] if rawQueryList[0]?
+
+  updateRawQueryList: (query) ->
+    @rawQueryList = ([ query ].concat @rawQueryList.filter (q) => q != query)[0..@max]
+
   getQuery: (index = 0) ->
-    @rawQueryList = settings.get "findModeRawQueryList" unless @rawQueryList
-    if index < @rawQueryList.length then @rawQueryList[index] else ""
+    if @rawQueryList and index < @rawQueryList.length then @rawQueryList[index] else ""
 
   saveQuery: (query) ->
-    @rawQueryList = settings.get "findModeRawQueryList" unless @rawQueryList
-    if 0 < query.length
-      @rawQueryList = ([ query ].concat @rawQueryList.filter (q) -> q != query)[0..50]
+    @updateRawQueryList query if 0 < query.length
+    settings.set "findModeRawQueryList", @rawQueryList unless isIncognitoMode
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
