@@ -188,7 +188,7 @@ handleSettings = (args, port) ->
     value = Settings.get(args.key)
     port.postMessage({ key: args.key, value: value })
   else # operation == "set"
-    Settings.set(args.key, args.value)
+    Settings.set(args.key, args.value) unless args.incognito and args.key in [ "findModeRawQueryList" ]
     # For some settings, we propagate changes to all tabs immediately.
     # In the case of findModeRawQueryList, this allows each tab to accurately track the find-mode history.
     if args.key in [ "findModeRawQueryList" ]
@@ -593,12 +593,15 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
+# Normally, the request is sent to all tabs.  However, if args.incognito is set, then the request is only sent
+# to incognito tabs.
 #
 sendRequestToAllTabs = (args) ->
   chrome.windows.getAll({ populate: true }, (windows) ->
     for window in windows
       for tab in window.tabs
-        chrome.tabs.sendMessage(tab.id, args, null))
+        if not args.incognito or tab.incognito
+          chrome.tabs.sendMessage(tab.id, args, null))
 
 #
 # Returns true if the current extension version is greater than the previously recorded version in

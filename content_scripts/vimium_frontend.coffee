@@ -74,7 +74,7 @@ settings =
     @init() unless @port
 
     @values[key] = value
-    @port.postMessage({ operation: "set", key: key, value: value })
+    @port.postMessage({ operation: "set", key: key, value: value, incognito: isIncognitoMode })
 
   load: ->
     @init() unless @port
@@ -575,7 +575,7 @@ FindModeHistory =
   saveQuery: (query) ->
     if 0 < query.length
       @updateRawQueryList query
-      settings.set "findModeRawQueryList", @rawQueryList unless isIncognitoMode
+      settings.set "findModeRawQueryList", @rawQueryList
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
