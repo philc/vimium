@@ -551,16 +551,16 @@ FindModeHistory =
       @key = "findModeRawQueryListIncognito" if isIncognitoMode
       @storage.get @key, (items) =>
         unless chrome.runtime.lastError
-          @rawQueryList = items[@key]
-          if isIncognitoMode and not @rawQueryList
-            # This is the first incognito tab, we need to initialize the incognito-mode query history.
+          @rawQueryList = items[@key] if items[@key]
+          if isIncognitoMode and not items[@key]
+            # This is the first incognito tab, so we need to initialize the incognito-mode query history.
             @storage.get "findModeRawQueryList", (items) =>
               unless chrome.runtime.lastError
                 @rawQueryList = items.findModeRawQueryList
                 @storage.set findModeRawQueryListIncognito: @rawQueryList
 
     chrome.storage.onChanged.addListener (changes, area) =>
-      @rawQueryList = changes[@key].newValue if changes[@key]?.newValue?
+      @rawQueryList = changes[@key].newValue if changes[@key]?
 
   getQuery: (index = 0) ->
     @rawQueryList?[index] or ""
@@ -570,6 +570,12 @@ FindModeHistory =
       @rawQueryList = ([ query ].concat @rawQueryList.filter (q) => q != query)[0..@max]
       newSetting = {}; newSetting[@key] = @rawQueryList
       @storage.set newSetting
+      # Now, check whether we need to propagte this query to incognito mode too.
+      unless isIncognitoMode
+        @storage.get "findModeRawQueryListIncognito", (items) =>
+          if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
+            rawQueryList = ([ query ].concat items.findModeRawQueryListIncognito.filter (q) => q != query)[0..@max]
+            @storage.set findModeRawQueryListIncognito: rawQueryList
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->

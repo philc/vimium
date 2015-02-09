@@ -116,6 +116,7 @@ root.Settings = Settings =
 
     settingsVersion: Utils.getCurrentVersion()
 
+
 # We use settingsVersion to coordinate any necessary schema changes.
 if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
   Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
