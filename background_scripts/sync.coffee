@@ -62,7 +62,8 @@ root.Sync = Sync =
   # No need to propagate updates to the rest of vimium, that's already been done.
   set: (key, value) ->
     if @shouldSyncKey key
-      @storage.set key: value
+      setting = {}; setting[key] = value
+      @storage.set setting
 
   # Only called synchronously from within vimium, never on a callback.
   clear: (key) ->
