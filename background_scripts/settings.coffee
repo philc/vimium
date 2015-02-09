@@ -116,7 +116,6 @@ root.Settings = Settings =
 
     settingsVersion: Utils.getCurrentVersion()
 
-
 # We use settingsVersion to coordinate any necessary schema changes.
 if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
   Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
@@ -124,8 +123,9 @@ Settings.set("settingsVersion", Utils.getCurrentVersion())
 
 # Migration (after 1.49, 2015/2/1).
 # Legacy setting: findModeRawQuery (a string).
-# New setting: findModeRawQueryList (a list of strings).
-unless Settings.has "findModeRawQueryList"
-  rawQuery = Settings.get "findModeRawQuery"
-  Settings.set "findModeRawQueryList", (if rawQuery then [ rawQuery ] else [])
+# New setting: findModeRawQueryList (a list of strings), now stored in chrome.storage.local (not localStorage).
+chrome.storage.local.get "findModeRawQueryList", (items) ->
+  unless chrome.runtime.lastError or items.findModeRawQueryList
+    rawQuery = Settings.get "findModeRawQuery"
+    chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
 

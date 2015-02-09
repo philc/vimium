@@ -43,11 +43,10 @@ settings =
   values: {}
   loadedValues: 0
   valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
-    "previousPatterns", "nextPatterns", "findModeRawQuery", "findModeRawQueryList", "regexFindMode",
-    "userDefinedLinkHintCss", "helpDialog_showAdvancedCommands", "smoothScroll" ]
+    "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
+    "helpDialog_showAdvancedCommands", "smoothScroll" ]
   isLoaded: false
   eventListeners: {}
-  postUpdateHooks: {}
 
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
@@ -64,17 +63,11 @@ settings =
 
   get: (key) -> @values[key]
 
-  # This is used when an updated value is received from the background page.
-  update: (key, value) ->
-    @values[key] = value
-    @postUpdateHooks[key]? value
-
-  # This is used when the current tab sets a new value for a setting.
   set: (key, value) ->
     @init() unless @port
 
     @values[key] = value
-    @port.postMessage({ operation: "set", key: key, value: value, incognito: isIncognitoMode })
+    @port.postMessage({ operation: "set", key: key, value: value })
 
   load: ->
     @init() unless @port
@@ -84,7 +77,7 @@ settings =
 
   receiveMessage: (args) ->
     # not using 'this' due to issues with binding on callback
-    settings.update args.key, args.value
+    settings.values[args.key] = args.value
     # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
     # for equality so initializeOnReady only runs once
     if (++settings.loadedValues == settings.valuesToLoad.length)
@@ -123,12 +116,6 @@ window.initializeModes = ->
   new InsertMode permanent: true
 
 #
-# Called if we learn that this frame is in incognito mode.
-#
-goIncognito = ->
-  FindModeHistory.goIncognito()
-
-#
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
@@ -164,9 +151,6 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
-    updateSettings: (request) ->
-      settings.update request.key, request.value
-      FindModeHistory.updateFindModeHistory request.value if request.key = "findModeRawQueryList"
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -203,9 +187,9 @@ window.initializeWhenEnabled = ->
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
-  goIncognito() if request.incognito and not isIncognitoMode
   isIncognitoMode = request.incognito
   initializeWhenEnabled() if isEnabledForUrl
+  FindModeHistory.init()
   handlerStack.bubbleEvent "registerStateChange",
     enabled: isEnabledForUrl
     passKeys: passKeys
@@ -556,38 +540,36 @@ isValidFirstKey = (keyChar) ->
 # This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
 # most recent first.
 FindModeHistory =
+  storage: chrome.storage.local
+  key: "findModeRawQueryList"
   max: 50
   rawQueryList: null
 
-  postUpdateHook: do ->
-    # This update path is only used to initialize @rawQueryList.  Thereafter, we use updateFindModeHistory to
-    # track the history.
-    settings.postUpdateHooks.findModeRawQueryList = (args...) -> FindModeHistory.postUpdateHook args...
-    (rawQueryList) -> @rawQueryList = rawQueryList unless @rawQueryList?
+  init: ->
+    unless @rawQueryList
+      @rawQueryList = [] # Prevent repeated initialization.
+      @key = "findModeRawQueryListIncognito" if isIncognitoMode
+      @storage.get @key, (items) =>
+        unless chrome.runtime.lastError
+          @rawQueryList = items[@key]
+          if isIncognitoMode and not @rawQueryList
+            # This is the first incognito tab, we need to initialize the incognito-mode query history.
+            @storage.get "findModeRawQueryList", (items) =>
+              unless chrome.runtime.lastError
+                @rawQueryList = items.findModeRawQueryList
+                @storage.set findModeRawQueryListIncognito: @rawQueryList
 
-  # This is called when we receive an updateSettings message from the background page.  It is called
-  # synchronously with the update from another tab.  Therefore, we know that only the most-recent query can
-  # have changed.
-  updateFindModeHistory: (rawQueryList) ->
-    @updateRawQueryList rawQueryList[0] if rawQueryList[0]?
-
-  # Register query as the most-recent query, removing any existing occurrences.  Note: this is idempotent when
-  # called repeatedly with the same argument.
-  updateRawQueryList: (query) ->
-    @rawQueryList = ([ query ].concat @rawQueryList.filter (q) => q != query)[0..@max]
+    chrome.storage.onChanged.addListener (changes, area) =>
+      @rawQueryList = changes[@key].newValue if changes[@key]?.newValue?
 
   getQuery: (index = 0) ->
     @rawQueryList?[index] or ""
 
   saveQuery: (query) ->
     if 0 < query.length
-      @updateRawQueryList query
-      settings.set "findModeRawQueryList", @rawQueryList
-
-  goIncognito: ->
-    # In incognito mode, we try to fetch the query history from another incognito tab.  See #1465.
-    chrome.runtime.sendMessage { handler: "getIncognitoRawQueryList" }, (response) =>
-      @rawQueryList = response if response
+      @rawQueryList = ([ query ].concat @rawQueryList.filter (q) => q != query)[0..@max]
+      newSetting = {}; newSetting[@key] = @rawQueryList
+      @storage.set newSetting
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->

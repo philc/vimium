@@ -188,20 +188,7 @@ handleSettings = (args, port) ->
     value = Settings.get(args.key)
     port.postMessage({ key: args.key, value: value })
   else # operation == "set"
-    Settings.set(args.key, args.value) unless args.incognito and args.key in [ "findModeRawQueryList" ]
-    # For some settings, we propagate changes to all tabs immediately.
-    # In the case of findModeRawQueryList, this allows each tab to accurately track the find-mode history.
-    if args.key in [ "findModeRawQueryList" ]
-      sendRequestToAllTabs extend args, name: "updateSettings"
-    # We also track the incognito find-mode history setting in the tabInfoMap for all incognito tabs.
-    if args.incognito and args.key == "findModeRawQueryList"
-      for own _, map of tabInfoMap
-        map.findModeRawQueryList = args.value if map.incognito
-
-# Search through the active tab map for an up-to-date find-mode history for an incognito-mode tab.
-getIncognitoRawQueryList = ->
-  for own id, map of tabInfoMap
-    return map.findModeRawQueryList if map.findModeRawQueryList
+    Settings.set(args.key, args.value)
 
 refreshCompleter = (request) -> completers[request.name].refresh()
 
@@ -346,8 +333,6 @@ updateOpenTabs = (tab) ->
     scrollX: null
     scrollY: null
     deletor: null
-    incognito: tab.incognito
-    findModeRawQueryList: null
   # Frames are recreated on refresh
   delete frameIdsForTab[tab.id]
 
@@ -604,15 +589,12 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
-# Normally, the request is sent to all tabs.  However, if args.incognito is set, then the request is only sent
-# to incognito tabs.
 #
 sendRequestToAllTabs = (args) ->
   chrome.windows.getAll({ populate: true }, (windows) ->
     for window in windows
       for tab in window.tabs
-        if not args.incognito or tab.incognito
-          chrome.tabs.sendMessage(tab.id, args, null))
+        chrome.tabs.sendMessage(tab.id, args, null))
 
 #
 # Returns true if the current extension version is greater than the previously recorded version in
@@ -672,7 +654,21 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setBadge: setBadge
-  getIncognitoRawQueryList: getIncognitoRawQueryList
+
+# We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
+chrome.storage.local.remove "findModeRawQueryListIncognito"
+
+# Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode tabs.
+# Since the common case is that there are none to begin with, we first check whether the key is set at all.
+chrome.tabs.onRemoved.addListener (tabId) ->
+  chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
+    if items.findModeRawQueryListIncognito
+      chrome.windows.getAll { populate: true }, (windows) ->
+        for window in windows
+          for tab in window.tabs
+            return if tab.incognito and tab.id != tabId
+        # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
+        chrome.storage.local.remove "findModeRawQueryListIncognito"
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
