@@ -560,22 +560,25 @@ FindModeHistory =
                 @storage.set findModeRawQueryListIncognito: @rawQueryList
 
     chrome.storage.onChanged.addListener (changes, area) =>
-      @rawQueryList = changes[@key].newValue if changes[@key]?
+      @rawQueryList = changes[@key].newValue if changes[@key]
 
   getQuery: (index = 0) ->
-    @rawQueryList?[index] or ""
+    @rawQueryList[index] or ""
 
   saveQuery: (query) ->
     if 0 < query.length
-      @rawQueryList = ([ query ].concat @rawQueryList.filter (q) => q != query)[0..@max]
+      @rawQueryList = @refreshRawQueryList query, @rawQueryList
       newSetting = {}; newSetting[@key] = @rawQueryList
       @storage.set newSetting
-      # Now, check whether we need to propagte this query to incognito mode too.
+      # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
       unless isIncognitoMode
         @storage.get "findModeRawQueryListIncognito", (items) =>
           if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
-            rawQueryList = ([ query ].concat items.findModeRawQueryListIncognito.filter (q) => q != query)[0..@max]
-            @storage.set findModeRawQueryListIncognito: rawQueryList
+            @storage.set
+              findModeRawQueryListIncognito: @refreshRawQueryList query, items.findModeRawQueryListIncognito
+
+  refreshRawQueryList: (query, rawQueryList) ->
+    ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
