@@ -38,6 +38,7 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
  1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. Install [PhantomJS](http://phantomjs.org/download.html).
  1. `npm install path` to install the [Node.js Path module](http://nodejs.org/api/path.html), used by the test runner.
+ 1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
 
