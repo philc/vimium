@@ -78,7 +78,7 @@ class Mode
     if @options.exitOnBlur
       @push
         _name: "mode-#{@id}/exitOnBlur"
-        "blur": (event) => @alwaysContinueBubbling => @exit() if event.target == @options.exitOnBlur
+        "blur": (event) => @alwaysContinueBubbling => @exit event if event.target == @options.exitOnBlur
 
     # If @options.exitOnClick is truthy, then the mode will exit on any click event.
     if @options.exitOnClick
@@ -92,11 +92,9 @@ class Mode
     if @options.singleton
       do =>
         singletons = Mode.singletons ||= {}
-        key = @options.singleton
-        @onExit => delete singletons[key] if singletons[key] == @
-        if singletons[key]
-          @log "singleton:", "deactivating #{singletons[key].id}"
-          singletons[key].exit()
+        key = Utils.getIdentity @options.singleton
+        @onExit -> delete singletons[key]
+        @deactivateSingleton @options.singleton
         singletons[key] = @
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
@@ -140,6 +138,9 @@ class Mode
       Mode.updateBadge()
       @modeIsActive = false
 
+  deactivateSingleton: (singleton) ->
+    Mode.singletons?[Utils.getIdentity singleton]?.exit()
+
   # The badge is chosen by bubbling an "updateBadge" event down the handler stack allowing each mode the
   # opportunity to choose a badge. This is overridden in sub-classes.
   updateBadge: (badge) ->
@@ -149,6 +150,12 @@ class Mode
   # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common
   # case), because they do not need to be concerned with the value they yield.
   alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
+
+  # Activate a new instance of this mode, together with all of its original options (except its main
+  # keybaord-event handlers; these will be recreated).
+  cloneMode: ->
+    delete @options[key] for key in [ "keydown", "keypress", "keyup" ]
+    new @constructor @options
 
   # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
   # the resulting badge to the background page.  We only update the badge if this document (hence this frame)

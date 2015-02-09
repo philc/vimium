@@ -309,8 +309,14 @@ extend window,
   enterInsertMode: ->
     new InsertMode global: true
 
-  enterVisualMode: =>
+  enterVisualMode: ->
     new VisualMode()
+
+  enterVisualLineMode: ->
+    new VisualLineMode
+
+  enterEditMode: ->
+    @focusInput 1, EditMode
 
   focusInput: do ->
     # Track the most recently focused input element.
@@ -319,10 +325,11 @@ extend window,
       (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
     , true
 
-    (count) ->
+    (count, mode = InsertMode) ->
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with
       # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
       # Pressing any other key will remove the overlays and the special tab behavior.
+      # The mode argument is the mode to enter once an input is selected.
       resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
       visibleInputs =
         for i in [0...resultSet.snapshotLength] by 1
@@ -360,9 +367,6 @@ extend window,
           super
             name: "focus-selector"
             badge: "?"
-            # We share a singleton with PostFindMode.  That way, a new FocusSelector displaces any existing
-            # PostFindMode.
-            singleton: PostFindMode
             exitOnClick: true
             keydown: (event) =>
               if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -370,22 +374,35 @@ extend window,
                 selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
                 selectedInputIndex %= hints.length
                 hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+                # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
+                @deactivateSingleton visibleInputs[selectedInputIndex].element
                 visibleInputs[selectedInputIndex].element.focus()
                 @suppressEvent
               else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
                 @exit()
-                @continueBubbling
+                # Give the new mode the opportunity to handle the event.
+                @restartBubbling
 
-          @onExit -> DomUtils.removeElement hintContainingDiv
-          hintContainingDiv = DomUtils.addElementList hints,
+          @hintContainingDiv = DomUtils.addElementList hints,
             id: "vimiumInputMarkerContainer"
             className: "vimiumReset"
 
+          # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
+          @deactivateSingleton visibleInputs[selectedInputIndex].element
           visibleInputs[selectedInputIndex].element.focus()
           if visibleInputs.length == 1
             @exit()
+            return
           else
             hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+
+        exit: ->
+          super()
+          DomUtils.removeElement @hintContainingDiv
+          if mode and document.activeElement and DomUtils.isEditable document.activeElement
+            new mode
+              singleton: document.activeElement
+              targetElement: document.activeElement
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
 # event.
@@ -760,18 +777,20 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
   findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
 
-findAndFocus = (backwards) ->
+window.getFindModeQuery  = ->
   # check if the query has been changed by a script in another frame
   mostRecentQuery = FindModeHistory.getQuery()
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
 
-  query =
-    if findModeQuery.isRegex
-      getNextQueryFromRegexMatches(if backwards then -1 else 1)
-    else
-      findModeQuery.parsedQuery
+  if findModeQuery.isRegex
+    getNextQueryFromRegexMatches(if backwards then -1 else 1)
+  else
+    findModeQuery.parsedQuery
+
+findAndFocus = (backwards) ->
+  query = getFindModeQuery()
 
   findModeQueryHasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
@@ -915,6 +934,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
   selection.removeAllRanges()
   selection.addRange range
 
+# Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()

@@ -146,7 +146,7 @@ CoreScroller =
   calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, or too fast.
 
   # Scroll element by a relative amount (a number) in some direction.
-  scroll: (element, direction, amount) ->
+  scroll: (element, direction, amount, continuous = true) ->
     return unless amount
 
     unless @settings.get "smoothScroll"
@@ -202,10 +202,14 @@ CoreScroller =
         # We're done.
         checkVisibility element
 
+    # If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test always
+    # fails.
+    ++@time unless continuous
+
     # Launch animator.
     requestAnimationFrame animate
 
-# Scroller contains the two main scroll functions (scrollBy and scrollTo) which are exported to clients.
+# Scroller contains the two main scroll functions which are used by clients.
 Scroller =
   init: (frontendSettings) ->
     handlerStack.push
@@ -241,6 +245,53 @@ Scroller =
     element = findScrollableElement activatedElement, direction, pos, 1
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
+
+  # Scroll the top, bottom, left and right of element into view.  The is used by visual mode to ensure the
+  # focus remains visible.
+  scrollIntoView: (element) ->
+    activatedElement ||= document.body and firstScrollableElement()
+    rect = element. getClientRects()?[0]
+    if rect?
+      # Scroll y axis.
+      if rect.top < 0
+        amount = rect.top - 10
+        element = findScrollableElement element, "y", amount, 1
+        CoreScroller.scroll element, "y", amount, false
+      else if window.innerHeight < rect.bottom
+        amount = rect.bottom - window.innerHeight + 10
+        element = findScrollableElement element, "y", amount, 1
+        CoreScroller.scroll element, "y", amount, false
+
+      # Scroll x axis.
+      if rect.left < 0
+        amount = rect.left - 10
+        element = findScrollableElement element, "x", amount, 1
+        CoreScroller.scroll element, "x", amount, false
+      else if window.innerWidth < rect.right
+        amount = rect.right - window.innerWidth + 10
+        element = findScrollableElement element, "x", amount, 1
+        CoreScroller.scroll element, "x", amount, false
+
+  # Scroll element to position top, left.  This is used by edit mode to ensure that the caret remains visible
+  # in text inputs (not contentEditable).
+  scrollToPosition: (element, top, left) ->
+    activatedElement ||= document.body and firstScrollableElement()
+
+    # Scroll down, "y".
+    amount = top + 20 - (element.clientHeight + element.scrollTop)
+    CoreScroller.scroll element, "y", amount, false if 0 < amount
+
+    # Scroll up, "y".
+    amount = top - (element.scrollTop) - 5
+    CoreScroller.scroll element, "y", amount, false if amount < 0
+
+    # Scroll down, "x".
+    amount = left + 20 - (element.clientWidth + element.scrollLeft)
+    CoreScroller.scroll element, "x", amount, false if 0 < amount
+
+    # Scroll up, "x".
+    amount = left - (element.scrollLeft) - 5
+    CoreScroller.scroll element, "x", amount, false if amount < 0
 
 root = exports ? window
 root.Scroller = Scroller

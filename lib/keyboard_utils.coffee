@@ -1,6 +1,6 @@
 KeyboardUtils =
   keyCodes:
-    { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, space: 32, shiftKey: 16, ctrlKey: 17, f1: 112,
+    { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, ctrlEnter: 10, space: 32, shiftKey: 16, ctrlKey: 17, f1: 112,
     f12: 123, tab: 9, downArrow: 40, upArrow: 38 }
 
   keyNames:
@@ -59,7 +59,12 @@ KeyboardUtils =
   # identify any of chrome's own keyboard shortcuts as printable.
   isPrintable: (event) ->
     return false if event.metaKey or event.ctrlKey or event.altKey
-    @getKeyChar(event)?.length == 1
+    keyChar =
+      if event.type == "keypress"
+        String.fromCharCode event.charCode
+      else
+        @getKeyChar event
+    keyChar.length == 1
 
 KeyboardUtils.init()
 

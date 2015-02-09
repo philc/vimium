@@ -31,19 +31,24 @@ class InsertMode extends Mode
     super extend defaults, options
 
     @insertModeLock =
-      if document.activeElement and DomUtils.isEditable document.activeElement
+      if options.targetElement and DomUtils.isEditable options.targetElement
+        # The caller has told us which element to activate on.
+        options.targetElement
+      else if document.activeElement and DomUtils.isEditable document.activeElement
         # An input element is already active, so use it.
         document.activeElement
       else
         null
 
     @push
+      _name: "mode-#{@id}-focus"
       "blur": (event) => @alwaysContinueBubbling =>
         target = event.target
         # We can't rely on focus and blur events arriving in the expected order.  When the active element
         # changes, we might get "focus" before "blur".  We track the active element in @insertModeLock, and
         # exit only when that element blurs.
-        @exit event, target if @insertModeLock and target == @insertModeLock
+        # We don't exit if we're running under edit mode.  Edit mode itself will handles that case.
+        @exit event, target if @insertModeLock and target == @insertModeLock and not @options.parentMode
       "focus": (event) => @alwaysContinueBubbling =>
         if @insertModeLock != event.target and DomUtils.isFocusable event.target
           @activateOnElement event.target
@@ -66,7 +71,6 @@ class InsertMode extends Mode
     Mode.updateBadge()
 
   exit: (_, target)  ->
-    # Note: target == undefined, here, is required only for tests.
     if (target and target == @insertModeLock) or @global or target == undefined
       @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
       @insertModeLock = null
@@ -74,6 +78,7 @@ class InsertMode extends Mode
       if @permanent then Mode.updateBadge() else super()
 
   updateBadge: (badge) ->
+    badge.badge ||= @badge if @badge
     badge.badge ||= "I" if @isActive badge
 
   # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.

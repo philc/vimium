@@ -168,9 +168,11 @@ upgradeNotificationClosed = (request) ->
   sendRequestToAllTabs({ name: "hideUpgradeNotification" })
 
 #
-# Copies some data (request.data) to the clipboard.
+# Copies or pastes some data (request.data) to/from the clipboard.
+# We return null to avoid the return value from the copy operations being passed to sendResponse.
 #
 copyToClipboard = (request) -> Clipboard.copy(request.data); null
+pasteFromClipboard = (request) -> Clipboard.paste(); null
 
 #
 # Selects the tab with the ID specified in request.id
@@ -647,6 +649,7 @@ sendRequestHandlers =
   upgradeNotificationClosed: upgradeNotificationClosed
   updateScrollPosition: handleUpdateScrollPosition
   copyToClipboard: copyToClipboard
+  pasteFromClipboard: pasteFromClipboard
   isEnabledForUrl: isEnabledForUrl
   saveHelpDialogSettings: saveHelpDialogSettings
   selectSpecificTab: selectSpecificTab
