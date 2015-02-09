@@ -46,7 +46,9 @@ exports.chrome =
   storage:
     # chrome.storage.local
     local:
+      get: ->
       set: ->
+      remove: ->
 
     # chrome.storage.onChanged
     onChanged:
