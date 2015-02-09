@@ -661,15 +661,14 @@ sendRequestHandlers =
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"
 
-# Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode tabs.
+# Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode windows.
 # Since the common case is that there are none to begin with, we first check whether the key is set at all.
 chrome.tabs.onRemoved.addListener (tabId) ->
   chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
     if items.findModeRawQueryListIncognito
-      chrome.windows.getAll { populate: true }, (windows) ->
+      chrome.windows.getAll null, (windows) ->
         for window in windows
-          for tab in window.tabs
-            return if tab.incognito and tab.id != tabId
+          return if window.incognito
         # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
         chrome.storage.local.remove "findModeRawQueryListIncognito"
 
