@@ -42,7 +42,7 @@ root.Sync = Sync =
 
   # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value) ->
-    return if not key of Settings.defaults
+    return unless key of Settings.defaults
     return if not @shouldSyncKey key
     return if value and key of localStorage and localStorage[key] is value
     defaultValue = Settings.defaults[key]
