@@ -172,10 +172,7 @@ upgradeNotificationClosed = (request) ->
 # We return null to avoid the return value from the copy operations being passed to sendResponse.
 #
 copyToClipboard = (request) -> Clipboard.copy(request.data); null
-<<<<<<< HEAD
 pasteFromClipboard = (request) -> Clipboard.paste(); null
-=======
->>>>>>> @{-1}
 
 #
 # Selects the tab with the ID specified in request.id
