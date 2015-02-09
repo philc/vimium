@@ -12,6 +12,7 @@ findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
+isIncognitoMode = false
 passKeys = null
 keyQueue = null
 # The user's operating system.
@@ -41,9 +42,9 @@ settings =
   port: null
   values: {}
   loadedValues: 0
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
-    "previousPatterns", "nextPatterns", "findModeRawQuery", "findModeRawQueryList", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll"]
+  valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
+    "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
+    "helpDialog_showAdvancedCommands", "smoothScroll" ]
   isLoaded: false
   eventListeners: {}
 
@@ -186,7 +187,9 @@ window.initializeWhenEnabled = ->
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
+  isIncognitoMode = request.incognito
   initializeWhenEnabled() if isEnabledForUrl
+  FindModeHistory.init()
   handlerStack.bubbleEvent "registerStateChange",
     enabled: isEnabledForUrl
     passKeys: passKeys
@@ -551,27 +554,48 @@ window.refreshCompletionKeys = (response) ->
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
-# This implements a find-mode query history (using the "findModeRawQueryList" setting) as a list of raw
-# queries, most recent first.
+# This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
+# most recent first.
 FindModeHistory =
+  storage: chrome.storage.local
+  key: "findModeRawQueryList"
+  max: 50
+  rawQueryList: null
+
+  init: ->
+    unless @rawQueryList
+      @rawQueryList = [] # Prevent repeated initialization.
+      @key = "findModeRawQueryListIncognito" if isIncognitoMode
+      @storage.get @key, (items) =>
+        unless chrome.runtime.lastError
+          @rawQueryList = items[@key] if items[@key]
+          if isIncognitoMode and not items[@key]
+            # This is the first incognito tab, so we need to initialize the incognito-mode query history.
+            @storage.get "findModeRawQueryList", (items) =>
+              unless chrome.runtime.lastError
+                @rawQueryList = items.findModeRawQueryList
+                @storage.set findModeRawQueryListIncognito: @rawQueryList
+
+    chrome.storage.onChanged.addListener (changes, area) =>
+      @rawQueryList = changes[@key].newValue if changes[@key]
+
   getQuery: (index = 0) ->
-    @migration()
-    recentQueries = settings.get "findModeRawQueryList"
-    if index < recentQueries.length then recentQueries[index] else ""
+    @rawQueryList[index] or ""
 
-  recordQuery: (query) ->
-    @migration()
+  saveQuery: (query) ->
     if 0 < query.length
-      recentQueries = settings.get "findModeRawQueryList"
-      settings.set "findModeRawQueryList", ([ query ].concat recentQueries.filter (q) -> q != query)[0..50]
+      @rawQueryList = @refreshRawQueryList query, @rawQueryList
+      newSetting = {}; newSetting[@key] = @rawQueryList
+      @storage.set newSetting
+      # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
+      unless isIncognitoMode
+        @storage.get "findModeRawQueryListIncognito", (items) =>
+          if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
+            @storage.set
+              findModeRawQueryListIncognito: @refreshRawQueryList query, items.findModeRawQueryListIncognito
 
-  # Migration (from 1.49, 2015/2/1).
-  # Legacy setting: findModeRawQuery (a string).
-  # New setting: findModeRawQueryList (a list of strings).
-  migration: ->
-    unless settings.get "findModeRawQueryList"
-      rawQuery = settings.get "findModeRawQuery"
-      settings.set "findModeRawQueryList", (if rawQuery then [ rawQuery ] else [])
+  refreshRawQueryList: (query, rawQueryList) ->
+    ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -665,7 +689,7 @@ handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  FindModeHistory.recordQuery findModeQuery.rawQuery
+  FindModeHistory.saveQuery findModeQuery.rawQuery
 
 class FindMode extends Mode
   constructor: ->

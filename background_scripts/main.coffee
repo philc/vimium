@@ -172,7 +172,10 @@ upgradeNotificationClosed = (request) ->
 # We return null to avoid the return value from the copy operations being passed to sendResponse.
 #
 copyToClipboard = (request) -> Clipboard.copy(request.data); null
+<<<<<<< HEAD
 pasteFromClipboard = (request) -> Clipboard.paste(); null
+=======
+>>>>>>> @{-1}
 
 #
 # Selects the tab with the ID specified in request.id
@@ -384,7 +387,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
           setBrowserActionIcon(tabId,disabledIcon)
         # Propagate the new state only if it has changed.
         if (isCurrentlyEnabled != enabled || currentPasskeys != passKeys)
-          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys })
+          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys, incognito: tab.incognito })
       else
         # We didn't get a response from the front end, so Vimium isn't running.
         setBrowserActionIcon(tabId,disabledIcon)
@@ -657,6 +660,21 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setBadge: setBadge
+
+# We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
+chrome.storage.local.remove "findModeRawQueryListIncognito"
+
+# Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode tabs.
+# Since the common case is that there are none to begin with, we first check whether the key is set at all.
+chrome.tabs.onRemoved.addListener (tabId) ->
+  chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
+    if items.findModeRawQueryListIncognito
+      chrome.windows.getAll { populate: true }, (windows) ->
+        for window in windows
+          for tab in window.tabs
+            return if tab.incognito and tab.id != tabId
+        # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
+        chrome.storage.local.remove "findModeRawQueryListIncognito"
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
