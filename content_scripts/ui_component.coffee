@@ -76,7 +76,7 @@ class UIComponent
 
     @iframeElement.classList.remove "vimiumUIComponentVisible"
     @iframeElement.classList.add "vimiumUIComponentHidden"
-    window.focus() if focusWindow
+    (document.activeElement ? window).focus()
     @showing = false
 
 root = exports ? window
