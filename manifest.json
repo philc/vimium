@@ -48,6 +48,7 @@
              "content_scripts/mode_passkeys.js",
              "content_scripts/mode_find.js",
              "content_scripts/mode_visual_edit.js",
+             "content_scripts/hud_controller.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["content_scripts/vimium.css"],
@@ -66,6 +67,7 @@
     "default_popup": "pages/popup.html"
   },
   "web_accessible_resources": [
-    "pages/vomnibar.html"
+    "pages/vomnibar.html",
+    "pages/HUD.html"
   ]
 }

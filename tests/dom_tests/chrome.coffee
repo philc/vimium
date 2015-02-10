@@ -17,6 +17,7 @@ root.chrome = {
         addListener: ->
       }
       postMessage: ->
+      disconnect: ->
     }
     onMessage: {
       addListener: ->

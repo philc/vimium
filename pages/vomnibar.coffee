@@ -6,12 +6,8 @@
 Vomnibar =
   vomnibarUI: null # the dialog instance for this window
   getUI: -> @vomnibarUI
-  completers: {}
 
-  getCompleter: (name) ->
-    if (!(name of @completers))
-      @completers[name] = new BackgroundCompleter(name)
-    @completers[name]
+  getCompleter: (name) -> new BackgroundCompleter(name)
 
   #
   # Activate the Vomnibox.
@@ -49,6 +45,7 @@ class VomnibarUI
     @initialSelectionValue = initialSelectionValue
 
   setCompleter: (completer) ->
+    @completer?.closePort() # If we're reusing the UI, stop receiving responses from stale requests.
     @completer = completer
     @reset()
     @update(true)
@@ -209,6 +206,8 @@ class BackgroundCompleter
       callback(results)
 
     @filterPort.postMessage({ id: id, name: @name, query: query })
+
+  closePort: -> @filterPort.disconnect()
 
 extend BackgroundCompleter,
   #
