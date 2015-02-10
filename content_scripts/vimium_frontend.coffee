@@ -189,7 +189,7 @@ setState = (request) ->
   passKeys = request.passKeys
   isIncognitoMode = request.incognito
   initializeWhenEnabled() if isEnabledForUrl
-  FindModeHistory.init()
+  FindModeHistory.init isIncognitoMode
   handlerStack.bubbleEvent "registerStateChange",
     enabled: isEnabledForUrl
     passKeys: passKeys
@@ -555,49 +555,6 @@ window.refreshCompletionKeys = (response) ->
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
-# This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
-# most recent first.
-FindModeHistory =
-  storage: chrome.storage.local
-  key: "findModeRawQueryList"
-  max: 50
-  rawQueryList: null
-
-  init: ->
-    unless @rawQueryList
-      @rawQueryList = [] # Prevent repeated initialization.
-      @key = "findModeRawQueryListIncognito" if isIncognitoMode
-      @storage.get @key, (items) =>
-        unless chrome.runtime.lastError
-          @rawQueryList = items[@key] if items[@key]
-          if isIncognitoMode and not items[@key]
-            # This is the first incognito tab, so we need to initialize the incognito-mode query history.
-            @storage.get "findModeRawQueryList", (items) =>
-              unless chrome.runtime.lastError
-                @rawQueryList = items.findModeRawQueryList
-                @storage.set findModeRawQueryListIncognito: @rawQueryList
-
-    chrome.storage.onChanged.addListener (changes, area) =>
-      @rawQueryList = changes[@key].newValue if changes[@key]
-
-  getQuery: (index = 0) ->
-    @rawQueryList[index] or ""
-
-  saveQuery: (query) ->
-    if 0 < query.length
-      @rawQueryList = @refreshRawQueryList query, @rawQueryList
-      newSetting = {}; newSetting[@key] = @rawQueryList
-      @storage.set newSetting
-      # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
-      unless isIncognitoMode
-        @storage.get "findModeRawQueryListIncognito", (items) =>
-          if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
-            @storage.set
-              findModeRawQueryListIncognito: @refreshRawQueryList query, items.findModeRawQueryListIncognito
-
-  refreshRawQueryList: (query, rawQueryList) ->
-    ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
-
 # should be called whenever rawQuery is modified.
 window.updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
@@ -672,55 +629,6 @@ window.handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  FindModeHistory.saveQuery findModeQuery.rawQuery
-
-class FindMode extends Mode
-  constructor: ->
-    @historyIndex = -1
-    @partialQuery = ""
-    super
-      name: "find"
-      badge: "/"
-      exitOnEscape: true
-      exitOnClick: true
-
-      keydown: (event) =>
-        if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-          @exit() unless handleDeleteForFindMode()
-          @suppressEvent
-        else if event.keyCode == keyCodes.enter
-          handleEnterForFindMode()
-          @exit()
-          @suppressEvent
-        else if event.keyCode == keyCodes.upArrow
-          if rawQuery = FindModeHistory.getQuery @historyIndex + 1
-            @historyIndex += 1
-            @partialQuery = findModeQuery.rawQuery if @historyIndex == 0
-            updateQueryForFindMode rawQuery
-          @suppressEvent
-        else if event.keyCode == keyCodes.downArrow
-          @historyIndex = Math.max -1, @historyIndex - 1
-          rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
-          updateQueryForFindMode rawQuery
-          @suppressEvent
-        else
-          DomUtils.suppressPropagation(event)
-          handlerStack.stopBubblingAndFalse
-
-      keypress: (event) ->
-        handlerStack.neverContinueBubbling ->
-          if event.keyCode > 31
-            keyChar = String.fromCharCode event.charCode
-            handleKeyCharForFindMode keyChar if keyChar
-
-      keyup: (event) => @suppressEvent
-
-  exit: (event) ->
-    super()
-    handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
-    handleEscapeForFindMode() if event?.type == "click"
-    if findModeQueryHasResults and event?.type != "click"
-      new PostFindMode
 
 window.performFindInPlace = ->
   # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
@@ -949,11 +857,14 @@ window.updateFindModeHUDCount = ->
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
-  findModeQuery = { rawQuery: "" }
-  HUD.showFindMode()
+  findModeQuery = rawQuery: ""
+  HUD.showFindMode incognito: isIncognitoMode
 
 exitFindMode = ->
   HUD.hide()
+  # FIXME(smblott).  If the search lands in an input, and since the HUD is now in an iframe, the input is not
+  # active, PostFindMode exits immediately.
+  new PostFindMode()
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)

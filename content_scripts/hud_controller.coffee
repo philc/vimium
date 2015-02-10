@@ -48,9 +48,9 @@ root.HUD =
   hideUpgradeNotification: ->
     @upgradeTween.fade 0, 150, => @upgradeUI.hide false
 
-  showFindMode: ->
+  showFindMode: (options = {}) ->
     clearTimeout @showForDurationTimerId
-    @hudUI.activate {name: "find"}
+    @hudUI.activate extend options, name: "find"
     @hudTween.fade 1.0, 150
     # Refocus the HUD if the user focuses this window.
     window.addEventListener "focus", @focusFindModeHUD, false

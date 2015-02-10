@@ -22,6 +22,7 @@ showUpgradeNotification = (data) ->
 
 enterFindMode = (data) ->
   hud = document.getElementById "hud"
+  hud.innerHTML = ""
   hud.innerText = "/"
 
   inputElement = document.createElement "span"
@@ -29,29 +30,59 @@ enterFindMode = (data) ->
   inputElement.id = "hud-find-input"
   hud.appendChild inputElement
 
-  inputElement.addEventListener "input", (event) ->
+  getInputElementText = ->
+    inputElement.innerText.replace /\r\n/g, ""
+
+  updateSearch = (event, text = null) ->
+    inputElement.innerText = text if text?
+    console.log inputElement.innerText, inputElement
+    console.log getInputElementText()
+    console.log hud
     # Strip newlines in case the user has pasted some.
-    UIComponentServer.postMessage name: "search", query: inputElement.innerText.replace(/\r\n/g, "")
+    UIComponentServer.postMessage name: "search", query: getInputElementText()
+
+  inputElement.addEventListener "input", updateSearch
+  inputElement.focus()
+
+  FindModeHistory.init data.incognito
+  historyIndex = -1
+  partialQuery = ""
 
   document.addEventListener "keydown", (event) ->
-    if KeyboardUtils.isEscape event
+    eventType = null
+
+    # Find-mode history.
+    if event.keyCode == keyCodes.upArrow
+      console.log "up"
+      if rawQuery = FindModeHistory.getQuery historyIndex + 1
+        historyIndex += 1
+        partialQuery = inputElement.innerText if historyIndex == 0
+        updateSearch null, rawQuery
+    else if event.keyCode == keyCodes.downArrow
+      historyIndex = Math.max -1, historyIndex - 1
+      rawQuery = if 0 <= historyIndex then FindModeHistory.getQuery historyIndex else partialQuery
+      updateSearch null, rawQuery
+
+    # Various ways of leaving find mode.
+    else if KeyboardUtils.isEscape event
       eventType = "esc"
     else if event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]
-      return unless inputElement.innerText.replace(/\r\n/g, "").length == 0
+      return true unless getInputElementText().length == 0
       eventType = "del"
     else if event.keyCode == keyCodes.enter
       eventType = "enter"
-    else
-      return true # Don't handle this key.
+      FindModeHistory.saveQuery getInputElementText()
+
+    # Otherwise, don't handle this key.
+    else return true
 
     DomUtils.suppressEvent event
-    UIComponentServer.postMessage
-      name: "hideFindMode"
-      type: eventType
-      query: inputElement.innerText.replace /\r\n/g, ""
-    inputElement.blur()
-
-  inputElement.focus()
+    if eventType
+      UIComponentServer.postMessage
+        name: "hideFindMode"
+        type: eventType
+        query: getInputElementText()
+      inputElement.blur()
 
 updateMatchesCount = (data) ->
   inputElement = document.getElementById "hud-find-input"
@@ -60,7 +91,8 @@ updateMatchesCount = (data) ->
   hud = document.getElementById "hud"
   nodeAfter = inputElement.nextSibling
   plural = if data.count == 1 then "" else "es"
-  countText = " (#{if data.count == 0 then "No" else data.count} match#{plural})"
+  count = if data.count == 0 then "No" else data.count
+  countText = " (#{count} match#{plural})"
 
   # Replace the old count (if there was one) with the new one.
   hud.insertBefore document.createTextNode(countText), nodeAfter

@@ -28,14 +28,14 @@ class UIComponent
       @loaded = true
       @onLoad()
 
-  queueAction: (functionName, args) -> @queuedActions.push {functionName, args}
+  queueAction: (functionName, args) -> @queuedActions?.push {functionName, args}
 
   onLoad: ->
     return unless @loaded
     # Run queued actions.
     for {functionName, args} in @queuedActions
       this[functionName].apply this, args
-    @queuedActions = null # No more actions should get queued, so make @queuedActions.push error if we try.
+    @queuedActions = null # No more actions should be queued, so disable @queuedActions.
 
   postMessage: (message) ->
     unless @loaded
@@ -50,13 +50,7 @@ class UIComponent
       return
 
     @postMessage message if message?
-    if @showing
-      # NOTE(smblott) Experimental.  Not sure this is a great idea. If the iframe was already showing, then
-      # the user gets no visual feedback when it is re-focused.  So flash its border.
-      @iframeElement.classList.add "vimiumUIComponentReactivated"
-      setTimeout((=> @iframeElement.classList.remove "vimiumUIComponentReactivated"), 200)
-    else
-      @show()
+    @show() unless @showing
     @iframeElement.focus()
 
   show: (message) ->
@@ -76,7 +70,7 @@ class UIComponent
 
     @iframeElement.classList.remove "vimiumUIComponentVisible"
     @iframeElement.classList.add "vimiumUIComponentHidden"
-    (document.activeElement ? window).focus()
+    (document.activeElement ? window).focus() if focusWindow
     @showing = false
 
 root = exports ? window
