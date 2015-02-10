@@ -818,15 +818,6 @@ window.goNext = ->
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-showFindModeHUDForQuery = ->
-  if findModeQuery.rawQuery and (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    plural = if findModeQuery.matchCount == 1 then "" else "es"
-    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Match#{plural})")
-  else if findModeQuery.rawQuery
-    HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
-  else
-    HUD.show("/")
-
 getCurrentRange = ->
   selection = getSelection()
   if selection.type == "None"
@@ -974,6 +965,5 @@ window.onbeforeunload = ->
 
 root = exports ? window
 root.settings = settings
-root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId

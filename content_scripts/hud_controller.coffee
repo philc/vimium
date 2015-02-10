@@ -35,10 +35,13 @@ root.HUD =
     @hudTween.fade 1.0, 150
 
   hide: (immediate) ->
+    console.log "aaaaaaaaaaaaaaa"
     clearTimeout @showForDurationTimerId
-    if (immediate)
+    if immediate
+      console.log "xxxxxxxxxxxxxxx"
       @hudUI.hide()
     else
+      console.log "yyyyyyyyyyyyyyy"
       @hudTween.fade 0, 150, => @hudUI.hide false
 
   showUpgradeNotification: (version) ->
