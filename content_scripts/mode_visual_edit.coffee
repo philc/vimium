@@ -456,8 +456,9 @@ class Movement extends CountPrefix
             coords = DomUtils.getCaretCoordinates @element, position
             Scroller.scrollToPosition @element, coords.top, coords.left
       else
-        elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
-        Scroller.scrollIntoView elementWithFocus if elementWithFocus
+        unless @selection.type == "None"
+          elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
+          Scroller.scrollIntoView elementWithFocus if elementWithFocus
 
 class VisualMode extends Movement
   constructor: (options = {}) ->
