@@ -88,7 +88,7 @@ task "package-custom-crx", "build .crx file", ->
 
   crxmake = spawn "crxmake", optArrayFromDict
     "pack-extension": "."
-    "pack-extension-key": "vimium.pem"
+    "pack-extension-key": process.env.VIMIUM_CRX_PEM ? "vimium.pem"
     "extension-output": "vimium-latest.crx"
     "ignore-file": "(^\\.|\\.(coffee|crx|pem|un~)$)"
     "ignore-dir": "^(\\.|test)"
