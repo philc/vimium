@@ -846,17 +846,19 @@ window.updateFindModeHUDCount = ->
       0
   HUD.updateMatchesCount count, findModeQuery.rawQuery
 
+# Enter find mode.  Return a new mode instance (which is used by visual mode).
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = rawQuery: ""
   HUD.showFindMode incognito: isIncognitoMode
-  # Activate new mode, but only for its badge.
+  # Activate a new mode, but only for its badge
   findMode = new Mode name: "find", badge: "/"
 
 exitFindMode = ->
   HUD.hide()
   findMode.exit()
+  findMode = null
   # FIXME(smblott).  If the search lands in an input, and since the HUD is now in an iframe, the input is not
   # active, PostFindMode exits immediately.
   new PostFindMode()
