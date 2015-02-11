@@ -86,10 +86,17 @@ task "package-custom-crx", "build .crx file", ->
   manifest.update_url = "http://philc.github.com/vimium/updates.xml"
   fs.writeFileSync "manifest.json", JSON.stringify manifest
 
+  pem = process.env.VIMIUM_CRX_PEM ? "vimium.pem"
+  target = "vimium-latest.crx"
+
+  console.log "Building crx file..."
+  console.log "  using pem-file: #{pem}"
+  console.log "  target: #{target}"
+
   crxmake = spawn "crxmake", optArrayFromDict
     "pack-extension": "."
-    "pack-extension-key": process.env.VIMIUM_CRX_PEM ? "vimium.pem"
-    "extension-output": "vimium-latest.crx"
+    "pack-extension-key": pem
+    "extension-output": target
     "ignore-file": "(^\\.|\\.(coffee|crx|pem|un~)$)"
     "ignore-dir": "^(\\.|test)"
 
