@@ -34,9 +34,13 @@ enterFindMode = (data) ->
     inputElement.innerText.replace /\r\n/g, ""
 
   updateSearch = (event, text = null) ->
-    inputElement.innerText = text if text?
     # Strip newlines in case the user has pasted some.
     UIComponentServer.postMessage name: "search", query: getInputElementText()
+
+  setQueryAndUpdateSearch = (text) ->
+    inputElement.innerText = ""
+    DomUtils.simulateTextEntry inputElement, text
+    updateSearch()
 
   inputElement.addEventListener "input", updateSearch
   inputElement.focus()
@@ -53,11 +57,11 @@ enterFindMode = (data) ->
       if rawQuery = FindModeHistory.getQuery historyIndex + 1
         historyIndex += 1
         partialQuery = inputElement.innerText if historyIndex == 0
-        updateSearch null, rawQuery
+        setQueryAndUpdateSearch rawQuery
     else if event.keyCode == keyCodes.downArrow
       historyIndex = Math.max -1, historyIndex - 1
       rawQuery = if 0 <= historyIndex then FindModeHistory.getQuery historyIndex else partialQuery
-      updateSearch null, rawQuery
+      setQueryAndUpdateSearch rawQuery
 
     # Various ways of leaving find mode.
     else if KeyboardUtils.isEscape event

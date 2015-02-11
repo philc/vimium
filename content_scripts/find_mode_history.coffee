@@ -29,14 +29,12 @@ FindModeHistory =
       @rawQueryList = changes[@key].newValue if changes[@key]
 
   getQuery: (index = 0) ->
-    console.log "FindModeHistory, get:", index, @rawQueryList[index]
     @rawQueryList[index] or ""
 
   saveQuery: (query) ->
     if 0 < query.length
       @rawQueryList = @refreshRawQueryList query, @rawQueryList
       newSetting = {}; newSetting[@key] = @rawQueryList
-      console.log "FindModeHistory, save:", query
       @storage.set newSetting
       # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
       unless @isIncognitoMode

@@ -9,6 +9,7 @@ window.findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 findModeInitialRange = null
+findMode = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
@@ -850,9 +851,13 @@ window.enterFindMode = ->
   findModeSaveSelection()
   findModeQuery = rawQuery: ""
   HUD.showFindMode incognito: isIncognitoMode
+  # Activate new mode, but only for its badge.
+  findMode = new Mode name: "find", badge: "/"
 
 exitFindMode = ->
   HUD.hide()
+  console.log "xxxxxxxxxxxxxxxxxx"
+  findMode.exit()
   # FIXME(smblott).  If the search lands in an input, and since the HUD is now in an iframe, the input is not
   # active, PostFindMode exits immediately.
   new PostFindMode()
