@@ -4,7 +4,8 @@
 # This is in a separate file because it's used by both the front end and the HUD.
 
 FindModeHistory =
-  storage: chrome.storage.local
+  # In tests, chrome is not set, hence "chrome?".
+  storage: chrome?.storage.local
   key: "findModeRawQueryList"
   max: 50
   rawQueryList: null

@@ -856,7 +856,6 @@ window.enterFindMode = ->
 
 exitFindMode = ->
   HUD.hide()
-  console.log "xxxxxxxxxxxxxxxxxx"
   findMode.exit()
   # FIXME(smblott).  If the search lands in an input, and since the HUD is now in an iframe, the input is not
   # active, PostFindMode exits immediately.
