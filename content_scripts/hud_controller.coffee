@@ -35,13 +35,10 @@ root.HUD =
     @hudTween.fade 1.0, 150
 
   hide: (immediate) ->
-    console.log "aaaaaaaaaaaaaaa"
     clearTimeout @showForDurationTimerId
     if immediate
-      console.log "xxxxxxxxxxxxxxx"
       @hudUI.hide()
     else
-      console.log "yyyyyyyyyyyyyyy"
       @hudTween.fade 0, 150, => @hudUI.hide false
 
   showUpgradeNotification: (version) ->
@@ -72,6 +69,8 @@ root.HUD =
     @hudUI.postMessage {name: "updateMatchesCount", count}
 
   hideFindMode: (data) ->
+    window.removeEventListener "focus", @focusFindModeHUD, false
+    document.documentElement.removeEventListener "mouseup", @focusFindModeHUD, false
     handlers =
       esc: handleEscapeForFindMode
       del: handleDeleteForFindMode
@@ -82,7 +81,7 @@ root.HUD =
 
   isReady: -> document.body != null
 
-  # A preference which can be toggled in the Options page. */
+  # A preference which can be toggled in the options page.
   enabled: -> !settings.get("hideHud")
 
 class Tween

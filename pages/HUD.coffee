@@ -35,9 +35,6 @@ enterFindMode = (data) ->
 
   updateSearch = (event, text = null) ->
     inputElement.innerText = text if text?
-    console.log inputElement.innerText, inputElement
-    console.log getInputElementText()
-    console.log hud
     # Strip newlines in case the user has pasted some.
     UIComponentServer.postMessage name: "search", query: getInputElementText()
 
@@ -48,12 +45,11 @@ enterFindMode = (data) ->
   historyIndex = -1
   partialQuery = ""
 
-  document.addEventListener "keydown", (event) ->
+  onKeydown = (event) ->
     eventType = null
 
     # Find-mode history.
     if event.keyCode == keyCodes.upArrow
-      console.log "up"
       if rawQuery = FindModeHistory.getQuery historyIndex + 1
         historyIndex += 1
         partialQuery = inputElement.innerText if historyIndex == 0
@@ -83,6 +79,9 @@ enterFindMode = (data) ->
         type: eventType
         query: getInputElementText()
       inputElement.blur()
+      document.removeEventListener "keydown", onKeydown
+
+  document.addEventListener "keydown", onKeydown
 
 updateMatchesCount = (data) ->
   inputElement = document.getElementById "hud-find-input"
