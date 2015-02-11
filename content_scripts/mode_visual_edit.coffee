@@ -341,28 +341,16 @@ class Movement extends CountPrefix
 
         @continueBubbling
 
-    # Install basic bindings for find mode, "n" and "N".  We do not install these bindings if this is a
-    # sub-mode of edit mode (because we cannot guarantee that the selection will remain within the active
-    # element), or if this instance has been created to execute only a single movement.
+    # Install bindings for find mode, "n" and "N".  We do not install these bindings if this is a sub-mode of
+    # edit mode (because we cannot guarantee that the selection will remain within the active element), or if
+    # this instance has been created to execute only a single movement.
     unless @options.parentMode or options.oneMovementOnly
-      do =>
-        executeFind = (count, findBackwards) =>
-          if query = getFindModeQuery()
-            initialRange = @selection.getRangeAt(0).cloneRange()
-            for [0...count]
-              unless window.find query, Utils.hasUpperCase(query), findBackwards, true, false, true, false
-                @setSelectionRange initialRange
-                HUD.showForDuration("No matches for '" + query + "'", 1000)
-                return
-            # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
-            # drop back into visual mode.
-            @changeMode VisualMode if @name == "caret" and 0 < @selection.toString().length
-
-        @movements.n = (count) -> executeFind count, false
-        @movements.N = (count) -> executeFind count, true
-        @movements["/"] = ->
-          @findMode = window.enterFindMode()
-          @findMode.onExit => @changeMode VisualMode
+      @movements.n = (count) ->
+        @changeMode VisualMode if @selectionChanged => performFind() for [0...count]
+      @movements.N = (count) ->
+        @changeMode VisualMode if @selectionChanged => performBackwardsFind() for [0...count]
+      @movements["/"] = ->
+        @findMode = window.enterFindMode => @changeMode VisualMode
     #
     # End of Movement constructor.
 
@@ -621,7 +609,7 @@ class CaretMode extends Movement
   handleMovementKeyChar: (args...) ->
     @collapseSelectionToAnchor()
     super args...
-    @selection.modify "extend", forward, character
+    @selection.modify "extend", forward, character if @modeIsActive
 
   # When visual mode starts and there's no existing selection, we launch CaretMode and try to establish a
   # selection.  As a heuristic, we pick the first non-whitespace character of the first visible text node

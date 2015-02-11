@@ -846,13 +846,14 @@ window.updateFindModeHUDCount = ->
       0
   HUD.updateMatchesCount count, findModeQuery.rawQuery
 
-window.enterFindMode = ->
+window.enterFindMode = (onExit = null) ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = rawQuery: ""
   HUD.showFindMode incognito: isIncognitoMode
   # Activate new mode, but only for its badge.
   findMode = new Mode name: "find", badge: "/"
+  findMode.onExit onExit if onExit
 
 exitFindMode = ->
   HUD.hide()
