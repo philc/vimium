@@ -844,7 +844,7 @@ window.updateFindModeHUDCount = ->
       findModeQuery.matchCount
     else
       0
-  HUD.updateMatchesCount count
+  HUD.updateMatchesCount count, findModeQuery.rawQuery
 
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.

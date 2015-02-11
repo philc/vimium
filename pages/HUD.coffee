@@ -87,15 +87,20 @@ enterFindMode = (data) ->
 
   document.addEventListener "keydown", onKeydown
 
-updateMatchesCount = (data) ->
+updateMatchesCount = ({ count: count, rawQuery: rawQuery }) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
 
   hud = document.getElementById "hud"
   nodeAfter = inputElement.nextSibling
-  plural = if data.count == 1 then "" else "es"
-  count = if data.count == 0 then "No" else data.count
-  countText = " (#{count} match#{plural})"
+
+  countText =
+    if 0 < rawQuery.length
+      plural = if count == 1 then "" else "es"
+      count = if count == 0 then "No" else count
+      " (#{count} match#{plural})"
+    else
+      ""
 
   # Replace the old count (if there was one) with the new one.
   hud.insertBefore document.createTextNode(countText), nodeAfter

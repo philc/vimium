@@ -65,8 +65,11 @@ root.HUD =
     performFindInPlace()
     updateFindModeHUDCount()
 
-  updateMatchesCount: (count) ->
-    @hudUI.postMessage {name: "updateMatchesCount", count}
+  updateMatchesCount: (count, rawQuery) ->
+    @hudUI.postMessage
+      name: "updateMatchesCount"
+      count: count
+      rawQuery: rawQuery
 
   hideFindMode: (data) ->
     window.removeEventListener "focus", @focusFindModeHUD, false
