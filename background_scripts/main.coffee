@@ -336,7 +336,7 @@ updateOpenTabs = (tab) ->
     scrollY: null
     deletor: null
   # Frames are recreated on refresh
-  delete frameIdsForTab[tab.id]
+  chrome.tabs.sendMessage(tab.id, {name: "registerFrame"})
 
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
@@ -614,6 +614,7 @@ openOptionsPageInNewTab = ->
 
 registerFrame = (request, sender) ->
   (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
+  (frameIdsForTab[sender.tab.id]=frameIdsForTab[sender.tab.id].filter (item, pos, self) -> self.indexOf(item) == pos).length
 
 unregisterFrame = (request, sender) ->
   tabId = sender.tab.id

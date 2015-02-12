@@ -142,6 +142,7 @@ initializePreDomReady = ->
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
+    registerFrame : -> registerFrame()
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
