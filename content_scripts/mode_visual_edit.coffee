@@ -347,7 +347,7 @@ class Movement extends CountPrefix
     unless @options.parentMode or options.oneMovementOnly
       do =>
         executeFind = (count, findBackwards) =>
-          if query = getFindModeQuery()
+          if query = getFindModeQuery findBackwards
             initialRange = @selection.getRangeAt(0).cloneRange()
             for [0...count]
               unless window.find query, Utils.hasUpperCase(query), findBackwards, true, false, true, false
