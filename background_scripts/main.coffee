@@ -275,6 +275,7 @@ BackgroundCommands =
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count,frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
+      chrome.tabs.sendMessage(tab.id, {name: "registerFrame"}) # ask all frames in the tab re-register their frame_id 
       frames = frameIdsForTab[tab.id]
       # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
       # additional offset such that we do indeed start from frameId.
