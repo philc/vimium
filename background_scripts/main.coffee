@@ -275,7 +275,6 @@ BackgroundCommands =
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count,frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id, {name: "registerFrame"})
       frames = frameIdsForTab[tab.id]
       # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
       # additional offset such that we do indeed start from frameId.
@@ -337,7 +336,7 @@ updateOpenTabs = (tab) ->
     scrollY: null
     deletor: null
   # Frames are recreated on refresh
-  delete frameIdsForTab[tab.id]
+  chrome.tabs.sendMessage(tab.id, {name: "registerFrame"})
 
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
