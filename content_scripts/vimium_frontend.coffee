@@ -96,6 +96,31 @@ settings =
 #
 frameId = Math.floor(Math.random()*999999999)
 
+# If an input grabs the focus before the user has interacted with the page, then grab it back.
+class GrabBackFocus extends Mode
+  constructor: (@insertMode) ->
+    return if @shouldBeDeactivated()
+    super name: "grab-focus", keydown: => @alwaysContinueBubbling => @exit()
+
+    @push
+      _name: "grab-focus-handlers"
+      mousedown: => @alwaysContinueBubbling => @exit()
+      focus: (event) => @grabBackFocus event.target
+
+    # An input may already be focused. If so, grab back the focus.
+    @grabBackFocus document.activeElement if document.activeElement
+
+  grabBackFocus: (element) ->
+    if DomUtils.isEditable(element) and not @shouldBeDeactivated()
+      element.blur()
+      @insertMode.exit null, element
+      return @suppressEvent
+    @exit() if @shouldBeDeactivated()
+    @continueBubbling
+
+  shouldBeDeactivated: ->
+    false and settings.isLoaded and not settings.get "grabBackFocus"
+
 # Only exported for tests.
 window.initializeModes = ->
   class NormalMode extends Mode
@@ -114,6 +139,7 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
+  new GrabBackFocus InsertMode.permanentInstance
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
@@ -179,7 +205,7 @@ window.initializeWhenEnabled = ->
   unless installedListeners
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
-    for type in ["keydown", "keypress", "keyup", "click", "focus", "blur"]
+    for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown" ]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
