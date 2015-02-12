@@ -98,28 +98,27 @@ frameId = Math.floor(Math.random()*999999999)
 
 # If an input grabs the focus before the user has interacted with the page, then grab it back.
 class GrabBackFocus extends Mode
-  constructor: (@insertMode) ->
-    return if @shouldBeDeactivated()
-    super name: "grab-focus", keydown: => @alwaysContinueBubbling => @exit()
+  constructor: ->
+    super
+      name: "grab-back-focus"
+      keydown: => @alwaysContinueBubbling => @exit()
 
     @push
-      _name: "grab-focus-handlers"
+      _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
-      focus: (event) => @grabBackFocus event.target
 
-    # An input may already be focused. If so, grab back the focus.
-    @grabBackFocus document.activeElement if document.activeElement
+    chrome.storage.sync.get "grabBackfocus", (items) =>
+      return @exit() unless items.grabBackfocus and not chrome.runtime.lastError
+      @push
+        _name: "grab-back-focus-focus"
+        focus: (event) => @grabBackFocus event.target
+      # An input may already be focused. If so, grab back the focus.
+      @grabBackFocus document.activeElement if document.activeElement
 
   grabBackFocus: (element) ->
-    if DomUtils.isEditable(element) and not @shouldBeDeactivated()
-      element.blur()
-      @insertMode.exit null, element
-      return @suppressEvent
-    @exit() if @shouldBeDeactivated()
-    @continueBubbling
-
-  shouldBeDeactivated: ->
-    false and settings.isLoaded and not settings.get "grabBackFocus"
+    return @continueBubbling unless DomUtils.isEditable element
+    element.blur()
+    @suppressEvent
 
 # Only exported for tests.
 window.initializeModes = ->
@@ -139,7 +138,7 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
-  new GrabBackFocus InsertMode.permanentInstance
+  new GrabBackFocus
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
