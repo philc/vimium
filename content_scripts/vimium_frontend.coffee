@@ -96,7 +96,8 @@ settings =
 #
 frameId = Math.floor(Math.random()*999999999)
 
-# If an input grabs the focus before the user has interacted with the page, then grab it back.
+# If an input grabs the focus before the user has interacted with the page, then grab it back (if the
+# grabBackFocus option is set).
 class GrabBackFocus extends Mode
   constructor: ->
     super
@@ -107,8 +108,12 @@ class GrabBackFocus extends Mode
       _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
 
-    chrome.storage.sync.get "grabBackfocus", (items) =>
-      return @exit() unless items.grabBackfocus and not chrome.runtime.lastError
+    # HACK. We use chrome.storage.sync directly here (rather than settings).  This avoids a race condition.
+    # An input can be focused by the page either before we install our handlers or after, and we handle both
+    # cases.  There's no uncertainty period while we wait to learn whether the option is set or not.
+    # Note.  We also assume that the default value for grabBackFocus is false.
+    chrome.storage.sync.get "grabBackFocus", (items) =>
+      return @exit() if chrome.runtime.lastError or not items.grabBackFocus
       @push
         _name: "grab-back-focus-focus"
         focus: (event) => @grabBackFocus event.target

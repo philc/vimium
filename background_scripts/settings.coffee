@@ -73,7 +73,6 @@ root.Settings = Settings =
     linkHintNumbers: "0123456789"
     filterLinkHints: false
     hideHud: false
-    grabBackfocus: false
     userDefinedLinkHintCss:
       """
       div > .vimiumHintMarker {
@@ -116,6 +115,10 @@ root.Settings = Settings =
     newTabUrl: "chrome://newtab"
 
     settingsVersion: Utils.getCurrentVersion()
+
+    # NOTE. This setting is accessed directly via chrome.storage.sync in the front end. There, we assume that
+    # the default value is false.
+    grabBackFocus: false
 
 
 # We use settingsVersion to coordinate any necessary schema changes.
