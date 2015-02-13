@@ -84,9 +84,6 @@ root.isEnabledForUrl = isEnabledForUrl = (request) ->
     passKeys: rule?.passKeys or ""
   }
 
-saveHelpDialogSettings = (request) ->
-  Settings.set("helpDialog_showAdvancedCommands", request.showAdvancedCommands)
-
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
@@ -651,7 +648,6 @@ sendRequestHandlers =
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
   isEnabledForUrl: isEnabledForUrl
-  saveHelpDialogSettings: saveHelpDialogSettings
   selectSpecificTab: selectSpecificTab
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks)
