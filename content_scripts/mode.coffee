@@ -163,9 +163,7 @@ class Mode
   @updateBadge: ->
     if document.hasFocus()
       handlerStack.bubbleEvent "updateBadge", badge = badge: ""
-      chrome.runtime.sendMessage
-        handler: "setBadge"
-        badge: badge.badge
+      chrome.runtime.sendMessage { handler: "setBadge", badge: badge.badge }, ->
 
   # Debugging routines.
   logModes: ->
