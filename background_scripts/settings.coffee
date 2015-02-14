@@ -113,6 +113,7 @@ root.Settings = Settings =
     # put in an example search engine
     searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s wikipedia"
     newTabUrl: "chrome://newtab"
+    grabBackFocus: false
 
     settingsVersion: Utils.getCurrentVersion()
 

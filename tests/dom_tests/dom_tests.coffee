@@ -354,24 +354,24 @@ context "Triggering insert mode",
     document.getElementById("test-div").innerHTML = ""
 
   should "trigger insert mode on focus of text input", ->
-    assert.isTrue Mode.top().name == "insert" and not Mode.top().isActive()
+    assert.isFalse InsertMode.permanentInstance.isActive()
     document.getElementById("first").focus()
-    assert.isTrue Mode.top().name == "insert" and Mode.top().isActive()
+    assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "trigger insert mode on focus of password input", ->
-    assert.isTrue Mode.top().name == "insert" and not Mode.top().isActive()
+    assert.isFalse InsertMode.permanentInstance.isActive()
     document.getElementById("third").focus()
-    assert.isTrue Mode.top().name == "insert" and Mode.top().isActive()
+    assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "trigger insert mode on focus of contentEditable elements", ->
-    assert.isTrue Mode.top().name == "insert" and not Mode.top().isActive()
+    assert.isFalse InsertMode.permanentInstance.isActive()
     document.getElementById("fourth").focus()
-    assert.isTrue Mode.top().name == "insert" and Mode.top().isActive()
+    assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "not trigger insert mode on other elements", ->
-    assert.isTrue Mode.top().name == "insert" and not Mode.top().isActive()
+    assert.isFalse InsertMode.permanentInstance.isActive()
     document.getElementById("fifth").focus()
-    assert.isTrue Mode.top().name == "insert" and not Mode.top().isActive()
+    assert.isFalse InsertMode.permanentInstance.isActive()
 
 context "Mode utilities",
   setup ->
@@ -454,6 +454,10 @@ context "PostFindMode",
     testContent = "<input type='text' id='first'/>"
     document.getElementById("test-div").innerHTML = testContent
     document.getElementById("first").focus()
+    # For these tests, we need to push GrabBackFocus out of the way.  When it exits, it updates the badge,
+    # which interferes with event suppression within insert mode.  This cannot happen in normal operation,
+    # because GrabBackFocus exits on the first keydown.
+    Mode.top().exit()
     @postFindMode = new PostFindMode
 
   tearDown ->
@@ -466,7 +470,7 @@ context "PostFindMode",
 
   should "suppress unmapped printable keys", ->
     sendKeyboardEvent "m"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
 
   should "be deactivated on click events", ->
     handlerStack.bubbleEvent "click", target: document.activeElement

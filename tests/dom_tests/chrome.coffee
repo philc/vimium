@@ -7,26 +7,23 @@ root.chromeMessages = []
 
 document.hasFocus = -> true
 
-root.chrome = {
-  runtime: {
-    connect: -> {
-      onMessage: {
+root.chrome =
+  runtime:
+    connect: ->
+      onMessage:
         addListener: ->
-      }
-      onDisconnect: {
+      onDisconnect:
         addListener: ->
-      }
       postMessage: ->
-    }
-    onMessage: {
+    onMessage:
       addListener: ->
-    }
     sendMessage: (message) -> chromeMessages.unshift message
     getManifest: ->
     getURL: (url) -> "../../#{url}"
-  }
   storage:
     local:
       get: ->
       set: ->
-}
+    sync:
+      get: ->
+      set: ->

@@ -257,6 +257,7 @@ initOptionsPage = ->
     regexFindMode: CheckBoxOption
     scrollStepSize: NumberOption
     smoothScroll: CheckBoxOption
+    grabBackFocus: CheckBoxOption
     searchEngines: TextOption
     searchUrl: NonEmptyTextOption
     userDefinedLinkHintCss: TextOption

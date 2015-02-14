@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll" ]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus" ]
   isLoaded: false
   eventListeners: {}
 
@@ -96,6 +96,33 @@ settings =
 #
 frameId = Math.floor(Math.random()*999999999)
 
+# If an input grabs the focus before the user has interacted with the page, then grab it back (if the
+# grabBackFocus option is set).
+class GrabBackFocus extends Mode
+  constructor: ->
+    super
+      name: "grab-back-focus"
+      keydown: => @alwaysContinueBubbling => @exit()
+
+    @push
+      _name: "grab-back-focus-mousedown"
+      mousedown: => @alwaysContinueBubbling => @exit()
+
+    activate = =>
+      return @exit() unless settings.get "grabBackFocus"
+      @push
+        _name: "grab-back-focus-focus"
+        focus: (event) => @grabBackFocus event.target
+      # An input may already be focused. If so, grab back the focus.
+      @grabBackFocus document.activeElement if document.activeElement
+
+    if settings.isLoaded then activate() else settings.addEventListener "load", activate
+
+  grabBackFocus: (element) ->
+    return @continueBubbling unless DomUtils.isEditable element
+    element.blur()
+    @suppressEvent
+
 # Only exported for tests.
 window.initializeModes = ->
   class NormalMode extends Mode
@@ -114,6 +141,7 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
+  new GrabBackFocus
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
@@ -179,7 +207,7 @@ window.initializeWhenEnabled = ->
   unless installedListeners
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
-    for type in ["keydown", "keypress", "keyup", "click", "focus", "blur"]
+    for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown" ]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
