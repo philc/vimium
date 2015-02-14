@@ -321,7 +321,7 @@ selectTab = (callback, direction) ->
       selectionChangedHandlers.push(callback)
       chrome.tabs.update(toSelect.id, { selected: true })))
 
-updateOpenTabs = (tab) ->
+updateOpenTabs = (tab, deleteFrames = false) ->
   # Chrome might reuse the tab ID of a recently removed tab.
   if tabInfoMap[tab.id]?.deletor
     clearTimeout tabInfoMap[tab.id].deletor
@@ -333,7 +333,7 @@ updateOpenTabs = (tab) ->
     scrollY: null
     deletor: null
   # Frames are recreated on refresh
-  delete frameIdsForTab[tab.id]
+  delete frameIdsForTab[tab.id] if deleteFrames
 
 setBrowserActionIcon = (tabId,path) ->
   chrome.browserAction.setIcon({ tabId: tabId, path: path })
@@ -616,7 +616,7 @@ unregisterFrame = (request, sender) ->
   tabId = sender.tab.id
   if frameIdsForTab[tabId]?
     if request.tab_is_closing
-      updateOpenTabs sender.tab
+      updateOpenTabs sender.tab, true
     else
       frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
 
