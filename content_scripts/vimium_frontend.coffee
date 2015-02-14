@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll" ]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus" ]
   isLoaded: false
   eventListeners: {}
 
@@ -108,17 +108,15 @@ class GrabBackFocus extends Mode
       _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
 
-    # HACK. We use chrome.storage.sync directly here (rather than settings).  This avoids a race condition.
-    # An input can be focused by the page either before we install our handlers or after, and we handle both
-    # cases.  There's no uncertainty period while we wait to learn whether the option is set or not.
-    # Note.  We also assume that the default value for grabBackFocus is false.
-    chrome.storage.sync.get "grabBackFocus", (items) =>
-      return @exit() if chrome.runtime.lastError or not items.grabBackFocus
+    activate = =>
+      return @exit() unless settings.get "grabBackFocus"
       @push
         _name: "grab-back-focus-focus"
         focus: (event) => @grabBackFocus event.target
       # An input may already be focused. If so, grab back the focus.
       @grabBackFocus document.activeElement if document.activeElement
+
+    if settings.isLoaded then activate() else settings.addEventListener "load", activate
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isEditable element
