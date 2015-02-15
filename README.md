@@ -212,7 +212,7 @@ Release Notes
 
 1.36 (2012-07-07)
 
-- 'b' brings up a bookmark-only Vomnibar.
+- `b` brings up a bookmark-only Vomnibar.
 - Better support for some bookmarklets.
 
 1.35 (2012-07-05)
@@ -237,7 +237,7 @@ Release Notes
 - Improve style of link hints, and use fewer characters for hints.
 - Add an option to hide the heads up display (HUD). Notably, the HUD obscures Facebook Chat's textbox.
 - Detection and following of next / previous links has been improved.
-- Addition of 'g0' and 'g$' commands, for switching tabs.
+- Addition of `g0` and `g$` commands, for switching tabs.
 - Addition of `p`/`P` commands for URL pasting.
 - A new find mode which optionally supports case sensitivity and regular expressions.
 - Bug fixes.
