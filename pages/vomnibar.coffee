@@ -59,9 +59,13 @@ class VomnibarUI
 
   setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
-  hide: ->
+  # Hide the vomnibar, then call callback.  We add a short delay to allow the vomnibar to close before the
+  # action is performed.  This ensures (hopefully) that the vomnibar isn't visible when the tab is
+  # subsequently refocused (see #1485).
+  hide: (callback = ->) ->
     UIComponentServer.postMessage "hide"
     @reset()
+    setTimeout callback, 20
 
   reset: ->
     @completionList.style.display = ""
@@ -123,15 +127,15 @@ class VomnibarUI
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
-        @hide()
-        chrome.runtime.sendMessage({
-          handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-          url: query })
+        @hide ->
+          chrome.runtime.sendMessage
+            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+            url: query
       else
         @update true, =>
           # Shift+Enter will open the result in a new tab instead of the current tab.
-          @completions[@selection].performAction(openInNewTab)
-          @hide()
+          completion = @completions[@selection]
+          @hide -> completion.performAction openInNewTab
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
