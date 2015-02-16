@@ -366,8 +366,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
   disabledIcon = "icons/browser_action_disabled.png"
   partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get tabId, (tab) ->
-    # Default to disabled state in case we can't connect to Vimium, primarily for the "New Tab" page.
-    setBrowserActionIcon(tabId,disabledIcon)
+    setBrowserActionIcon tabId, enabledIcon
     setBadge badge: ""
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
       if response
@@ -385,7 +384,8 @@ root.updateActiveState = updateActiveState = (tabId) ->
         # Propagate the new state only if it has changed.
         if (isCurrentlyEnabled != enabled || currentPasskeys != passKeys)
           chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys, incognito: tab.incognito })
-
+      else
+        setBrowserActionIcon tabId, disabledIcon
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
