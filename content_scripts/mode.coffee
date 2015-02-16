@@ -86,6 +86,13 @@ class Mode
         _name: "mode-#{@id}/exitOnClick"
         "click": (event) => @alwaysContinueBubbling => @exit event
 
+    #If @options.exitOnFocus is truthy, then the mode will exit whenever a focusable element is activated.
+    if @options.exitOnFocus
+      @push
+        _name: "mode-#{@id}/exitOnFocus"
+        "focus": (event) => @alwaysContinueBubbling =>
+          @exit event if DomUtils.isFocusable event.target
+
     # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
     # if @options.singleton is truthy.  The value of @options.singleton should be the key which is intended to
     # be unique.  New instances deactivate existing instances with the same key.
