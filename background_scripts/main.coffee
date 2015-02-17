@@ -366,7 +366,6 @@ root.updateActiveState = updateActiveState = (tabId) ->
   disabledIcon = "icons/browser_action_disabled.png"
   partialIcon = "icons/browser_action_partial.png"
   chrome.tabs.get tabId, (tab) ->
-    setBrowserActionIcon tabId, enabledIcon
     setBadge badge: ""
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
       if response
