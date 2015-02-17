@@ -167,7 +167,8 @@ DomUtils =
       node = node.parentNode
     false
 
-  # True if element contains the active selection range.
+  # True if element contains the active selection range, or if the element does not support its selection
+  # being accessed.
   isSelected: (element) ->
     if element.isContentEditable
       node = document.getSelection()?.anchorNode
@@ -175,7 +176,13 @@ DomUtils =
     else
       # Note.  This makes the wrong decision if the user has placed the caret at the start of element.  We
       # cannot distinguish that case from the user having made no selection.
-      element.selectionStart? and element.selectionEnd? and element.selectionEnd != 0
+      try
+        element.selectionEnd != 0
+      catch
+        # This input element doesn't support selectionStart/selectionEnd.
+        # NOTE(mrmr1993): We choose true here because it does the right thing everywhere in the code. I am
+        # not certain that this is necessarily what we should do.
+        true
 
   simulateSelect: (element) ->
     # If element is already active, then we don't move the selection.  However, we also won't get a new focus
