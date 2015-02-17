@@ -171,13 +171,11 @@ DomUtils =
   # being accessed.
   isSelected: (element) ->
     if element.isContentEditable
-      node = document.getSelection()?.anchorNode
+      node = document.getSelection().anchorNode
       node and @isDOMDescendant element, node
     else
-      # Note.  This makes the wrong decision if the user has placed the caret at the start of element.  We
-      # cannot distinguish that case from the user having made no selection.
       try
-        element.selectionEnd != 0
+        element.selectionStart != element.selectionEnd
       catch
         # This input element doesn't support selectionStart/selectionEnd.
         # NOTE(mrmr1993): We choose true here because it does the right thing everywhere in the code. I am
