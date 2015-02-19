@@ -796,8 +796,7 @@ executeFind = (query, options) ->
   # previous find landed in an editable element, then that element may still be activated.  In this case, we
   # don't want to leave it behind (see #1412).
   if document.activeElement and DomUtils.isEditable document.activeElement
-    if not DomUtils.isSelected document.activeElement
-      document.activeElement.blur()
+    document.activeElement.blur() unless DomUtils.isSelected document.activeElement
 
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()

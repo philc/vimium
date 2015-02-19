@@ -190,11 +190,6 @@ DomUtils =
       handlerStack.bubbleEvent "click", target: element
     else
       element.focus()
-      unless @isSelected element
-        # When focusing a textbox (without an existing selection), put the selection caret at the end of the
-        # textbox's contents.  For some HTML5 input types (eg. date) we can't position the caret, so we wrap
-        # this with a try.
-        try element.setSelectionRange(element.value.length, element.value.length)
 
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
