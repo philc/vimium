@@ -586,7 +586,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
 #
-sendRequestToAllTabs = (args) ->
+window.sendRequestToAllTabs = (args) ->
   chrome.windows.getAll({ populate: true }, (windows) ->
     for window in windows
       for tab in window.tabs
