@@ -191,6 +191,18 @@ DomUtils =
       handlerStack.bubbleEvent "click", target: element
     else
       element.focus()
+        # If the cursor is at the start of the element's contents, send it to the end. Motivation:
+        # * the end is a more useful place to focus than the start,
+        # * we've been moving the cursor to the end for quite some time now,
+        # * this way preserves the last used position (except when it's at the beginning), so the user can
+        #   'resume where they left off'.
+        # NOTE(mrmr1993): Some elements throw an error when we try to access their selection properties, so
+        # wrap this with a try.
+      try
+        if element.selectionStart == 0 and element.selectionEnd == 0
+          element.setSelectionRange element.value.length, element.value.length
+
+
 
   simulateClick: (element, modifiers) ->
     modifiers ||= {}
