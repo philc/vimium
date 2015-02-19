@@ -27,3 +27,5 @@ root.chrome =
     sync:
       get: ->
       set: ->
+    onChanged:
+      addListener: ->
