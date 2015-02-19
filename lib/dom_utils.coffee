@@ -167,20 +167,21 @@ DomUtils =
       node = node.parentNode
     false
 
-  # True if element contains the active selection range, or if the element does not support its selection
-  # being accessed.
+  # True if the current element is editable and contains the active selection range.
   isSelected: (element) ->
     if element.isContentEditable
       node = document.getSelection().anchorNode
       node and @isDOMDescendant element, node
     else
-      try
-        element.selectionStart != element.selectionEnd
-      catch
-        # This input element doesn't support selectionStart/selectionEnd.
-        # NOTE(mrmr1993): We choose true here because it does the right thing everywhere in the code. I am
-        # not certain that this is necessarily what we should do.
-        true
+      selection = document.getSelection()
+      if selection.type == "Range" and selection.isCollapsed
+	# The selection is inside the Shadow DOM of a node. We can check the node it registers as being
+	# before, since this represents the node whose Shadow DOM it's inside.
+        containerNode = selection.anchorNode.childNodes[selection.anchorOffset]
+
+        element == containerNode # True if the selection is inside the Shadow DOM of our element.
+      else
+        false
 
   simulateSelect: (element) ->
     # If element is already active, then we don't move the selection.  However, we also won't get a new focus
