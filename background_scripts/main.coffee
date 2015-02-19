@@ -77,11 +77,12 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
 # whether any keys should be passed through to the underlying page.
 #
-root.isEnabledForUrl = isEnabledForUrl = (request) ->
+root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
   rule = Exclusions.getRule(request.url)
   {
     isEnabledForUrl: not rule or rule.passKeys
     passKeys: rule?.passKeys or ""
+    incognito: sender?.tab.incognito
   }
 
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
@@ -371,8 +372,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
     setBadge badge: ""
     chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
       if response
-        isCurrentlyEnabled = response.enabled
-        currentPasskeys = response.passKeys
+        # The top frame of the page is responding.
         config = isEnabledForUrl({url: tab.url})
         enabled = config.isEnabledForUrl
         passKeys = config.passKeys
@@ -382,10 +382,6 @@ root.updateActiveState = updateActiveState = (tabId) ->
           setBrowserActionIcon(tabId,enabledIcon)
         else
           setBrowserActionIcon(tabId,disabledIcon)
-        # Propagate the new state only if it has changed.
-        if (isCurrentlyEnabled != enabled || currentPasskeys != passKeys)
-          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys, incognito: tab.incognito })
-
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
@@ -401,8 +397,9 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
-  updateOpenTabs(tab) if changeInfo.url?
-  updateActiveState(tabId)
+  updateOpenTabs tab if changeInfo.url?
+  updateActiveState tabId
+  chrome.tabs.sendMessage tabId, {name: "checkIfEnabledForUrl"}
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
   # We should update all the tabs in the old window and the new window.
