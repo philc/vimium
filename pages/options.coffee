@@ -292,7 +292,7 @@ initPopupPage = ->
       $("saveOptions").innerHTML = "Saved"
       $("saveOptions").disabled = true
       # Update the enabled/passkeys state of every frame in every tab.
-      chrome.extension.getBackgroundPage().sendRequestToAllTabs, {name: "checkIfEnabledForUrl"}
+      chrome.extension.getBackgroundPage().sendRequestToAllTabs {name: "checkIfEnabledForUrl"}
       # Update the status of the Vimium icon for every window.
       chrome.tabs.query { active: true }, (tabs) ->
         for tab in tabs
