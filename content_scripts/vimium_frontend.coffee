@@ -175,7 +175,7 @@ initializePreDomReady = ->
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
     getActiveState: getActiveState
-    setState: setState
+    checkIfEnabledForUrl: checkIfEnabledForUrl
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
@@ -184,7 +184,7 @@ initializePreDomReady = ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
+    return unless isEnabledForUrl or request.name in ["getActiveState", "checkIfEnabledForUrl"]
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler == "registerFrame" or request.handler == "frameFocused"
     sendResponse requestHandlers[request.name](request, sender)
@@ -212,19 +212,14 @@ window.initializeWhenEnabled = ->
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
 
-setState = (request) ->
-  isEnabledForUrl = request.enabled
-  passKeys = request.passKeys
-  isIncognitoMode = request.incognito
-  initializeWhenEnabled() if isEnabledForUrl
-  FindModeHistory.init()
-  handlerStack.bubbleEvent "registerStateChange",
-    enabled: isEnabledForUrl
-    passKeys: passKeys
+    FindModeHistory.init()
 
 getActiveState = ->
   Mode.updateBadge()
-  return { enabled: isEnabledForUrl, passKeys: passKeys }
+  if window.top == window
+      {enabled: isEnabledForUrl, passKeys: passKeys}
+  else
+      undefined
 
 #
 # The backend needs to know which frame has focus.
@@ -562,6 +557,7 @@ checkIfEnabledForUrl = ->
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     passKeys = response.passKeys
+    isIncognitoMode = response.incognito
     if isEnabledForUrl
       initializeWhenEnabled()
     else if (HUD.isReady())
