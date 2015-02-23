@@ -77,11 +77,12 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
 # whether any keys should be passed through to the underlying page.
 #
-root.isEnabledForUrl = isEnabledForUrl = (request) ->
+root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
   rule = Exclusions.getRule(request.url)
   {
     isEnabledForUrl: not rule or rule.passKeys
     passKeys: rule?.passKeys or ""
+    incognito: sender.tab.incognito
   }
 
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
@@ -371,7 +372,7 @@ root.updateActiveState = updateActiveState = (tabId) ->
       if response
         isCurrentlyEnabled = response.enabled
         currentPasskeys = response.passKeys
-        config = isEnabledForUrl({url: tab.url})
+        config = isEnabledForUrl { url: tab.url }, { tab: tab }
         enabled = config.isEnabledForUrl
         passKeys = config.passKeys
         if (enabled and passKeys)

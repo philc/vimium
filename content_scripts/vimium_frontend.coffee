@@ -211,13 +211,13 @@ window.initializeWhenEnabled = ->
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
+    FindModeHistory.init()
 
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
   isIncognitoMode = request.incognito
   initializeWhenEnabled() if isEnabledForUrl
-  FindModeHistory.init()
   handlerStack.bubbleEvent "registerStateChange",
     enabled: isEnabledForUrl
     passKeys: passKeys
@@ -562,6 +562,7 @@ checkIfEnabledForUrl = ->
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     passKeys = response.passKeys
+    isIncognitoMode = response.incognito
     if isEnabledForUrl
       initializeWhenEnabled()
     else if (HUD.isReady())
