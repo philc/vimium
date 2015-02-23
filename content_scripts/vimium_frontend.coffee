@@ -562,6 +562,7 @@ checkIfEnabledForUrl = ->
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
     passKeys = response.passKeys
+    isIncognitoMode = response.incognito
     if isEnabledForUrl
       initializeWhenEnabled()
     else if (HUD.isReady())
