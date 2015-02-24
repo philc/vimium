@@ -4,25 +4,20 @@
 # background page that we're in domReady and ready to accept normal commands by connectiong to a port named
 # "domReady".
 #
-window.handlerStack = new HandlerStack
 
-insertModeLock = null
-findMode = false
 findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
+findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
-# Users can disable Vimium on URL patterns via the settings page.  The following two variables
-# (isEnabledForUrl and passKeys) control Vimium's enabled/disabled behaviour.
-# "passKeys" are keys which would normally be handled by Vimium, but are disabled on this tab, and therefore
-# are passed through to the underlying page.
 isEnabledForUrl = true
+isIncognitoMode = false
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = null
-validFirstKeys = null
+currentCompletionKeys = ""
+validFirstKeys = ""
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
@@ -47,15 +42,24 @@ settings =
   port: null
   values: {}
   loadedValues: 0
-  valuesToLoad: ["scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
-    "previousPatterns", "nextPatterns", "findModeRawQuery", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands"]
+  valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
+    "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
+    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus" ]
   isLoaded: false
   eventListeners: {}
 
   init: ->
     @port = chrome.runtime.connect({ name: "settings" })
     @port.onMessage.addListener(@receiveMessage)
+
+    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
+    # settings object so we don't keep trying to connect to the extension even though it's gone away.
+    @port.onDisconnect.addListener =>
+      @port = null
+      for own property, value of this
+        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
+        @[property] = (->) if "function" == typeof value and property != "get"
+
 
   get: (key) -> @values[key]
 
@@ -92,7 +96,52 @@ settings =
 #
 frameId = Math.floor(Math.random()*999999999)
 
-hasModifiersRegex = /^<([amc]-)+.>/
+# If an input grabs the focus before the user has interacted with the page, then grab it back (if the
+# grabBackFocus option is set).
+class GrabBackFocus extends Mode
+  constructor: ->
+    super
+      name: "grab-back-focus"
+      keydown: => @alwaysContinueBubbling => @exit()
+
+    @push
+      _name: "grab-back-focus-mousedown"
+      mousedown: => @alwaysContinueBubbling => @exit()
+
+    activate = =>
+      return @exit() unless settings.get "grabBackFocus"
+      @push
+        _name: "grab-back-focus-focus"
+        focus: (event) => @grabBackFocus event.target
+      # An input may already be focused. If so, grab back the focus.
+      @grabBackFocus document.activeElement if document.activeElement
+
+    if settings.isLoaded then activate() else settings.addEventListener "load", activate
+
+  grabBackFocus: (element) ->
+    return @continueBubbling unless DomUtils.isEditable element
+    element.blur()
+    @suppressEvent
+
+# Only exported for tests.
+window.initializeModes = ->
+  class NormalMode extends Mode
+    constructor: ->
+      super
+        name: "normal"
+        keydown: (event) => onKeydown.call @, event
+        keypress: (event) => onKeypress.call @, event
+        keyup: (event) => onKeyup.call @, event
+
+      Scroller.init settings
+
+  # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
+  # activates/deactivates itself accordingly.
+  new BadgeMode
+  new NormalMode
+  new PassKeysMode
+  new InsertMode permanent: true
+  new GrabBackFocus
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
@@ -101,14 +150,19 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  Scroller.init()
-
+  initializeModes()
   checkIfEnabledForUrl()
-
   refreshCompletionKeys()
 
   # Send the key to the key handler in the background page.
   keyPort = chrome.runtime.connect({ name: "keyDown" })
+  # If the port is closed, the background page has gone away (since we never close it ourselves). Disable all
+  # our event listeners, and stub out chrome.runtime.sendMessage/connect (to prevent errors).
+  # TODO(mrmr1993): Do some actual cleanup to free resources, hide UI, etc.
+  keyPort.onDisconnect.addListener ->
+    isEnabledForUrl = false
+    chrome.runtime.sendMessage = ->
+    chrome.runtime.connect = ->
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -120,9 +174,11 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: -> { enabled: isEnabledForUrl, passKeys: passKeys }
+    getActiveState: getActiveState
     setState: setState
-    currentKeyQueue: (request) -> keyQueue = request.keyQueue
+    currentKeyQueue: (request) ->
+      keyQueue = request.keyQueue
+      handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -136,31 +192,39 @@ initializePreDomReady = ->
     false
 
 # Wrapper to install event listeners.  Syntactic sugar.
-installListener = (event, callback) -> document.addEventListener(event, callback, true)
+installListener = (element, event, callback) ->
+  element.addEventListener(event, ->
+    if isEnabledForUrl then callback.apply(this, arguments) else true
+  , true)
 
 #
-# This is called once the background page has told us that Vimium should be enabled for the current URL.
-# We enable/disable Vimium by toggling isEnabledForUrl.  The alternative, installing or uninstalling
-# listeners, is error prone.  It's more difficult to keep track of the state.
+# Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
+# we know whether the listener should run or not.
+# Run this as early as possible, so the page can't register any event handlers before us.
 #
 installedListeners = false
-initializeWhenEnabled = (newPassKeys) ->
-  isEnabledForUrl = true
-  passKeys = newPassKeys
-  if (!installedListeners)
-    installListener "keydown", (event) -> if isEnabledForUrl then onKeydown(event) else true
-    installListener "keypress", (event) -> if isEnabledForUrl then onKeypress(event) else true
-    installListener "keyup", (event) -> if isEnabledForUrl then onKeyup(event) else true
-    installListener "focus", (event) -> if isEnabledForUrl then onFocusCapturePhase(event) else true
-    installListener "blur", (event) -> if isEnabledForUrl then onBlurCapturePhase(event)
-    installListener "DOMActivate", (event) -> if isEnabledForUrl then onDOMActivate(event)
-    enterInsertModeIfElementIsFocused()
+window.initializeWhenEnabled = ->
+  unless installedListeners
+    # Key event handlers fire on window before they do on document. Prefer window for key events so the page
+    # can't set handlers to grab the keys before us.
+    for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown" ]
+      do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
+    installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
 
 setState = (request) ->
   isEnabledForUrl = request.enabled
   passKeys = request.passKeys
-  initializeWhenEnabled(passKeys) if isEnabledForUrl and !installedListeners
+  isIncognitoMode = request.incognito
+  initializeWhenEnabled() if isEnabledForUrl
+  FindModeHistory.init()
+  handlerStack.bubbleEvent "registerStateChange",
+    enabled: isEnabledForUrl
+    passKeys: passKeys
+
+getActiveState = ->
+  Mode.updateBadge()
+  return { enabled: isEnabledForUrl, passKeys: passKeys }
 
 #
 # The backend needs to know which frame has focus.
@@ -174,28 +238,24 @@ window.addEventListener "focus", ->
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  registerFrame(window.top == window.self)
-
-  enterInsertModeIfElementIsFocused() if isEnabledForUrl
-
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
+  CursorHider.init()
+  Vomnibar.init()
 
-registerFrame = (is_top) ->
-  chrome.runtime.sendMessage(
-    handler: "registerFrame"
+registerFrame = ->
+  # Don't register frameset containers; focusing them is no use.
+  unless document.body?.tagName.toLowerCase() == "frameset"
+    chrome.runtime.sendMessage
+      handler: "registerFrame"
+      frameId: frameId
+
+# Unregister the frame if we're going to exit.
+unregisterFrame = ->
+  chrome.runtime.sendMessage
+    handler: "unregisterFrame"
     frameId: frameId
-    is_top: is_top
-    total: frames.length + 1)
-
-#
-# Enters insert mode if the currently focused element in the DOM is focusable.
-#
-enterInsertModeIfElementIsFocused = ->
-  if (document.activeElement && isEditable(document.activeElement) && !findMode)
-    enterInsertModeWithoutShowingIndicator(document.activeElement)
-
-onDOMActivate = (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+    tab_is_closing: window.top == window.self
 
 executePageCommand = (request) ->
   return unless frameId == request.frameId
@@ -215,6 +275,12 @@ setScrollPosition = (scrollX, scrollY) ->
 # Called from the backend in order to change frame focus.
 #
 window.focusThisFrame = (shouldHighlight) ->
+  if window.innerWidth < 3 or window.innerHeight < 3
+    # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
+    # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
+    # Here we're assuming that there is at least one frame large enough to focus.
+    chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
+    return
   window.focus()
   if (document.body && shouldHighlight)
     borderWas = document.body.style.border
@@ -234,8 +300,8 @@ extend window,
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
   scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
   scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
-  scrollBack: -> Scroller.scrollBack()
-  scrollForward: -> Scroller.scrollForward()
+  scrollBackward: -> Scroller.scrollHistory -1
+  scrollForward: -> Scroller.scrollHistory 1
 
 extend window,
   reload: -> window.location.reload()
@@ -270,71 +336,132 @@ extend window,
     # http://code.google.com/p/chromium/issues/detail?id=55188
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
       chrome.runtime.sendMessage { handler: "copyToClipboard", data: url }
+      url = url[0..25] + "...." if 28 < url.length
+      HUD.showForDuration("Yanked #{url}", 2000)
 
-    HUD.showForDuration("Yanked URL", 1000)
+  enterInsertMode: ->
+    # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
+    # instance to take over.
+    new InsertMode global: true, exitOnFocus: true
 
-  focusInput: (count) ->
-    # Focus the first input element on the page, and create overlays to highlight all the input elements, with
-    # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
-    # Pressing any other key will remove the overlays and the special tab behavior.
-    resultSet = DomUtils.evaluateXPath(textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
-    visibleInputs =
-      for i in [0...resultSet.snapshotLength] by 1
-        element = resultSet.snapshotItem(i)
-        rect = DomUtils.getVisibleClientRect(element)
-        continue if rect == null
-        { element: element, rect: rect }
+  enterVisualMode: ->
+    new VisualMode()
 
-    return if visibleInputs.length == 0
+  enterVisualLineMode: ->
+    new VisualLineMode
 
-    selectedInputIndex = Math.min(count - 1, visibleInputs.length - 1)
+  enterEditMode: ->
+    @focusInput 1, EditMode
 
-    visibleInputs[selectedInputIndex].element.focus()
+  focusInput: do ->
+    # Track the most recently focused input element.
+    recentlyFocusedElement = null
+    window.addEventListener "focus",
+      (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+    , true
 
-    return if visibleInputs.length == 1
+    (count, mode = InsertMode) ->
+      # Focus the first input element on the page, and create overlays to highlight all the input elements, with
+      # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
+      # Pressing any other key will remove the overlays and the special tab behavior.
+      # The mode argument is the mode to enter once an input is selected.
+      resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
+      visibleInputs =
+        for i in [0...resultSet.snapshotLength] by 1
+          element = resultSet.snapshotItem i
+          rect = DomUtils.getVisibleClientRect element
+          continue if rect == null
+          { element: element, rect: rect }
 
-    hints = for tuple in visibleInputs
-      hint = document.createElement("div")
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+      if visibleInputs.length == 0
+        HUD.showForDuration("There are no inputs to focus.", 1000)
+        return
 
-      # minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-      hint.style.width = tuple.rect.width + "px"
-      hint.style.height = tuple.rect.height + "px"
-
-      hint
-
-    hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-
-    hintContainingDiv = DomUtils.addElementList(hints,
-      { id: "vimiumInputMarkerContainer", className: "vimiumReset" })
-
-    handlerStack.push keydown: (event) ->
-      if event.keyCode == KeyboardUtils.keyCodes.tab
-        hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-        if event.shiftKey
-          if --selectedInputIndex == -1
-            selectedInputIndex = hints.length - 1
+      selectedInputIndex =
+        if count == 1
+          # As the starting index, we pick that of the most recently focused input element (or 0).
+          elements = visibleInputs.map (visibleInput) -> visibleInput.element
+          Math.max 0, elements.indexOf recentlyFocusedElement
         else
-          if ++selectedInputIndex == hints.length
-            selectedInputIndex = 0
-        hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-        visibleInputs[selectedInputIndex].element.focus()
-      else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
-        DomUtils.removeElement hintContainingDiv
-        @remove()
-        return true
+          Math.min(count, visibleInputs.length) - 1
 
-      false
+      hints = for tuple in visibleInputs
+        hint = document.createElement "div"
+        hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
-# Decide whether this keyChar should be passed to the underlying page.
-# Keystrokes are *never* considered passKeys if the keyQueue is not empty.  So, for example, if 't' is a
-# passKey, then 'gt' and '99t' will neverthless be handled by vimium.
-isPassKey = ( keyChar ) ->
-  return !keyQueue and passKeys and 0 <= passKeys.indexOf(keyChar)
+        # minus 1 for the border
+        hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+        hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+        hint.style.width = tuple.rect.width + "px"
+        hint.style.height = tuple.rect.height + "px"
 
-handledKeydownEvents = []
+        hint
+
+      new class FocusSelector extends Mode
+        constructor: ->
+          super
+            name: "focus-selector"
+            badge: "?"
+            exitOnClick: true
+            keydown: (event) =>
+              if event.keyCode == KeyboardUtils.keyCodes.tab
+                hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+                selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+                selectedInputIndex %= hints.length
+                hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+                # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
+                @deactivateSingleton visibleInputs[selectedInputIndex].element
+                visibleInputs[selectedInputIndex].element.focus()
+                @suppressEvent
+              else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+                @exit()
+                # Give the new mode the opportunity to handle the event.
+                @restartBubbling
+
+          @hintContainingDiv = DomUtils.addElementList hints,
+            id: "vimiumInputMarkerContainer"
+            className: "vimiumReset"
+
+          # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
+          @deactivateSingleton visibleInputs[selectedInputIndex].element
+          visibleInputs[selectedInputIndex].element.focus()
+          if visibleInputs.length == 1
+            @exit()
+            return
+          else
+            hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+
+        exit: ->
+          super()
+          DomUtils.removeElement @hintContainingDiv
+          if mode and document.activeElement and DomUtils.isEditable document.activeElement
+            new mode
+              singleton: document.activeElement
+              targetElement: document.activeElement
+
+# Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
+# event.
+KeydownEvents =
+  handledEvents: {}
+
+  stringify: (event) ->
+    JSON.stringify
+      metaKey: event.metaKey
+      altKey: event.altKey
+      ctrlKey: event.ctrlKey
+      keyIdentifier: event.keyIdentifier
+      keyCode: event.keyCode
+
+  push: (event) ->
+    @handledEvents[@stringify event] = true
+
+  # Yields truthy or falsy depending upon whether a corresponding keydown event is present (and removes that
+  # event).
+  pop: (event) ->
+    detailString = @stringify event
+    value = @handledEvents[detailString]
+    delete @handledEvents[detailString]
+    value
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
@@ -343,35 +470,26 @@ handledKeydownEvents = []
 #
 # Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
 #
+# @/this, here, is the the normal-mode Mode object.
 onKeypress = (event) ->
-  return unless handlerStack.bubbleEvent('keypress', event)
-
   keyChar = ""
 
   # Ignore modifier keys by themselves.
   if (event.keyCode > 31)
     keyChar = String.fromCharCode(event.charCode)
 
-    # Enter insert mode when the user enables the native find interface.
-    if (keyChar == "f" && KeyboardUtils.isPrimaryModifierKey(event))
-      enterInsertModeWithoutShowingIndicator()
-      return
-
     if (keyChar)
-      if (findMode)
-        handleKeyCharForFindMode(keyChar)
+      if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
         DomUtils.suppressEvent(event)
-      else if (!isInsertMode() && !findMode)
-        if (isPassKey keyChar)
-          return undefined
-        if (currentCompletionKeys.indexOf(keyChar) != -1)
-          DomUtils.suppressEvent(event)
-
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        return @stopBubblingAndTrue
 
+      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+
+  return @continueBubbling
+
+# @/this, here, is the the normal-mode Mode object.
 onKeydown = (event) ->
-  return unless handlerStack.bubbleEvent('keydown', event)
-
   keyChar = ""
 
   # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
@@ -399,53 +517,24 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isInsertMode() && KeyboardUtils.isEscape(event))
-    if isEditable(event.srcElement) or isEmbed(event.srcElement)
-      # Remove focus so the user can't just get himself back into insert mode by typing in the same input
-      # box.
-      event.srcElement.blur()
-      exitInsertMode()
-      DomUtils.suppressEvent event
-      handledKeydownEvents.push event
-
-  else if (findMode)
-    if (KeyboardUtils.isEscape(event))
-      handleEscapeForFindMode()
-      DomUtils.suppressEvent event
-      handledKeydownEvents.push event
-
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      handleDeleteForFindMode()
-      DomUtils.suppressEvent event
-      handledKeydownEvents.push event
-
-    else if (event.keyCode == keyCodes.enter)
-      handleEnterForFindMode()
-      DomUtils.suppressEvent event
-      handledKeydownEvents.push event
-
-    else if (!modifiers)
-      event.stopPropagation()
-      handledKeydownEvents.push event
-
-  else if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+  if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
     hideHelpDialog()
     DomUtils.suppressEvent event
-    handledKeydownEvents.push event
+    KeydownEvents.push event
+    return @stopBubblingAndTrue
 
-  else if (!isInsertMode() && !findMode)
+  else
     if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1)
+      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
         DomUtils.suppressEvent event
-        handledKeydownEvents.push event
+        KeydownEvents.push event
+        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        return @stopBubblingAndTrue
 
       keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
 
     else if (KeyboardUtils.isEscape(event))
       keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
-
-    else if isPassKey KeyboardUtils.getKeyChar(event)
-      return undefined
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
@@ -454,40 +543,38 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if (keyChar == "" && !isInsertMode() &&
+  if keyChar == "" &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event))))
-    event.stopPropagation()
-    handledKeydownEvents.push event
+      isValidFirstKey(KeyboardUtils.getKeyChar(event)))
+    DomUtils.suppressPropagation(event)
+    KeydownEvents.push event
+    return @stopBubblingAndTrue
 
+  return @continueBubbling
+
+# @/this, here, is the the normal-mode Mode object.
 onKeyup = (event) ->
-  return unless handlerStack.bubbleEvent("keyup", event)
-  return if isInsertMode()
-
-  # Don't propagate the keyup to the underlying page if Vimium has handled it. See #733.
-  for keydown, i in handledKeydownEvents
-    if event.metaKey == keydown.metaKey and
-       event.altKey == keydown.altKey and
-       event.ctrlKey == keydown.ctrlKey and
-       event.keyIdentifier == keydown.keyIdentifier and
-       event.keyCode == keydown.keyCode
-
-      handledKeydownEvents.splice i, 1
-      event.stopPropagation()
-      break
+  return @continueBubbling unless KeydownEvents.pop event
+  DomUtils.suppressPropagation(event)
+  @stopBubblingAndTrue
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
     isEnabledForUrl = response.isEnabledForUrl
-    if (isEnabledForUrl)
-      initializeWhenEnabled(response.passKeys)
+    passKeys = response.passKeys
+    if isEnabledForUrl
+      initializeWhenEnabled()
     else if (HUD.isReady())
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: isEnabledForUrl
+      passKeys: passKeys
 
-refreshCompletionKeys = (response) ->
+# Exported to window, but only for DOM tests.
+window.refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
 
@@ -497,65 +584,50 @@ refreshCompletionKeys = (response) ->
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
 isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /[1-9]/.test(keyChar)
+  validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
-onFocusCapturePhase = (event) ->
-  if (isFocusable(event.target) && !findMode)
-    enterInsertModeWithoutShowingIndicator(event.target)
+# This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
+# most recent first.
+FindModeHistory =
+  storage: chrome.storage.local
+  key: "findModeRawQueryList"
+  max: 50
+  rawQueryList: null
 
-onBlurCapturePhase = (event) ->
-  if (isFocusable(event.target))
-    exitInsertMode(event.target)
+  init: ->
+    unless @rawQueryList
+      @rawQueryList = [] # Prevent repeated initialization.
+      @key = "findModeRawQueryListIncognito" if isIncognitoMode
+      @storage.get @key, (items) =>
+        unless chrome.runtime.lastError
+          @rawQueryList = items[@key] if items[@key]
+          if isIncognitoMode and not items[@key]
+            # This is the first incognito tab, so we need to initialize the incognito-mode query history.
+            @storage.get "findModeRawQueryList", (items) =>
+              unless chrome.runtime.lastError
+                @rawQueryList = items.findModeRawQueryList
+                @storage.set findModeRawQueryListIncognito: @rawQueryList
 
-#
-# Returns true if the element is focusable. This includes embeds like Flash, which steal the keybaord focus.
-#
-isFocusable = (element) -> isEditable(element) || isEmbed(element)
+    chrome.storage.onChanged.addListener (changes, area) =>
+      @rawQueryList = changes[@key].newValue if changes[@key]
 
-#
-# Embedded elements like Flash and quicktime players can obtain focus but cannot be programmatically
-# unfocused.
-#
-isEmbed = (element) -> ["embed", "object"].indexOf(element.nodeName.toLowerCase()) >= 0
+  getQuery: (index = 0) ->
+    @rawQueryList[index] or ""
 
-#
-# Input or text elements are considered focusable and able to receieve their own keyboard events,
-# and will enter enter mode if focused. Also note that the "contentEditable" attribute can be set on
-# any element which makes it a rich text editor, like the notes on jjot.com.
-#
-isEditable = (target) ->
-  return true if target.isContentEditable
-  nodeName = target.nodeName.toLowerCase()
-  # use a blacklist instead of a whitelist because new form controls are still being implemented for html5
-  noFocus = ["radio", "checkbox"]
-  if (nodeName == "input" && noFocus.indexOf(target.type) == -1)
-    return true
-  focusableElements = ["textarea", "select"]
-  focusableElements.indexOf(nodeName) >= 0
+  saveQuery: (query) ->
+    if 0 < query.length
+      @rawQueryList = @refreshRawQueryList query, @rawQueryList
+      newSetting = {}; newSetting[@key] = @rawQueryList
+      @storage.set newSetting
+      # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
+      unless isIncognitoMode
+        @storage.get "findModeRawQueryListIncognito", (items) =>
+          if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
+            @storage.set
+              findModeRawQueryListIncognito: @refreshRawQueryList query, items.findModeRawQueryListIncognito
 
-#
-# Enters insert mode and show an "Insert mode" message. Showing the UI is only useful when entering insert
-# mode manually by pressing "i". In most cases we do not show any UI (enterInsertModeWithoutShowingIndicator)
-#
-window.enterInsertMode = (target) ->
-  enterInsertModeWithoutShowingIndicator(target)
-  HUD.show("Insert mode")
-
-#
-# We cannot count on 'focus' and 'blur' events to happen sequentially. For example, if blurring element A
-# causes element B to come into focus, we may get "B focus" before "A blur". Thus we only leave insert mode
-# when the last editable element that came into focus -- which insertModeLock points to -- has been blurred.
-# If insert mode is entered manually (via pressing 'i'), then we set insertModeLock to 'undefined', and only
-# leave insert mode when the user presses <ESC>.
-#
-enterInsertModeWithoutShowingIndicator = (target) -> insertModeLock = target
-
-exitInsertMode = (target) ->
-  if (target == undefined || insertModeLock == target)
-    insertModeLock = null
-    HUD.hide()
-
-isInsertMode = -> insertModeLock != null
+  refreshRawQueryList: (query, rawQueryList) ->
+    ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
 
 # should be called whenever rawQuery is modified.
 updateFindModeQuery = ->
@@ -583,6 +655,9 @@ updateFindModeQuery = ->
   # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
   findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
 
+  # Don't count matches in the HUD.
+  HUD.hide(true)
+
   # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
   # sequentially so the browser handles the scrolling / text selection.
   if findModeQuery.isRegex
@@ -608,11 +683,14 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleKeyCharForFindMode = (keyChar) ->
-  findModeQuery.rawQuery += keyChar
+updateQueryForFindMode = (rawQuery) ->
+  findModeQuery.rawQuery = rawQuery
   updateFindModeQuery()
   performFindInPlace()
   showFindModeHUDForQuery()
+
+handleKeyCharForFindMode = (keyChar) ->
+  updateQueryForFindMode findModeQuery.rawQuery + keyChar
 
 handleEscapeForFindMode = ->
   exitFindMode()
@@ -626,15 +704,15 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
+# Return true if character deleted, false otherwise.
 handleDeleteForFindMode = ->
-  if (findModeQuery.rawQuery.length == 0)
+  if findModeQuery.rawQuery.length == 0
     exitFindMode()
     performFindInPlace()
+    false
   else
-    findModeQuery.rawQuery = findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
-    updateFindModeQuery()
-    performFindInPlace()
-    showFindModeHUDForQuery()
+    updateQueryForFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
+    true
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
@@ -643,32 +721,67 @@ handleEnterForFindMode = ->
   exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  settings.set("findModeRawQuery", findModeQuery.rawQuery)
+  FindModeHistory.saveQuery findModeQuery.rawQuery
+
+class FindMode extends Mode
+  constructor: ->
+    @historyIndex = -1
+    @partialQuery = ""
+    super
+      name: "find"
+      badge: "/"
+      exitOnEscape: true
+      exitOnClick: true
+
+      keydown: (event) =>
+        if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+          @exit() unless handleDeleteForFindMode()
+          @suppressEvent
+        else if event.keyCode == keyCodes.enter
+          handleEnterForFindMode()
+          @exit()
+          @suppressEvent
+        else if event.keyCode == keyCodes.upArrow
+          if rawQuery = FindModeHistory.getQuery @historyIndex + 1
+            @historyIndex += 1
+            @partialQuery = findModeQuery.rawQuery if @historyIndex == 0
+            updateQueryForFindMode rawQuery
+          @suppressEvent
+        else if event.keyCode == keyCodes.downArrow
+          @historyIndex = Math.max -1, @historyIndex - 1
+          rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
+          updateQueryForFindMode rawQuery
+          @suppressEvent
+        else
+          DomUtils.suppressPropagation(event)
+          handlerStack.stopBubblingAndFalse
+
+      keypress: (event) ->
+        handlerStack.neverContinueBubbling ->
+          if event.keyCode > 31
+            keyChar = String.fromCharCode event.charCode
+            handleKeyCharForFindMode keyChar if keyChar
+
+      keyup: (event) => @suppressEvent
+
+  exit: (event) ->
+    super()
+    handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
+    handleEscapeForFindMode() if event?.type == "click"
+    if findModeQueryHasResults and event?.type != "click"
+      new PostFindMode
 
 performFindInPlace = ->
-  cachedScrollX = window.scrollX
-  cachedScrollY = window.scrollY
-
+  # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
+  # match as the user adds matching characters, or removes previously-matched characters. See #1434.
+  findModeRestoreSelection()
   query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-
-  # Search backwards first to "free up" the current word as eligible for the real forward search. This allows
-  # us to search in place without jumping around between matches as the query grows.
-  executeFind(query, { backwards: true, caseSensitive: !findModeQuery.ignoreCase })
-
-  # We need to restore the scroll position because we might've lost the right position by searching
-  # backwards.
-  window.scrollTo(cachedScrollX, cachedScrollY)
-
   findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 executeFind = (query, options) ->
+  result = null
   options = options || {}
-
-  # rather hacky, but this is our way of signalling to the insertMode listener not to react to the focus
-  # changes that find() induces.
-  oldFindMode = findMode
-  findMode = true
 
   document.body.classList.add("vimiumFindMode")
 
@@ -681,7 +794,13 @@ executeFind = (query, options) ->
     -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
     0)
 
-  findMode = oldFindMode
+  # We are either in normal mode ("n"), or find mode ("/").  We are not in insert mode.  Nevertheless, if a
+  # previous find landed in an editable element, then that element may still be activated.  In this case, we
+  # don't want to leave it behind (see #1412).
+  if document.activeElement and DomUtils.isEditable document.activeElement
+    if not DomUtils.isSelected document.activeElement
+      document.activeElement.blur()
+
   # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
   # preventDefault()
   findModeAnchorNode = document.getSelection().anchorNode
@@ -694,13 +813,6 @@ focusFoundLink = ->
     link = getLinkFromSelection()
     link.focus() if link
 
-isDOMDescendant = (parent, child) ->
-  node = child
-  while (node != null)
-    return true if (node == parent)
-    node = node.parentNode
-  false
-
 selectFoundInputElement = ->
   # if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
   # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
@@ -708,10 +820,8 @@ selectFoundInputElement = ->
   # heuristic of checking that the last anchor node is an ancestor of our element.
   if (findModeQueryHasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
-      isDOMDescendant(findModeAnchorNode, document.activeElement))
+      DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
-    # the element has already received focus via find(), so invoke insert mode manually
-    enterInsertModeWithoutShowingIndicator(document.activeElement)
 
 getNextQueryFromRegexMatches = (stepSize) ->
   # find()ing an empty query always returns false
@@ -723,43 +833,29 @@ getNextQueryFromRegexMatches = (stepSize) ->
 
   findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
 
-findAndFocus = (backwards) ->
+window.getFindModeQuery = (backwards) ->
   # check if the query has been changed by a script in another frame
-  mostRecentQuery = settings.get("findModeRawQuery") || ""
+  mostRecentQuery = FindModeHistory.getQuery()
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
     updateFindModeQuery()
 
-  query =
-    if findModeQuery.isRegex
-      getNextQueryFromRegexMatches(if backwards then -1 else 1)
-    else
-      findModeQuery.parsedQuery
+  if findModeQuery.isRegex
+    getNextQueryFromRegexMatches(if backwards then -1 else 1)
+  else
+    findModeQuery.parsedQuery
+
+findAndFocus = (backwards) ->
+  query = getFindModeQuery backwards
 
   findModeQueryHasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
 
-  if (!findModeQueryHasResults)
+  if findModeQueryHasResults
+    focusFoundLink()
+    new PostFindMode() if findModeQueryHasResults
+  else
     HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
-    return
-
-  # if we have found an input element via 'n', pressing <esc> immediately afterwards sends us into insert
-  # mode
-  elementCanTakeInput = document.activeElement &&
-    DomUtils.isSelectable(document.activeElement) &&
-    isDOMDescendant(findModeAnchorNode, document.activeElement)
-  if (elementCanTakeInput)
-    handlerStack.push({
-      keydown: (event) ->
-        @remove()
-        if (KeyboardUtils.isEscape(event))
-          DomUtils.simulateSelect(document.activeElement)
-          enterInsertModeWithoutShowingIndicator(document.activeElement)
-          return false # we have "consumed" this event, so do not propagate
-        return true
-    })
-
-  focusFoundLink()
 
 window.performFind = -> findAndFocus()
 
@@ -867,18 +963,42 @@ window.goNext = ->
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
-  if (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Matches)")
-  else
+  if findModeQuery.rawQuery and (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
+    plural = if findModeQuery.matchCount == 1 then "" else "es"
+    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Match#{plural})")
+  else if findModeQuery.rawQuery
     HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
+  else
+    HUD.show("/")
 
+getCurrentRange = ->
+  selection = getSelection()
+  if selection.type == "None"
+    range = document.createRange()
+    range.setStart document.body, 0
+    range.setEnd document.body, 0
+    range
+  else
+    selection.collapseToStart() if selection.type == "Range"
+    selection.getRangeAt 0
+
+findModeSaveSelection = ->
+  findModeInitialRange = getCurrentRange()
+
+findModeRestoreSelection = (range = findModeInitialRange) ->
+  selection = getSelection()
+  selection.removeAllRanges()
+  selection.addRange range
+
+# Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = ->
+  # Save the selection, so performFindInPlace can restore it.
+  findModeSaveSelection()
   findModeQuery = { rawQuery: "" }
-  findMode = true
   HUD.show("/")
+  new FindMode()
 
 exitFindMode = ->
-  findMode = false
   HUD.hide()
 
 window.showHelpDialog = (html, fid) ->
@@ -968,10 +1088,10 @@ HUD =
     HUD.displayElement().style.display = ""
 
   showUpgradeNotification: (version) ->
-    HUD.upgradeNotificationElement().innerHTML = "Vimium has been updated to
-      <a class='vimiumReset'
-      href='https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb'>
-      #{version}</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
+    HUD.upgradeNotificationElement().innerHTML = "Vimium has been upgraded to #{version}. See
+      <a class='vimiumReset' target='_blank'
+      href='https://github.com/philc/vimium#release-notes'>
+      what's new</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
     links = HUD.upgradeNotificationElement().getElementsByTagName("a")
     links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
     links[1].addEventListener "click", (event) ->
@@ -1049,8 +1169,44 @@ Tween =
       value = (elapsed / state.duration)  * (state.to - state.from) + state.from
       state.onUpdate(value)
 
+CursorHider =
+  #
+  # Hide the cursor when the browser scrolls, and prevent mouse from hovering while invisible.
+  #
+  cursorHideStyle: null
+  isScrolling: false
+
+  onScroll: (event) ->
+    CursorHider.isScrolling = true
+    unless CursorHider.cursorHideStyle.parentElement
+      document.head.appendChild CursorHider.cursorHideStyle
+
+  onMouseMove: (event) ->
+    if CursorHider.cursorHideStyle.parentElement and not CursorHider.isScrolling
+      CursorHider.cursorHideStyle.remove()
+    CursorHider.isScrolling = false
+
+  init: ->
+    # Temporarily disabled pending consideration of #1359 (in particular, whether cursor hiding is too fragile
+    # as to provide a consistent UX).
+    return
+
+    # Disable cursor hiding for Chrome versions less than 39.0.2171.71 due to a suspected browser error.
+    # See #1345 and #1348.
+    return unless Utils.haveChromeVersion "39.0.2171.71"
+
+    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle.innerHTML = """
+      body * {pointer-events: none !important; cursor: none !important;}
+      body, html {cursor: none !important;}
+    """
+    window.addEventListener "mousemove", @onMouseMove
+    window.addEventListener "scroll", @onScroll
+
 initializePreDomReady()
-window.addEventListener("DOMContentLoaded", initializeOnDomReady)
+DomUtils.documentReady initializeOnDomReady
+DomUtils.documentReady registerFrame
+window.addEventListener "unload", unregisterFrame
 
 window.onbeforeunload = ->
   chrome.runtime.sendMessage(

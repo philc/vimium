@@ -78,6 +78,8 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
 # This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
 # Vimium and want to distribute their fork?
 task "package-custom-crx", "build .crx file", ->
+  # To get exec-sync, use `npm install exec-sync`. We use this for synchronously executing shell commands.
+  # To get crxmake, use `sudo gem install crxmake`.
   invoke "build"
 
   # ugly hack to modify our manifest file on-the-fly
@@ -86,10 +88,17 @@ task "package-custom-crx", "build .crx file", ->
   manifest.update_url = "http://philc.github.com/vimium/updates.xml"
   fs.writeFileSync "manifest.json", JSON.stringify manifest
 
+  pem = process.env.VIMIUM_CRX_PEM ? "vimium.pem"
+  target = "vimium-latest.crx"
+
+  console.log "Building crx file..."
+  console.log "  using pem-file: #{pem}"
+  console.log "  target: #{target}"
+
   crxmake = spawn "crxmake", optArrayFromDict
     "pack-extension": "."
-    "pack-extension-key": "vimium.pem"
-    "extension-output": "vimium-latest.crx"
+    "pack-extension-key": pem
+    "extension-output": target
     "ignore-file": "(^\\.|\\.(coffee|crx|pem|un~)$)"
     "ignore-dir": "^(\\.|test)"
 

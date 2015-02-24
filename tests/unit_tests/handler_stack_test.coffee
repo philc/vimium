@@ -23,6 +23,29 @@ context "handlerStack",
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
 
+  should "terminate bubbling on stopBubblingAndTrue, and be true", ->
+    @handlerStack.push { keydown: => @handler1Called = true }
+    @handlerStack.push { keydown: => @handler2Called = true; @handlerStack.stopBubblingAndTrue  }
+    assert.isTrue @handlerStack.bubbleEvent 'keydown', {}
+    assert.isTrue @handler2Called
+    assert.isFalse @handler1Called
+
+  should "terminate bubbling on stopBubblingAndTrue, and be false", ->
+    @handlerStack.push { keydown: => @handler1Called = true }
+    @handlerStack.push { keydown: => @handler2Called = true; @handlerStack.stopBubblingAndFalse  }
+    assert.isFalse @handlerStack.bubbleEvent 'keydown', {}
+    assert.isTrue @handler2Called
+    assert.isFalse @handler1Called
+
+  should "restart bubbling on restartBubbling", ->
+    @handler1Called = 0
+    @handler2Called = 0
+    id = @handlerStack.push { keydown: => @handler1Called++; @handlerStack.remove(id); @handlerStack.restartBubbling }
+    @handlerStack.push { keydown: => @handler2Called++; true  }
+    assert.isTrue @handlerStack.bubbleEvent 'keydown', {}
+    assert.isTrue @handler1Called == 1
+    assert.isTrue @handler2Called == 2
+
   should "remove handlers correctly", ->
     @handlerStack.push { keydown: => @handler1Called = true }
     handlerId = @handlerStack.push { keydown: => @handler2Called = true }

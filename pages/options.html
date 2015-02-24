@@ -1,279 +1,84 @@
 <html>
   <head>
     <title>Vimium Options</title>
-    <script src="../lib/utils.js"></script>
-    <script src="../lib/keyboard_utils.js"></script>
-    <script src="../lib/dom_utils.js"></script>
-    <script src="../lib/handler_stack.js"></script>
-    <script src="../lib/clipboard.js"></script>
-    <script src="../content_scripts/link_hints.js"></script>
-    <script src="../content_scripts/vomnibar.js"></script>
-    <script src="../content_scripts/scroller.js"></script>
-    <script src="../content_scripts/vimium_frontend.js"></script>
-    <style type="text/css" media="screen">
-      body {
-        font: 14px "DejaVu Sans", "Arial", sans-serif;
-        color: #303942;
-        width: 680px;
-        margin: 0 auto;
-      }
-      a, a:visited { color: #15c; }
-      a:active { color: #052577; }
-      div#wrapper { width: 500px; }
-      header {
-        font-size: 18px;
-        font-weight: normal;
-        border-bottom: 1px solid #eee;
-        padding: 20px 0 15px 0;
-        width: 100%;
-      }
-      button {
-        -webkit-user-select: none;
-        -webkit-appearance: none;
-        background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
-        border: 1px solid rgba(0, 0, 0, 0.25);
-        border-radius: 2px;
-        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
-        color: #444;
-        font: inherit;
-        text-shadow: 0 1px 0 #f0f0f0;
-        height: 24px;
-        font-size: 12px;
-        padding: 0 10px;
-      }
-      button:hover {
-        background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
-        border-color: rgba(0, 0, 0, 0.3);
-        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-        color: black;
-      }
-      button:active {
-        background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
-        box-shadow: none;
-        text-shadow: none;
-      }
-      button[disabled], button[disabled]:hover, button[disabled]:active {
-        background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
-        border: 1px solid rgba(0, 0, 0, 0.25);
-        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
-        text-shadow: 0 1px 0 #f0f0f0;
-        color: #888;
-      }
-      input[type="checkbox"] {
-        -webkit-user-select: none;
-      }
-      label:hover {
-        color: black;
-      }
-      pre, code, .code {
-        font-family: Consolas, "Liberation Mono", Courier, monospace;
-      }
-      pre {
-        margin: 5px;
-        border-left: 1px solid #eee;
-        padding-left: 5px;
-
-      }
-      input, textarea {
-        box-sizing: border-box;
-      }
-      textarea {
-        /* Horizontal resizing is pretty screwy-looking. */
-        resize: vertical;
-      }
-      table#options{
-        width: 100%;
-        font-size: 14px;
-        position: relative;
-        border-spacing: 0 23px;
-      }
-      .example {
-        font-size: 12px;
-        line-height: 16px;
-        color: #979ca0;
-        margin-left: 20px;
-      }
-      .caption {
-        margin-right: 10px;
-        min-width: 130px;
-      }
-      td { padding: 0; }
-      div#exampleKeyMapping {
-        margin-left: 10px;
-        margin-top: 5px;
-      }
-      input#linkHintCharacters {
-        width: 160px;
-      }
-      input#scrollStepSize {
-        width: 40px;
-        margin-right: 3px;
-      }
-      textarea#userDefinedLinkHintCss {
-        width: 100%;;
-        min-height: 100px;
-      }
-      textarea#keyMappings {
-        width: 100%;
-        min-height: 135px;
-      }
-      textarea#searchEngines {
-        width: 100%;
-        min-height: 135px;
-      }
-      input#previousPatterns, input#nextPatterns {
-        width: 100%;
-      }
-      input#searchUrl {
-        width: 100%;
-      }
-      #status {
-        margin-left: 10px;
-        font-size: 80%;
-      }
-      /* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-      td:first-child {
-        width: 1px;
-        white-space: nowrap;
-      }
-      #buttonsPanel { width: 100%; }
-      #advancedOptions { display: none; }
-      #advancedOptionsLink { line-height: 24px; }
-      #buttonContainer { float: right; }
-      #buttonContainer button:last-child {
-        margin-right: 0;
-      }
-      #showHelpDialogMessage { width: 100%; }
-      .help {
-        position: absolute;
-        right: -320px;
-        width: 320px;
-      }
-      input:read-only {
-        background-color: #eee;
-        color: #666;
-        pointer-events: none;
-        -webkit-user-select: none;
-      }
-      input[type="text"], textarea {
-        border: 1px solid #bfbfbf;
-        border-radius: 2px;
-        color: #444;
-        font: inherit;
-        padding: 3px;
-      }
-      button:focus, input[type="text"]:focus, textarea:focus {
-        -webkit-transition: border-color 200ms;
-        border-color: #4d90fe;
-        outline: none;
-      }
-      /* Boolean options have a tighter form representation than text options. */
-      td.booleanOption { font-size: 12px; }
-      footer {
-        padding: 15px 0;
-        border-top: 1px solid #eee;
-      }
-      /* Ids and classes for rendering exclusionRules */
-      #exclusionScrollBox {
-        overflow: scroll;
-        overflow-x: hidden;
-        overflow-y: auto;
-        height: 225px;
-        border: 1px solid #bfbfbf;
-        border-radius: 2px;
-        color: #444;
-      }
-      input.pattern, input.passKeys {
-        font-family: Consolas, "Liberation Mono", Courier, monospace;
-        font-size: 14px;
-      }
-      .pattern {
-        width: 250px;
-      }
-      .passKeys {
-        width: 120px;
-      }
-      #exclusionAddButton {
-        float: right;
-        margin-top: 5px;
-        margin-right: 0px;
-      }
-    </style>
-  <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
-
-  <script type="text/javascript" src="options.js"></script>
-
+    <link rel="stylesheet" type="text/css" href="options.css">
+    <script src="content_script_loader.js"></script>
+    <script type="text/javascript" src="options.js"></script>
   </head>
 
   <body>
     <div id="wrapper">
-      <header>Vimium options</header>
+      <header>Vimium Options</header>
       <table id="options">
         <tr>
-          <td class="caption">Scroll step size</td>
-          <td>
-            <input id="scrollStepSize" type="number" />px
-          </td>
-        </tr>
-        <tr>
-          <td>Excluded URLs<br/>and keys</td>
+          <td class="caption">Excluded URLs<br/>and keys</td>
           <td>
             <div class="help">
               <div class="example">
-                <p>
-                   The left column contains URL patterns.  Vimium will be wholly or partially disabled for URLs matching these patterns.  Patterns are Javascript regular expressions.  Additionally, the character "*" matches any zero or more characters.
-                </p>
-                <p>
-                   The right column contains keys which Vimium would would normally handle, but should instead be passed through to the underlying web page (for pages matching the corresponding pattern).  If empty, then Vimium is wholly disabled.
-                </p>
+                Wholly or partially disable Vimium.  "Patterns" are URL regular expressions;
+                additionally, "*" matches any zero or more characters.
+                <br/><br/>
+                If "Keys" is left empty, then vimium is wholly disabled.
+                Otherwise, just the listed keys are disabled (they are passed through).
               </div>
             </div>
             <div>
                <div id="exclusionScrollBox">
-                  <table id="exclusionRules"></table>
-                  <template id="exclusionRuleTemplate">
-                    <tr>
-                       <td><input/ type="text" class="pattern" placeholder="URL pattern"></td>
-                       <td><input/ type="text" class="passKeys" placeholder="Exclude keys"></td>
-                       <td><input/ type="button" class="exclusionRemoveButton" value="&#x2716;"></td>
-                    </tr>
-                  </template>
+                  <!-- Populated from exclusions.html by options.coffee. -->
                </div>
                <button id="exclusionAddButton">Add Rule</button>
             </div>
           </td>
         </tr>
-        <tbody id='advancedOptions'>
-          <tr>
-            <td class="caption">Custom key<br/>mappings</td>
-            <td id="mappingsHelp" verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  <!-- TODO(ilya/philc): Expand this and style it better. -->
-                  Enter commands to remap your keys. Available commands:<br/>
-                  <pre id="exampleKeyMapping">
+        <tr>
+          <td class="caption">Custom key<br/>mappings</td>
+          <td id="mappingsHelp" verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                <!-- TODO(ilya/philc): Expand this and style it better. -->
+                Enter commands to remap your keys. Available commands:<br/>
+                <pre id="exampleKeyMapping">
 map j scrollDown
 unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-                  <a href="#" id="showCommands">Show available commands.</a>
-                </div>
+                <a href="#" id="showCommands">Show available commands.</a>
               </div>
-              <textarea id="keyMappings" type="text"></textarea>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">CSS for link hints</td>
-            <td verticalAlign="top">
+            </div>
+            <textarea id="keyMappings" type="text"></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">Custom search<br/>engines</td>
+          <td verticalAlign="top">
               <div class="help">
                 <div class="example">
-                  The CSS used to style the characters next to each link hint.<br/><br/>
-                  Note: these styles are used in addition to and take precedence over Vimium's
-                  default styles.
+                  Add search-engine shortcuts to the Vomnibar. Format:<br/>
+                  <pre>
+a: http://a.com/?q=%s
+b: http://b.com/?q=%s description
+" this is a comment
+# this is also a comment</pre>
+                  %s is replaced with the search terms.
                 </div>
               </div>
-              <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+              <textarea id="searchEngines"></textarea>
+          </td>
+        </tr>
+        <tr>
+           <td colspan="2"><a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a></td>
+        </tr>
+        <tbody id='advancedOptions'>
+          <tr>
+            <td class="caption">Scroll step size</td>
+            <td>
+                <div class="help">
+                  <div class="example">
+                    The size for basic movements (usually j/k/h/l).
+                  </div>
+                </div>
+              <input id="scrollStepSize" type="number" />px
             </td>
           </tr>
           <tr>
@@ -281,35 +86,31 @@ unmapAll
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    The characters placed next to each link after typing "F" to enter link hinting mode.
+                    The characters placed next to each link after typing "f" to enter link-hint mode.
                   </div>
                 </div>
                 <input id="linkHintCharacters" type="text" />
+                <div class="nonEmptyTextOption">
             </td>
           </tr>
           <tr>
-            <td class="caption">Numbers used<br/> for filtered link hints</td>
+            <td class="caption">Numbers used<br/> for link hints</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    The numbers placed next to each link after typing "F" to enter link hinting mode.
+                    The numbers placed next to each link after typing "f" to enter link-hint mode.
                   </div>
                 </div>
                 <input id="linkHintNumbers" type="text" />
+                <div class="nonEmptyTextOption">
             </td>
           </tr>
           <tr>
-            <td class="caption"></td>
+            <td class="caption" verticalAlign="top">Miscellaneous<br/>options</td>
             <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  After typing "F" to enter link hinting mode, this option lets you type the text of a link
-                  to select it.
-                </div>
-              </div>
               <label>
-                <input id="filterLinkHints" type="checkbox"/>
-                Use the link's name and numbers for link hint filtering
+                <input id="smoothScroll" type="checkbox"/>
+                Use smooth scrolling
               </label>
             </td>
           </tr>
@@ -318,7 +119,35 @@ unmapAll
             <td verticalAlign="top" class="booleanOption">
               <div class="help">
                 <div class="example">
-                  The Heads-Up Display appears when typing into text boxes.
+                  In link-hint mode, this option lets you also select a link by typing its text.
+                </div>
+              </div>
+              <label>
+                <input id="filterLinkHints" type="checkbox"/>
+                Use the link's name and numbers for link-hint filtering
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption"></td>
+            <td verticalAlign="top" class="booleanOption">
+              <div class="help">
+                <div class="example">
+                  Prevent pages from focusing an input on load (e.g. Google, Bing, etc.).
+                </div>
+              </div>
+              <label>
+                <input id="grabBackFocus" type="checkbox"/>
+                Don't let pages steal the focus on load
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption"></td>
+            <td verticalAlign="top" class="booleanOption">
+              <div class="help">
+                <div class="example">
+                  When enabled, the HUD will not be displayed.
                 </div>
               </div>
               <label>
@@ -337,76 +166,97 @@ unmapAll
               </div>
               <label>
                 <input id="regexFindMode" type="checkbox"/>
-                Treat find queries as regular expressions.
+                Treat find queries as regular expressions
               </label>
             </td>
           </tr>
           <tr>
-            <td class="caption">Previous Patterns</td>
+            <td class="caption">Previous patterns</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    Vimium will match against these patterns when using the "navigate to the previous page"
-                    command.
+                    The "navigate to previous page" command uses these patterns to find the link to follow.
                   </div>
                 </div>
                 <input id="previousPatterns" type="text" />
+                <div class="nonEmptyTextOption">
             </td>
           </tr>
           <tr>
-            <td class="caption">Next Patterns</td>
+            <td class="caption">Next patterns</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    Vimium will match against these patterns when using the "navigate to the next page" command.
+                    The "navigate to next page" command uses these patterns to find the link to follow.
                   </div>
                 </div>
                 <input id="nextPatterns" type="text" />
+                <div class="nonEmptyTextOption">
             </td>
           </tr>
           <tr>
-            <td class="caption">Default Search<br/>Engine</td>
+            <td class="caption">New tab URL</td>
             <td verticalAlign="top">
                 <div class="help">
                   <div class="example">
-                    The search engine which is used when searching from the Vomnibar
-                    (e.g.: "http://duckduckgo.com/?q=").
+                      The page to open with the "create new tab" command.
+                      Set this to "<tt>pages/blank.html</tt>" for a blank page.<br />
+                  </div>
+                </div>
+                <input id="newTabUrl" type="text" />
+                <div class="nonEmptyTextOption">
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Default search<br/>engine</td>
+            <td verticalAlign="top">
+                <div class="help">
+                  <div class="example">
+                     The search engine to use in the Vomnibar <br> (e.g.: "http://duckduckgo.com/?q=").
                   </div>
                 </div>
                 <input id="searchUrl" type="text" />
+                <div class="nonEmptyTextOption">
             </td>
           </tr>
           <tr>
-            <td class="caption">Custom Search<br/>Engines</td>
+            <td class="caption">CSS for link hints</td>
             <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    Use this to add shortcuts for your common search engines when using the Vomnibar.<br/><br/>
-                    The format is:<br/>
-                    <pre>your-keyword: http://the-site.com/?q=%s</pre>
-                    %s will be replaced with your search term.<br/>
-                    Lines which start with "#" are comments.
-                  </div>
+              <div class="help">
+                <div class="example">
+                  The CSS used to style the characters next to each link hint.<br/><br/>
+                  These styles are used in addition to and take precedence over Vimium's
+                  default styles.
                 </div>
-                <textarea id="searchEngines"></textarea>
+              </div>
+              <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+              <div class="nonEmptyTextOption">
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
 
-      <div id="buttonsPanel">
-        <a href="#" id="advancedOptionsLink">Show advanced options&hellip;</a>
-        <div id="buttonContainer">
-          <button id="restoreSettings">Restore to Defaults</button>
-          <button id="saveOptions" disabled="true">Save Options</button>
-        </div>
+    <!-- Some extra space which is hidden underneath the footer. -->
+    <div id="endSpace"/>
+
+    <div id="footer">
+      <div id="footerWrapper">
+        <table id="footerTable">
+          <tr>
+            <td id="footerTableData">
+              <span id="helpText">
+                Type <strong>?</strong> to show the Vimium help dialog.
+                <br/>
+                Type <strong>Ctrl-Enter</strong> to save <i>all</i> options.
+              </span>
+            </td>
+            <td id="saveOptionsTableData">
+              <button id="saveOptions" disabled="true">No Changes</button>
+            </td>
+          </tr>
+        </table>
       </div>
-
-      <br/>
-
-      <footer id="showHelpDialogMessage">
-        To view all available shortcuts, type <strong>?</strong> to show the Vimium help dialog.
-      </footer>
     </div>
   </body>
 </html>

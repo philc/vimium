@@ -58,7 +58,7 @@ Commands =
 
     for line in lines
       continue if (line[0] == "\"" || line[0] == "#")
-      splitLine = line.split(/\s+/)
+      splitLine = line.replace(/\s+$/, "").split(/\s+/)
 
       lineCommand = splitLine[0]
 
@@ -103,7 +103,7 @@ Commands =
       "scrollFullPageUp",
       "scrollFullPageDown",
       "reload",
-      "scrollBack",
+      "scrollBackward",
       "scrollForward",
       "toggleViewSource",
       "copyCurrentUrl",
@@ -113,12 +113,16 @@ Commands =
       "goUp",
       "goToRoot",
       "enterInsertMode",
+      "enterVisualMode",
+      "enterVisualLineMode",
+      # "enterEditMode",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
       "LinkHints.activateModeToOpenInNewForegroundTab",
       "LinkHints.activateModeWithQueue",
       "LinkHints.activateModeToDownloadLink",
+      "LinkHints.activateModeToOpenIncognito",
       "Vomnibar.activate",
       "Vomnibar.activateInNewTab",
       "Vomnibar.activateTabSelection",
@@ -189,8 +193,8 @@ defaultKeyMappings =
   "zL": "scrollToRight"
   "<c-e>": "scrollDown"
   "<c-y>": "scrollUp"
-  "<c-o>": "scrollBack"
-  "g;": "scrollBack"
+  "<c-o>": "scrollBackward"
+  "g;": "scrollBackward"
   "<c-i>": "scrollForward"
 
   "d": "scrollPageDown"
@@ -199,6 +203,9 @@ defaultKeyMappings =
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
+  "v": "enterVisualMode"
+  "V": "enterVisualLineMode"
+  # "gv": "enterEditMode"
 
   "H": "goBack"
   "L": "goForward"
@@ -210,8 +217,6 @@ defaultKeyMappings =
   "f":     "LinkHints.activateMode"
   "F":     "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
-
-  "af": "LinkHints.activateModeToDownloadLink"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -280,7 +285,7 @@ commandDescriptions =
   scrollFullPageDown: ["Scroll a full page down"]
   scrollFullPageUp: ["Scroll a full page up"]
 
-  scrollBack: ["Go to older position in scroll jump history"]
+  scrollBackward: ["Go to older position in scroll jump history"]
   scrollForward: ["Go to newer position in scroll jump history"]
 
   reload: ["Reload the page", { noRepeat: true }]
@@ -292,6 +297,9 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+  enterVisualMode: ["Enter visual mode", { noRepeat: true }]
+  enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
+  # enterEditMode: ["Enter vim-like edit mode (not yet implemented)", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
@@ -326,7 +334,9 @@ commandDescriptions =
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
-  removeTab: ["Close current tab", { background: true, repeatLimit: 50 }]
+  removeTab: ["Close current tab", { background: true, repeatLimit:
+    # Require confirmation to remove more tabs than we can restore.
+    (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }]

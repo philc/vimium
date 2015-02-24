@@ -14,12 +14,22 @@ page.onConsoleMessage = (msg) ->
   console.log msg
 
 page.onError = (msg, trace) ->
-  console.log(msg);
+  console.log(msg)
   trace.forEach (item) ->
     console.log('  ', item.file, ':', item.line)
 
 page.onResourceError = (resourceError) ->
   console.log(resourceError.errorString)
+
+page.onCallback = (request) ->
+  switch request.request
+    when "keyboard"
+      switch request.key
+        when "escape"
+          page.sendEvent "keydown", page.event.key.Escape
+          page.sendEvent "keyup", page.event.key.Escape
+        else
+          page.sendEvent "keypress", request.key
 
 testfile = path.join(path.dirname(system.args[0]), 'dom_tests.html')
 page.open testfile, (status) ->

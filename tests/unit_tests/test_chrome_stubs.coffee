@@ -5,10 +5,10 @@
 # It also provides stubs for a number of other chrome APIs.
 #
 
-global.window = {}
-global.localStorage = {}
+exports.window = {}
+exports.localStorage = {}
 
-global.chrome =
+exports.chrome =
   runtime:
     getManifest: () ->
       version: "1.2.3"
@@ -30,6 +30,10 @@ global.chrome =
       addListener: () -> true
     onActiveChanged:
       addListener: () -> true
+    onActivated:
+      addListener: () -> true
+    onReplaced:
+      addListener: () -> true
     query: () -> true
 
   windows:
@@ -37,7 +41,15 @@ global.chrome =
       addListener: () -> true
     getAll: () -> true
 
+  browserAction:
+    setBadgeBackgroundColor: ->
   storage:
+    # chrome.storage.local
+    local:
+      get: ->
+      set: ->
+      remove: ->
+
     # chrome.storage.onChanged
     onChanged:
       addListener: (func) -> @func = func
@@ -55,6 +67,9 @@ global.chrome =
           items = {}
           items[key] = {}
           @func(items,'synced storage stub')
+
+    session:
+      MAX_SESSION_RESULTS: 25
 
     # chrome.storage.sync
     sync:

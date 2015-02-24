@@ -21,6 +21,8 @@ class Suggestion
   # - extraRelevancyData: data (like the History item itself) which may be used by the relevancy function.
   constructor: (@queryTerms, @type, @url, @title, @computeRelevancyFunction, @extraRelevancyData) ->
     @title ||= ""
+    # When @autoSelect is truthy, the suggestion is automatically pre-selected in the vomnibar.
+    @autoSelect = false
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
@@ -39,6 +41,12 @@ class Suggestion
         #{relevancyHtml}
       </div>
       """
+
+  # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
+  getUrlRoot: (url) ->
+    a = document.createElement 'a'
+    a.href = url
+    a.protocol + "//" + a.hostname
 
   shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
 
@@ -230,7 +238,7 @@ class DomainCompleter
       onComplete()
 
   onPageVisited: (newPage) ->
-    domain = @parseDomain(newPage.url)
+    domain = @parseDomainAndScheme newPage.url
     if domain
       slot = @domains[domain] ||= { entry: newPage, referenceCount: 0 }
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
@@ -242,14 +250,57 @@ class DomainCompleter
       @domains = {}
     else
       toRemove.urls.forEach (url) =>
-        domain = @parseDomain(url)
+        domain = @parseDomainAndScheme url
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
 
-  parseDomain: (url) -> url.split("/")[2] || ""
+  # Return something like "http://www.example.com" or false.
+  parseDomainAndScheme: (url) ->
+      Utils.hasFullUrlPrefix(url) and not Utils.hasChromePrefix(url) and url.split("/",3).join "/"
 
   # Suggestions from the Domain completer have the maximum relevancy. They should be shown first in the list.
   computeRelevancy: -> 1
+
+# TabRecency associates a logical timestamp with each tab id.  These are used to provide an initial
+# recency-based ordering in the tabs vomnibar (which allows jumping quickly between recently-visited tabs).
+class TabRecency
+  timestamp: 1
+  current: -1
+  cache: {}
+  lastVisited: null
+  lastVisitedTime: null
+  timeDelta: 500 # Milliseconds.
+
+  constructor: ->
+    chrome.tabs.onActivated.addListener (activeInfo) => @register activeInfo.tabId
+    chrome.tabs.onRemoved.addListener (tabId) => @deregister tabId
+
+    chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) =>
+      @deregister removedTabId
+      @register addedTabId
+
+  register: (tabId) ->
+    currentTime = new Date()
+    # Register tabId if it has been visited for at least @timeDelta ms.  Tabs which are visited only for a
+    # very-short time (e.g. those passed through with `5J`) aren't registered as visited at all.
+    if @lastVisitedTime? and @timeDelta <= currentTime - @lastVisitedTime
+      @cache[@lastVisited] = ++@timestamp
+
+    @current = @lastVisited = tabId
+    @lastVisitedTime = currentTime
+
+  deregister: (tabId) ->
+    if tabId == @lastVisited
+      # Ensure we don't register this tab, since it's going away.
+      @lastVisited = @lastVisitedTime = null
+    delete @cache[tabId]
+
+  # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
+  recencyScore: (tabId) ->
+    @cache[tabId] ||= 1
+    if tabId == @current then 0.0 else @cache[tabId] / @timestamp
+
+tabRecency = new TabRecency()
 
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
@@ -265,18 +316,28 @@ class TabCompleter
       onComplete(suggestions)
 
   computeRelevancy: (suggestion) ->
-    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    if suggestion.queryTerms.length
+      RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    else
+      tabRecency.recencyScore(suggestion.tabId)
 
 # A completer which will return your search engines
 class SearchEngineCompleter
   searchEngines: {}
 
   filter: (queryTerms, onComplete) ->
-    searchEngineMatch = this.getSearchEngineMatches(queryTerms[0])
+    {url: url, description: description} = @getSearchEngineMatches queryTerms
     suggestions = []
-    if searchEngineMatch
-      searchEngineMatch = searchEngineMatch.replace(/%s/g, queryTerms[1..].join(" "))
-      suggestion = new Suggestion(queryTerms, "search", searchEngineMatch, queryTerms[0] + ": " + queryTerms[1..].join(" "), @computeRelevancy)
+    if url
+      url = url.replace(/%s/g, Utils.createSearchQuery queryTerms[1..])
+      if description
+        type = description
+        query = queryTerms[1..].join " "
+      else
+        type = "search"
+        query = queryTerms[0] + ": " + queryTerms[1..].join(" ")
+      suggestion = new Suggestion(queryTerms, type, url, query, @computeRelevancy)
+      suggestion.autoSelect = true
       suggestions.push(suggestion)
     onComplete(suggestions)
 
@@ -285,8 +346,8 @@ class SearchEngineCompleter
   refresh: ->
     this.searchEngines = root.Settings.getSearchEngines()
 
-  getSearchEngineMatches: (queryTerm) ->
-    this.searchEngines[queryTerm]
+  getSearchEngineMatches: (queryTerms) ->
+    (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
@@ -538,3 +599,4 @@ root.SearchEngineCompleter = SearchEngineCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache
+root.TabRecency = TabRecency

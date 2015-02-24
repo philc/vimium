@@ -1,5 +1,5 @@
 require "./test_helper.js"
-require "./test_chrome_stubs.js"
+extend global, require "./test_chrome_stubs.js"
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.43'
 extend(global, require "../../background_scripts/sync.js")
@@ -45,7 +45,29 @@ context "convertToUrl",
 
   should "convert non-URL terms into search queries", ->
     assert.equal "http://www.google.com/search?q=google", Utils.convertToUrl("google")
-    assert.equal "http://www.google.com/search?q=go%20ogle.com", Utils.convertToUrl("go ogle.com")
+    assert.equal "http://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com")
+    assert.equal "http://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter")
+
+context "hasChromePrefix",
+  should "detect chrome prefixes of URLs", ->
+    assert.isTrue Utils.hasChromePrefix "about:foobar"
+    assert.isTrue Utils.hasChromePrefix "view-source:foobar"
+    assert.isTrue Utils.hasChromePrefix "chrome-extension:foobar"
+    assert.isTrue Utils.hasChromePrefix "data:foobar"
+    assert.isTrue Utils.hasChromePrefix "data:"
+    assert.isFalse Utils.hasChromePrefix ""
+    assert.isFalse Utils.hasChromePrefix "about"
+    assert.isFalse Utils.hasChromePrefix "view-source"
+    assert.isFalse Utils.hasChromePrefix "chrome-extension"
+    assert.isFalse Utils.hasChromePrefix "data"
+    assert.isFalse Utils.hasChromePrefix "data :foobar"
+
+context "isUrl",
+  should "identify URLs as URLs", ->
+    assert.isTrue Utils.isUrl "http://www.example.com/blah"
+
+  should "identify non-URLs and non-URLs", ->
+    assert.isFalse Utils.isUrl "http://www.example.com/ blah"
 
 context "Function currying",
   should "Curry correctly", ->

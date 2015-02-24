@@ -1,16 +1,38 @@
-#
-# Dispatching keyboard events via the DOM would require async tests,
-# which tend to be more complicated. Here we create mock events and
-# invoke the handlers directly.
-#
-mockKeyboardEvent = (keyChar) ->
-  event = {}
-  event.charCode = (if keyCodes[keyChar] isnt undefined then keyCodes[keyChar] else keyChar.charCodeAt(0))
-  event.keyIdentifier = "U+00" + event.charCode.toString(16)
-  event.keyCode = event.charCode
-  event.stopPropagation = ->
-  event.preventDefault = ->
-  event
+
+# Install frontend event handlers.
+initializeWhenEnabled()
+
+installListener = (element, event, callback) ->
+  element.addEventListener event, (-> callback.apply(this, arguments)), true
+
+# A count of the number of keyboard events received by the page (for the most recently-sent keystroke).  E.g.,
+# we expect 3 if the keystroke is passed through (keydown, keypress, keyup), and 0 if it is suppressed.
+pageKeyboardEventCount = 0
+
+sendKeyboardEvent = (key) ->
+  pageKeyboardEventCount = 0
+  response = window.callPhantom
+    request: "keyboard"
+    key: key
+
+# These listeners receive events after the main frontend listeners, and do not receive suppressed events.
+for type in [ "keydown", "keypress", "keyup" ]
+  installListener window, type, (event) ->
+    pageKeyboardEventCount += 1
+
+# Some tests have side effects on the handler stack and the active mode, so these are reset on setup.
+initializeModeState = ->
+  Mode.reset()
+  handlerStack.reset()
+  initializeModes()
+  # We use "m" as the only mapped key, "p" as a passkey, and "u" as an unmapped key.
+  refreshCompletionKeys
+    completionKeys: "mp"
+  handlerStack.bubbleEvent "registerStateChange",
+    enabled: true
+    passKeys: "p"
+  handlerStack.bubbleEvent "registerKeyQueue",
+    keyQueue: ""
 
 #
 # Retrieve the hint markers as an array object.
@@ -27,6 +49,7 @@ createGeneralHintTests = (isFilteredMode) ->
   context "Link hints",
 
     setup ->
+      initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>"
       document.getElementById("test-div").innerHTML = testContent
       stub settings.values, "filterLinkHints", false
@@ -64,6 +87,7 @@ createGeneralHintTests true
 context "Alphabetical link hints",
 
   setup ->
+    initializeModeState()
     stub settings.values, "filterLinkHints", false
     stub settings.values, "linkHintCharacters", "ab"
 
@@ -86,7 +110,7 @@ context "Alphabetical link hints",
 
   should "narrow the hints", ->
     hintMarkers = getHintMarkers()
-    LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("A")
+    sendKeyboardEvent "A"
     assert.equal "none", hintMarkers[1].style.display
     assert.equal "", hintMarkers[0].style.display
 
@@ -99,6 +123,7 @@ context "Filtered link hints",
   context "Text hints",
 
     setup ->
+      initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>" + "<a>trait</a>" + "<a>track<img alt='alt text'/></a>"
       document.getElementById("test-div").innerHTML = testContent
       LinkHints.init()
@@ -115,17 +140,18 @@ context "Filtered link hints",
 
     should "narrow the hints", ->
       hintMarkers = getHintMarkers()
-      LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("T")
-      LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("R")
+      sendKeyboardEvent "T"
+      sendKeyboardEvent "R"
       assert.equal "none", hintMarkers[0].style.display
       assert.equal "1", hintMarkers[1].hintString
       assert.equal "", hintMarkers[1].style.display
-      LinkHints.onKeyDownInMode hintMarkers, mockKeyboardEvent("A")
+      sendKeyboardEvent "A"
       assert.equal "2", hintMarkers[3].hintString
 
   context "Image hints",
 
     setup ->
+      initializeModeState()
       testContent = "<a><img alt='alt text'/></a><a><img alt='alt text' title='some title'/></a>
         <a><img title='some title'/></a>" + "<a><img src='' width='320px' height='100px'/></a>"
       document.getElementById("test-div").innerHTML = testContent
@@ -145,6 +171,7 @@ context "Filtered link hints",
   context "Input hints",
 
     setup ->
+      initializeModeState()
       testContent = "<input type='text' value='some value'/><input type='password' value='some value'/>
         <textarea>some text</textarea><label for='test-input'/>a label</label>
         <input type='text' id='test-input' value='some value'/>
@@ -167,6 +194,7 @@ context "Filtered link hints",
 context "Input focus",
 
   setup ->
+    initializeModeState()
     testContent = "<input type='text' id='first'/><input style='display:none;' id='second'/>
       <input type='password' id='third' value='some value'/>"
     document.getElementById("test-div").innerHTML = testContent
@@ -174,15 +202,31 @@ context "Input focus",
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
 
-  should "focus the right element", ->
+  should "focus the first element", ->
     focusInput 1
     assert.equal "first", document.activeElement.id
-    # deactivate the tabbing mode and its overlays
-    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
 
+  should "focus the nth element", ->
     focusInput 100
     assert.equal "third", document.activeElement.id
-    handlerStack.bubbleEvent 'keydown', mockKeyboardEvent("A")
+
+  should "activate insert mode on the first element", ->
+    focusInput 1
+    assert.isTrue InsertMode.permanentInstance.isActive()
+
+  should "activate insert mode on the first element", ->
+    focusInput 100
+    assert.isTrue InsertMode.permanentInstance.isActive()
+
+  should "activate the most recently-selected input if the count is 1", ->
+    focusInput 3
+    focusInput 1
+    assert.equal "third", document.activeElement.id
+
+  should "not trigger insert if there are no inputs", ->
+    document.getElementById("test-div").innerHTML = ""
+    focusInput 1
+    assert.isFalse InsertMode.permanentInstance.isActive()
 
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
 # a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
@@ -193,6 +237,7 @@ context "Input focus",
 context "Find prev / next links",
 
   setup ->
+    initializeModeState()
     window.location.hash = ""
 
   should "find exact matches", ->
@@ -243,9 +288,251 @@ context "Find prev / next links",
     goNext()
     assert.equal '#first', window.location.hash
 
-
 createLinks = (n) ->
   for i in [0...n] by 1
     link = document.createElement("a")
     link.textContent = "test"
     document.getElementById("test-div").appendChild link
+
+context "Normal mode",
+  setup ->
+    initializeModeState()
+
+  should "suppress mapped keys", ->
+    sendKeyboardEvent "m"
+    assert.equal pageKeyboardEventCount, 0
+
+  should "not suppress unmapped keys", ->
+    sendKeyboardEvent "u"
+    assert.equal pageKeyboardEventCount, 3
+
+  should "not suppress escape", ->
+    sendKeyboardEvent "escape"
+    assert.equal pageKeyboardEventCount, 2
+
+  should "not suppress passKeys", ->
+    sendKeyboardEvent "p"
+    assert.equal pageKeyboardEventCount, 3
+
+  should "suppress passKeys with a non-empty keyQueue", ->
+    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "p"
+    sendKeyboardEvent "p"
+    assert.equal pageKeyboardEventCount, 0
+
+context "Insert mode",
+  setup ->
+    initializeModeState()
+    @insertMode = new InsertMode global: true
+
+  should "not suppress mapped keys in insert mode", ->
+    sendKeyboardEvent "m"
+    assert.equal pageKeyboardEventCount, 3
+
+  should "exit on escape", ->
+    assert.isTrue @insertMode.modeIsActive
+    sendKeyboardEvent "escape"
+    assert.isFalse @insertMode.modeIsActive
+
+  should "resume normal mode after leaving insert mode", ->
+    @insertMode.exit()
+    sendKeyboardEvent "m"
+    assert.equal pageKeyboardEventCount, 0
+
+context "Triggering insert mode",
+  setup ->
+    initializeModeState()
+
+    testContent = "<input type='text' id='first'/>
+      <input style='display:none;' id='second'/>
+      <input type='password' id='third' value='some value'/>
+      <p id='fourth' contenteditable='true'/>
+      <p id='fifth'/>"
+    document.getElementById("test-div").innerHTML = testContent
+
+  tearDown ->
+    document.activeElement?.blur()
+    document.getElementById("test-div").innerHTML = ""
+
+  should "trigger insert mode on focus of text input", ->
+    assert.isFalse InsertMode.permanentInstance.isActive()
+    document.getElementById("first").focus()
+    assert.isTrue InsertMode.permanentInstance.isActive()
+
+  should "trigger insert mode on focus of password input", ->
+    assert.isFalse InsertMode.permanentInstance.isActive()
+    document.getElementById("third").focus()
+    assert.isTrue InsertMode.permanentInstance.isActive()
+
+  should "trigger insert mode on focus of contentEditable elements", ->
+    assert.isFalse InsertMode.permanentInstance.isActive()
+    document.getElementById("fourth").focus()
+    assert.isTrue InsertMode.permanentInstance.isActive()
+
+  should "not trigger insert mode on other elements", ->
+    assert.isFalse InsertMode.permanentInstance.isActive()
+    document.getElementById("fifth").focus()
+    assert.isFalse InsertMode.permanentInstance.isActive()
+
+context "Mode utilities",
+  setup ->
+    initializeModeState()
+
+    testContent = "<input type='text' id='first'/>
+      <input style='display:none;' id='second'/>
+      <input type='password' id='third' value='some value'/>"
+    document.getElementById("test-div").innerHTML = testContent
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "not have duplicate singletons", ->
+    count = 0
+
+    class Test extends Mode
+      constructor: -> count += 1; super singleton: Test
+      exit: -> count -= 1; super()
+
+    assert.isTrue count == 0
+    for [1..10]
+      mode = new Test()
+      assert.isTrue count == 1
+
+    mode.exit()
+    assert.isTrue count == 0
+
+  should "exit on escape", ->
+    test = new Mode exitOnEscape: true
+
+    assert.isTrue test.modeIsActive
+    sendKeyboardEvent "escape"
+    assert.equal pageKeyboardEventCount, 0
+    assert.isFalse test.modeIsActive
+
+  should "not exit on escape if not enabled", ->
+    test = new Mode exitOnEscape: false
+
+    assert.isTrue test.modeIsActive
+    sendKeyboardEvent "escape"
+    assert.equal pageKeyboardEventCount, 2
+    assert.isTrue test.modeIsActive
+
+  should "exit on blur", ->
+    element = document.getElementById("first")
+    element.focus()
+    test = new Mode exitOnBlur: element
+
+    assert.isTrue test.modeIsActive
+    element.blur()
+    assert.isFalse test.modeIsActive
+
+  should "not exit on blur if not enabled", ->
+    element = document.getElementById("first")
+    element.focus()
+    test = new Mode exitOnBlur: false
+
+    assert.isTrue test.modeIsActive
+    element.blur()
+    assert.isTrue test.modeIsActive
+
+  should "register state change", ->
+    test = new Mode trackState: true
+    handlerStack.bubbleEvent "registerStateChange", { enabled: "one", passKeys: "two" }
+
+    assert.isTrue test.enabled == "one"
+    assert.isTrue test.passKeys == "two"
+
+  should "register the keyQueue", ->
+    test = new Mode trackState: true
+    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "hello"
+
+    assert.isTrue test.keyQueue == "hello"
+
+context "PostFindMode",
+  setup ->
+    initializeModeState()
+
+    testContent = "<input type='text' id='first'/>"
+    document.getElementById("test-div").innerHTML = testContent
+    document.getElementById("first").focus()
+    # For these tests, we need to push GrabBackFocus out of the way.  When it exits, it updates the badge,
+    # which interferes with event suppression within insert mode.  This cannot happen in normal operation,
+    # because GrabBackFocus exits on the first keydown.
+    Mode.top().exit()
+    @postFindMode = new PostFindMode
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "be a singleton", ->
+    assert.isTrue @postFindMode.modeIsActive
+    new PostFindMode
+    assert.isFalse @postFindMode.modeIsActive
+
+  should "suppress unmapped printable keys", ->
+    sendKeyboardEvent "m"
+    assert.equal 0, pageKeyboardEventCount
+
+  should "be deactivated on click events", ->
+    handlerStack.bubbleEvent "click", target: document.activeElement
+    assert.isFalse @postFindMode.modeIsActive
+
+  should "enter insert mode on immediate escape", ->
+    sendKeyboardEvent "escape"
+    assert.equal pageKeyboardEventCount, 0
+    assert.isFalse @postFindMode.modeIsActive
+
+  should "not enter insert mode on subsequent escapes", ->
+    sendKeyboardEvent "a"
+    sendKeyboardEvent "escape"
+    assert.isTrue @postFindMode.modeIsActive
+
+context "Mode badges",
+  setup ->
+    initializeModeState()
+    testContent = "<input type='text' id='first'/>"
+    document.getElementById("test-div").innerHTML = testContent
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "have no badge in normal mode", ->
+    Mode.updateBadge()
+    assert.isTrue chromeMessages[0].badge == ""
+
+  should "have an I badge in insert mode by focus", ->
+    document.getElementById("first").focus()
+    assert.isTrue chromeMessages[0].badge == "I"
+
+  should "have no badge after leaving insert mode by focus", ->
+    document.getElementById("first").focus()
+    document.getElementById("first").blur()
+    assert.isTrue chromeMessages[0].badge == ""
+
+  should "have an I badge in global insert mode", ->
+    new InsertMode global: true
+    assert.isTrue chromeMessages[0].badge == "I"
+
+  should "have no badge after leaving global insert mode", ->
+    mode = new InsertMode global: true
+    mode.exit()
+    assert.isTrue chromeMessages[0].badge == ""
+
+  should "have a ? badge in PostFindMode (immediately)", ->
+    document.getElementById("first").focus()
+    new PostFindMode
+    assert.isTrue chromeMessages[0].badge == "?"
+
+  should "have no badge in PostFindMode (subsequently)", ->
+    document.getElementById("first").focus()
+    new PostFindMode
+    sendKeyboardEvent "a"
+    assert.isTrue chromeMessages[0].badge == ""
+
+  should "have no badge when disabled", ->
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: false
+      passKeys: ""
+
+    document.getElementById("first").focus()
+    assert.isTrue chromeMessages[0].badge == ""
+

@@ -25,26 +25,28 @@ Utils =
     id = 0
     -> id += 1
 
-  hasChromePrefix: (url) ->
-    chromePrefixes = [ "about", "view-source", "chrome-extension", "data" ]
-    for prefix in chromePrefixes
-      return true if url.startsWith prefix
-    false
+  hasChromePrefix: do ->
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:", "javascript:" ]
+    (url) ->
+      for prefix in chromePrefixes
+        return true if url.startsWith prefix
+      false
+
+  hasFullUrlPrefix: do ->
+    urlPrefix = new RegExp "^[a-z]{3,}://."
+    (url) -> urlPrefix.test url
 
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
-    unless /^[a-z]{3,}:\/\//.test partialUrl
-      "http://" + partialUrl
-    else
-      partialUrl
+    if @hasFullUrlPrefix(partialUrl) then partialUrl else ("http://" + partialUrl)
 
   # Tries to detect if :str is a valid URL.
   isUrl: (str) ->
-    # Starts with a scheme: URL
-    return true if /^[a-z]{3,}:\/\//.test str
-
     # Must not contain spaces
     return false if ' ' in str
+
+    # Starts with a scheme: URL
+    return true if @hasFullUrlPrefix str
 
     # More or less RFC compliant URL host part parsing. This should be sufficient for our needs
     urlRegex = new RegExp(
@@ -85,18 +87,24 @@ Utils =
     # Fallback: no URL
     return false
 
+  # Map a search query to its URL encoded form. The query may be either a string or an array of strings.
+  # E.g. "BBC Sport" -> "BBC+Sport".
+  createSearchQuery: (query) ->
+    query = query.split(/\s+/) if typeof(query) == "string"
+    query.map(encodeURIComponent).join "+"
+
   # Creates a search URL from the given :query.
   createSearchUrl: (query) ->
-    # it would be better to pull the default search engine from chrome itself,
-    # but it is not clear if/how that is possible
-    Settings.get("searchUrl") + encodeURIComponent(query)
+    # It would be better to pull the default search engine from chrome itself.  However, unfortunately chrome
+    # does not provide an API for doing so.
+    Settings.get("searchUrl") + @createSearchQuery query
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
   convertToUrl: (string) ->
     string = string.trim()
 
-    # Special-case about:[url] and view-source:[url]
+    # Special-case about:[url], view-source:[url] and the like
     if Utils.hasChromePrefix string
       string
     else if Utils.isUrl string
@@ -107,6 +115,12 @@ Utils =
   # detects both literals and dynamically created strings
   isString: (obj) -> typeof obj == 'string' or obj instanceof String
 
+  # Transform "zjkjkabz" into "abjkz".
+  distinctCharacters: (str) ->
+    unique = ""
+    for char in str.split("").sort()
+      unique += char unless 0 <= unique.indexOf char
+    unique
 
   # Compares two version strings (e.g. "1.1" and "1.5") and returns
   # -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.
@@ -122,6 +136,11 @@ Utils =
         return 1
     0
 
+  # True if the current Chrome version is at least the required version.
+  haveChromeVersion: (required) ->
+    chromeVersion = navigator.appVersion.match(/Chrome\/(.*?) /)?[1]
+    chromeVersion and 0 <= Utils.compareVersions chromeVersion, required
+
   # Zip two (or more) arrays:
   #   - Utils.zip([ [a,b], [1,2] ]) returns [ [a,1], [b,2] ]
   #   - Length of result is `arrays[0].length`.
@@ -132,6 +151,23 @@ Utils =
 
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
+
+  # Give objects (including elements) distinct identities.
+  getIdentity: do ->
+    identities = []
+
+    (obj) ->
+      index = identities.indexOf obj
+      if index < 0
+        index = identities.length
+        identities.push obj
+      "identity-" + index
+
+  # Return a copy of object, but with some of its properties omitted.
+  copyObjectOmittingProperties: (obj, properties...) ->
+    obj = extend {}, obj
+    delete obj[property] for property in properties
+    obj
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.

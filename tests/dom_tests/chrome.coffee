@@ -3,19 +3,27 @@
 #
 
 root = exports ? window
+root.chromeMessages = []
 
-root.chrome = {
-  runtime: {
-    connect: -> {
-      onMessage: {
+document.hasFocus = -> true
+
+root.chrome =
+  runtime:
+    connect: ->
+      onMessage:
         addListener: ->
-      }
+      onDisconnect:
+        addListener: ->
       postMessage: ->
-    }
-    onMessage: {
+    onMessage:
       addListener: ->
-    }
-    sendMessage: ->
+    sendMessage: (message) -> chromeMessages.unshift message
     getManifest: ->
-  }
-}
+    getURL: (url) -> "../../#{url}"
+  storage:
+    local:
+      get: ->
+      set: ->
+    sync:
+      get: ->
+      set: ->

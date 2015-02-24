@@ -1,5 +1,5 @@
 require "./test_helper.js"
-require "./test_chrome_stubs.js"
+extend global, require "./test_chrome_stubs.js"
 
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
@@ -70,14 +70,15 @@ context "settings",
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(message) }
     assert.equal message, Sync.message
 
-  should "set search engines, retrieve them correctly and check that it has been parsed correctly", ->
-    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s"
-    parsedSearchEngines = {"foo": "bar?q=%s", "baz": "qux?q=%s"}
+  should "set search engines, retrieve them correctly and check that they have been parsed correctly", ->
+    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
     Settings.set 'searchEngines', searchEngines
-    assert.equal(searchEngines, Settings.get('searchEngines'))
     result = Settings.getSearchEngines()
-    assert.isTrue(parsedSearchEngines["foo"] == result["foo"] &&
-      parsedSearchEngines["baz"] == result["baz"] && Object.keys(result).length == 2)
+    assert.equal Object.keys(result).length, 2
+    assert.equal "bar?q=%s", result["foo"].url
+    assert.isFalse result["foo"].description
+    assert.equal "qux?q=%s", result["baz"].url
+    assert.equal "baz description", result["baz"].description
 
   should "sync a key which is not a known setting (without crashing)", ->
     chrome.storage.sync.set { notASetting: JSON.stringify("notAUsefullValue") }
