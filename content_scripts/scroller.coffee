@@ -176,7 +176,7 @@ CoreScroller =
     @time = 0
     @lastEvent = null
     @keyIsDown = false
-    @activeAnimations = 0
+    @activeAnimations = []
 
     handlerStack.push
       _name: 'scroller/track-key-status'
@@ -200,10 +200,10 @@ CoreScroller =
   maxCalibration: 1.6 # Controls how much we're willing to speed scrolls up; bigger means more speed up.
   calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, or too fast.
 
-  isAnimating: -> @activeAnimations > 0
+  isAnimating: -> @activeAnimations.length > 0
 
   # Scroll element by a relative amount (a number) in some direction.
-  scroll: (element, direction, amount, continuous = true) ->
+  scroll: (element, direction, amount, continuous = true, isJump) ->
     return unless amount
 
     unless @settings.get "smoothScroll"
@@ -231,7 +231,13 @@ CoreScroller =
     calibration = 1.0
     previousTimestamp = null
 
+    if isJump
+      for animation in @activeAnimations
+        animation.cancelled = true
+      @activeAnimations = []
+
     animate = (timestamp) =>
+      return if animate.cancelled
       previousTimestamp ?= timestamp
       return requestAnimationFrame(animate) if timestamp == previousTimestamp
 
@@ -258,14 +264,14 @@ CoreScroller =
       else
         # We're done.
         checkVisibility element
-        @activeAnimations--
+        @activeAnimations.splice @activeAnimations.indexOf(animate, 1)
 
     # If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test always
     # fails.
     ++@time unless continuous
 
     # Launch animator.
-    @activeAnimations++
+    @activeAnimations.push animate
     requestAnimationFrame animate
 
 # Scroller contains the two main scroll functions which are used by clients.
@@ -311,7 +317,7 @@ Scroller =
     amount = newPos - prevPos
     if not CoreScroller.isAnimating()
       JumpHistory.jump(direction, prevPos, newPos, isHistoryPoint)
-    CoreScroller.scroll element, direction, amount
+    CoreScroller.scroll element, direction, amount, true, true
 
   scrollHistory: (direction) ->
     point = JumpHistory.goToPoint(direction)
