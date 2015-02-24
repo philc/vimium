@@ -103,7 +103,7 @@ checkVisibility = (element) ->
   # subsequent scrolls affect the parent element.
   rect = activatedElement.getBoundingClientRect()
   if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
-    setActivatedElement(element)
+    activatedElement = element
 
 JumpHistory =
   maxHistory: 50
