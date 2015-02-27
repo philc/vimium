@@ -165,8 +165,6 @@ openUrlInCurrentTab = (request) ->
 #
 openUrlInNewTab = (request) ->
   chrome.tabs.getSelected(null, (tab) ->
-    # Pass selected tabs windowId to make sure we open in current window.
-    # Fixes issue #1507 Open new tab in incognito mode should open new tab in same window.
     chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true, windowId: tab.windowId }))
 
 openUrlInIncognito = (request) ->
@@ -233,9 +231,6 @@ moveTab = (callback, direction) ->
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  # Using openUrlInNewTab instead of chrome.tabs.create() because of upstread bug #308171.
-  # The function openUrlInNewTab now selects the current tab and uses its windowId while
-  # opening a new tab to force proper window selection.
   createTab: (callback) -> openUrlInNewTab({ url: Settings.get("newTabUrl") })
   duplicateTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
