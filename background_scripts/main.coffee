@@ -349,14 +349,14 @@ chrome.browserAction.setBadgeBackgroundColor
 setBadge = do ->
   current = null
   timer = null
-  updateBadge = (badge) -> -> chrome.browserAction.setBadgeText text: badge
-  (request) ->
+  updateBadge = (badge, tabId) -> -> chrome.browserAction.setBadgeText text: badge, tabId: tabId
+  (request, sender) ->
     badge = request.badge
     if badge? and badge != current
       current = badge
       clearTimeout timer if timer
       # We wait a few moments. This avoids badge flicker when there are rapid changes.
-      timer = setTimeout updateBadge(badge), 50
+      timer = setTimeout updateBadge(badge, sender.tab.id), 50
 
 # Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
 # Also propagates new enabled/disabled/passkeys state to active window, if necessary.
