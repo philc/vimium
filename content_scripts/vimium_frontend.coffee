@@ -186,7 +186,7 @@ initializePreDomReady = ->
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
-    return if request.handler == "registerFrame" or request.handler == "frameFocused"
+    return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
