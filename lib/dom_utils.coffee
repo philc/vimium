@@ -296,7 +296,7 @@ DomUtils =
       coordinates
 
   # Get the text content of an element (and its descendents), but omit the text content of previously-visited
-  # nodes.
+  # nodes.  See #1514.
   # NOTE(smblott).  This is currently O(N^2) (when called on N elements).  An alternative would be to mark
   # each node visited, and then clear the marks when we're done.
   textContent: do ->
