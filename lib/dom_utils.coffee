@@ -295,5 +295,24 @@ DomUtils =
       document.body.removeChild div
       coordinates
 
+  # Get the text content of an element (and its descendents), but omit the text content of previously-visited
+  # nodes.
+  # NOTE(smblott).  This is currently O(N^2) (when called on N elements).  An alternative would be to mark
+  # each node visited, and then clear the marks when we're done.
+  textContent: do ->
+    visitedNodes = null
+    reset: -> visitedNodes = []
+    get: (element) ->
+      nodes = document.createTreeWalker element, NodeFilter.SHOW_TEXT
+      texts =
+        while node = nodes.nextNode()
+          continue unless node.nodeType == 3
+          continue if node in visitedNodes
+          text = node.data.trim()
+          continue unless 0 < text.length
+          visitedNodes.push node
+          text
+      texts.join " "
+
 root = exports ? window
 root.DomUtils = DomUtils
