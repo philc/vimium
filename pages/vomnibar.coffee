@@ -180,7 +180,7 @@ class VomnibarUI
     @completionList.style.display = ""
 
     @input.focus()
-    @input.addEventListener "blur", => @hide()
+    window.addEventListener "blur", => @?hide()
 
 #
 # Sends filter and refresh requests to a Vomnibox completer on the background page.
