@@ -182,6 +182,12 @@ class VomnibarUI
     @completionList.style.display = ""
 
     window.addEventListener "focus", => @input.focus()
+    # A click in the vomnibar itself refocuses the input.
+    @box.addEventListener "click", (event) =>
+      @input.focus()
+      event.stopImmediatePropagation()
+    # A click anywhere else hides the vomnibar.
+    document.body.addEventListener "click", => @hide()
 
 #
 # Sends filter and refresh requests to a Vomnibox completer on the background page.
