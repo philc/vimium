@@ -289,8 +289,8 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
-  enterVisualMode: ["Enter visual mode", { noRepeat: true }]
-  enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
+  enterVisualMode: ["Enter visual mode (beta feature)", { noRepeat: true }]
+  enterVisualLineMode: ["Enter visual line mode (beta feature)", { noRepeat: true }]
   # enterEditMode: ["Enter vim-like edit mode (not yet implemented)", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
