@@ -231,6 +231,8 @@ LinkHints =
     # Remove rects from elements where another clickable element lies above it.
     nonOverlappingElements = []
     # Traverse the DOM from first to last, since later elements show above earlier elements.
+    # NOTE(smblott). filterHints.generateLinkText also assumes this order when generating the content text for
+    # each hint.  Specifically, we consider descendents before we consider their ancestors.
     visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
       rects = [visibleElement.rect]
@@ -469,7 +471,7 @@ filterHints =
       linkText = element.firstElementChild.alt || element.firstElementChild.title
       showLinkText = true if (linkText)
     else
-      linkText = element.textContent || element.innerHTML
+      linkText = DomUtils.textContent.get element
 
     { text: linkText, show: showLinkText }
 
@@ -479,6 +481,7 @@ filterHints =
 
   fillInMarkers: (hintMarkers) ->
     @generateLabelMap()
+    DomUtils.textContent.reset()
     for marker, idx in hintMarkers
       marker.hintString = @generateHintString(idx)
       linkTextObject = @generateLinkText(marker.clickableItem)
