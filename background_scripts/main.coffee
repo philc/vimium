@@ -164,9 +164,13 @@ openUrlInCurrentTab = (request) ->
 # Opens request.url in new tab and switches to it if request.selected is true.
 #
 openUrlInNewTab = (request, callback) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true, windowId: tab.windowId },
-                         (tab) -> callback()))
+  chrome.tabs.getSelected null, (tab) ->
+    tabConfig =
+      url: Utils.convertToUrl request.url
+      index: tab.index + 1
+      selected: true
+      windowId: tab.windowId
+    chrome.tabs.create tabConfig, callback
 
 openUrlInIncognito = (request) ->
   chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
@@ -232,7 +236,7 @@ moveTab = (callback, direction) ->
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  createTab: (callback) -> openUrlInNewTab({ url: Settings.get("newTabUrl") }, (tab) -> callback())
+  createTab: (callback) -> openUrlInNewTab { url: Settings.get("newTabUrl") }, callback
   duplicateTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
