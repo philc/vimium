@@ -29,24 +29,25 @@ class UIComponent
 
   activate: (message) ->
     @postMessage message if message?
-    if @showing
-      # NOTE(smblott) Experimental.  Not sure this is a great idea. If the iframe was already showing, then
-      # the user gets no visual feedback when it is re-focused.  So flash its border.
-      @iframeElement.classList.add "vimiumUIComponentReactivated"
-      setTimeout((=> @iframeElement.classList.remove "vimiumUIComponentReactivated"), 200)
-    else
-      @show()
+    @show() unless @showing
     @iframeElement.focus()
 
   show: (message) ->
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
     @iframeElement.classList.add "vimiumUIComponentShowing"
+    window.addEventListener "focus", @onFocus = (event) =>
+      if event.target == window
+        window.removeEventListener @onFocus
+        @onFocus = null
+        @postMessage "hide"
     @showing = true
 
   hide: (focusWindow = true)->
     @iframeElement.classList.remove "vimiumUIComponentShowing"
     @iframeElement.classList.add "vimiumUIComponentHidden"
+    window.removeEventListener @onFocus if @onFocus
+    @onFocus = null
     window.focus() if focusWindow
     @showing = false
 

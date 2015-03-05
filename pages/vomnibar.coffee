@@ -38,6 +38,8 @@ Vomnibar =
     @vomnibarUI.setQuery(options.query)
     @vomnibarUI.update()
 
+  hide: -> @vomnibarUI?.hide()
+
 class VomnibarUI
   constructor: ->
     @refreshInterval = 0
@@ -225,7 +227,8 @@ extend BackgroundCompleter,
 
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
-UIComponentServer.registerHandler (event) -> Vomnibar.activate event.data
+UIComponentServer.registerHandler (event) ->
+  if event.data == "hide" then Vomnibar.hide() else Vomnibar.activate event.data
 
 root = exports ? window
 root.Vomnibar = Vomnibar
