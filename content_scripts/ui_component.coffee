@@ -38,7 +38,7 @@ class UIComponent
     @iframeElement.classList.add "vimiumUIComponentShowing"
     window.addEventListener "focus", @onFocus = (event) =>
       if event.target == window
-        window.removeEventListener @onFocus
+        window.removeEventListener "focus", @onFocus
         @onFocus = null
         @postMessage "hide"
     @showing = true
@@ -46,7 +46,7 @@ class UIComponent
   hide: (focusWindow = true)->
     @iframeElement.classList.remove "vimiumUIComponentShowing"
     @iframeElement.classList.add "vimiumUIComponentHidden"
-    window.removeEventListener @onFocus if @onFocus
+    window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
     window.focus() if focusWindow
     @showing = false
