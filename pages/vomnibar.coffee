@@ -39,10 +39,12 @@ Vomnibar =
     @vomnibarUI.update()
 
   hide: -> @vomnibarUI?.hide()
+  onHidden: -> @vomnibarUI?.onHidden()
 
 class VomnibarUI
   constructor: ->
     @refreshInterval = 0
+    @postHideCallback = null
     @initDom()
 
   setQuery: (query) -> @input.value = query
@@ -59,13 +61,10 @@ class VomnibarUI
 
   setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
-  # Hide the vomnibar, then call callback.  We add a short delay to allow the vomnibar to close before the
-  # action is performed.  This ensures (hopefully) that the vomnibar isn't visible when the tab is
-  # subsequently refocused (see #1485).
-  hide: (callback = ->) ->
+  hide: (callback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
-    setTimeout callback, 20
+    @postHideCallback = callback
 
   reset: ->
     @completionList.style.display = ""
@@ -73,6 +72,12 @@ class VomnibarUI
     @updateTimer = null
     @completions = []
     @selection = @initialSelectionValue
+
+  # Called after the vomnibar has been hidden.  We wait until after the vomnibar has been hidden to avoid
+  # vomnibar flicker (see #1485).
+  onHidden: ->
+    @postHideCallback?()
+    @postHideCallback = null
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
@@ -238,7 +243,10 @@ extend BackgroundCompleter,
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
 UIComponentServer.registerHandler (event) ->
-  if event.data == "hide" then Vomnibar.hide() else Vomnibar.activate event.data
+  switch event.data
+    when "hide" then Vomnibar.hide()
+    when "hidden" then Vomnibar.onHidden()
+    else Vomnibar.activate event.data
 
 root = exports ? window
 root.Vomnibar = Vomnibar
