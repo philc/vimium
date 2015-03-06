@@ -84,6 +84,47 @@ createGeneralHintTests = (isFilteredMode) ->
 createGeneralHintTests false
 createGeneralHintTests true
 
+inputs = []
+context "Test link hints for focusing input elements correctly",
+
+  setup ->
+    initializeModeState()
+    testDiv = document.getElementById("test-div")
+    testDiv.innerHTML = ""
+
+    stub settings.values, "filterLinkHints", false
+    stub settings.values, "linkHintCharacters", "ab"
+
+    # Every HTML5 input type except for hidden. We should be able to activate all of them with link hints.
+    inputTypes = ["button", "checkbox", "color", "date", "datetime", "datetime-local", "email", "file",
+      "image", "month", "number", "password", "radio", "range", "reset", "search", "submit", "tel", "text",
+      "time", "url", "week"]
+
+    for type in inputTypes
+      input = document.createElement "input"
+      input.type = type
+      testDiv.appendChild input
+      inputs.push input
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "Focus each input when its hint text is typed", ->
+    for input in inputs
+      input.scrollIntoView() # Ensure the element is visible so we create a link hint for it.
+
+      activeListener = ensureCalled (event) ->
+        input.blur() if event.type == "focus"
+      input.addEventListener "focus", activeListener, false
+      input.addEventListener "click", activeListener, false
+
+      LinkHints.activateMode()
+      [hint] = getHintMarkers().filter (hint) -> input == hint.clickableItem
+      sendKeyboardEvent char for char in hint.hintString
+
+      input.removeEventListener "focus", activeListener, false
+      input.removeEventListener "click", activeListener, false
+
 context "Alphabetical link hints",
 
   setup ->
