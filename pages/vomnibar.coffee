@@ -38,6 +38,8 @@ Vomnibar =
     @vomnibarUI.setQuery(options.query)
     @vomnibarUI.update()
 
+  hide: -> @vomnibarUI?.hide()
+
 class VomnibarUI
   constructor: ->
     @refreshInterval = 0
@@ -180,6 +182,12 @@ class VomnibarUI
     @completionList.style.display = ""
 
     window.addEventListener "focus", => @input.focus()
+    # A click in the vomnibar itself refocuses the input.
+    @box.addEventListener "click", (event) =>
+      @input.focus()
+      event.stopImmediatePropagation()
+    # A click anywhere else hides the vomnibar.
+    document.body.addEventListener "click", => @hide()
 
 #
 # Sends filter and refresh requests to a Vomnibox completer on the background page.
@@ -225,7 +233,8 @@ extend BackgroundCompleter,
 
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
-UIComponentServer.registerHandler (event) -> Vomnibar.activate event.data
+UIComponentServer.registerHandler (event) ->
+  if event.data == "hide" then Vomnibar.hide() else Vomnibar.activate event.data
 
 root = exports ? window
 root.Vomnibar = Vomnibar
