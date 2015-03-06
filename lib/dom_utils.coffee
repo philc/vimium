@@ -167,18 +167,17 @@ DomUtils =
       node = node.parentNode
     false
 
-  # True if the current element is editable and contains the active selection range.
+  # True if element is editable and contains the active selection range.
   isSelected: (element) ->
+    selection = document.getSelection()
     if element.isContentEditable
-      node = document.getSelection().anchorNode
+      node = selection.anchorNode
       node and @isDOMDescendant element, node
     else
-      selection = document.getSelection()
       if selection.type == "Range" and selection.isCollapsed
-	# The selection is inside the Shadow DOM of a node. We can check the node it registers as being
-	# before, since this represents the node whose Shadow DOM it's inside.
+	      # The selection is inside the Shadow DOM of a node. We can check the node it registers as being
+	      # before, since this represents the node whose Shadow DOM it's inside.
         containerNode = selection.anchorNode.childNodes[selection.anchorOffset]
-
         element == containerNode # True if the selection is inside the Shadow DOM of our element.
       else
         false
@@ -191,13 +190,12 @@ DomUtils =
       handlerStack.bubbleEvent "click", target: element
     else
       element.focus()
-        # If the cursor is at the start of the element's contents, send it to the end. Motivation:
-        # * the end is a more useful place to focus than the start,
-        # * we've been moving the cursor to the end for quite some time now,
-        # * this way preserves the last used position (except when it's at the beginning), so the user can
-        #   'resume where they left off'.
-        # NOTE(mrmr1993): Some elements throw an error when we try to access their selection properties, so
-        # wrap this with a try.
+      # If the cursor is at the start of the element's contents, send it to the end. Motivation:
+      # * the end is a more useful place to focus than the start,
+      # * this way preserves the last used position (except when it's at the beginning), so the user can
+      #   'resume where they left off'.
+      # NOTE(mrmr1993): Some elements throw an error when we try to access their selection properties, so
+      # wrap this with a try.
       try
         if element.selectionStart == 0 and element.selectionEnd == 0
           element.setSelectionRange element.value.length, element.value.length
