@@ -16,6 +16,8 @@ exports.chrome =
       addListener: () -> true
     onMessage:
       addListener: () -> true
+    onInstalled:
+      addListener: ->
 
   tabs:
     onSelectionChanged:
