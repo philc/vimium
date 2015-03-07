@@ -39,10 +39,12 @@ Vomnibar =
     @vomnibarUI.update()
 
   hide: -> @vomnibarUI?.hide()
+  onHidden: -> @vomnibarUI?.onHidden()
 
 class VomnibarUI
   constructor: ->
     @refreshInterval = 0
+    @postHideCallback = null
     @initDom()
 
   setQuery: (query) -> @input.value = query
@@ -59,9 +61,10 @@ class VomnibarUI
 
   setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
-  hide: ->
+  hide: (callback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
+    @postHideCallback = callback
 
   reset: ->
     @completionList.style.display = ""
@@ -69,6 +72,12 @@ class VomnibarUI
     @updateTimer = null
     @completions = []
     @selection = @initialSelectionValue
+
+  # Called after the vomnibar has been hidden.  We wait until after the vomnibar has been hidden to avoid
+  # vomnibar flicker (see #1485).
+  onHidden: ->
+    @postHideCallback?()
+    @postHideCallback = null
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
@@ -123,15 +132,15 @@ class VomnibarUI
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
-        @hide()
-        chrome.runtime.sendMessage({
-          handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-          url: query })
+        @hide ->
+          chrome.runtime.sendMessage
+            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+            url: query
       else
         @update true, =>
           # Shift+Enter will open the result in a new tab instead of the current tab.
-          @completions[@selection].performAction(openInNewTab)
-          @hide()
+          completion = @completions[@selection]
+          @hide -> completion.performAction openInNewTab
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
@@ -234,7 +243,10 @@ extend BackgroundCompleter,
     switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
 
 UIComponentServer.registerHandler (event) ->
-  if event.data == "hide" then Vomnibar.hide() else Vomnibar.activate event.data
+  switch event.data
+    when "hide" then Vomnibar.hide()
+    when "hidden" then Vomnibar.onHidden()
+    else Vomnibar.activate event.data
 
 root = exports ? window
 root.Vomnibar = Vomnibar
