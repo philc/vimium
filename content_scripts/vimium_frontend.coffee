@@ -26,7 +26,7 @@ validFirstKeys = ""
 
 # The corresponding XPath for such elements.
 textInputXPath = (->
-  textInputTypes = ["text", "search", "email", "url", "number", "password"]
+  textInputTypes = [ "text", "search", "email", "url", "number", "password", "date", "tel" ]
   inputElements = ["input[" +
     "(" + textInputTypes.map((type) -> '@type="' + type + '"').join(" or ") + "or not(@type))" +
     " and not(@disabled or @readonly)]",
