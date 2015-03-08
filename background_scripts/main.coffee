@@ -1,7 +1,22 @@
 root = exports ? window
 
-currentVersion = Utils.getCurrentVersion()
+# The browser may have tabs already open. We inject the content scripts immediately so that they work straight
+# away.
+chrome.runtime.onInstalled.addListener ->
+  manifest = chrome.runtime.getManifest()
+  # Content scripts loaded on every page should be in the same group. We assume it is the first.
+  contentScripts = manifest.content_scripts[0]
+  jobs = [ [ chrome.tabs.executeScript, contentScripts.js ], [ chrome.tabs.insertCSS, contentScripts.css ] ]
+  # Chrome complains if we don't evaluate chrome.runtime.lastError on errors (and we get errors for tabs on
+  # which Vimium cannot run).
+  checkLastRuntimeError = -> chrome.runtime.lastError
+  chrome.tabs.query { status: "complete" }, (tabs) ->
+    for tab in tabs
+      for [ func, files ] in jobs
+        for file in files
+          func tab.id, { file: file, allFrames: contentScripts.allFrames }, checkLastRuntimeError
 
+currentVersion = Utils.getCurrentVersion()
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed

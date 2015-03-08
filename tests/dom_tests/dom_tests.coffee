@@ -542,7 +542,8 @@ context "Mode badges",
 
   should "have an I badge in insert mode by focus", ->
     document.getElementById("first").focus()
-    assert.isTrue chromeMessages[0].badge == "I"
+    # Focus triggers an event in the handler stack, so we check element "1", here.
+    assert.isTrue chromeMessages[1].badge == "I"
 
   should "have no badge after leaving insert mode by focus", ->
     document.getElementById("first").focus()
@@ -575,5 +576,6 @@ context "Mode badges",
       passKeys: ""
 
     document.getElementById("first").focus()
-    assert.isTrue chromeMessages[0].badge == ""
+    # Focus triggers an event in the handler stack, so we check element "1", here.
+    assert.isTrue chromeMessages[1].badge == ""
 
