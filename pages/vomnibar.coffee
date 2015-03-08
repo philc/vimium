@@ -61,10 +61,20 @@ class VomnibarUI
 
   setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
 
+  # The sequence of events when the vomnibar is hidden is as follows:
+  # 1. Post a "hide" message to the host page.
+  # 2. The host page hides the vomnibar and posts back a "hidden" message.
+  # 3. Only once "hidden" message is received here is any required action (callback) invoked (in onHidden).
+  # This ensures that the vomnibar is actually hidden, and avoids flicker after opening a link in a new tab
+  # (see #1485).
   hide: (callback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
     @postHideCallback = callback
+
+  onHidden: ->
+    @postHideCallback?()
+    @postHideCallback = null
 
   reset: ->
     @completionList.style.display = ""
@@ -72,12 +82,6 @@ class VomnibarUI
     @updateTimer = null
     @completions = []
     @selection = @initialSelectionValue
-
-  # Called after the vomnibar has been hidden.  We wait until after the vomnibar has been hidden to avoid
-  # vomnibar flicker (see #1485).
-  onHidden: ->
-    @postHideCallback?()
-    @postHideCallback = null
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
