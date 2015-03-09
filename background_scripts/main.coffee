@@ -2,7 +2,9 @@ root = exports ? window
 
 # The browser may have tabs already open. We inject the content scripts immediately so that they work straight
 # away.
-chrome.runtime.onInstalled.addListener ->
+chrome.runtime.onInstalled.addListener ({ reason }) ->
+  # See https://developer.chrome.com/extensions/runtime#event-onInstalled
+  return if reason in [ "chrome_update", "shared_module_update" ]
   manifest = chrome.runtime.getManifest()
   # Content scripts loaded on every page should be in the same group. We assume it is the first.
   contentScripts = manifest.content_scripts[0]
