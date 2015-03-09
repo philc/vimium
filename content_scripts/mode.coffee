@@ -120,6 +120,16 @@ class Mode
             @registerStateChange?()
         registerKeyQueue: ({ keyQueue: keyQueue }) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
+    # If @options.passInitialKeyupEvents is set, then we pass initial non-printable keyup events to the page
+    # or to other extensions (because the corresponding keydown events were passed).  This is used when
+    # activating link hints, see #1522.
+    if @options.passInitialKeyupEvents
+      @push
+        _name: "mode-#{@id}/passInitialKeyupEvents"
+        keydown: => @alwaysContinueBubbling -> handlerStack.remove()
+        keyup: (event) =>
+          if KeyboardUtils.isPrintable event then @stopBubblingAndFalse else @stopBubblingAndTrue
+
     Mode.modes.push @
     Mode.updateBadge()
     @logModes()

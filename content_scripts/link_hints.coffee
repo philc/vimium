@@ -68,6 +68,7 @@ LinkHints =
     @hintMode = new Mode
       name: "hint/#{mode.name}"
       badge: "#{mode.key}?"
+      passInitialKeyupEvents: true
       keydown: @onKeyDownInMode.bind(this, hintMarkers),
       # trap all key events
       keypress: -> false
