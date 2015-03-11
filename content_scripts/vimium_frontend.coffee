@@ -133,8 +133,6 @@ window.initializeModes = ->
         keypress: (event) => onKeypress.call @, event
         keyup: (event) => onKeyup.call @, event
 
-      Scroller.init settings
-
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
   new BadgeMode
@@ -142,6 +140,7 @@ window.initializeModes = ->
   new PassKeysMode
   new InsertMode permanent: true
   new GrabBackFocus
+  Scroller.init settings
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
