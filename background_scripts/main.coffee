@@ -164,9 +164,13 @@ openUrlInCurrentTab = (request) ->
 # Opens request.url in new tab and switches to it if request.selected is true.
 #
 openUrlInNewTab = (request, callback) ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: Utils.convertToUrl(request.url), index: tab.index + 1, selected: true, windowId: tab.windowId },
-                         (tab) -> callback()))
+  chrome.tabs.getSelected null, (tab) ->
+    chrome.tabs.create {
+      url: if request.rawUrl then request.url else Utils.convertToUrl request.url
+      index: tab.index + 1
+      selected: true
+      windowId: tab.windowId
+    }, (tab) -> callback?()
 
 openUrlInIncognito = (request) ->
   chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
@@ -232,7 +236,10 @@ moveTab = (callback, direction) ->
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  createTab: (callback) -> openUrlInNewTab({ url: Settings.get("newTabUrl") }, (tab) -> callback())
+  createTab: (callback) -> openUrlInNewTab {
+    url: Settings.get "newTabUrl"
+    rawUrl: true
+  }, (tab) -> callback()
   duplicateTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
@@ -598,8 +605,7 @@ shouldShowUpgradeMessage = ->
   Utils.compareVersions(currentVersion, Settings.get("previousVersion")) == 1
 
 openOptionsPageInNewTab = ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
+  openUrlInNewTab { url: "pages/options.html", rawUrl: true }
 
 registerFrame = (request, sender) ->
   (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
