@@ -247,6 +247,8 @@ moveTab = (callback, direction) ->
 BackgroundCommands =
   createTab: (callback) ->
     url = Settings.get "newTabUrl"
+    # FIXME(smblott).  "pages/blank.html" doesn't work in incognito mode. It opens the tab in a
+    # non-incognito-mode window.  Perhaps we should just use "chrome://newtab" in that case?
     url = chrome.runtime.getURL url if url == "pages/blank.html"
     openUrlInNewTab { url }, callback
   duplicateTab: (callback) ->
