@@ -150,7 +150,7 @@ initializePreDomReady = ->
   settings.load()
 
   initializeModes()
-  checkIfEnabledForUrl()
+  checkIfEnabledForUrl true # true means checkIfEnabledForUrl is being called on start up.
   refreshCompletionKeys()
 
   # Send the key to the key handler in the background page.
@@ -225,7 +225,12 @@ setState = (request) ->
 
 getActiveState = ->
   Mode.updateBadge()
-  return { enabled: isEnabledForUrl, passKeys: passKeys }
+  # getActiveState is called in each frame within the tab.  However, only the response from the first frame is
+  # handled on the background page.  Therefore, exclusion rule changes are not propagated to other frames.
+  # So, we force a state update for this frame, just in case.
+  # FIXME(smblott): This could be avoided if settings were propagated via chrome.storage.
+  checkIfEnabledForUrl()
+  return enabled: isEnabledForUrl, passKeys: passKeys, url: window.location.toString()
 
 #
 # The backend needs to know which frame has focus, and the active URL.
@@ -557,7 +562,7 @@ onKeyup = (event) ->
   DomUtils.suppressPropagation(event)
   @stopBubblingAndTrue
 
-checkIfEnabledForUrl = ->
+checkIfEnabledForUrl = (onStartUp = false) ->
   url = window.location.toString()
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
@@ -566,7 +571,7 @@ checkIfEnabledForUrl = ->
     isIncognitoMode = response.incognito
     if isEnabledForUrl
       initializeWhenEnabled()
-    else if (HUD.isReady())
+    else if onStartUp and HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
     handlerStack.bubbleEvent "registerStateChange",

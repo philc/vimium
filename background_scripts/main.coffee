@@ -398,7 +398,8 @@ root.updateActiveState = updateActiveState = (tabId) ->
       if response
         isCurrentlyEnabled = response.enabled
         currentPasskeys = response.passKeys
-        config = isEnabledForUrl { url: tab.url }, { tab: tab }
+        currentURL = response.url
+        config = isEnabledForUrl { url: currentURL }, { tab: tab }
         enabled = config.isEnabledForUrl
         passKeys = config.passKeys
         if (enabled and passKeys)
