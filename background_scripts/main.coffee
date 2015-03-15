@@ -245,7 +245,10 @@ moveTab = (callback, direction) ->
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  createTab: (callback) -> openUrlInNewTab { url: Settings.get("newTabUrl") }, callback
+  createTab: (callback) ->
+    url = Settings.get "newTabUrl"
+    url = chrome.runtime.getURL url if url == "pages/blank.html"
+    openUrlInNewTab { url }, callback
   duplicateTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
