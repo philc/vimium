@@ -150,7 +150,7 @@ initializePreDomReady = ->
   settings.load()
 
   initializeModes()
-  checkIfEnabledForUrl true # true means checkIfEnabledForUrl is being called on start up.
+  checkIfEnabledForUrl()
   refreshCompletionKeys()
 
   # Send the key to the key handler in the background page.
@@ -547,7 +547,7 @@ onKeyup = (event) ->
   DomUtils.suppressPropagation(event)
   @stopBubblingAndTrue
 
-checkIfEnabledForUrl = (onStartUp = false) ->
+checkIfEnabledForUrl = ->
   url = window.location.toString()
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
@@ -556,7 +556,7 @@ checkIfEnabledForUrl = (onStartUp = false) ->
     isIncognitoMode = response.incognito
     if isEnabledForUrl
       initializeWhenEnabled()
-    else if onStartUp and HUD.isReady()
+    else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
     handlerStack.bubbleEvent "registerStateChange",

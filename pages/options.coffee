@@ -304,7 +304,7 @@ initPopupPage = ->
         window.close()
 
     # Populate options. Just one, here.
-    exclusions = new ExclusionRulesOnPopupOption(url, "exclusionRules", onUpdated)
+    exclusions = new ExclusionRulesOnPopupOption url, "exclusionRules", onUpdated
 
     updateState()
     document.addEventListener "keyup", updateState
