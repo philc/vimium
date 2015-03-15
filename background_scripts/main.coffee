@@ -26,6 +26,7 @@ validFirstKeys = {}
 singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
+root.urlForTab = {}
 
 # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
 # This regular expression captures two groups: the first is a named key, the second is the remainder of
@@ -462,6 +463,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   tabInfoMap.deletor = -> delete tabInfoMap[tabId]
   setTimeout tabInfoMap.deletor, 1000
   delete frameIdsForTab[tabId]
+  delete urlForTab[tabId]
 
 chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
 
@@ -647,6 +649,7 @@ unregisterFrame = (request, sender) ->
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
+  urlForTab[tabId] = request.url
   if frameIdsForTab[tabId]?
     frameIdsForTab[tabId] =
       [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]

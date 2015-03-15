@@ -190,6 +190,7 @@ initializePreDomReady = ->
     # Ensure the sendResponse callback is freed.
     false
 
+
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
   element.addEventListener(event, ->
@@ -227,12 +228,12 @@ getActiveState = ->
   return { enabled: isEnabledForUrl, passKeys: passKeys }
 
 #
-# The backend needs to know which frame has focus.
+# The backend needs to know which frame has focus, and the active URL.
 #
 registerFocus = ->
   # settings may have changed since the frame last had focus
   settings.load()
-  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
+  chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId, url: window.location.toString()
 
 #
 # Initialization tasks that must wait for the document to be ready.
