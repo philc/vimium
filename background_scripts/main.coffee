@@ -246,11 +246,13 @@ moveTab = (callback, direction) ->
 # mapped in commands.coffee.
 BackgroundCommands =
   createTab: (callback) ->
-    url = Settings.get "newTabUrl"
-    # FIXME(smblott).  "pages/blank.html" doesn't work in incognito mode. It opens the tab in a
-    # non-incognito-mode window.  Perhaps we should just use "chrome://newtab" in that case?
-    url = chrome.runtime.getURL url if url == "pages/blank.html"
-    openUrlInNewTab { url }, callback
+    chrome.tabs.query { active: true, currentWindow: true }, (tabs) ->
+      tab = tabs[0]
+      url = Settings.get "newTabUrl"
+      if url == "pages/blank.html"
+        # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
+        url = if tab.incognito then "chrome://newtab" else chrome.runtime.getURL url
+      openUrlInNewTab { url }, callback
   duplicateTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
