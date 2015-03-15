@@ -362,9 +362,6 @@ updateOpenTabs = (tab, deleteFrames = false) ->
   # Frames are recreated on refresh
   delete frameIdsForTab[tab.id] if deleteFrames
 
-setBrowserActionIcon = (tabId,path) ->
-  chrome.browserAction.setIcon({ tabId: tabId, path: path })
-
 chrome.browserAction.setBadgeBackgroundColor
   # This is Vimium blue (from the icon).
   # color: [102, 176, 226, 255]
@@ -384,35 +381,24 @@ setBadge = do ->
       # We wait a few moments. This avoids badge flicker when there are rapid changes.
       timer = setTimeout updateBadge(badge, sender.tab.id), 50
 
-# Updates the browserAction icon to indicate whether Vimium is enabled or disabled on the current page.
-# Also propagates new enabled/disabled/passkeys state to active window, if necessary.
-# This lets you disable Vimium on a page without needing to reload.
-# Exported via root because it's called from the page popup.
-root.updateActiveState = updateActiveState = (tabId) ->
-  enabledIcon = "icons/browser_action_enabled.png"
-  disabledIcon = "icons/browser_action_disabled.png"
-  partialIcon = "icons/browser_action_partial.png"
-  chrome.tabs.get tabId, (tab) ->
-    setBadge { badge: "" }, tab: { id: tabId }
-    chrome.tabs.sendMessage tabId, { name: "getActiveState" }, (response) ->
-      if response
-        isCurrentlyEnabled = response.enabled
-        currentPasskeys = response.passKeys
-        currentURL = response.url
-        config = isEnabledForUrl { url: currentURL }, { tab: tab }
-        enabled = config.isEnabledForUrl
-        passKeys = config.passKeys
-        if (enabled and passKeys)
-          setBrowserActionIcon(tabId,partialIcon)
-        else if (enabled)
-          setBrowserActionIcon(tabId,enabledIcon)
-        else
-          setBrowserActionIcon(tabId,disabledIcon)
-        # Propagate the new state only if it has changed.
-        if (isCurrentlyEnabled != enabled || currentPasskeys != passKeys)
-          chrome.tabs.sendMessage(tabId, { name: "setState", enabled: enabled, passKeys: passKeys, incognito: tab.incognito })
-      else
-        setBrowserActionIcon tabId, disabledIcon
+# Here's how we set the page icon.  The default is "disabled", so if we do nothing else, then we get the
+# grey-out disabled icon.  Thereafter, we only set tab-specific icons, so there's no need to update the icon
+# when we visit a tab on which Vimium isn't running.
+#
+# For active tabs, when a frame starts, it requests its active state via isEnabledForUrl.  We also check the
+# state every time a frame gets the focus.  Once the frame learns its active state, it updates the current
+# tab's badge (but only if that frame has the focus).
+#
+# Exclusion rule changes (from either the options page or the page popup) propagate via the subsequent focus
+# change.  In particular, whenever a frame next gets the focus, it requests its new state and sets the icon
+# accordingly.
+#
+setIcon = (request, sender) ->
+  path = switch request.icon
+    when "enabled" then "icons/browser_action_enabled.png"
+    when "partial" then "icons/browser_action_partial.png"
+    when "disabled" then "icons/browser_action_disabled.png"
+  chrome.browserAction.setIcon tabId: sender.tab.id, path: path
 
 handleUpdateScrollPosition = (request, sender) ->
   updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
@@ -429,7 +415,6 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
   updateOpenTabs(tab) if changeInfo.url?
-  updateActiveState(tabId)
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
   # We should update all the tabs in the old window and the new window.
@@ -465,8 +450,6 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   setTimeout tabInfoMap.deletor, 1000
   delete frameIdsForTab[tabId]
   delete urlForTab[tabId]
-
-chrome.tabs.onActiveChanged.addListener (tabId, selectInfo) -> updateActiveState(tabId)
 
 unless chrome.sessions
   chrome.windows.onRemoved.addListener (windowId) -> delete tabQueue[windowId]
@@ -681,6 +664,7 @@ sendRequestHandlers =
   refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
+  setIcon: setIcon
   setBadge: setBadge
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.

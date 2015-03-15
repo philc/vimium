@@ -295,8 +295,6 @@ initPopupPage = ->
       Option.saveOptions()
       $("saveOptions").innerHTML = "Saved"
       $("saveOptions").disabled = true
-      chrome.tabs.query { windowId: chrome.windows.WINDOW_ID_CURRENT, active: true }, (tabs) ->
-        chrome.extension.getBackgroundPage().updateActiveState(tabs[0].id)
 
     $("saveOptions").addEventListener "click", saveOptions
 
