@@ -209,7 +209,7 @@ window.initializeWhenEnabled = ->
     for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown" ]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-    installListener document, "focus", detectFocus
+    installListener window, "focus", registerFocus
     installedListeners = true
     FindModeHistory.init()
 
@@ -229,7 +229,7 @@ getActiveState = ->
 #
 # The backend needs to know which frame has focus.
 #
-detectFocus = ->
+registerFocus = ->
   # settings may have changed since the frame last had focus
   settings.load()
   chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
