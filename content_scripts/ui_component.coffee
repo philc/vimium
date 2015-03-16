@@ -36,6 +36,9 @@ class UIComponent
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
     @iframeElement.classList.add "vimiumUIComponentShowing"
+    # The window may not have the focus.  We focus it now so that the focus listener below isn't triggered
+    # immediately.
+    window.focus()
     window.addEventListener "focus", @onFocus = (event) =>
       if event.target == window
         window.removeEventListener "focus", @onFocus

@@ -241,7 +241,7 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
-  Vomnibar.init()
+  Vomnibar.init() if window.top == window
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -258,6 +258,14 @@ unregisterFrame = ->
     tab_is_closing: window.top == window.self
 
 executePageCommand = (request) ->
+  # Vomnibar commands are handled in the tab's main frame.
+  if request.command.split(".")[0] == "Vomnibar"
+    if window.top == window
+      Utils.invokeCommandString request.command
+      refreshCompletionKeys request
+    return
+
+  # All other commands are handled in their frame.
   return unless frameId == request.frameId
 
   if (request.passCountToFunction)
