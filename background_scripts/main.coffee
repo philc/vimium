@@ -304,13 +304,13 @@ BackgroundCommands =
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count,frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
+    chrome.tabs.getSelected null, (tab) ->
       frames = frameIdsForTab[tab.id]
       # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
       # additional offset such that we do indeed start from frameId.
       count = (count + Math.max 0, frameIdsForTab[tab.id].indexOf frameId) % frames.length
       frames = frameIdsForTab[tab.id] = [frames[count..]..., frames[0...count]...]
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
+      chrome.tabs.sendMessage tab.id, name: "focusFrame", frameId: frames[0]
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
