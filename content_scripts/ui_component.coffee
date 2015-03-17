@@ -20,7 +20,7 @@ class UIComponent
     # other UI components.
     chrome.runtime.onMessage.addListener (request) =>
       @postMessage "hide" if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
-      false # Free up response handler.
+      false # Free up the sendResponse handler.
 
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->

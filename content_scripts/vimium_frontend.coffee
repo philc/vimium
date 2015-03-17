@@ -94,10 +94,10 @@ settings =
 #
 # Give this frame a unique id.
 #
-window.frameId = Math.floor(Math.random()*999999999)
+frameId = Math.floor(Math.random()*999999999)
 
 # For debugging only. This logs to the console on the background page.
-window.bgLog = (args...) ->
+bgLog = (args...) ->
   args = (arg.toString() for arg in args)
   chrome.runtime.sendMessage handler: "log", frameId: frameId, message: args.join " "
 
@@ -271,7 +271,7 @@ executePageCommand = (request) ->
   if request.command.split(".")[0] == "Vomnibar"
     if DomUtils.isTopFrame()
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
-      # that needs to receive the focus when we're done.
+      # which whould receive the focus when the vomnibar closes.
       Utils.invokeCommandString request.command, [ request.frameId ]
       refreshCompletionKeys request
     return
@@ -1238,3 +1238,4 @@ root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
+root.bgLog = bgLog

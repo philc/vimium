@@ -657,7 +657,6 @@ handleFrameFocused = (request, sender) ->
   if frameIdsForTab[tabId]?
     frameIdsForTab[tabId] =
       [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
-  console.log frameIdsForTab[tabId]
   # Inform all frames that a frame has received the focus.
   chrome.tabs.sendMessage sender.tab.id, 
     name: "frameFocused"
