@@ -162,6 +162,7 @@ initializePreDomReady = ->
     isEnabledForUrl = false
     chrome.runtime.sendMessage = ->
     chrome.runtime.connect = ->
+    window.removeEventListener "focus", onFocus
 
   requestHandlers =
     hideUpgradeNotification: -> HUD.hideUpgradeNotification()
@@ -173,8 +174,6 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
     executePageCommand: executePageCommand
-    getActiveState: getActiveState
-    setState: setState
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
@@ -183,7 +182,7 @@ initializePreDomReady = ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
+    return unless isEnabledForUrl
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
     sendResponse requestHandlers[request.name](request, sender)
@@ -209,30 +208,24 @@ window.initializeWhenEnabled = ->
     for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown" ]
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-    installListener window, "focus", registerFocus
     installedListeners = true
     FindModeHistory.init()
 
-setState = (request) ->
-  isEnabledForUrl = request.enabled
-  passKeys = request.passKeys
-  isIncognitoMode = request.incognito
-  initializeWhenEnabled() if isEnabledForUrl
-  handlerStack.bubbleEvent "registerStateChange",
-    enabled: isEnabledForUrl
-    passKeys: passKeys
-
-getActiveState = ->
-  Mode.updateBadge()
-  return { enabled: isEnabledForUrl, passKeys: passKeys }
-
 #
-# The backend needs to know which frame has focus.
+# Whenever we get the focus:
+# - Reload settings (they may have changed).
+# - Tell the background page this frame's URL.
+# - Check if we should be enabled.
 #
-registerFocus = ->
-  # settings may have changed since the frame last had focus
-  settings.load()
-  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
+onFocus = (event) ->
+  if event.target == window
+    settings.load()
+    chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId, url: window.location.toString()
+    checkIfEnabledForUrl()
+
+# We install this listener directly (that is, we don't use installListener) because we still need to receive
+# events when Vimium is not enabled.
+window.addEventListener "focus", onFocus
 
 #
 # Initialization tasks that must wait for the document to be ready.
@@ -565,12 +558,21 @@ checkIfEnabledForUrl = ->
     isIncognitoMode = response.incognito
     if isEnabledForUrl
       initializeWhenEnabled()
-    else if (HUD.isReady())
+    else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
     handlerStack.bubbleEvent "registerStateChange",
       enabled: isEnabledForUrl
       passKeys: passKeys
+    # Update the page icon, if necessary.
+    if document.hasFocus()
+      chrome.runtime.sendMessage
+        handler: "setIcon"
+        icon:
+          if isEnabledForUrl and not passKeys then "enabled"
+          else if isEnabledForUrl then "partial"
+          else "disabled"
+
 
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->
