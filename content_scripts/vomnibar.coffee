@@ -50,8 +50,7 @@ Vomnibar =
   #   query       - Optional. Text to prefill the Vomnibar with.
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
-  open: (frameId, options) ->
-    @vomnibarUI.activate extend options, { frameId }
+  open: (frameId, options) -> @vomnibarUI.activate extend options, { frameId }
 
 root = exports ? window
 root.Vomnibar = Vomnibar

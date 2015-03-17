@@ -287,7 +287,6 @@ setScrollPosition = (scrollX, scrollY) ->
 # Called from the backend in order to change frame focus.
 #
 window.focusThisFrame = (shouldHighlight) ->
-  console.log "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   if window.innerWidth < 3 or window.innerHeight < 3
     # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
     # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
