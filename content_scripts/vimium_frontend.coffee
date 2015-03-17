@@ -192,6 +192,9 @@ initializePreDomReady = ->
     return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
+    # We don't handle these here.  They're handled elsewhere (e.g. in the vomnibar/UI component).
+    return if request.name in [ "frameFocused" ]
+    # Handle the request.
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
@@ -271,7 +274,7 @@ executePageCommand = (request) ->
   if request.command.split(".")[0] == "Vomnibar"
     if DomUtils.isTopFrame()
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
-      # which whould receive the focus when the vomnibar closes.
+      # which should receive the focus when the vomnibar closes.
       Utils.invokeCommandString request.command, [ request.frameId ]
       refreshCompletionKeys request
     return
