@@ -237,11 +237,11 @@ getActiveState = ->
 #
 registerFocus = (event) ->
   if event.target == window
-    # settings may have changed since the frame last had focus
+    # Settings may have changed since the frame last had focus.
     settings.load()
     # Don't register frameset containers; focusing them is no use.
     unless document.body?.tagName.toLowerCase() == "frameset"
-      chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
+      chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId
 
 #
 # Initialization tasks that must wait for the document to be ready.
@@ -250,7 +250,7 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
-  Vomnibar.init() if window.top == window
+  Vomnibar.init() if DomUtils.isTopFrame()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -264,12 +264,12 @@ unregisterFrame = ->
   chrome.runtime.sendMessage
     handler: "unregisterFrame"
     frameId: frameId
-    tab_is_closing: window.top == window.self
+    tab_is_closing: DomUtils.isTopFrame()
 
 executePageCommand = (request) ->
-  # Vomnibar commands are handled in the tab's main frame.
+  # Vomnibar commands are handled in the tab's main/top frame.
   if request.command.split(".")[0] == "Vomnibar"
-    if window.top == window
+    if DomUtils.isTopFrame()
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
       # that needs to receive the focus when we're done.
       Utils.invokeCommandString request.command, [ request.frameId ]

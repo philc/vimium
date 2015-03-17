@@ -660,9 +660,9 @@ handleFrameFocused = (request, sender) ->
   # Inform all frames that a frame has received the focus.
   chrome.tabs.sendMessage sender.tab.id, 
     name: "frameFocused"
-    frameId: request.frameId
+    focusFrameId: request.frameId
 
-# Send a message to a all frames in the current tab.
+# Send a message to all frames in the current tab.
 sendMessageToFrames = (request, sender) ->
   chrome.tabs.sendMessage sender.tab.id, request.message
 
