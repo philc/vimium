@@ -94,7 +94,12 @@ settings =
 #
 # Give this frame a unique id.
 #
-frameId = Math.floor(Math.random()*999999999)
+window.frameId = Math.floor(Math.random()*999999999)
+
+# For debugging only. This logs to the console on the background page.
+window.bgLog = (args...) ->
+  args = (arg.toString() for arg in args)
+  chrome.runtime.sendMessage handler: "log", frameId: frameId, message: args.join " "
 
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
@@ -230,12 +235,13 @@ getActiveState = ->
 #
 # The backend needs to know which frame has focus.
 #
-registerFocus = ->
-  # settings may have changed since the frame last had focus
-  settings.load()
-  # Don't register frameset containers; focusing them is no use.
-  unless document.body?.tagName.toLowerCase() == "frameset"
-    chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
+registerFocus = (event) ->
+  if event.target == window
+    # settings may have changed since the frame last had focus
+    settings.load()
+    # Don't register frameset containers; focusing them is no use.
+    unless document.body?.tagName.toLowerCase() == "frameset"
+      chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
 # Initialization tasks that must wait for the document to be ready.

@@ -666,6 +666,10 @@ handleFrameFocused = (request, sender) ->
 sendMessageToFrames = (request, sender) ->
   chrome.tabs.sendMessage sender.tab.id, request.message
 
+# For debugging only. This allows content scripts to log messages to the background page's console.
+bgLog = (request, sender) ->
+  console.log "#{sender.tab.id}/#{request.frameId}", request.message
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -694,6 +698,7 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
   setBadge: setBadge
   sendMessageToFrames: sendMessageToFrames
+  log: bgLog
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"
