@@ -67,10 +67,9 @@ class VomnibarUI
   # 3. Only once "hidden" message is received here is any required action (callback) invoked (in onHidden).
   # This ensures that the vomnibar is actually hidden, and avoids flicker after opening a link in a new tab
   # (see #1485).
-  hide: (callback = null) ->
+  hide: (@postHideCallback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
-    @postHideCallback = callback
 
   onHidden: ->
     @postHideCallback?()

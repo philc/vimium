@@ -173,7 +173,7 @@ initializePreDomReady = ->
     showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
-    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
+    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
@@ -293,7 +293,7 @@ setScrollPosition = (scrollX, scrollY) ->
 #
 # Called from the backend in order to change frame focus.
 #
-window.focusThisFrame = (shouldHighlight) ->
+window.focusThisFrame = (request) ->
   if window.innerWidth < 3 or window.innerHeight < 3
     # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
     # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
@@ -301,7 +301,9 @@ window.focusThisFrame = (shouldHighlight) ->
     chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
     return
   window.focus()
-  if (document.body && shouldHighlight)
+  shouldHighlight = request.highlight
+  shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
+  if document.body and shouldHighlight
     borderWas = document.body.style.border
     document.body.style.border = '5px solid yellow'
     setTimeout((-> document.body.style.border = borderWas), 200)

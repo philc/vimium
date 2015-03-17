@@ -19,7 +19,7 @@ class UIComponent
     # NOTE(smblott) This is correct for the vomnibar, but might be incorrect (and need to be revisited) for
     # other UI components.
     chrome.runtime.onMessage.addListener (request) =>
-      @hide false if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
+      @postMessage "hide" if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
       false # Free up response handler.
 
   # Open a port and pass it to the iframe via window.postMessage.
@@ -55,19 +55,29 @@ class UIComponent
     @showing = true
 
   hide: (focusWindow = true)->
-    @iframeElement.classList.remove "vimiumUIComponentShowing"
-    @iframeElement.classList.add "vimiumUIComponentHidden"
+    @refocusSourceFrame @options?.sourceFrameId if focusWindow and @options?.sourceFrameId?
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
-    if focusWindow and @options?.sourceFrameId?
-      chrome.runtime.sendMessage
-        handler: "sendMessageToFrames"
-        message:
-          name: "focusFrame"
-          frameId: @options.sourceFrameId
-          highlight: true # true for debugging; should be false when live.
+    @iframeElement.classList.remove "vimiumUIComponentShowing"
+    @iframeElement.classList.add "vimiumUIComponentHidden"
     @options = null
     @showing = false
+
+  # Refocus the frame from which the UI component was opened.
+  # After hiding the UI component, Chrome refocuses the containing frame. To avoid a race condition, we need
+  # to wait until that frame receives the focus, before then focusing the frame which should now have the
+  # focus.
+  refocusSourceFrame: (sourceFrameId) ->
+    window.addEventListener "focus", handler = (event) ->
+      if event.target == window
+        window.removeEventListener "focus", handler
+        chrome.runtime.sendMessage
+          handler: "sendMessageToFrames"
+          message:
+            name: "focusFrame"
+            frameId: sourceFrameId
+            highlight: false
+            highlightOnlyIfNotTop: true
 
 root = exports ? window
 root.UIComponent = UIComponent
