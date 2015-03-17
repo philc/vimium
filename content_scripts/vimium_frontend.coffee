@@ -178,6 +178,7 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
+    frameFocused: -> # A frame has received the focus.  We don't care, here. The Vomnibar/UI-component cares.
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those

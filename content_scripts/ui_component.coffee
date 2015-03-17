@@ -15,6 +15,11 @@ class UIComponent
     # Hide the iframe, but don't interfere with the focus.
     @hide false
 
+    # If any frame in the current tab receives the focus, then we hide the vomnibar.
+    chrome.runtime.onMessage.addListener (request) =>
+      @hide false if @showing and request.name == "frameFocused"
+      false # Free up response handler.
+
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->
     messageChannel = new MessageChannel()
@@ -37,21 +42,11 @@ class UIComponent
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
     @iframeElement.classList.add "vimiumUIComponentShowing"
-    # The window may not have the focus.  We focus it now so that the focus listener below isn't triggered
-    # immediately.
-    window.focus()
-    window.addEventListener "focus", @onFocus = (event) =>
-      if event.target == window
-        window.removeEventListener "focus", @onFocus
-        @onFocus = null
-        @postMessage "hide"
     @showing = true
 
   hide: (focusWindow = true)->
     @iframeElement.classList.remove "vimiumUIComponentShowing"
     @iframeElement.classList.add "vimiumUIComponentHidden"
-    window.removeEventListener "focus", @onFocus if @onFocus
-    @onFocus = null
     if focusWindow and @options?.frameId?
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames"
