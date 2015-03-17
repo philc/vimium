@@ -658,6 +658,15 @@ handleFrameFocused = (request, sender) ->
     frameIdsForTab[tabId] =
       [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
 
+# Send a message to a frame (in the sender's tab).  The sender should set:
+# - request.targetFrameId (the target frame)
+# - request.name (the name of the handler in the target frame, e.g. "focusFrame")
+# In addition, request.senderFrameId will be set to the frameId of the sender.
+sendMessageToFrame = (request, sender) ->
+  request.senderFrameId = request.frameId
+  request.frameId = request.targetFrameId
+  chrome.tabs.sendMessage sender.tab.id, request
+
 # Port handler mapping
 portHandlers =
   keyDown: handleKeyDown,
@@ -685,6 +694,7 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setBadge: setBadge
+  sendMessageToFrame: sendMessageToFrame
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

@@ -2,6 +2,7 @@ class UIComponent
   iframeElement: null
   iframePort: null
   showing: null
+  options: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
     @iframeElement = document.createElement "iframe"
@@ -27,8 +28,8 @@ class UIComponent
   postMessage: (message) ->
     @iframePort.postMessage message
 
-  activate: (message) ->
-    @postMessage message if message?
+  activate: (@options) ->
+    @postMessage @options if @options?
     @show() unless @showing
     @iframeElement.focus()
 
@@ -51,7 +52,14 @@ class UIComponent
     @iframeElement.classList.add "vimiumUIComponentHidden"
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
-    window.focus() if focusWindow
+    if focusWindow and @options?.frameId?
+      chrome.runtime.sendMessage
+        handler: "sendMessageToFrame"
+        frameId: frameId
+        targetFrameId: @options.frameId
+        name: "focusFrame"
+        highlight: true # true for debugging; should be false when live.
+    @options = null
     @showing = false
 
 root = exports ? window

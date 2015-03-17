@@ -232,7 +232,9 @@ getActiveState = ->
 registerFocus = ->
   # settings may have changed since the frame last had focus
   settings.load()
-  chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
+  # Don't register frameset containers; focusing them is no use.
+  unless document.body?.tagName.toLowerCase() == "frameset"
+    chrome.runtime.sendMessage({ handler: "frameFocused", frameId: frameId })
 
 #
 # Initialization tasks that must wait for the document to be ready.
@@ -261,7 +263,9 @@ executePageCommand = (request) ->
   # Vomnibar commands are handled in the tab's main frame.
   if request.command.split(".")[0] == "Vomnibar"
     if window.top == window
-      Utils.invokeCommandString request.command
+      # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
+      # that needs to receive the focus when we're done.
+      Utils.invokeCommandString request.command, [ request.frameId ]
       refreshCompletionKeys request
     return
 
@@ -283,6 +287,7 @@ setScrollPosition = (scrollX, scrollY) ->
 # Called from the backend in order to change frame focus.
 #
 window.focusThisFrame = (shouldHighlight) ->
+  console.log "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   if window.innerWidth < 3 or window.innerHeight < 3
     # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
     # This affects sites like Google Inbox, which have many tiny iframes. See #1317.

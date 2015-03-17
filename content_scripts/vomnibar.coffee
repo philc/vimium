@@ -4,31 +4,33 @@
 Vomnibar =
   vomnibarUI: null
 
-  activate: -> @open {completer:"omni"}
-  activateInNewTab: -> @open {
+  # frameId here (and below) is the ID of the frame from which this request originates, which may be different
+  # from the current frame.
+  activate: (frameId) -> @open frameId, {completer:"omni"}
+  activateInNewTab: (frameId) -> @open frameId, {
     completer: "omni"
     selectFirst: false
     newTab: true
   }
-  activateTabSelection: -> @open {
+  activateTabSelection: (frameId) -> @open frameId, {
     completer: "tabs"
     selectFirst: true
   }
-  activateBookmarks: -> @open {
+  activateBookmarks: (frameId) -> @open frameId, {
     completer: "bookmarks"
     selectFirst: true
   }
-  activateBookmarksInNewTab: -> @open {
+  activateBookmarksInNewTab: (frameId) -> @open frameId, {
     completer: "bookmarks"
     selectFirst: true
     newTab: true
   }
-  activateEditUrl: -> @open {
+  activateEditUrl: (frameId) -> @open frameId, {
     completer: "omni"
     selectFirst: false
     query: window.location.href
   }
-  activateEditUrlInNewTab: -> @open {
+  activateEditUrlInNewTab: (frameId) -> @open frameId, {
     completer: "omni"
     selectFirst: false
     query: window.location.href
@@ -48,7 +50,8 @@ Vomnibar =
   #   query       - Optional. Text to prefill the Vomnibar with.
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
-  open: (options) -> @vomnibarUI.activate options
+  open: (frameId, options) ->
+    @vomnibarUI.activate extend options, { frameId }
 
 root = exports ? window
 root.Vomnibar = Vomnibar
