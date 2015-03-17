@@ -54,11 +54,11 @@ class UIComponent
     @onFocus = null
     if focusWindow and @options?.frameId?
       chrome.runtime.sendMessage
-        handler: "sendMessageToFrame"
-        frameId: frameId
-        targetFrameId: @options.frameId
-        name: "focusFrame"
-        highlight: true # true for debugging; should be false when live.
+        handler: "sendMessageToFrames"
+        message:
+          name: "focusFrame"
+          frameId: @options.frameId
+          highlight: true # true for debugging; should be false when live.
     @options = null
     @showing = false
 
