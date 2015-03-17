@@ -242,6 +242,7 @@ registerFocus = (event) ->
   if event.target == window
     # Settings may have changed since the frame last had focus.
     settings.load()
+    checkIfEnabledForUrl()
     # Don't register frameset containers; focusing them is no use.
     unless document.body?.tagName.toLowerCase() == "frameset"
       chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId
