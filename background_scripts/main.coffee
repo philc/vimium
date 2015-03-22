@@ -58,7 +58,7 @@ completers =
   bookmarks: new MultiCompleter([completionSources.bookmarks])
   tabs: new MultiCompleter([completionSources.tabs])
 
-chrome.runtime.onConnect.addListener((port, name) ->
+chrome.runtime.onConnect.addListener (port, name) ->
   senderTabId = if port.sender.tab then port.sender.tab.id else null
   # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
   # the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
@@ -72,7 +72,10 @@ chrome.runtime.onConnect.addListener((port, name) ->
 
   if (portHandlers[port.name])
     port.onMessage.addListener(portHandlers[port.name])
-)
+
+  # If the user has accepted the "notifications" permission since we started, then we should try showing the
+  # upgrade massge again.
+  showUpgradeMessage()
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
@@ -689,20 +692,21 @@ populateValidFirstKeys()
 populateSingleKeyCommands()
 
 # Show notification on upgrade.
-if shouldShowUpgradeMessage()
-  notificationId = "VimiumUpgradeNotification"
-  notification =
-    type: "basic"
-    iconUrl: chrome.runtime.getURL "icons/vimium.png"
-    title: "Vimium Upgrade"
-    message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information"
-    isClickable: true
-  chrome.notifications.create notificationId, notification, ->
-    unless chrome.runtime.lastError
-      Settings.set "previousVersion", currentVersion
-      chrome.notifications.onClicked.addListener (id) ->
-        if id == notificationId
-          openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
+showUpgradeMessage = ->
+  if shouldShowUpgradeMessage()
+    notificationId = "VimiumUpgradeNotification"
+    notification =
+      type: "basic"
+      iconUrl: chrome.runtime.getURL "icons/vimium.png"
+      title: "Vimium Upgrade"
+      message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information"
+      isClickable: true
+    chrome.notifications.create notificationId, notification, ->
+      unless chrome.runtime.lastError
+        Settings.set "previousVersion", currentVersion
+        chrome.notifications.onClicked.addListener (id) ->
+          if id == notificationId
+            openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
 
 # Ensure that tabInfoMap is populated when Vimium is installed.
 chrome.windows.getAll { populate: true }, (windows) ->
@@ -715,3 +719,4 @@ chrome.windows.getAll { populate: true }, (windows) ->
 
 # Start pulling changes from synchronized storage.
 Sync.init()
+showUpgradeMessage()
