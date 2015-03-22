@@ -165,8 +165,6 @@ initializePreDomReady = ->
     window.removeEventListener "focus", onFocus
 
   requestHandlers =
-    hideUpgradeNotification: -> HUD.hideUpgradeNotification()
-    showUpgradeNotification: (request) -> HUD.showUpgradeNotification(request.version)
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
@@ -1069,7 +1067,6 @@ toggleHelpDialog = (html, fid) ->
 HUD =
   _tweenId: -1
   _displayElement: null
-  _upgradeNotificationElement: null
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
@@ -1087,26 +1084,6 @@ HUD =
     HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150)
     HUD.displayElement().style.display = ""
 
-  showUpgradeNotification: (version) ->
-    HUD.upgradeNotificationElement().innerHTML = "Vimium has been upgraded to #{version}. See
-      <a class='vimiumReset' target='_blank'
-      href='https://github.com/philc/vimium#release-notes'>
-      what's new</a>.<a class='vimiumReset close-button' href='#'>&times;</a>"
-    links = HUD.upgradeNotificationElement().getElementsByTagName("a")
-    links[0].addEventListener("click", HUD.onUpdateLinkClicked, false)
-    links[1].addEventListener "click", (event) ->
-      event.preventDefault()
-      HUD.onUpdateLinkClicked()
-    Tween.fade(HUD.upgradeNotificationElement(), 1.0, 150)
-
-  onUpdateLinkClicked: (event) ->
-    HUD.hideUpgradeNotification()
-    chrome.runtime.sendMessage({ handler: "upgradeNotificationClosed" })
-
-  hideUpgradeNotification: (clickEvent) ->
-    Tween.fade(HUD.upgradeNotificationElement(), 0, 150,
-      -> HUD.upgradeNotificationElement().style.display = "none")
-
   #
   # Retrieves the HUD HTML element.
   #
@@ -1116,13 +1093,6 @@ HUD =
       # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
       HUD._displayElement.style.right = "150px"
     HUD._displayElement
-
-  upgradeNotificationElement: ->
-    if (!HUD._upgradeNotificationElement)
-      HUD._upgradeNotificationElement = HUD.createHudElement()
-      # Position this just to the left of our normal HUD.
-      HUD._upgradeNotificationElement.style.right = "315px"
-    HUD._upgradeNotificationElement
 
   createHudElement: ->
     element = document.createElement("div")

@@ -70,11 +70,6 @@ chrome.runtime.onConnect.addListener((port, name) ->
       delete tabLoadedHandlers[senderTabId]
       toCall.call()
 
-    # domReady is the appropriate time to show the "vimium has been upgraded" message.
-    # TODO: This might be broken on pages with frames.
-    if (shouldShowUpgradeMessage())
-      chrome.tabs.sendMessage(senderTabId, { name: "showUpgradeNotification", version: currentVersion })
-
   if (portHandlers[port.name])
     port.onMessage.addListener(portHandlers[port.name])
 )
@@ -182,14 +177,6 @@ openUrlInNewTab = (request, callback) ->
 
 openUrlInIncognito = (request) ->
   chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
-
-#
-# Called when the user has clicked the close icon on the "Vimium has been updated" message.
-# We should now dismiss that message in all tabs.
-#
-upgradeNotificationClosed = (request) ->
-  Settings.set("previousVersion", currentVersion)
-  sendRequestToAllTabs({ name: "hideUpgradeNotification" })
 
 #
 # Copies or pastes some data (request.data) to/from the clipboard.
@@ -662,7 +649,6 @@ sendRequestHandlers =
   unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
-  upgradeNotificationClosed: upgradeNotificationClosed
   updateScrollPosition: handleUpdateScrollPosition
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
@@ -701,8 +687,22 @@ if Settings.has("keyMappings")
 
 populateValidFirstKeys()
 populateSingleKeyCommands()
+
+# Show notification on upgrade.
 if shouldShowUpgradeMessage()
-  sendRequestToAllTabs({ name: "showUpgradeNotification", version: currentVersion })
+  notificationId = "VimiumUpgradeNotification"
+  notification =
+    type: "basic"
+    iconUrl: chrome.runtime.getURL "icons/vimium.png"
+    title: "Vimium Upgrade"
+    message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information"
+    isClickable: true
+  chrome.notifications.create notificationId, notification, ->
+    unless chrome.runtime.lastError
+      Settings.set "previousVersion", currentVersion
+      chrome.notifications.onClicked.addListener (id) ->
+        if id == notificationId
+          openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
 
 # Ensure that tabInfoMap is populated when Vimium is installed.
 chrome.windows.getAll { populate: true }, (windows) ->
