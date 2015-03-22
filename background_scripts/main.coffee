@@ -699,7 +699,7 @@ showUpgradeMessage = ->
       type: "basic"
       iconUrl: chrome.runtime.getURL "icons/vimium.png"
       title: "Vimium Upgrade"
-      message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information"
+      message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information."
       isClickable: true
     chrome.notifications.create notificationId, notification, ->
       unless chrome.runtime.lastError
