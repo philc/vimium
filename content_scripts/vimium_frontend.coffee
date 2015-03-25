@@ -223,9 +223,10 @@ onFocus = (event) ->
     chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId, url: window.location.toString()
     checkIfEnabledForUrl()
 
-# We install this listener directly (that is, we don't use installListener) because we still need to receive
+# We install these listeners directly (that is, we don't use installListener) because we still need to receive
 # events when Vimium is not enabled.
 window.addEventListener "focus", onFocus
+window.addEventListener "hashchange", onFocus
 
 #
 # Initialization tasks that must wait for the document to be ready.
