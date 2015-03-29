@@ -344,10 +344,32 @@ class SearchEngineCompleter
   computeRelevancy: -> 1
 
   refresh: ->
-    this.searchEngines = root.Settings.getSearchEngines()
+    @searchEngines = SearchEngineCompleter.getSearchEngines()
 
   getSearchEngineMatches: (queryTerms) ->
     (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
+
+  # Static data and methods for parsing the configured search engines.  We keep a cache of the search-engine
+  # mapping in @searchEnginesMap.
+  @searchEnginesMap: null
+
+  # Parse the custom search engines setting and cache it in SearchEngineCompleter.searchEnginesMap.
+  @parseSearchEngines: (searchEnginesText) ->
+    searchEnginesMap = SearchEngineCompleter.searchEnginesMap = {}
+    for line in searchEnginesText.split /\n/
+      tokens = line.trim().split /\s+/
+      continue if tokens.length < 2 or tokens[0].startsWith('"') or tokens[0].startsWith("#")
+      keywords = tokens[0].split ":"
+      continue unless keywords.length == 2 and not keywords[1] # So, like: [ "w", "" ].
+      searchEnginesMap[keywords[0]] =
+        url: tokens[1]
+        description: tokens[2..].join(" ")
+
+  # Fetch the search-engine map, building it if necessary.
+  @getSearchEngines: ->
+    unless SearchEngineCompleter.searchEnginesMap?
+      SearchEngineCompleter.parseSearchEngines Settings.get "searchEngines"
+    SearchEngineCompleter.searchEnginesMap
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.

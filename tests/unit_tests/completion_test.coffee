@@ -238,7 +238,7 @@ context "search engines",
     @completer = new SearchEngineCompleter()
     # note, I couldn't just call @completer.refresh() here as I couldn't set root.Settings without errors
     # workaround is below, would be good for someone that understands the testing system better than me to improve
-    @completer.searchEngines = Settings.getSearchEngines()
+    @completer.searchEngines = SearchEngineCompleter.getSearchEngines()
 
   should "return search engine suggestion without description", ->
     results = filterCompleter(@completer, ["foo", "hello"])

@@ -33,7 +33,7 @@ root.Settings = Settings =
       root.refreshCompletionKeysAfterMappingSave()
 
     searchEngines: (value) ->
-      root.Settings.parseSearchEngines value
+      root.SearchEngineCompleter.parseSearchEngines value
 
     exclusionRules: (value) ->
       root.Exclusions.postUpdateHook value
@@ -41,27 +41,6 @@ root.Settings = Settings =
   # postUpdateHooks convenience wrapper
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key] value if @postUpdateHooks[key]
-
-  # Here we have our functions that parse the search engines
-  # this is a map that we use to store our search engines for use.
-  searchEnginesMap: {}
-
-  # Parse the custom search engines setting and cache it.
-  parseSearchEngines: (searchEnginesText) ->
-    @searchEnginesMap = {}
-    for line in searchEnginesText.split /\n/
-      tokens = line.trim().split /\s+/
-      continue if tokens.length < 2 or tokens[0].startsWith('"') or tokens[0].startsWith("#")
-      keywords = tokens[0].split ":"
-      continue unless keywords.length == 2 and not keywords[1] # So, like: [ "w", "" ].
-      @searchEnginesMap[keywords[0]] =
-        url: tokens[1]
-        description: tokens[2..].join(" ")
-
-  # Fetch the search-engine map, building it if necessary.
-  getSearchEngines: ->
-    this.parseSearchEngines(@get("searchEngines") || "") if Object.keys(@searchEnginesMap).length == 0
-    @searchEnginesMap
 
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
   # or strings
