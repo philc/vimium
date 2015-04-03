@@ -27,6 +27,7 @@
     "clipboardRead",
     "storage",
     "sessions",
+    "notifications",
     "<all_urls>"
   ],
   "content_scripts": [
