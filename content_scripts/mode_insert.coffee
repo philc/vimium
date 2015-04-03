@@ -7,6 +7,7 @@ class InsertMode extends Mode
 
     # If truthy, then we were activated by the user (with "i").
     @global = options.global
+    HUD.show "Insert mode" if @global
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
@@ -74,6 +75,7 @@ class InsertMode extends Mode
     if (target and target == @insertModeLock) or @global or target == undefined
       @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
       @insertModeLock = null
+      HUD.hide() if @global
       # Exit, but only if this isn't the permanently-installed instance.
       if @permanent then Mode.updateBadge() else super()
 
