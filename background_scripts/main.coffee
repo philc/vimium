@@ -73,10 +73,6 @@ chrome.runtime.onConnect.addListener (port, name) ->
   if (portHandlers[port.name])
     port.onMessage.addListener(portHandlers[port.name])
 
-  # If the user has accepted the "notifications" permission since we started, then we should try showing the
-  # upgrade massge again.
-  showUpgradeMessage()
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
@@ -603,16 +599,6 @@ sendRequestToAllTabs = (args) ->
       for tab in window.tabs
         chrome.tabs.sendMessage(tab.id, args, null))
 
-#
-# Returns true if the current extension version is greater than the previously recorded version in
-# localStorage, and false otherwise.
-#
-shouldShowUpgradeMessage = ->
-  # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
-  # installs.
-  Settings.set("previousVersion", currentVersion) unless Settings.get("previousVersion")
-  Utils.compareVersions(currentVersion, Settings.get("previousVersion")) == 1
-
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
@@ -693,7 +679,10 @@ populateSingleKeyCommands()
 
 # Show notification on upgrade.
 showUpgradeMessage = ->
-  if shouldShowUpgradeMessage()
+  # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
+  # installs.
+  Settings.set "previousVersion", currentVersion  unless Settings.get "previousVersion"
+  if Utils.compareVersions(currentVersion, Settings.get "previousVersion" ) == 1
     notificationId = "VimiumUpgradeNotification"
     notification =
       type: "basic"
@@ -701,12 +690,16 @@ showUpgradeMessage = ->
       title: "Vimium Upgrade"
       message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information."
       isClickable: true
-    chrome.notifications.create notificationId, notification, ->
-      unless chrome.runtime.lastError
-        Settings.set "previousVersion", currentVersion
-        chrome.notifications.onClicked.addListener (id) ->
-          if id == notificationId
-            openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
+    if chrome.notifications?.create?
+      chrome.notifications.create notificationId, notification, ->
+        unless chrome.runtime.lastError
+          Settings.set "previousVersion", currentVersion
+          chrome.notifications.onClicked.addListener (id) ->
+            if id == notificationId
+              openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
+    else
+      # We need to wait for the user to accept the "notifications" permission.
+      chrome.permissions.onAdded.addListener showUpgradeMessage
 
 # Ensure that tabInfoMap is populated when Vimium is installed.
 chrome.windows.getAll { populate: true }, (windows) ->
