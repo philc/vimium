@@ -123,6 +123,9 @@ CoreScroller =
     @lastEvent = null
     @keyIsDown = false
 
+    # NOTE(smblott) With extreme keyboard configurations, Chrome sometimes does not get a keyup event for
+    # every keydown, in which case tapping "j" scrolls indefinitely.  This appears to be a Chrome/OS/XOrg bug
+    # of some kind.  See #1549.
     handlerStack.push
       _name: 'scroller/track-key-status'
       keydown: (event) =>
