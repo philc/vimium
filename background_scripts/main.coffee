@@ -132,6 +132,9 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
       if (showCommandNames)
         html.push("<span class='vimiumReset commandName'>(#{command})</span>")
 
+      if (isAdvanced)
+        html.push("<span class='vimiumReset advancedText'>Advanced</span>")
+
       html.push("</td></tr>")
   html.join("\n")
 

@@ -61,6 +61,13 @@ tr.vimiumReset {
   z-index: 2147483648;
 }
 
+span.vimiumReset.advancedText {
+  font-variant: small-caps;
+  border: solid 1px #C38A22;
+  border-radius: 3px;
+  color: #633A22;
+}
+
 /* Linkhints CSS */
 
 div.internalVimiumHintMarker {
