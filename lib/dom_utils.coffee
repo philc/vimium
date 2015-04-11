@@ -54,15 +54,9 @@ DomUtils =
     clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
 
     for clientRect in clientRects
-      # If the link has zero dimensions, it may be wrapping visible
-      # but floated elements. Check for this.
+      # If the link has zero dimensions, it may neverthe less be wrapping visible elements.
       if (clientRect.width == 0 || clientRect.height == 0)
         for child in element.children
-          computedStyle = window.getComputedStyle(child, null)
-          # Ignore child elements which are not floated and not absolutely positioned for parent elements with
-          # zero width/height
-          continue if (computedStyle.getPropertyValue('float') == 'none' &&
-            computedStyle.getPropertyValue('position') != 'absolute')
           childClientRect = @getVisibleClientRect(child)
           continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
           return childClientRect
