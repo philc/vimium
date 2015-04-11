@@ -54,7 +54,7 @@ DomUtils =
     clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
 
     for clientRect in clientRects
-      # If the link has zero dimensions, it may neverthe less be wrapping visible elements.
+      # If the link has zero dimensions, it may nevertheless be wrapping visible elements.
       if (clientRect.width == 0 || clientRect.height == 0)
         for child in element.children
           childClientRect = @getVisibleClientRect(child)
