@@ -204,7 +204,7 @@ class DomainCompleter
   domains: null
 
   filter: (queryTerms, onComplete) ->
-    return onComplete([]) if queryTerms.length > 1 or queryTerms.length == 0
+    return onComplete([]) unless queryTerms.length == 1
     if @domains
       @performSearch(queryTerms, onComplete)
     else
