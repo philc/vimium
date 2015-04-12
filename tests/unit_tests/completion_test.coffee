@@ -152,8 +152,9 @@ context "domain completer",
   setup ->
     @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) }
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
+    @undef    = { title: "history2", url: "http://undefined.net", lastVisitTime: hours(1) }
 
-    stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2]))
+    stub(HistoryCache, "use", (onComplete) => onComplete([@history1, @history2, @undef]))
     global.chrome.history =
       onVisited: { addListener: -> }
       onVisitRemoved: { addListener: -> }
@@ -173,6 +174,9 @@ context "domain completer",
 
   should "returns no results when there's more than one query term, because clearly it's not a domain", ->
     assert.arrayEqual [], filterCompleter(@completer, ["his", "tory"])
+
+  should "not return any results for empty queries", ->
+    assert.arrayEqual [], filterCompleter(@completer, [])
 
 context "domain completer (removing entries)",
   setup ->
