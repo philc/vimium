@@ -174,7 +174,7 @@ Release Notes
 - Added `gU`, which goes to the root of the current URL.
 - Added `yt`, which duplicates the current tab.
 - Added `W`, which moves the current tab to a new window.
-- Added marks for saving and jumping to sections of a page. `mX` to set a mark and `X` to return to it.
+- Added marks for saving and jumping to sections of a page. `mX` to set a mark and `` `X`` to return to it.
 - Added "LinkHints.activateModeToOpenIncognito", currently an advanced, unbound command.
 - Disallowed repeat tab closings, since this causes trouble for many people.
 - Update our Chrome APIs so Vimium works on Chrome 28+.
