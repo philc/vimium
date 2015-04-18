@@ -54,6 +54,15 @@ LinkHints =
       return
     @isActive = true
 
+    @hintMode = new Mode
+      name: "hint/#{mode.name}"
+      indicator: false
+      passInitialKeyupEvents: true
+      keydown: @onKeyDownInMode.bind(this, hintMarkers),
+      # trap all key events
+      keypress: -> false
+      keyup: -> false
+
     @setOpenLinkMode(mode)
     hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
     @getMarkerMatcher().fillInMarkers(hintMarkers)
@@ -63,14 +72,6 @@ LinkHints =
     # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
     @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
-
-    @hintMode = new Mode
-      name: "hint/#{mode.name}"
-      passInitialKeyupEvents: true
-      keydown: @onKeyDownInMode.bind(this, hintMarkers),
-      # trap all key events
-      keypress: -> false
-      keyup: -> false
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
