@@ -55,6 +55,7 @@ class Mode
         # Update the mode indicator.  Setting @options.indicator to a string shows a mode indicator in the
         # HUD.  Setting @options.indicator to 'false' forces no mode indicator.  If @options.indicator is
         # undefined, then the request propagates to the next mode.
+        # The active indicator can also be changed with @setIndicator().
         if @options.indicator?
           if @options.indicator then HUD?.show @options.indicator else HUD?.hide true, false
           @stopBubblingAndTrue
@@ -130,9 +131,16 @@ class Mode
           if KeyboardUtils.isPrintable event then @stopBubblingAndFalse else @stopBubblingAndTrue
 
     Mode.modes.push @
-    handlerStack.bubbleEvent 'indicator'
+    @setIndicator()
     @logModes()
     # End of Mode constructor.
+
+  setIndicator: (indicator = @options.indicator) ->
+    @options.indicator = indicator
+    Mode.setIndicator()
+
+  @setIndicator: ->
+    handlerStack.bubbleEvent "indicator"
 
   push: (handlers) ->
     handlers._name ||= "mode-#{@id}"
@@ -152,7 +160,7 @@ class Mode
       handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
       @modeIsActive = false
-      handlerStack.bubbleEvent 'indicator'
+      @setIndicator()
 
   deactivateSingleton: (singleton) ->
     Mode.singletons?[Utils.getIdentity singleton]?.exit()

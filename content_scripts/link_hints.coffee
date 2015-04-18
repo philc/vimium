@@ -54,18 +54,19 @@ LinkHints =
       return
     @isActive = true
 
+    hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
+    @getMarkerMatcher().fillInMarkers(hintMarkers)
+
     @hintMode = new Mode
       name: "hint/#{mode.name}"
       indicator: false
       passInitialKeyupEvents: true
-      keydown: @onKeyDownInMode.bind(this, hintMarkers),
-      # trap all key events
+      keydown: @onKeyDownInMode.bind this, hintMarkers
+      # Trap all other key events.
       keypress: -> false
       keyup: -> false
 
-    @setOpenLinkMode(mode)
-    hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
-    @getMarkerMatcher().fillInMarkers(hintMarkers)
+    @setOpenLinkMode mode
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
@@ -76,39 +77,33 @@ LinkHints =
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
-        HUD.show("Open link in new tab")
+        @hintMode.setIndicator "Open link in new tab"
       else if @mode is OPEN_IN_NEW_FG_TAB
-        HUD.show("Open link in new tab and switch to it")
+        @hintMode.setIndicator "Open link in new tab and switch to it"
       else
-        HUD.show("Open multiple links in a new tab")
+        @hintMode.setIndicator "Open multiple links in a new tab"
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
-        DomUtils.simulateClick(link, {
-          shiftKey: @mode is OPEN_IN_NEW_FG_TAB,
-          metaKey: KeyboardUtils.platform == "Mac",
-          ctrlKey: KeyboardUtils.platform != "Mac",
-          altKey: false})
+        DomUtils.simulateClick link,
+          shiftKey: @mode is OPEN_IN_NEW_FG_TAB
+          metaKey: KeyboardUtils.platform == "Mac"
+          ctrlKey: KeyboardUtils.platform != "Mac"
+          altKey: false
     else if @mode is COPY_LINK_URL
-      HUD.show("Copy link URL to Clipboard")
+      @hintMode.setIndicator "Copy link URL to Clipboard"
       @linkActivator = (link) ->
-        chrome.runtime.sendMessage({handler: "copyToClipboard", data: link.href})
+        chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
     else if @mode is OPEN_INCOGNITO
-      HUD.show("Open link in incognito window")
-
+      @hintMode.setIndicator "Open link in incognito window"
       @linkActivator = (link) ->
-        chrome.runtime.sendMessage(
-          handler: 'openUrlInIncognito'
-          url: link.href)
+        chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
-      HUD.show("Download link URL")
+      @hintMode.setIndicator "Download link URL"
       @linkActivator = (link) ->
-        DomUtils.simulateClick(link, {
-          altKey: true,
-          ctrlKey: false,
-          metaKey: false })
+        DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
-      HUD.show("Open link in current tab")
+      @hintMode.setIndicator "Open link in current tab"
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
 
   #
@@ -275,8 +270,8 @@ LinkHints =
       handlerStack.push
         keyup: (event) =>
           if event.keyCode == keyCode
-            @setOpenLinkMode previousMode if @isActive
             handlerStack.remove()
+            @setOpenLinkMode previousMode if @isActive
           true
 
     # TODO(philc): Ignore keys that have modifiers.
@@ -346,7 +341,6 @@ LinkHints =
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
       @hintMode.exit()
-      HUD.hide()
       @isActive = false
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that

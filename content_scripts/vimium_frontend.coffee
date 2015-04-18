@@ -1103,7 +1103,7 @@ HUD =
     clearInterval(HUD._tweenId)
     if immediate
       HUD.displayElement().style.display = "none" unless updateIndicator
-      handlerStack.bubbleEvent "indicator" if updateIndicator
+      Mode.setIndicator() if updateIndicator
     else
       HUD._tweenId = Tween.fade HUD.displayElement(), 0, 150, -> HUD.hide true, updateIndicator
 
