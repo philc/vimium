@@ -726,8 +726,9 @@ class FindMode extends Mode
   constructor: (options = {}) ->
     @historyIndex = -1
     @partialQuery = ""
-    @scrollX = window.scrollX
-    @scrollY = window.scrollY
+    if options.returnToViewport
+      @scrollX = window.scrollX
+      @scrollY = window.scrollY
     super
       name: "find"
       badge: "/"
@@ -735,6 +736,7 @@ class FindMode extends Mode
       exitOnClick: true
 
       keydown: (event) =>
+        window.scrollTo @scrollX, @scrollY if options.returnToViewport
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
           @exit() unless handleDeleteForFindMode()
           @suppressEvent
@@ -761,8 +763,6 @@ class FindMode extends Mode
         handlerStack.neverContinueBubbling =>
           if event.keyCode > 31
             keyChar = String.fromCharCode event.charCode
-            # Primarily for visual mode. If there's no match, we return to the original viewport.
-            window.scrollTo @scrollX, @scrollY if options.returnToViewport
             handleKeyCharForFindMode keyChar if keyChar
 
       keyup: (event) => @suppressEvent
@@ -994,8 +994,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
   selection.addRange range
 
 # Enters find mode.  Returns the new find-mode instance.
-# Experimental.  Try "returnToViewport: true" for *all* find operations.
-window.enterFindMode = (options = { returnToViewport: true }) ->
+window.enterFindMode = (options = {}) ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = { rawQuery: "" }
