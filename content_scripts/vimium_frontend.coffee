@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus" ]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus", "vomnibarInTopFrame" ]
   isLoaded: false
   eventListeners: {}
 
@@ -254,7 +254,7 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
-  Vomnibar.init() if DomUtils.isTopFrame()
+  Vomnibar.init() # if DomUtils.isTopFrame()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -273,11 +273,12 @@ unregisterFrame = ->
 executePageCommand = (request) ->
   # Vomnibar commands are handled in the tab's main/top frame.
   if request.command.split(".")[0] == "Vomnibar"
-    if DomUtils.isTopFrame()
-      # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
-      # which should receive the focus when the vomnibar closes.
-      Utils.invokeCommandString request.command, [ request.frameId ]
-      refreshCompletionKeys request
+    if (DomUtils.isTopFrame() and settings.get "vomnibarInTopFrame") or
+      (frameId == request.frameId and not settings.get "vomnibarInTopFrame")
+        # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
+        # which should receive the focus when the vomnibar closes.
+        Utils.invokeCommandString request.command, [ request.frameId ]
+        refreshCompletionKeys request
     return
 
   # All other commands are handled in their frame.
