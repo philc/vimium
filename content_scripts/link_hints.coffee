@@ -8,16 +8,15 @@
 # In 'filter' mode, our link hints are numbers, and the user can narrow down the range of possibilities by
 # typing the text of the link itself.
 #
-# The "name" property below is a short-form name to appear in the link-hints mode name.  Debugging only.  The
-# key appears in the mode's badge.
+# The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
-OPEN_IN_CURRENT_TAB = { name: "curr-tab", key: "" }
-OPEN_IN_NEW_BG_TAB = { name: "bg-tab", key: "B" }
-OPEN_IN_NEW_FG_TAB = { name: "fg-tab", key: "F" }
-OPEN_WITH_QUEUE = { name: "queue", key: "Q" }
-COPY_LINK_URL = { name: "link", key: "C" }
-OPEN_INCOGNITO = { name: "incognito", key: "I" }
-DOWNLOAD_LINK_URL = { name: "download", key: "D" }
+OPEN_IN_CURRENT_TAB = name: "curr-tab"
+OPEN_IN_NEW_BG_TAB = name: "bg-tab"
+OPEN_IN_NEW_FG_TAB = name: "fg-tab"
+OPEN_WITH_QUEUE = name: "queue"
+COPY_LINK_URL = name: "link"
+OPEN_INCOGNITO = name: "incognito"
+DOWNLOAD_LINK_URL = name: "download"
 
 LinkHints =
   hintMarkerContainingDiv: null
@@ -67,7 +66,6 @@ LinkHints =
 
     @hintMode = new Mode
       name: "hint/#{mode.name}"
-      badge: "#{mode.key}?"
       passInitialKeyupEvents: true
       keydown: @onKeyDownInMode.bind(this, hintMarkers),
       # trap all key events

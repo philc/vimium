@@ -68,18 +68,13 @@ class InsertMode extends Mode
   activateOnElement: (element) ->
     @log "#{@id}: activating (permanent)" if @debug and @permanent
     @insertModeLock = element
-    Mode.updateBadge()
 
   exit: (_, target)  ->
     if (target and target == @insertModeLock) or @global or target == undefined
       @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
       @insertModeLock = null
       # Exit, but only if this isn't the permanently-installed instance.
-      if @permanent then Mode.updateBadge() else super()
-
-  updateBadge: (badge) ->
-    badge.badge ||= @badge if @badge
-    badge.badge ||= "I" if @isActive badge
+      super() unless @permanent
 
   # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.
   @suppressedEvent: null

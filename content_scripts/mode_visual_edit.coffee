@@ -466,7 +466,6 @@ class VisualMode extends Movement
 
     defaults =
       name: "visual"
-      badge: "V"
       singleton: VisualMode
       exitOnEscape: true
     super extend defaults, options
@@ -587,7 +586,6 @@ class CaretMode extends Movement
 
     defaults =
       name: "caret"
-      badge: "C"
       singleton: VisualMode
       exitOnEscape: true
     super extend defaults, options
@@ -652,7 +650,6 @@ class EditMode extends Movement
 
     defaults =
       name: "edit"
-      badge: "E"
       exitOnEscape: true
       exitOnBlur: @element
     super extend defaults, options
@@ -748,7 +745,6 @@ class EditMode extends Movement
   # and (possibly) deletes it.
   enterVisualModeForMovement: (count, options = {}) ->
     @launchSubMode VisualMode, extend options,
-      badge: "M"
       initialCountPrefix: count
       oneMovementOnly: true
 

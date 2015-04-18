@@ -355,32 +355,12 @@ updateOpenTabs = (tab, deleteFrames = false) ->
   # Frames are recreated on refresh
   delete frameIdsForTab[tab.id] if deleteFrames
 
-chrome.browserAction.setBadgeBackgroundColor
-  # This is Vimium blue (from the icon).
-  # color: [102, 176, 226, 255]
-  # This is a slightly darker blue. It makes the badge more striking in the corner of the eye, and the symbol
-  # easier to read.
-  color: [82, 156, 206, 255]
-
-setBadge = do ->
-  current = null
-  timer = null
-  updateBadge = (badge, tabId) -> -> chrome.browserAction.setBadgeText text: badge, tabId: tabId
-  (request, sender) ->
-    badge = request.badge
-    if badge? and badge != current
-      current = badge
-      clearTimeout timer if timer
-      # We wait a few moments. This avoids badge flicker when there are rapid changes.
-      timer = setTimeout updateBadge(badge, sender.tab.id), 50
-
 # Here's how we set the page icon.  The default is "disabled", so if we do nothing else, then we get the
 # grey-out disabled icon.  Thereafter, we only set tab-specific icons, so there's no need to update the icon
 # when we visit a tab on which Vimium isn't running.
 #
 # For active tabs, when a frame starts, it requests its active state via isEnabledForUrl.  We also check the
-# state every time a frame gets the focus.  Once the frame learns its active state, it updates the current
-# tab's badge (but only if that frame has the focus).
+# state every time a frame gets the focus.  In both cases, the frame then updates the tab's icon accordingly.
 #
 # Exclusion rule changes (from either the options page or the page popup) propagate via the subsequent focus
 # change.  In particular, whenever a frame next gets the focus, it requests its new state and sets the icon
@@ -647,7 +627,6 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setIcon: setIcon
-  setBadge: setBadge
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

@@ -135,7 +135,6 @@ window.initializeModes = ->
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
-  new BadgeMode
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
@@ -391,7 +390,6 @@ extend window,
         constructor: ->
           super
             name: "focus-selector"
-            badge: "?"
             exitOnClick: true
             keydown: (event) =>
               if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -729,7 +727,6 @@ class FindMode extends Mode
     @partialQuery = ""
     super
       name: "find"
-      badge: "/"
       exitOnEscape: true
       exitOnClick: true
 
