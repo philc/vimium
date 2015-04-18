@@ -724,9 +724,12 @@ handleEnterForFindMode = ->
   FindModeHistory.saveQuery findModeQuery.rawQuery
 
 class FindMode extends Mode
-  constructor: ->
+  constructor: (options = {}) ->
     @historyIndex = -1
     @partialQuery = ""
+    if options.returnToViewport
+      @scrollX = window.scrollX
+      @scrollY = window.scrollY
     super
       name: "find"
       badge: "/"
@@ -734,6 +737,7 @@ class FindMode extends Mode
       exitOnClick: true
 
       keydown: (event) =>
+        window.scrollTo @scrollX, @scrollY if options.returnToViewport
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
           @exit() unless handleDeleteForFindMode()
           @suppressEvent
@@ -756,8 +760,8 @@ class FindMode extends Mode
           DomUtils.suppressPropagation(event)
           handlerStack.stopBubblingAndFalse
 
-      keypress: (event) ->
-        handlerStack.neverContinueBubbling ->
+      keypress: (event) =>
+        handlerStack.neverContinueBubbling =>
           if event.keyCode > 31
             keyChar = String.fromCharCode event.charCode
             handleKeyCharForFindMode keyChar if keyChar
@@ -990,12 +994,12 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
   selection.addRange range
 
 # Enters find mode.  Returns the new find-mode instance.
-window.enterFindMode = ->
+window.enterFindMode = (options = {}) ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = { rawQuery: "" }
   HUD.show("/")
-  new FindMode()
+  new FindMode options
 
 exitFindMode = ->
   HUD.hide()
