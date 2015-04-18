@@ -366,12 +366,12 @@ class Movement extends CountPrefix
     #
     # End of Movement constructor.
 
-  # Yank the selection; always exits; either deletes the selection or removes it; set @yankedText and return
+  # Yank the selection; always exits; either deletes the selection or collapses it; set @yankedText and return
   # it.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
     @selection.deleteFromDocument() if @options.deleteFromDocument or args.deleteFromDocument
-    @selection.removeAllRanges() unless @options.parentMode
+    @selection.collapseToStart() unless @options.parentMode
 
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length
@@ -384,7 +384,7 @@ class Movement extends CountPrefix
 
   exit: (event, target) ->
     unless @options.parentMode or @options.oneMovementOnly
-      @selection.removeAllRanges() if event?.type == "keydown" and KeyboardUtils.isEscape event
+      @selection.collapseToStart() if event?.type == "keydown" and KeyboardUtils.isEscape event
 
       # Disabled, pending discussion of fine-tuning the UX.  Simpler alternative is implemented above.
       # # If we're exiting on escape and there is a range selection, then we leave it in place.  However, an
