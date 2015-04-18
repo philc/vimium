@@ -24,7 +24,7 @@ class InsertMode extends Mode
 
     defaults =
       name: "insert"
-      indicator: if @global then "Insert mode" else null
+      indicator: if @permanent then null else "Insert mode"
       keypress: handleKeyEvent
       keyup: handleKeyEvent
       keydown: handleKeyEvent
