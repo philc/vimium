@@ -706,7 +706,6 @@ handleEscapeForFindMode = ->
 handleDeleteForFindMode = ->
   if findModeQuery.rawQuery.length == 0
     HUD.hide()
-    performFindInPlace()
     false
   else
     updateQueryForFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
@@ -990,7 +989,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
 window.enterFindMode = ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
-  findModeQuery = { rawQuery: "" }
+  findModeQuery = rawQuery: ""
   findMode = new FindMode()
   HUD.show "/"
   findMode
