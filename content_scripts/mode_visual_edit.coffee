@@ -489,8 +489,8 @@ class VisualMode extends Movement
             @selection.removeAllRanges()
 
         if @selection.type != "Range"
-          HUD.showForDuration "No usable selection, entering caret mode...", 2500
           @changeMode CaretMode
+          HUD.showForDuration "No usable selection, entering caret mode...", 2500
           return
 
     @push
@@ -597,8 +597,8 @@ class CaretMode extends Movement
       when "None"
         @establishInitialSelectionAnchor()
         if @selection.type == "None"
-          HUD.showForDuration "Create a selection before entering visual mode.", 2500
           @exit()
+          HUD.showForDuration "Create a selection before entering visual mode.", 2500
           return
       when "Range"
         @collapseSelectionToAnchor()
