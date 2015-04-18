@@ -51,6 +51,14 @@ class Mode
       keydown: @options.keydown || null
       keypress: @options.keypress || null
       keyup: @options.keyup || null
+      indicator: =>
+        # Update the mode indicator.  Setting @options.indicator to a string shows a mode indicator in the
+        # HUD.  Setting @options.indicator to 'false' forces no mode indicator.  If @options.indicator is
+        # undefined, then the request propagates to the next mode.
+        if @options.indicator?
+          if @options.indicator then HUD?.show @options.indicator else HUD?.hide true, false
+          @stopBubblingAndTrue
+        else @continueBubbling
 
     # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
     if @options.exitOnEscape
@@ -122,6 +130,7 @@ class Mode
           if KeyboardUtils.isPrintable event then @stopBubblingAndFalse else @stopBubblingAndTrue
 
     Mode.modes.push @
+    handlerStack.bubbleEvent 'indicator'
     @logModes()
     # End of Mode constructor.
 
@@ -143,6 +152,7 @@ class Mode
       handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
       @modeIsActive = false
+      handlerStack.bubbleEvent 'indicator'
 
   deactivateSingleton: (singleton) ->
     Mode.singletons?[Utils.getIdentity singleton]?.exit()
