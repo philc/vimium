@@ -733,10 +733,7 @@ class FindMode extends Mode
       exitOnClick: true
 
       keydown: (event) =>
-        console.log "aaa", options.returnToViewport
-        if options.returnToViewport
-          console.log "window.scrollTo", @scrollX, @scrollY
-          window.scrollTo @scrollX, @scrollY
+        window.scrollTo @scrollX, @scrollY if options.returnToViewport
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
           @exit() unless handleDeleteForFindMode()
           @suppressEvent
