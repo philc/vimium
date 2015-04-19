@@ -261,7 +261,6 @@ initOptionsPage = ->
     searchEngines: TextOption
     searchUrl: NonEmptyTextOption
     userDefinedLinkHintCss: TextOption
-    vomnibarInTopFrame: CheckBoxOption
 
   # Populate options. The constructor adds each new object to "Option.all".
   for name, type of options
