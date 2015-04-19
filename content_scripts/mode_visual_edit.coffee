@@ -376,10 +376,10 @@ class Movement extends CountPrefix
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length
     plural = if @yankedText.length == 1 then "" else "s"
-    HUD.showForDuration "Yanked #{@yankedText.length} character#{plural}: \"#{message}\".", 2500
 
     @options.onYank?.call @, @yankedText
     @exit()
+    HUD.showForDuration "Yanked #{@yankedText.length} character#{plural}: \"#{message}\".", 2500
     @yankedText
 
   exit: (event, target) ->
@@ -466,7 +466,7 @@ class VisualMode extends Movement
 
     defaults =
       name: "visual"
-      badge: "V"
+      indicator: if options.indicator? then options.indicator else "Visual mode"
       singleton: VisualMode
       exitOnEscape: true
     super extend defaults, options
@@ -489,8 +489,8 @@ class VisualMode extends Movement
             @selection.removeAllRanges()
 
         if @selection.type != "Range"
-          HUD.showForDuration "No usable selection, entering caret mode...", 2500
           @changeMode CaretMode
+          HUD.showForDuration "No usable selection, entering caret mode...", 2500
           return
 
     @push
@@ -567,7 +567,7 @@ class VisualMode extends Movement
 
 class VisualLineMode extends VisualMode
   constructor: (options = {}) ->
-    super extend { name: "visual/line" }, options
+    super extend { name: "visual/line", indicator: "Visual mode (line)" }, options
     @extendSelection()
     @commands.v = -> @changeMode VisualMode
 
@@ -587,7 +587,7 @@ class CaretMode extends Movement
 
     defaults =
       name: "caret"
-      badge: "C"
+      indicator: "Caret mode"
       singleton: VisualMode
       exitOnEscape: true
     super extend defaults, options
@@ -597,8 +597,8 @@ class CaretMode extends Movement
       when "None"
         @establishInitialSelectionAnchor()
         if @selection.type == "None"
-          HUD.showForDuration "Create a selection before entering visual mode.", 2500
           @exit()
+          HUD.showForDuration "Create a selection before entering visual mode.", 2500
           return
       when "Range"
         @collapseSelectionToAnchor()
@@ -652,7 +652,7 @@ class EditMode extends Movement
 
     defaults =
       name: "edit"
-      badge: "E"
+      indicator: "Edit mode"
       exitOnEscape: true
       exitOnBlur: @element
     super extend defaults, options
@@ -748,7 +748,6 @@ class EditMode extends Movement
   # and (possibly) deletes it.
   enterVisualModeForMovement: (count, options = {}) ->
     @launchSubMode VisualMode, extend options,
-      badge: "M"
       initialCountPrefix: count
       oneMovementOnly: true
 

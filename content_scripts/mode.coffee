@@ -6,13 +6,6 @@
 # name:
 #   A name for this mode.
 #
-# badge:
-#   A badge (to appear on the browser popup).
-#   Optional.  Define a badge if the badge is constant; for example, in find mode the badge is always "/".
-#   Otherwise, do not define a badge, but instead override the updateBadge method; for example, in passkeys
-#   mode, the badge may be "P" or "", depending on the configuration state.  Or, if the mode *never* shows a
-#   badge, then do neither.
-#
 # keydown:
 # keypress:
 # keyup:
@@ -48,7 +41,6 @@ class Mode
     @handlers = []
     @exitHandlers = []
     @modeIsActive = true
-    @badge = @options.badge || ""
     @name = @options.name || "anonymous"
 
     @count = ++count
@@ -59,7 +51,15 @@ class Mode
       keydown: @options.keydown || null
       keypress: @options.keypress || null
       keyup: @options.keyup || null
-      updateBadge: (badge) => @alwaysContinueBubbling => @updateBadge badge
+      indicator: =>
+        # Update the mode indicator.  Setting @options.indicator to a string shows a mode indicator in the
+        # HUD.  Setting @options.indicator to 'false' forces no mode indicator.  If @options.indicator is
+        # undefined, then the request propagates to the next mode.
+        # The active indicator can also be changed with @setIndicator().
+        if @options.indicator?
+          if @options.indicator then HUD?.show @options.indicator else HUD?.hide true, false
+          @stopBubblingAndTrue
+        else @continueBubbling
 
     # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
     if @options.exitOnEscape
@@ -131,9 +131,16 @@ class Mode
           if KeyboardUtils.isPrintable event then @stopBubblingAndFalse else @stopBubblingAndTrue
 
     Mode.modes.push @
-    Mode.updateBadge()
+    @setIndicator()
     @logModes()
     # End of Mode constructor.
+
+  setIndicator: (indicator = @options.indicator) ->
+    @options.indicator = indicator
+    Mode.setIndicator()
+
+  @setIndicator: ->
+    handlerStack.bubbleEvent "indicator"
 
   push: (handlers) ->
     handlers._name ||= "mode-#{@id}"
@@ -152,16 +159,11 @@ class Mode
       handler() for handler in @exitHandlers
       handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
-      Mode.updateBadge()
       @modeIsActive = false
+      @setIndicator()
 
   deactivateSingleton: (singleton) ->
     Mode.singletons?[Utils.getIdentity singleton]?.exit()
-
-  # The badge is chosen by bubbling an "updateBadge" event down the handler stack allowing each mode the
-  # opportunity to choose a badge. This is overridden in sub-classes.
-  updateBadge: (badge) ->
-    badge.badge ||= @badge
 
   # Shorthand for an otherwise long name.  This wraps a handler with an arbitrary return value, and always
   # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common
@@ -173,14 +175,6 @@ class Mode
   cloneMode: ->
     delete @options[key] for key in [ "keydown", "keypress", "keyup" ]
     new @constructor @options
-
-  # Static method.  Used externally and internally to initiate bubbling of an updateBadge event and to send
-  # the resulting badge to the background page.  We only update the badge if this document (hence this frame)
-  # has the focus.
-  @updateBadge: ->
-    if document.hasFocus()
-      handlerStack.bubbleEvent "updateBadge", badge = badge: ""
-      chrome.runtime.sendMessage { handler: "setBadge", badge: badge.badge }, ->
 
   # Debugging routines.
   logModes: ->
@@ -200,31 +194,5 @@ class Mode
     mode.exit() for mode in @modes
     @modes = []
 
-# BadgeMode is a pseudo mode for triggering badge updates on focus changes and state updates. It sits at the
-# bottom of the handler stack, and so it receives state changes *after* all other modes, and can override the
-# badge choice of the other modes.
-class BadgeMode extends Mode
-  constructor: () ->
-    super
-      name: "badge"
-      trackState: true
-
-    # FIXME(smblott) BadgeMode is currently triggering an updateBadge event on every focus event.  That's a
-    # lot, considerably more than necessary.  Really, it only needs to trigger when we change frame, or when
-    # we change tab.
-    @push
-      _name: "mode-#{@id}/focus"
-      "focus": => @alwaysContinueBubbling -> Mode.updateBadge()
-
-  updateBadge: (badge) ->
-    # If we're not enabled, then post an empty badge.
-    badge.badge = "" unless @enabled
-
-  # When the registerStateChange event bubbles to the bottom of the stack, all modes have been notified.  So
-  # it's now time to update the badge.
-  registerStateChange: ->
-    Mode.updateBadge()
-
 root = exports ? window
 root.Mode = Mode
-root.BadgeMode = BadgeMode

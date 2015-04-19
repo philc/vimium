@@ -129,13 +129,13 @@ window.initializeModes = ->
     constructor: ->
       super
         name: "normal"
+        indicator: false # There is no mode indicator in normal mode.
         keydown: (event) => onKeydown.call @, event
         keypress: (event) => onKeypress.call @, event
         keyup: (event) => onKeyup.call @, event
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
-  new BadgeMode
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
@@ -391,7 +391,6 @@ extend window,
         constructor: ->
           super
             name: "focus-selector"
-            badge: "?"
             exitOnClick: true
             keydown: (event) =>
               if event.keyCode == KeyboardUtils.keyCodes.tab
@@ -693,7 +692,6 @@ handleKeyCharForFindMode = (keyChar) ->
   updateQueryForFindMode findModeQuery.rawQuery + keyChar
 
 handleEscapeForFindMode = ->
-  exitFindMode()
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
   # back to the default color.
@@ -707,8 +705,7 @@ handleEscapeForFindMode = ->
 # Return true if character deleted, false otherwise.
 handleDeleteForFindMode = ->
   if findModeQuery.rawQuery.length == 0
-    exitFindMode()
-    performFindInPlace()
+    HUD.hide()
     false
   else
     updateQueryForFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
@@ -718,7 +715,6 @@ handleDeleteForFindMode = ->
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
 handleEnterForFindMode = ->
-  exitFindMode()
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
   FindModeHistory.saveQuery findModeQuery.rawQuery
@@ -732,7 +728,7 @@ class FindMode extends Mode
       @scrollY = window.scrollY
     super
       name: "find"
-      badge: "/"
+      indicator: false
       exitOnEscape: true
       exitOnClick: true
 
@@ -997,12 +993,10 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
 window.enterFindMode = (options = {}) ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
-  findModeQuery = { rawQuery: "" }
-  HUD.show("/")
-  new FindMode options
-
-exitFindMode = ->
-  HUD.hide()
+  findModeQuery = rawQuery: ""
+  findMode = new FindMode()
+  HUD.show "/"
+  findMode
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
@@ -1105,13 +1099,17 @@ HUD =
     document.body.appendChild(element)
     element
 
-  hide: (immediate) ->
+  # Hide the HUD.
+  # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
+  # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
+  # mode indicator, is when hide() is called for the mode indicator itself.
+  hide: (immediate = false, updateIndicator = true) ->
     clearInterval(HUD._tweenId)
-    if (immediate)
-      HUD.displayElement().style.display = "none"
+    if immediate
+      HUD.displayElement().style.display = "none" unless updateIndicator
+      Mode.setIndicator() if updateIndicator
     else
-      HUD._tweenId = Tween.fade(HUD.displayElement(), 0, 150,
-        -> HUD.displayElement().style.display = "none")
+      HUD._tweenId = Tween.fade HUD.displayElement(), 0, 150, -> HUD.hide true, updateIndicator
 
   isReady: -> document.body != null
 

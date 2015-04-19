@@ -84,10 +84,8 @@ class HandlerStack
 
   # Debugging.
   logResult: (eventNumber, type, event, handler, result) ->
-    # FIXME(smblott).  Badge updating is too noisy, so we filter it out.  However, we do need to look at how
-    # many badge update events are happening.  It seems to be more than necessary. We also filter out
-    # registerKeyQueue as unnecessarily noisy and not particularly helpful.
-    return if type in [ "updateBadge", "registerKeyQueue" ]
+    # Key queue events aren't usually useful for debugging, so we filter them out.
+    return if type in [ "registerKeyQueue" ]
     label =
       switch result
         when @stopBubblingAndTrue then "stop/true"

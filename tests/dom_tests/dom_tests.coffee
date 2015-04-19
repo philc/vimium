@@ -495,10 +495,6 @@ context "PostFindMode",
     testContent = "<input type='text' id='first'/>"
     document.getElementById("test-div").innerHTML = testContent
     document.getElementById("first").focus()
-    # For these tests, we need to push GrabBackFocus out of the way.  When it exits, it updates the badge,
-    # which interferes with event suppression within insert mode.  This cannot happen in normal operation,
-    # because GrabBackFocus exits on the first keydown.
-    Mode.top().exit()
     @postFindMode = new PostFindMode
 
   tearDown ->
@@ -526,56 +522,4 @@ context "PostFindMode",
     sendKeyboardEvent "a"
     sendKeyboardEvent "escape"
     assert.isTrue @postFindMode.modeIsActive
-
-context "Mode badges",
-  setup ->
-    initializeModeState()
-    testContent = "<input type='text' id='first'/>"
-    document.getElementById("test-div").innerHTML = testContent
-
-  tearDown ->
-    document.getElementById("test-div").innerHTML = ""
-
-  should "have no badge in normal mode", ->
-    Mode.updateBadge()
-    assert.isTrue chromeMessages[0].badge == ""
-
-  should "have an I badge in insert mode by focus", ->
-    document.getElementById("first").focus()
-    # Focus triggers an event in the handler stack, so we check element "1", here.
-    assert.isTrue chromeMessages[1].badge == "I"
-
-  should "have no badge after leaving insert mode by focus", ->
-    document.getElementById("first").focus()
-    document.getElementById("first").blur()
-    assert.isTrue chromeMessages[0].badge == ""
-
-  should "have an I badge in global insert mode", ->
-    new InsertMode global: true
-    assert.isTrue chromeMessages[0].badge == "I"
-
-  should "have no badge after leaving global insert mode", ->
-    mode = new InsertMode global: true
-    mode.exit()
-    assert.isTrue chromeMessages[0].badge == ""
-
-  should "have a ? badge in PostFindMode (immediately)", ->
-    document.getElementById("first").focus()
-    new PostFindMode
-    assert.isTrue chromeMessages[0].badge == "?"
-
-  should "have no badge in PostFindMode (subsequently)", ->
-    document.getElementById("first").focus()
-    new PostFindMode
-    sendKeyboardEvent "a"
-    assert.isTrue chromeMessages[0].badge == ""
-
-  should "have no badge when disabled", ->
-    handlerStack.bubbleEvent "registerStateChange",
-      enabled: false
-      passKeys: ""
-
-    document.getElementById("first").focus()
-    # Focus triggers an event in the handler stack, so we check element "1", here.
-    assert.isTrue chromeMessages[1].badge == ""
 
