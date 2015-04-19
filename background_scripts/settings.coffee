@@ -114,8 +114,6 @@ root.Settings = Settings =
     searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s wikipedia"
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
-    # Vimium Labs settings
-    vomnibarInTopFrame: false
 
     settingsVersion: Utils.getCurrentVersion()
 
