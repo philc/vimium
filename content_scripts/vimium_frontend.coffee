@@ -733,7 +733,10 @@ class FindMode extends Mode
       exitOnClick: true
 
       keydown: (event) =>
-        window.scrollTo @scrollX, @scrollY if options.returnToViewport
+        console.log "aaa", options.returnToViewport
+        if options.returnToViewport
+          console.log "window.scrollTo", @scrollX, @scrollY
+          window.scrollTo @scrollX, @scrollY
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
           @exit() unless handleDeleteForFindMode()
           @suppressEvent
@@ -994,7 +997,7 @@ window.enterFindMode = (options = {}) ->
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = rawQuery: ""
-  findMode = new FindMode()
+  findMode = new FindMode options
   HUD.show "/"
   findMode
 
