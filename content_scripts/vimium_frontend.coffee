@@ -189,7 +189,8 @@ initializePreDomReady = ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or request.name == 'getActiveState' or request.name == 'setState'
+    # We handle the message if we're enabled, or if it's one of these listed message types.
+    return unless isEnabledForUrl or request.name in [ "getActiveState", "setState", "executePageCommand" ]
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
     # We don't handle these here.  They're handled elsewhere (e.g. in the vomnibar/UI component).
@@ -254,7 +255,8 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
-  Vomnibar.init() # if DomUtils.isTopFrame()
+  # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
+  Vomnibar.init() if DomUtils.isTopFrame()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -271,18 +273,17 @@ unregisterFrame = ->
     tab_is_closing: DomUtils.isTopFrame()
 
 executePageCommand = (request) ->
-  # Vomnibar commands are handled in the tab's main/top frame.
-  if request.command.split(".")[0] == "Vomnibar"
-    if (DomUtils.isTopFrame() and settings.get "vomnibarInTopFrame") or
-      (frameId == request.frameId and not settings.get "vomnibarInTopFrame")
-        # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
-        # which should receive the focus when the vomnibar closes.
-        Utils.invokeCommandString request.command, [ request.frameId ]
-        refreshCompletionKeys request
+  # Vomnibar commands are handled in the tab's main/top frame.  They are handled even if Vimium is otherwise
+  # disabled in the frame.
+  if request.command.split(".")[0] == "Vomnibar" and DomUtils.isTopFrame()
+      # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
+      # which should receive the focus when the vomnibar closes.
+      Utils.invokeCommandString request.command, [ request.frameId ]
+      refreshCompletionKeys request
     return
 
-  # All other commands are handled in their frame.
-  return unless frameId == request.frameId
+  # All other commands are handled in their frame (but only if Vimium is enabled).
+  return unless frameId == request.frameId and isEnabledForUrl
 
   if (request.passCountToFunction)
     Utils.invokeCommandString(request.command, [request.count])
