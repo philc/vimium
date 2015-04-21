@@ -167,7 +167,7 @@ initializePreDomReady = ->
   requestHandlers =
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
-    focusFrame: (request) -> if (request.frameId in [ frameId, 0 ]) then focusThisFrame(request.highlight)
+    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
@@ -180,10 +180,15 @@ initializePreDomReady = ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl or (request.frameId == 0 and request.name in [ "focusFrame" ])
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
-    sendResponse requestHandlers[request.name](request, sender)
+    shouldHandleRequest = isEnabledForUrl
+    # Requests with a frameId of zero are sent to and only received by the tab's main frame.  We *always*
+    # handle the listed requests in that frame (even if Vimium is otherwise disabled).
+    if request.frameId == 0 and request.name in [ "focusFrame" ]
+      request.frameId = frameId
+      shouldHandleRequest = true
+    sendResponse requestHandlers[request.name](request, sender) if shouldHandleRequest
     # Ensure the sendResponse callback is freed.
     false
 
