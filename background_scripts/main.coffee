@@ -298,6 +298,11 @@ BackgroundCommands =
       count = (count + Math.max 0, frameIdsForTab[tab.id].indexOf frameId) % frames.length
       frames = frameIdsForTab[tab.id] = [frames[count..]..., frames[0...count]...]
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
+  mainFrame: ->
+    chrome.tabs.getSelected null, (tab) ->
+      # Messages sent with a frameId of zero in the options argument (as below) are delivered only to the
+      # tab's main frame.
+      chrome.tabs.sendMessage tab.id, { name: "focusFrame", frameId: 0, highlight: true }, frameId: 0
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"
@@ -618,6 +623,7 @@ sendRequestHandlers =
   unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
+  mainFrame: BackgroundCommands.mainFrame
   updateScrollPosition: handleUpdateScrollPosition
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard

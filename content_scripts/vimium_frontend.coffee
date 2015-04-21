@@ -92,9 +92,9 @@ settings =
     @eventListeners[eventName].push(callback)
 
 #
-# Give this frame a unique id.
+# Give this frame a unique (non-zero) id.
 #
-frameId = Math.floor(Math.random()*999999999)
+frameId = 1 + Math.floor(Math.random()*999999999)
 
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
@@ -167,7 +167,7 @@ initializePreDomReady = ->
   requestHandlers =
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
-    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
+    focusFrame: (request) -> if (request.frameId in [ frameId, 0 ]) then focusThisFrame(request.highlight)
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
@@ -180,7 +180,7 @@ initializePreDomReady = ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl
+    return unless isEnabledForUrl or (request.frameId == 0 and request.name in [ "focusFrame" ])
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
     sendResponse requestHandlers[request.name](request, sender)
