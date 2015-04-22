@@ -44,7 +44,7 @@ settings =
   loadedValues: 0
   valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
     "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus", "vomnibarInTopFrame" ]
+    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus" ]
   isLoaded: false
   eventListeners: {}
 
@@ -275,7 +275,6 @@ unregisterFrame = ->
 executePageCommand = (request) ->
   # Vomnibar commands are handled in the tab's main/top frame.  They are handled even if Vimium is otherwise
   # disabled in the frame.
-  console.log frameId, request
   if request.command.split(".")[0] == "Vomnibar"
     if DomUtils.isTopFrame()
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
