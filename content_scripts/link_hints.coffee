@@ -56,7 +56,10 @@ LinkHints =
       return
     @isActive = true
 
-    hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
+    elements = @getVisibleClickableElements()
+    # For COPY_LINK_URL mode, we filter out those elements which don't have an HREF to copy.
+    elements = (el for el in elements when el.element.href?) if mode == COPY_LINK_URL
+    hintMarkers = (@createMarkerFor(el) for el in elements)
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 
     @hintMode = new Mode
