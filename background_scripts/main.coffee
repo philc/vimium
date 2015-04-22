@@ -623,7 +623,6 @@ sendRequestHandlers =
   unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
-  mainFrame: BackgroundCommands.mainFrame
   updateScrollPosition: handleUpdateScrollPosition
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
