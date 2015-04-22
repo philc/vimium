@@ -95,10 +95,13 @@ LinkHints =
     else if @mode is COPY_LINK_URL
       @hintMode.setIndicator "Copy link URL to Clipboard"
       @linkActivator = (link) =>
-        chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
-        url = link.href
-        url = url[0..25] + "...." if 28 < url.length
-        @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+        if link.href?
+          chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+          url = link.href
+          url = url[0..25] + "...." if 28 < url.length
+          @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+        else
+          @onExit = -> HUD.showForDuration "No link to yank.", 2000
     else if @mode is OPEN_INCOGNITO
       @hintMode.setIndicator "Open link in incognito window"
       @linkActivator = (link) ->
