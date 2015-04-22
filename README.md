@@ -45,6 +45,7 @@ Navigating the current page:
     yy      copy the current url to the clipboard
     yf      copy a link url to the clipboard
     gf      cycle forward to the next frame
+    gF      focus the main/top frame
 
 Navigating to new pages:
 
