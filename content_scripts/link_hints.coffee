@@ -32,6 +32,8 @@ LinkHints =
     if settings.get("filterLinkHints") then filterHints else alphabetHints
   # lock to ensure only one instance runs at a time
   isActive: false
+  # Call this function on exit (if defined).
+  onExit: null
 
   #
   # To be called after linkHints has been generated from linkHintsBase.
@@ -92,8 +94,11 @@ LinkHints =
           altKey: false
     else if @mode is COPY_LINK_URL
       @hintMode.setIndicator "Copy link URL to Clipboard"
-      @linkActivator = (link) ->
+      @linkActivator = (link) =>
         chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+        url = link.href
+        url = url[0..25] + "...." if 28 < url.length
+        @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
     else if @mode is OPEN_INCOGNITO
       @hintMode.setIndicator "Open link in incognito window"
       @linkActivator = (link) ->
@@ -341,6 +346,8 @@ LinkHints =
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
       @hintMode.exit()
+      @onExit?()
+      @onExit = null
       @isActive = false
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
