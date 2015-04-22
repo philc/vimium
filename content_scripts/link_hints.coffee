@@ -32,6 +32,8 @@ LinkHints =
     if settings.get("filterLinkHints") then filterHints else alphabetHints
   # lock to ensure only one instance runs at a time
   isActive: false
+  # Call this function on exit (if defined).
+  onExit: null
 
   #
   # To be called after linkHints has been generated from linkHintsBase.
@@ -54,7 +56,11 @@ LinkHints =
       return
     @isActive = true
 
-    hintMarkers = (@createMarkerFor(el) for el in @getVisibleClickableElements())
+    elements = @getVisibleClickableElements()
+    # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
+    # with them).
+    elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
+    hintMarkers = (@createMarkerFor(el) for el in elements)
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 
     @hintMode = new Mode
@@ -92,8 +98,14 @@ LinkHints =
           altKey: false
     else if @mode is COPY_LINK_URL
       @hintMode.setIndicator "Copy link URL to Clipboard"
-      @linkActivator = (link) ->
-        chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+      @linkActivator = (link) =>
+        if link.href?
+          chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+          url = link.href
+          url = url[0..25] + "...." if 28 < url.length
+          @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+        else
+          @onExit = -> HUD.showForDuration "No link to yank.", 2000
     else if @mode is OPEN_INCOGNITO
       @hintMode.setIndicator "Open link in incognito window"
       @linkActivator = (link) ->
@@ -341,6 +353,8 @@ LinkHints =
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
       @hintMode.exit()
+      @onExit?()
+      @onExit = null
       @isActive = false
 
     # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
