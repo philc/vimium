@@ -63,10 +63,11 @@ class VomnibarUI
 
   # The sequence of events when the vomnibar is hidden is as follows:
   # 1. Post a "hide" message to the host page.
-  # 2. The host page hides the vomnibar and posts back a "hidden" message.
-  # 3. Only once "hidden" message is received here is any required action (callback) invoked (in onHidden).
-  # This ensures that the vomnibar is actually hidden, and avoids flicker after opening a link in a new tab
-  # (see #1485).
+  # 2. The host page hides the vomnibar.
+  # 3. When that page receives the focus, and it posts back a "hidden" message.
+  # 3. Only once the "hidden" message is received here is any required action  invoked (in onHidden).
+  # This ensures that the vomnibar is actually hidden before any new tab is created, and avoids flicker after
+  # opening a link in a new tab then returning to the original tab (see #1485).
   hide: (@postHideCallback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()

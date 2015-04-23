@@ -55,7 +55,7 @@ class UIComponent
     @showing = true
 
   hide: (focusWindow = true)->
-    @refocusSourceFrame @options?.sourceFrameId if focusWindow and @options?.sourceFrameId?
+    @refocusSourceFrame @options?.sourceFrameId if focusWindow
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
     @iframeElement.classList.remove "vimiumUIComponentShowing"
@@ -63,14 +63,13 @@ class UIComponent
     @options = null
     @showing = false
 
-  # Refocus the frame from which the UI component was opened.
+  # Refocus the frame from which the UI component was opened.  This may be different from the current frame.
   # After hiding the UI component, Chrome refocuses the containing frame. To avoid a race condition, we need
-  # to wait until that frame receives the focus, before then focusing the frame which should now have the
-  # focus.
+  # to wait until that frame first receives the focus, before then focusing the frame which should now have
+  # the focus.
   refocusSourceFrame: (sourceFrameId) ->
-    window.addEventListener "focus", handler = (event) ->
-      if event.target == window
-        window.removeEventListener "focus", handler
+    if @showing and sourceFrameId? and sourceFrameId != frameId
+      refocusSourceFrame = ->
         chrome.runtime.sendMessage
           handler: "sendMessageToFrames"
           message:
@@ -78,6 +77,16 @@ class UIComponent
             frameId: sourceFrameId
             highlight: false
             highlightOnlyIfNotTop: true
+
+      if windowIsFocused() and false
+        # We already have the focus.
+        refocusSourceFrame()
+      else
+        # We don't yet have the focus (but we'll be getting it soon).
+        window.addEventListener "focus", handler = (event) ->
+          if event.target == window
+            window.removeEventListener "focus", handler
+            refocusSourceFrame()
 
 root = exports ? window
 root.UIComponent = UIComponent

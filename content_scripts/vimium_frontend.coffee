@@ -19,6 +19,13 @@ keyQueue = null
 currentCompletionKeys = ""
 validFirstKeys = ""
 
+# We track whther the current window has the focus or not.
+windowIsFocused = do ->
+  windowHasFocus = document.hasFocus()
+  window.addEventListener "focus", (event) -> windowHasFocus = true if event.target == window; true
+  window.addEventListener "blur", (event) -> windowHasFocus = false if event.target == window; true
+  -> windowHasFocus
+
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
 # fetch it each time.
@@ -192,7 +199,7 @@ initializePreDomReady = ->
     # We handle the message if we're enabled, or if it's one of these listed message types.
     return unless isEnabledForUrl or request.name in [ "getActiveState", "setState", "executePageCommand" ]
     # These requests are delivered to the options page, but there are no handlers there.
-    return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
+    return if request.handler in [ "registerFrame", "unregisterFrame" ]
     # We don't handle these here.  They're handled elsewhere (e.g. in the vomnibar/UI component).
     return if request.name in [ "frameFocused" ]
     # Handle the request.
@@ -1245,4 +1252,5 @@ root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
+root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
