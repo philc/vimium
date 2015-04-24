@@ -96,6 +96,15 @@ root.isEnabledForUrl = isEnabledForUrl = (request) ->
     passKeys: rule?.passKeys or ""
   }
 
+isEnabledForUpdatedUrl = (details) ->
+  message = isEnabledForUrl details
+  message.name = "updateEnabledForUrlState"
+  chrome.tabs.sendMessage details.tabId, message, {frameId: details.frameId}
+
+# Re-check whether Vimium is enabled for a frame when the url changes without a reload.
+chrome.webNavigation.onHistoryStateUpdated.addListener isEnabledForUpdatedUrl # history.pushState.
+chrome.webNavigation.onReferenceFragmentUpdated.addListener isEnabledForUpdatedUrl # Hash changed.
+
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->

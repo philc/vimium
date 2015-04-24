@@ -175,12 +175,13 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
+    updateEnabledForUrlState: updateEnabledForUrlState
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl
+    return unless isEnabledForUrl or request.name in ["updateEnabledForUrlState"]
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
     sendResponse requestHandlers[request.name](request, sender)
@@ -550,24 +551,27 @@ onKeyup = (event) ->
 checkIfEnabledForUrl = ->
   url = window.location.toString()
 
-  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
-    {isEnabledForUrl, passKeys} = response
-    if isEnabledForUrl
-      initializeWhenEnabled()
-    else if HUD.isReady()
-      # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
-      HUD.hide()
-    handlerStack.bubbleEvent "registerStateChange",
-      enabled: isEnabledForUrl
-      passKeys: passKeys
-    # Update the page icon, if necessary.
-    if document.hasFocus()
-      chrome.runtime.sendMessage
-        handler: "setIcon"
-        icon:
-          if isEnabledForUrl and not passKeys then "enabled"
-          else if isEnabledForUrl then "partial"
-          else "disabled"
+  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, updateEnabledForUrlState
+
+updateEnabledForUrlState = (response) ->
+  {isEnabledForUrl, passKeys} = response
+  if isEnabledForUrl
+    initializeWhenEnabled()
+  else if HUD.isReady()
+    # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
+    HUD.hide()
+  handlerStack.bubbleEvent "registerStateChange",
+    enabled: isEnabledForUrl
+    passKeys: passKeys
+  # Update the page icon, if necessary.
+  if document.hasFocus()
+    chrome.runtime.sendMessage
+      handler: "setIcon"
+      icon:
+        if isEnabledForUrl and not passKeys then "enabled"
+        else if isEnabledForUrl then "partial"
+        else "disabled"
+  null
 
 
 # Exported to window, but only for DOM tests.
