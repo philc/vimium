@@ -200,7 +200,7 @@ installListener = (element, event, callback) ->
 # Run this as early as possible, so the page can't register any event handlers before us.
 #
 installedListeners = false
-window.initializeWhenEnabled = ->
+window.initializeWithState = ->
   unless installedListeners
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
@@ -555,9 +555,8 @@ checkIfEnabledForUrl = ->
 
 updateEnabledForUrlState = (response) ->
   {isEnabledForUrl, passKeys} = response
-  if isEnabledForUrl
-    initializeWhenEnabled()
-  else if HUD.isReady()
+  initializeWithState()
+  if HUD.isReady() and not isEnabledForUrl
     # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
     HUD.hide()
   handlerStack.bubbleEvent "registerStateChange",
