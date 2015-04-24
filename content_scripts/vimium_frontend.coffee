@@ -12,7 +12,7 @@ findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
-isIncognitoMode = false
+isIncognitoMode = chrome.extension.inIncognitoContext
 passKeys = null
 keyQueue = null
 # The user's operating system.
@@ -551,9 +551,7 @@ checkIfEnabledForUrl = ->
   url = window.location.toString()
 
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
-    isEnabledForUrl = response.isEnabledForUrl
-    passKeys = response.passKeys
-    isIncognitoMode = response.incognito
+    {isEnabledForUrl, passKeys} = response
     if isEnabledForUrl
       initializeWhenEnabled()
     else if HUD.isReady()
