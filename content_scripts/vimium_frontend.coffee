@@ -243,7 +243,7 @@ onFocus = (event) ->
   if event.target == window
     settings.load()
     chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId, url: window.location.toString()
-    checkIfEnabledForUrl()
+    checkIfEnabledForUrl true
 
 # We install these listeners directly (that is, we don't use installListener) because we still need to receive
 # events when Vimium is not enabled.
@@ -585,9 +585,11 @@ onKeyup = (event) ->
   DomUtils.suppressPropagation(event)
   @stopBubblingAndTrue
 
-checkIfEnabledForUrl = ->
+# Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
+# page whether this frame has the focus, allowing the background page to track the active frame's URL.
+checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
   url = window.location.toString()
-  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
+  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url, frameIsFocused: frameIsFocused }, (response) ->
     { isEnabledForUrl, passKeys } = response
     installListeners() # But only if they have not been installed already.
     if HUD.isReady() and not isEnabledForUrl

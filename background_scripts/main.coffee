@@ -88,8 +88,11 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 #
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
 # whether any keys should be passed through to the underlying page.
+# The source frame also informs us whether or not it has the focus, which allows us to track the URL of the
+# active frame.
 #
-root.isEnabledForUrl = isEnabledForUrl = (request) ->
+root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
+  urlForTab[sender.tab.id] = request.url if request.frameIsFocused
   rule = Exclusions.getRule(request.url)
   {
     isEnabledForUrl: not rule or rule.passKeys
@@ -606,7 +609,6 @@ unregisterFrame = (request, sender) ->
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
-  urlForTab[tabId] = request.url
   # Cycle frameIdsForTab to the focused frame.  However, also ensure that we don't inadvertently register a
   # frame which wasn't previously registered (such as a frameset).
   if frameIdsForTab[tabId]? and request.frameId in frameIdsForTab[tabId]
