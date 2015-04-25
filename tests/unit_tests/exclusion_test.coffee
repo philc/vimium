@@ -21,10 +21,6 @@ extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
 
-dummyTab =
-  tab:
-    incognito: false
-
 # These tests cover only the most basic aspects of excluded URLs and passKeys.
 #
 context "Excluded URLs and pass keys",
@@ -40,22 +36,22 @@ context "Excluded URLs and pass keys",
       ])
 
   should "be disabled for excluded sites", ->
-    rule = isEnabledForUrl({ url: 'http://mail.google.com/calendar/page' }, dummyTab)
+    rule = isEnabledForUrl({ url: 'http://mail.google.com/calendar/page' })
     assert.isFalse rule.isEnabledForUrl
     assert.isFalse rule.passKeys
 
   should "be disabled for excluded sites, one exclusion", ->
-    rule = isEnabledForUrl({ url: 'http://www.bbc.com/calendar/page' }, dummyTab)
+    rule = isEnabledForUrl({ url: 'http://www.bbc.com/calendar/page' })
     assert.isFalse rule.isEnabledForUrl
     assert.isFalse rule.passKeys
 
   should "be enabled, but with pass keys", ->
-    rule = isEnabledForUrl({ url: 'https://www.facebook.com/something' }, dummyTab)
+    rule = isEnabledForUrl({ url: 'https://www.facebook.com/something' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal rule.passKeys, 'abcd'
 
   should "be enabled", ->
-    rule = isEnabledForUrl({ url: 'http://www.twitter.com/pages' }, dummyTab)
+    rule = isEnabledForUrl({ url: 'http://www.twitter.com/pages' })
     assert.isTrue rule.isEnabledForUrl
     assert.isFalse rule.passKeys
 

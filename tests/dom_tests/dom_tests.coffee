@@ -1,6 +1,6 @@
 
 # Install frontend event handlers.
-initializeWhenEnabled()
+installListeners()
 
 installListener = (element, event, callback) ->
   element.addEventListener event, (-> callback.apply(this, arguments)), true

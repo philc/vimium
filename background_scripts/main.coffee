@@ -89,13 +89,21 @@ getCurrentTabUrl = (request, sender) -> sender.tab.url
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
 # whether any keys should be passed through to the underlying page.
 #
-root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
+root.isEnabledForUrl = isEnabledForUrl = (request) ->
   rule = Exclusions.getRule(request.url)
   {
     isEnabledForUrl: not rule or rule.passKeys
     passKeys: rule?.passKeys or ""
-    incognito: sender.tab.incognito
   }
+
+isEnabledForUpdatedUrl = (details) ->
+  message = isEnabledForUrl details
+  message.name = "updateEnabledForUrlState"
+  chrome.tabs.sendMessage details.tabId, message, {frameId: details.frameId}
+
+# Re-check whether Vimium is enabled for a frame when the url changes without a reload.
+chrome.webNavigation.onHistoryStateUpdated.addListener isEnabledForUpdatedUrl # history.pushState.
+chrome.webNavigation.onReferenceFragmentUpdated.addListener isEnabledForUpdatedUrl # Hash changed.
 
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
 # This is called by options.coffee.
