@@ -91,7 +91,7 @@ settings =
     @values = response.values if response.values?
     @values[response.key] = response.value if response.key? and response.value?
     @isLoaded = true
-    listener() while listener = @eventListeners["load"].pop()
+    listener() while listener = @eventListeners.load?.pop()
 
   addEventListener: (eventName, callback) ->
     (@eventListeners[eventName] ||= []).push callback
