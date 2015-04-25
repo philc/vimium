@@ -94,7 +94,7 @@ settings =
     listener() while listener = @eventListeners["load"].pop()
 
   addEventListener: (eventName, callback) ->
-    (@eventListeners[eventName] ||= []).push(callback)
+    (@eventListeners[eventName] ||= []).push callback
 
 #
 # Give this frame a unique (non-zero) id.
