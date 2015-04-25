@@ -189,7 +189,7 @@ initializePreDomReady = ->
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
-    updateEnabledForUrlState: updateEnabledForUrlState
+    checkEnabledAfterURLChange: checkEnabledAfterURLChange
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -199,7 +199,7 @@ initializePreDomReady = ->
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
     shouldHandleRequest = isEnabledForUrl
     # We always handle the message if it's one of these listed message types.
-    shouldHandleRequest ||= request.name in [ "executePageCommand", "updateEnabledForUrlState" ]
+    shouldHandleRequest ||= request.name in [ "executePageCommand", "checkEnabledAfterURLChange" ]
     # Requests with a frameId of zero should always and only be handled in the main/top frame (regardless of
     # whether Vimium is enabled there).
     if request.frameId == 0 and DomUtils.isTopFrame()
@@ -587,27 +587,29 @@ onKeyup = (event) ->
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
-  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, updateEnabledForUrlState
+  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
+    { isEnabledForUrl, passKeys } = response
+    installListeners() # But only if they have not been installed already.
+    if HUD.isReady() and not isEnabledForUrl
+      # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
+      HUD.hide()
+    handlerStack.bubbleEvent "registerStateChange",
+      enabled: isEnabledForUrl
+      passKeys: passKeys
+    # Update the page icon, if necessary.
+    if windowIsFocused()
+      chrome.runtime.sendMessage
+        handler: "setIcon"
+        icon:
+          if isEnabledForUrl and not passKeys then "enabled"
+          else if isEnabledForUrl then "partial"
+          else "disabled"
+    null
 
-updateEnabledForUrlState = (response) ->
-  { isEnabledForUrl, passKeys } = response
-  installListeners()
-  if HUD.isReady() and not isEnabledForUrl
-    # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
-    HUD.hide()
-  handlerStack.bubbleEvent "registerStateChange",
-    enabled: isEnabledForUrl
-    passKeys: passKeys
-  # Update the page icon, if necessary.
-  if document.hasFocus()
-    chrome.runtime.sendMessage
-      handler: "setIcon"
-      icon:
-        if isEnabledForUrl and not passKeys then "enabled"
-        else if isEnabledForUrl then "partial"
-        else "disabled"
-  null
-
+# When we're informed by the background page that a URL in this tab has changed, we check if we have the
+# correct enabled state (but only if this frame has the focus).
+checkEnabledAfterURLChange = ->
+  checkIfEnabledForUrl() if windowIsFocused()
 
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->
