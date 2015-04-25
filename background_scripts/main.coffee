@@ -298,6 +298,10 @@ BackgroundCommands =
       count = (count + Math.max 0, frameIdsForTab[tab.id].indexOf frameId) % frames.length
       frames = frameIdsForTab[tab.id] = [frames[count..]..., frames[0...count]...]
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
+  mainFrame: ->
+    chrome.tabs.getSelected null, (tab) ->
+      # The front end interprets a frameId of 0 to mean the main/top from.
+      chrome.tabs.sendMessage tab.id, name: "focusFrame", frameId: 0, highlight: true
 
   closeTabsOnLeft: -> removeTabsRelative "before"
   closeTabsOnRight: -> removeTabsRelative "after"

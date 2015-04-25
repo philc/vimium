@@ -99,9 +99,9 @@ settings =
     @eventListeners[eventName].push(callback)
 
 #
-# Give this frame a unique id.
+# Give this frame a unique (non-zero) id.
 #
-frameId = Math.floor(Math.random()*999999999)
+frameId = 1 + Math.floor(Math.random()*999999999)
 
 # For debugging only. This logs to the console on the background page.
 bgLog = (args...) ->
@@ -187,20 +187,23 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
-    frameFocused: -> # A frame has received the focus.  We don't care, here. The Vomnibar/UI-component cares.
+    # A frame has received the focus.  We don't care, here (the Vomnibar/UI-component handles this).
+    frameFocused: ->
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    # We handle the message if we're enabled, or if it's one of these listed message types.
-    return unless isEnabledForUrl or request.name in [ "executePageCommand" ]
     # These requests are delivered to the options page, but there are no handlers there.
-    return if request.handler in [ "registerFrame", "unregisterFrame" ]
-    # We don't handle these here.  They're handled elsewhere (e.g. in the vomnibar/UI component).
-    return if request.name in [ "frameFocused" ]
-    # Handle the request.
-    sendResponse requestHandlers[request.name](request, sender)
+    return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
+    # We handle the message if we're enabled, or if it's one of these listed message types.
+    shouldHandleRequest = isEnabledForUrl or request.name in [ "executePageCommand" ]
+    # Requests with a frameId of zero should only be handled in the main/top frame (regardless of whether
+    # Vimium is enabled there).
+    if request.frameId == 0 and DomUtils.isTopFrame()
+      request.frameId = frameId
+      shouldHandleRequest = true
+    sendResponse requestHandlers[request.name](request, sender) if shouldHandleRequest
     # Ensure the sendResponse callback is freed.
     false
 
