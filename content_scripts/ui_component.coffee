@@ -2,6 +2,7 @@ class UIComponent
   iframeElement: null
   iframePort: null
   showing: null
+  options: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
     @iframeElement = document.createElement "iframe"
@@ -13,6 +14,13 @@ class UIComponent
     @showing = true # The iframe is visible now.
     # Hide the iframe, but don't interfere with the focus.
     @hide false
+
+    # If any other frame in the current tab receives the focus, then we hide the UI component.
+    # NOTE(smblott) This is correct for the vomnibar, but might be incorrect (and need to be revisited) for
+    # other UI components.
+    chrome.runtime.onMessage.addListener (request) =>
+      @postMessage "hide" if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
+      false # Free up the sendResponse handler.
 
   # Open a port and pass it to the iframe via window.postMessage.
   openPort: ->
@@ -27,8 +35,8 @@ class UIComponent
   postMessage: (message) ->
     @iframePort.postMessage message
 
-  activate: (message) ->
-    @postMessage message if message?
+  activate: (@options) ->
+    @postMessage @options if @options?
     @show() unless @showing
     @iframeElement.focus()
 
@@ -36,6 +44,9 @@ class UIComponent
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
     @iframeElement.classList.add "vimiumUIComponentShowing"
+    # The window may not have the focus.  We focus it now, to prevent the "focus" listener below from firing
+    # immediately.
+    window.focus()
     window.addEventListener "focus", @onFocus = (event) =>
       if event.target == window
         window.removeEventListener "focus", @onFocus
@@ -44,12 +55,38 @@ class UIComponent
     @showing = true
 
   hide: (focusWindow = true)->
-    @iframeElement.classList.remove "vimiumUIComponentShowing"
-    @iframeElement.classList.add "vimiumUIComponentHidden"
+    @refocusSourceFrame @options?.sourceFrameId if focusWindow
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
-    window.focus() if focusWindow
+    @iframeElement.classList.remove "vimiumUIComponentShowing"
+    @iframeElement.classList.add "vimiumUIComponentHidden"
+    @options = null
     @showing = false
+
+  # Refocus the frame from which the UI component was opened.  This may be different from the current frame.
+  # After hiding the UI component, Chrome refocuses the containing frame. To avoid a race condition, we need
+  # to wait until that frame first receives the focus, before then focusing the frame which should now have
+  # the focus.
+  refocusSourceFrame: (sourceFrameId) ->
+    if @showing and sourceFrameId? and sourceFrameId != frameId
+      refocusSourceFrame = ->
+        chrome.runtime.sendMessage
+          handler: "sendMessageToFrames"
+          message:
+            name: "focusFrame"
+            frameId: sourceFrameId
+            highlight: false
+            highlightOnlyIfNotTop: true
+
+      if windowIsFocused() and false
+        # We already have the focus.
+        refocusSourceFrame()
+      else
+        # We don't yet have the focus (but we'll be getting it soon).
+        window.addEventListener "focus", handler = (event) ->
+          if event.target == window
+            window.removeEventListener "focus", handler
+            refocusSourceFrame()
 
 root = exports ? window
 root.UIComponent = UIComponent

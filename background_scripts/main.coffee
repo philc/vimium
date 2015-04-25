@@ -600,6 +600,18 @@ handleFrameFocused = (request, sender) ->
   if frameIdsForTab[tabId]?
     frameIdsForTab[tabId] =
       [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
+  # Inform all frames that a frame has received the focus.
+  chrome.tabs.sendMessage sender.tab.id,
+    name: "frameFocused"
+    focusFrameId: request.frameId
+
+# Send a message to all frames in the current tab.
+sendMessageToFrames = (request, sender) ->
+  chrome.tabs.sendMessage sender.tab.id, request.message
+
+# For debugging only. This allows content scripts to log messages to the background page's console.
+bgLog = (request, sender) ->
+  console.log "#{sender.tab.id}/#{request.frameId}", request.message
 
 # Port handler mapping
 portHandlers =
@@ -627,6 +639,8 @@ sendRequestHandlers =
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setIcon: setIcon
+  sendMessageToFrames: sendMessageToFrames
+  log: bgLog
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

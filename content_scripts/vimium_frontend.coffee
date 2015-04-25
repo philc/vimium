@@ -19,6 +19,13 @@ keyQueue = null
 currentCompletionKeys = ""
 validFirstKeys = ""
 
+# We track whther the current window has the focus or not.
+windowIsFocused = do ->
+  windowHasFocus = document.hasFocus()
+  window.addEventListener "focus", (event) -> windowHasFocus = true if event.target == window; true
+  window.addEventListener "blur", (event) -> windowHasFocus = false if event.target == window; true
+  -> windowHasFocus
+
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
 # fetch it each time.
@@ -96,6 +103,11 @@ settings =
 #
 frameId = Math.floor(Math.random()*999999999)
 
+# For debugging only. This logs to the console on the background page.
+bgLog = (args...) ->
+  args = (arg.toString() for arg in args)
+  chrome.runtime.sendMessage handler: "log", frameId: frameId, message: args.join " "
+
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
 class GrabBackFocus extends Mode
@@ -167,7 +179,7 @@ initializePreDomReady = ->
   requestHandlers =
     showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
-    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame(request.highlight)
+    focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
@@ -175,14 +187,19 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
+    frameFocused: -> # A frame has received the focus.  We don't care, here. The Vomnibar/UI-component cares.
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    return unless isEnabledForUrl
+    # We handle the message if we're enabled, or if it's one of these listed message types.
+    return unless isEnabledForUrl or request.name in [ "executePageCommand" ]
     # These requests are delivered to the options page, but there are no handlers there.
-    return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
+    return if request.handler in [ "registerFrame", "unregisterFrame" ]
+    # We don't handle these here.  They're handled elsewhere (e.g. in the vomnibar/UI component).
+    return if request.name in [ "frameFocused" ]
+    # Handle the request.
     sendResponse requestHandlers[request.name](request, sender)
     # Ensure the sendResponse callback is freed.
     false
@@ -233,7 +250,8 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
-  Vomnibar.init()
+  # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
+  Vomnibar.init() if DomUtils.isTopFrame()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -247,10 +265,21 @@ unregisterFrame = ->
   chrome.runtime.sendMessage
     handler: "unregisterFrame"
     frameId: frameId
-    tab_is_closing: window.top == window.self
+    tab_is_closing: DomUtils.isTopFrame()
 
 executePageCommand = (request) ->
-  return unless frameId == request.frameId
+  # Vomnibar commands are handled in the tab's main/top frame.  They are handled even if Vimium is otherwise
+  # disabled in the frame.
+  if request.command.split(".")[0] == "Vomnibar"
+    if DomUtils.isTopFrame()
+      # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
+      # which should receive the focus when the vomnibar closes.
+      Utils.invokeCommandString request.command, [ request.frameId ]
+      refreshCompletionKeys request
+    return
+
+  # All other commands are handled in their frame (but only if Vimium is enabled).
+  return unless frameId == request.frameId and isEnabledForUrl
 
   if (request.passCountToFunction)
     Utils.invokeCommandString(request.command, [request.count])
@@ -266,7 +295,7 @@ setScrollPosition = (scrollX, scrollY) ->
 #
 # Called from the backend in order to change frame focus.
 #
-window.focusThisFrame = (shouldHighlight) ->
+window.focusThisFrame = (request) ->
   if window.innerWidth < 3 or window.innerHeight < 3
     # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
     # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
@@ -274,7 +303,9 @@ window.focusThisFrame = (shouldHighlight) ->
     chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
     return
   window.focus()
-  if (document.body && shouldHighlight)
+  shouldHighlight = request.highlight
+  shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
+  if document.body and shouldHighlight
     borderWas = document.body.style.border
     document.body.style.border = '5px solid yellow'
     setTimeout((-> document.body.style.border = borderWas), 200)
@@ -1192,3 +1223,5 @@ root.settings = settings
 root.HUD = HUD
 root.handlerStack = handlerStack
 root.frameId = frameId
+root.windowIsFocused = windowIsFocused
+root.bgLog = bgLog

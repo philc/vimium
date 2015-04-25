@@ -27,6 +27,12 @@ DomUtils =
   removeElement: (el) -> el.parentNode.removeChild el
 
   #
+  # Test whether the current frame is the top/main frame.
+  #
+  isTopFrame: ->
+    window.top == window.self
+
+  #
   # Takes an array of XPath selectors, adds the necessary namespaces (currently only XHTML), and applies them
   # to the document root. The namespaceResolver in evaluateXPath should be kept in sync with the namespaces
   # here.

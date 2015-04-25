@@ -4,31 +4,33 @@
 Vomnibar =
   vomnibarUI: null
 
-  activate: -> @open {completer:"omni"}
-  activateInNewTab: -> @open {
+  # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
+  # from the current frame.
+  activate: (sourceFrameId) -> @open sourceFrameId, {completer:"omni"}
+  activateInNewTab: (sourceFrameId) -> @open sourceFrameId, {
     completer: "omni"
     selectFirst: false
     newTab: true
   }
-  activateTabSelection: -> @open {
+  activateTabSelection: (sourceFrameId) -> @open sourceFrameId, {
     completer: "tabs"
     selectFirst: true
   }
-  activateBookmarks: -> @open {
+  activateBookmarks: (sourceFrameId) -> @open sourceFrameId, {
     completer: "bookmarks"
     selectFirst: true
   }
-  activateBookmarksInNewTab: -> @open {
+  activateBookmarksInNewTab: (sourceFrameId) -> @open sourceFrameId, {
     completer: "bookmarks"
     selectFirst: true
     newTab: true
   }
-  activateEditUrl: -> @open {
+  activateEditUrl: (sourceFrameId) -> @open sourceFrameId, {
     completer: "omni"
     selectFirst: false
     query: window.location.href
   }
-  activateEditUrlInNewTab: -> @open {
+  activateEditUrlInNewTab: (sourceFrameId) -> @open sourceFrameId, {
     completer: "omni"
     selectFirst: false
     query: window.location.href
@@ -38,9 +40,11 @@ Vomnibar =
   init: ->
     unless @vomnibarUI?
       @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", (event) =>
-        if event.data == "hide"
-          @vomnibarUI.hide()
-          @vomnibarUI.postMessage "hidden"
+        @vomnibarUI.hide() if event.data == "hide"
+      # Whenever the window receives the focus, we tell the Vomnibar UI that it has been hidden (regardless of
+      # whether it was previously visible).
+      window.addEventListener "focus", (event) =>
+        @vomnibarUI.postMessage "hidden" if event.target == window; true
 
 
   # This function opens the vomnibar. It accepts options, a map with the values:
@@ -48,7 +52,7 @@ Vomnibar =
   #   query       - Optional. Text to prefill the Vomnibar with.
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
-  open: (options) -> @vomnibarUI.activate options
+  open: (sourceFrameId, options) -> @vomnibarUI.activate extend options, { sourceFrameId }
 
 root = exports ? window
 root.Vomnibar = Vomnibar
