@@ -29,3 +29,5 @@ root.chrome =
       set: ->
     onChanged:
       addListener: ->
+  extension:
+    inIncognitoContext: false

@@ -12,7 +12,7 @@ findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
-isIncognitoMode = false
+isIncognitoMode = chrome.extension.inIncognitoContext
 passKeys = null
 keyQueue = null
 # The user's operating system.
@@ -187,8 +187,9 @@ initializePreDomReady = ->
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
       handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
-    # A frame has received the focus.  We don't care, here (the Vomnibar/UI-component handles this).
+    # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
+    checkEnabledAfterURLChange: checkEnabledAfterURLChange
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -196,10 +197,11 @@ initializePreDomReady = ->
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     # These requests are delivered to the options page, but there are no handlers there.
     return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
-    # We handle the message if we're enabled, or if it's one of these listed message types.
-    shouldHandleRequest = isEnabledForUrl or request.name in [ "executePageCommand" ]
-    # Requests with a frameId of zero should only be handled in the main/top frame (regardless of whether
-    # Vimium is enabled there).
+    shouldHandleRequest = isEnabledForUrl
+    # We always handle the message if it's one of these listed message types.
+    shouldHandleRequest ||= request.name in [ "executePageCommand", "checkEnabledAfterURLChange" ]
+    # Requests with a frameId of zero should always and only be handled in the main/top frame (regardless of
+    # whether Vimium is enabled there).
     if request.frameId == 0 and DomUtils.isTopFrame()
       request.frameId = frameId
       shouldHandleRequest = true
@@ -217,9 +219,11 @@ installListener = (element, event, callback) ->
 # Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
 # we know whether the listener should run or not.
 # Run this as early as possible, so the page can't register any event handlers before us.
+# Note: We install the listeners even if Vimium is disabled.  See comment in commit
+# 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
 #
 installedListeners = false
-window.initializeWhenEnabled = ->
+window.installListeners = ->
   unless installedListeners
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
@@ -583,28 +587,29 @@ onKeyup = (event) ->
 
 checkIfEnabledForUrl = ->
   url = window.location.toString()
-
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url }, (response) ->
-    isEnabledForUrl = response.isEnabledForUrl
-    passKeys = response.passKeys
-    isIncognitoMode = response.incognito
-    if isEnabledForUrl
-      initializeWhenEnabled()
-    else if HUD.isReady()
+    { isEnabledForUrl, passKeys } = response
+    installListeners() # But only if they have not been installed already.
+    if HUD.isReady() and not isEnabledForUrl
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
     handlerStack.bubbleEvent "registerStateChange",
       enabled: isEnabledForUrl
       passKeys: passKeys
     # Update the page icon, if necessary.
-    if document.hasFocus()
+    if windowIsFocused()
       chrome.runtime.sendMessage
         handler: "setIcon"
         icon:
           if isEnabledForUrl and not passKeys then "enabled"
           else if isEnabledForUrl then "partial"
           else "disabled"
+    null
 
+# When we're informed by the background page that a URL in this tab has changed, we check if we have the
+# correct enabled state (but only if this frame has the focus).
+checkEnabledAfterURLChange = ->
+  checkIfEnabledForUrl() if windowIsFocused()
 
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->

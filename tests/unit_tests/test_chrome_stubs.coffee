@@ -38,6 +38,12 @@ exports.chrome =
       addListener: () -> true
     query: () -> true
 
+  webNavigation:
+    onHistoryStateUpdated:
+      addListener: () ->
+    onReferenceFragmentUpdated:
+      addListener: () ->
+
   windows:
     onRemoved:
       addListener: () -> true

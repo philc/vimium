@@ -28,6 +28,7 @@
     "storage",
     "sessions",
     "notifications",
+    "webNavigation",
     "<all_urls>"
   ],
   "content_scripts": [
