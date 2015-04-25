@@ -46,18 +46,26 @@ textInputXPath = (->
 # must be called beforehand to ensure get() will return up-to-date values.
 #
 settings =
-  port: null
-  values: {}
-  loadedValues: 0
-  valuesToLoad: [ "scrollStepSize", "linkHintCharacters", "linkHintNumbers", "filterLinkHints", "hideHud",
-    "previousPatterns", "nextPatterns", "regexFindMode", "userDefinedLinkHintCss",
-    "helpDialog_showAdvancedCommands", "smoothScroll", "grabBackFocus" ]
   isLoaded: false
+  port: null
   eventListeners: {}
+  values:
+    scrollStepSize: null
+    linkHintCharacters: null
+    linkHintNumbers: null
+    filterLinkHints: null
+    hideHud: null
+    previousPatterns: null
+    nextPatterns: null
+    regexFindMode: null
+    userDefinedLinkHintCss: null
+    helpDialog_showAdvancedCommands: null
+    smoothScroll: null
+    grabBackFocus: null
 
   init: ->
-    @port = chrome.runtime.connect({ name: "settings" })
-    @port.onMessage.addListener(@receiveMessage)
+    @port = chrome.runtime.connect name: "settings"
+    @port.onMessage.addListener (response) => @receiveMessage response
 
     # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
     # settings object so we don't keep trying to connect to the extension even though it's gone away.
@@ -67,36 +75,26 @@ settings =
         # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
         @[property] = (->) if "function" == typeof value and property != "get"
 
-
   get: (key) -> @values[key]
 
   set: (key, value) ->
     @init() unless @port
 
     @values[key] = value
-    @port.postMessage({ operation: "set", key: key, value: value })
+    @port.postMessage operation: "set", key: key, value: value
 
   load: ->
     @init() unless @port
+    @port.postMessage operation: "fetch", values: @values
 
-    for i of @valuesToLoad
-      @port.postMessage({ operation: "get", key: @valuesToLoad[i] })
-
-  receiveMessage: (args) ->
-    # not using 'this' due to issues with binding on callback
-    settings.values[args.key] = args.value
-    # since load() can be called more than once, loadedValues can be greater than valuesToLoad, but we test
-    # for equality so initializeOnReady only runs once
-    if (++settings.loadedValues == settings.valuesToLoad.length)
-      settings.isLoaded = true
-      listener = null
-      while (listener = settings.eventListeners["load"].pop())
-        listener()
+  receiveMessage: (response) ->
+    @values = response.values if response.values?
+    @values[response.key] = response.value if response.key? and response.value?
+    @isLoaded = true
+    listener() while listener = @eventListeners["load"].pop()
 
   addEventListener: (eventName, callback) ->
-    if (!(eventName of @eventListeners))
-      @eventListeners[eventName] = []
-    @eventListeners[eventName].push(callback)
+    (@eventListeners[eventName] ||= []).push(callback)
 
 #
 # Give this frame a unique (non-zero) id.

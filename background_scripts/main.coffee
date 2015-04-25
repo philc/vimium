@@ -204,12 +204,16 @@ selectSpecificTab = (request) ->
 #
 # Used by the content scripts to get settings from the local storage.
 #
-handleSettings = (args, port) ->
-  if (args.operation == "get")
-    value = Settings.get(args.key)
-    port.postMessage({ key: args.key, value: value })
-  else # operation == "set"
-    Settings.set(args.key, args.value)
+handleSettings = (request, port) ->
+  switch request.operation
+    when "get" # Get a single settings value.
+      port.postMessage key: request.key, value: Settings.get request.key
+    when "set" # Set a single settings value.
+      Settings.set request.key, request.value
+    when "fetch" # Fetch multiple settings values.
+      values = request.values
+      values[key] = Settings.get key for own key of values
+      port.postMessage { values }
 
 refreshCompleter = (request) -> completers[request.name].refresh()
 
