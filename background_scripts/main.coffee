@@ -597,7 +597,9 @@ unregisterFrame = (request, sender) ->
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
   urlForTab[tabId] = request.url
-  if frameIdsForTab[tabId]?
+  # Cycle frameIdsForTab to the focused frame.  However, also ensure that we don't inadvertently register a
+  # frame which wasn't previously registered (such as a frameset).
+  if frameIdsForTab[tabId]? and request.frameId in frameIdsForTab[tabId]
     frameIdsForTab[tabId] =
       [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
   # Inform all frames that a frame has received the focus.
