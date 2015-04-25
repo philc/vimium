@@ -218,8 +218,6 @@ filterCompleter = (args, port) ->
   queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
   completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
 
-getCurrentTimeInSeconds = -> Math.floor((new Date()).getTime() / 1000)
-
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
     selectionChangedHandlers.pop().call()

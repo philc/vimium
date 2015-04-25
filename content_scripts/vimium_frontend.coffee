@@ -242,7 +242,7 @@ window.installListeners = ->
 onFocus = (event) ->
   if event.target == window
     settings.load()
-    chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId, url: window.location.toString()
+    chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId
     checkIfEnabledForUrl true
 
 # We install these listeners directly (that is, we don't use installListener) because we still need to receive
