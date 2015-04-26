@@ -78,7 +78,7 @@ class UIComponent
             highlight: false
             highlightOnlyIfNotTop: true
 
-      if windowIsFocused() and false
+      if windowIsFocused()
         # We already have the focus.
         refocusSourceFrame()
       else
