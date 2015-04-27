@@ -118,8 +118,8 @@ class ExclusionRulesOption extends Option
   readValueFromElement: ->
     rules =
       for element in @element.getElementsByClassName "exclusionRuleTemplateInstance"
-        pattern: @getPattern(element).value.split(/\s+/).join ""
-        passKeys: @getPassKeys(element).value.split(/\s+/).join ""
+        pattern: @getPattern(element).value.trim()
+        passKeys: @getPassKeys(element).value.trim()
     rules.filter (rule) -> rule.pattern
 
   areEqual: (a,b) ->
