@@ -5,10 +5,6 @@
 # * Sync.fetchAsync() polls chrome.storage.sync at startup, similarly propagating
 #   changes to localStorage and into vimium's internal state.
 #
-# Changes are propagated into vimium's state using the same mechanism
-# (Settings.performPostUpdateHook) that is used when options are changed on
-# the options page.
-#
 # The effect is best-effort synchronization of vimium options/settings between
 # chrome/vimium instances.
 #
@@ -33,30 +29,12 @@ root.Sync = Sync =
     @storage.get null, (items) =>
       unless chrome.runtime.lastError
         for own key, value of items
-          @storeAndPropagate key, value
+          Settings.storeAndPropagate key, value if @shouldSyncKey key
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
     for own key, change of changes
-      @storeAndPropagate key, change?.newValue
-
-  # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
-  storeAndPropagate: (key, value) ->
-    return unless key of Settings.defaults
-    return if not @shouldSyncKey key
-    return if value and key of localStorage and localStorage[key] is value
-    defaultValue = Settings.defaults[key]
-    defaultValueJSON = JSON.stringify(defaultValue)
-
-    if value and value != defaultValueJSON
-      # Key/value has been changed to non-default value at remote instance.
-      localStorage[key] = value
-      Settings.performPostUpdateHook key, JSON.parse(value)
-    else
-      # Key has been reset to default value at remote instance.
-      if key of localStorage
-        delete localStorage[key]
-      Settings.performPostUpdateHook key, defaultValue
+      Settings.storeAndPropagate key, change?.newValue if @shouldSyncKey key
 
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates to the rest of vimium, that's already been done.
@@ -111,6 +89,23 @@ root.Settings = Settings =
   # postUpdateHooks convenience wrapper
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key] value if @postUpdateHooks[key]
+
+  # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
+  storeAndPropagate: (key, value) ->
+    return unless key of @defaults
+    return if value and key of localStorage and localStorage[key] is value
+    defaultValue = @defaults[key]
+    defaultValueJSON = JSON.stringify(defaultValue)
+
+    if value and value != defaultValueJSON
+      # Key/value has been changed to non-default value at remote instance.
+      localStorage[key] = value
+      @performPostUpdateHook key, JSON.parse(value)
+    else
+      # Key has been reset to default value at remote instance.
+      if key of localStorage
+        delete localStorage[key]
+      @performPostUpdateHook key, defaultValue
 
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
   # or strings
