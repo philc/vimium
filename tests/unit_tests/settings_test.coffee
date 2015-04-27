@@ -3,6 +3,8 @@ extend global, require "./test_chrome_stubs.js"
 
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
+Utils.isBackgroundPage = -> true
+Utils.isExtensionPage = -> true
 global.localStorage = {}
 extend(global,require "../../lib/settings.js")
 
@@ -10,6 +12,7 @@ context "settings",
 
   setup ->
     stub global, 'localStorage', {}
+    Settings.cache = global.localStorage # Point the settings cache to the new localStorage object.
     Settings.postUpdateHooks = {} # Avoid running update hooks which include calls to outside of settings.
     Settings.init()
 

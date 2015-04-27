@@ -54,10 +54,20 @@ Sync =
 # Used by all parts of Vimium to manipulate localStorage.
 #
 
+# Select the object to use as the cache for settings.
+if Utils.isExtensionPage()
+  if Utils.isBackgroundPage()
+    settingsCache = localStorage
+  else
+    settingsCache = extend {}, localStorage # Make a copy of the cached settings from localStorage
+else
+  settingsCache = {}
+
 root.Settings = Settings =
+  cache: settingsCache
   init: -> Sync.init()
   get: (key) ->
-    if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
+    if (key of @cache) then JSON.parse(@cache[key]) else @defaults[key]
 
   set: (key, value) ->
     # Don't store the value if it is equal to the default, so we can change the defaults in the future
@@ -65,15 +75,15 @@ root.Settings = Settings =
       @clear(key)
     else
       jsonValue = JSON.stringify value
-      localStorage[key] = jsonValue
+      @cache[key] = jsonValue
       Sync.set key, jsonValue
 
   clear: (key) ->
     if @has key
-      delete localStorage[key]
+      delete @cache[key]
     Sync.clear key
 
-  has: (key) -> key of localStorage
+  has: (key) -> key of @cache
 
   # For settings which require action when their value changes, add hooks to this object, to be called from
   # options/options.coffee (when the options page is saved), and by Settings.storeAndPropagate (when an
@@ -87,18 +97,18 @@ root.Settings = Settings =
   # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value) ->
     return unless key of @defaults
-    return if value and key of localStorage and localStorage[key] is value
+    return if value and key of @cache and @cache[key] is value
     defaultValue = @defaults[key]
     defaultValueJSON = JSON.stringify(defaultValue)
 
     if value and value != defaultValueJSON
       # Key/value has been changed to non-default value at remote instance.
-      localStorage[key] = value
+      @cache[key] = value
       @performPostUpdateHook key, JSON.parse(value)
     else
       # Key has been reset to default value at remote instance.
-      if key of localStorage
-        delete localStorage[key]
+      if key of @cache
+        delete @cache[key]
       @performPostUpdateHook key, defaultValue
 
   # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
