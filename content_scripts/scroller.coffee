@@ -132,6 +132,7 @@ CoreScroller =
         handlerStack.alwaysContinueBubbling =>
           @keyIsDown = true
           @lastEvent = event
+          @time += 1 unless event.repeat
       keyup: =>
         handlerStack.alwaysContinueBubbling =>
           @keyIsDown = false
