@@ -256,22 +256,22 @@ Scroller =
     rect = element. getClientRects()?[0]
     if rect?
       # Scroll y axis.
-      if rect.top < 0
-        amount = rect.top - 10
+      if rect.bottom < 0
+        amount = rect.bottom - Math.min(rect.height, window.innerHeight)
         element = findScrollableElement element, "y", amount, 1
         CoreScroller.scroll element, "y", amount, false
-      else if window.innerHeight < rect.bottom
-        amount = rect.bottom - window.innerHeight + 10
+      else if window.innerHeight < rect.top
+        amount = rect.top + Math.min(rect.height - window.innerHeight, 0)
         element = findScrollableElement element, "y", amount, 1
         CoreScroller.scroll element, "y", amount, false
 
       # Scroll x axis.
-      if rect.left < 0
-        amount = rect.left - 10
+      if rect.right < 0
+        amount = rect.right - Math.min(rect.width, window.innerWidth)
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
-      else if window.innerWidth < rect.right
-        amount = rect.right - window.innerWidth + 10
+      else if window.innerWidth < rect.left
+        amount = rect.left + Math.min(rect.width - window.innerWidth, 0)
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
 
