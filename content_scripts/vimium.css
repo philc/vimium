@@ -275,7 +275,7 @@ body.vimiumFindMode ::selection {
 /* Vomnibar Frame CSS */
 
 iframe.vomnibarFrame {
-  background-color: transparent;
+  background-color: transparent !important;
   padding: 0px;
   overflow: hidden;
 
