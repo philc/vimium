@@ -19,6 +19,9 @@ exports.chrome =
     onInstalled:
       addListener: ->
 
+  extension:
+    getURL: (path) -> path
+
   tabs:
     onSelectionChanged:
       addListener: () -> true
