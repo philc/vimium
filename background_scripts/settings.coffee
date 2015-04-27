@@ -14,7 +14,7 @@
 #
 
 root = exports ? window
-root.Sync = Sync =
+Sync =
 
   storage: chrome.storage.sync
   doNotSync: ["settingsVersion", "previousVersion"]
@@ -55,6 +55,7 @@ root.Sync = Sync =
 #
 
 root.Settings = Settings =
+  init: -> Sync.init()
   get: (key) ->
     if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
@@ -177,6 +178,9 @@ root.Settings = Settings =
     grabBackFocus: false
 
     settingsVersion: Utils.getCurrentVersion()
+
+# Export Sync via Settings for tests.
+root.Settings.Sync = Sync
 
 
 # We use settingsVersion to coordinate any necessary schema changes.
