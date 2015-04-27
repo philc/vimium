@@ -73,3 +73,7 @@ if not Settings.has("exclusionRules") and Settings.has("excludedUrls")
   # We'll keep a backup of the "excludedUrls" setting, just in case.
   Settings.set("excludedUrlsBackup", Settings.get("excludedUrls")) if not Settings.has("excludedUrlsBackup")
   Settings.clear("excludedUrls")
+
+# Register postUpdateHook for exclusionRules setting.
+Settings.postUpdateHooks["exclusionRules"] = (value) ->
+  Exclusions.postUpdateHook value

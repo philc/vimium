@@ -75,17 +75,10 @@ root.Settings = Settings =
 
   has: (key) -> key of localStorage
 
-  # For settings which require action when their value changes, add hooks here called from
-  # options/options.coffee (when the options page is saved), and from background_scripts/sync.coffee (when an
+  # For settings which require action when their value changes, add hooks to this object, to be called from
+  # options/options.coffee (when the options page is saved), and by Settings.storeAndPropagate (when an
   # update propagates from chrome.storage.sync).
-  postUpdateHooks:
-    keyMappings: (value) ->
-      root.Commands.clearKeyMappingsAndSetDefaults()
-      root.Commands.parseCustomKeyMappings value
-      root.refreshCompletionKeysAfterMappingSave()
-
-    exclusionRules: (value) ->
-      root.Exclusions.postUpdateHook value
+  postUpdateHooks: {}
 
   # postUpdateHooks convenience wrapper
   performPostUpdateHook: (key, value) ->
