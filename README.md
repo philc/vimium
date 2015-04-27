@@ -144,7 +144,7 @@ Release Notes
 1.50 (2015-04-26)
 
 - Visual mode (in beta): use `v` and then vim-like keystrokes to select text on the page. Use `y` to yank or
-  `p` and `P` to search. Please provide feedback on Github.
+  `p` and `P` to search with your default search engine.. Please provide feedback on Github.
 - Added the option to prevent pages from stealing focus from Vimium when loaded.
 - Many bugfixes for custom search engines, and search engines can now have a description.
 - Better support for frames: key exclusion rules are much improved and work within frames; the Vomnibar is
