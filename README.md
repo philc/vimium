@@ -141,6 +141,19 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+1.50 (2015-04-26)
+
+- Visual mode (in beta): use `v` and then vim-like keystrokes to select text on the page. Use `y` to yank or
+  `p` and `P` to search. Please provide feedback on Github.
+- Added the option to prevent pages from stealing focus from Vimium when loaded.
+- Many bugfixes for custom search engines, and search engines can now have a description.
+- Better support for frames: key exclusion rules are much improved and work within frames; the Vomnibar is
+  always activated in the main frame; and a new command (`gF`) focuses the main frame.
+- Find mode now has history. Use the up arrow to select previous searches.
+- Ctrl and Shift when using link hints changes the tab in which links are opened in (reinstated feature).
+- Focus input (`gi`) remembers previously-visited inputs.
+- Bug fixes.
+
 1.49 (2014-12-16)
 
 - An option to toggle smooth scrolling.
