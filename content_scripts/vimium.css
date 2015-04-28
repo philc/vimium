@@ -279,7 +279,6 @@ iframe.vomnibarFrame {
   padding: 0px;
   overflow: hidden;
 
-  display: block;
   position: fixed;
   width: calc(80% + 20px); /* same adjustment as in pages/vomnibar.coffee */
   min-width: 400px;
@@ -304,11 +303,11 @@ div#vimiumFlash {
 
 /* UIComponent CSS */
 iframe.vimiumUIComponentHidden {
-  display: none;
+  display: none !important;
 }
 
 iframe.vimiumUIComponentVisible {
-  display: block;
+  display: block !important;
 }
 
 iframe.vimiumUIComponentReactivated {
