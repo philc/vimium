@@ -303,11 +303,7 @@ BackgroundCommands =
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count,frameId) ->
     chrome.tabs.getSelected(null, (tab) ->
-      frames = frameIdsForTab[tab.id]
-      # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
-      # additional offset such that we do indeed start from frameId.
-      count = (count + Math.max 0, frameIdsForTab[tab.id].indexOf frameId) % frames.length
-      frames = frameIdsForTab[tab.id] = [frames[count..]..., frames[0...count]...]
+      frameIdsForTab[tab.id] = cycleToFrame frameIdsForTab[tab.id], frameId, count
       chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
   mainFrame: ->
     chrome.tabs.getSelected null, (tab) ->
@@ -613,13 +609,19 @@ handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
   # Cycle frameIdsForTab to the focused frame.  However, also ensure that we don't inadvertently register a
   # frame which wasn't previously registered (such as a frameset).
-  if frameIdsForTab[tabId]? and request.frameId in frameIdsForTab[tabId]
-    frameIdsForTab[tabId] =
-      [request.frameId, (frameIdsForTab[tabId].filter (id) -> id != request.frameId)...]
+  if frameIdsForTab[tabId]?
+    frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], request.frameId
   # Inform all frames that a frame has received the focus.
   chrome.tabs.sendMessage sender.tab.id,
     name: "frameFocused"
     focusFrameId: request.frameId
+
+# Rotate through frames to the frame count places after frameId.
+cycleToFrame = (frames, frameId, count = 0) ->
+  # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
+  # additional offset such that we do indeed start from frameId.
+  count = (count + Math.max 0, frames.indexOf frameId) % frames.length
+  [frames[count..]..., frames[0...count]...]
 
 # Send a message to all frames in the current tab.
 sendMessageToFrames = (request, sender) ->
