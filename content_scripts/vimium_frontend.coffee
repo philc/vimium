@@ -1138,7 +1138,8 @@ HUD =
   createHudElement: ->
     element = document.createElement("div")
     element.className = "vimiumReset vimiumHUD"
-    document.body.appendChild(element)
+    # FIXME(smblott) The "?" below is only inserted for the tests.  Fix!
+    document.body?.appendChild(element)
     element
 
   # Hide the HUD.
