@@ -55,21 +55,25 @@ DomUtils =
   #
   # Returns the first visible clientRect of an element if it exists. Otherwise it returns null.
   #
-  getVisibleClientRect: (element) ->
+  # WARNING: If testChildren = true then the rects of visible (eg. floated) children may be returned instead.
+  # This is used for LinkHints and focusInput, **BUT IS UNSUITABLE FOR MOST OTHER PURPOSES**.
+  #
+  getVisibleClientRect: (element, testChildren = false) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
     clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
 
     for clientRect in clientRects
-      # If the link has zero dimensions, it may be wrapping visible
-      # but floated elements. Check for this.
-      if (clientRect.width == 0 || clientRect.height == 0)
+      # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
+      if (clientRect.width == 0 or clientRect.height == 0) and testChildren
         for child in element.children
           computedStyle = window.getComputedStyle(child, null)
           # Ignore child elements which are not floated and not absolutely positioned for parent elements with
           # zero width/height
+          # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline
+          # children.
           continue if (computedStyle.getPropertyValue('float') == 'none' &&
             computedStyle.getPropertyValue('position') != 'absolute')
-          childClientRect = @getVisibleClientRect(child)
+          childClientRect = @getVisibleClientRect child, true
           continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
           return childClientRect
 
@@ -80,9 +84,7 @@ DomUtils =
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
         computedStyle = window.getComputedStyle(element, null)
-        if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-            computedStyle.getPropertyValue('display') == 'none')
-          continue
+        continue if computedStyle.getPropertyValue('visibility') != 'visible'
 
         return clientRect
 

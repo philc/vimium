@@ -398,7 +398,7 @@ extend window,
       visibleInputs =
         for i in [0...resultSet.snapshotLength] by 1
           element = resultSet.snapshotItem i
-          rect = DomUtils.getVisibleClientRect element
+          rect = DomUtils.getVisibleClientRect element, true
           continue if rect == null
           { element: element, rect: rect }
 
