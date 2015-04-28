@@ -1,4 +1,5 @@
 vomnibarFrame = null
+Vomnibar.init()
 
 context "Keep selection within bounds",
 
