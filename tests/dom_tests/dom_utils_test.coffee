@@ -73,6 +73,15 @@ context "Check visibility",
     """
     assert.equal null, (DomUtils.getVisibleClientRect (document.getElementById 'foo'), true)
 
+  should "detect font-size: 0; and display: inline; links when their children are display: inline", ->
+    # This test represents the minimal test case covering issue #1554.
+    document.getElementById("test-div").innerHTML = """
+    <a id='foo' style='display: inline; font-size: 0px;'>
+      <div style='display: inline; font-size: 16px;'>test</div>
+    </a>
+    """
+    assert.isTrue (DomUtils.getVisibleClientRect (document.getElementById 'foo'), true) != null
+
   should "detect links inside opacity:0 elements as visible", ->
     # XXX This is an expected failure. See issue #16.
     document.getElementById("test-div").innerHTML = """
