@@ -1,8 +1,4 @@
 
-# FIXME(smblott) Getting everything initialized in the right order for both tests and live operation is
-# proving difficult.  Until we can figure it out, we tell the front end that we're running the DOM tests.
-window.runningDOMTests = true
-
 # Install frontend event handlers.
 installListeners()
 

@@ -149,6 +149,7 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
+  new GrabBackFocus
   Scroller.init settings
 
 #
@@ -158,8 +159,6 @@ initializePreDomReady = ->
   settings.addEventListener("load", LinkHints.init.bind(LinkHints))
   settings.load()
 
-  # Note. checkIfEnabledForUrl() must come after initializeModes(), here, because checkIfEnabledForUrl() may
-  # install an additional mode (GrabBackFocus).
   initializeModes()
   checkIfEnabledForUrl()
   refreshCompletionKeys()
@@ -230,10 +229,7 @@ window.installListeners = ->
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
-    # Other one-time initialization operations.
     FindModeHistory.init()
-    # See note in ../tests/dom_tests/dom_tests.coffee re. window.runningDOMTests.
-    new GrabBackFocus if isEnabledForUrl and not window.runningDOMTests
 
 #
 # Whenever we get the focus:
