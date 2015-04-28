@@ -33,7 +33,8 @@ class UIComponent
       @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
 
   postMessage: (message) ->
-    @iframePort.postMessage message
+    # We use "?" here because the iframe port is initialized asynchronously, and may not yet be ready.
+    @iframePort?.postMessage message
 
   activate: (@options) ->
     @postMessage @options if @options?
