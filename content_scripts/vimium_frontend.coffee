@@ -13,6 +13,7 @@ isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
+isDomReady = false
 passKeys = null
 keyQueue = null
 # The user's operating system.
@@ -149,7 +150,6 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
-  new GrabBackFocus
   Scroller.init settings
 
 #
@@ -229,7 +229,9 @@ window.installListeners = ->
       do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
     installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
     installedListeners = true
+    # Other once-only initialisation.
     FindModeHistory.init()
+    new GrabBackFocus if isEnabledForUrl
 
 #
 # Whenever we get the focus:
@@ -252,6 +254,7 @@ window.addEventListener "hashchange", onFocus
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
+  isDomReady = true
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
@@ -1153,7 +1156,7 @@ HUD =
     else
       HUD._tweenId = Tween.fade HUD.displayElement(), 0, 150, -> HUD.hide true, updateIndicator
 
-  isReady: -> document.body != null
+  isReady: -> document.body != null and isDomReady
 
   # A preference which can be toggled in the Options page. */
   enabled: -> !settings.get("hideHud")

@@ -57,7 +57,8 @@ class Mode
         # undefined, then the request propagates to the next mode.
         # The active indicator can also be changed with @setIndicator().
         if @options.indicator?
-          if @options.indicator then HUD?.show @options.indicator else HUD?.hide true, false
+          if HUD?.isReady()
+            if @options.indicator then HUD.show @options.indicator else HUD.hide true, false
           @stopBubblingAndTrue
         else @continueBubbling
 
