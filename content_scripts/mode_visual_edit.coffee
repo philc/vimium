@@ -650,9 +650,9 @@ class EditMode extends Movement
     @element = document.activeElement
     return unless @element and DomUtils.isEditable @element
 
+    options.indicator = "Edit mode"
     defaults =
       name: "edit"
-      indicator: "Edit mode"
       exitOnEscape: true
       exitOnBlur: @element
     super extend defaults, options

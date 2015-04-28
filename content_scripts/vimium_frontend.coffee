@@ -466,6 +466,7 @@ extend window,
             new mode
               singleton: document.activeElement
               targetElement: document.activeElement
+              indicator: false
 
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
 # event.
