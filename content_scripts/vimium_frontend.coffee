@@ -255,8 +255,6 @@ initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
-  # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
-  Vomnibar.init() if DomUtils.isTopFrame()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -604,6 +602,9 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
           if isEnabledForUrl and not passKeys then "enabled"
           else if isEnabledForUrl then "partial"
           else "disabled"
+    # Only initialize the vomnibar once we know Vimium is enabled.  Also, only in the tab's main frame,
+    # because it's only ever opened there.
+    Vomnibar.init() if isEnabledForUrl and DomUtils.isTopFrame()
     null
 
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
