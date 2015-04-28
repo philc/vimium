@@ -5,11 +5,16 @@ class UIComponent
   options: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
-    styleSheet = document.createElement "link"
-    extend styleSheet,
-      rel: "stylesheet"
-      type: "text/css"
-      href: chrome.runtime.getURL "content_scripts/vimium.css"
+    styleSheet = document.createElement "style"
+    styleSheet.type = "text/css"
+    # Default to everything hidden while the stylesheet loads.
+    styleSheet.innerHTML = "* {display: none !important;}"
+    # Load stylesheet.
+    xhr = new XMLHttpRequest()
+    xhr.onload = (e) -> styleSheet.innerHTML = xhr.responseText
+    xhr.open "GET", chrome.runtime.getURL("content_scripts/vimium.css"), true
+    xhr.send()
+
     @iframeElement = document.createElement "iframe"
     extend @iframeElement,
       className: className
