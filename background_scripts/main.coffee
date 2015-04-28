@@ -100,7 +100,7 @@ root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
   }
 
 onURLChange = (details) ->
-  chrome.tabs.sendMessage details.tabId, name: "checkEnabledAfterURLChange"
+  chrome.tabs.sendMessage details.tabId, extend details, name: "checkEnabledAfterURLChange"
 
 # Re-check whether Vimium is enabled for a frame when the url changes without a reload.
 chrome.webNavigation.onHistoryStateUpdated.addListener onURLChange # history.pushState.
