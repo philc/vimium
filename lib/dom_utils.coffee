@@ -80,9 +80,7 @@ DomUtils =
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
         computedStyle = window.getComputedStyle(element, null)
-        if (computedStyle.getPropertyValue('visibility') != 'visible' ||
-            computedStyle.getPropertyValue('display') == 'none')
-          continue
+        continue if computedStyle.getPropertyValue('visibility') != 'visible'
 
         return clientRect
 
