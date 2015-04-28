@@ -302,9 +302,9 @@ BackgroundCommands =
   moveTabLeft: (count) -> moveTab(null, -count)
   moveTabRight: (count) -> moveTab(null, count)
   nextFrame: (count,frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
+    chrome.tabs.getSelected null, (tab) ->
       frameIdsForTab[tab.id] = cycleToFrame frameIdsForTab[tab.id], frameId, count
-      chrome.tabs.sendMessage(tab.id, { name: "focusFrame", frameId: frames[0], highlight: true }))
+      chrome.tabs.sendMessage tab.id, name: "focusFrame", frameId: frameIdsForTab[tab.id][0], highlight: true
   mainFrame: ->
     chrome.tabs.getSelected null, (tab) ->
       # The front end interprets a frameId of 0 to mean the main/top from.
