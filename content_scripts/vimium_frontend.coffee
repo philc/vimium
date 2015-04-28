@@ -13,7 +13,6 @@ isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
-isDomReady = false
 passKeys = null
 keyQueue = null
 # The user's operating system.
@@ -254,7 +253,6 @@ window.addEventListener "hashchange", onFocus
 # Initialization tasks that must wait for the document to be ready.
 #
 initializeOnDomReady = ->
-  isDomReady = true
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
   CursorHider.init()
@@ -1157,7 +1155,10 @@ HUD =
     else
       HUD._tweenId = Tween.fade HUD.displayElement(), 0, 150, -> HUD.hide true, updateIndicator
 
-  isReady: -> document.body != null and isDomReady
+  isReady: do ->
+    ready = false
+    DomUtils.documentReady -> ready = true
+    -> ready and document.body != null
 
   # A preference which can be toggled in the Options page. */
   enabled: -> !settings.get("hideHud")
