@@ -68,6 +68,7 @@
     "default_popup": "pages/popup.html"
   },
   "web_accessible_resources": [
-    "pages/vomnibar.html"
+    "pages/vomnibar.html",
+    "content_scripts/vimium.css"
   ]
 }
