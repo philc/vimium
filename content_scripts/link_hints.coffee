@@ -197,7 +197,7 @@ LinkHints =
       isClickable = onlyHasTabIndex = true
 
     if isClickable
-      clientRect = DomUtils.getVisibleClientRect element
+      clientRect = DomUtils.getVisibleClientRect element, true
       if clientRect != null
         visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex}
 
