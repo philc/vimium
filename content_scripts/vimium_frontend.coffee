@@ -232,7 +232,7 @@ window.installListeners = ->
     installedListeners = true
     # Other one-time initialization operations.
     FindModeHistory.init()
-    new GrabBackFocus if isEnabledForUrl
+    new GrabBackFocus if isEnabledForUrl and not runningDOMTests
 
 #
 # Whenever we get the focus:
