@@ -65,7 +65,7 @@ LinkHints =
       # This allows us to exclude the text used for matching descendants from that used for matching their
       # ancestors.
       textLength = (el) -> el.element.textContent?.length ? 0
-      elements = elements.sort (a,b) -> textLength(a) - textLength b
+      elements.sort (a,b) -> textLength(a) - textLength b
     hintMarkers = (@createMarkerFor(el) for el in elements)
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 

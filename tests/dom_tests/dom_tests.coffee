@@ -228,9 +228,9 @@ context "Filtered link hints",
       hintMarkers = getHintMarkers()
       assert.equal "1", hintMarkers[0].textContent.toLowerCase()
       assert.equal "2", hintMarkers[1].textContent.toLowerCase()
-      assert.equal "3", hintMarkers[2].textContent.toLowerCase()
+      assert.equal "3: a label", hintMarkers[2].textContent.toLowerCase()
       assert.equal "4: a label", hintMarkers[3].textContent.toLowerCase()
-      assert.equal "5: a label", hintMarkers[4].textContent.toLowerCase()
+      assert.equal "5", hintMarkers[4].textContent.toLowerCase()
 
 context "Input focus",
 
