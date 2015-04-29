@@ -262,7 +262,7 @@ LinkHints =
   # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
   #
   onKeyDownInMode: (hintMarkers, event) ->
-    return if @delayMode
+    return if @delayMode or event.repeat
 
     if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
         (@mode == OPEN_IN_CURRENT_TAB or
