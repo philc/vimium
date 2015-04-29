@@ -611,10 +611,7 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
 # correct enabled state (but only if this frame has the focus).
 checkEnabledAfterURLChange = ->
-  if windowIsFocused()
-    checkIfEnabledForUrl()
-    # We also grab back the focus.  See #1588.
-    new GrabBackFocus
+  checkIfEnabledForUrl() if windowIsFocused()
 
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->
