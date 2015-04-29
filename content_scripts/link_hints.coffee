@@ -64,8 +64,8 @@ LinkHints =
       # When using text filtering, we sort the elements such that we visit descendants before their ancestors.
       # This allows us to exclude the text used for matching descendants from that used for matching their
       # ancestors.
-      textLength = (el) -> el.element.textContent?.length ? 0
-      elements.sort (a,b) -> textLength(a) - textLength b
+      length = (el) -> el.element.innerHTML?.length ? 0
+      elements.sort (a,b) -> length(a) - length b
     hintMarkers = (@createMarkerFor(el) for el in elements)
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 
