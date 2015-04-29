@@ -60,6 +60,12 @@ LinkHints =
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
     elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
+    if settings.get "filterLinkHints"
+      # When using text filtering, we sort the elements such that we visit descendants before their ancestors.
+      # This allows us to exclude the text used for matching descendants from that used for matching their
+      # ancestors.
+      length = (el) -> el.element.innerHTML?.length ? 0
+      elements.sort (a,b) -> length(a) - length b
     hintMarkers = (@createMarkerFor(el) for el in elements)
     @getMarkerMatcher().fillInMarkers(hintMarkers)
 
@@ -238,8 +244,6 @@ LinkHints =
     # Remove rects from elements where another clickable element lies above it.
     nonOverlappingElements = []
     # Traverse the DOM from first to last, since later elements show above earlier elements.
-    # NOTE(smblott). filterHints.generateLinkText also assumes this order when generating the content text for
-    # each hint.  Specifically, we consider descendents before we consider their ancestors.
     visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
       rects = [visibleElement.rect]
