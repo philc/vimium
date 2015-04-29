@@ -156,6 +156,9 @@ context "Alphabetical link hints",
     assert.equal "", hintMarkers[0].style.display
 
 context "Filtered link hints",
+  # Note.  In all of these tests, the order of the elements returned by getHintMarkers() may be different from
+  # the order they are listed in the test HTML content.  This is because LinkHints.activateMode() sorts the
+  # elements.
 
   setup ->
     stub settings.values, "filterLinkHints", true
@@ -205,8 +208,8 @@ context "Filtered link hints",
     should "label the images", ->
       hintMarkers = getHintMarkers()
       assert.equal "1: alt text", hintMarkers[0].textContent.toLowerCase()
-      assert.equal "2: alt text", hintMarkers[1].textContent.toLowerCase()
-      assert.equal "3: some title", hintMarkers[2].textContent.toLowerCase()
+      assert.equal "2: some title", hintMarkers[1].textContent.toLowerCase()
+      assert.equal "3: alt text", hintMarkers[2].textContent.toLowerCase()
       assert.equal "4", hintMarkers[3].textContent.toLowerCase()
 
   context "Input hints",
