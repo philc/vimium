@@ -275,10 +275,11 @@ body.vimiumFindMode ::selection {
 /* Vomnibar Frame CSS */
 
 iframe.vomnibarFrame {
-  background-color: transparent !important;
+  background-color: transparent;
   padding: 0px;
   overflow: hidden;
 
+  display: block;
   position: fixed;
   width: calc(80% + 20px); /* same adjustment as in pages/vomnibar.coffee */
   min-width: 400px;
@@ -303,11 +304,11 @@ div#vimiumFlash {
 
 /* UIComponent CSS */
 iframe.vimiumUIComponentHidden {
-  display: none !important;
+  display: none;
 }
 
 iframe.vimiumUIComponentVisible {
-  display: block !important;
+  display: block;
 }
 
 iframe.vimiumUIComponentReactivated {

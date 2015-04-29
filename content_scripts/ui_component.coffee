@@ -5,12 +5,29 @@ class UIComponent
   options: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
+    styleSheet = document.createElement "style"
+    styleSheet.type = "text/css"
+    # Default to everything hidden while the stylesheet loads.
+    styleSheet.innerHTML = "* {display: none !important;}"
+    # Load stylesheet.
+    xhr = new XMLHttpRequest()
+    xhr.onload = (e) -> styleSheet.innerHTML = xhr.responseText
+    xhr.open "GET", chrome.runtime.getURL("content_scripts/vimium.css"), true
+    xhr.send()
+
     @iframeElement = document.createElement "iframe"
-    @iframeElement.className = className
-    @iframeElement.seamless = "seamless"
-    @iframeElement.src = chrome.runtime.getURL iframeUrl
+    extend @iframeElement,
+      className: className
+      seamless: "seamless"
+      src: chrome.runtime.getURL iframeUrl
     @iframeElement.addEventListener "load", => @openPort()
-    document.documentElement.appendChild @iframeElement
+    shadowWrapper = document.createElement "div"
+    # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
+    shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
+    shadowDOM.appendChild styleSheet
+    shadowDOM.appendChild @iframeElement
+    document.documentElement.appendChild shadowWrapper
+
     @showing = true # The iframe is visible now.
     # Hide the iframe, but don't interfere with the focus.
     @hide false
