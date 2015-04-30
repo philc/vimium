@@ -26,15 +26,31 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:", "javascript:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
     (url) ->
       for prefix in chromePrefixes
         return true if url.startsWith prefix
       false
 
+  hasJavascriptPrefix: (url) ->
+    url.startsWith "javascript:"
+
   hasFullUrlPrefix: do ->
     urlPrefix = new RegExp "^[a-z]{3,}://."
     (url) -> urlPrefix.test url
+
+  # Apply heuristics to test whether a string (such as a "javascript:" URI) has been URL encoded.
+  isUrlEncoded: (string) ->
+    # If it doesn't contain "%", it's not URL encoded.
+    return false if -1 == string.indexOf "%"
+    # If it contains certain non-URL characters, then it's not URL encoded.
+    for char in [ " ", "{", "}", ";", '"', "'" ]
+      return false if 0 <= string.indexOf char
+    # If it contains any of these non-ascii characters, then it's not URL encoded.
+    return false if /[\u0000-\u001f\u00ff-\uffff]/.test string
+    # If every occurence of "%" is followed by two hexadecimal digits, then it's URL encoded (otherwise, it is
+    # not).
+    string.split(/%/).length == string.split(/%[0-9a-f][0-9a-f]/i).length
 
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
@@ -107,6 +123,9 @@ Utils =
     # Special-case about:[url], view-source:[url] and the like
     if Utils.hasChromePrefix string
       string
+    else if Utils.hasJavascriptPrefix string
+      # In some workflows, Chrome URL encodes bookmarklets.  We URL decode them, if necessary.  See #1611.
+      if Utils.isUrlEncoded string then decodeURI string else string
     else if Utils.isUrl string
       Utils.createFullUrl string
     else
