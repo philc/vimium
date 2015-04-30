@@ -133,6 +133,28 @@ class GrabBackFocus extends Mode
     element.blur()
     @suppressEvent
 
+# Pages can load new content dynamically and change the displayed URL using history.pushState. Since this can
+# often be indistinguishable from an actual new page load for the user, we should also re-start GrabBackFocus
+# for these as well.
+handlerStack.push
+  click: (event) ->
+    target = event.target
+    while target
+      # Often, a link which triggers a content load and url change with javascript will also have the new
+      # url as it's href attribute.
+      if target.tagName == "A" and
+         target.origin == document.location.origin and
+         # Clicking the link will change the url of this frame.
+         (target.pathName != document.location.pathName or
+          target.search != document.location.search) and
+         (target.target in ["", "_self"] or
+          (target.target == "_parent" and window.parent == window) or
+          (target.target == "_top" and window.top == window))
+        return new GrabBackFocus()
+      else
+        target = target.parentElement
+    true
+
 # Only exported for tests.
 window.initializeModes = ->
   class NormalMode extends Mode
