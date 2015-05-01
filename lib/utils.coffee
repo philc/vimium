@@ -26,11 +26,14 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:", "javascript:" ]
+    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
     (url) ->
       for prefix in chromePrefixes
         return true if url.startsWith prefix
       false
+
+  hasJavascriptPrefix: (url) ->
+    url.startsWith "javascript:"
 
   hasFullUrlPrefix: do ->
     urlPrefix = new RegExp "^[a-z]{3,}://."
@@ -107,6 +110,11 @@ Utils =
     # Special-case about:[url], view-source:[url] and the like
     if Utils.hasChromePrefix string
       string
+    else if Utils.hasJavascriptPrefix string
+      # We blindly URL decode javascript: URLs.  That's what Chrome does when they're clicked, or entered into
+      # the omnibox.  However, Chrome does not URL decode such URLs in chrome.tabs.update.
+      # This is arguably a Chrome bug.  See https://code.google.com/p/chromium/issues/detail?id=483000.
+      decodeURI string
     else if Utils.isUrl string
       Utils.createFullUrl string
     else
