@@ -33,7 +33,7 @@ root.Settings = Settings =
       root.refreshCompletionKeysAfterMappingSave()
 
     searchEngines: (value) ->
-      root.SearchEngineCompleter.parseSearchEngines value
+      root.CustomSearchEngineCompleter.parseSearchEngines value
 
     exclusionRules: (value) ->
       root.Exclusions.postUpdateHook value
