@@ -39,19 +39,6 @@ Utils =
     urlPrefix = new RegExp "^[a-z]{3,}://."
     (url) -> urlPrefix.test url
 
-  # Apply heuristics to test whether a string (such as a "javascript:" URI) has been URL encoded.
-  isUrlEncoded: (string) ->
-    # If it doesn't contain "%", it's not URL encoded.
-    return false if -1 == string.indexOf "%"
-    # If it contains certain non-URL characters, then it's not URL encoded.
-    for char in [ " ", "{", "}", ";", '"', "'" ]
-      return false if 0 <= string.indexOf char
-    # If it contains any of these non-ascii characters, then it's not URL encoded.
-    return false if /[\u0000-\u001f\u00ff-\uffff]/.test string
-    # If every occurence of "%" is followed by two hexadecimal digits, then it's URL encoded (otherwise, it is
-    # not).
-    string.split(/%/).length == string.split(/%[0-9a-f][0-9a-f]/i).length
-
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
     if @hasFullUrlPrefix(partialUrl) then partialUrl else ("http://" + partialUrl)
@@ -124,8 +111,10 @@ Utils =
     if Utils.hasChromePrefix string
       string
     else if Utils.hasJavascriptPrefix string
-      # In some workflows, Chrome URL encodes bookmarklets.  We URL decode them, if necessary.  See #1611.
-      if Utils.isUrlEncoded string then decodeURI string else string
+      # We blindly URL decode javascript: URLs.  That's what Chrome does when they're clicked, or entered into
+      # the omnibox.  However, Chrome does not URL decode such URLs in chrome.tabs.update.
+      # This is arguably a Chrome bug.  See https://code.google.com/p/chromium/issues/detail?id=483000.
+      decodeURI string
     else if Utils.isUrl string
       Utils.createFullUrl string
     else
