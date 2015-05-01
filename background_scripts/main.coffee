@@ -618,6 +618,7 @@ handleFrameFocused = (request, sender) ->
 
 # Rotate through frames to the frame count places after frameId.
 cycleToFrame = (frames, frameId, count = 0) ->
+  frames ||= []
   # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
   # additional offset such that we do indeed start from frameId.
   count = (count + Math.max 0, frames.indexOf frameId) % frames.length
