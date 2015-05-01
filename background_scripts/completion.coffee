@@ -322,7 +322,7 @@ class TabCompleter
       tabRecency.recencyScore(suggestion.tabId)
 
 # A completer which will return your search engines
-class SearchEngineCompleter
+class CustomSearchEngineCompleter
   searchEngines: {}
 
   filter: (queryTerms, onComplete) ->
@@ -344,7 +344,7 @@ class SearchEngineCompleter
   computeRelevancy: -> 1
 
   refresh: ->
-    @searchEngines = SearchEngineCompleter.getSearchEngines()
+    @searchEngines = CustomSearchEngineCompleter.getSearchEngines()
 
   getSearchEngineMatches: (queryTerms) ->
     (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
@@ -353,9 +353,9 @@ class SearchEngineCompleter
   # mapping in @searchEnginesMap.
   @searchEnginesMap: null
 
-  # Parse the custom search engines setting and cache it in SearchEngineCompleter.searchEnginesMap.
+  # Parse the custom search engines setting and cache it in CustomSearchEngineCompleter.searchEnginesMap.
   @parseSearchEngines: (searchEnginesText) ->
-    searchEnginesMap = SearchEngineCompleter.searchEnginesMap = {}
+    searchEnginesMap = CustomSearchEngineCompleter.searchEnginesMap = {}
     for line in searchEnginesText.split /\n/
       tokens = line.trim().split /\s+/
       continue if tokens.length < 2 or tokens[0].startsWith('"') or tokens[0].startsWith("#")
@@ -367,9 +367,9 @@ class SearchEngineCompleter
 
   # Fetch the search-engine map, building it if necessary.
   @getSearchEngines: ->
-    unless SearchEngineCompleter.searchEnginesMap?
-      SearchEngineCompleter.parseSearchEngines Settings.get "searchEngines"
-    SearchEngineCompleter.searchEnginesMap
+    unless CustomSearchEngineCompleter.searchEnginesMap?
+      CustomSearchEngineCompleter.parseSearchEngines Settings.get "searchEngines"
+    CustomSearchEngineCompleter.searchEnginesMap
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
@@ -617,7 +617,7 @@ root.MultiCompleter = MultiCompleter
 root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
-root.SearchEngineCompleter = SearchEngineCompleter
+root.CustomSearchEngineCompleter = CustomSearchEngineCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache

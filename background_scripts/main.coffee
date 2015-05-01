@@ -47,7 +47,7 @@ completionSources =
   history: new HistoryCompleter()
   domains: new DomainCompleter()
   tabs: new TabCompleter()
-  seachEngines: new SearchEngineCompleter()
+  seachEngines: new CustomSearchEngineCompleter()
 
 completers =
   omni: new MultiCompleter([
