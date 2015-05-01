@@ -139,6 +139,9 @@ class GrabBackFocus extends Mode
 handlerStack.push
   _name: "GrabBackFocus-pushState-monitor"
   click: (event) ->
+    # If a focusable element is focused, the user must have clicked on it. Retain focus and bail.
+    return true if DomUtils.isFocusable document.activeElement
+
     target = event.target
     while target
       # Often, a link which triggers a content load and url change with javascript will also have the new
