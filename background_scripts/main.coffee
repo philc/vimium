@@ -506,12 +506,9 @@ splitKeyQueue = (queue) ->
 handleKeyDown = (request, port) ->
   key = request.keyChar
   if (key == "<ESC>")
-    console.log("clearing keyQueue")
     keyQueue = ""
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
