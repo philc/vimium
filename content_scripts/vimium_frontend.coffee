@@ -135,8 +135,9 @@ class GrabBackFocus extends Mode
 
 # Pages can load new content dynamically and change the displayed URL using history.pushState. Since this can
 # often be indistinguishable from an actual new page load for the user, we should also re-start GrabBackFocus
-# for these as well.
+# for these as well. This fixes issue #1622.
 handlerStack.push
+  _name: "GrabBackFocus-pushState-monitor"
   click: (event) ->
     target = event.target
     while target
