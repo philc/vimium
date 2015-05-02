@@ -5,10 +5,14 @@
 #   getUrl: map these query terms to a completion URL.
 #   parse:  extract suggestions from the resulting (successful) XMLHttpRequest.
 #
-Google =
+class Google
+  constructor: ->
   name: "Google"
   match: (searchUrl) ->
-    true # TBD.
+    return true if /^https?:\/\/[a-z]+.google.com\//.test searchUrl
+    # NOTE(smblott). A  temporary hack, just for me, and just for development. Will be removed.
+    return true if /localhost\/.*\/booky/.test searchUrl
+    false
 
   getUrl: (queryTerms) ->
     "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{Utils.createSearchQuery queryTerms}"
@@ -23,16 +27,17 @@ Google =
     else
       callback []
 
-# A dummy search engine which is guaranteed to match any search URL, but produces no completions.  This allows
-# the rest of the logic to be written knowing that there will be a search engine match.
-DummySearchEngine =
+# A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
+# allows the rest of the logic to be written knowing that there will be a search engine match.
+class DummySearchEngine
+  constructor: ->
   name: "Dummy"
   match: -> true
   # We return a useless URL which we know will succeed, but which won't generate any network traffic.
   getUrl: -> chrome.runtime.getURL "content_scripts/vimium.css"
   parse: (_, callback) -> callback []
 
-CompletionEngines = [ Google, DummySearchEngine ]
+completionEngines = [ Google, DummySearchEngine ]
 
 SearchEngines =
   cancel: (searchUrl, callback = null) ->
@@ -40,16 +45,18 @@ SearchEngines =
     delete @requests[searchUrl]
     callback? null
 
-  # Perform and HTTP GET.
-  #   searchUrl is the search engine's URL, e.g. Settings.get("searchUrl")
-  #   url is the URL to fetch
-  #   callback will be called a successful XMLHttpRequest object, or null.
+  # Perform an HTTP GET.
+  #   searchUrl is the search engine's URL, e.g. Settings.get("searchUrl").
+  #   url is the URL to fetch.
+  #   callback will be called with a successful XMLHttpRequest object, or null.
   get: (searchUrl, url, callback) ->
     @requests ?= {} # Maps searchUrls to any outstanding HTTP request for that search engine.
     @cancel searchUrl
 
-    # We cache the results of recent requests (with a two-hour expiry).
-    @requestCache ?= new SimpleCache 2 * 60 * 60 * 1000
+    # We cache the results of the most-recent 1000 requests (with a two-hour expiry).
+    # FIXME(smblott) Currently we're caching XMLHttpRequest objects, which is wasteful of memory.  It would be
+    # better to handle caching at a higher level.
+    @requestCache ?= new SimpleCache 2 * 60 * 60 * 1000, 1000
 
     if @requestCache.has url
       callback @requestCache.get url
@@ -70,21 +77,22 @@ SearchEngines =
         else
           callback null
 
-  # Look up the search engine for this search URL.  Because of DummySearchEngine, above, we know there will
-  # always be a match.  Imagining that there may be many search engines, and knowing that this is called for
-  # every character entered, we cache the result.
+  # Look up the search-completion engine for this search URL.  Because of DummySearchEngine, above, we know
+  # there will always be a match.  Imagining that there may be many search engines, and knowing that this is
+  # called for every character entered, we cache the result.
   lookupEngine: (searchUrl) ->
     @engineCache ?= new SimpleCache 24 * 60 * 60 * 1000
     if @engineCache.has searchUrl
       @engineCache.get searchUrl
     else
-      for engine in CompletionEngines
+      for engine in completionEngines
+        engine = new engine()
         return @engineCache.set searchUrl, engine if engine.match searchUrl
 
   # This is the main (actually, the only) entry point.
-  #   searchUrl is the search engine's URL, e.g. Settings.get("searchUrl")
-  #   queryTerms are the queryTerms
-  #   callback will be applied to a list of suggestion strings (which will be an empty list, if anything goes
+  #   searchUrl is the search engine's URL, e.g. Settings.get("searchUrl").
+  #   queryTerms are the queryTerms.
+  #   callback will be applied to a list of suggestion strings (which may be an empty list, if anything goes
   #   wrong).
   complete: (searchUrl, queryTerms, callback) ->
     return callback [] unless 0 < queryTerms.length

@@ -202,7 +202,8 @@ class SimpleCache
   constructor: (@expiry = 60 * 60 * 1000, @entries = 1000) ->
     @cache = {}
     @previous = {}
-    setInterval (=> @rotate()), @expiry
+    rotate = => @rotate()
+    setInterval rotate, @expiry
 
   rotate: ->
     @previous = @cache
@@ -212,7 +213,6 @@ class SimpleCache
     (key of @cache) or key of @previous
 
   get: (key) ->
-    console.log "get", key
     if key of @cache
       @cache[key]
     else if key of @previous
