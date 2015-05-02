@@ -219,9 +219,10 @@ class BackgroundCompleter
     chrome.runtime.sendMessage({ handler: "refreshCompleter", name: @name })
 
   filter: (query, callback) ->
+    id = BackgroundCompleter.messageId += 1
     @filterPort.onMessage.addListener (msg) =>
       @filterPort.onMessage.removeListener(arguments.callee)
-      if msg.id == BackgroundCompleter.messageId
+      if id == BackgroundCompleter.messageId
         # The result objects coming from the background page will be of the form:
         #   { html: "", type: "", url: "" }
         # type will be one of [tab, bookmark, history, domain].
@@ -234,7 +235,7 @@ class BackgroundCompleter
           result
         callback(results)
 
-    @filterPort.postMessage({ id: ++BackgroundCompleter.messageId, name: @name, query: query })
+    @filterPort.postMessage({ id: id, name: @name, query: query })
 
 extend BackgroundCompleter,
   #
