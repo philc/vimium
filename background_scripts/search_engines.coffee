@@ -89,6 +89,12 @@ SearchEngines =
   complete: (searchUrl, queryTerms, callback) ->
     return callback [] unless 0 < queryTerms.length
 
+    # Don't try to complete general URLs.
+    return callback [] if 1 == queryTerms.length and Utils.isUrl queryTerms[0]
+
+    # Don't try to complete Javascrip URLs.
+    return callback [] if 0 < queryTerms.length and Utils.hasJavascriptPrefix queryTerms[0]
+
     engine = @lookupEngine searchUrl
     url = engine.getUrl queryTerms
     @get searchUrl, url, (xhr = null) ->
