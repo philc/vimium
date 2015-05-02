@@ -330,7 +330,9 @@ class SearchEngineCompleter
       completions =
         for suggestion in suggestions
           url = Utils.createSearchUrl suggestion.split /\s+/
-          new Suggestion queryTerms, "search", url, suggestion, @computeRelevancy, characterCount
+          suggestion = new Suggestion queryTerms, "search", url, suggestion, @computeRelevancy, characterCount
+          suggestion.insertText = true
+          suggestion
       onComplete completions
 
   computeRelevancy: (suggestion) ->

@@ -93,6 +93,22 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
+    # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
+    # and revert when not.
+    if 0 <= @selection
+      suggestion = @completions[@selection]
+      if suggestion.insertText
+        @previousText ?= @input.value
+        @input.value = suggestion.title
+      else
+        if @previousText?
+          @input.value = @previousText
+          @previousText = null
+    else
+      if @previousText?
+        @input.value = @previousText
+        @previousText = null
+
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
   # We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
@@ -141,9 +157,9 @@ class VomnibarUI
             handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
             url: query
       else
+        completion = @completions[@selection]
         @update true, =>
           # Shift+Enter will open the result in a new tab instead of the current tab.
-          completion = @completions[@selection]
           @hide -> completion.performAction openInNewTab
 
     # It seems like we have to manually suppress the event here and still return true.
@@ -168,8 +184,12 @@ class VomnibarUI
 
   update: (updateSynchronously, callback) =>
     if (updateSynchronously)
+      # The use entered something.  Don't reset any previous text.
+      if @previousText?
+        @previousText = null
+        @selection = -1
       # cancel scheduled update
-      if (@updateTimer != null)
+      if @updateTimer?
         window.clearTimeout(@updateTimer)
         @updateTimer = null
       @updateCompletions(callback)
