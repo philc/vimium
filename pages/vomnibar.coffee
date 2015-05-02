@@ -171,6 +171,7 @@ class VomnibarUI
       # cancel scheduled update
       if (@updateTimer != null)
         window.clearTimeout(@updateTimer)
+        @updateTimer = null
       @updateCompletions(callback)
     else if (@updateTimer != null)
       # an update is already scheduled, don't do anything
@@ -212,29 +213,30 @@ class BackgroundCompleter
   # - name: The background page completer that you want to interface with. Either "omni", "tabs", or
   # "bookmarks". */
   constructor: (@name) ->
-    @filterPort = chrome.runtime.connect({ name: "filterCompleter" })
+    @filterPort = chrome.runtime.connect name: "filterCompleter"
 
   refresh: ->
-    BackgroundCompleter.messageId += 1
-    chrome.runtime.sendMessage({ handler: "refreshCompleter", name: @name })
+    chrome.runtime.sendMessage handler: "refreshCompleter", name: @name
 
   filter: (query, callback) ->
-    @filterPort.onMessage.addListener (msg) =>
-      @filterPort.onMessage.removeListener(arguments.callee)
-      if msg.id == BackgroundCompleter.messageId
-        # The result objects coming from the background page will be of the form:
-        #   { html: "", type: "", url: "" }
-        # type will be one of [tab, bookmark, history, domain].
-        results = msg.results.map (result) ->
-          functionToCall = if (result.type == "tab")
-            BackgroundCompleter.completionActions.switchToTab.curry(result.tabId)
-          else
-            BackgroundCompleter.completionActions.navigateToUrl.curry(result.url)
-          result.performAction = functionToCall
-          result
-        callback(results)
+    id = BackgroundCompleter.messageId += 1
+    @filterPort.onMessage.addListener handler = (msg) =>
+      if msg.id == id
+        @filterPort.onMessage.removeListener handler
+        if id == BackgroundCompleter.messageId
+          # The result objects coming from the background page will be of the form:
+          #   { html: "", type: "", url: "" }
+          # type will be one of [tab, bookmark, history, domain].
+          results = msg.results.map (result) ->
+            functionToCall = if (result.type == "tab")
+              BackgroundCompleter.completionActions.switchToTab.curry(result.tabId)
+            else
+              BackgroundCompleter.completionActions.navigateToUrl.curry(result.url)
+            result.performAction = functionToCall
+            result
+          callback(results)
 
-    @filterPort.postMessage({ id: ++BackgroundCompleter.messageId, name: @name, query: query })
+    @filterPort.postMessage id: id, name: @name, query: query
 
 extend BackgroundCompleter,
   #
