@@ -99,7 +99,7 @@ class VomnibarUI
       suggestion = @completions[@selection]
       if suggestion.insertText
         @previousText ?= @input.value
-        @input.value = suggestion.title
+        @input.value = (suggestion.reinsertPrefix ? "") + suggestion.title
       else
         if @previousText?
           @input.value = @previousText

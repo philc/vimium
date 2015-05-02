@@ -47,13 +47,11 @@ completionSources =
   history: new HistoryCompleter()
   domains: new DomainCompleter()
   tabs: new TabCompleter()
-  customSearchEngines: new CustomSearchEngineCompleter()
   searchEngines: new SearchEngineCompleter()
 
 completers =
   omni: new MultiCompleter([
     completionSources.searchEngines,
-    completionSources.customSearchEngines,
     completionSources.bookmarks,
     completionSources.history,
     completionSources.domains])

@@ -322,52 +322,61 @@ class TabCompleter
       tabRecency.recencyScore(suggestion.tabId)
 
 class SearchEngineCompleter
-  refresh: ->
-
-  filter: (queryTerms, onComplete) ->
-    SearchEngines.complete Settings.get("searchUrl"), queryTerms, (suggestions = []) =>
-      characterCount = queryTerms.join("").length
-      completions =
-        for suggestion in suggestions
-          url = Utils.createSearchUrl suggestion.split /\s+/
-          suggestion = new Suggestion queryTerms, "search", url, suggestion, @computeRelevancy, characterCount
-          suggestion.insertText = true
-          suggestion
-      onComplete completions
-
-  computeRelevancy: (suggestion) ->
-    # We score search-engine completions by word relevancy, but weight the score increasingly as the number of
-    # characters in the query terms increases.  The idea is that, the more the user has had to type, the less
-    # likely it is that one of the other suggestion types has proven useful, so the more likely it is that
-    # this suggestion will be useful.
-    # NOTE(smblott) This will require tweaking.
-    (Math.min(suggestion.extraRelevancyData, 12)/12) *
-      RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.title, suggestion.title
-
-# A completer which will return your search engines
-class CustomSearchEngineCompleter
   searchEngines: {}
 
   filter: (queryTerms, onComplete) ->
-    {url: url, description: description} = @getSearchEngineMatches queryTerms
+    { keyword: keyword, url: url, description: description } = @getSearchEngineMatches queryTerms
+    custom = url?
     suggestions = []
-    if url
-      url = url.replace(/%s/g, Utils.createSearchQuery queryTerms[1..])
-      if description
-        type = description
-        query = queryTerms[1..].join " "
-      else
-        type = "search"
-        query = queryTerms[0] + ": " + queryTerms[1..].join(" ")
-      suggestion = new Suggestion(queryTerms, type, url, query, @computeRelevancy)
-      suggestion.autoSelect = true
-      suggestions.push(suggestion)
-    onComplete(suggestions)
 
-  computeRelevancy: -> 1
+    mkUrl =
+      if custom
+        (string) -> url.replace /%s/g, Utils.createSearchQuery string.split /\s+/
+      else
+        (string) -> Utils.createSearchUrl string.split /\s+/
+
+    type = if description? then description else "search"
+    searchUrl = if custom then url else Settings.get "searchUrl"
+    query = queryTerms[1..].join " "
+
+    # For custom search engines, we add an auto-selected suggestion.
+    if custom
+      title = if description? then query else queryTerms[0] + ": " + query
+      suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), description, @computeRelevancy
+      suggestions[0].autoSelect = true
+      suggestions[0].relevancyScore = 1
+      queryTerms = queryTerms[1..]
+
+    # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
+    # this adds suggestions for the default search engine (if we have a completer for that).
+    SearchEngines.complete searchUrl, queryTerms, (newSuggestions = []) =>
+      characterCount = query.length - queryTerms.length + 1
+      for suggestion in newSuggestions
+        suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, characterCount
+
+      if custom
+        for suggestion in suggestions
+          suggestion.reinsertPrefix = "#{keyword} " if suggestion.insertText
+
+      onComplete suggestions
+
+  mkSuggestion: (insertText, args...) ->
+    suggestion = new Suggestion args...
+    suggestion.insertText = insertText
+    suggestion
+
+  computeRelevancy: (suggestion) ->
+    suggestion.relevancyScore ?
+      # We score search-engine completions by word relevancy, but weight the score increasingly as the number of
+      # characters in the query terms increases.  The idea is that, the more the user has had to type, the less
+      # likely it is that one of the other suggestion types has proven useful, so the more likely it is that
+      # this suggestion will be useful.
+      # NOTE(smblott) This will require tweaking.
+      (Math.min(suggestion.extraRelevancyData, 12)/12) *
+        RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.title, suggestion.title
 
   refresh: ->
-    @searchEngines = CustomSearchEngineCompleter.getSearchEngines()
+    @searchEngines = SearchEngineCompleter.getSearchEngines()
 
   getSearchEngineMatches: (queryTerms) ->
     (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
@@ -376,23 +385,24 @@ class CustomSearchEngineCompleter
   # mapping in @searchEnginesMap.
   @searchEnginesMap: null
 
-  # Parse the custom search engines setting and cache it in CustomSearchEngineCompleter.searchEnginesMap.
+  # Parse the custom search engines setting and cache it in SearchEngineCompleter.searchEnginesMap.
   @parseSearchEngines: (searchEnginesText) ->
-    searchEnginesMap = CustomSearchEngineCompleter.searchEnginesMap = {}
+    searchEnginesMap = SearchEngineCompleter.searchEnginesMap = {}
     for line in searchEnginesText.split /\n/
       tokens = line.trim().split /\s+/
       continue if tokens.length < 2 or tokens[0].startsWith('"') or tokens[0].startsWith("#")
       keywords = tokens[0].split ":"
       continue unless keywords.length == 2 and not keywords[1] # So, like: [ "w", "" ].
       searchEnginesMap[keywords[0]] =
+        keyword: keywords[0]
         url: tokens[1]
         description: tokens[2..].join(" ")
 
   # Fetch the search-engine map, building it if necessary.
   @getSearchEngines: ->
-    unless CustomSearchEngineCompleter.searchEnginesMap?
-      CustomSearchEngineCompleter.parseSearchEngines Settings.get "searchEngines"
-    CustomSearchEngineCompleter.searchEnginesMap
+    unless SearchEngineCompleter.searchEnginesMap?
+      SearchEngineCompleter.parseSearchEngines Settings.get "searchEngines"
+    SearchEngineCompleter.searchEnginesMap
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
@@ -641,7 +651,6 @@ root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
 root.SearchEngineCompleter = SearchEngineCompleter
-root.CustomSearchEngineCompleter = CustomSearchEngineCompleter
 root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache
