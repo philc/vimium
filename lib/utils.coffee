@@ -194,5 +194,43 @@ globalRoot.extend = (hash1, hash2) ->
     hash1[key] = hash2[key]
   hash1
 
+# A simple cache. Entries used within an expiry period are retained (for one more expiry period), otherwise
+# they are discarded.
+class SimpleCache
+  # expiry: expiry time in milliseconds (default, one hour)
+  # entries: maximum number of entries
+  constructor: (@expiry = 60 * 60 * 1000, @entries = 1000) ->
+    @cache = {}
+    @previous = {}
+    setInterval (=> @rotate()), @expiry
+
+  rotate: ->
+    @previous = @cache
+    @cache = {}
+
+  has: (key) ->
+    (key of @cache) or key of @previous
+
+  get: (key) ->
+    console.log "get", key
+    if key of @cache
+      @cache[key]
+    else if key of @previous
+      @cache[key] = @previous[key]
+    else
+      null
+
+  # Set value, and return that value.  If value is null, then delete key.
+  set: (key, value = null) ->
+    if value?
+      @cache[key] = value
+      delete @previous[key]
+      @rotate() if @entries < Object.keys(@cache).length
+    else
+      delete @cache[key]
+      delete @previous[key]
+    value
+
 root = exports ? window
 root.Utils = Utils
+root.SimpleCache = SimpleCache

@@ -321,63 +321,26 @@ class TabCompleter
     else
       tabRecency.recencyScore(suggestion.tabId)
 
-# searchUrl is the URL that will be used for the search, either the default search URL, or a custom
-# search-engine URL.  The other arguments area obvious.
-# If we know the search-suggestion URL for searchUrl, then use it to pass a list of suggestions to callback.
-# Otherwise, just call callback.
-#
-# Note: That's all TBD.  For now, we just assume Google and use it.
-#
-getOnlineSuggestions = do ->
-  xhrs = {} # Maps searchUrl to outstanding HTTP request.
-  (searchUrl, queryTerms, callback) ->
-    # Cancel any outstanding requests.
-    xhrs?[searchUrl]?.abort()
-    xhrs[searchUrl] = null
-
-    sendNoSuggestions = -> xhrs[searchUrl] = null; callback []
-    return sendNoSuggestions() if queryTerms.length == 0
-
-    url = "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{Utils.createSearchQuery queryTerms}"
-    xhrs[searchUrl] = xhr = new XMLHttpRequest()
-    xhr.open "GET", url, true
-    xhr.timeout = 500
-    xhr.ontimeout = sendNoSuggestions
-    xhr.onerror = sendNoSuggestions
-    xhr.send()
-
-    xhr.onreadystatechange = (response) =>
-      if xhr.readyState == 4
-        suggestions = xhr.responseXML?.getElementsByTagName "suggestion"
-        return sendNoSuggestions() unless xhr.status == 200 and suggestions
-        xhr[searchUrl] = null
-        suggestions =
-          for suggestion in suggestions
-            continue unless suggestion = suggestion.getAttribute "data"
-            suggestion
-        callback suggestions
-
 class SearchEngineCompleter
   refresh: ->
-  filter: (queryTerms, onComplete) ->
-    return onComplete([]) if queryTerms.length == 0
 
-    getOnlineSuggestions Settings.get("searchUrl"), queryTerms, (suggestions) =>
-        completions =
-          for suggestion in suggestions
-            url = Utils.createSearchUrl suggestion.split /\s+/
-            new Suggestion queryTerms, "suggestion", url, suggestion, @computeRelevancy
-        characterCount = queryTerms.join(" ").length
-        completion.characterCount = characterCount for completion in completions
-        onComplete completions
+  filter: (queryTerms, onComplete) ->
+    SearchEngines.complete Settings.get("searchUrl"), queryTerms, (suggestions = []) =>
+      console.log suggestions.length
+      characterCount = queryTerms.join("").length
+      completions =
+        for suggestion in suggestions
+          url = Utils.createSearchUrl suggestion.split /\s+/
+          new Suggestion queryTerms, "search", url, suggestion, @computeRelevancy, characterCount
+      onComplete completions
 
   computeRelevancy: (suggestion) ->
     # We score search-engine completions by word relevancy, but weight increasingly as the number of
     # characters in the query terms increases.  The idea is that, the more the user has had to type, the less
     # likely it is that one of the other suggestion types has found what they're looking for, so the more
-    # likely it is that a search suggestion will be useful.
+    # likely it is that this suggestion will be useful.
     # (1.0 - (1.0 / suggestion.characterCount)) *
-    (Math.min(suggestion.characterCount, 12)/12) *
+    (Math.min(suggestion.extraRelevancyData, 12)/12) *
       RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.title, suggestion.title
 
 # A completer which will return your search engines
