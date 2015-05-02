@@ -337,22 +337,32 @@ class SearchEngineCompleter
 
     type = if description? then description else "search"
     searchUrl = if custom then url else Settings.get "searchUrl"
-    query = queryTerms[1..].join " "
+    query = queryTerms[(if custom then 1 else 0)..].join " "
 
     # For custom search engines, we add an auto-selected suggestion.
     if custom
       title = if description? then query else queryTerms[0] + ": " + query
-      suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), description, @computeRelevancy
+      suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), description, @computeRelevancy, 1
       suggestions[0].autoSelect = true
-      suggestions[0].relevancyScore = 1
       queryTerms = queryTerms[1..]
 
     # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
     # this adds suggestions for the default search engine (if we have a completer for that).
-    SearchEngines.complete searchUrl, queryTerms, (newSuggestions = []) =>
+    SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
+
+      # Scoring:
+      #   - The score does not depend upon the actual suggestion (so, it does not depend upon word relevancy).
+      #     We assume that the completion engine has already factored that in.
+      #   - The score is higher if the query is longer.  The idea is that search suggestions are more likely
+      #     to be relevant if, after typing quite some number of characters, the user hasn't yet found a
+      #     useful suggestion from another completer.
+      #   - Scores are weighted such that they retain the ordering provided by the completion engine.
       characterCount = query.length - queryTerms.length + 1
-      for suggestion in newSuggestions
-        suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, characterCount
+      score = 0.8 * (Math.min(characterCount, 12.0)/12.0)
+
+      for suggestion in searchSuggestions
+        suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
+        score *= 0.9
 
       if custom
         for suggestion in suggestions
@@ -365,15 +375,8 @@ class SearchEngineCompleter
     suggestion.insertText = insertText
     suggestion
 
-  computeRelevancy: (suggestion) ->
-    suggestion.relevancyScore ?
-      # We score search-engine completions by word relevancy, but weight the score increasingly as the number of
-      # characters in the query terms increases.  The idea is that, the more the user has had to type, the less
-      # likely it is that one of the other suggestion types has proven useful, so the more likely it is that
-      # this suggestion will be useful.
-      # NOTE(smblott) This will require tweaking.
-      (Math.min(suggestion.extraRelevancyData, 12)/12) *
-        RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.title, suggestion.title
+  # The score is computed in filter() and provided here via suggestion.extraRelevancyData.
+  computeRelevancy: (suggestion) -> suggestion.extraRelevancyData
 
   refresh: ->
     @searchEngines = SearchEngineCompleter.getSearchEngines()

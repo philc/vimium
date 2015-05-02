@@ -177,6 +177,13 @@ Utils =
     delete obj[property] for property in properties
     obj
 
+  # Does string match any of these regexps?
+  matchesAnyRegexp: (regexps, string) ->
+    for re in regexps
+      return true if re.test string
+    false
+
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->

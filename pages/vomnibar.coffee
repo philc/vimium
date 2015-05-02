@@ -81,6 +81,7 @@ class VomnibarUI
     @input.value = ""
     @updateTimer = null
     @completions = []
+    @previousText = null
     @selection = @initialSelectionValue
 
   updateSelection: ->
@@ -94,18 +95,12 @@ class VomnibarUI
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
-    # and revert when not.
-    if 0 <= @selection
+    # and revert when not.  This allows the user to select a suggestion and then continue typing.
+    if 0 <= @selection and @completions[@selection].insertText
+      @previousText ?= @input.value
       suggestion = @completions[@selection]
-      if suggestion.insertText
-        @previousText ?= @input.value
-        @input.value = (suggestion.reinsertPrefix ? "") + suggestion.title
-      else
-        if @previousText?
-          @input.value = @previousText
-          @previousText = null
-    else
-      if @previousText?
+      @input.value = (suggestion.reinsertPrefix ? "") + suggestion.title
+    else if @previousText?
         @input.value = @previousText
         @previousText = null
 
