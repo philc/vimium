@@ -326,7 +326,6 @@ class SearchEngineCompleter
 
   filter: (queryTerms, onComplete) ->
     SearchEngines.complete Settings.get("searchUrl"), queryTerms, (suggestions = []) =>
-      console.log suggestions.length
       characterCount = queryTerms.join("").length
       completions =
         for suggestion in suggestions
@@ -335,11 +334,11 @@ class SearchEngineCompleter
       onComplete completions
 
   computeRelevancy: (suggestion) ->
-    # We score search-engine completions by word relevancy, but weight increasingly as the number of
+    # We score search-engine completions by word relevancy, but weight the score increasingly as the number of
     # characters in the query terms increases.  The idea is that, the more the user has had to type, the less
-    # likely it is that one of the other suggestion types has found what they're looking for, so the more
-    # likely it is that this suggestion will be useful.
-    # (1.0 - (1.0 / suggestion.characterCount)) *
+    # likely it is that one of the other suggestion types has proven useful, so the more likely it is that
+    # this suggestion will be useful.
+    # NOTE(smblott) This will require tweaking.
     (Math.min(suggestion.extraRelevancyData, 12)/12) *
       RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.title, suggestion.title
 
