@@ -7,11 +7,17 @@
 #
 class Google
   constructor: ->
+    @regexps = [
+      # We include matches for the major English-speaking TLDs.
+      new RegExp "^https?://[a-z]+\.google\.(com|ie|co.uk|ca|com.au)/"
+      # NOTE(smblott). A  temporary hack, just for me, and just for development. Will be removed.
+      new RegExp "localhost/.*/booky"
+      ]
+
   name: "Google"
   match: (searchUrl) ->
-    return true if /^https?:\/\/[a-z]+.google.com\//.test searchUrl
-    # NOTE(smblott). A  temporary hack, just for me, and just for development. Will be removed.
-    return true if /localhost\/.*\/booky/.test searchUrl
+    for re in @regexps
+      return true if re.test searchUrl
     false
 
   getUrl: (queryTerms) ->
