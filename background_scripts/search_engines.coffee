@@ -41,7 +41,7 @@ class Google extends RegexpEngine
 
 class Youtube extends RegexpEngine
   constructor: ->
-    super [ new RegExp "https?://[a-z]+\.youtube\.com/results" ]
+    super [ new RegExp "^https?://[a-z]+\.youtube\.com/results" ]
 
   getUrl: (queryTerms) ->
     "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=#{Utils.createSearchQuery queryTerms}"
@@ -53,8 +53,9 @@ class Youtube extends RegexpEngine
     suggestion[0] for suggestion in JSON.parse(text)[1]
 
 class Wikipedia extends RegexpEngine
+  # Example search URL: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s
   constructor: ->
-    super [ new RegExp "https?://[a-z]+\.wikipedia\.org/" ]
+    super [ new RegExp "^https?://[a-z]+\.wikipedia\.org/" ]
 
   getUrl: (queryTerms) ->
     "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=#{Utils.createSearchQuery queryTerms}"
@@ -62,6 +63,18 @@ class Wikipedia extends RegexpEngine
   parse: (xhr) ->
     JSON.parse(xhr.responseText)[1]
 
+class GoogleMaps extends RegexpEngine
+  constructor: ->
+    super [ new RegExp "^https?://www\.google\.com/maps/search/" ]
+
+  getUrl: (queryTerms) ->
+    "https://www.google.com/s?tbm=map&fp=1&gs_ri=maps&source=hp&suggest=p&authuser=0&hl=en&pf=p&tch=1&ech=2&q=#{Utils.createSearchQuery queryTerms}"
+
+  parse: (xhr) ->
+    console.log xhr
+    []
+
+  'google-maps':  'https://www.google.com/maps/search/',
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will be a search engine match.
 class DummySearchEngine

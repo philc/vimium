@@ -90,7 +90,11 @@ root.Settings = Settings =
     # default/fall back search engine
     searchUrl: "http://www.google.com/search?q="
     # put in an example search engine
-    searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s wikipedia"
+    searchEngines: [
+      "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia", ""
+      "t: http://www.youtube.com/results?search_query=%s Youtube", ""
+      "m: https://www.google.com/maps/search/%s Google Maps", ""
+      ].join "\n"
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
 
