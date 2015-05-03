@@ -342,7 +342,7 @@ class SearchEngineCompleter
     # For custom search engines, we add an auto-selected suggestion.
     if custom
       title = if description? then query else queryTerms[0] + ": " + query
-      suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), description, @computeRelevancy, 1
+      suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), title, @computeRelevancy, 1
       suggestions[0].autoSelect = true
       queryTerms = queryTerms[1..]
 
