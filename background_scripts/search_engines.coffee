@@ -22,8 +22,15 @@ class RegexpEngine
   constructor: (@regexps) ->
   match: (searchUrl) -> Utils.matchesAnyRegexp @regexps, searchUrl
 
-# Completion engine for English-language Google search.
-class Google extends RegexpEngine
+# Several Google completion engines package responses in this way.
+class GoogleXMLRegexpEngine extends RegexpEngine
+  parse: (xhr) ->
+    for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
+      continue unless suggestion = suggestion.getAttribute "data"
+      suggestion
+
+class Google extends GoogleXMLRegexpEngine
+  # Example search URL: http://www.google.com/search?q=%s
   constructor: ->
     super [
       # We match the major English-speaking TLDs.
@@ -34,23 +41,13 @@ class Google extends RegexpEngine
   getUrl: (queryTerms) ->
     "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{Utils.createSearchQuery queryTerms}"
 
-  parse: (xhr) ->
-    for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
-      continue unless suggestion = suggestion.getAttribute "data"
-      suggestion
-
-class Youtube extends RegexpEngine
+class Youtube extends GoogleXMLRegexpEngine
+  # Example search URL: http://www.youtube.com/results?search_query=%s
   constructor: ->
     super [ new RegExp "^https?://[a-z]+\.youtube\.com/results" ]
 
   getUrl: (queryTerms) ->
-    "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=#{Utils.createSearchQuery queryTerms}"
-
-  parse: (xhr) ->
-    text = xhr.responseText
-    text = text.replace /^[^(]*\(/, ""
-    text = text.replace /\)[^\)]*$/, ""
-    suggestion[0] for suggestion in JSON.parse(text)[1]
+    "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=#{Utils.createSearchQuery queryTerms}"
 
 class Wikipedia extends RegexpEngine
   # Example search URL: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s
@@ -63,18 +60,34 @@ class Wikipedia extends RegexpEngine
   parse: (xhr) ->
     JSON.parse(xhr.responseText)[1]
 
-class GoogleMaps extends RegexpEngine
-  constructor: ->
-    super [ new RegExp "^https?://www\.google\.com/maps/search/" ]
+## class GoogleMaps extends RegexpEngine
+##   # Example search URL: https://www.google.com/maps/search/%s
+##   constructor: ->
+##     super [ new RegExp "^https?://www\.google\.com/maps/search/" ]
+##
+##   getUrl: (queryTerms) ->
+##     console.log "xxxxxxxxxxxxxxxxxxxxx"
+##     "https://www.google.com/s?tbm=map&fp=1&gs_ri=maps&source=hp&suggest=p&authuser=0&hl=en&pf=p&tch=1&ech=2&q=#{Utils.createSearchQuery queryTerms}"
+##
+##   parse: (xhr) ->
+##     console.log "yyy", xhr.responseText
+##     data = JSON.parse xhr.responseText
+##     console.log "zzz"
+##     console.log data
+##     []
 
-  getUrl: (queryTerms) ->
-    "https://www.google.com/s?tbm=map&fp=1&gs_ri=maps&source=hp&suggest=p&authuser=0&hl=en&pf=p&tch=1&ech=2&q=#{Utils.createSearchQuery queryTerms}"
+class Bing extends RegexpEngine
+  # Example search URL: https://www.bing.com/search?q=%s
+  constructor: -> super [ new RegExp "^https?://www\.bing\.com/search" ]
+  getUrl: (queryTerms) -> "http://api.bing.com/osjson.aspx?query=#{Utils.createSearchQuery queryTerms}"
+  parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
-  parse: (xhr) ->
-    console.log xhr
-    []
+class Amazon extends RegexpEngine
+  # Example search URL: http://www.amazon.com/s/?field-keywords=%s
+  constructor: -> super [ new RegExp "^https?://www\.amazon\.com/s/" ]
+  getUrl: (queryTerms) -> "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=#{Utils.createSearchQuery queryTerms}"
+  parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
-  'google-maps':  'https://www.google.com/maps/search/',
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will be a search engine match.
 class DummySearchEngine
@@ -84,9 +97,11 @@ class DummySearchEngine
   parse: -> []
 
 completionEngines = [
-  Google
   Youtube
+  Google
   Wikipedia
+  Bing
+  Amazon
   DummySearchEngine
 ]
 
@@ -112,7 +127,7 @@ SearchEngines =
     @requests[searchUrl] = xhr = new XMLHttpRequest()
     xhr.open "GET", url, true
     # We set a fairly short timeout.  If we block for too long, then we block *all* completers.
-    xhr.timeout = 300
+    xhr.timeout = 500
     xhr.ontimeout = => @cancel searchUrl, callback
     xhr.onerror = => @cancel searchUrl, callback
     xhr.send()

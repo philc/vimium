@@ -91,10 +91,14 @@ root.Settings = Settings =
     searchUrl: "http://www.google.com/search?q="
     # put in an example search engine
     searchEngines: [
-      "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia", ""
-      "t: http://www.youtube.com/results?search_query=%s Youtube", ""
-      "m: https://www.google.com/maps/search/%s Google Maps", ""
-      ].join "\n"
+      # FIXME(smblott) Comment out these before merge.
+      "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
+      "t: http://www.youtube.com/results?search_query=%s Youtube"
+      "m: https://www.google.com/maps/search/%s Google Maps"
+      "b: https://www.bing.com/search?q=%s Bing"
+      "y: http://www.youtube.com/results?search_query=%s Youtube"
+      "az: http://www.amazon.com/s/?field-keywords=%s Amazon"
+      ].join "\n\n"
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
 

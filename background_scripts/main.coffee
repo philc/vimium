@@ -51,10 +51,11 @@ completionSources =
 
 completers =
   omni: new MultiCompleter([
-    completionSources.searchEngines,
-    completionSources.bookmarks,
-    completionSources.history,
-    completionSources.domains])
+    completionSources.searchEngines
+    # completionSources.bookmarks,
+    # completionSources.history,
+    # completionSources.domains
+    ])
   bookmarks: new MultiCompleter([completionSources.bookmarks])
   tabs: new MultiCompleter([completionSources.tabs])
 
