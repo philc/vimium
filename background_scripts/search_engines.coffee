@@ -35,12 +35,9 @@ class Google extends RegexpEngine
     "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{Utils.createSearchQuery queryTerms}"
 
   parse: (xhr) ->
-    try
-      for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
-        continue unless suggestion = suggestion.getAttribute "data"
-        suggestion
-    catch
-      []
+    for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
+      continue unless suggestion = suggestion.getAttribute "data"
+      suggestion
 
 class Youtube extends RegexpEngine
   constructor: ->
@@ -50,13 +47,20 @@ class Youtube extends RegexpEngine
     "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=#{Utils.createSearchQuery queryTerms}"
 
   parse: (xhr) ->
-    try
-      text = xhr.responseText
-      text = text.replace /^[^(]*\(/, ""
-      text = text.replace /\)[^\)]*$/, ""
-      suggestion[0] for suggestion in JSON.parse(text)[1]
-    catch
-      []
+    text = xhr.responseText
+    text = text.replace /^[^(]*\(/, ""
+    text = text.replace /\)[^\)]*$/, ""
+    suggestion[0] for suggestion in JSON.parse(text)[1]
+
+class Wikipedia extends RegexpEngine
+  constructor: ->
+    super [ new RegExp "https?://[a-z]+\.wikipedia\.org/" ]
+
+  getUrl: (queryTerms) ->
+    "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=#{Utils.createSearchQuery queryTerms}"
+
+  parse: (xhr) ->
+    JSON.parse(xhr.responseText)[1]
 
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will be a search engine match.
@@ -66,7 +70,12 @@ class DummySearchEngine
   getUrl: -> chrome.runtime.getURL "content_scripts/vimium.css"
   parse: -> []
 
-completionEngines = [ Google, Youtube, DummySearchEngine ]
+completionEngines = [
+  Google
+  Youtube
+  Wikipedia
+  DummySearchEngine
+]
 
 SearchEngines =
   cancel: (searchUrl, callback = null) ->
@@ -142,11 +151,19 @@ SearchEngines =
 
     engine = @lookupEngine searchUrl
     url = engine.getUrl queryTerms
+    query = queryTerms.join(" ").toLowerCase()
     @get searchUrl, url, (xhr = null) =>
-      if xhr?
-        # We keep at most three suggestions, the top three.  These are most likely to be useful.
-        callback @completionCache.set completionCacheKey, engine.parse(xhr)[...3]
-      else
+      # Parsing the response may fail if we receive an unexpected or an unexpectedly-formatted response.  In
+      # all cases, we fall back to the catch clause, below.
+      try
+        suggestions = engine.parse xhr
+        # Make sure we really do have an iterable of strings.
+        suggestions = (suggestion for suggestion in suggestions when "string" == typeof suggestion)
+        # Filter out the query itself. It's not adding anything.
+        suggestions = (suggestion for suggestion in suggestions when suggestion.toLowerCase() != query)
+        # We keep at most three suggestions, the top three.
+        callback @completionCache.set completionCacheKey, suggestions[...3]
+      catch
         callback @completionCache.set completionCacheKey, callback []
         # We cache failures, but remove them after just ten minutes.  This (it is hoped) avoids repeated
         # XMLHttpRequest failures over a short period of time.
