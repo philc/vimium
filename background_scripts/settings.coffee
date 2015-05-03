@@ -91,11 +91,12 @@ root.Settings = Settings =
     searchUrl: "http://www.google.com/search?q="
     # put in an example search engine
     searchEngines: [
-      # FIXME(smblott) Comment out these before merge.
+      # FIXME(smblott) Comment these out before merge.
       "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
       "t: http://www.youtube.com/results?search_query=%s Youtube"
       "m: https://www.google.com/maps/search/%s Google Maps"
       "b: https://www.bing.com/search?q=%s Bing"
+      "d: https://duckduckgo.com/?q=%s DuckDuckGo"
       "y: http://www.youtube.com/results?search_query=%s Youtube"
       "az: http://www.amazon.com/s/?field-keywords=%s Amazon"
       ].join "\n\n"

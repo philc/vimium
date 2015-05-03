@@ -88,6 +88,13 @@ class Amazon extends RegexpEngine
   getUrl: (queryTerms) -> "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=#{Utils.createSearchQuery queryTerms}"
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
+class DuckDuckGo extends RegexpEngine
+  # Example search URL: https://duckduckgo.com/?q=%s
+  constructor: -> super [ new RegExp "^https?://([a-z]+\.)?duckduckgo\.com/" ]
+  getUrl: (queryTerms) -> "https://duckduckgo.com/ac/?q=#{Utils.createSearchQuery queryTerms}"
+  parse: (xhr) ->
+    suggestion.phrase for suggestion in JSON.parse xhr.responseText
+
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will be a search engine match.
 class DummySearchEngine
@@ -99,6 +106,7 @@ class DummySearchEngine
 completionEngines = [
   Youtube
   Google
+  DuckDuckGo
   Wikipedia
   Bing
   Amazon
