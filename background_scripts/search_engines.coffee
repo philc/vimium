@@ -84,7 +84,7 @@ class Bing extends RegexpEngine
 
 class Amazon extends RegexpEngine
   # Example search URL: http://www.amazon.com/s/?field-keywords=%s
-  constructor: -> super [ new RegExp "^https?://www\.amazon\.com/s/" ]
+  constructor: -> super [ new RegExp "^https?://www\.amazon\.(com|co.uk|ca|com.au)/s/" ]
   getUrl: (queryTerms) -> "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=#{Utils.createSearchQuery queryTerms}"
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
