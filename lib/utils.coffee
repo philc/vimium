@@ -183,6 +183,12 @@ Utils =
       return true if re.test string
     false
 
+  # Convenience wrapper for setTimeout (with the arguments around the other way).
+  setTimeout: (ms, func) -> setTimeout func, ms
+
+  # Like Nodejs's nextTick.
+  nextTick: (func) -> @setTimeout 0, func
+
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.

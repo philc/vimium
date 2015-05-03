@@ -239,7 +239,7 @@ class BackgroundCompleter
     id = BackgroundCompleter.messageId += 1
     @filterPort.onMessage.addListener handler = (msg) =>
       if msg.id == id
-        @filterPort.onMessage.removeListener handler
+        @filterPort.onMessage.removeListener handler unless msg.keepAlive and id == BackgroundCompleter.messageId
         if id == BackgroundCompleter.messageId
           # The result objects coming from the background page will be of the form:
           #   { html: "", type: "", url: "" }

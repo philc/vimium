@@ -50,11 +50,13 @@ completionSources =
   searchEngines: new SearchEngineCompleter()
 
 completers =
-  omni: new MultiCompleter([
-    completionSources.searchEngines,
-    completionSources.bookmarks,
-    completionSources.history,
-    completionSources.domains])
+  omni: new MultiCompleter [
+    completionSources.bookmarks
+    completionSources.history
+    completionSources.domains
+    # This comes last, because it delivers additional, asynchronous results.
+    completionSources.searchEngines
+    ]
   bookmarks: new MultiCompleter([completionSources.bookmarks])
   tabs: new MultiCompleter([completionSources.tabs])
 
@@ -220,7 +222,8 @@ refreshCompleter = (request) -> completers[request.name].refresh()
 whitespaceRegexp = /\s+/
 filterCompleter = (args, port) ->
   queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
-  completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
+  completers[args.name].filter queryTerms, (results, extra = {}) ->
+    port.postMessage extend extra, id: args.id, results: results
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)

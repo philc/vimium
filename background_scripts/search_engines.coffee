@@ -134,8 +134,7 @@ SearchEngines =
 
     @requests[searchUrl] = xhr = new XMLHttpRequest()
     xhr.open "GET", url, true
-    # We set a fairly short timeout.  If we block for too long, then we block *all* completers.
-    xhr.timeout = 500
+    xhr.timeout = 750
     xhr.ontimeout = => @cancel searchUrl, callback
     xhr.onerror = => @cancel searchUrl, callback
     xhr.send()

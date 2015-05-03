@@ -346,29 +346,31 @@ class SearchEngineCompleter
       suggestions[0].autoSelect = true
       queryTerms = queryTerms[1..]
 
-    # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
-    # this adds suggestions for the default search engine (if we have a completer for that).
-    SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
+    onComplete suggestions, (onComplete) =>
+      suggestions = []
+      # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
+      # this adds suggestions for the default search engine (if we have a completer for that).
+      SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
 
-      # Scoring:
-      #   - The score does not depend upon the actual suggestion (so, it does not depend upon word relevancy).
-      #     We assume that the completion engine has already factored that in.
-      #   - The score is higher if the query is longer.  The idea is that search suggestions are more likely
-      #     to be relevant if, after typing quite some number of characters, the user hasn't yet found a
-      #     useful suggestion from another completer.
-      #   - Scores are weighted such that they retain the ordering provided by the completion engine.
-      characterCount = query.length - queryTerms.length + 1
-      score = 0.8 * (Math.min(characterCount, 12.0)/12.0)
+        # Scoring:
+        #   - The score does not depend upon the actual suggestion (so, it does not depend upon word relevancy).
+        #     We assume that the completion engine has already factored that in.
+        #   - The score is higher if the query is longer.  The idea is that search suggestions are more likely
+        #     to be relevant if, after typing quite some number of characters, the user hasn't yet found a
+        #     useful suggestion from another completer.
+        #   - Scores are weighted such that they retain the ordering provided by the completion engine.
+        characterCount = query.length - queryTerms.length + 1
+        score = 0.8 * (Math.min(characterCount, 12.0)/12.0)
 
-      for suggestion in searchSuggestions
-        suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
-        score *= 0.9
+        for suggestion in searchSuggestions
+          suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
+          score *= 0.9
 
-      if custom
-        for suggestion in suggestions
-          suggestion.reinsertPrefix = "#{keyword} " if suggestion.insertText
+        if custom
+          for suggestion in suggestions
+            suggestion.reinsertPrefix = "#{keyword} " if suggestion.insertText
 
-      onComplete suggestions
+        onComplete suggestions
 
   mkSuggestion: (insertText, args...) ->
     suggestion = new Suggestion args...
@@ -410,9 +412,11 @@ class SearchEngineCompleter
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
-  constructor: (@completers) -> @maxResults = 10
+  constructor: (@completers) ->
+    @maxResults = 10
 
-  refresh: -> completer.refresh() for completer in @completers when completer.refresh
+  refresh: ->
+    completer.refresh?() for completer in @completers
 
   filter: (queryTerms, onComplete) ->
     # Allow only one query to run at a time.
@@ -424,21 +428,40 @@ class MultiCompleter
     @filterInProgress = true
     suggestions = []
     completersFinished = 0
+    continuation = null
     for completer in @completers
       # Call filter() on every source completer and wait for them all to finish before returning results.
-      completer.filter queryTerms, (newSuggestions) =>
-        suggestions = suggestions.concat(newSuggestions)
-        completersFinished += 1
-        if completersFinished >= @completers.length
-          results = @sortSuggestions(suggestions)[0...@maxResults]
-          result.generateHtml() for result in results
-          onComplete(results)
-          @filterInProgress = false
-          @filter(@mostRecentQuery.queryTerms, @mostRecentQuery.onComplete) if @mostRecentQuery
+      # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
+      # called asynchronously after the results of all of the other completers have been posted.  Any
+      # additional results from this continuation will be added to the existing results and posted.  We don't
+      # call the continuation if another query is already waiting.
+      completer.filter queryTerms, (newSuggestions, cont = null) =>
+        # Allow completers to execute concurrently.
+        Utils.nextTick =>
+          suggestions = suggestions.concat newSuggestions
+          continuation = cont if cont?
+          completersFinished += 1
+          if completersFinished >= @completers.length
+            onComplete @prepareSuggestions(suggestions), keepAlive: continuation?
+            onDone = =>
+              @filterInProgress = false
+              @filter @mostRecentQuery.queryTerms, @mostRecentQuery.onComplete if @mostRecentQuery
+            # We add a very short delay.  It is possible for all of this processing to have been handled
+            # pretty-much synchronously, which would have prevented any newly-arriving queries from
+            # registering.
+            Utils.setTimeout 10, =>
+              if continuation? and not @mostRecentQuery
+                continuation (newSuggestions) =>
+                  onComplete @prepareSuggestions suggestions.concat(newSuggestions)
+                  onDone()
+              else
+                onDone()
 
-  sortSuggestions: (suggestions) ->
-    suggestion.computeRelevancy(@queryTerms) for suggestion in suggestions
+  prepareSuggestions: (suggestions) ->
+    suggestion.computeRelevancy @queryTerms for suggestion in suggestions
     suggestions.sort (a, b) -> b.relevancy - a.relevancy
+    suggestions = suggestions[0...@maxResults]
+    suggestion.generateHtml() for suggestion in suggestions
     suggestions
 
 # Utilities which help us compute a relevancy score for a given item.
