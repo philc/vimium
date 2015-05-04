@@ -23,6 +23,11 @@ class Suggestion
     @title ||= ""
     # When @autoSelect is truthy, the suggestion is automatically pre-selected in the vomnibar.
     @autoSelect = false
+    # If @noHighlightTerms is falsy, then we don't highlight matched terms in the title and URL.
+    @autoSelect = true
+    # If @insertText is a string, then the indicated text is inserted into the vomnibar input when the
+    # suggestion is selected.
+    @insertText = null
 
   computeRelevancy: -> @relevancy = @computeRelevancyFunction(this)
 
@@ -345,7 +350,7 @@ class SearchEngineCompleter
     if custom
       query = queryTerms[1..].join " "
       title = if haveDescription then query else keyword + ": " + query
-      suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), title, @computeRelevancy, 1
+      suggestions.push @mkSuggestion null, queryTerms, type, mkUrl(query), title, @computeRelevancy, 1
       suggestions[0].autoSelect = true
       queryTerms = queryTerms[1..]
 
@@ -384,16 +389,12 @@ class SearchEngineCompleter
 
         SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
           for suggestion in searchSuggestions
-            suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
+            insertText = if custom then "#{keyword} #{suggestion}" else suggestion
+            suggestions.push @mkSuggestion insertText, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
             score *= 0.9
 
           # Experimental. Force the best match to the top of the list.
           suggestions[0].extraRelevancyData = 0.9999999 if 0 < suggestions.length
-
-          if custom
-            # For custom search engines, we need to tell the front end to insert the search engine's keyword
-            # when copying a suggestion into the vomnibar.
-            suggestion.reinsertPrefix = "#{keyword} " for suggestion in suggestions
 
           # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
           # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions

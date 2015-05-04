@@ -96,10 +96,10 @@ class VomnibarUI
 
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
-    if 0 <= @selection and @completions[@selection].insertText
+    if 0 <= @selection and @completions[@selection].insertText?
       @previousText ?= @input.value
       suggestion = @completions[@selection]
-      @input.value = (suggestion.reinsertPrefix ? "") + suggestion.title + " "
+      @input.value = @completions[@selection].insertText
     else if @previousText?
         @input.value = @previousText
         @previousText = null
