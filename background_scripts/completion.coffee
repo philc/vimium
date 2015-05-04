@@ -335,42 +335,67 @@ class SearchEngineCompleter
       else
         (string) -> Utils.createSearchUrl string.split /\s+/
 
-    type = if description? then description else "search"
+    haveDescription = description? and 0 < description.trim().length
+    type = if haveDescription then description else "search"
     searchUrl = if custom then url else Settings.get "searchUrl"
-    query = queryTerms[(if custom then 1 else 0)..].join " "
 
     # For custom search engines, we add an auto-selected suggestion.
     if custom
-      title = if description? then query else queryTerms[0] + ": " + query
+      query = queryTerms[1..].join " "
+      title = if haveDescription then query else keyword + ": " + query
       suggestions.push @mkSuggestion false, queryTerms, type, mkUrl(query), title, @computeRelevancy, 1
       suggestions[0].autoSelect = true
       queryTerms = queryTerms[1..]
 
-    onComplete suggestions, (onComplete) =>
+    if queryTerms.length == 0
+      return onComplete suggestions
+
+    onComplete suggestions, (existingSuggestions, onComplete) =>
       suggestions = []
       # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
       # this adds suggestions for the default search engine (if we have a completer for that).
-      SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
 
-        # Scoring:
-        #   - The score does not depend upon the actual suggestion (so, it does not depend upon word relevancy).
-        #     We assume that the completion engine has already factored that in.
-        #   - The score is higher if the query is longer.  The idea is that search suggestions are more likely
-        #     to be relevant if, after typing quite some number of characters, the user hasn't yet found a
-        #     useful suggestion from another completer.
-        #   - Scores are weighted such that they retain the ordering provided by the completion engine.
-        characterCount = query.length - queryTerms.length + 1
-        score = 0.8 * (Math.min(characterCount, 12.0)/12.0)
+      # Scoring:
+      #   - The score does not depend upon the actual suggestion (so, it does not depend upon word
+      #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
+      #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
+      #     suggestion anyway.
+      #   - The score is based on the length of the last query term.  The idea is that the user is already
+      #     happy with the earlier terms.
+      #   - The score is higher if the last query term is longer.  The idea is that search suggestions are more
+      #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
+      #     a useful suggestion from another completer.
+      #   - Scores are weighted such that they retain the order provided by the completion engine.
+      characterCount = queryTerms[queryTerms.length - 1].length
+      score = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
-        for suggestion in searchSuggestions
-          suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
-          score *= 0.9
+      if 0 < existingSuggestions.length
+        existingSuggestionMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
+        if score < existingSuggestionMinScore and MultiCompleter.maxResults <= existingSuggestions.length
+          # No suggestion we propose will have a high enough score to beat the existing suggestions, so bail
+          # immediately.
+          return onComplete []
 
-        if custom
-          for suggestion in suggestions
-            suggestion.reinsertPrefix = "#{keyword} " if suggestion.insertText
+      # We pause in case the user is still typing.
+      Utils.setTimeout 250, handler = @mostRecentHandler = =>
+        return onComplete [] if handler != @mostRecentHandler # Bail if another completion has begun.
 
-        onComplete suggestions
+        SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
+          for suggestion in searchSuggestions
+            suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
+            score *= 0.9
+
+          if custom
+            # For custom search engines, we need to tell the front end to insert the search engine's keyword
+            # when copying a suggestion into the vomnibar.
+            suggestion.reinsertPrefix = "#{keyword} " for suggestion in suggestions
+
+          # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
+          # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
+          # from other completers.  That would potentially be a problem because there is no relationship
+          # between the relevancy scores produced here and those produced by other completers.
+          count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
+          onComplete suggestions[...count]
 
   mkSuggestion: (insertText, args...) ->
     suggestion = new Suggestion args...
@@ -412,8 +437,10 @@ class SearchEngineCompleter
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
+  @maxResults: 10
+
   constructor: (@completers) ->
-    @maxResults = 10
+    @maxResults = MultiCompleter.maxResults
 
   refresh: ->
     completer.refresh?() for completer in @completers
@@ -429,36 +456,30 @@ class MultiCompleter
     suggestions = []
     completersFinished = 0
     continuation = null
+    # Call filter() on every source completer and wait for them all to finish before returning results.
+    # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
+    # called after the results of all of the other completers have been posted.  Any additional results
+    # from this continuation will be added to the existing results and posted later.  We don't call the
+    # continuation if another query is already waiting.
     for completer in @completers
-      # Call filter() on every source completer and wait for them all to finish before returning results.
-      # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
-      # called asynchronously after the results of all of the other completers have been posted.  Any
-      # additional results from this continuation will be added to the existing results and posted.  We don't
-      # call the continuation if another query is already waiting.
-      completer.filter queryTerms, (newSuggestions, cont = null) =>
-        # Allow completers to execute concurrently.
+      do (completer) =>
         Utils.nextTick =>
-          suggestions = suggestions.concat newSuggestions
-          continuation = cont if cont?
-          completersFinished += 1
-          if completersFinished >= @completers.length
-            onComplete @prepareSuggestions(suggestions), keepAlive: continuation?
-            onDone = =>
+          completer.filter queryTerms, (newSuggestions, cont = null) =>
+            suggestions = suggestions.concat newSuggestions
+            continuation = cont if cont?
+            if @completers.length <= ++completersFinished
+              shouldRunContinuation = continuation? and not @mostRecentQuery
+              onComplete @prepareSuggestions(queryTerms, suggestions), keepAlive: shouldRunContinuation
+              # Allow subsequent queries to begin.
               @filterInProgress = false
-              @filter @mostRecentQuery.queryTerms, @mostRecentQuery.onComplete if @mostRecentQuery
-            # We add a very short delay.  It is possible for all of this processing to have been handled
-            # pretty-much synchronously, which would have prevented any newly-arriving queries from
-            # registering.
-            Utils.setTimeout 10, =>
-              if continuation? and not @mostRecentQuery
-                continuation (newSuggestions) =>
-                  onComplete @prepareSuggestions suggestions.concat(newSuggestions)
-                  onDone()
+              if shouldRunContinuation
+                continuation suggestions, (newSuggestions) =>
+                  onComplete @prepareSuggestions queryTerms, suggestions.concat(newSuggestions)
               else
-                onDone()
+                @filter @mostRecentQuery.queryTerms, @mostRecentQuery.onComplete if @mostRecentQuery
 
-  prepareSuggestions: (suggestions) ->
-    suggestion.computeRelevancy @queryTerms for suggestion in suggestions
+  prepareSuggestions: (queryTerms, suggestions) ->
+    suggestion.computeRelevancy queryTerms for suggestion in suggestions
     suggestions.sort (a, b) -> b.relevancy - a.relevancy
     suggestions = suggestions[0...@maxResults]
     suggestion.generateHtml() for suggestion in suggestions

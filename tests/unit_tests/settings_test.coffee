@@ -73,7 +73,7 @@ context "settings",
   should "set search engines, retrieve them correctly and check that they have been parsed correctly", ->
     searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
     Settings.set 'searchEngines', searchEngines
-    result = CustomSearchEngineCompleter.getSearchEngines()
+    result = SearchEngineCompleter.getSearchEngines()
     assert.equal Object.keys(result).length, 2
     assert.equal "bar?q=%s", result["foo"].url
     assert.isFalse result["foo"].description
