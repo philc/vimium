@@ -29,15 +29,17 @@ class Suggestion
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
+    highlightTerms =
+      if @noHighlightTerms then ((s) -> Utils.escapeHtml s) else ((s) => @highlightTerms Utils.escapeHtml s)
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
          <span class="vimiumReset vomnibarSource">#{@type}</span>
-         <span class="vimiumReset vomnibarTitle">#{@highlightTerms(Utils.escapeHtml(@title))}</span>
+         <span class="vimiumReset vomnibarTitle">#{highlightTerms @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl(@highlightTerms(Utils.escapeHtml(@url)))}</span>
+        <span class="vimiumReset vomnibarUrl">#{@shortenUrl highlightTerms @url}</span>
         #{relevancyHtml}
       </div>
       """
@@ -402,8 +404,7 @@ class SearchEngineCompleter
 
   mkSuggestion: (insertText, args...) ->
     suggestion = new Suggestion args...
-    suggestion.insertText = insertText
-    suggestion
+    extend suggestion, insertText: insertText, noHighlightTerms: true
 
   # The score is computed in filter() and provided here via suggestion.extraRelevancyData.
   computeRelevancy: (suggestion) -> suggestion.extraRelevancyData
