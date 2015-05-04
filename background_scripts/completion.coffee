@@ -389,9 +389,6 @@ class SearchEngineCompleter
           suggestions.push @mkSuggestion insertText, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
           score *= 0.9
 
-        # Experimental. Force the best match to the top of the list.
-        suggestions[0].extraRelevancyData = 0.9999999 if 0 < suggestions.length
-
         # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
         # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
         # from other completers.  That would potentially be a problem because there is no relationship
