@@ -469,7 +469,11 @@ class MultiCompleter
             continuation = cont if cont?
             if @completers.length <= ++completersFinished
               shouldRunContinuation = continuation? and not @mostRecentQuery
-              onComplete @prepareSuggestions(queryTerms, suggestions), keepAlive: shouldRunContinuation
+              # We don't post results immediately if there are none, and we're going to run a continuation
+              # (ie. a SearchEngineCompleter).  This prevents hiding the vomnibar briefly before showing it
+              # again, which looks ugly.
+              unless shouldRunContinuation and suggestions.length == 0
+                onComplete @prepareSuggestions(queryTerms, suggestions), keepAlive: shouldRunContinuation
               # Allow subsequent queries to begin.
               @filterInProgress = false
               if shouldRunContinuation
