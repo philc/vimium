@@ -82,28 +82,29 @@ class VomnibarUI
     @updateTimer = null
     @completions = []
     @previousAutoSelect = null
-    @previousText = null
+    @previousInputValue = null
     @selection = @initialSelectionValue
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
     # has just appeared or disappeared. If that happens, we set @selection to 0 or -1.
-    if @completions[0]
+    if 0 < @completions.length
       @selection = 0 if @completions[0].autoSelect and not @previousAutoSelect
       @selection = -1 if @previousAutoSelect and not @completions[0].autoSelect
       @previousAutoSelect = @completions[0].autoSelect
-    for i in [0...@completionList.children.length]
-      @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
     if 0 <= @selection and @completions[@selection].insertText?
-      @previousText ?= @input.value
-      suggestion = @completions[@selection]
+      @previousInputValue ?= @input.value
       @input.value = @completions[@selection].insertText
-    else if @previousText?
-        @input.value = @previousText
-        @previousText = null
+    else if @previousInputValue?
+        @input.value = @previousInputValue
+        @previousInputValue = null
+
+    # Highlight the the selected entry, and only the selected entry.
+    for i in [0...@completionList.children.length]
+      @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
@@ -182,9 +183,8 @@ class VomnibarUI
     if (updateSynchronously)
       # The user entered something.  Don't reset any previous text, and re-enable custom search engine auto
       # selection.
-      if @previousText?
-        @previousText = null
-        @previousAutoSelect = null
+      if @previousInputValue? and updateSynchronously.type == "input"
+        @previousInputValue = null
         @selection = -1
       # cancel scheduled update
       if @updateTimer?

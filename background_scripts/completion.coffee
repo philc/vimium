@@ -24,7 +24,7 @@ class Suggestion
     # When @autoSelect is truthy, the suggestion is automatically pre-selected in the vomnibar.
     @autoSelect = false
     # If @noHighlightTerms is falsy, then we don't highlight matched terms in the title and URL.
-    @autoSelect = true
+    @noHighlightTerms = false
     # If @insertText is a string, then the indicated text is inserted into the vomnibar input when the
     # suggestion is selected.
     @insertText = null
