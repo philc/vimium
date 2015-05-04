@@ -385,6 +385,9 @@ class SearchEngineCompleter
             suggestions.push @mkSuggestion true, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
             score *= 0.9
 
+          # Experimental. Force the best match to the top of the list.
+          suggestions[0].extraRelevancyData = 0.9999999 if 0 < suggestions.length
+
           if custom
             # For custom search engines, we need to tell the front end to insert the search engine's keyword
             # when copying a suggestion into the vomnibar.
