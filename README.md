@@ -143,7 +143,7 @@ Release Notes
 -------------
 1.51 (2015-05-02)
 
-- Bug [fixes](https://github.com/philc/vimium/pulls?utf8=%E2%9C%93&q=is%3Apr+sort%3Aupdated-desc+is%3Aclosed+updated%3A%3E%3D2015-04-26+state%3Amerged).
+- Bug [fixes](https://github.com/philc/vimium/pulls?utf8=%E2%9C%93&q=is%3Apr+sort%3Aupdated-desc+is%3Aclosed+merged%3A%3E%3D2015-04-26+merged%3A%3C2015-05-02+state%3Amerged).
 
 1.50 (2015-04-26)
 
