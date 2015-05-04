@@ -54,7 +54,7 @@ class VomnibarUI
   setCompleter: (completer) ->
     @completer = completer
     @reset()
-    # NEEDED? (smblott) @update(true)
+    @update(true)
 
   setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
 
