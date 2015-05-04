@@ -383,25 +383,21 @@ class SearchEngineCompleter
           # immediately.
           return onComplete []
 
-      # We pause in case the user is still typing.
-      Utils.setTimeout 250, handler = @mostRecentHandler = =>
-        return onComplete [] if handler != @mostRecentHandler # Bail if another completion has begun.
+      SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
+        for suggestion in searchSuggestions
+          insertText = if custom then "#{keyword} #{suggestion}" else suggestion
+          suggestions.push @mkSuggestion insertText, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
+          score *= 0.9
 
-        SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
-          for suggestion in searchSuggestions
-            insertText = if custom then "#{keyword} #{suggestion}" else suggestion
-            suggestions.push @mkSuggestion insertText, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score
-            score *= 0.9
+        # Experimental. Force the best match to the top of the list.
+        suggestions[0].extraRelevancyData = 0.9999999 if 0 < suggestions.length
 
-          # Experimental. Force the best match to the top of the list.
-          suggestions[0].extraRelevancyData = 0.9999999 if 0 < suggestions.length
-
-          # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
-          # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
-          # from other completers.  That would potentially be a problem because there is no relationship
-          # between the relevancy scores produced here and those produced by other completers.
-          count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
-          onComplete suggestions[...count]
+        # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
+        # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
+        # from other completers.  That would potentially be a problem because there is no relationship
+        # between the relevancy scores produced here and those produced by other completers.
+        count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
+        onComplete suggestions[...count]
 
   mkSuggestion: (insertText, args...) ->
     suggestion = new Suggestion args...
@@ -474,6 +470,7 @@ class MultiCompleter
             continuation = cont if cont?
             if @completers.length <= ++completersFinished
               shouldRunContinuation = continuation? and not @mostRecentQuery
+              console.log "skip continuation" if continuation? and not shouldRunContinuation
               # We don't post results immediately if there are none, and we're going to run a continuation
               # (ie. a SearchEngineCompleter).  This prevents hiding the vomnibar briefly before showing it
               # again, which looks ugly.

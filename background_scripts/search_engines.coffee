@@ -114,6 +114,8 @@ completionEngines = [
 ]
 
 SearchEngines =
+  debug: true
+
   get: (searchUrl, url, callback) ->
     xhr = new XMLHttpRequest()
     xhr.open "GET", url, true
@@ -144,11 +146,18 @@ SearchEngines =
   #  - callback will be applied to a list of suggestion strings (which may be an empty list, if anything goes
   #    wrong).
   complete: (searchUrl, queryTerms, callback) ->
+    @mostRecentHandler = null
+
     # We can't complete empty queries.
     return callback [] unless 0 < queryTerms.length
 
-    # We don't complete URLs.
-    return callback [] if 1 == queryTerms.length and Utils.isUrl queryTerms[0]
+    if 1 == queryTerms.length
+      # We don't complete URLs.
+      return callback [] if Utils.isUrl queryTerms[0]
+      # We don't complete less then three characters: the results are usually useless.  This also prevents
+      # one- and two-character custom search engine keywords from being sent to the default completer (e.g.
+      # the initial "w" before typing "w something").
+      return callback [] unless 2 < queryTerms[0].length
 
     # We don't complete Javascript URLs.
     return callback [] if Utils.hasJavascriptPrefix queryTerms[0]
@@ -158,13 +167,15 @@ SearchEngines =
     # unlikely.
     junk = "//Zi?ei5;o//"
     completionCacheKey = searchUrl + junk + queryTerms.join junk
-    @completionCache ?= new SimpleCache 6 * 60 * 60 * 1000, 2000 # Six hours, 2000 entries.
+    @completionCache ?= new SimpleCache 60 * 60 * 1000, 2000 # One hour, 2000 entries.
     if @completionCache.has completionCacheKey
+      console.log "hit", completionCacheKey if @debug
       return callback @completionCache.get completionCacheKey
 
     fetchSuggestions = (callback) =>
       engine = @lookupEngine searchUrl
       url = engine.getUrl queryTerms
+      console.log "get", url if @debug
       query = queryTerms.join(" ").toLowerCase()
       @get searchUrl, url, (xhr = null) =>
         # Parsing the response may fail if we receive an unexpected or an unexpectedly-formatted response.  In
@@ -184,15 +195,21 @@ SearchEngines =
 
         callback suggestions
 
-    # Don't allow duplicate identical active requests.  This can happen, for example, when the user enters or
-    # removes a space, or when they enter a character and immediately delete it.
-    @inTransit ?= {}
-    unless @inTransit[completionCacheKey]?.push callback
-      queue = @inTransit[completionCacheKey] = []
-      fetchSuggestions (suggestions) =>
-        callback @completionCache.set completionCacheKey, suggestions
-        delete @inTransit[completionCacheKey]
-        callback suggestions for callback in queue
+    # We pause in case the user is still typing.
+    Utils.setTimeout 200, handler = @mostRecentHandler = =>
+      if handler != @mostRecentHandler # Bail if another completion has begun.
+        console.log "bail", completionCacheKey if @debug
+        return callback []
+      # Don't allow duplicate identical active requests.  This can happen, for example, when the user enters or
+      # removes a space, or when they enter a character and immediately delete it.
+      @inTransit ?= {}
+      unless @inTransit[completionCacheKey]?.push callback
+        queue = @inTransit[completionCacheKey] = []
+        fetchSuggestions (suggestions) =>
+          callback @completionCache.set completionCacheKey, suggestions
+          delete @inTransit[completionCacheKey]
+          console.log "callbacks", queue.length, completionCacheKey if @debug and 0 < queue.length
+          callback suggestions for callback in queue
 
 root = exports ? window
 root.SearchEngines = SearchEngines

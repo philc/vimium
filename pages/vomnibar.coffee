@@ -81,6 +81,7 @@ class VomnibarUI
     @input.value = ""
     @updateTimer = null
     @completions = []
+    @previousAutoSelect = null
     @previousText = null
     @selection = @initialSelectionValue
 
