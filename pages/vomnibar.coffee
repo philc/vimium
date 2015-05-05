@@ -186,14 +186,13 @@ class VomnibarUI
     @update()
 
   update: (updateSynchronously = false, callback = null) =>
-    # Cancel any scheduled update.
-    if @updateTimer?
-      window.clearTimeout @updateTimer
-      @updateTimer = null
-
     if updateSynchronously
+      # Cancel any scheduled update.
+      if @updateTimer?
+        window.clearTimeout @updateTimer
+        @updateTimer = null
       @updateCompletions callback
-    else
+    else if not @updateTimer?
       # Update asynchronously for better user experience and to take some load off the CPU (not every
       # keystroke will cause a dedicated update)
       @updateTimer = Utils.setTimeout @refreshInterval, =>
