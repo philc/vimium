@@ -19,7 +19,7 @@ class InsertMode extends Mode
         # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
         # games.  See discussion in #1211 and #1194.
         target.blur()
-      else if target.shadowRoot and @insertModeLock
+      else if target?.shadowRoot and @insertModeLock
         # An editable element in a shadow DOM is focused; blur it.
         @insertModeLock.blur()
       @exit event, event.srcElement
@@ -61,16 +61,18 @@ class InsertMode extends Mode
           # event inside the shadow DOM. This fixes #853.
           shadowRoot = event.target.shadowRoot
           eventListeners = {}
-          for type in ["focus", "blur"]
+          for type in [ "focus", "blur" ]
             eventListeners[type] = do (type) ->
-              (event) ->
-                handlerStack.bubbleEvent type, event
-                if type == "blur"
-                  # Unregister the event listeners.
-                  for ltype, listener of eventListeners
-                    shadowRoot.removeEventListener ltype, listener, true
-
+              (event) -> handlerStack.bubbleEvent type, event
             shadowRoot.addEventListener type, eventListeners[type], true
+
+          handlerStack.push
+            _name: "shadow-DOM-input-mode"
+            blur: (event) ->
+              if event.target.shadowRoot == shadowRoot
+                handlerStack.remove()
+                for type, listener of eventListeners
+                  shadowRoot.removeEventListener type, listener, true
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = @ if @permanent
