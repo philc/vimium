@@ -385,7 +385,7 @@ setIcon = (request, sender) ->
   chrome.browserAction.setIcon tabId: sender.tab.id, path: path
 
 handleUpdateScrollPosition = (request, sender) ->
-  # See note re. sender.tab at unregisterFrame.
+  # See note regarding sender.tab at unregisterFrame.
   updateScrollPosition sender.tab, request.scrollX, request.scrollY if sender.tab?
 
 updateScrollPosition = (tab, scrollX, scrollY) ->
@@ -678,6 +678,13 @@ chrome.tabs.onRemoved.addListener (tabId) ->
           return if window.incognito
         # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
         chrome.storage.local.remove "findModeRawQueryListIncognito"
+
+# Tidy up tab caches when tabs are removed.  We cannot rely on unregisterFrame because Chrome does not always
+# provide sender.tab there.
+# NOTE(smblott) (2015-05-05) This may break restoreTab on legacy Chrome versions, but we'll be moving to
+# chrome.sessions support only soon anyway.
+chrome.tabs.onRemoved.addListener (tabId) ->
+  delete cache[tabId] for cache in [ frameIdsForTab, urlForTab, tabInfoMap ]
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
