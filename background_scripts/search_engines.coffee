@@ -34,7 +34,7 @@ class Google extends GoogleXMLRegexpEngine
   constructor: ->
     super [
       # We match the major English-speaking TLDs.
-      new RegExp "^https?://[a-z]+\.google\.(com|ie|co.uk|ca|com.au)/"
+      new RegExp "^https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/"
       new RegExp "localhost/cgi-bin/booky" # Only for smblott.
       ]
 

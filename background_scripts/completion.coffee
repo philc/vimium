@@ -34,17 +34,15 @@ class Suggestion
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
-    highlightTerms =
-      if @noHighlightTerms then ((s) -> Utils.escapeHtml s) else ((s) => @highlightTerms Utils.escapeHtml s)
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
          <span class="vimiumReset vomnibarSource">#{@type}</span>
-         <span class="vimiumReset vomnibarTitle">#{highlightTerms @title}</span>
+         <span class="vimiumReset vomnibarTitle">#{@highlightTerms Utils.escapeHtml @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl highlightTerms @url}</span>
+        <span class="vimiumReset vomnibarUrl">#{@shortenUrl @highlightTerms Utils.escapeHtml @url}</span>
         #{relevancyHtml}
       </div>
       """
@@ -85,6 +83,7 @@ class Suggestion
 
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightTerms: (string) ->
+    return string if @noHighlightTerms
     ranges = []
     escapedTerms = @queryTerms.map (term) -> Utils.escapeHtml(term)
     for term in escapedTerms
@@ -399,6 +398,7 @@ class SearchEngineCompleter
         count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
         onComplete suggestions[...count]
 
+  # FIXME(smblott) Refactor Suggestion constructor as per @mrmr1993's comment in #1635.
   mkSuggestion: (insertText, args...) ->
     suggestion = new Suggestion args...
     extend suggestion, insertText: insertText, noHighlightTerms: true
