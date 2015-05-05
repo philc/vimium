@@ -91,6 +91,8 @@ class VomnibarUI
       @selection = 0 if @completions[0].autoSelect and not @previousAutoSelect
       @selection = -1 if @previousAutoSelect and not @completions[0].autoSelect
       @previousAutoSelect = @completions[0].autoSelect
+    else
+      @previousAutoSelect = null
 
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
