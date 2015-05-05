@@ -42,7 +42,7 @@ context "convertToUrl",
     assert.equal "http://127.0.0.1:8080", Utils.convertToUrl("127.0.0.1:8080")
     assert.equal "http://[::]:8080", Utils.convertToUrl("[::]:8080")
     assert.equal "view-source:    0.0.0.0", Utils.convertToUrl("view-source:    0.0.0.0")
-    assert.equal "javascript:alert('25 % 20 25 ');", Utils.convertToUrl "javascript:alert('25 % 20 25%20');"
+    assert.equal "javascript:alert('25 % 20 * 25 ');", Utils.convertToUrl "javascript:alert('25 % 20 * 25%20');"
 
   should "convert non-URL terms into search queries", ->
     assert.equal "http://www.google.com/search?q=google", Utils.convertToUrl("google")
