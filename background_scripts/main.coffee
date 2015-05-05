@@ -599,9 +599,8 @@ registerFrame = (request, sender) ->
   (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
 
 unregisterFrame = (request, sender) ->
-  # When a tab is closing, Chrome sometimes passes on messages without sender.tab.  Therefore, we guard
-  # against this.
-  # FIXME(smblott) Consequently, we have a space leak in frameIdsForTab, tabInfoMap and urlForTab.
+  # When a tab is closing, Chrome sometimes passes messages without sender.tab.  Therefore, we guard against
+  # this.
   tabId = sender.tab?.id
   if tabId? and frameIdsForTab[tabId]?
     if request.tab_is_closing
