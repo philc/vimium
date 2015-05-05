@@ -602,7 +602,8 @@ unregisterFrame = (request, sender) ->
   # When a tab is closing, Chrome sometimes passes messages without sender.tab.  Therefore, we guard against
   # this.
   tabId = sender.tab?.id
-  if tabId? and frameIdsForTab[tabId]?
+  return unless tabId?
+  if frameIdsForTab[tabId]?
     if request.tab_is_closing
       updateOpenTabs sender.tab, true
     else
