@@ -207,14 +207,14 @@ globalRoot.extend = (hash1, hash2) ->
     hash1[key] = hash2[key]
   hash1
 
-# A simple cache. Entries used within an expiry period are retained (for one more expiry period), otherwise
-# they are discarded.
+# A simple cache. Entries used within two expiry periods are retained, otherwise they are discarded.
+# At most 2 * @entries entries are retained.
 class SimpleCache
   # expiry: expiry time in milliseconds (default, one hour)
   # entries: maximum number of entries in @cache (there may be this many entries in @previous, too)
   constructor: (@expiry = 60 * 60 * 1000, @entries = 1000) ->
     @cache = {}
-    @rotate() # Force starts the rotation timer.
+    @rotate() # Force start the rotation timer.
 
   rotate: ->
     @previous = @cache

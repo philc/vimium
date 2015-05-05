@@ -385,7 +385,7 @@ class SearchEngineCompleter
           # immediately.
           return onComplete []
 
-      SearchEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
+      CompletionEngines.complete searchUrl, queryTerms, (searchSuggestions = []) =>
         for suggestion in searchSuggestions
           insertText = if custom then "#{keyword} #{suggestion}" else suggestion
           suggestions.push @mkSuggestion insertText, queryTerms, type, mkUrl(suggestion), suggestion, @computeRelevancy, score

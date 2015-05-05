@@ -13,8 +13,8 @@
 #   3. "parse" - This takes a successful XMLHttpRequest object (the request has completed successfully), and
 #      returns a list of suggestions (a list of strings).
 #
-# The main completion entry point is SearchEngines.complete().  This implements all lookup and caching
-# logic.  It is possible to add new completion engines without changing the SearchEngines infrastructure
+# The main completion entry point is CompletionEngines.complete().  This implements all lookup and caching
+# logic.  It is possible to add new completion engines without changing the CompletionEngines infrastructure
 # itself.
 
 # A base class for common regexp-based matching engines.
@@ -113,7 +113,7 @@ completionEngines = [
   DummySearchEngine
 ]
 
-SearchEngines =
+CompletionEngines =
   debug: true
 
   get: (searchUrl, url, callback) ->
@@ -216,4 +216,4 @@ SearchEngines =
     @mostRecentHandler = null
 
 root = exports ? window
-root.SearchEngines = SearchEngines
+root.CompletionEngines = CompletionEngines
