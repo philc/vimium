@@ -25,7 +25,7 @@ Vomnibar =
     extend options, userOptions
 
     options.refreshInterval =
-      if options.completer == "omni" then 125 else 50
+      if options.completer == "omni" then 125 else 0
 
     completer = @getCompleter(options.completer)
     @vomnibarUI ?= new VomnibarUI()

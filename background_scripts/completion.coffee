@@ -353,6 +353,8 @@ class SearchEngineCompleter
       suggestions.push @mkSuggestion null, queryTerms, type, mkUrl(query), title, @computeRelevancy, 1
       suggestions[0].autoSelect = true
       queryTerms = queryTerms[1..]
+    else
+      query = queryTerms.join " "
 
     if queryTerms.length == 0
       return onComplete suggestions
@@ -367,13 +369,11 @@ class SearchEngineCompleter
       #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
       #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
       #     suggestion anyway.
-      #   - The score is based on the length of the last query term.  The idea is that the user is already
-      #     happy with the earlier terms.
-      #   - The score is higher if the last query term is longer.  The idea is that search suggestions are more
+      #   - The score is higher if the query term is longer.  The idea is that search suggestions are more
       #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
       #     a useful suggestion from another completer.
       #   - Scores are weighted such that they retain the order provided by the completion engine.
-      characterCount = queryTerms[queryTerms.length - 1].length
+      characterCount = query.length - queryTerms.length + 1
       score = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
       if 0 < existingSuggestions.length
