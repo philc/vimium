@@ -385,7 +385,8 @@ setIcon = (request, sender) ->
   chrome.browserAction.setIcon tabId: sender.tab.id, path: path
 
 handleUpdateScrollPosition = (request, sender) ->
-  updateScrollPosition(sender.tab, request.scrollX, request.scrollY)
+  # See note re. sender.tab at unregisterFrame.
+  updateScrollPosition sender.tab, request.scrollX, request.scrollY if sender.tab?
 
 updateScrollPosition = (tab, scrollX, scrollY) ->
   tabInfoMap[tab.id].scrollX = scrollX
@@ -598,8 +599,11 @@ registerFrame = (request, sender) ->
   (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
 
 unregisterFrame = (request, sender) ->
-  tabId = sender.tab.id
-  if frameIdsForTab[tabId]?
+  # When a tab is closing, Chrome sometimes passes on messages without sender.tab.  Therefore, we guard
+  # against this.
+  # FIXME(smblott) Consequently, we have a space leak in frameIdsForTab, tabInfoMap and urlForTab.
+  tabId = sender.tab?.id
+  if tabId? and frameIdsForTab[tabId]?
     if request.tab_is_closing
       updateOpenTabs sender.tab, true
     else
