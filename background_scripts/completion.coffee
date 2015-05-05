@@ -331,6 +331,9 @@ class TabCompleter
 class SearchEngineCompleter
   searchEngines: {}
 
+  userIsTyping: ->
+    SearchEngines.userIsTyping()
+
   filter: (queryTerms, onComplete) ->
     { keyword: keyword, url: url, description: description } = @getSearchEngineMatches queryTerms
     custom = url?
@@ -442,6 +445,9 @@ class MultiCompleter
 
   refresh: ->
     completer.refresh?() for completer in @completers
+
+  userIsTyping: ->
+    completer.userIsTyping?() for completer in @completers
 
   filter: (queryTerms, onComplete) ->
     # Allow only one query to run at a time.

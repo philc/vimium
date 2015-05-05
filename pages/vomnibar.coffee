@@ -178,6 +178,7 @@ class VomnibarUI
     @updateSelection()
 
   updateOnInput: =>
+    @completer.userIsTyping()
     # If the user types, then don't reset any previous text, and re-enable auto-select.
     if @previousInputValue?
       @previousInputValue = null
@@ -252,6 +253,9 @@ class BackgroundCompleter
           callback(results)
 
     @filterPort.postMessage id: id, name: @name, query: query
+
+  userIsTyping: ->
+    @filterPort.postMessage name: @name, userIsTyping: true
 
 extend BackgroundCompleter,
   #

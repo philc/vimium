@@ -13,7 +13,7 @@
 #   3. "parse" - This takes a successful XMLHttpRequest object (the request has completed successfully), and
 #      returns a list of suggestions (a list of strings).
 #
-# The main (only) completion entry point is SearchEngines.complete().  This implements all lookup and caching
+# The main completion entry point is SearchEngines.complete().  This implements all lookup and caching
 # logic.  It is possible to add new completion engines without changing the SearchEngines infrastructure
 # itself.
 
@@ -197,7 +197,7 @@ SearchEngines =
 
     # We pause in case the user is still typing.
     Utils.setTimeout 200, handler = @mostRecentHandler = =>
-      if handler != @mostRecentHandler # Bail if another completion has begun.
+      if handler != @mostRecentHandler # Bail if another completion has begun, or the user is typing.
         console.log "bail", completionCacheKey if @debug
         return callback []
       # Don't allow duplicate identical active requests.  This can happen, for example, when the user enters or
@@ -210,6 +210,10 @@ SearchEngines =
           delete @inTransit[completionCacheKey]
           console.log "callbacks", queue.length, completionCacheKey if @debug and 0 < queue.length
           callback suggestions for callback in queue
+
+  userIsTyping: ->
+    console.log "reset (typing)" if @debug and @mostRecentHandler?
+    @mostRecentHandler = null
 
 root = exports ? window
 root.SearchEngines = SearchEngines
