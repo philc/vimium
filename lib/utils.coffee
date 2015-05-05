@@ -211,16 +211,18 @@ globalRoot.extend = (hash1, hash2) ->
 # they are discarded.
 class SimpleCache
   # expiry: expiry time in milliseconds (default, one hour)
-  # entries: maximum number of entries
+  # entries: maximum number of entries in @cache (there may be this many entries in @previous, too)
   constructor: (@expiry = 60 * 60 * 1000, @entries = 1000) ->
     @cache = {}
-    @previous = {}
-    rotate = => @rotate()
-    setInterval rotate, @expiry
+    @rotate() # Force starts the rotation timer.
 
   rotate: ->
     @previous = @cache
     @cache = {}
+    # We reset the timer every time the cache is rotated (which could be because a previous timer expired, or
+    # because the number of @entries was exceeded.
+    clearTimeout @timer if @timer?
+    @timer = Utils.setTimeout @expiry, => @rotate()
 
   has: (key) ->
     (key of @cache) or key of @previous
