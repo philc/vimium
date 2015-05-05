@@ -39,6 +39,17 @@ Utils =
     urlPrefix = new RegExp "^[a-z]{3,}://."
     (url) -> urlPrefix.test url
 
+  # Decode valid escape sequences in a Javascript URI.  This is intended to mimic the best-effort decoding
+  # Chrome itself seems to apply when a Javascript URI is enetered into the omnibox (or clicked).
+  # See https://code.google.com/p/chromium/issues/detail?id=483000, #1611 and #1636.
+  decodeJavascriptURI: (uri) ->
+    uri.split(/(?=%)/).map((uriComponent) ->
+      try
+        decodeURIComponent uriComponent
+      catch
+        uriComponent
+    ).join ""
+
   # Completes a partial URL (without scheme)
   createFullUrl: (partialUrl) ->
     if @hasFullUrlPrefix(partialUrl) then partialUrl else ("http://" + partialUrl)
@@ -111,10 +122,7 @@ Utils =
     if Utils.hasChromePrefix string
       string
     else if Utils.hasJavascriptPrefix string
-      # We blindly URL decode javascript: URLs.  That's what Chrome does when they're clicked, or entered into
-      # the omnibox.  However, Chrome does not URL decode such URLs in chrome.tabs.update.
-      # This is arguably a Chrome bug.  See https://code.google.com/p/chromium/issues/detail?id=483000.
-      decodeURI string
+      Utils.decodeJavascriptURI string
     else if Utils.isUrl string
       Utils.createFullUrl string
     else
