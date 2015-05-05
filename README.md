@@ -141,6 +141,10 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+Changes since 1.51 (these have not yet been released)
+
+- Bug fixes: bookmarklets accessed from the vomnibar.
+
 1.51 (2015-05-02)
 
 - Bug [fixes](https://github.com/philc/vimium/pulls?utf8=%E2%9C%93&q=is%3Apr+sort%3Aupdated-desc+is%3Aclosed+merged%3A%3E%3D2015-04-26+merged%3A%3C2015-05-02+state%3Amerged).
