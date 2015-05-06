@@ -96,11 +96,12 @@ Utils =
     query = query.split(/\s+/) if typeof(query) == "string"
     query.map(encodeURIComponent).join "+"
 
-  # Creates a search URL from the given :query.
-  createSearchUrl: (query) ->
-    # It would be better to pull the default search engine from chrome itself.  However, unfortunately chrome
-    # does not provide an API for doing so.
-    Settings.get("searchUrl") + @createSearchQuery query
+  # Create a search URL from the given :query (using either the provided search URL, or the default one).
+  # It would be better to pull the default search engine from chrome itself.  However, chrome does not provide
+  # an API for doing so.
+  createSearchUrl: (query, searchUrl = Settings.get("searchUrl")) ->
+    searchUrl += "%s" unless 0 <= searchUrl.indexOf "%s"
+    searchUrl.replace /%s/g, @createSearchQuery query
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.

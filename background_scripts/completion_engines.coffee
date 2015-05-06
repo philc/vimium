@@ -116,6 +116,9 @@ completionEngines = [
 CompletionEngines =
   debug: true
 
+  # The amount of time to wait for new completions before launching the HTTP request.
+  delay: 250
+
   get: (searchUrl, url, callback) ->
     xhr = new XMLHttpRequest()
     xhr.open "GET", url, true
@@ -139,7 +142,7 @@ CompletionEngines =
         engine = new engine()
         return @engineCache.set searchUrl, engine if engine.match searchUrl
 
-  # This is the main (actually, the only) entry point.
+  # This is the main entry point.
   #  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custome search engine's URL.
   #    This is only used as a key for determining the relevant completion engine.
   #  - queryTerms are the queryTerms.
@@ -169,34 +172,41 @@ CompletionEngines =
     completionCacheKey = searchUrl + junk + queryTerms.join junk
     @completionCache ?= new SimpleCache 60 * 60 * 1000, 2000 # One hour, 2000 entries.
     if @completionCache.has completionCacheKey
-      console.log "hit", completionCacheKey if @debug
-      return callback @completionCache.get completionCacheKey
+      # We add a short delay, even for a cache hit.  This avoids an ugly flicker when the additional
+      # suggestions are posted.  It also makes the vomnibar behave similarly regardless of whether there's a
+      # cache hit.
+      Utils.setTimeout @delay, =>
+        console.log "hit", completionCacheKey if @debug
+        callback @completionCache.get completionCacheKey
+      return
 
     fetchSuggestions = (callback) =>
       engine = @lookupEngine searchUrl
       url = engine.getUrl queryTerms
-      console.log "get", url if @debug
       query = queryTerms.join(" ").toLowerCase()
       @get searchUrl, url, (xhr = null) =>
         # Parsing the response may fail if we receive an unexpected or an unexpectedly-formatted response.  In
-        # all cases, we fall back to the catch clause, below.
+        # all cases, we fall back to the catch clause, below.  Therefore, we "fail safe" in the case of
+        # incorrect or out-of-date completion engines.
         try
           suggestions = engine.parse xhr
           # Make sure we really do have an iterable of strings.
           suggestions = (suggestion for suggestion in suggestions when "string" == typeof suggestion)
           # Filter out the query itself. It's not adding anything.
           suggestions = (suggestion for suggestion in suggestions when suggestion.toLowerCase() != query)
+          console.log "GET", url if @debug
         catch
           suggestions = []
-          # We cache failures, but remove them after just ten minutes.  This (it is hoped) avoids repeated
-          # XMLHttpRequest failures over a short period of time.
+          # We allow failures to be cached, but remove them after just ten minutes.  This (it is hoped) avoids
+          # repeated unnecessary XMLHttpRequest failures over a short period of time.
           removeCompletionCacheKey = => @completionCache.set completionCacheKey, null
           setTimeout removeCompletionCacheKey, 10 * 60 * 1000 # Ten minutes.
+          console.log "fail", url if @debug
 
         callback suggestions
 
     # We pause in case the user is still typing.
-    Utils.setTimeout 200, handler = @mostRecentHandler = =>
+    Utils.setTimeout @delay, handler = @mostRecentHandler = =>
       if handler != @mostRecentHandler # Bail if another completion has begun, or the user is typing.
         console.log "bail", completionCacheKey if @debug
         return callback []
