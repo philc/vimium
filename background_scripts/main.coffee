@@ -16,7 +16,7 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
     for tab in tabs
       for [ func, files ] in jobs
         for file in files
-          func tab.id, { file: file, allFrames: contentScripts.allFrames }, checkLastRuntimeError
+          func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
 
 currentVersion = Utils.getCurrentVersion()
 tabQueue = {} # windowId -> Array
