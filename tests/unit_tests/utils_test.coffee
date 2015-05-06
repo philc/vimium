@@ -45,9 +45,9 @@ context "convertToUrl",
     assert.equal "javascript:alert('25 % 20 * 25 ');", Utils.convertToUrl "javascript:alert('25 % 20 * 25%20');"
 
   should "convert non-URL terms into search queries", ->
-    assert.equal "http://www.google.com/search?q=google", Utils.convertToUrl("google")
-    assert.equal "http://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com")
-    assert.equal "http://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter")
+    assert.equal "https://www.google.com/search?q=google", Utils.convertToUrl("google")
+    assert.equal "https://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com")
+    assert.equal "https://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter")
 
 context "hasChromePrefix",
   should "detect chrome prefixes of URLs", ->
