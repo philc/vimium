@@ -226,8 +226,8 @@ filterCompleter = (args, port) ->
 
   if args.id? and args.name? and args.query?
     queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
-    completers[args.name].filter queryTerms, (results, extra = {}) ->
-      port.postMessage extend extra, id: args.id, results: results
+    completers[args.name].filter queryTerms, (results) ->
+      port.postMessage id: args.id, results: results
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)

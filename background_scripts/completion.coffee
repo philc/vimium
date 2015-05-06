@@ -478,12 +478,12 @@ class MultiCompleter
               # (ie. a SearchEngineCompleter).  This prevents hiding the vomnibar briefly before showing it
               # again, which looks ugly.
               unless shouldRunContinuation and suggestions.length == 0
-                onComplete @prepareSuggestions(queryTerms, suggestions), keepAlive: shouldRunContinuation
+                onComplete @prepareSuggestions queryTerms, suggestions
               # Allow subsequent queries to begin.
               @filterInProgress = false
               if shouldRunContinuation
                 continuation suggestions, (newSuggestions) =>
-                  onComplete @prepareSuggestions queryTerms, suggestions.concat(newSuggestions)
+                  onComplete @prepareSuggestions queryTerms, suggestions.concat newSuggestions
               else
                 @filter @mostRecentQuery.queryTerms, @mostRecentQuery.onComplete if @mostRecentQuery
 
