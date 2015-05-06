@@ -65,8 +65,8 @@ completionHandlers =
       queryTerms = args.query.split(/\s+/).filter (s) -> 0 < s.length
       completer.filter queryTerms, (results) -> port.postMessage id: args.id, results: results
 
-  refreshCompleter: (completer) -> completer.refresh()
-  userIsTyping: (completer) -> completer.userIsTyping()
+  refresh: (completer) -> completer.refresh()
+  cancel: (completer) -> completer.cancel()
 
 handleCompletions = (args, port) ->
   completionHandlers[args.handler] completers[args.name], args, port

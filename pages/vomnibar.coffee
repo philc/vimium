@@ -8,11 +8,6 @@ Vomnibar =
   getUI: -> @vomnibarUI
   completers: {}
 
-  getCompleter: (name) ->
-    if (!(name of @completers))
-      @completers[name] = new BackgroundCompleter(name)
-    @completers[name]
-
   #
   # Activate the Vomnibox.
   #
@@ -27,7 +22,8 @@ Vomnibar =
     options.refreshInterval =
       if options.completer == "omni" then 125 else 0
 
-    completer = @getCompleter(options.completer)
+    name = options.completer
+    completer = @completers[name] ?= new BackgroundCompleter name
     @vomnibarUI ?= new VomnibarUI()
     completer.refresh()
     @vomnibarUI.setInitialSelectionValue(if options.selectFirst then 0 else -1)
@@ -35,7 +31,7 @@ Vomnibar =
     @vomnibarUI.setRefreshInterval(options.refreshInterval)
     @vomnibarUI.setForceNewTab(options.newTab)
     @vomnibarUI.setQuery(options.query)
-    @vomnibarUI.update()
+    @vomnibarUI.update true
 
   hide: -> @vomnibarUI?.hide()
   onHidden: -> @vomnibarUI?.onHidden()
@@ -54,7 +50,6 @@ class VomnibarUI
   setCompleter: (completer) ->
     @completer = completer
     @reset()
-    @update(true)
 
   setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
 
@@ -178,7 +173,7 @@ class VomnibarUI
     @updateSelection()
 
   updateOnInput: =>
-    @completer.userIsTyping()
+    @completer.cancel()
     # If the user types, then don't reset any previous text, and re-enable auto-select.
     if @previousInputValue?
       @previousInputValue = null
@@ -249,10 +244,10 @@ class BackgroundCompleter
     @port.postMessage name: @name, handler: "filter", id: @messageId, query: query
 
   refresh: ->
-    @port.postMessage name: @name, handler: "refreshCompleter"
+    @port.postMessage name: @name, handler: "refresh"
 
-  userIsTyping: ->
-    @port.postMessage name: @name, handler: "userIsTyping"
+  cancel: ->
+    @port.postMessage name: @name, handler: "cancel"
 
   # These are the actions we can perform when the user selects a result in the Vomnibox.
   completionActions:

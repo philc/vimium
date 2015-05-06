@@ -8,8 +8,7 @@
 # A completer is a class which has three functions:
 #  - filter(query, onComplete): "query" will be whatever the user typed into the Vomnibox.
 #  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
-#  - userIsTyping(): (optional) informs the completer that the user is typing (and pending completions may no
-#                               longer be needed).
+#  - cancel(): (optional) cancels any pending, cancelable action.
 class Suggestion
   showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
 
@@ -351,8 +350,8 @@ class TabCompleter
 class SearchEngineCompleter
   searchEngines: {}
 
-  userIsTyping: ->
-    CompletionEngines.userIsTyping()
+  cancel: ->
+    CompletionEngines.cancel()
 
   filter: (queryTerms, onComplete) ->
     suggestions = []
@@ -462,8 +461,8 @@ class MultiCompleter
   refresh: ->
     completer.refresh?() for completer in @completers
 
-  userIsTyping: ->
-    completer.userIsTyping?() for completer in @completers
+  cancel: ->
+    completer.cancel?() for completer in @completers
 
   filter: (queryTerms, onComplete) ->
     # Allow only one query to run at a time.

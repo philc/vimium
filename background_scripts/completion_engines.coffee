@@ -22,8 +22,9 @@ class RegexpEngine
   constructor: (@regexps) ->
   match: (searchUrl) -> Utils.matchesAnyRegexp @regexps, searchUrl
 
-# Several Google completion engines package responses in this way.
+# Several Google completion engines package XML responses in this way.
 class GoogleXMLRegexpEngine extends RegexpEngine
+  doNotCache: true
   parse: (xhr) ->
     for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
       continue unless suggestion = suggestion.getAttribute "data"
@@ -50,6 +51,7 @@ class Youtube extends GoogleXMLRegexpEngine
     "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=#{Utils.createSearchQuery queryTerms}"
 
 class Wikipedia extends RegexpEngine
+  doNotCache: true
   # Example search URL: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s
   constructor: ->
     super [ new RegExp "^https?://[a-z]+\.wikipedia\.org/" ]
@@ -96,8 +98,8 @@ class DuckDuckGo extends RegexpEngine
     suggestion.phrase for suggestion in JSON.parse xhr.responseText
 
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
-# allows the rest of the logic to be written knowing that there will be a search engine match.
-class DummySearchEngine
+# allows the rest of the logic to be written knowing that there will always be a completion engine match.
+class DummyCompletionEngine
   match: -> true
   # We return a useless URL which we know will succeed, but which won't generate any network traffic.
   getUrl: -> chrome.runtime.getURL "content_scripts/vimium.css"
@@ -110,13 +112,19 @@ completionEngines = [
   Wikipedia
   Bing
   Amazon
-  DummySearchEngine
+  DummyCompletionEngine
 ]
+
+# A note on caching.
+# Some completion engines allow caching, and Chrome serves up cached responses to requests (e.g. Google,
+# Wikipedia, YouTube).  Others do not (e.g. Bing, DuckDuckGo, Amazon).  A completion engine can set
+# @doNotCache to a truthy value to disable caching in cases where it is unnecessary.
 
 CompletionEngines =
   debug: true
 
-  # The amount of time to wait for new completions before launching the HTTP request.
+  # The amount of time to wait for new requests before launching the HTTP request.  The intention is to cut
+  # down on the number of HTTP requests we issue.
   delay: 250
 
   get: (searchUrl, url, callback) ->
@@ -128,11 +136,12 @@ CompletionEngines =
 
     xhr.onreadystatechange = ->
       if xhr.readyState == 4
+        console.log xhr.getAllResponseHeaders()
         callback(if xhr.status == 200 then xhr else null)
 
-  # Look up the search-completion engine for this searchUrl.  Because of DummySearchEngine, above, we know
-  # there will always be a match.  Imagining that there may be many completion engines, and knowing that this
-  # is called for every input event in the vomnibar, we cache the result.
+  # Look up the completion engine for this searchUrl.  Because of DummyCompletionEngine, above, we know there
+  # will always be a match.  Imagining that there may be many completion engines, and knowing that this is
+  # called for every input event in the vomnibar, we cache the result.
   lookupEngine: (searchUrl) ->
     @engineCache ?= new SimpleCache 30 * 60 * 60 * 1000 # 30 hours (these are small, we can keep them longer).
     if @engineCache.has searchUrl
@@ -145,29 +154,25 @@ CompletionEngines =
   # This is the main entry point.
   #  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custome search engine's URL.
   #    This is only used as a key for determining the relevant completion engine.
-  #  - queryTerms are the queryTerms.
+  #  - queryTerms are the query terms.
   #  - callback will be applied to a list of suggestion strings (which may be an empty list, if anything goes
   #    wrong).
   complete: (searchUrl, queryTerms, callback) ->
     @mostRecentHandler = null
+    query = queryTerms.join ""
 
-    # We can't complete empty queries.
-    return callback [] unless 0 < queryTerms.length
+    # We don't complete less then three characters: the results are usually useless.  This also prevents
+    # one- and two-character custom search engine keywords from being sent to the default completer (e.g.
+    # the initial "w" before typing "w something" for Wikipedia).
+    return callback [] unless 3 <= query.length
 
-    if 1 == queryTerms.length
-      # We don't complete URLs.
-      return callback [] if Utils.isUrl queryTerms[0]
-      # We don't complete less then three characters: the results are usually useless.  This also prevents
-      # one- and two-character custom search engine keywords from being sent to the default completer (e.g.
-      # the initial "w" before typing "w something").
-      return callback [] unless 2 < queryTerms[0].length
-
-    # We don't complete Javascript URLs.
-    return callback [] if Utils.hasJavascriptPrefix queryTerms[0]
+    # We don't complete regular URLs or Javascript URLs.
+    return callback [] if 1 == queryTerms.length and Utils.isUrl query
+    return callback [] if Utils.hasJavascriptPrefix query
 
     # Cache completions.  However, completions depend upon both the searchUrl and the query terms.  So we need
-    # to generate a key.  We mix in some junk generated by pwgen. A key clash is possible, but vanishingly
-    # unlikely.
+    # to generate a key.  We mix in some junk generated by pwgen. A key clash might be possible, but
+    # vanishingly unlikely.
     junk = "//Zi?ei5;o//"
     completionCacheKey = searchUrl + junk + queryTerms.join junk
     @completionCache ?= new SimpleCache 60 * 60 * 1000, 2000 # One hour, 2000 entries.
@@ -180,8 +185,7 @@ CompletionEngines =
         callback @completionCache.get completionCacheKey
       return
 
-    fetchSuggestions = (callback) =>
-      engine = @lookupEngine searchUrl
+    fetchSuggestions = (engine, callback) =>
       url = engine.getUrl queryTerms
       query = queryTerms.join(" ").toLowerCase()
       @get searchUrl, url, (xhr = null) =>
@@ -215,14 +219,15 @@ CompletionEngines =
       @inTransit ?= {}
       unless @inTransit[completionCacheKey]?.push callback
         queue = @inTransit[completionCacheKey] = []
-        fetchSuggestions (suggestions) =>
-          callback @completionCache.set completionCacheKey, suggestions
+        engine = @lookupEngine searchUrl
+        fetchSuggestions engine, (suggestions) =>
+          callback @completionCache.set completionCacheKey, suggestions unless engine.doNotCache
           delete @inTransit[completionCacheKey]
           console.log "callbacks", queue.length, completionCacheKey if @debug and 0 < queue.length
           callback suggestions for callback in queue
 
-  userIsTyping: ->
-    console.log "reset (typing)" if @debug and @mostRecentHandler?
+  cancel: ->
+    console.log "cancel (user is typing)" if @debug and @mostRecentHandler?
     @mostRecentHandler = null
 
 root = exports ? window
