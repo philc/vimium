@@ -221,7 +221,8 @@ CompletionEngines =
         queue = @inTransit[completionCacheKey] = []
         engine = @lookupEngine searchUrl
         fetchSuggestions engine, (suggestions) =>
-          callback @completionCache.set completionCacheKey, suggestions unless engine.doNotCache
+          @completionCache.set completionCacheKey, suggestions unless engine.doNotCache
+          callback suggestions
           delete @inTransit[completionCacheKey]
           console.log "callbacks", queue.length, completionCacheKey if @debug and 0 < queue.length
           callback suggestions for callback in queue
