@@ -88,7 +88,7 @@ root.Settings = Settings =
     # "\bnext\b,\bmore\b,>,→,»,≫,>>"
     nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
     # default/fall back search engine
-    searchUrl: "http://www.google.com/search?q="
+    searchUrl: "https://www.google.com/search?q="
     # put in an example search engine
     searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s wikipedia"
     newTabUrl: "chrome://newtab"
