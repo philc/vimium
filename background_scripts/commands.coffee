@@ -305,7 +305,7 @@ commandDescriptions =
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { noRepeat: true }]
   "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
 
-  enterFindMode: ["Enter find mode", { noRepeat: true }]
+  enterFindMode: ["Enter find mode. Append \r to enable RegExp", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]
   performBackwardsFind: ["Cycle backward to the previous find match"]
 
