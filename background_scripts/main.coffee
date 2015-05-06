@@ -60,6 +60,17 @@ completers =
   bookmarks: new MultiCompleter([completionSources.bookmarks])
   tabs: new MultiCompleter([completionSources.tabs])
 
+completionHandlers =
+  filter: (completer, args, port) ->
+      queryTerms = args.query.split(/\s+/).filter (s) -> 0 < s.length
+      completer.filter queryTerms, (results) -> port.postMessage id: args.id, results: results
+
+  refreshCompleter: (completer) -> completer.refresh()
+  userIsTyping: (completer) -> completer.userIsTyping()
+
+handleCompletions = (args, port) ->
+  completionHandlers[args.handler] completers[args.name], args, port
+
 chrome.runtime.onConnect.addListener (port, name) ->
   senderTabId = if port.sender.tab then port.sender.tab.id else null
   # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
@@ -216,18 +227,6 @@ handleSettings = (request, port) ->
       values = request.values
       values[key] = Settings.get key for own key of values
       port.postMessage { values }
-
-refreshCompleter = (request) -> completers[request.name].refresh()
-
-whitespaceRegexp = /\s+/
-filterCompleter = (args, port) ->
-  if args.name? and args.userIsTyping
-    completers[args.name].userIsTyping?()
-
-  if args.id? and args.name? and args.query?
-    queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
-    completers[args.name].filter queryTerms, (results) ->
-      port.postMessage id: args.id, results: results
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
@@ -643,7 +642,7 @@ bgLog = (request, sender) ->
 portHandlers =
   keyDown: handleKeyDown,
   settings: handleSettings,
-  filterCompleter: filterCompleter
+  completions: handleCompletions
 
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest
@@ -661,7 +660,6 @@ sendRequestHandlers =
   pasteFromClipboard: pasteFromClipboard
   isEnabledForUrl: isEnabledForUrl
   selectSpecificTab: selectSpecificTab
-  refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setIcon: setIcon

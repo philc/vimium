@@ -331,7 +331,7 @@ class SearchEngineCompleter
   searchEngines: {}
 
   userIsTyping: ->
-    SearchEngines.userIsTyping()
+    CompletionEngines.userIsTyping()
 
   filter: (queryTerms, onComplete) ->
     { keyword: keyword, url: url, description: description } = @getSearchEngineMatches queryTerms

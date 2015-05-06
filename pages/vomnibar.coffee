@@ -220,15 +220,14 @@ class VomnibarUI
     document.body.addEventListener "click", => @hide()
 
 #
-# Sends filter and refresh requests to a Vomnibox completer on the background page.
+# Sends requests to a Vomnibox completer on the background page.
 #
 class BackgroundCompleter
-  # - name: The background page completer that you want to interface with. Either "omni", "tabs", or
-  # "bookmarks". */
+  # name is background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
     @messageId = null
-    @filterPort = chrome.runtime.connect name: "filterCompleter"
-    @filterPort.onMessage.addListener handler = @messageHandler
+    @port = chrome.runtime.connect name: "completions"
+    @port.onMessage.addListener handler = @messageHandler
 
   messageHandler: (msg) =>
     # We ignore messages which arrive too late.
@@ -236,29 +235,26 @@ class BackgroundCompleter
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
       # type will be one of [tab, bookmark, history, domain].
-      results = msg.results.map (result) ->
+      results = msg.results.map (result) =>
         functionToCall = if  result.type == "tab"
-          BackgroundCompleter.completionActions.switchToTab.curry result.tabId
+          @completionActions.switchToTab.curry result.tabId
         else
-          BackgroundCompleter.completionActions.navigateToUrl.curry result.url
+          @completionActions.navigateToUrl.curry result.url
         result.performAction = functionToCall
         result
       @mostRecentCallback results
 
   filter: (query, @mostRecentCallback) ->
     @messageId = Utils.createUniqueId()
-    @filterPort.postMessage id: @messageId, name: @name, query: query
+    @port.postMessage name: @name, handler: "filter", id: @messageId, query: query
 
   refresh: ->
-    chrome.runtime.sendMessage handler: "refreshCompleter", name: @name
+    @port.postMessage name: @name, handler: "refreshCompleter"
 
   userIsTyping: ->
-    @filterPort.postMessage name: @name, userIsTyping: true
+    @port.postMessage name: @name, handler: "userIsTyping"
 
-extend BackgroundCompleter,
-  #
   # These are the actions we can perform when the user selects a result in the Vomnibox.
-  #
   completionActions:
     navigateToUrl: (url, openInNewTab) ->
       # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
