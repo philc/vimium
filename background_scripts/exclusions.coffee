@@ -2,6 +2,7 @@ root = exports ? window
 
 RegexpCache =
   cache: {}
+  clear: -> @cache = {}
   get: (pattern) ->
     if regexp = @cache[pattern]
       regexp
@@ -44,8 +45,8 @@ root.Exclusions = Exclusions =
     @rules = rules.filter (rule) -> rule and rule.pattern
     Settings.set("exclusionRules", @rules)
 
-  postUpdateHook: (rules) ->
-    @rules = rules
+  postUpdateHook: (@rules) ->
+    RegexpCache.clear()
 
 # Development and debug only.
 # Enable this (temporarily) to restore legacy exclusion rules from backup.
