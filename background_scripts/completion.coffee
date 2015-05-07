@@ -197,7 +197,7 @@ class HistoryCompleter
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
         else
           []
-      suggestions = results.map (entry) =>
+      onComplete results.map (entry) =>
         new Suggestion
           queryTerms: queryTerms
           type: "history"
@@ -205,7 +205,6 @@ class HistoryCompleter
           title: entry.title
           relevancyFunction: @computeRelevancy
           relevancyData: entry
-      onComplete suggestions
 
   computeRelevancy: (suggestion) ->
     historyEntry = suggestion.relevancyData
@@ -232,16 +231,15 @@ class DomainCompleter
 
   performSearch: (queryTerms, onComplete) ->
     query = queryTerms[0]
-    domainCandidates = (domain for domain of @domains when domain.indexOf(query) >= 0)
-    domains = @sortDomainsByRelevancy(queryTerms, domainCandidates)
-    return onComplete([]) if domains.length == 0
-    topDomain = domains[0][0]
-    suggestion = new Suggestion
-      queryTerms: queryTerms
-      type: "domain"
-      url: topDomain
-      relevancy: 1
-    onComplete [ suggestion ]
+    domains = (domain for domain of @domains when 0 <= domain.indexOf query)
+    domains = @sortDomainsByRelevancy queryTerms, domains
+    onComplete [
+      new Suggestion
+        queryTerms: queryTerms
+        type: "domain"
+        url: domains[0]?[0] ? "" # This is the URL or an empty string, but not null.
+        relevancy: 1
+      ].filter (s) -> 0 < s.url.length
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
@@ -656,8 +654,7 @@ HistoryCache =
     @callbacks = null
 
   use: (callback) ->
-    return @fetchHistory(callback) unless @history?
-    callback(@history)
+    if @history? then callback @history else @fetchHistory callback
 
   fetchHistory: (callback) ->
     return @callbacks.push(callback) if @callbacks

@@ -136,7 +136,6 @@ CompletionEngines =
 
     xhr.onreadystatechange = ->
       if xhr.readyState == 4
-        console.log xhr.getAllResponseHeaders()
         callback(if xhr.status == 200 then xhr else null)
 
   # Look up the completion engine for this searchUrl.  Because of DummyCompletionEngine, above, we know there
@@ -214,6 +213,7 @@ CompletionEngines =
       if handler != @mostRecentHandler # Bail if another completion has begun, or the user is typing.
         console.log "bail", completionCacheKey if @debug
         return callback []
+      @mostRecentHandler = null
       # Don't allow duplicate identical active requests.  This can happen, for example, when the user enters or
       # removes a space, or when they enter a character and immediately delete it.
       @inTransit ?= {}
@@ -228,8 +228,9 @@ CompletionEngines =
           callback suggestions for callback in queue
 
   cancel: ->
-    console.log "cancel (user is typing)" if @debug and @mostRecentHandler?
-    @mostRecentHandler = null
+    if @mostRecentHandler?
+      @mostRecentHandler = null
+      console.log "cancel (user is typing)" if @debug
 
 root = exports ? window
 root.CompletionEngines = CompletionEngines
