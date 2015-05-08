@@ -22,7 +22,7 @@ Vomnibar =
 
     completer = @getCompleter options.completer
     @vomnibarUI ?= new VomnibarUI()
-    completer.refresh()
+    completer.refresh @vomnibarUI
     @vomnibarUI.setInitialSelectionValue if options.selectFirst then 0 else -1
     @vomnibarUI.setCompleter completer
     @vomnibarUI.setRefreshInterval options.refreshInterval
@@ -44,6 +44,7 @@ class VomnibarUI
   setRefreshInterval: (@refreshInterval) ->
   setForceNewTab: (@forceNewTab) ->
   setCompleter: (@completer) -> @reset()
+  setKeywords: (@keywords) ->
 
   # The sequence of events when the vomnibar is hidden is as follows:
   # 1. Post a "hide" message to the host page.
@@ -67,8 +68,9 @@ class VomnibarUI
     @completions = []
     @previousAutoSelect = null
     @previousInputValue = null
-    @suppressedLeadingQueryTerm = null
+    @suppressedLeadingKeyword = null
     @selection = @initialSelectionValue
+    @keywords = []
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
@@ -82,12 +84,9 @@ class VomnibarUI
 
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
-    if @suppressedLeadingQueryTerm?
-      @restoreSuppressedQueryTerm()
-    else if @completions[0]?.suppressLeadingQueryTerm
-      # We've been asked to suppress the leading query term, and it's not already suppressed.  So suppress it.
+    if @completions[0]?.suppressLeadingKeyword and not @suppressedLeadingKeyword?
       queryTerms = @input.value.trim().split /\s+/
-      @suppressedLeadingQueryTerm = queryTerms[0]
+      @suppressedLeadingKeyword = queryTerms[0]
       @input.value = queryTerms[1..].join " "
 
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
@@ -102,13 +101,6 @@ class VomnibarUI
     # Highlight the the selected entry, and only the selected entry.
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
-
-  restoreSuppressedQueryTerm: ->
-    if @suppressedLeadingQueryTerm?
-      # If we have a suppressed term and the input is empty, then reinstate it.
-      if @input.value.length == 0
-        @input.value = @suppressedLeadingQueryTerm
-        @suppressedLeadingQueryTerm = null
 
   #
   # Returns the user's action ("up", "down", "enter", "dismiss", "delete" or null) based on their keypress.
@@ -164,8 +156,9 @@ class VomnibarUI
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
     else if action == "delete"
-      if @input.value.length == 0
-        @restoreSuppressedQueryTerm()
+      if @suppressedLeadingKeyword? and @input.value.length == 0
+        @input.value = @suppressedLeadingKeyword
+        @suppressedLeadingKeyword = null
         @updateCompletions()
       else
         # Don't suppress the Delete.  We want it to happen.
@@ -177,7 +170,7 @@ class VomnibarUI
     true
 
   getInputValue: ->
-    (if @suppressedLeadingQueryTerm? then @suppressedLeadingQueryTerm + " " else "") + @input.value
+    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @input.value
 
   updateCompletions: (callback = null) ->
     @clearUpdateTimer()
@@ -208,6 +201,11 @@ class VomnibarUI
       @updateTimer = null
 
   update: (updateSynchronously = false, callback = null) =>
+    # If the query text is a custom search keyword, then we need to force a synchronous update (so that the
+    # interface is snappy).
+    if @keywords? and not @suppressedLeadingKeyword?
+      queryTerms = @input.value.ltrim().split /\s+/
+      updateSynchronously ||= 1 < queryTerms.length and queryTerms[0] in @keywords
     if updateSynchronously
       @updateCompletions callback
     else if not @updateTimer?
@@ -248,26 +246,30 @@ class BackgroundCompleter
     @reset()
 
     @port.onMessage.addListener (msg) =>
-      # The result objects coming from the background page will be of the form:
-      #   { html: "", type: "", url: "" }
-      # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
-      for result in msg.results
-        result.performAction =
-          if result.type == "tab"
-            @completionActions.switchToTab.curry result.tabId
+      switch msg.handler
+        when "customSearchEngineKeywords"
+          @lastUI.setKeywords msg.keywords
+        when "completions"
+          # The result objects coming from the background page will be of the form:
+          #   { html: "", type: "", url: "" }
+          # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
+          for result in msg.results
+            result.performAction =
+              if result.type == "tab"
+                @completionActions.switchToTab.curry result.tabId
+              else
+                @completionActions.navigateToUrl.curry result.url
+
+          # Cache the results (but only if the background completer tells us that it's ok to do so).
+          if msg.callerMayCacheResults
+            console.log "cache set:", msg.query if @debug
+            @cache.set msg.query, msg.results
           else
-            @completionActions.navigateToUrl.curry result.url
+            console.log "not setting cache:", msg.query if @debug
 
-      # Cache the results (but only if the background completer tells us that it's ok to do so).
-      if msg.callerMayCacheResults
-        console.log "cache set:", msg.query if @debug
-        @cache.set msg.query, msg.results
-      else
-        console.log "not setting cache:", msg.query if @debug
-
-      # We ignore messages which arrive too late.
-      if msg.id == @messageId
-        @mostRecentCallback msg.results
+          # We ignore messages which arrive too late.
+          if msg.id == @messageId
+            @mostRecentCallback msg.results
 
   filter: (query, @mostRecentCallback) ->
     # We retain trailing whitespace so that we can tell the difference between "w" and "w " (for custom search
@@ -286,7 +288,7 @@ class BackgroundCompleter
         query: query
         queryTerms: queryTerms
 
-  refresh: ->
+  refresh: (@lastUI) ->
     @reset()
     # Inform the background completer that we have a new vomnibar activation.
     @port.postMessage name: @name, handler: "refresh"

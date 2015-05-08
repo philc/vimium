@@ -359,6 +359,13 @@ class SearchEngineCompleter
   cancel: ->
     CompletionEngines.cancel()
 
+  refresh: (port) ->
+    @searchEngines = SearchEngineCompleter.getSearchEngines()
+    # Let the vomnibar know the custom search engine keywords.
+    port.postMessage
+      handler: "customSearchEngineKeywords"
+      keywords: key for own key of @searchEngines
+
   filter: (queryTerms, onComplete) ->
     suggestions = []
 
@@ -385,7 +392,7 @@ class SearchEngineCompleter
         # Always reset the selection to this suggestion on query change.  The UX is weird otherwise.
         forceAutoSelect: true
         # Suppress the "w" from "w query terms" in the vomnibar input.
-        suppressLeadingQueryTerm: true
+        suppressLeadingKeyword: true
 
     # We filter out the empty strings late so that we can distinguish between, for example, "w" and "w ".
     queryTerms = queryTerms.filter (t) -> 0 < t.length
@@ -436,9 +443,6 @@ class SearchEngineCompleter
           count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
           onComplete suggestions[...count]
 
-  refresh: ->
-    @searchEngines = SearchEngineCompleter.getSearchEngines()
-
   getSearchEngineMatches: (queryTerms) ->
     (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
 
@@ -473,11 +477,11 @@ class MultiCompleter
   constructor: (@completers) ->
     @maxResults = MultiCompleter.maxResults
 
-  refresh: ->
-    completer.refresh?() for completer in @completers
+  refresh: (port) ->
+    completer.refresh? port for completer in @completers
 
-  cancel: ->
-    completer.cancel?() for completer in @completers
+  cancel: (port) ->
+    completer.cancel? port for completer in @completers
 
   filter: do ->
     defaultCallbackOptions =

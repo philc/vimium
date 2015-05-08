@@ -60,15 +60,15 @@ completers =
   tabs: new MultiCompleter [completionSources.tabs]
 
 completionHandlers =
-  filter: (completer, args, port) ->
-    completer.filter args.queryTerms, (response) ->
-      port.postMessage extend args, response
+  filter: (completer, request, port) ->
+    completer.filter request.queryTerms, (response) ->
+      port.postMessage extend request, extend response, handler: "completions"
 
-  refresh: (completer) -> completer.refresh()
-  cancel: (completer) -> completer.cancel()
+  refresh: (completer, _, port) -> completer.refresh port
+  cancel: (completer, _, port) -> completer.cancel port
 
-handleCompletions = (args, port) ->
-  completionHandlers[args.handler] completers[args.name], args, port
+handleCompletions = (request, port) ->
+  completionHandlers[request.handler] completers[request.name], request, port
 
 chrome.runtime.onConnect.addListener (port, name) ->
   senderTabId = if port.sender.tab then port.sender.tab.id else null
