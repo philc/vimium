@@ -465,46 +465,53 @@ class MultiCompleter
   filter: (queryTerms, onComplete) ->
     # Allow only one query to run at a time.
     if @filterInProgress
-      @mostRecentQuery = { queryTerms: queryTerms, onComplete: onComplete }
+      @mostRecentQuery = [ queryTerms, onComplete ]
       return
     RegexpCache.clear()
     @mostRecentQuery = null
     @filterInProgress = true
     suggestions = []
-    completersFinished = 0
     continuation = null
+    activeCompleters = [0...@completers.length]
     # Call filter() on every source completer and wait for them all to finish before returning results.
     # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
     # called after the results of all of the other completers have been posted.  Any additional results
     # from this continuation will be added to the existing results and posted later.  We don't call the
     # continuation if another query is already waiting.
-    for completer in @completers
-      do (completer) =>
-        Utils.nextTick =>
-          completer.filter queryTerms, (newSuggestions, cont = null) =>
-            suggestions = suggestions.concat newSuggestions
-            continuation = cont if cont?
-            if @completers.length <= ++completersFinished
-              shouldRunContinuation = continuation? and not @mostRecentQuery
-              console.log "skip continuation" if continuation? and not shouldRunContinuation
-              # We don't post results immediately if there are none, and we're going to run a continuation
-              # (ie. a SearchEngineCompleter).  This prevents hiding the vomnibar briefly before showing it
-              # again, which looks ugly.
-              unless shouldRunContinuation and suggestions.length == 0
-                onComplete
-                  results: @prepareSuggestions queryTerms, suggestions
-                  callerMayCacheResults: not shouldRunContinuation
-              # Allow subsequent queries to begin.
-              @filterInProgress = false
-              if shouldRunContinuation
-                continuation suggestions, (newSuggestions) =>
-                  if 0 < newSuggestions.length
-                    suggestions.push newSuggestions...
-                    onComplete
-                      results: @prepareSuggestions queryTerms, suggestions
-                      callerMayCacheResults: true
-              else
-                @filter @mostRecentQuery.queryTerms, @mostRecentQuery.onComplete if @mostRecentQuery
+    for completer, index in @completers
+      do (completer, index) =>
+        completer.filter queryTerms, (newSuggestions, newContinuation = null) =>
+          if index not in activeCompleters
+            # NOTE(smblott) I suspect one of the completers is calling onComplete more than once. (And the
+            # legacy code had ">=" where "==" should have sufficed.)  This is just to track that case down.
+            console.log "XXXXXXXXXXXXXXX, onComplete called twice!"
+            console.log completer
+          activeCompleters = activeCompleters.filter (i) -> i != index
+          suggestions.push newSuggestions...
+          continuation = continuation ? newContinuation
+          if activeCompleters.length == 0
+            shouldRunContinuation = continuation? and not @mostRecentQuery
+            console.log "skip continuation" if continuation? and not shouldRunContinuation
+            # We don't post results immediately if there are none, and we're going to run a continuation
+            # (ie. a SearchEngineCompleter).  This collapsing the vomnibar briefly before expanding it
+            # again, which looks ugly.
+            unless shouldRunContinuation and suggestions.length == 0
+              onComplete
+                results: @prepareSuggestions queryTerms, suggestions
+                callerMayCacheResults: not shouldRunContinuation
+            # Allow subsequent queries to begin.
+            @filterInProgress = false
+            if shouldRunContinuation
+              continuation suggestions, (newSuggestions) =>
+                if 0 < newSuggestions.length
+                  suggestions.push newSuggestions...
+                  onComplete
+                    results: @prepareSuggestions queryTerms, suggestions
+                    callerMayCacheResults: true
+            else
+              if @mostRecentQuery
+                console.log "running pending query:", @mostRecentQuery[0]
+                @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
     suggestion.computeRelevancy queryTerms for suggestion in suggestions
