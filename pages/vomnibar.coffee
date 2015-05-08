@@ -161,7 +161,7 @@ class VomnibarUI
     true
 
   updateCompletions: (callback = null) ->
-    @completer.filter @input.value.trim(), (@completions) =>
+    @completer.filter @input.value, (@completions) =>
       @populateUiWithCompletions @completions
       callback?()
 
@@ -229,7 +229,7 @@ class BackgroundCompleter
     if msg.id == @messageId
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
-      # type will be one of [tab, bookmark, history, domain].
+      # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
       results = msg.results.map (result) =>
         functionToCall = if  result.type == "tab"
           @completionActions.switchToTab.curry result.tabId
@@ -240,12 +240,14 @@ class BackgroundCompleter
       @mostRecentCallback results
 
   filter: (query, @mostRecentCallback) ->
-    # Ignore identical consecutive queries.  This can happen, for example, if the user adds a <SPACE> to the
-    # query.
+    # Ignore identical consecutive queries.  This can happen, for example, if the user adds whitespace to the
+    # query.  We normalize the query first to ensure that differences only in whitespace are ignored.
+    queryTerms = query.trim().split(/\s+/).filter (term) -> 0 < term.length
+    query = queryTerms.join " "
     unless @mostRecentQuery? and query == @mostRecentQuery
       @mostRecentQuery = query
       @messageId = Utils.createUniqueId()
-      @port.postMessage name: @name, handler: "filter", id: @messageId, query: query
+      @port.postMessage name: @name, handler: "filter", id: @messageId, queryTerms: queryTerms
 
   refresh: ->
     @port.postMessage name: @name, handler: "refresh"
