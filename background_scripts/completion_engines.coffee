@@ -126,7 +126,7 @@ CompletionEngines =
 
   # The amount of time to wait for new requests before launching the HTTP request.  The intention is to cut
   # down on the number of HTTP requests we issue.
-  delay: 200
+  delay: 100
 
   get: (searchUrl, url, callback) ->
     xhr = new XMLHttpRequest()
