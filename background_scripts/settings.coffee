@@ -92,7 +92,9 @@ root.Settings = Settings =
     # put in an example search engine
     searchEngines: [
       "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
-      "# Examples:"
+      ""
+      "# More examples:"
+      "#"
       "# g: http://www.google.com/search?q=%s Google"
       "# l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
       "# y: http://www.youtube.com/results?search_query=%s Youtube"
