@@ -8,9 +8,6 @@ Vomnibar =
   getUI: -> @vomnibarUI
   completers: {}
 
-  #
-  # Activate the Vomnibox.
-  #
   activate: (userOptions) ->
     options =
       completer: "omni"
@@ -18,19 +15,16 @@ Vomnibar =
       newTab: false
       selectFirst: false
     extend options, userOptions
+    extend options, refreshInterval: if options.completer == "omni" then 100 else 0
 
-    options.refreshInterval =
-      if options.completer == "omni" then 100 else 0
-
-    name = options.completer
-    completer = @completers[name] ?= new BackgroundCompleter name
+    completer = @completers[options.completer] ?= new BackgroundCompleter options.completer
     @vomnibarUI ?= new VomnibarUI()
     completer.refresh()
-    @vomnibarUI.setInitialSelectionValue(if options.selectFirst then 0 else -1)
-    @vomnibarUI.setCompleter(completer)
-    @vomnibarUI.setRefreshInterval(options.refreshInterval)
-    @vomnibarUI.setForceNewTab(options.newTab)
-    @vomnibarUI.setQuery(options.query)
+    @vomnibarUI.setInitialSelectionValue if options.selectFirst then 0 else -1
+    @vomnibarUI.setCompleter completer
+    @vomnibarUI.setRefreshInterval options.refreshInterval
+    @vomnibarUI.setForceNewTab options.newTab
+    @vomnibarUI.setQuery options.query
     @vomnibarUI.update true
 
   hide: -> @vomnibarUI?.hide()
@@ -43,17 +37,10 @@ class VomnibarUI
     @initDom()
 
   setQuery: (query) -> @input.value = query
-
-  setInitialSelectionValue: (initialSelectionValue) ->
-    @initialSelectionValue = initialSelectionValue
-
-  setCompleter: (completer) ->
-    @completer = completer
-    @reset()
-
-  setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
-
-  setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
+  setInitialSelectionValue: (@initialSelectionValue) ->
+  setRefreshInterval: (@refreshInterval) ->
+  setForceNewTab: (@forceNewTab) ->
+  setCompleter: (@completer) -> @reset()
 
   # The sequence of events when the vomnibar is hidden is as follows:
   # 1. Post a "hide" message to the host page.
@@ -76,7 +63,6 @@ class VomnibarUI
     @completions = []
     window.clearTimeout @updateTimer if @updateTimer?
     @updateTimer = null
-    @mostRecentQuery = null
     @previousAutoSelect = null
     @previousInputValue = null
     @selection = @initialSelectionValue
@@ -166,7 +152,7 @@ class VomnibarUI
       callback?()
 
   populateUiWithCompletions: (completions) ->
-    # update completion list with the new data
+    # Update completion list with the new suggestions.
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else ""
     @selection = Math.min completions.length - 1, Math.max @initialSelectionValue, @selection
@@ -179,7 +165,7 @@ class VomnibarUI
       @previousInputValue = null
       @previousAutoSelect = null
       @selection = -1
-    @update()
+    @update false
 
   update: (updateSynchronously = false, callback = null) =>
     if updateSynchronously
@@ -222,36 +208,31 @@ class BackgroundCompleter
 
   # name is background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
-    @messageId = null
     @port = chrome.runtime.connect name: "completions"
-    @port.onMessage.addListener (msg) => @messageHandler msg
+    @messageId = null
     @reset()
 
-  reset: ->
-    # We only cache results for the duration of a single vomnibar activation.
-    @cache = new SimpleCache 1000 * 60 * 5
+    @port.onMessage.addListener (msg) =>
+      # The result objects coming from the background page will be of the form:
+      #   { html: "", type: "", url: "" }
+      # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
+      for result in msg.results
+        result.performAction =
+          if result.type == "tab"
+            @completionActions.switchToTab.curry result.tabId
+          else
+            @completionActions.navigateToUrl.curry result.url
 
-  messageHandler: (msg) ->
-    # The result objects coming from the background page will be of the form:
-    #   { html: "", type: "", url: "" }
-    # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
-    for result in msg.results
-      result.performAction =
-        if result.type == "tab"
-          @completionActions.switchToTab.curry result.tabId
-        else
-          @completionActions.navigateToUrl.curry result.url
+      # Cache the results (but only if the background completer tells us that it's ok to do so).
+      if msg.callerMayCacheResults
+        console.log "cache set:", msg.query if @debug
+        @cache.set msg.query, msg.results
+      else
+        console.log "not setting cache:", msg.query if @debug
 
-    # Cache the results (but only if the background completer tells us that it's ok to do so).
-    if msg.callerMayCacheResults
-      console.log "cache set:", msg.query if @debug
-      @cache.set msg.query, msg.results
-    else
-      console.log "not setting cache:", msg.query if @debug
-
-    # We ignore messages which arrive too late.
-    if msg.id == @messageId
-      @mostRecentCallback msg.results
+      # We ignore messages which arrive too late.
+      if msg.id == @messageId
+        @mostRecentCallback msg.results
 
   filter: (query, @mostRecentCallback) ->
     queryTerms = query.trim().split(/\s+/).filter (term) -> 0 < term.length
@@ -276,6 +257,11 @@ class BackgroundCompleter
     @reset()
     # Inform the background completer that we have a new vomnibar activation.
     @port.postMessage name: @name, handler: "refresh"
+
+  reset: ->
+    # We only cache results for the duration of a single vomnibar activation.
+    @cache = new SimpleCache 1000 * 60 * 5
+    @mostRecentQuery = null
 
   cancel: ->
     # Inform the background completer that it may (should it choose to do so) abandon any pending query
