@@ -156,6 +156,7 @@ class VomnibarUI
     @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
     @completionList.style.display = if completions.length > 0 then "block" else ""
     @selection = Math.min completions.length - 1, Math.max @initialSelectionValue, @selection
+    @previousAutoSelect = null if completions[0]?.autoSelect and completions[0]?.forceAutoSelect
     @updateSelection()
 
   updateOnInput: =>

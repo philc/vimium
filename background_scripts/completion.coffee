@@ -22,8 +22,12 @@ class Suggestion
     @title = ""
     # Extra data which will be available to the relevancy function.
     @relevancyData = null
-    # When @autoSelect is truthy, the suggestion is automatically pre-selected in the vomnibar.
+    # If @autoSelect is truthy, then this suggestion is automatically pre-selected in the vomnibar.  There may
+    # be at most one such suggestion.
     @autoSelect = false
+    # If truthy (and @autoSelect is truthy too), then this suggestion is always pre-selected when the query
+    # changes.  There may be at most one such suggestion.
+    @forceAutoSelect = false
     # If @highlightTerms is true, then we highlight matched terms in the title and URL.
     @highlightTerms = true
     # If @insertText is a string, then the indicated text is inserted into the vomnibar input when the
@@ -356,7 +360,7 @@ class SearchEngineCompleter
 
     { keyword, searchUrl, description } = @getSearchEngineMatches queryTerms
     custom = searchUrl? and keyword?
-    searchUrl ?= Settings.get("searchUrl") + "%s"
+    searchUrl ?= Settings.get "searchUrl"
     haveDescription = description? and 0 < description.length
     description ||= "#{if custom then "custom " else ""}search"
 
@@ -364,7 +368,7 @@ class SearchEngineCompleter
     query = queryTerms.join " "
 
     if queryTerms.length == 0
-      return onComplete suggestions
+      return onComplete []
 
     # For custom search engines, we add an auto-selected suggestion.
     if custom
@@ -376,48 +380,52 @@ class SearchEngineCompleter
         relevancy: 1
         highlightTerms: false
         autoSelect: true
+        # Always reset the selection to this suggestion on query change.  The UX is weird otherwise.
+        forceAutoSelect: true
 
-    onComplete suggestions, (existingSuggestions, onComplete) =>
-      suggestions = []
-      # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
-      # this adds suggestions for the default search engine (if we have a completer for that).
+    onComplete suggestions,
+      exclusive: if custom and CompletionEngines.haveCompletionEngine searchUrl then description else null
+      continuation: (existingSuggestions, onComplete) =>
+        suggestions = []
+        # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
+        # this adds suggestions for the default search engine (if we have a completer for that).
 
-      # Relevancy:
-      #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
-      #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
-      #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
-      #     suggestion anyway.
-      #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
-      #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
-      #     a useful suggestion from another completer.
-      #   - Scores are weighted such that they retain the order provided by the completion engine.
-      characterCount = query.length - queryTerms.length + 1
-      relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
+        # Relevancy:
+        #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
+        #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
+        #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
+        #     suggestion anyway.
+        #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
+        #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
+        #     a useful suggestion from another completer.
+        #   - Scores are weighted such that they retain the order provided by the completion engine.
+        characterCount = query.length - queryTerms.length + 1
+        relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
-      if 0 < existingSuggestions.length
-        existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
-        if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
-          # No suggestion we propose will have a high enough relavancy to beat the existing suggestions, so bail
-          # immediately.
-          return onComplete []
+        if 0 < existingSuggestions.length
+          existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
+          if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
+            # No suggestion we propose will have a high enough relavancy to beat the existing suggestions, so bail
+            # immediately.
+            return onComplete []
 
-      CompletionEngines.complete searchUrl, queryTerms, (completionSuggestions = []) =>
-        for suggestion in completionSuggestions
-          suggestions.push new Suggestion
-            queryTerms: queryTerms
-            type: description
-            url: Utils.createSearchUrl suggestion, searchUrl
-            title: suggestion
-            relevancy: relavancy *= 0.9
-            highlightTerms: false
-            insertText: if custom then "#{keyword} #{suggestion}" else suggestion
+        CompletionEngines.complete searchUrl, queryTerms, (completionSuggestions = []) =>
+          for suggestion in completionSuggestions
+            suggestions.push new Suggestion
+              queryTerms: queryTerms
+              type: description
+              url: Utils.createSearchUrl suggestion, searchUrl
+              title: suggestion
+              relevancy: relavancy *= 0.9
+              highlightTerms: false
+              insertText: if custom then "#{keyword} #{suggestion}" else suggestion
 
-        # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
-        # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
-        # from other completers.  That would potentially be a problem because there is no relationship
-        # between the relevancy scores produced here and those produced by other completers.
-        count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
-        onComplete suggestions[...count]
+          # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
+          # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
+          # from other completers.  That would potentially be a problem because there is no relationship
+          # between the relevancy scores produced here and those produced by other completers.
+          count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
+          onComplete suggestions[...count]
 
   refresh: ->
     @searchEngines = SearchEngineCompleter.getSearchEngines()
@@ -462,56 +470,77 @@ class MultiCompleter
   cancel: ->
     completer.cancel?() for completer in @completers
 
-  filter: (queryTerms, onComplete) ->
-    # Allow only one query to run at a time.
-    if @filterInProgress
-      @mostRecentQuery = [ queryTerms, onComplete ]
-      return
-    RegexpCache.clear()
-    @mostRecentQuery = null
-    @filterInProgress = true
-    suggestions = []
-    continuation = null
-    activeCompleters = [0...@completers.length]
-    # Call filter() on every source completer and wait for them all to finish before returning results.
-    # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
-    # called after the results of all of the other completers have been posted.  Any additional results
-    # from this continuation will be added to the existing results and posted later.  We don't call the
-    # continuation if another query is already waiting.
-    for completer, index in @completers
-      do (completer, index) =>
-        completer.filter queryTerms, (newSuggestions, newContinuation = null) =>
-          if index not in activeCompleters
-            # NOTE(smblott) I suspect one of the completers is calling onComplete more than once. (And the
-            # legacy code had ">=" where "==" should have sufficed.)  This is just to track that case down.
-            console.log "XXXXXXXXXXXXXXX, onComplete called twice!"
-            console.log completer
-          activeCompleters = activeCompleters.filter (i) -> i != index
-          suggestions.push newSuggestions...
-          continuation = continuation ? newContinuation
-          if activeCompleters.length == 0
-            shouldRunContinuation = continuation? and not @mostRecentQuery
-            console.log "skip continuation" if continuation? and not shouldRunContinuation
-            # We don't post results immediately if there are none, and we're going to run a continuation
-            # (ie. a SearchEngineCompleter).  This collapsing the vomnibar briefly before expanding it
-            # again, which looks ugly.
-            unless shouldRunContinuation and suggestions.length == 0
-              onComplete
-                results: @prepareSuggestions queryTerms, suggestions
-                callerMayCacheResults: not shouldRunContinuation
-            # Allow subsequent queries to begin.
-            @filterInProgress = false
-            if shouldRunContinuation
-              continuation suggestions, (newSuggestions) =>
-                if 0 < newSuggestions.length
-                  suggestions.push newSuggestions...
-                  onComplete
-                    results: @prepareSuggestions queryTerms, suggestions
-                    callerMayCacheResults: true
-            else
-              if @mostRecentQuery
-                console.log "running pending query:", @mostRecentQuery[0]
-                @filter @mostRecentQuery...
+  filter: do ->
+    defaultCallbackOptions =
+      # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
+      # called after the results of all of the other completers have been posted.  Any additional results
+      # from this continuation will be added to the existing results and posted later.  We don't call the
+      # continuation if another query is already waiting.
+      continuation: null
+      # If truthy, completions from other completers should be discarded.  The truthy value should be the type
+      # of the completer (e.g. "custom search").
+      exclusive: false
+
+    (queryTerms, onComplete) ->
+      # Allow only one query to run at a time.
+      if @filterInProgress
+        @mostRecentQuery = [ queryTerms, onComplete ]
+        return
+      RegexpCache.clear()
+      @mostRecentQuery = null
+      @filterInProgress = true
+      suggestions = []
+      continuation = null
+      exclusive = null
+      activeCompleters = [0...@completers.length]
+      # Call filter() on every source completer and wait for them all to finish before returning results.
+      for completer, index in @completers
+        do (completer, index) =>
+          completer.filter queryTerms, (newSuggestions, options = defaultCallbackOptions) =>
+            if index not in activeCompleters
+              # NOTE(smblott) I suspect one of the completers is calling onComplete more than once. (And the
+              # legacy code had ">=" where "==" should have sufficed.)  This is just to track that case down.
+              console.log "XXXXXXXXXXXXXXX, onComplete called twice!"
+              console.log completer
+            activeCompleters = activeCompleters.filter (i) -> i != index
+            suggestions.push newSuggestions...
+            continuation = continuation ? options.continuation
+            exclusive = options.exclusive if options.exclusive?
+
+            if activeCompleters.length == 0
+              # All the completers have now returned; we combine the results, post them and call any
+              # continuation.
+              shouldRunContinuation = continuation? and not @mostRecentQuery
+              console.log "skip continuation" if continuation? and not shouldRunContinuation
+
+              # If one completer has claimed exclusivity (SearchEngineCompleter), then filter out results from
+              # other completers.
+              if exclusive
+                suggestions = suggestions.filter (suggestion) -> suggestion.type == exclusive
+
+              # We don't post results immediately if there are none, and we're going to run a continuation
+              # (ie. a SearchEngineCompleter).  This collapsing the vomnibar briefly before expanding it
+              # again, which looks ugly.
+              unless shouldRunContinuation and suggestions.length == 0
+                onComplete
+                  results: @prepareSuggestions queryTerms, suggestions
+                  callerMayCacheResults: not shouldRunContinuation
+
+              # Allow subsequent queries to begin.
+              @filterInProgress = false
+
+              # Launch continuation or any pending query.
+              if shouldRunContinuation
+                continuation suggestions, (newSuggestions) =>
+                  if 0 < newSuggestions.length
+                    suggestions.push newSuggestions...
+                    onComplete
+                      results: @prepareSuggestions queryTerms, suggestions
+                      callerMayCacheResults: true
+              else
+                if @mostRecentQuery
+                  console.log "running pending query:", @mostRecentQuery[0]
+                  @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
     suggestion.computeRelevancy queryTerms for suggestion in suggestions

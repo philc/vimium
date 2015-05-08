@@ -100,6 +100,7 @@ class DuckDuckGo extends RegexpEngine
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine
+  dummy: true
   match: -> true
   # We return a useless URL which we know will succeed, but which won't generate any network traffic.
   getUrl: -> chrome.runtime.getURL "content_scripts/vimium.css"
@@ -140,7 +141,7 @@ CompletionEngines =
 
   # Look up the completion engine for this searchUrl.  Because of DummyCompletionEngine, above, we know there
   # will always be a match.  Imagining that there may be many completion engines, and knowing that this is
-  # called for every input event in the vomnibar, we cache the result.
+  # called for every query, we cache the result.
   lookupEngine: (searchUrl) ->
     @engineCache ?= new SimpleCache 30 * 60 * 60 * 1000 # 30 hours (these are small, we can keep them longer).
     if @engineCache.has searchUrl
@@ -149,6 +150,10 @@ CompletionEngines =
       for engine in completionEngines
         engine = new engine()
         return @engineCache.set searchUrl, engine if engine.match searchUrl
+
+  # True if we have a completion engine for this search URL, undefined otherwise.
+  haveCompletionEngine: (searchUrl) ->
+    not @lookupEngine(searchUrl).dummy
 
   # This is the main entry point.
   #  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custome search engine's URL.
