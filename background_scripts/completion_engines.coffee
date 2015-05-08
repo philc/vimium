@@ -165,10 +165,8 @@ CompletionEngines =
     @mostRecentHandler = null
     query = queryTerms.join ""
 
-    # We don't complete less then three characters: the results are usually useless.  This also prevents
-    # one- and two-character custom search engine keywords from being sent to the default completer (e.g.
-    # the initial "w" before typing "w something" for Wikipedia).
-    return callback [] unless 3 <= query.length
+    # We don't complete single characters: the results are usually useless.
+    return callback [] unless 1 < query.length
 
     # We don't complete regular URLs or Javascript URLs.
     return callback [] if 1 == queryTerms.length and Utils.isUrl query
