@@ -73,8 +73,10 @@ class VomnibarUI
   reset: ->
     @completionList.style.display = ""
     @input.value = ""
-    @updateTimer = null
     @completions = []
+    window.clearTimeout @updateTimer if @updateTimer?
+    @updateTimer = null
+    @mostRecentQuery = null
     @previousAutoSelect = null
     @previousInputValue = null
     @selection = @initialSelectionValue
@@ -151,9 +153,7 @@ class VomnibarUI
             url: query
       else
         completion = @completions[@selection]
-        @update true, =>
-          # Shift+Enter will open the result in a new tab instead of the current tab.
-          @hide -> completion.performAction openInNewTab
+        @hide -> completion.performAction openInNewTab
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
@@ -230,14 +230,13 @@ class BackgroundCompleter
       # The result objects coming from the background page will be of the form:
       #   { html: "", type: "", url: "" }
       # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
-      results = msg.results.map (result) =>
-        functionToCall = if  result.type == "tab"
-          @completionActions.switchToTab.curry result.tabId
-        else
-          @completionActions.navigateToUrl.curry result.url
-        result.performAction = functionToCall
-        result
-      @mostRecentCallback results
+      for result in msg.results
+        result.performAction =
+          if result.type == "tab"
+            @completionActions.switchToTab.curry result.tabId
+          else
+            @completionActions.navigateToUrl.curry result.url
+      @mostRecentCallback msg.results
 
   filter: (query, @mostRecentCallback) ->
     # Ignore identical consecutive queries.  This can happen, for example, if the user adds whitespace to the
