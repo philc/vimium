@@ -61,11 +61,10 @@ class VomnibarUI
     @postHideCallback = null
 
   reset: ->
+    @clearUpdateTimer()
     @completionList.style.display = ""
     @input.value = ""
     @completions = []
-    window.clearTimeout @updateTimer if @updateTimer?
-    @updateTimer = null
     @previousAutoSelect = null
     @previousInputValue = null
     @suppressedLeadingQueryTerm = null
@@ -84,10 +83,7 @@ class VomnibarUI
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
     if @suppressedLeadingQueryTerm?
-      # If we have a suppressed term and the input is empty, then reinstate it.
-      if @input.value.trim().split(/\s+/).join("").length == 0
-        @input.value = @getInputValue()
-        @suppressedLeadingQueryTerm = null
+      @restoreSuppressedQueryTerm()
     else if @completions[0]?.suppressLeadingQueryTerm
       # We've been asked to suppress the leading query term, and it's not already suppressed.  So suppress it.
       queryTerms = @input.value.trim().split /\s+/
@@ -107,8 +103,15 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
+  restoreSuppressedQueryTerm: ->
+    if @suppressedLeadingQueryTerm?
+      # If we have a suppressed term and the input is empty, then reinstate it.
+      if @input.value.length == 0
+        @input.value = @suppressedLeadingQueryTerm
+        @suppressedLeadingQueryTerm = null
+
   #
-  # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
+  # Returns the user's action ("up", "down", "enter", "dismiss", "delete" or null) based on their keypress.
   # We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
   #
   actionFromKeyEvent: (event) ->
@@ -125,6 +128,9 @@ class VomnibarUI
       return "down"
     else if (event.keyCode == keyCodes.enter)
       return "enter"
+    else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+      return "delete"
+    null
 
   onKeydown: (event) =>
     action = @actionFromKeyEvent(event)
@@ -157,6 +163,13 @@ class VomnibarUI
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
+    else if action == "delete"
+      if @input.value.length == 0
+        @restoreSuppressedQueryTerm()
+        @updateCompletions()
+      else
+        # Don't suppress the Delete.  We want it to happen.
+        return true
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
@@ -167,6 +180,7 @@ class VomnibarUI
     (if @suppressedLeadingQueryTerm? then @suppressedLeadingQueryTerm + " " else "") + @input.value
 
   updateCompletions: (callback = null) ->
+    @clearUpdateTimer()
     @completer.filter @getInputValue(), (@completions) =>
       @populateUiWithCompletions @completions
       callback?()
@@ -188,19 +202,18 @@ class VomnibarUI
       @selection = -1
     @update false
 
+  clearUpdateTimer: ->
+    if @updateTimer?
+      window.clearTimeout @updateTimer
+      @updateTimer = null
+
   update: (updateSynchronously = false, callback = null) =>
     if updateSynchronously
-      # Cancel any scheduled update.
-      if @updateTimer?
-        window.clearTimeout @updateTimer
-        @updateTimer = null
       @updateCompletions callback
     else if not @updateTimer?
       # Update asynchronously for better user experience and to take some load off the CPU (not every
       # keystroke will cause a dedicated update)
-      @updateTimer = Utils.setTimeout @refreshInterval, =>
-        @updateTimer = null
-        @updateCompletions callback
+      @updateTimer = Utils.setTimeout @refreshInterval, => @updateCompletions callback
 
     @input.focus()
 
@@ -257,23 +270,21 @@ class BackgroundCompleter
         @mostRecentCallback msg.results
 
   filter: (query, @mostRecentCallback) ->
-    queryTerms = query.trim().split(/\s+/).filter (term) -> 0 < term.length
+    # We retain trailing whitespace so that we can tell the difference between "w" and "w " (for custom search
+    # engines).
+    queryTerms = query.ltrim().split(/\s+/)
     query = queryTerms.join " "
     if @cache.has query
       console.log "cache hit:", query if @debug
       @mostRecentCallback @cache.get query
     else
-      # Silently drop identical consecutive queries.  This can happen, for example, if the user adds
-      # whitespace to the query.
-      unless @mostRecentQuery? and query == @mostRecentQuery
-        @mostRecentQuery = query
-        @messageId = Utils.createUniqueId()
-        @port.postMessage
-          name: @name
-          handler: "filter"
-          id: @messageId
-          query: query
-          queryTerms: queryTerms
+      @messageId = Utils.createUniqueId()
+      @port.postMessage
+        name: @name
+        handler: "filter"
+        id: @messageId
+        query: query
+        queryTerms: queryTerms
 
   refresh: ->
     @reset()
@@ -283,7 +294,6 @@ class BackgroundCompleter
   reset: ->
     # We only cache results for the duration of a single vomnibar activation, so clear the cache now.
     @cache.clear()
-    @mostRecentQuery = null
 
   cancel: ->
     # Inform the background completer that it may (should it choose to do so) abandon any pending query

@@ -131,7 +131,8 @@ class BookmarkCompleter
   # These bookmarks are loaded asynchronously when refresh() is called.
   bookmarks: null
 
-  filter: (@queryTerms, @onComplete) ->
+  filter: (queryTerms, @onComplete) ->
+    @queryTerms = queryTerms.filter (t) -> 0 < t.length
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     @performSearch() if @bookmarks
 
@@ -193,6 +194,7 @@ class BookmarkCompleter
 
 class HistoryCompleter
   filter: (queryTerms, onComplete) ->
+    queryTerms = queryTerms.filter (t) -> 0 < t.length
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
@@ -227,6 +229,7 @@ class DomainCompleter
   domains: null
 
   filter: (queryTerms, onComplete) ->
+    queryTerms = queryTerms.filter (t) -> 0 < t.length
     return onComplete([]) unless queryTerms.length == 1
     if @domains
       @performSearch(queryTerms, onComplete)
@@ -329,6 +332,7 @@ tabRecency = new TabRecency()
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
   filter: (queryTerms, onComplete) ->
+    queryTerms = queryTerms.filter (t) -> 0 < t.length
     # NOTE(philc): We search all tabs, not just those in the current window. I'm not sure if this is the
     # correct UX.
     chrome.tabs.query {}, (tabs) =>
@@ -366,9 +370,7 @@ class SearchEngineCompleter
 
     queryTerms = queryTerms[1..] if custom
     query = queryTerms.join " "
-
-    if queryTerms.length == 0
-      return onComplete []
+    return onComplete [] if queryTerms.length == 0
 
     # For custom search engines, we add an auto-selected suggestion.
     if custom
@@ -384,6 +386,10 @@ class SearchEngineCompleter
         forceAutoSelect: true
         # Suppress the "w" from "w query terms" in the vomnibar input.
         suppressLeadingQueryTerm: true
+
+    # We filter out the empty strings late so that we can distinguish between, for example, "w" and "w ".
+    queryTerms = queryTerms.filter (t) -> 0 < t.length
+    return onComplete suggestions if queryTerms.length == 0
 
     onComplete suggestions,
       exclusive: if custom and CompletionEngines.haveCompletionEngine searchUrl then description else null
@@ -404,6 +410,7 @@ class SearchEngineCompleter
         characterCount = query.length - queryTerms.length + 1
         relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
+        queryTerms = queryTerms.filter (t) -> 0 < t.length
         if 0 < existingSuggestions.length
           existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
           if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
@@ -477,10 +484,11 @@ class MultiCompleter
       # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
       # called after the results of all of the other completers have been posted.  Any additional results
       # from this continuation will be added to the existing results and posted later.  We don't call the
-      # continuation if another query is already waiting.
+      # continuation if another query is already waiting.  This is for slow tasks which should be done
+      # asynchronously (e.g. HTTP GET).
       continuation: null
-      # If truthy, completions from other completers should be discarded.  The truthy value should be the type
-      # of the completer (e.g. "custom search").
+      # If truthy, completions from other completers should be suppressed.  The truthy value should be the
+      # type of the completer (e.g. "custom search").  All other completion types are suppressed.
       exclusive: false
 
     (queryTerms, onComplete) ->
