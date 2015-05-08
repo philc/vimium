@@ -382,6 +382,8 @@ class SearchEngineCompleter
         autoSelect: true
         # Always reset the selection to this suggestion on query change.  The UX is weird otherwise.
         forceAutoSelect: true
+        # Suppress the "w" from "w query terms" in the vomnibar input.
+        suppressLeadingQueryTerm: true
 
     onComplete suggestions,
       exclusive: if custom and CompletionEngines.haveCompletionEngine searchUrl then description else null
@@ -418,7 +420,7 @@ class SearchEngineCompleter
               title: suggestion
               relevancy: relavancy *= 0.9
               highlightTerms: false
-              insertText: if custom then "#{keyword} #{suggestion}" else suggestion
+              insertText: suggestion
 
           # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
           # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions

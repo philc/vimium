@@ -68,6 +68,7 @@ class VomnibarUI
     @updateTimer = null
     @previousAutoSelect = null
     @previousInputValue = null
+    @suppressedLeadingQueryTerm = null
     @selection = @initialSelectionValue
 
   updateSelection: ->
@@ -79,6 +80,19 @@ class VomnibarUI
       @previousAutoSelect = @completions[0].autoSelect
     else
       @previousAutoSelect = null
+
+    # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
+    # vomnibar input.
+    if @suppressedLeadingQueryTerm?
+      # If we have a suppressed term and the input is empty, then reinstate it.
+      if @input.value.trim().split(/\s+/).join("").length == 0
+        @input.value = @getInputValue()
+        @suppressedLeadingQueryTerm = null
+    else if @completions[0]?.suppressLeadingQueryTerm
+      # We've been asked to suppress the leading query term, and it's not already suppressed.  So suppress it.
+      queryTerms = @input.value.trim().split /\s+/
+      @suppressedLeadingQueryTerm = queryTerms[0]
+      @input.value = queryTerms[1..].join " "
 
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
@@ -149,8 +163,11 @@ class VomnibarUI
     event.preventDefault()
     true
 
+  getInputValue: ->
+    (if @suppressedLeadingQueryTerm? then @suppressedLeadingQueryTerm + " " else "") + @input.value
+
   updateCompletions: (callback = null) ->
-    @completer.filter @input.value, (@completions) =>
+    @completer.filter @getInputValue(), (@completions) =>
       @populateUiWithCompletions @completions
       callback?()
 
