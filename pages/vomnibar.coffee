@@ -210,6 +210,7 @@ class BackgroundCompleter
   constructor: (@name) ->
     @port = chrome.runtime.connect name: "completions"
     @messageId = null
+    @cache ?= new SimpleCache 1000 * 60 * 5
     @reset()
 
     @port.onMessage.addListener (msg) =>
@@ -259,8 +260,8 @@ class BackgroundCompleter
     @port.postMessage name: @name, handler: "refresh"
 
   reset: ->
-    # We only cache results for the duration of a single vomnibar activation.
-    @cache = new SimpleCache 1000 * 60 * 5
+    # We only cache results for the duration of a single vomnibar activation, so clear the cache now.
+    @cache.clear()
     @mostRecentQuery = null
 
   cancel: ->

@@ -236,6 +236,17 @@ class SimpleCache
     else
       null
 
+  clear: ->
+    @rotate()
+    @rotate()
+
+  # Because of the timer, we can't just let these caches go out of scope and have the garbage collector
+  # harvest them.  Whenever they may fall out of use, we need to remove the timer. @rotate() can be used to
+  # restart the cache.
+  suspend: ->
+    clearTimeout @timer if @timer?
+    @timer = null
+
   # Set value, and return that value.  If value is null, then delete key.
   set: (key, value = null) ->
     if value?
