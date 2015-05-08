@@ -240,8 +240,12 @@ class BackgroundCompleter
       @mostRecentCallback results
 
   filter: (query, @mostRecentCallback) ->
-    @messageId = Utils.createUniqueId()
-    @port.postMessage name: @name, handler: "filter", id: @messageId, query: query
+    # Ignore identical consecutive queries.  This can happen, for example, if the user adds a <SPACE> to the
+    # query.
+    unless @mostRecentQuery? and query == @mostRecentQuery
+      @mostRecentQuery = query
+      @messageId = Utils.createUniqueId()
+      @port.postMessage name: @name, handler: "filter", id: @messageId, query: query
 
   refresh: ->
     @port.postMessage name: @name, handler: "refresh"
