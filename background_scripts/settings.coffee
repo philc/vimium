@@ -5,8 +5,6 @@
 root = exports ? window
 root.Settings = Settings =
   get: (key) ->
-    # FIXME(smblott). Remove this line.
-    return @defaults.searchEngines if key == "searchEngines"
     if (key of localStorage) then JSON.parse(localStorage[key]) else @defaults[key]
 
   set: (key, value) ->
@@ -93,18 +91,16 @@ root.Settings = Settings =
     searchUrl: "http://www.google.com/search?q="
     # put in an example search engine
     searchEngines: [
-      # FIXME(smblott) Comment these out before merge.
-      "# THESE ARE HARD WIRED.\n# YOU CANNOT CHANGE THEM IN THIS VERSION.\n# FOR DEVELOPMENT ONLY."
-      "g: http://www.google.com/search?q=%s Google"
-      "l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
       "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
-      "y: http://www.youtube.com/results?search_query=%s Youtube"
-      "t: http://www.youtube.com/results?search_query=%s"
-      "m: https://www.google.com/maps/search/%s Google Maps"
-      "b: https://www.bing.com/search?q=%s Bing"
-      "d: https://duckduckgo.com/?q=%s DuckDuckGo"
-      "az: http://www.amazon.com/s/?field-keywords=%s Amazon"
-      ].join "\n\n"
+      "# Examples:"
+      "# g: http://www.google.com/search?q=%s Google"
+      "# l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
+      "# y: http://www.youtube.com/results?search_query=%s Youtube"
+      "# m: https://www.google.com/maps/search/%s Google Maps"
+      "# b: https://www.bing.com/search?q=%s Bing"
+      "# d: https://duckduckgo.com/?q=%s DuckDuckGo"
+      "# az: http://www.amazon.com/s/?field-keywords=%s Amazon"
+      ].join "\n"
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
 

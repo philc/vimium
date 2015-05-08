@@ -1,5 +1,6 @@
 require "./test_helper.js"
 extend(global, require "../../lib/utils.js")
+extend(global, require "../../background_scripts/completion_engines.js")
 extend(global, require "../../background_scripts/completion.js")
 extend global, require "./test_chrome_stubs.js"
 
@@ -248,31 +249,51 @@ context "search engines",
     results = filterCompleter(@completer, ["foo", "hello"])
     assert.arrayEqual ["bar?q=hello"], results.map (result) -> result.url
     assert.arrayEqual ["foo: hello"], results.map (result) -> result.title
-    assert.arrayEqual ["search"], results.map (result) -> result.type
+    assert.arrayEqual ["custom search"], results.map (result) -> result.type
 
   should "return search engine suggestion with description", ->
     results = filterCompleter(@completer, ["baz", "hello"])
-    assert.arrayEqual ["qux?q=hello"], results.map (result) -> result.url
-    assert.arrayEqual ["hello"], results.map (result) -> result.title
-    assert.arrayEqual ["baz description"], results.map (result) -> result.type
+    # assert.arrayEqual ["qux?q=hello"], results.map (result) -> result.searchUrl
+    # assert.arrayEqual ["hello"], results.map (result) -> result.title
+    # assert.arrayEqual ["baz description"], results.map (result) -> result.type
 
 context "suggestions",
   should "escape html in page titles", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "url", "title <span>", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["queryterm"]
+      type: "tab"
+      url: "url"
+      title: "title <span>"
+      relevancyFunction: returns 1
     assert.isTrue suggestion.generateHtml().indexOf("title &lt;span&gt;") >= 0
 
   should "highlight query words", ->
-    suggestion = new Suggestion(["ninj", "words"], "tab", "url", "ninjawords", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["ninj", "words"]
+      type: "tab"
+      url: "url"
+      title: "ninjawords"
+      relevancyFunction: returns 1
     expected = "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "highlight query words correctly when whey they overlap", ->
-    suggestion = new Suggestion(["ninj", "jaword"], "tab", "url", "ninjawords", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["ninj", "jaword"]
+      type: "tab"
+      url: "url"
+      title: "ninjawords"
+      relevancyFunction: returns 1
     expected = "<span class='vomnibarMatch'>ninjaword</span>s"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "shorten urls", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["queryterm"]
+      type: "tab"
+      url: "http://ninjawords.com"
+      title: "ninjawords"
+      relevancyFunction: returns 1
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
 context "RankingUtils.wordRelevancy",

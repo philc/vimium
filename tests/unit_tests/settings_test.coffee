@@ -74,10 +74,10 @@ context "settings",
     searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
     Settings.set 'searchEngines', searchEngines
     result = SearchEngineCompleter.getSearchEngines()
-    assert.equal Object.keys(result).length, 2
-    assert.equal "bar?q=%s", result["foo"].url
+    console.log result["foo"]
+    assert.equal "bar?q=%s", result["foo"].searchUrl
     assert.isFalse result["foo"].description
-    assert.equal "qux?q=%s", result["baz"].url
+    assert.equal "qux?q=%s", result["baz"].searchUrl
     assert.equal "baz description", result["baz"].description
 
   should "sync a key which is not a known setting (without crashing)", ->
