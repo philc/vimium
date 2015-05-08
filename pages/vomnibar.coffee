@@ -81,7 +81,7 @@ class VomnibarUI
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
     if 0 <= @selection and @completions[@selection].insertText?
       @previousInputValue ?= @input.value
-      @input.value = @completions[@selection].insertText
+      @input.value = @completions[@selection].insertText + " "
     else if @previousInputValue?
         @input.value = @previousInputValue
         @previousInputValue = null
