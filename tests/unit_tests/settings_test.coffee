@@ -74,7 +74,6 @@ context "settings",
     searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
     Settings.set 'searchEngines', searchEngines
     result = SearchEngineCompleter.getSearchEngines()
-    console.log result["foo"]
     assert.equal "bar?q=%s", result["foo"].searchUrl
     assert.isFalse result["foo"].description
     assert.equal "qux?q=%s", result["baz"].searchUrl

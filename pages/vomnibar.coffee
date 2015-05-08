@@ -8,6 +8,9 @@ Vomnibar =
   getUI: -> @vomnibarUI
   completers: {}
 
+  getCompleter: (name) ->
+    @completers[name] ?= new BackgroundCompleter name
+
   activate: (userOptions) ->
     options =
       completer: "omni"
@@ -17,7 +20,7 @@ Vomnibar =
     extend options, userOptions
     extend options, refreshInterval: if options.completer == "omni" then 100 else 0
 
-    completer = @completers[options.completer] ?= new BackgroundCompleter options.completer
+    completer = @getCompleter options.completer
     @vomnibarUI ?= new VomnibarUI()
     completer.refresh()
     @vomnibarUI.setInitialSelectionValue if options.selectFirst then 0 else -1
