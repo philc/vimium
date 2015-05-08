@@ -43,26 +43,26 @@ chrome.storage.local.set
   vimiumSecret: Math.floor Math.random() * 2000000000
 
 completionSources =
-  bookmarks: new BookmarkCompleter()
-  history: new HistoryCompleter()
-  domains: new DomainCompleter()
-  tabs: new TabCompleter()
-  searchEngines: new SearchEngineCompleter()
+  bookmarks: new BookmarkCompleter
+  history: new HistoryCompleter
+  domains: new DomainCompleter
+  tabs: new TabCompleter
+  searchEngines: new SearchEngineCompleter
 
 completers =
   omni: new MultiCompleter [
     completionSources.bookmarks
     completionSources.history
     completionSources.domains
-    # This comes last, because it delivers additional, asynchronous results.
     completionSources.searchEngines
     ]
-  bookmarks: new MultiCompleter([completionSources.bookmarks])
-  tabs: new MultiCompleter([completionSources.tabs])
+  bookmarks: new MultiCompleter [completionSources.bookmarks]
+  tabs: new MultiCompleter [completionSources.tabs]
 
 completionHandlers =
   filter: (completer, args, port) ->
-      completer.filter args.queryTerms, (results) -> port.postMessage id: args.id, results: results
+    completer.filter args.queryTerms, (response) ->
+      port.postMessage extend args, response
 
   refresh: (completer) -> completer.refresh()
   cancel: (completer) -> completer.cancel()

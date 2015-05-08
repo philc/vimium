@@ -218,53 +218,83 @@ class VomnibarUI
 # Sends requests to a Vomnibox completer on the background page.
 #
 class BackgroundCompleter
+  debug: true
+
   # name is background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
     @messageId = null
     @port = chrome.runtime.connect name: "completions"
-    @port.onMessage.addListener handler = @messageHandler
+    @port.onMessage.addListener (msg) => @messageHandler msg
+    @reset()
 
-  messageHandler: (msg) =>
+  reset: ->
+    # We only cache results for the duration of a single vomnibar activation.
+    @cache = new SimpleCache 1000 * 60 * 5
+
+  messageHandler: (msg) ->
+    # The result objects coming from the background page will be of the form:
+    #   { html: "", type: "", url: "" }
+    # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
+    for result in msg.results
+      result.performAction =
+        if result.type == "tab"
+          @completionActions.switchToTab.curry result.tabId
+        else
+          @completionActions.navigateToUrl.curry result.url
+
+    # Cache the results (but only if the background completer tells us that it's ok to do so).
+    if msg.callerMayCacheResults
+      console.log "cache set:", msg.query if @debug
+      @cache.set msg.query, msg.results
+    else
+      console.log "not setting cache:", msg.query if @debug
+
     # We ignore messages which arrive too late.
     if msg.id == @messageId
-      # The result objects coming from the background page will be of the form:
-      #   { html: "", type: "", url: "" }
-      # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
-      for result in msg.results
-        result.performAction =
-          if result.type == "tab"
-            @completionActions.switchToTab.curry result.tabId
-          else
-            @completionActions.navigateToUrl.curry result.url
       @mostRecentCallback msg.results
 
   filter: (query, @mostRecentCallback) ->
-    # Ignore identical consecutive queries.  This can happen, for example, if the user adds whitespace to the
-    # query.  We normalize the query first to ensure that differences only in whitespace are ignored.
     queryTerms = query.trim().split(/\s+/).filter (term) -> 0 < term.length
     query = queryTerms.join " "
-    unless @mostRecentQuery? and query == @mostRecentQuery
-      @mostRecentQuery = query
-      @messageId = Utils.createUniqueId()
-      @port.postMessage name: @name, handler: "filter", id: @messageId, queryTerms: queryTerms
+    if @cache.has query
+      console.log "cache hit:", query if @debug
+      @mostRecentCallback @cache.get query
+    else
+      # Silently drop identical consecutive queries.  This can happen, for example, if the user adds
+      # whitespace to the query.
+      unless @mostRecentQuery? and query == @mostRecentQuery
+        @mostRecentQuery = query
+        @messageId = Utils.createUniqueId()
+        @port.postMessage
+          name: @name
+          handler: "filter"
+          id: @messageId
+          query: query
+          queryTerms: queryTerms
 
   refresh: ->
+    @reset()
+    # Inform the background completer that we have a new vomnibar activation.
     @port.postMessage name: @name, handler: "refresh"
 
   cancel: ->
+    # Inform the background completer that it may (should it choose to do so) abandon any pending query
+    # (because the user is typing, and there'll be another query along soon).
     @port.postMessage name: @name, handler: "cancel"
 
-  # These are the actions we can perform when the user selects a result in the Vomnibox.
+  # These are the actions we can perform when the user selects a result.
   completionActions:
     navigateToUrl: (url, openInNewTab) ->
-      # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
-      openInNewTab = false if url.startsWith("javascript:")
-      chrome.runtime.sendMessage(
+      # If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the current
+      # tab.
+      openInNewTab &&= not Utils.hasJavascriptPrefix url
+      chrome.runtime.sendMessage
         handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-        url: url,
-        selected: openInNewTab)
+        url: url
+        selected: openInNewTab
 
-    switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
+    switchToTab: (tabId) ->
+      chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
 
 UIComponentServer.registerHandler (event) ->
   switch event.data

@@ -209,9 +209,13 @@ CompletionEngines =
 
     # We pause in case the user is still typing.
     Utils.setTimeout @delay, handler = @mostRecentHandler = =>
-      if handler != @mostRecentHandler # Bail if another completion has begun, or the user is typing.
+      if handler != @mostRecentHandler
+        # Bail! Another completion has begun, or the user is typing.
+        # NOTE: We do *not* call the callback (because we are not providing results, and we don't want allow
+        # any higher-level component to cache the results -- specifically, the vomnibar itself, via
+        # callerMayCacheResults).
         console.log "bail", completionCacheKey if @debug
-        return callback []
+        return
       @mostRecentHandler = null
       # Don't allow duplicate identical active requests.  This can happen, for example, when the user enters or
       # removes a space, or when they enter a character and immediately delete it.

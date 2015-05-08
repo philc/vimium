@@ -491,22 +491,27 @@ class MultiCompleter
               # (ie. a SearchEngineCompleter).  This prevents hiding the vomnibar briefly before showing it
               # again, which looks ugly.
               unless shouldRunContinuation and suggestions.length == 0
-                onComplete @prepareSuggestions queryTerms, suggestions
+                onComplete
+                  results: @prepareSuggestions queryTerms, suggestions
+                  callerMayCacheResults: not shouldRunContinuation
               # Allow subsequent queries to begin.
               @filterInProgress = false
               if shouldRunContinuation
                 continuation suggestions, (newSuggestions) =>
                   if 0 < newSuggestions.length
-                    onComplete @prepareSuggestions queryTerms, suggestions.concat newSuggestions
+                    suggestions.push newSuggestions...
+                    onComplete
+                      results: @prepareSuggestions queryTerms, suggestions
+                      callerMayCacheResults: true
               else
                 @filter @mostRecentQuery.queryTerms, @mostRecentQuery.onComplete if @mostRecentQuery
 
   prepareSuggestions: (queryTerms, suggestions) ->
     suggestion.computeRelevancy queryTerms for suggestion in suggestions
     suggestions.sort (a, b) -> b.relevancy - a.relevancy
-    suggestions = suggestions[0...@maxResults]
-    suggestion.generateHtml() for suggestion in suggestions
-    suggestions
+    for suggestion in suggestions[0...@maxResults]
+      suggestion.generateHtml()
+      suggestion
 
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
