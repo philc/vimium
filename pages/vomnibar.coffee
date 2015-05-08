@@ -20,7 +20,7 @@ Vomnibar =
     extend options, userOptions
 
     options.refreshInterval =
-      if options.completer == "omni" then 125 else 0
+      if options.completer == "omni" then 100 else 0
 
     name = options.completer
     completer = @completers[name] ?= new BackgroundCompleter name
