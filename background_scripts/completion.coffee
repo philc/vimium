@@ -136,8 +136,7 @@ class BookmarkCompleter
   # These bookmarks are loaded asynchronously when refresh() is called.
   bookmarks: null
 
-  filter: (queryTerms, @onComplete) ->
-    @queryTerms = queryTerms.filter (t) -> 0 < t.length
+  filter: ({ @queryTerms }, @onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     @performSearch() if @bookmarks
 
@@ -198,8 +197,7 @@ class BookmarkCompleter
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
 
 class HistoryCompleter
-  filter: (queryTerms, onComplete) ->
-    queryTerms = queryTerms.filter (t) -> 0 < t.length
+  filter: ({ queryTerms }, onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
@@ -233,8 +231,7 @@ class DomainCompleter
   #     If `referenceCount` goes to zero, the domain entry can and should be deleted.
   domains: null
 
-  filter: (queryTerms, onComplete) ->
-    queryTerms = queryTerms.filter (t) -> 0 < t.length
+  filter: ({ queryTerms }, onComplete) ->
     return onComplete([]) unless queryTerms.length == 1
     if @domains
       @performSearch(queryTerms, onComplete)
@@ -336,8 +333,7 @@ tabRecency = new TabRecency()
 
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
-  filter: (queryTerms, onComplete) ->
-    queryTerms = queryTerms.filter (t) -> 0 < t.length
+  filter: ({ queryTerms }, onComplete) ->
     # NOTE(philc): We search all tabs, not just those in the current window. I'm not sure if this is the
     # correct UX.
     chrome.tabs.query {}, (tabs) =>
@@ -371,10 +367,11 @@ class SearchEngineCompleter
       handler: "customSearchEngineKeywords"
       keywords: key for own key of @searchEngines
 
-  filter: (queryTerms, onComplete) ->
+  filter: ({ queryTerms, query }, onComplete) ->
+    return onComplete [] if queryTerms.length == 0
     suggestions = []
 
-    { keyword, searchUrl, description } = @getSearchEngineMatches queryTerms
+    { keyword, searchUrl, description } = @getSearchEngineMatches queryTerms, query
     custom = searchUrl? and keyword?
     searchUrl ?= Settings.get "searchUrl"
     haveDescription = description? and 0 < description.length
@@ -382,7 +379,6 @@ class SearchEngineCompleter
 
     queryTerms = queryTerms[1..] if custom
     query = queryTerms.join " "
-    return onComplete [] if queryTerms.length == 0
 
     # For custom search engines, we add an auto-selected suggestion.
     if custom
@@ -398,9 +394,6 @@ class SearchEngineCompleter
         forceAutoSelect: true
         # Suppress the "w" from "w query terms" in the vomnibar input.
         suppressLeadingKeyword: true
-
-    # We filter out the empty strings late so that we can distinguish between, for example, "w" and "w ".
-    queryTerms = queryTerms.filter (t) -> 0 < t.length
 
     # Exclude results from other completers if this is a custom search engine and we have a completer.
     filter =
@@ -431,7 +424,6 @@ class SearchEngineCompleter
         characterCount = query.length - queryTerms.length + 1
         relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
-        queryTerms = queryTerms.filter (t) -> 0 < t.length
         if 0 < existingSuggestions.length
           existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
           if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
@@ -457,8 +449,14 @@ class SearchEngineCompleter
           count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
           onComplete suggestions[...count]
 
-  getSearchEngineMatches: (queryTerms) ->
-    (1 < queryTerms.length and @searchEngines[queryTerms[0]]) or {}
+  getSearchEngineMatches: (queryTerms, query = queryTerms.join " ") ->
+    # To allow users to write queries with leading search-engine keywords, leading whitespace disables custom
+    # search engines; for example, " w" is a regular query.
+    return {} if /^\s/.test query
+    # Trailing whitespace is significant when activating a custom search engine; for example, "w" (just a
+    # regular query) is different from "w " (a custom search engine).
+    length = queryTerms.length + (if /\s$/.test query then 1 else 0)
+    (1 < length and @searchEngines[queryTerms[0]]) or {}
 
   # Static data and methods for parsing the configured search engines.  We keep a cache of the search-engine
   # mapping in @searchEnginesMap.
@@ -507,11 +505,12 @@ class MultiCompleter
       # other completers.
       filter: null
 
-    (queryTerms, onComplete) ->
+    (request, onComplete) ->
       @debug = true
       # Allow only one query to run at a time, and remember the most recent query.
       return @mostRecentQuery = arguments if @filterInProgress
 
+      { queryTerms } = request
       RegexpCache.clear()
       @mostRecentQuery = null
       @filterInProgress = true
@@ -524,7 +523,7 @@ class MultiCompleter
       # results, then calling any continuations.
       for completer, index in @completers
         do (index) =>
-          completer.filter queryTerms, (newSuggestions = [], { continuation, filter } = defaultCallbackOptions) =>
+          completer.filter request, (newSuggestions = [], { continuation, filter } = defaultCallbackOptions) =>
 
             # Store the results.
             suggestions.push newSuggestions...
@@ -546,7 +545,6 @@ class MultiCompleter
               unless suggestions.length == 0 and shouldRunContinuations
                 onComplete
                   results: @prepareSuggestions queryTerms, suggestions
-                  mayCacheResults: continuations.length == 0
                   expectMoreResults: shouldRunContinuations
 
               # Run any continuations, unless there's a pending query.
@@ -560,7 +558,6 @@ class MultiCompleter
                       results: @prepareSuggestions queryTerms, suggestions
                       # FIXME(smblott) This currently assumes that there is at most one continuation.  We
                       # should really be counting pending/completed continuations.
-                      mayCacheResults: true
                       expectMoreResults: false
 
               # Admit subsequent queries, and launch any pending query.

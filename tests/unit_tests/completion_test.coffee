@@ -486,7 +486,7 @@ context "TabRecency",
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
   results = []
-  completer.filter(queryTerms, (completionResults) -> results = completionResults)
+  completer.filter({ queryTerms }, (completionResults) -> results = completionResults)
   results
 
 hours = (n) -> 1000 * 60 * 60 * n

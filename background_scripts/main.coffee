@@ -61,7 +61,7 @@ completers =
 
 completionHandlers =
   filter: (completer, request, port) ->
-    completer.filter request.queryTerms, (response) ->
+    completer.filter request, (response) ->
       port.postMessage extend request, extend response, handler: "completions"
 
   refresh: (completer, _, port) -> completer.refresh port
