@@ -401,24 +401,19 @@ class SearchEngineCompleter
 
     # We filter out the empty strings late so that we can distinguish between, for example, "w" and "w ".
     queryTerms = queryTerms.filter (t) -> 0 < t.length
-    # NOTE(smblott) I'm having difficulty figuring out to do the filtering, here.  Exclusive should mean
-    # exclusive to what?
-    exclusive = if custom and CompletionEngines.haveCompletionEngine searchUrl then description else null
-    # exclusive =
-    #   if custom and CompletionEngines.haveCompletionEngine searchUrl
-    #     suggestions[0].getHostname suggestions[0].url
-    #   else
-    #     null
-    # exclusive =
-    #   if custom and CompletionEngines.haveCompletionEngine searchUrl
-    #     searchUrl.split("%s")?[0]
-    #   else
-    #     null
+
+    # Exclude results from other completers if this is a custom search engine and we have a completer.
+    filter =
+      if custom and CompletionEngines.haveCompletionEngine searchUrl
+        (suggestion) -> suggestion.type == description
+      else
+        null
+
     if queryTerms.length == 0
-      return onComplete suggestions, { exclusive }
+      return onComplete suggestions, { filter }
 
     onComplete suggestions,
-      exclusive: exclusive
+      filter: filter
       continuation: (existingSuggestions, onComplete) =>
         suggestions = []
         # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
@@ -504,75 +499,75 @@ class MultiCompleter
 
   filter: do ->
     defaultCallbackOptions =
-      # At most one of the completers (SearchEngineCompleter) may pass a continuation function, which will be
-      # called after the results of all of the other completers have been posted.  Any additional results
-      # from this continuation will be added to the existing results and posted later.  We don't call the
-      # continuation if another query is already waiting.  This is for slow tasks which should be done
-      # asynchronously (e.g. HTTP GET).
+      # Completers may provide a continuation function.  This will be run after all completers have posted
+      # their suggestions, and is used to post additional (slow) asynchronous suggestions (e.g. search-engine
+      # completions fetched over HTTP).
       continuation: null
-      # If truthy, non-matching completions from other completers should be suppressed.
-      exclusive: null
+      # Completers may provide a filter function.  This allows one completer to filter out suggestions from
+      # other completers.
+      filter: null
 
     (queryTerms, onComplete) ->
-      # Allow only one query to run at a time.
-      if @filterInProgress
-        @mostRecentQuery = [ queryTerms, onComplete ]
-        return
+      @debug = true
+      # Allow only one query to run at a time, and remember the most recent query.
+      return @mostRecentQuery = arguments if @filterInProgress
+
       RegexpCache.clear()
       @mostRecentQuery = null
       @filterInProgress = true
       suggestions = []
-      continuation = null
-      exclusive = null
+      continuations = []
+      filters = []
       activeCompleters = [0...@completers.length]
-      # Call filter() on every source completer and wait for them all to finish before returning results.
+
+      # Call filter() on every completer and wait for them all to finish before filtering and posting the
+      # results, then calling any continuations.
       for completer, index in @completers
-        do (completer, index) =>
-          completer.filter queryTerms, (newSuggestions, options = defaultCallbackOptions) =>
-            if index not in activeCompleters
-              # NOTE(smblott) I suspect one of the completers is calling onComplete more than once. (And the
-              # legacy code had ">=" where "==" should have sufficed.)  This is just to track that case down.
-              console.log "XXXXXXXXXXXXXXX, onComplete called twice!"
-              console.log completer
-            activeCompleters = activeCompleters.filter (i) -> i != index
+        do (index) =>
+          completer.filter queryTerms, (newSuggestions = [], { continuation, filter } = defaultCallbackOptions) =>
+
+            # Store the results.
             suggestions.push newSuggestions...
-            continuation ?= options.continuation
-            exclusive ?= options.exclusive
+            continuations.push continuation if continuation?
+            filters.push filter if filter?
 
+            activeCompleters = activeCompleters.filter (i) -> i != index
             if activeCompleters.length == 0
-              # All the completers have now returned; we combine the results, post them and call any
-              # continuation.
-              shouldRunContinuation = continuation? and not @mostRecentQuery
-              console.log "skip continuation" if continuation? and not shouldRunContinuation
+              # All the completers have now yielded their (initial) results, we're good to go.
 
-              # If one completer has claimed exclusivity (SearchEngineCompleter), then filter out results from
-              # other completers.
-              if exclusive
-                suggestions = suggestions.filter (suggestion) -> suggestion.type == exclusive
+              # Apply filters.
+              suggestions = suggestions.filter filter for filter in filters
 
-              # We don't post results immediately if there are none, and we're going to run a continuation
-              # (ie. a SearchEngineCompleter).  This collapsing the vomnibar briefly before expanding it
-              # again, which looks ugly.
-              unless shouldRunContinuation and suggestions.length == 0
+              # Should we run continuations?
+              shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
+
+              # Post results, unless there are none AND we will be running a continuation.  This avoids
+              # collapsing the vomnibar briefly before expanding it again, which looks ugly.
+              unless suggestions.length == 0 and shouldRunContinuations
                 onComplete
                   results: @prepareSuggestions queryTerms, suggestions
-                  callerMayCacheResults: not shouldRunContinuation
+                  mayCacheResults: continuations.length == 0
+                  expectMoreResults: shouldRunContinuations
 
-              # Allow subsequent queries to begin.
-              @filterInProgress = false
-
-              # Launch continuation or any pending query.
-              if shouldRunContinuation
-                continuation suggestions, (newSuggestions) =>
-                  if 0 < newSuggestions.length
+              # Run any continuations, unless there's a pending query.
+              if shouldRunContinuations
+                for continuation in continuations
+                  console.log "launching continuation..." if @debug
+                  continuation suggestions, (newSuggestions) =>
+                    console.log "posting continuation" if @debug
                     suggestions.push newSuggestions...
                     onComplete
                       results: @prepareSuggestions queryTerms, suggestions
-                      callerMayCacheResults: true
-              else
-                if @mostRecentQuery
-                  console.log "running pending query:", @mostRecentQuery[0]
-                  @filter @mostRecentQuery...
+                      # FIXME(smblott) This currently assumes that there is at most one continuation.  We
+                      # should really be counting pending/completed continuations.
+                      mayCacheResults: true
+                      expectMoreResults: false
+
+              # Admit subsequent queries, and launch any pending query.
+              @filterInProgress = false
+              if @mostRecentQuery
+                console.log "running pending query:", @mostRecentQuery[0] if @debug
+                @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
     suggestion.computeRelevancy queryTerms for suggestion in suggestions

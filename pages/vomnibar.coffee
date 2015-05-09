@@ -261,7 +261,7 @@ class BackgroundCompleter
                 @completionActions.navigateToUrl.curry result.url
 
           # Cache the results (but only if the background completer tells us that it's ok to do so).
-          if msg.callerMayCacheResults
+          if msg.mayCacheResults
             console.log "cache set:", msg.query if @debug
             @cache.set msg.query, msg.results
           else
