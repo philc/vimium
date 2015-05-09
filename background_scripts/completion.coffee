@@ -547,7 +547,7 @@ class MultiCompleter
               unless suggestions.length == 0 and shouldRunContinuations
                 onComplete
                   results: @prepareSuggestions queryTerms, suggestions
-                  expectMoreResults: shouldRunContinuations
+                  mayCacheResult: continuations.length == 0
 
               # Run any continuations, unless there's a pending query.
               if shouldRunContinuations
@@ -560,7 +560,7 @@ class MultiCompleter
                       results: @prepareSuggestions queryTerms, suggestions
                       # FIXME(smblott) This currently assumes that there is at most one continuation.  We
                       # should really be counting pending/completed continuations.
-                      expectMoreResults: false
+                      mayCacheResult: true
 
               # Admit subsequent queries, and launch any pending query.
               @filterInProgress = false
