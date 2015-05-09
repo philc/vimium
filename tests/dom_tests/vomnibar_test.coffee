@@ -14,7 +14,7 @@ context "Keep selection within bounds",
     oldGetCompleter = vomnibarFrame.Vomnibar.getCompleter.bind vomnibarFrame.Vomnibar
     stub vomnibarFrame.Vomnibar, 'getCompleter', (name) =>
       completer = oldGetCompleter name
-      stub completer, 'filter', (query, callback) => callback(@completions)
+      stub completer, 'filter', (query, callback) => callback results: @completions
       completer
 
     # Shoulda.js doesn't support async tests, so we have to hack around.

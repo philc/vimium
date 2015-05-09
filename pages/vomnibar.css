@@ -134,3 +134,7 @@
   font-weight: normal;
 }
 
+#vomnibarInput::selection {
+  /* This is the light grey color of the vomnibar border. */
+  background-color: #F1F1F1;
+}

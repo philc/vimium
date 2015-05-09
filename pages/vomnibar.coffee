@@ -69,6 +69,7 @@ class VomnibarUI
     @previousAutoSelect = null
     @previousInputValue = null
     @suppressedLeadingKeyword = null
+    @previousLength = 0
     @selection = @initialSelectionValue
     @keywords = []
 
@@ -92,7 +93,7 @@ class VomnibarUI
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
     if 0 <= @selection and @completions[@selection].insertText?
-      @previousInputValue ?= @input.value
+      @previousInputValue ?= @getInputWithoutSelectionRange()
       @input.value = @completions[@selection].insertText + " "
     else if @previousInputValue?
         @input.value = @previousInputValue
@@ -102,8 +103,66 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
+  highlightCommonMatches: (response) ->
+    # For custom search engines, add characters to the input which are:
+    #   - not in the query/input
+    #   - in all completions
+    # and select the added text.
+
+    # Bail if we don't yet have the background completer's final word on the current query.
+    return unless response.mayCacheResults
+
+    # Bail if there's an update pending (because @input and the correct completion state are out of sync).
+    return if @updateTimer?
+
+    @previousLength ?= @input.value.length
+    previousLength = @previousLength
+    currentLength = @input.value.length
+    @previousLength = currentLength
+
+    # Bail if the query didn't get longer.
+    console.log previousLength < currentLength, previousLength, currentLength, @input.value
+    return unless previousLength < currentLength
+
+    # Bail if these aren't completions from a custom search engine.
+    return unless @suppressedLeadingKeyword?
+
+    # Bail if there are too few suggestions.
+    return unless 1 < @completions.length
+
+    # Fetch the query and the suggestion texts.
+    query = @input.value.ltrim().split(/\s+/).join(" ").toLowerCase()
+    suggestions = @completions[1..].map (completion) -> completion.title
+
+    # Ensure that the query is a prefix of all suggestions.
+    for suggestion in suggestions
+      return unless 0 == suggestion.toLowerCase().indexOf query
+
+    # Calculate the length of the shotest suggestion.
+    length = suggestions[0].length
+    length = Math.min length, suggestion.length for suggestion in suggestions
+
+    # Find the thenght of the longest common continuation.
+    length = do ->
+      for index in [query.length...length]
+        for suggestion in suggestions
+          return index if suggestions[0][index].toLowerCase() != suggestion[index].toLowerCase()
+      length
+
+    # But don't complete only whitespace.
+    return if /^\s+$/.test suggestions[0].slice query.length, length
+
+    # Bail if there's nothing to complete.
+    return unless  query.length < length
+
+    # Install completion.
+    @input.value = suggestions[0].slice 0, length
+    @input.setSelectionRange query.length, length
+    # @previousLength = @input.value.length
+
   #
-  # Returns the user's action ("up", "down", "enter", "dismiss", "delete" or null) based on their keypress.
+  # Returns the user's action ("up", "down", "tab", "enter", "dismiss", "delete" or null) based on their
+  # keypress.
   # We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
   #
   actionFromKeyEvent: (event) ->
@@ -114,8 +173,9 @@ class VomnibarUI
         (event.shiftKey && event.keyCode == keyCodes.tab) ||
         (event.ctrlKey && (key == "k" || key == "p")))
       return "up"
+    else if (event.keyCode == keyCodes.tab && !event.shiftKey)
+      return "tab"
     else if (key == "down" ||
-        (event.keyCode == keyCodes.tab && !event.shiftKey) ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
     else if (event.keyCode == keyCodes.enter)
@@ -132,19 +192,38 @@ class VomnibarUI
       (event.shiftKey || event.ctrlKey || KeyboardUtils.isPrimaryModifierKey(event))
     if (action == "dismiss")
       @hide()
+    else if action in [ "tab", "down" ]
+      if action == "tab"
+        if @inputContainsASelectionRange()
+          # There is a selection: callapse it and update the completions.
+          window.getSelection().collapseToEnd()
+          @update true
+        else
+          # There is no selection: treat "tab" as "down".
+          action = "down"
+      if action == "down"
+        @selection += 1
+        @selection = @initialSelectionValue if @selection == @completions.length
+        @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
-    else if (action == "down")
-      @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
-      @updateSelection()
     else if (action == "enter")
-      # If they type something and hit enter without selecting a completion from our list of suggestions,
-      # try to open their query as a URL directly. If it doesn't look like a URL, we will search using
-      # google.
-      if (@selection == -1)
+      if @inputContainsASelectionRange()
+        # There is selected completion text in the input, put there by highlightCommonMatches().  It looks to
+        # the user like, if they type "enter", then that's the query which will fire.  But we don't actually
+        # have a URL for this query (it doesn't actually correspond to any of the current completions).  So we
+        # fire off a new query and immediately launch the first resulting URL.
+        @update true, =>
+          if @completions[0]?
+            completion = @completions[0]
+            @hide -> completion.performAction openInNewTab
+
+      # If the user types something and hits enter without selecting a completion from the list, then try to
+      # open their query as a URL directly. If it doesn't look like a URL, then use the default search
+      # engine.
+      else if (@selection == -1)
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
@@ -169,22 +248,34 @@ class VomnibarUI
     event.preventDefault()
     true
 
-  getInputValue: ->
+  # Test whether the input contains selected text.
+  inputContainsASelectionRange: ->
+    @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
+
+  # Return the text of the input, with any selected text renage removed.
+  getInputWithoutSelectionRange: ->
+    if @inputContainsASelectionRange()
+      @input.value[0...@input.selectionStart] + @input.value[@input.selectionEnd..]
+    else
+      @input.value
+
+  # Return the background-page query corresponding to the current input state.  In other words, reinstate any
+  # custom search engine keyword which is currently stripped from the input.
+  getInputValueAsQuery: ->
     (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @input.value
 
   updateCompletions: (callback = null) ->
-    @clearUpdateTimer()
-    @completer.filter @getInputValue(), (@completions) =>
-      @populateUiWithCompletions @completions
+    @completer.filter @getInputValueAsQuery(), (response) =>
+      { results, mayCacheResults } = response
+      @completions = results
+      # Update completion list with the new suggestions.
+      @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
+      @completionList.style.display = if @completions.length > 0 then "block" else ""
+      @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
+      @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
+      @updateSelection()
+      @highlightCommonMatches response
       callback?()
-
-  populateUiWithCompletions: (completions) ->
-    # Update completion list with the new suggestions.
-    @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
-    @completionList.style.display = if completions.length > 0 then "block" else ""
-    @selection = Math.min completions.length - 1, Math.max @initialSelectionValue, @selection
-    @previousAutoSelect = null if completions[0]?.autoSelect and completions[0]?.forceAutoSelect
-    @updateSelection()
 
   updateOnInput: =>
     @completer.cancel()
@@ -209,11 +300,14 @@ class VomnibarUI
     # interface is snappy).
     updateSynchronously ||= @isCustomSearch() and not @suppressedLeadingKeyword?
     if updateSynchronously
+      @clearUpdateTimer()
       @updateCompletions callback
     else if not @updateTimer?
       # Update asynchronously for better user experience and to take some load off the CPU (not every
       # keystroke will cause a dedicated update)
-      @updateTimer = Utils.setTimeout @refreshInterval, => @updateCompletions callback
+      @updateTimer = Utils.setTimeout @refreshInterval, =>
+        @updateTimer = null
+        @updateCompletions callback
 
     @input.focus()
 
@@ -268,14 +362,14 @@ class BackgroundCompleter
 
           # Cache the result -- if we have been told it's ok to do so (it could be that more results will be
           # posted shortly).  We cache the result even if it arrives late.
-          if msg.mayCacheResult
+          if msg.mayCacheResults
             console.log "cache set:", "-#{msg.cacheKey}-" if @debug
-            @cache[msg.cacheKey] = msg.results
+            @cache[msg.cacheKey] = msg
           else
             console.log "not setting cache:", "-#{msg.cacheKey}-" if @debug
 
           # Handle the message, but only if it hasn't arrived too late.
-          @mostRecentCallback msg.results if msg.id == @messageId
+          @mostRecentCallback msg if msg.id == @messageId
 
   filter: (query, @mostRecentCallback) ->
     queryTerms = query.trim().split(/\s+/).filter (s) -> 0 < s.length
