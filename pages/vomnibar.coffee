@@ -93,13 +93,22 @@ class VomnibarUI
     # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
     # and revert when not.  This allows the user to select a suggestion and then continue typing.
     if 0 <= @selection and @completions[@selection].insertText?
-      @previousInputValue ?= @getInputWithoutSelectionRange()
-      @input.value = @completions[@selection].insertText + " "
+      @previousInputValue ?=
+        value: @input.value
+        selectionStart: @input.selectionStart
+        selectionEnd: @input.selectionEnd
+      @input.value = @completions[@selection].insertText + (if @selection == 0 then "" else " ")
     else if @previousInputValue?
-        @input.value = @previousInputValue
+        @input.value = @previousInputValue.value
+        if @previousInputValue.selectionStart? and @previousInputValue.selectionEnd? and
+          @previousInputValue.selectionStart != @previousInputValue.selectionEnd
+            @input.setSelectionRange @previousInputValue.selectionStart, @previousInputValue.selectionEnd
         @previousInputValue = null
 
     # Highlight the the selected entry, and only the selected entry.
+    @highlightTheSelectedEntry()
+
+  highlightTheSelectedEntry: ->
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
@@ -121,11 +130,10 @@ class VomnibarUI
     @previousLength = currentLength
 
     # Bail if the query didn't get longer.
-    console.log previousLength < currentLength, previousLength, currentLength, @input.value
     return unless previousLength < currentLength
 
-    # Bail if these aren't completions from a custom search engine.
-    return unless @suppressedLeadingKeyword?
+    # Bail if these aren't completions from a custom search engine with completion.
+    return unless @suppressedLeadingKeyword? and @completions[0]?.completeSuggestions
 
     # Bail if there are too few suggestions.
     return unless 1 < @completions.length
@@ -158,7 +166,6 @@ class VomnibarUI
     # Install completion.
     @input.value = suggestions[0].slice 0, length
     @input.setSelectionRange query.length, length
-    # @previousLength = @input.value.length
 
   #
   # Returns the user's action ("up", "down", "tab", "enter", "dismiss", "delete" or null) based on their
@@ -195,11 +202,10 @@ class VomnibarUI
     else if action in [ "tab", "down" ]
       if action == "tab"
         if @inputContainsASelectionRange()
-          # There is a selection: callapse it and update the completions.
-          window.getSelection().collapseToEnd()
-          @update true
+          # The first tab collapses the selection to the end.
+          window.getSelection()?.collapseToEnd()
         else
-          # There is no selection: treat "tab" as "down".
+          # Subsequent tabs behave the same as "down".
           action = "down"
       if action == "down"
         @selection += 1
@@ -210,27 +216,27 @@ class VomnibarUI
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
-      if @inputContainsASelectionRange()
-        # There is selected completion text in the input, put there by highlightCommonMatches().  It looks to
-        # the user like, if they type "enter", then that's the query which will fire.  But we don't actually
-        # have a URL for this query (it doesn't actually correspond to any of the current completions).  So we
-        # fire off a new query and immediately launch the first resulting URL.
-        @update true, =>
-          if @completions[0]?
-            completion = @completions[0]
-            @hide -> completion.performAction openInNewTab
-
-      # If the user types something and hits enter without selecting a completion from the list, then try to
-      # open their query as a URL directly. If it doesn't look like a URL, then use the default search
-      # engine.
-      else if (@selection == -1)
+      if @selection == -1
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
-        @hide ->
-          chrome.runtime.sendMessage
-            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-            url: query
+        if @suppressedLeadingKeyword?
+          # This is a custom search engine completion.  Because of the way we add the text common to all
+          # completions to the input (highlighted), the text in the input might not correspond to any of the
+          # completions.  So we fire the query off to the background page and use the completion at the top of
+          # the list (which will be the right one).
+          @update true, =>
+            if @completions[0]?
+              completion = @completions[0]
+              @hide -> completion.performAction openInNewTab
+        else
+          # If the user types something and hits enter without selecting a completion from the list, then try
+          # to open their query as a URL directly. If it doesn't look like a URL, then use the default search
+          # engine.
+          @hide ->
+            chrome.runtime.sendMessage
+              handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+              url: query
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab

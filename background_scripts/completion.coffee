@@ -375,25 +375,10 @@ class SearchEngineCompleter
     custom = searchUrl? and keyword?
     searchUrl ?= Settings.get "searchUrl"
     haveDescription = description? and 0 < description.length
-    description ||= "#{if custom then "custom " else ""}search"
+    description ||= "search#{if custom then " [#{keyword}]" else ""}"
 
     queryTerms = queryTerms[1..] if custom
     query = queryTerms.join " "
-
-    # For custom search engines, we add an auto-selected suggestion.
-    if custom
-      suggestions.push new Suggestion
-        queryTerms: queryTerms
-        type: description
-        url: Utils.createSearchUrl queryTerms, searchUrl
-        title: if haveDescription then query else "#{keyword}: #{query}"
-        relevancy: 1
-        highlightTerms: false
-        autoSelect: true
-        # Always reset the selection to this suggestion on query change.  The UX is weird otherwise.
-        forceAutoSelect: true
-        # Suppress the "w" from "w query terms" in the vomnibar input.
-        suppressLeadingKeyword: true
 
     haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
     # If this is a custom search engine and we have a completer, then exclude results from other completers.
@@ -402,6 +387,25 @@ class SearchEngineCompleter
         (suggestion) -> suggestion.type == description
       else
         null
+
+    # For custom search engines, we add an auto-selected suggestion.
+    if custom
+      suggestions.push new Suggestion
+        queryTerms: queryTerms
+        type: description
+        url: Utils.createSearchUrl queryTerms, searchUrl
+        title: query
+        relevancy: 1
+        highlightTerms: false
+        insertText: query
+        # NOTE (smblott) Disbaled pending consideration of how to handle text selection within the vomnibar
+        # itself.
+        # autoSelect: true
+        # Always reset the selection to this suggestion on query change.  The UX is weird otherwise.
+        # forceAutoSelect: true
+        # Suppress the "w" from "w query terms" in the vomnibar input.
+        suppressLeadingKeyword: true
+        completeSuggestions: filter?
 
     # Post suggestions and bail if there is no prospect of adding further suggestions.
     if queryTerms.length == 0 or not haveCompletionEngine

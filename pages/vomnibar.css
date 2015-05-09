@@ -136,5 +136,8 @@
 
 #vomnibarInput::selection {
   /* This is the light grey color of the vomnibar border. */
-  background-color: #F1F1F1;
+  /* background-color: #F1F1F1; */
+
+  /* This is the light blue color of the vomnibar selected item. */
+  background-color: #BBCEE9;
 }

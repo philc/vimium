@@ -248,8 +248,8 @@ context "search engines",
   should "return search engine suggestion without description", ->
     results = filterCompleter(@completer, ["foo", "hello"])
     assert.arrayEqual ["bar?q=hello"], results.map (result) -> result.url
-    assert.arrayEqual ["foo: hello"], results.map (result) -> result.title
-    assert.arrayEqual ["custom search"], results.map (result) -> result.type
+    assert.arrayEqual ["hello"], results.map (result) -> result.title
+    assert.arrayEqual ["search [foo]"], results.map (result) -> result.type
 
   should "return search engine suggestion with description", ->
     results = filterCompleter(@completer, ["baz", "hello"])
