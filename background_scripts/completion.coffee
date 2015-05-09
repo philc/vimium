@@ -395,14 +395,16 @@ class SearchEngineCompleter
         # Suppress the "w" from "w query terms" in the vomnibar input.
         suppressLeadingKeyword: true
 
-    # Exclude results from other completers if this is a custom search engine and we have a completer.
+    haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
+    # If this is a custom search engine and we have a completer, then exclude results from other completers.
     filter =
-      if custom and CompletionEngines.haveCompletionEngine searchUrl
+      if custom and haveCompletionEngine
         (suggestion) -> suggestion.type == description
       else
         null
 
-    if queryTerms.length == 0
+    # Post suggestions and bail if there is no prospect of adding further suggestions.
+    if queryTerms.length == 0 or not haveCompletionEngine
       return onComplete suggestions, { filter }
 
     onComplete suggestions,
