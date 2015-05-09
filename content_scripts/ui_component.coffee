@@ -7,6 +7,14 @@ class UIComponent
 
   constructor: (iframeUrl, className, @handleMessage) ->
     styleSheet = document.createElement "style"
+
+    # If this is an XML document, nothing we do here works:
+    # * <style> elements show their contents inline,
+    # * <iframe> elements don't load any content,
+    # * document.createElement generates elements that have style == null and ignore CSS.
+    # We bail here if this is the case so we're polluting the DOM to no or negative effect.
+    return unless styleSheet.style
+
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
     styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
