@@ -93,7 +93,9 @@ root.Settings = Settings =
     searchEngines: [
       "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
       ""
-      "# More examples:"
+      "# More examples."
+      "#"
+      "# (Vimium has built-in completion for these.)"
       "#"
       "# g: http://www.google.com/search?q=%s Google"
       "# l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
