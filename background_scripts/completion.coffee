@@ -382,6 +382,8 @@ class SearchEngineCompleter
 
     haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
     # If this is a custom search engine and we have a completer, then exclude results from other completers.
+    # The truthiness of filter? also serves to distinguish two very different vomnibar behaviors, one for
+    # custom search engines with completers (filter? is true), and one for those without (filter? is false).
     filter =
       if custom and haveCompletionEngine
         (suggestion) -> suggestion.type == description
@@ -390,22 +392,26 @@ class SearchEngineCompleter
 
     # For custom search engines, we add an auto-selected suggestion.
     if custom
+      # Note. This suggestion always appears at the top of the suggestion list.  Its settings serves to serve
+      # to configure various vomnibar behaviors.
       suggestions.push new Suggestion
         queryTerms: queryTerms
         type: description
         url: Utils.createSearchUrl queryTerms, searchUrl
         title: query
         relevancy: 1
-        highlightTerms: false
-        insertText: query
-        # NOTE (smblott) Disbaled pending consideration of how to handle text selection within the vomnibar
-        # itself.
-        # autoSelect: true
-        # Always reset the selection to this suggestion on query change.  The UX is weird otherwise.
-        # forceAutoSelect: true
-        # Suppress the "w" from "w query terms" in the vomnibar input.
+        insertText: if filter? then query else null
+        # For all custom search engines, we suppress the leading keyword, for example "w something" becomes
+        # "something" in the vomnibar.
         suppressLeadingKeyword: true
+        # We complete suggestions only for custom search engines where we have an associated completion
+        # engine.
         completeSuggestions: filter?
+        # We only use autoSelect and highlight query terms (on custom search engines) when we do not have a
+        # completer.
+        autoSelect: not filter?
+        forceAutoSelect: not filter?
+        highlightTerms: not filter?
 
     # Post suggestions and bail if there is no prospect of adding further suggestions.
     if queryTerms.length == 0 or not haveCompletionEngine
