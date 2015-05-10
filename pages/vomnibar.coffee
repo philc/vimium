@@ -411,8 +411,7 @@ class BackgroundCompleter
 
   filter: (query, @mostRecentCallback) ->
     queryTerms = query.trim().split(/\s+/).filter (s) -> 0 < s.length
-    cacheKey = queryTerms.join " "
-    cacheKey += " " if queryTerms.length == 1 and queryTerms[0] in @keywords and /\s$/.test query
+    cacheKey = query.ltrim().split(/\s+/).join " "
 
     if cacheKey of @cache
       console.log "cache hit:", "-#{cacheKey}-" if @debug

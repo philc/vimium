@@ -360,6 +360,16 @@ class SearchEngineCompleter
   cancel: ->
     CompletionSearch.cancel()
 
+  triageRequest: (request) ->
+    @searchEngines.use (engines) =>
+      { queryTerms, query } = request
+      keyword = queryTerms[0]
+      if keyword and engines[keyword] and (1 < queryTerms.length or /\s$/.test query)
+        extend request,
+          queryTerms: queryTerms[1..]
+          keyword: keyword
+          engine: engines[keyword]
+
   refresh: (port) ->
     # Parse the search-engine configuration.
     @searchEngines = new AsyncDataFetcher (callback) ->
@@ -385,99 +395,95 @@ class SearchEngineCompleter
         handler: "keywords"
         keywords: key for own key of engines
 
-  filter: ({ queryTerms, query, maxResults }, onComplete) ->
-    return onComplete [] if queryTerms.length == 0
+  filter: ({ queryTerms, query, engine }, onComplete) ->
+    suggestions = []
 
-    @searchEngines.use (engines) =>
-      suggestions = []
-      keyword = queryTerms[0]
+    { custom, searchUrl, description } =
+      if engine
+        { keyword, searchUrl, description } = engine
+        custom: true
+        searchUrl: searchUrl
+        description: description
+      else
+        custom: false
+        searchUrl: Settings.get "searchUrl"
+        description: "search"
 
-      { custom, searchUrl, description, queryTerms } =
-        if engines[keyword]? and (1 < queryTerms.length or /\s$/.test query)
-          { searchUrl, description } = engines[keyword]
-          custom: true
-          searchUrl: searchUrl
-          description: description
-          queryTerms: queryTerms[1..]
-        else
-          custom: false
-          searchUrl: Settings.get "searchUrl"
-          description: "search"
-          queryTerms: queryTerms
+    return onComplete [] unless custom or 0 < queryTerms.length
 
-      query = queryTerms.join " "
-      haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
+    query = queryTerms.join " "
+    haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
 
-      # Relevancy:
-      #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
-      #     relevancy, say).  We assume that the completion engine has already factored that in.  Also,
-      #     completion engines often handle spelling mistakes, in which case we wouldn't find the query terms
-      #     in the suggestion anyway.
-      #   - Scores are weighted such that they retain the order provided by the completion engine.
-      #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
-      #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
-      #     a useful suggestion from another completer.
-      #
-      characterCount = query.length - queryTerms.length + 1
-      relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
+    # Relevancy:
+    #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
+    #     relevancy, say).  We assume that the completion engine has already factored that in.  Also,
+    #     completion engines often handle spelling mistakes, in which case we wouldn't find the query terms
+    #     in the suggestion anyway.
+    #   - Scores are weighted such that they retain the order provided by the completion engine.
+    #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
+    #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
+    #     a useful suggestion from another completer.
+    #
+    characterCount = query.length - queryTerms.length + 1
+    relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
-      # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
-      # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
-      # engines for which we do not have a completion engine.  By "exclusive vomnibar", we mean suggestions
-      # from other completers are suppressed (so the vomnibar "exclusively" uses suggestions from this search
-      # engine).
-      useExclusiveVomnibar = custom and haveCompletionEngine
-      filter = if useExclusiveVomnibar then (suggestion) -> suggestion.type == description else null
+    # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
+    # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
+    # engines for which we do not have a completion engine.  By "exclusive vomnibar", we mean suggestions
+    # from other completers are suppressed (so the vomnibar "exclusively" uses suggestions from this search
+    # engine).
+    useExclusiveVomnibar = custom and haveCompletionEngine
+    filter = if useExclusiveVomnibar then (suggestion) -> suggestion.type == description else null
 
-      # For custom search engines, we add a single, top-ranked entry for the unmodified query.  This
-      # suggestion always appears at the top of the list.
-      if custom
-        suggestions.push new Suggestion
+    # For custom search engines, we add a single, top-ranked entry for the unmodified query.  This
+    # suggestion always appears at the top of the list.
+    if custom
+      suggestions.push new Suggestion
+        queryTerms: queryTerms
+        type: description
+        url: Utils.createSearchUrl queryTerms, searchUrl
+        title: query
+        relevancy: 1
+        insertText: if useExclusiveVomnibar then query else null
+        # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
+        suppressLeadingKeyword: true
+        selectCommonMatches: false
+        # Toggles for the legacy behaviour.
+        autoSelect: not useExclusiveVomnibar
+        forceAutoSelect: not useExclusiveVomnibar
+        highlightTerms: not useExclusiveVomnibar
+
+    mkSuggestion = do ->
+      (suggestion) ->
+        new Suggestion
           queryTerms: queryTerms
           type: description
-          url: Utils.createSearchUrl queryTerms, searchUrl
-          title: query
-          relevancy: 1
-          insertText: if useExclusiveVomnibar then query else null
-          # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
-          suppressLeadingKeyword: true
-          selectCommonMatches: false
-          # Toggles for the legacy behaviour.
-          autoSelect: not useExclusiveVomnibar
-          forceAutoSelect: not useExclusiveVomnibar
-          highlightTerms: not useExclusiveVomnibar
+          url: Utils.createSearchUrl suggestion, searchUrl
+          title: suggestion
+          relevancy: relavancy *= 0.9
+          insertText: suggestion
+          highlightTerms: false
+          selectCommonMatches: true
 
-      mkSuggestion = do ->
-        (suggestion) ->
-          new Suggestion
-            queryTerms: queryTerms
-            type: description
-            url: Utils.createSearchUrl suggestion, searchUrl
-            title: suggestion
-            relevancy: relavancy *= 0.9
-            insertText: suggestion
-            highlightTerms: false
-            selectCommonMatches: true
+    # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
+    # asynchronously).
+    cachedSuggestions = CompletionSearch.complete searchUrl, queryTerms
 
-      # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
-      # asynchronously).
-      cachedSuggestions = CompletionSearch.complete searchUrl, queryTerms
+    # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
+    # adding further suggestions.
+    if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
+      if cachedSuggestions?
+        console.log "using cached suggestions:", query
+        suggestions.push cachedSuggestions.map(mkSuggestion)...
+      return onComplete suggestions, { filter, continuation: null }
 
-      # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
-      # adding further suggestions.
-      if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
-        if cachedSuggestions?
-          console.log "using cached suggestions:", query
-          suggestions.push cachedSuggestions.map(mkSuggestion)...
-        return onComplete suggestions, { filter, continuation: null }
-
-      # Post any initial suggestion, and then deliver the rest of the suggestions as a continuation (so,
-      # asynchronously).
-      onComplete suggestions,
-        filter: filter
-        continuation: (onComplete) =>
-          CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
-            onComplete suggestions.map mkSuggestion
+    # Post any initial suggestion, and then deliver the rest of the suggestions as a continuation (so,
+    # asynchronously).
+    onComplete suggestions,
+      filter: filter
+      continuation: (onComplete) =>
+        CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
+          onComplete suggestions.map mkSuggestion
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
@@ -493,6 +499,11 @@ class MultiCompleter
     @debug = true
     # Allow only one query to run at a time.
     return @mostRecentQuery = arguments if @filterInProgress
+
+    # Provide each completer with an opportunity to see (and possibly alter) the request before it is
+    # launched.
+    for completer in @completers
+      completer.triageRequest? request
 
     RegexpCache.clear()
     { queryTerms } = request
