@@ -278,7 +278,23 @@ class AsyncDataFetcher
   use: (callback) ->
     if @data? then callback @data else @queue.push callback
 
+# This takes a list of jobs (functions) and runs them, asynchronously.  Functions queued with @onReady() are
+# run once all of the jobs have completed.
+class JobRunner
+  constructor: (@jobs) ->
+    @fetcher = new AsyncDataFetcher (callback) =>
+      for job in @jobs
+        do (job) =>
+          Utils.nextTick =>
+            job =>
+              @jobs = @jobs.filter (j) -> j != job
+              callback true if @jobs.length == 0
+
+  onReady: (callback) ->
+    @fetcher.use callback
+
 root = exports ? window
 root.Utils = Utils
 root.SimpleCache = SimpleCache
 root.AsyncDataFetcher = AsyncDataFetcher
+root.JobRunner = JobRunner

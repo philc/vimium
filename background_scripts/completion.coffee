@@ -499,76 +499,66 @@ class MultiCompleter
   cancel: (port) ->
     completer.cancel? port for completer in @completers
 
-  filter: do ->
-    defaultCallbackOptions =
-      # Completers may provide a continuation function.  This will be run after all completers have posted
-      # their suggestions, and is used to post additional (slow) asynchronous suggestions (e.g. search-engine
-      # completions fetched over HTTP).
-      continuation: null
-      # Completers may provide a filter function.  This allows one completer to filter out suggestions from
-      # other completers.
-      filter: null
+  filter: (request, onComplete) ->
+    @debug = true
+    # Allow only one query to run at a time.
+    return @mostRecentQuery = arguments if @filterInProgress
 
-    (request, onComplete) ->
-      @debug = true
-      # Allow only one query to run at a time, and remember the most recent query.
-      return @mostRecentQuery = arguments if @filterInProgress
+    RegexpCache.clear()
+    { queryTerms } = request
 
-      { queryTerms } = request
-      RegexpCache.clear()
-      @mostRecentQuery = null
-      @filterInProgress = true
-      suggestions = []
-      continuations = []
-      filters = []
-      activeCompleters = [0...@completers.length]
+    @mostRecentQuery = null
+    @filterInProgress = true
 
-      # Call filter() on every completer and wait for them all to finish before filtering and posting the
-      # results, then calling any continuations.
-      for completer, index in @completers
-        do (index) =>
-          completer.filter request, (newSuggestions = [], { continuation, filter } = defaultCallbackOptions) =>
+    suggestions = []
+    continuations = []
+    filters = []
 
-            # Store the results.
-            suggestions.push newSuggestions...
-            continuations.push continuation if continuation?
-            filters.push filter if filter?
+    # Run each of the completers (asynchronously).
+    jobs = new JobRunner @completers.map (completer) ->
+      (callback) ->
+        completer.filter request, (newSuggestions = [], { continuation, filter } = {}) ->
+          suggestions.push newSuggestions...
+          continuations.push continuation if continuation?
+          filters.push filter if filter?
+          callback()
 
-            activeCompleters = activeCompleters.filter (i) -> i != index
-            if activeCompleters.length == 0
-              # All the completers have now yielded their (initial) results, we're good to go.
+    # Once all completers have finished, process and post the results, and run any continuations or pending
+    # queries.
+    jobs.onReady =>
+      # Apply filters.
+      suggestions = suggestions.filter filter for filter in filters
 
-              # Apply filters.
-              suggestions = suggestions.filter filter for filter in filters
+      # Should we run continuations?
+      shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
 
-              # Should we run continuations?
-              shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
+      # Post results, unless there are none AND we will be running a continuation.  This avoids
+      # collapsing the vomnibar briefly before expanding it again, which looks ugly.
+      unless suggestions.length == 0 and shouldRunContinuations
+        onComplete
+          results: @prepareSuggestions queryTerms, suggestions
+          mayCacheResults: continuations.length == 0
 
-              # Post results, unless there are none AND we will be running a continuation.  This avoids
-              # collapsing the vomnibar briefly before expanding it again, which looks ugly.
-              unless suggestions.length == 0 and shouldRunContinuations
-                onComplete
-                  results: @prepareSuggestions queryTerms, suggestions
-                  mayCacheResults: continuations.length == 0
+      # Run any continuations (asynchronously).
+      if shouldRunContinuations
+        continuationJobs = new JobRunner continuations.map (continuation) ->
+          (callback) ->
+            continuation suggestions, (newSuggestions) ->
+              suggestions.push newSuggestions...
+              callback()
 
-              # Run any continuations, unless there's a pending query.
-              if shouldRunContinuations
-                for continuation in continuations
-                  console.log "launching continuation..." if @debug
-                  continuation suggestions, (newSuggestions) =>
-                    console.log "posting continuation" if @debug
-                    suggestions.push newSuggestions...
-                    onComplete
-                      results: @prepareSuggestions queryTerms, suggestions
-                      # FIXME(smblott) This currently assumes that there is at most one continuation.  We
-                      # should really be counting pending/completed continuations.
-                      mayCacheResults: true
+        continuationJobs.onReady =>
+          # We post these results even if a new query has started.  The vomnibar will not display the
+          # completions, but will cache the results.
+          onComplete
+            results: @prepareSuggestions queryTerms, suggestions
+            mayCacheResults: true
 
-              # Admit subsequent queries, and launch any pending query.
-              @filterInProgress = false
-              if @mostRecentQuery
-                console.log "running pending query:", @mostRecentQuery[0] if @debug
-                @filter @mostRecentQuery...
+      # Admit subsequent queries, and launch any pending query.
+      @filterInProgress = false
+      if @mostRecentQuery
+        console.log "running pending query:", @mostRecentQuery[0] if @debug
+        @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
     suggestion.computeRelevancy queryTerms for suggestion in suggestions
