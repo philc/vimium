@@ -56,6 +56,7 @@ class VomnibarUI
   hide: (@postHideCallback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
+    @completer?.reset()
 
   onHidden: ->
     @postHideCallback?()
@@ -175,8 +176,7 @@ class VomnibarUI
 
     completion = suggestions[0].slice query.length, length
 
-    # Don't complete trailing whitespace; so, strip it.  Then, verify that the completion is still long
-    # enough.
+    # Don't complete trailing whitespace, strip it.  Then, verify that the completion is still long enough.
     completion = completion.replace /\s+$/, ""
     return unless 0 < completion.length
 
@@ -187,11 +187,9 @@ class VomnibarUI
     @input.value = query + completion
     @input.setSelectionRange query.length, query.length + completion.length
 
-  #
   # Returns the user's action ("up", "down", "tab", "enter", "dismiss", "delete" or null) based on their
-  # keypress.
-  # We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
-  #
+  # keypress.  We support the arrow keys and various other shortcuts for moving. This method hides that
+  # complexity.
   actionFromKeyEvent: (event) ->
     key = KeyboardUtils.getKeyChar(event)
     if (KeyboardUtils.isEscape(event))
@@ -245,7 +243,7 @@ class VomnibarUI
         if @suppressedLeadingKeyword?
           # This is a custom search engine completion.  Because of the way we add and highlight the text
           # common to all completions in the input (selectCommonMatches), the text in the input might not
-          # correspond to any of the completions.  So we fire the query off to the background page and use the
+          # correspond to any of the completions.  So we fire off the query to the background page and use the
           # completion at the top of the list (which will be the right one).
           @update true, =>
             if @completions[0]
@@ -279,8 +277,9 @@ class VomnibarUI
   onKeypress: (event) =>
     if @inputContainsASelectionRange()
       # As the user types characters which match a highlighted completion suggestion (in the text input), we
-      # suppress the keyboard event and "simulate" it by advancing the start of the highlighted selection.  We
-      # do this so that the selection doesn't flicker as the user types.
+      # suppress the keyboard event and "simulate" it by advancing the start of the highlighted selection (but
+      # only if the typed character matches).  This avoids flicker as the selection is first collapsed then
+      # replaced.
       if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
         console.log "extend selection:", @getInputWithoutSelectionRange()
         @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
@@ -293,7 +292,7 @@ class VomnibarUI
   inputContainsASelectionRange: ->
     @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
 
-  # Return the text of the input, with any selected text renage removed.
+  # Return the text of the input, with any selected text removed.
   getInputWithoutSelectionRange: ->
     if @inputContainsASelectionRange()
       @input.value[0...@input.selectionStart] + @input.value[@input.selectionEnd..]
@@ -301,7 +300,7 @@ class VomnibarUI
       @input.value
 
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
-  # custom search engine keyword which is currently stripped from the input.
+  # search engine keyword which is currently stripped from the input, and strip any selection.
   getInputValueAsQuery: ->
     (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutSelectionRange()
 
@@ -337,15 +336,15 @@ class VomnibarUI
     1 < queryTerms.length and queryTerms[0] in @keywords
 
   update: (updateSynchronously = false, callback = null) =>
-    # If the query text becomes a custom search, then we need to force a synchronous update (so that the
-    # interface is snappy).
+    # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
+    # synchronous update (so that state is updated immediately).
     updateSynchronously ||= @isCustomSearch() and not @suppressedLeadingKeyword?
     if updateSynchronously
       @clearUpdateTimer()
       @updateCompletions callback
     else if not @updateTimer?
       # Update asynchronously for better user experience and to take some load off the CPU (not every
-      # keystroke will cause a dedicated update)
+      # keystroke will cause a dedicated update).
       @updateTimer = Utils.setTimeout @refreshInterval, =>
         @updateTimer = null
         @updateCompletions callback
@@ -376,14 +375,10 @@ class VomnibarUI
 class BackgroundCompleter
   debug: true
 
-  # name is background-page completer to connect to: "omni", "tabs", or "bookmarks".
+  # The "name" is the background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
     @port = chrome.runtime.connect name: "completions"
     @messageId = null
-    # @keywords and @cache are both reset in @reset().
-    # We only cache for the duration of a single vomnibar activation.
-    @keywords = []
-    @cache = {}
     @reset()
 
     @port.onMessage.addListener (msg) =>
@@ -393,17 +388,18 @@ class BackgroundCompleter
           @lastUI.setKeywords @keywords
         when "completions"
           # The result objects coming from the background page will be of the form:
-          #   { html: "", type: "", url: "" }
+          #   { html: "", type: "", url: "", ... }
           # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
           for result in msg.results
-            result.performAction =
-              if result.type == "tab"
-                @completionActions.switchToTab.curry result.tabId
-              else
-                @completionActions.navigateToUrl.curry result.url
+            extend result,
+              performAction:
+                if result.type == "tab"
+                  @completionActions.switchToTab result.tabId
+                else
+                  @completionActions.navigateToUrl result.url
 
-          # Cache the result -- if we have been told it's ok to do so (it could be that more results will be
-          # posted shortly).  We cache the result even if it arrives late.
+          # Cache the results, but only if we have been told it's ok to do so (it could be that more results
+          # will be posted shortly).  We cache the results even if they arrive late.
           if msg.mayCacheResults
             console.log "cache set:", "-#{msg.cacheKey}-" if @debug
             @cache[msg.cacheKey] = msg
@@ -416,7 +412,7 @@ class BackgroundCompleter
   filter: (query, @mostRecentCallback) ->
     queryTerms = query.trim().split(/\s+/).filter (s) -> 0 < s.length
     cacheKey = queryTerms.join " "
-    cacheKey += " " if 0 < queryTerms.length and queryTerms[0] in @keywords and /\s$/.test query
+    cacheKey += " " if queryTerms.length == 1 and queryTerms[0] in @keywords and /\s$/.test query
 
     if cacheKey of @cache
       console.log "cache hit:", "-#{cacheKey}-" if @debug
@@ -432,22 +428,20 @@ class BackgroundCompleter
         cacheKey: cacheKey
 
   reset: ->
-    @keywords = []
-    @cache = {}
+    [ @keywords, @cache ] = [ [], {} ]
 
   refresh: (@lastUI) ->
     @reset()
-    # Inform the background completer that we have a new vomnibar activation.
     @port.postMessage name: @name, handler: "refresh"
 
   cancel: ->
     # Inform the background completer that it may (should it choose to do so) abandon any pending query
-    # (because the user is typing, and there'll be another query along soon).
+    # (because the user is typing, and there will be another query along soon).
     @port.postMessage name: @name, handler: "cancel"
 
   # These are the actions we can perform when the user selects a result.
   completionActions:
-    navigateToUrl: (url, openInNewTab) ->
+    navigateToUrl: (url) -> (openInNewTab) ->
       # If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the current
       # tab.
       openInNewTab &&= not Utils.hasJavascriptPrefix url
@@ -456,7 +450,7 @@ class BackgroundCompleter
         url: url
         selected: openInNewTab
 
-    switchToTab: (tabId) ->
+    switchToTab: (tabId) -> ->
       chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
 
 UIComponentServer.registerHandler (event) ->
