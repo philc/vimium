@@ -376,10 +376,10 @@ class SearchEngineCompleter
           searchUrl: tokens[1]
           description: description
 
-      # Deliver the resulting engines AsyncDataFetcher lookup table.
+      # Deliver the resulting engines AsyncDataFetcher table/data.
       callback engines
 
-      # Let the vomnibar know the custom search engine keywords.
+      # Let the vomnibar in the front end know the custom search engine keywords.
       port.postMessage
         handler: "keywords"
         keywords: key for own key of engines

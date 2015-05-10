@@ -62,7 +62,11 @@ completers =
 completionHandlers =
   filter: (completer, request, port) ->
     completer.filter request, (response) ->
-      port.postMessage extend request, extend response, handler: "completions"
+      # We use try here because this may fail if the sender has already navigated away from the original page.
+      # This can happen, for example, when posting completion suggestions from the SearchEngineCompleter
+      # (which can be slow).
+      try
+        port.postMessage extend request, extend response, handler: "completions"
 
   refresh: (completer, _, port) -> completer.refresh port
   cancel: (completer, _, port) -> completer.cancel port
