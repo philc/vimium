@@ -355,11 +355,14 @@ class TabCompleter
       tabRecency.recencyScore(suggestion.tabId)
 
 class SearchEngineCompleter
-  searchEngineConfig: null
+  searchEngines: null
+
+  cancel: ->
+    CompletionEngines.cancel()
 
   refresh: (port) ->
     # Load and parse the search-engine configuration.
-    @searchEngineConfig = new AsyncDataFetcher (callback) ->
+    @searchEngines = new AsyncDataFetcher (callback) ->
       engines = {}
       for line in Settings.get("searchEngines").split "\n"
         line = line.trim()
@@ -373,18 +376,18 @@ class SearchEngineCompleter
           searchUrl: tokens[1]
           description: description
 
-      # Deliver the resulting engines lookup table.
+      # Deliver the resulting engines AsyncDataFetcher lookup table.
       callback engines
 
       # Let the vomnibar know the custom search engine keywords.
       port.postMessage
-        handler: "customSearchEngineKeywords"
+        handler: "keywords"
         keywords: key for own key of engines
 
   filter: ({ queryTerms, query }, onComplete) ->
     return onComplete [] if queryTerms.length == 0
 
-    @searchEngineConfig.use (engines) =>
+    @searchEngines.use (engines) =>
       keyword = queryTerms[0]
 
       { custom, searchUrl, description, queryTerms } =
@@ -481,9 +484,6 @@ class SearchEngineCompleter
             # between the relevancy scores produced here and those produced by other completers.
             count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
             onComplete suggestions[...count]
-
-  cancel: ->
-    CompletionEngines.cancel()
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.

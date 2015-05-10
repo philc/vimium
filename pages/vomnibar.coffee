@@ -352,7 +352,7 @@ class BackgroundCompleter
 
     @port.onMessage.addListener (msg) =>
       switch msg.handler
-        when "customSearchEngineKeywords"
+        when "keywords"
           @keywords = msg.keywords
           @lastUI.setKeywords @keywords
         when "completions"
