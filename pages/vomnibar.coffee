@@ -112,7 +112,7 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
-  highlightCommonMatches: (response) ->
+  selectCommonMatches: (response) ->
     # For custom search engines, add characters to the input which are:
     #   - not in the query/input
     #   - in all completions
@@ -134,7 +134,7 @@ class VomnibarUI
 
     # Get the completions from which we can select text to highlight.
     completions = @completions.filter (completion) ->
-      completion.highlightCommonMatches? and completion.highlightCommonMatches
+      completion.selectCommonMatches? and completion.selectCommonMatches
 
     # Fetch the query and the suggestion texts.
     query = @input.value.ltrim().split(/\s+/).join(" ").toLowerCase()
@@ -246,7 +246,7 @@ class VomnibarUI
         return unless 0 < query.length
         if @suppressedLeadingKeyword?
           # This is a custom search engine completion.  Because of the way we add and highlight the text
-          # common to all completions in the input (highlightCommonMatches), the text in the input might not
+          # common to all completions in the input (selectCommonMatches), the text in the input might not
           # correspond to any of the completions.  So we fire the query off to the background page and use the
           # completion at the top of the list (which will be the right one).
           @update true, =>
@@ -317,7 +317,7 @@ class VomnibarUI
       @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
       @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
       @updateSelection()
-      @highlightCommonMatches response
+      @selectCommonMatches response
       callback?()
 
   updateOnInput: =>

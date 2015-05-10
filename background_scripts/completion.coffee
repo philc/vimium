@@ -361,7 +361,7 @@ class SearchEngineCompleter
     CompletionSearch.cancel()
 
   refresh: (port) ->
-    # Load and parse the search-engine configuration.
+    # Parse the search-engine configuration.
     @searchEngines = new AsyncDataFetcher (callback) ->
       engines = {}
       for line in Settings.get("searchEngines").split "\n"
@@ -370,16 +370,17 @@ class SearchEngineCompleter
         tokens = line.split /\s+/
         continue unless 2 <= tokens.length
         keyword = tokens[0].split(":")[0]
+        url = tokens[1]
         description = tokens[2..].join(" ") || "search (#{keyword})"
+        continue unless Utils.hasFullUrlPrefix url
         engines[keyword] =
           keyword: keyword
-          searchUrl: tokens[1]
+          searchUrl: url
           description: description
 
-      # Deliver the resulting engines AsyncDataFetcher table/data.
       callback engines
 
-      # Let the vomnibar in the front end know the custom search engine keywords.
+      # Let the front-end vomnibar know the search-engine keywords.
       port.postMessage
         handler: "keywords"
         keywords: key for own key of engines
@@ -388,6 +389,7 @@ class SearchEngineCompleter
     return onComplete [] if queryTerms.length == 0
 
     @searchEngines.use (engines) =>
+      suggestions = []
       keyword = queryTerms[0]
 
       { custom, searchUrl, description, queryTerms } =
@@ -408,30 +410,27 @@ class SearchEngineCompleter
 
       # Relevancy:
       #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
-      #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
-      #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
-      #     suggestion anyway.
+      #     relevancy, say).  We assume that the completion engine has already factored that in.  Also,
+      #     completion engines often handle spelling mistakes, in which case we wouldn't find the query terms
+      #     in the suggestion anyway.
+      #   - Scores are weighted such that they retain the order provided by the completion engine.
       #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
       #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
       #     a useful suggestion from another completer.
-      #   - Scores are weighted such that they retain the order provided by the completion engine.
+      #
       characterCount = query.length - queryTerms.length + 1
       relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
       # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
       # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
-      # engines for which we do not have a completion engine.
+      # engines for which we do not have a completion engine.  By "exclusive vomnibar", we mean suggestions
+      # from other completers are suppressed (so the vomnibar "exclusively" uses suggestions from this search
+      # engine).
       useExclusiveVomnibar = custom and haveCompletionEngine
-
-      # If this is a custom search engine and we have a completer, then we exclude results from other
-      # completers.
       filter = if useExclusiveVomnibar then (suggestion) -> suggestion.type == description else null
 
-      suggestions = []
-
       # For custom search engines, we add a single, top-ranked entry for the unmodified query.  This
-      # suggestion always appears at the top of the suggestion list.  Its setting serve to define various
-      # vomnibar behaviors.
+      # suggestion always appears at the top of the list.
       if custom
         suggestions.push new Suggestion
           queryTerms: queryTerms
@@ -442,15 +441,11 @@ class SearchEngineCompleter
           insertText: if useExclusiveVomnibar then query else null
           # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
           suppressLeadingKeyword: true
-          # Should we highlight (via the selection) the longest continuation of the current query which is
-          # contained in all completions?
-          completeSuggestions: useExclusiveVomnibar
+          selectCommonMatches: false
           # Toggles for the legacy behaviour.
           autoSelect: not useExclusiveVomnibar
           forceAutoSelect: not useExclusiveVomnibar
           highlightTerms: not useExclusiveVomnibar
-          # Do not use this entry for vomnibar completion (highlighting the common text of the suggestions).
-          highlightCommonMatches: false
 
       mkSuggestion = do ->
         (suggestion) ->
@@ -460,14 +455,12 @@ class SearchEngineCompleter
             url: Utils.createSearchUrl suggestion, searchUrl
             title: suggestion
             relevancy: relavancy *= 0.9
-            highlightTerms: false
             insertText: suggestion
-            # Do use this entry for vomnibar completion.
-            highlightCommonMatches: true
+            highlightTerms: false
+            selectCommonMatches: true
 
-      # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to do an HTTP
-      # request, which we do asynchronously).  This is a synchronous call (for cached suggestions only)
-      # because no callback is provided.
+      # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
+      # asynchronously).
       cachedSuggestions = CompletionSearch.complete searchUrl, queryTerms
 
       # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
@@ -476,42 +469,15 @@ class SearchEngineCompleter
         if cachedSuggestions?
           console.log "using cached suggestions:", query
           suggestions.push cachedSuggestions.map(mkSuggestion)...
-        return onComplete suggestions, { filter }
+        return onComplete suggestions, { filter, continuation: null }
 
-      # Post any initial suggestion, and then deliver suggestions from completion engines as a continuation
-      # (so, asynchronously).
+      # Post any initial suggestion, and then deliver the rest of the suggestions as a continuation (so,
+      # asynchronously).
       onComplete suggestions,
         filter: filter
-        continuation: (existingSuggestions, onComplete) =>
-          suggestions = []
-
-          if 0 < existingSuggestions.length
-            existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
-            if relavancy < existingSuggestionsMinScore and maxResults <= existingSuggestions.length
-              # No suggestion we propose will have a high enough relavancy to beat the existing suggestions, so bail
-              # immediately.
-              console.log "skip: cannot add completions" if @debug
-              return onComplete []
-
-          CompletionSearch.complete searchUrl, queryTerms, (completionSuggestions = []) =>
-            for suggestion in completionSuggestions
-              suggestions.push new Suggestion
-                queryTerms: queryTerms
-                type: description
-                url: Utils.createSearchUrl suggestion, searchUrl
-                title: suggestion
-                relevancy: relavancy *= 0.9
-                highlightTerms: false
-                insertText: suggestion
-                # Do use this entry for vomnibar completion.
-                highlightCommonMatches: true
-
-            # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
-            # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
-            # from other completers.  That would potentially be a problem because there is no relationship
-            # between the relevancy scores produced here and those produced by other completers.
-            count = Math.min 6, Math.max 3, maxResults - existingSuggestions.length
-            onComplete suggestions[...count]
+        continuation: (onComplete) =>
+          CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
+            onComplete suggestions.map mkSuggestion
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
@@ -520,11 +486,8 @@ class MultiCompleter
 
   constructor: (@completers) ->
 
-  refresh: (port) ->
-    completer.refresh? port for completer in @completers
-
-  cancel: (port) ->
-    completer.cancel? port for completer in @completers
+  refresh: (port) -> completer.refresh? port for completer in @completers
+  cancel: (port) -> completer.cancel? port for completer in @completers
 
   filter: (request, onComplete) ->
     @debug = true
@@ -533,14 +496,9 @@ class MultiCompleter
 
     RegexpCache.clear()
     { queryTerms } = request
-    request.maxResults = @maxResults
 
-    @mostRecentQuery = null
-    @filterInProgress = true
-
-    suggestions = []
-    continuations = []
-    filters = []
+    [ @mostRecentQuery, @filterInProgress ] = [ null, true ]
+    [ suggestions, continuations, filters ] = [ [], [], [] ]
 
     # Run each of the completers (asynchronously).
     jobs = new JobRunner @completers.map (completer) ->
@@ -554,38 +512,37 @@ class MultiCompleter
     # Once all completers have finished, process and post the results, and run any continuations or pending
     # queries.
     jobs.onReady =>
-      # Apply filters.
       suggestions = suggestions.filter filter for filter in filters
-
-      # Should we run continuations?
       shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
 
-      # Post results, unless there are none AND we will be running a continuation.  This avoids
+      # Post results, unless there are none and we will be running a continuation.  This avoids
       # collapsing the vomnibar briefly before expanding it again, which looks ugly.
       unless suggestions.length == 0 and shouldRunContinuations
+        suggestions = @prepareSuggestions queryTerms, suggestions
         onComplete
-          results: @prepareSuggestions queryTerms, suggestions
+          results: suggestions
           mayCacheResults: continuations.length == 0
 
       # Run any continuations (asynchronously).
       if shouldRunContinuations
-        continuationJobs = new JobRunner continuations.map (continuation) ->
+        jobs = new JobRunner continuations.map (continuation) ->
           (callback) ->
-            continuation suggestions, (newSuggestions) ->
+            continuation (newSuggestions) ->
               suggestions.push newSuggestions...
               callback()
 
-        continuationJobs.onReady =>
+        jobs.onReady =>
+          suggestions = @prepareSuggestions queryTerms, suggestions
           # We post these results even if a new query has started.  The vomnibar will not display the
-          # completions, but will cache the results.
+          # completions (they're arriving too late), but it will cache them.
           onComplete
-            results: @prepareSuggestions queryTerms, suggestions
+            results: suggestions
             mayCacheResults: true
 
       # Admit subsequent queries, and launch any pending query.
       @filterInProgress = false
       if @mostRecentQuery
-        console.log "running pending query:", @mostRecentQuery[0] if @debug
+        console.log "running pending query:", @mostRecentQuery[0].query if @debug
         @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
