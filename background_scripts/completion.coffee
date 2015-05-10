@@ -466,7 +466,7 @@ class SearchEngineCompleter
           insertText: suggestion
           highlightTerms: false
           selectCommonMatches: true
-          custonSearchEngineCompletionSuggestion: true
+          customSearchEngineCompletionSuggestion: true
 
     # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
     # asynchronously).

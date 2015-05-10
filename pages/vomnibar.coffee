@@ -201,13 +201,12 @@ class VomnibarUI
     # We only highlight matches when the query gets longer (so, not on deletions).
     return unless previousLength < currentLength
 
-    completion = do =>
+    completion = do (completion) =>
       for completion in @completions
         continue if completion.custonSearchEnginePrimarySuggestion
-        return completion if completion.custonSearchEngineCompletionSuggestion
-        return null
+        return completion if completion.customSearchEngineCompletionSuggestion
+      null
 
-    console.log 1
     return unless completion
 
     # Fetch the query and suggestion.
@@ -215,13 +214,10 @@ class VomnibarUI
     suggestion = completion.title
 
     index = suggestion.toLowerCase().indexOf query
-    console.log 2
-    return unless index <= 1
+    return unless 0 <= index
 
     suggestion = suggestion[index..]
-    console.log 3, suggestion
     return unless query.length < suggestion.length
-    console.log 4
 
     # If the typed text is all lower case, then make the completion lower case too.
     suggestion = suggestion.toLowerCase() unless /[A-Z]/.test @getInputWithoutSelectionRange()
@@ -263,11 +259,13 @@ class VomnibarUI
     else if action in [ "tab", "down" ]
       if action == "tab"
         if @inputContainsASelectionRange()
-          # The first tab collapses the selection to the end.
-          window.getSelection()?.collapseToEnd()
-          @updateOnInput()
+          # Tab moves the start of the selection to the end of the current word.
+          text = @input.value[@input.selectionStart..]
+          length = text.length
+          text = text.replace /^\s*\S+/, ""
+          @input.setSelectionRange @input.selectionStart + (length - text.length), @input.selectionEnd
         else
-          # Subsequent tabs behave the same as "down".
+          # Other tabs behave the same as "down".
           action = "down"
       if action == "down"
         @selection += 1
