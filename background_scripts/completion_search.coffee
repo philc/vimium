@@ -74,7 +74,7 @@ CompletionSearch =
       reusePreviousSuggestions = do =>
         # Verify that the previous query is a prefix of the current query.
         return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
-        # Ensure that every previous suggestion contains the text of the new query.
+        # Verify that every previous suggestion contains the text of the new query.
         for suggestion in (@mostRecentSuggestions.map (s) -> s.toLowerCase())
           return false unless 0 <= suggestion.indexOf query
         # Ok. Re-use the suggestion.
