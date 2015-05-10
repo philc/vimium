@@ -406,6 +406,18 @@ class SearchEngineCompleter
       query = queryTerms.join " "
       haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
 
+      # Relevancy:
+      #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
+      #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
+      #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
+      #     suggestion anyway.
+      #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
+      #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
+      #     a useful suggestion from another completer.
+      #   - Scores are weighted such that they retain the order provided by the completion engine.
+      characterCount = query.length - queryTerms.length + 1
+      relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
+
       # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
       # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
       # engines for which we do not have a completion engine.
@@ -440,8 +452,30 @@ class SearchEngineCompleter
           # Do not use this entry for vomnibar completion.
           highlightCommonMatches: false
 
-      # Post suggestions and bail if there is no prospect of adding further suggestions.
-      if queryTerms.length == 0 or not haveCompletionEngine
+      mkSuggestion = do ->
+        (suggestion) ->
+          new Suggestion
+            queryTerms: queryTerms
+            type: description
+            url: Utils.createSearchUrl suggestion, searchUrl
+            title: suggestion
+            relevancy: relavancy *= 0.9
+            highlightTerms: false
+            insertText: suggestion
+            # Do use this entry for vomnibar completion.
+            highlightCommonMatches: true
+
+      # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to do an HTTP
+      # request, which we do asynchronously).  This is a synchronous call (for cached suggestions only)
+      # because no callback is provided.
+      cachedSuggestions = CompletionEngines.complete searchUrl, queryTerms
+
+      # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
+      # adding further suggestions.
+      if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
+        if cachedSuggestions?
+          console.log "using cached suggestions"
+          suggestions.push cachedSuggestions.map(mkSuggestion)...
         return onComplete suggestions, { filter }
 
       # Post any initial suggestion, and then deliver suggestions from completion engines as a continuation
@@ -450,17 +484,6 @@ class SearchEngineCompleter
         filter: filter
         continuation: (existingSuggestions, onComplete) =>
           suggestions = []
-          # Relevancy:
-          #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
-          #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
-          #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
-          #     suggestion anyway.
-          #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
-          #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
-          #     a useful suggestion from another completer.
-          #   - Scores are weighted such that they retain the order provided by the completion engine.
-          characterCount = query.length - queryTerms.length + 1
-          relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
           if 0 < existingSuggestions.length
             existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy

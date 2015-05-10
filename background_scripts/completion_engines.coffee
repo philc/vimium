@@ -161,9 +161,15 @@ CompletionEngines =
   #  - queryTerms are the query terms.
   #  - callback will be applied to a list of suggestion strings (which may be an empty list, if anything goes
   #    wrong).
-  complete: (searchUrl, queryTerms, callback) ->
+  complete: (searchUrl, queryTerms, callback = null) ->
     @mostRecentHandler = null
     query = queryTerms.join ""
+
+    # If no callback is provided, then we're to provide suggestions only if we can do so synchronously (ie.
+    # from a cache).  In this case we return the results and don't call callback.  Return null if we cannot
+    # service the request synchronously.
+    returnResultsOnlyFromCache = not callback?
+    callback ?= (suggestions) -> suggestions
 
     # We don't complete single characters: the results are usually useless.
     return callback [] unless 1 < query.length
@@ -179,16 +185,20 @@ CompletionEngines =
     completionCacheKey = searchUrl + junk + queryTerms.map((s) -> s.toLowerCase()).join junk
     @completionCache ?= new SimpleCache 60 * 60 * 1000, 2000 # One hour, 2000 entries.
     if @completionCache.has completionCacheKey
-      # We add a short delay, even for a cache hit.  This avoids an ugly flicker when the additional
-      # suggestions are posted.
-      Utils.setTimeout 75, =>
-        console.log "hit", completionCacheKey if @debug
-        callback @completionCache.get completionCacheKey
-      return
+      if returnResultsOnlyFromCache
+        return @completionCache.get completionCacheKey
+      else
+        # We add a short delay, even for a cache hit.  This avoids an ugly flicker when the additional
+        # suggestions are posted.
+        Utils.setTimeout 75, =>
+          console.log "hit", completionCacheKey if @debug
+          callback @completionCache.get completionCacheKey
+        return
 
     if @mostRecentQuery? and @mostRecentSuggestions?
-      # If the user appears to be typing a continuation of the characters in all of the most recent query,
-      # then we can re-use the results of the previous query.
+      # If the user appears to be typing a continuation of the characters of the most recent query, and those
+      # characters are also common to all of the most recent suggestions, then we can re-use the previous
+      # suggestions.
       reusePreviousSuggestions = do (query) =>
         query = queryTerms.join(" ").toLowerCase()
         return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
@@ -200,6 +210,8 @@ CompletionEngines =
         console.log "reuse previous query", @mostRecentQuery if @debug
         @mostRecentQuery = queryTerms.join " "
         return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
+
+    return null if returnResultsOnlyFromCache
 
     fetchSuggestions = (engine, callback) =>
       url = engine.getUrl queryTerms
