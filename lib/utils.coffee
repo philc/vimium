@@ -184,6 +184,16 @@ Utils =
       return true if re.test string
     false
 
+  # Calculate the length of the longest shared prefix of a list of strings.
+  longestCommonPrefix: (strings) ->
+    return 0 unless 0 < strings.length
+    strings.sort (a,b) -> a.length - b.length
+    [ shortest, strings... ] = strings
+    for ch, index in shortest.split ""
+      for str in strings
+        return index if ch != str[index]
+    return shortest.length
+
   # Convenience wrapper for setTimeout (with the arguments around the other way).
   setTimeout: (ms, func) -> setTimeout func, ms
 
