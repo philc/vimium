@@ -274,14 +274,14 @@ class SimpleCache
     @rotate()
 
 # This is a simple class for the common case where we want to use some data value which may be immediately
-# available, or for which we may have to wait.  It implements the use-immediately-or-wait queue, and calls the
-# function to fetch the data asynchronously.
+# available, or for which we may have to wait.  It implements a use-immediately-or-wait queue, and calls the
+# fetch function to fetch the data asynchronously.
 class AsyncDataFetcher
   constructor: (fetch) ->
     @data = null
     @queue = []
-    fetch (@data) =>
-      Utils.nextTick =>
+    Utils.nextTick =>
+      fetch (@data) =>
         callback @data for callback in @queue
         @queue = null
 
