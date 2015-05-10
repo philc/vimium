@@ -474,7 +474,7 @@ class SearchEngineCompleter
       # adding further suggestions.
       if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
         if cachedSuggestions?
-          console.log "using cached suggestions"
+          console.log "using cached suggestions:", query
           suggestions.push cachedSuggestions.map(mkSuggestion)...
         return onComplete suggestions, { filter }
 

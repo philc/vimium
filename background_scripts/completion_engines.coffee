@@ -210,7 +210,7 @@ CompletionEngines =
         true
 
       if reusePreviousSuggestions
-        console.log "reuse previous query", @mostRecentQuery if @debug
+        console.log "reuse previous query:", @mostRecentQuery if @debug
         @mostRecentQuery = queryTerms.join " "
         return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
 

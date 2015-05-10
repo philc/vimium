@@ -129,10 +129,10 @@ class VomnibarUI
     currentLength = @input.value.length
     @previousLength = currentLength
 
-    # We only highlight matches if the query gets longer (so, not on deletions).
+    # We only highlight matches when the query gets longer (so, not on deletions).
     return unless previousLength < currentLength
 
-    # Get the completions for which we can highlight matching text.
+    # Get the completions from which we can select text to highlight.
     completions = @completions.filter (completion) ->
       completion.highlightCommonMatches? and completion.highlightCommonMatches
 
@@ -173,19 +173,21 @@ class VomnibarUI
       length
 
     # Bail if there's nothing to complete.
-    return unless  query.length < length
-
-    # Don't highlight only whitespace (that is, the entire common text consists only of whitespace).
-    return if /^\s+$/.test suggestions[0].slice query.length, length
+    return unless query.length < length
 
     completion = suggestions[0].slice query.length, length
+
+    # Don't complete trailing whitespace; so, strip it.  Then , verify that the completion is still long
+    # enough.
+    completion = completion.replace /\s+$/, ""
+    return unless 0 < completion.length
 
     # If the typed text is all lower case, then make the completion lower case too.
     completion = completion.toLowerCase() unless /[A-Z]/.test @input.value
 
-    # Highlight match.
+    # Insert the completion and highlight it.
     @input.value = @input.value + completion
-    @input.setSelectionRange query.length, length
+    @input.setSelectionRange query.length, query.length + completion.length
 
   #
   # Returns the user's action ("up", "down", "tab", "enter", "dismiss", "delete" or null) based on their
