@@ -327,20 +327,40 @@ setScrollPosition = (scrollX, scrollY) ->
 #
 # Called from the backend in order to change frame focus.
 #
-window.focusThisFrame = (request) ->
-  if window.innerWidth < 3 or window.innerHeight < 3
-    # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
-    # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
-    # Here we're assuming that there is at least one frame large enough to focus.
-    chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
-    return
-  window.focus()
-  shouldHighlight = request.highlight
-  shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
-  if document.body and shouldHighlight
-    borderWas = document.body.style.border
-    document.body.style.border = '5px solid yellow'
-    setTimeout((-> document.body.style.border = borderWas), 200)
+window.focusThisFrame = do ->
+  # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
+  highlightedFrameElement = document.createElement "div"
+  # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
+  _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
+
+  # Inject stylesheet.
+  _styleSheet = document.createElement "style"
+  if _styleSheet.style?
+    _styleSheet.innerHTML = ""
+    _shadowDOM.appendChild _styleSheet
+    # Load stylesheet.
+    xhr = new XMLHttpRequest()
+    xhr.onload = (e) -> _styleSheet.innerHTML = xhr.responseText
+    xhr.open "GET", chrome.runtime.getURL("content_scripts/vimium.css"), true
+    xhr.send()
+
+  _frameEl = document.createElement "div"
+  _frameEl.className = "vimiumReset vimiumHighlightedFrame"
+  _shadowDOM.appendChild _frameEl
+
+  (request) ->
+    if window.innerWidth < 3 or window.innerHeight < 3
+      # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
+      # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
+      # Here we're assuming that there is at least one frame large enough to focus.
+      chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
+      return
+    window.focus()
+    shouldHighlight = request.highlight
+    shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
+    if shouldHighlight
+      document.documentElement.appendChild highlightedFrameElement
+      setTimeout (-> highlightedFrameElement.remove()), 200
 
 extend window,
   scrollToBottom: -> Scroller.scrollTo "y", "max"
