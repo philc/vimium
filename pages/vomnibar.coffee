@@ -218,16 +218,17 @@ class VomnibarUI
       @updateSelection()
     else if (action == "enter")
       if @selection == -1
+        # The user has not selected a suggestion.
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
         if @suppressedLeadingKeyword?
-          # This is a custom search engine completion.  Because of the way we add the text common to all
-          # completions to the input (highlighted), the text in the input might not correspond to any of the
-          # completions.  So we fire the query off to the background page and use the completion at the top of
-          # the list (which will be the right one).
+          # This is a custom search engine completion.  Because of the way we add and highlight the text
+          # common to all completions in the input (highlightCommonMatches), the text in the input might not
+          # correspond to any of the completions.  So we fire the query off to the background page and use the
+          # completion at the top of the list (which will be the right one).
           @update true, =>
-            if @completions[0]?
+            if @completions[0]
               completion = @completions[0]
               @hide -> completion.performAction openInNewTab
         else
