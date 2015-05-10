@@ -99,25 +99,23 @@ class VomnibarUI
         selectionEnd: @input.selectionEnd
       @input.value = @completions[@selection].insertText + (if @selection == 0 then "" else " ")
     else if @previousInputValue?
-        @input.value = @previousInputValue.value
-        if @previousInputValue.selectionStart? and @previousInputValue.selectionEnd? and
-          @previousInputValue.selectionStart != @previousInputValue.selectionEnd
-            @input.setSelectionRange @previousInputValue.selectionStart, @previousInputValue.selectionEnd
-        @previousInputValue = null
+      # Restore the text.
+      @input.value = @previousInputValue.value
+      # Restore the selection.
+      if @previousInputValue.selectionStart? and @previousInputValue.selectionEnd? and
+        @previousInputValue.selectionStart != @previousInputValue.selectionEnd
+          @input.setSelectionRange @previousInputValue.selectionStart, @previousInputValue.selectionEnd
+      @previousInputValue = null
 
-    # Highlight the the selected entry, and only the selected entry.
-    @highlightTheSelectedEntry()
-
-  highlightTheSelectedEntry: ->
+    # Highlight the selected entry, and only the selected entry.
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
+  # This identifies the common part of all of the (relevant) suggestions which has yet to be typed, adds that
+  # text to the input and selects it. Tab (or just Enter) can then be used to accept the new text, or the user
+  # can just continue typing.
   selectCommonMatches: (response) ->
-    # For custom search engines, add characters to the input which are:
-    #   - not in the query/input
-    #   - in all completions
-    # and select the added text.
-
+    #
     # Bail if we don't yet have the background completer's final word on the current query.
     return unless response.mayCacheResults
 
@@ -142,8 +140,8 @@ class VomnibarUI
 
     # Some completion engines add text at the start of the suggestion; for example, Bing takes "they might be"
     # and suggests "Ana Ng They Might be Giants".  In such cases, we should still be able to complete
-    # "giants". So, if the query string is present in the suggestion but there is an extra prefix, we strip
-    # the prefix.
+    # "giants". So, if the query string is present in the suggestion but there is extra text at the start, we
+    # strip the prefix.
     suggestions =
       for suggestion in suggestions
         index = Math.max 0, suggestion.toLowerCase().indexOf query
@@ -177,7 +175,7 @@ class VomnibarUI
 
     completion = suggestions[0].slice query.length, length
 
-    # Don't complete trailing whitespace; so, strip it.  Then , verify that the completion is still long
+    # Don't complete trailing whitespace; so, strip it.  Then, verify that the completion is still long
     # enough.
     completion = completion.replace /\s+$/, ""
     return unless 0 < completion.length
@@ -186,7 +184,7 @@ class VomnibarUI
     completion = completion.toLowerCase() unless /[A-Z]/.test @input.value
 
     # Insert the completion and highlight it.
-    @input.value = @input.value + completion
+    @input.value = query + completion
     @input.setSelectionRange query.length, query.length + completion.length
 
   #
