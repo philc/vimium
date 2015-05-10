@@ -330,7 +330,8 @@ setScrollPosition = (scrollX, scrollY) ->
 window.focusThisFrame = do ->
   # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
   highlightedFrameElement = document.createElement "div"
-  _shadowDOM = highlightedFrameElement.createShadowRoot()
+  # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
+  _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
 
   # Inject stylesheet.
   _styleSheet = document.createElement "style"
