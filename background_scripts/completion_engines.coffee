@@ -213,6 +213,21 @@ CompletionEngines =
 
     return null if returnResultsOnlyFromCache
 
+    if @mostRecentQuery? and @mostRecentSuggestions?
+      # If the user appears to be typing a continuation of the characters in all of the most recent query,
+      # then we can re-use the results of the previous query.
+      reusePreviousSuggestions = do (query) =>
+        query = queryTerms.join(" ").toLowerCase()
+        return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
+        previousSuggestions = @mostRecentSuggestions.map (s) -> s.toLowerCase()
+        return false unless query.length <= Utils.longestCommonPrefix previousSuggestions
+        true
+
+      if reusePreviousSuggestions
+        console.log "reuse previous query", @mostRecentQuery if @debug
+        @mostRecentQuery = queryTerms.join " "
+        return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
+
     fetchSuggestions = (engine, callback) =>
       url = engine.getUrl queryTerms
       query = queryTerms.join(" ").toLowerCase()
