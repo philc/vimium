@@ -256,6 +256,16 @@ class VomnibarUI
     event.preventDefault()
     true
 
+  onKeypress: (event) =>
+    if @inputContainsASelectionRange()
+      if @input.value[@input.selectionStart][0] == String.fromCharCode event.charCode
+        console.log "extend selection:", @getInputWithoutSelectionRange()
+        @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
+        @update()
+        event.stopImmediatePropagation()
+        event.preventDefault()
+    true
+
   # Test whether the input contains selected text.
   inputContainsASelectionRange: ->
     @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
@@ -270,7 +280,7 @@ class VomnibarUI
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
   # custom search engine keyword which is currently stripped from the input.
   getInputValueAsQuery: ->
-    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @input.value
+    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutSelectionRange()
 
   updateCompletions: (callback = null) ->
     @completer.filter @getInputValueAsQuery(), (response) =>
@@ -325,6 +335,7 @@ class VomnibarUI
     @input = @box.querySelector("input")
     @input.addEventListener "input", @updateOnInput
     @input.addEventListener "keydown", @onKeydown
+    @input.addEventListener "keypress", @onKeypress
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
 
