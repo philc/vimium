@@ -384,7 +384,7 @@ class SearchEngineCompleter
         handler: "keywords"
         keywords: key for own key of engines
 
-  filter: ({ queryTerms, query }, onComplete) ->
+  filter: ({ queryTerms, query, maxResults }, onComplete) ->
     return onComplete [] if queryTerms.length == 0
 
     @searchEngines.use (engines) =>
@@ -421,11 +421,11 @@ class SearchEngineCompleter
       # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
       # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
       # engines for which we do not have a completion engine.
-      version2 = custom and haveCompletionEngine
+      useExclusiveVomnibar = custom and haveCompletionEngine
 
       # If this is a custom search engine and we have a completer, then we exclude results from other
       # completers.
-      filter = if version2 then (suggestion) -> suggestion.type == description else null
+      filter = if useExclusiveVomnibar then (suggestion) -> suggestion.type == description else null
 
       suggestions = []
 
@@ -439,17 +439,17 @@ class SearchEngineCompleter
           url: Utils.createSearchUrl queryTerms, searchUrl
           title: query
           relevancy: 1
-          insertText: if version2 then query else null
+          insertText: if useExclusiveVomnibar then query else null
           # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
           suppressLeadingKeyword: true
           # Should we highlight (via the selection) the longest continuation of the current query which is
           # contained in all completions?
-          completeSuggestions: version2
+          completeSuggestions: useExclusiveVomnibar
           # Toggles for the legacy behaviour.
-          autoSelect: not version2
-          forceAutoSelect: not version2
-          highlightTerms: not version2
-          # Do not use this entry for vomnibar completion.
+          autoSelect: not useExclusiveVomnibar
+          forceAutoSelect: not useExclusiveVomnibar
+          highlightTerms: not useExclusiveVomnibar
+          # Do not use this entry for vomnibar completion (highlighting the common text of the suggestions).
           highlightCommonMatches: false
 
       mkSuggestion = do ->
@@ -487,9 +487,10 @@ class SearchEngineCompleter
 
           if 0 < existingSuggestions.length
             existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
-            if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
+            if relavancy < existingSuggestionsMinScore and maxResults <= existingSuggestions.length
               # No suggestion we propose will have a high enough relavancy to beat the existing suggestions, so bail
               # immediately.
+              console.log "skip: cannot add completions" if @debug
               return onComplete []
 
           CompletionEngines.complete searchUrl, queryTerms, (completionSuggestions = []) =>
@@ -509,16 +510,15 @@ class SearchEngineCompleter
             # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
             # from other completers.  That would potentially be a problem because there is no relationship
             # between the relevancy scores produced here and those produced by other completers.
-            count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
+            count = Math.min 6, Math.max 3, maxResults - existingSuggestions.length
             onComplete suggestions[...count]
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.
 class MultiCompleter
-  @maxResults: 10
+  maxResults: 10
 
   constructor: (@completers) ->
-    @maxResults = MultiCompleter.maxResults
 
   refresh: (port) ->
     completer.refresh? port for completer in @completers
@@ -533,6 +533,7 @@ class MultiCompleter
 
     RegexpCache.clear()
     { queryTerms } = request
+    request.maxResults = @maxResults
 
     @mostRecentQuery = null
     @filterInProgress = true

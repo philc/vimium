@@ -18,7 +18,7 @@ Vomnibar =
       newTab: false
       selectFirst: false
     extend options, userOptions
-    extend options, refreshInterval: if options.completer == "omni" then 100 else 0
+    extend options, refreshInterval: if options.completer == "omni" then 150 else 0
 
     completer = @getCompleter options.completer
     @vomnibarUI ?= new VomnibarUI()
@@ -136,26 +136,40 @@ class VomnibarUI
     completions = @completions.filter (completion) ->
       completion.highlightCommonMatches? and completion.highlightCommonMatches
 
-    # Bail if these aren't any completions.
-    return unless 0 < completions.length
-
     # Fetch the query and the suggestion texts.
     query = @input.value.ltrim().split(/\s+/).join(" ").toLowerCase()
     suggestions = completions.map (completion) -> completion.title
 
-    # Ensure that the query is a prefix of all of the suggestions.
+    # Some completion engines add text at the start of the suggestion; for example, Bing takes "they might be"
+    # and suggests "Ana Ng They Might be Giants".  In such cases, we should still be able to complete
+    # "giants". So, if the query string is present in the suggestion but there is an extra prefix, we strip
+    # the prefix.
+    suggestions =
+      for suggestion in suggestions
+        index = Math.max 0, suggestion.toLowerCase().indexOf query
+        suggestion[index..]
+
+    # Strip suggestions which aren't longer than the query (they can't help).
+    suggestions = suggestions.filter (suggestion) -> query.length < suggestion.length
+
+    # Ensure that the query is a prefix of all remaining suggestions.
     for suggestion in suggestions
       return unless 0 == suggestion.toLowerCase().indexOf query
 
-    # Calculate the length of the shotest suggestion.
+    # Bail if these aren't any remaining completions.
+    return unless 0 < completions.length
+
+    # Calculate the length of the shortest suggestion.
     length = suggestions[0].length
     length = Math.min length, suggestion.length for suggestion in suggestions
 
     # Find the the length of the longest common continuation.
-    length = do ->
+    length = do (suggestions) ->
+      suggestions = suggestions.map (s) -> s.toLowerCase()
+      [ first, suggestions... ] = suggestions
       for index in [query.length...length]
         for suggestion in suggestions
-          return index if suggestions[0][index].toLowerCase() != suggestion[index].toLowerCase()
+          return index if first[index] != suggestion[index]
       length
 
     # Bail if there's nothing to complete.
@@ -164,8 +178,13 @@ class VomnibarUI
     # Don't highlight only whitespace (that is, the entire common text consists only of whitespace).
     return if /^\s+$/.test suggestions[0].slice query.length, length
 
+    completion = suggestions[0].slice query.length, length
+
+    # If the typed text is all lower case, then make the completion lower case too.
+    completion = completion.toLowerCase() unless /[A-Z]/.test @input.value
+
     # Highlight match.
-    @input.value = suggestions[0].slice 0, length
+    @input.value = @input.value + completion
     @input.setSelectionRange query.length, length
 
   #
@@ -205,6 +224,7 @@ class VomnibarUI
         if @inputContainsASelectionRange()
           # The first tab collapses the selection to the end.
           window.getSelection()?.collapseToEnd()
+          @updateOnInput()
         else
           # Subsequent tabs behave the same as "down".
           action = "down"
@@ -258,10 +278,13 @@ class VomnibarUI
 
   onKeypress: (event) =>
     if @inputContainsASelectionRange()
-      if @input.value[@input.selectionStart][0] == String.fromCharCode event.charCode
+      # As the user types characters which match a highlighted completion suggestion (in the text input), we
+      # suppress the keyboard event and "simulate" it by advancing the start of the highlighted selection.  We
+      # do this so that the selection doesn't flicker as the user types.
+      if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
         console.log "extend selection:", @getInputWithoutSelectionRange()
         @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
-        @update()
+        @updateOnInput()
         event.stopImmediatePropagation()
         event.preventDefault()
     true

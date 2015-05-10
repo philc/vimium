@@ -126,7 +126,8 @@ CompletionEngines =
 
   # The amount of time to wait for new requests before launching the HTTP request.  The intention is to cut
   # down on the number of HTTP requests we issue.
-  delay: 100
+  # delay: 100
+  delay: 0
 
   get: (searchUrl, url, callback) ->
     xhr = new XMLHttpRequest()
@@ -190,20 +191,22 @@ CompletionEngines =
       else
         # We add a short delay, even for a cache hit.  This avoids an ugly flicker when the additional
         # suggestions are posted.
-        Utils.setTimeout 75, =>
+        Utils.setTimeout 50, =>
           console.log "hit", completionCacheKey if @debug
           callback @completionCache.get completionCacheKey
         return
 
     if @mostRecentQuery? and @mostRecentSuggestions?
-      # If the user appears to be typing a continuation of the characters of the most recent query, and those
-      # characters are also common to all of the most recent suggestions, then we can re-use the previous
-      # suggestions.
+      # If the user appears to be typing a continuation of the characters of the most recent query, then we
+      # can re-use the previous suggestions.
       reusePreviousSuggestions = do (query) =>
         query = queryTerms.join(" ").toLowerCase()
+        # Verify that the previous query is a prefix of the current query.
         return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
-        previousSuggestions = @mostRecentSuggestions.map (s) -> s.toLowerCase()
-        return false unless query.length <= Utils.longestCommonPrefix previousSuggestions
+        # Ensure that every previous suggestion contains the text of the new query.
+        for suggestion in (@mostRecentSuggestions.map (s) -> s.toLowerCase())
+          return false unless 0 <= suggestion.indexOf query
+        # Ok. Re-use the suggestion.
         true
 
       if reusePreviousSuggestions
