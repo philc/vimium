@@ -449,6 +449,7 @@ class SearchEngineCompleter
         # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
         suppressLeadingKeyword: true
         selectCommonMatches: false
+        custonSearchEnginePrimarySuggestion: true
         # Toggles for the legacy behaviour.
         autoSelect: not useExclusiveVomnibar
         forceAutoSelect: not useExclusiveVomnibar
@@ -465,6 +466,7 @@ class SearchEngineCompleter
           insertText: suggestion
           highlightTerms: false
           selectCommonMatches: true
+          custonSearchEngineCompletionSuggestion: true
 
     # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
     # asynchronously).
