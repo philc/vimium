@@ -260,6 +260,22 @@ class SimpleCache
       delete @previous[key]
     value
 
+# This is a simple class for the common case where we want to use some data value which may be immediately
+# available, or we may have to wait.  It implements the use-immediately-or-wait queue, and calls the function
+# to fetch the data asynchronously.
+class AsyncDataFetcher
+  constructor: (fetch) ->
+    @data = null
+    @queue = []
+    fetch (@data) =>
+      Utils.nextTick =>
+        callback @data for callback in @queue
+        @queue = null
+
+  use: (callback) ->
+    if @data? then callback @data else @queue.push callback
+
 root = exports ? window
 root.Utils = Utils
 root.SimpleCache = SimpleCache
+root.AsyncDataFetcher = AsyncDataFetcher

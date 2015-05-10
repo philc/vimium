@@ -70,14 +70,5 @@ context "settings",
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(message) }
     assert.equal message, Sync.message
 
-  should "set search engines, retrieve them correctly and check that they have been parsed correctly", ->
-    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
-    Settings.set 'searchEngines', searchEngines
-    result = SearchEngineCompleter.getSearchEngines()
-    assert.equal "bar?q=%s", result["foo"].searchUrl
-    assert.isFalse result["foo"].description
-    assert.equal "qux?q=%s", result["baz"].searchUrl
-    assert.equal "baz description", result["baz"].description
-
   should "sync a key which is not a known setting (without crashing)", ->
     chrome.storage.sync.set { notASetting: JSON.stringify("notAUsefullValue") }

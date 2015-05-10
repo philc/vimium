@@ -355,143 +355,135 @@ class TabCompleter
       tabRecency.recencyScore(suggestion.tabId)
 
 class SearchEngineCompleter
-  searchEngines: {}
-
-  cancel: ->
-    CompletionEngines.cancel()
+  searchEngineConfig: null
 
   refresh: (port) ->
-    @searchEngines = SearchEngineCompleter.getSearchEngines()
-    # Let the vomnibar know the custom search engine keywords.
-    port.postMessage
-      handler: "customSearchEngineKeywords"
-      keywords: key for own key of @searchEngines
+    # Load and parse the search-engine configuration.
+    @searchEngineConfig = new AsyncDataFetcher (callback) ->
+      engines = {}
+      for line in Settings.get("searchEngines").split "\n"
+        line = line.trim()
+        continue if /^[#"]/.test line
+        tokens = line.split /\s+/
+        continue unless 2 <= tokens.length
+        keyword = tokens[0].split(":")[0]
+        description = tokens[2..].join(" ") || "search (#{keyword})"
+        engines[keyword] =
+          keyword: keyword
+          searchUrl: tokens[1]
+          description: description
+
+      # Deliver the resulting engines lookup table.
+      callback engines
+
+      # Let the vomnibar know the custom search engine keywords.
+      port.postMessage
+        handler: "customSearchEngineKeywords"
+        keywords: key for own key of engines
 
   filter: ({ queryTerms, query }, onComplete) ->
     return onComplete [] if queryTerms.length == 0
-    suggestions = []
 
-    { keyword, searchUrl, description } = @getSearchEngineMatches queryTerms, query
-    custom = searchUrl? and keyword?
-    searchUrl ?= Settings.get "searchUrl"
-    haveDescription = description? and 0 < description.length
-    description ||= "search#{if custom then " [#{keyword}]" else ""}"
+    @searchEngineConfig.use (engines) =>
+      keyword = queryTerms[0]
 
-    queryTerms = queryTerms[1..] if custom
-    query = queryTerms.join " "
+      { custom, searchUrl, description, queryTerms } =
+        if engines[keyword]? and (1 < queryTerms.length or /\s$/.test query)
+          { searchUrl, description } = engines[keyword]
+          custom: true
+          searchUrl: searchUrl
+          description: description
+          queryTerms: queryTerms[1..]
+        else
+          custom: false
+          searchUrl: Settings.get "searchUrl"
+          description: "search"
+          queryTerms: queryTerms
 
-    haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
-    # If this is a custom search engine and we have a completer, then exclude results from other completers.
-    # The truthiness of filter? also serves to distinguish two very different vomnibar behaviors, one for
-    # custom search engines with completers (filter? is true), and one for those without (filter? is false).
-    filter =
-      if custom and haveCompletionEngine
-        (suggestion) -> suggestion.type == description
-      else
-        null
+      query = queryTerms.join " "
+      haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
 
-    # For custom search engines, we add an auto-selected suggestion.
-    if custom
-      # Note. This suggestion always appears at the top of the suggestion list.  Its settings serves to serve
-      # to configure various vomnibar behaviors.
-      suggestions.push new Suggestion
-        queryTerms: queryTerms
-        type: description
-        url: Utils.createSearchUrl queryTerms, searchUrl
-        title: query
-        relevancy: 1
-        insertText: if filter? then query else null
-        # For all custom search engines, we suppress the leading keyword, for example "w something" becomes
-        # "something" in the vomnibar.
-        suppressLeadingKeyword: true
-        # We complete suggestions only for custom search engines where we have an associated completion
-        # engine.
-        completeSuggestions: filter?
-        # We only use autoSelect and highlight query terms (on custom search engines) when we do not have a
-        # completer.
-        autoSelect: not filter?
-        forceAutoSelect: not filter?
-        highlightTerms: not filter?
+      # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
+      # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
+      # engines for which we do not have a completion engine.
+      version2 = custom and haveCompletionEngine
 
-    # Post suggestions and bail if there is no prospect of adding further suggestions.
-    if queryTerms.length == 0 or not haveCompletionEngine
-      return onComplete suggestions, { filter }
+      # If this is a custom search engine and we have a completer, then we exclude results from other
+      # completers.
+      filter = if version2 then (suggestion) -> suggestion.type == description else null
 
-    onComplete suggestions,
-      filter: filter
-      continuation: (existingSuggestions, onComplete) =>
-        suggestions = []
-        # For custom search-engine queries, this adds suggestions only if we have a completer.  For other queries,
-        # this adds suggestions for the default search engine (if we have a completer for that).
+      suggestions = []
 
-        # Relevancy:
-        #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
-        #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
-        #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
-        #     suggestion anyway.
-        #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
-        #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
-        #     a useful suggestion from another completer.
-        #   - Scores are weighted such that they retain the order provided by the completion engine.
-        characterCount = query.length - queryTerms.length + 1
-        relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
+      # For custom search engines, we add a single, top-ranked entry for the unmodified query.  This
+      # suggestion always appears at the top of the suggestion list.  Its setting serve to define various
+      # vomnibar behaviors.
+      if custom
+        suggestions.push new Suggestion
+          queryTerms: queryTerms
+          type: description
+          url: Utils.createSearchUrl queryTerms, searchUrl
+          title: query
+          relevancy: 1
+          insertText: if version2 then query else null
+          # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
+          suppressLeadingKeyword: true
+          # Should we highlight (via the selection) the longest continuation of the current query which is
+          # contained in all completions?
+          completeSuggestions: version2
+          # Toggles for the legacy behaviour.
+          autoSelect: not version2
+          forceAutoSelect: not version2
+          highlightTerms: not version2
 
-        if 0 < existingSuggestions.length
-          existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
-          if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
-            # No suggestion we propose will have a high enough relavancy to beat the existing suggestions, so bail
-            # immediately.
-            return onComplete []
+      # Post suggestions and bail if there is no prospect of adding further suggestions.
+      if queryTerms.length == 0 or not haveCompletionEngine
+        return onComplete suggestions, { filter }
 
-        CompletionEngines.complete searchUrl, queryTerms, (completionSuggestions = []) =>
-          for suggestion in completionSuggestions
-            suggestions.push new Suggestion
-              queryTerms: queryTerms
-              type: description
-              url: Utils.createSearchUrl suggestion, searchUrl
-              title: suggestion
-              relevancy: relavancy *= 0.9
-              highlightTerms: false
-              insertText: suggestion
+      # Post any initial suggestion, and then deliver suggestions from completion engines as a continuation
+      # (so, asynchronously).
+      onComplete suggestions,
+        filter: filter
+        continuation: (existingSuggestions, onComplete) =>
+          suggestions = []
+          # Relevancy:
+          #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
+          #     relevancy).  We assume that the completion engine has already factored that in.  Also, completion
+          #     engines often handle spelling mistakes, in which case we wouldn't find the query terms in the
+          #     suggestion anyway.
+          #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
+          #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
+          #     a useful suggestion from another completer.
+          #   - Scores are weighted such that they retain the order provided by the completion engine.
+          characterCount = query.length - queryTerms.length + 1
+          relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
 
-          # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
-          # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
-          # from other completers.  That would potentially be a problem because there is no relationship
-          # between the relevancy scores produced here and those produced by other completers.
-          count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
-          onComplete suggestions[...count]
+          if 0 < existingSuggestions.length
+            existingSuggestionsMinScore = existingSuggestions[existingSuggestions.length-1].relevancy
+            if relavancy < existingSuggestionsMinScore and MultiCompleter.maxResults <= existingSuggestions.length
+              # No suggestion we propose will have a high enough relavancy to beat the existing suggestions, so bail
+              # immediately.
+              return onComplete []
 
-  getSearchEngineMatches: (queryTerms, query = queryTerms.join " ") ->
-    # To allow users to write queries with leading search-engine keywords, leading whitespace disables custom
-    # search engines; for example, " w" is a regular query.
-    return {} if /^\s/.test query
-    # Trailing whitespace is significant when activating a custom search engine; for example, "w" (just a
-    # regular query) is different from "w " (a custom search engine).
-    length = queryTerms.length + (if /\s$/.test query then 1 else 0)
-    (1 < length and @searchEngines[queryTerms[0]]) or {}
+          CompletionEngines.complete searchUrl, queryTerms, (completionSuggestions = []) =>
+            for suggestion in completionSuggestions
+              suggestions.push new Suggestion
+                queryTerms: queryTerms
+                type: description
+                url: Utils.createSearchUrl suggestion, searchUrl
+                title: suggestion
+                relevancy: relavancy *= 0.9
+                highlightTerms: false
+                insertText: suggestion
 
-  # Static data and methods for parsing the configured search engines.  We keep a cache of the search-engine
-  # mapping in @searchEnginesMap.
-  @searchEnginesMap: null
+            # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
+            # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions
+            # from other completers.  That would potentially be a problem because there is no relationship
+            # between the relevancy scores produced here and those produced by other completers.
+            count = Math.min 6, Math.max 3, MultiCompleter.maxResults - existingSuggestions.length
+            onComplete suggestions[...count]
 
-  # Parse the custom search engines setting and cache it in SearchEngineCompleter.searchEnginesMap.
-  @parseSearchEngines: (searchEnginesText) ->
-    searchEnginesMap = SearchEngineCompleter.searchEnginesMap = {}
-    for line in searchEnginesText.split /\n/
-      tokens = line.trim().split /\s+/
-      continue if tokens.length < 2 or tokens[0].startsWith('"') or tokens[0].startsWith("#")
-      keywords = tokens[0].split ":"
-      continue unless keywords.length == 2 and not keywords[1] # So, like: [ "w", "" ].
-      searchEnginesMap[keywords[0]] =
-        keyword: keywords[0]
-        searchUrl: tokens[1]
-        description: tokens[2..].join(" ")
-
-  # Fetch the search-engine map, building it if necessary.
-  @getSearchEngines: ->
-    unless SearchEngineCompleter.searchEnginesMap?
-      SearchEngineCompleter.parseSearchEngines Settings.get "searchEngines"
-    SearchEngineCompleter.searchEnginesMap
+  cancel: ->
+    CompletionEngines.cancel()
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. Queries from the vomnibar frontend script come through a multi completer.

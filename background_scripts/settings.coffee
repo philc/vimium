@@ -32,9 +32,6 @@ root.Settings = Settings =
       root.Commands.parseCustomKeyMappings value
       root.refreshCompletionKeysAfterMappingSave()
 
-    searchEngines: (value) ->
-      root.SearchEngineCompleter.parseSearchEngines value
-
     exclusionRules: (value) ->
       root.Exclusions.postUpdateHook value
 
