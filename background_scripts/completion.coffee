@@ -437,6 +437,8 @@ class SearchEngineCompleter
           autoSelect: not version2
           forceAutoSelect: not version2
           highlightTerms: not version2
+          # Do not use this entry for vomnibar completion.
+          highlightCommonMatches: false
 
       # Post suggestions and bail if there is no prospect of adding further suggestions.
       if queryTerms.length == 0 or not haveCompletionEngine
@@ -477,6 +479,8 @@ class SearchEngineCompleter
                 relevancy: relavancy *= 0.9
                 highlightTerms: false
                 insertText: suggestion
+                # Do use this entry for vomnibar completion.
+                highlightCommonMatches: true
 
             # We keep at least three suggestions (if possible) and at most six.  We keep more than three only if
             # there are enough slots.  The idea is that these suggestions shouldn't wholly displace suggestions

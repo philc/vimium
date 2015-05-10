@@ -121,7 +121,7 @@ class VomnibarUI
     # Bail if we don't yet have the background completer's final word on the current query.
     return unless response.mayCacheResults
 
-    # Bail if there's an update pending (because @input and the correct completion state are out of sync).
+    # Bail if there's an update pending (because then @input and the completion state are out of sync).
     return if @updateTimer?
 
     @previousLength ?= @input.value.length
@@ -129,20 +129,21 @@ class VomnibarUI
     currentLength = @input.value.length
     @previousLength = currentLength
 
-    # Bail if the query didn't get longer.
+    # We only highlight matches if the query gets longer (so, not on deletions).
     return unless previousLength < currentLength
 
-    # Bail if these aren't completions from a custom search engine with completion.
-    return unless @suppressedLeadingKeyword? and @completions[0]?.completeSuggestions
+    # Get the completions for which we can highlight matching text.
+    completions = @completions.filter (completion) ->
+      completion.highlightCommonMatches? and completion.highlightCommonMatches
 
-    # Bail if there are too few suggestions.
-    return unless 1 < @completions.length
+    # Bail if these aren't any completions.
+    return unless 0 < completions.length
 
     # Fetch the query and the suggestion texts.
     query = @input.value.ltrim().split(/\s+/).join(" ").toLowerCase()
-    suggestions = @completions[1..].map (completion) -> completion.title
+    suggestions = completions.map (completion) -> completion.title
 
-    # Ensure that the query is a prefix of all suggestions.
+    # Ensure that the query is a prefix of all of the suggestions.
     for suggestion in suggestions
       return unless 0 == suggestion.toLowerCase().indexOf query
 
@@ -150,20 +151,20 @@ class VomnibarUI
     length = suggestions[0].length
     length = Math.min length, suggestion.length for suggestion in suggestions
 
-    # Find the thenght of the longest common continuation.
+    # Find the the length of the longest common continuation.
     length = do ->
       for index in [query.length...length]
         for suggestion in suggestions
           return index if suggestions[0][index].toLowerCase() != suggestion[index].toLowerCase()
       length
 
-    # But don't complete only whitespace.
-    return if /^\s+$/.test suggestions[0].slice query.length, length
-
     # Bail if there's nothing to complete.
     return unless  query.length < length
 
-    # Install completion.
+    # Don't highlight only whitespace (that is, the entire common text consists only of whitespace).
+    return if /^\s+$/.test suggestions[0].slice query.length, length
+
+    # Highlight match.
     @input.value = suggestions[0].slice 0, length
     @input.setSelectionRange query.length, length
 
