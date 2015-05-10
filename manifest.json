@@ -15,6 +15,7 @@
       "background_scripts/settings.js",
       "background_scripts/exclusions.js",
       "background_scripts/completion_engines.js",
+      "background_scripts/completion_search.js",
       "background_scripts/completion.js",
       "background_scripts/marks.js",
       "background_scripts/main.js"

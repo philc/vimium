@@ -358,7 +358,7 @@ class SearchEngineCompleter
   searchEngines: null
 
   cancel: ->
-    CompletionEngines.cancel()
+    CompletionSearch.cancel()
 
   refresh: (port) ->
     # Load and parse the search-engine configuration.
@@ -404,7 +404,7 @@ class SearchEngineCompleter
           queryTerms: queryTerms
 
       query = queryTerms.join " "
-      haveCompletionEngine = CompletionEngines.haveCompletionEngine searchUrl
+      haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
 
       # Relevancy:
       #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
@@ -468,7 +468,7 @@ class SearchEngineCompleter
       # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to do an HTTP
       # request, which we do asynchronously).  This is a synchronous call (for cached suggestions only)
       # because no callback is provided.
-      cachedSuggestions = CompletionEngines.complete searchUrl, queryTerms
+      cachedSuggestions = CompletionSearch.complete searchUrl, queryTerms
 
       # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
       # adding further suggestions.
@@ -493,7 +493,7 @@ class SearchEngineCompleter
               console.log "skip: cannot add completions" if @debug
               return onComplete []
 
-          CompletionEngines.complete searchUrl, queryTerms, (completionSuggestions = []) =>
+          CompletionSearch.complete searchUrl, queryTerms, (completionSuggestions = []) =>
             for suggestion in completionSuggestions
               suggestions.push new Suggestion
                 queryTerms: queryTerms
