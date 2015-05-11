@@ -8,12 +8,7 @@ class UIComponent
     styleSheet = document.createElement "style"
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
-    styleSheet.innerHTML = "* {display: none !important;}"
-    # Load stylesheet.
-    xhr = new XMLHttpRequest()
-    xhr.onload = (e) -> styleSheet.innerHTML = xhr.responseText
-    xhr.open "GET", chrome.runtime.getURL("content_scripts/vimium.css"), true
-    xhr.send()
+    styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
 
     @iframeElement = document.createElement "iframe"
     extend @iframeElement,
