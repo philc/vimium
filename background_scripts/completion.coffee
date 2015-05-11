@@ -361,14 +361,18 @@ class SearchEngineCompleter
   cancel: ->
     CompletionSearch.cancel()
 
-  # This looks up the custom search engine and, if one is found, then notes it and removes its keyword from
-  # the query terms.  It also sets request.completers to indicate that only this completer should run.
+  # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
+  # query terms.  It also sets request.completers to indicate that only this completer should run (but only if
+  # it finds a completion engine).
   triageRequest: (request) ->
     @searchEngines.use (engines) =>
       { queryTerms, query } = request
       keyword = queryTerms[0]
+      # Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
       if keyword and engines[keyword] and (1 < queryTerms.length or /\s$/.test query)
-        request.completers = [ this ]
+        # This is a query for a custom search engine.  If we have a completion engine, then we *only* want
+        # suggestions from SearchEngineCompleter.
+        request.completers = [ this ] if CompletionSearch.haveCompletionEngine engines[keyword].searchUrl
         extend request,
           queryTerms: queryTerms[1..]
           keyword: keyword
@@ -394,7 +398,9 @@ class SearchEngineCompleter
 
       callback engines
 
-      # Let the front-end vomnibar know the search-engine keywords.
+      # Let the front-end vomnibar know the search-engine keywords.  It needs to know them so that, when the
+      # query goes from "w" to "w ", the vomnibar synchronously launches the next filter() request (all of which avoids
+      # an ugly delay).
       port.postMessage
         handler: "keywords"
         keywords: key for own key of engines
@@ -453,7 +459,6 @@ class SearchEngineCompleter
         insertText: if useExclusiveVomnibar then query else null
         # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
         suppressLeadingKeyword: true
-        selectCommonMatches: false
         customSearchEnginePrimarySuggestion: true
         # Toggles for the legacy behaviour.
         autoSelect: not useExclusiveVomnibar
@@ -470,7 +475,6 @@ class SearchEngineCompleter
           relevancy: relevancy *= 0.9
           insertText: suggestion
           highlightTerms: false
-          selectCommonMatches: true
           customSearchEngineCompletionSuggestion: true
 
     # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
@@ -495,9 +499,11 @@ class SearchEngineCompleter
           onComplete suggestions.map mkSuggestion
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
-# 10. Queries from the vomnibar frontend script come through a multi completer.
+# 10. All queries from the vomnibar come through a multi completer.
 class MultiCompleter
   maxResults: 10
+  filterInProgress: false
+  mostRecentQuery: null
 
   constructor: (@completers) ->
   refresh: (port) -> completer.refresh? port for completer in @completers
@@ -531,8 +537,8 @@ class MultiCompleter
           filters.push filter if filter?
           callback()
 
-    # Once all completers have finished, process the results and post them, and run any continuations or
-    # pending queries.
+    # Once all completers have finished, process the results and post them, and run any continuations or a
+    # pending query.
     jobs.onReady =>
       suggestions = suggestions.filter filter for filter in filters
       shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
@@ -563,7 +569,7 @@ class MultiCompleter
             results: suggestions
             mayCacheResults: true
 
-      # Admit subsequent queries, and launch any pending query.
+      # Admit subsequent queries and launch any pending query.
       @filterInProgress = false
       if @mostRecentQuery
         @filter @mostRecentQuery...

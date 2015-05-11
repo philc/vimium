@@ -1,6 +1,6 @@
 
 # A completion engine provides search suggestions for a search engine.  A search engine is identified by a
-# "searchUrl", e.g. Settings.get("searchUrl"), or a custom search engine.
+# "searchUrl", e.g. Settings.get("searchUrl"), or a custom search engine URL.
 #
 # Each completion engine defines three functions:
 #
@@ -14,7 +14,7 @@
 #      returns a list of suggestions (a list of strings).  This method is always executed within the context
 #      of a try/catch block, so errors do not propagate.
 #
-# Each new completion engine must be add to the list "CompletionEngines" at the bottom of this file.
+# Each new completion engine must be added to the list "CompletionEngines" at the bottom of this file.
 #
 # The lookup logic which uses these completion engines is in "./completion_search.coffee".
 #

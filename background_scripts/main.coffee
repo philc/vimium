@@ -64,7 +64,7 @@ completionHandlers =
     completer.filter request, (response) ->
       # We use try here because this may fail if the sender has already navigated away from the original page.
       # This can happen, for example, when posting completion suggestions from the SearchEngineCompleter
-      # (which can be slow).
+      # (which is done asynchronously).
       try
         port.postMessage extend request, extend response, handler: "completions"
 

@@ -2,7 +2,7 @@
 CompletionSearch =
   debug: false
   inTransit: {}
-  completionCache: new SimpleCache 2 * 60 * 60 * 1000, 5000 # Two hour, 5000 entries.
+  completionCache: new SimpleCache 2 * 60 * 60 * 1000, 5000 # Two hours, 5000 entries.
   engineCache:new SimpleCache 1000 * 60 * 60 * 1000 # 1000 hours.
 
   # The amount of time to wait for new requests before launching the current request (for example, if the user
@@ -35,7 +35,7 @@ CompletionSearch =
     not @lookupEngine(searchUrl).dummy
 
   # This is the main entry point.
-  #  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custome search engine's URL.
+  #  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custom search engine's URL.
   #    This is only used as a key for determining the relevant completion engine.
   #  - queryTerms are the query terms.
   #  - callback will be applied to a list of suggestion strings (which may be an empty list, if anything goes
@@ -82,7 +82,6 @@ CompletionSearch =
 
       if reusePreviousSuggestions
         console.log "reuse previous query:", @mostRecentQuery if @debug
-        @mostRecentQuery = queryTerms.join " "
         return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
 
     # That's all of the caches we can try.  Bail if the caller is looking for synchronous results.

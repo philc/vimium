@@ -91,8 +91,8 @@ class VomnibarUI
       @suppressedLeadingKeyword = queryTerms[0]
       @input.value = queryTerms[1..].join " "
 
-    # For suggestions from search-engine completion, we copy the suggested text into the input when the item
-    # is selected, and revert when it is not.  This allows the user to select a suggestion and then continue
+    # For suggestions for custom search engines, we copy the suggested text into the input when the item is
+    # selected, and revert when it is not.  This allows the user to select a suggestion and then continue
     # typing.
     if 0 <= @selection and @completions[@selection].insertText?
       @previousInputValue ?=
@@ -113,8 +113,8 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
-  # This adds prompted text to the vomnibar input.  The propted text is a continuation of the text the user
-  # has typed already, taken from one of the search suggestions.  It is highlight (using the selection) and
+  # This adds prompted text to the vomnibar input.  The prompted text is a continuation of the text the user
+  # has already typed, taken from one of the search suggestions.  It is highlight (using the selection) and
   # will be included with the query should the user type <Enter>.
   addPromptedText: (response) ->
     # Bail if we don't yet have the background completer's final word on the current query.
@@ -168,8 +168,7 @@ class VomnibarUI
       return "enter"
     else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
       return "delete"
-    else if key in [ "left", "right" ] and event.ctrlKey and
-        not (event.altKey or event.metaKey or event.shiftKey)
+    else if key in [ "left", "right" ] and event.ctrlKey and not (event.altKey or event.metaKey)
       return "control-#{key}"
 
     null
@@ -219,8 +218,8 @@ class VomnibarUI
         @hide -> completion.performAction openInNewTab
     else if action == "delete"
       if @suppressedLeadingKeyword? and @input.value.length == 0
-        # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") suppressed.  If
-        # the input is empty, then show the keyword again.
+        # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
+        # If the input is empty, then show the keyword again.
         @input.value = @suppressedLeadingKeyword
         @suppressedLeadingKeyword = null
         @updateCompletions()
@@ -249,13 +248,13 @@ class VomnibarUI
     true
 
   onKeypress: (event) =>
-    # Handle typing with prompted text.
+    # Handle typing together with prompted text.
     unless event.altKey or event.ctrlKey or event.metaKey
       if @inputContainsASelectionRange()
-        # As the user types characters which the match prompted text, we suppress the keyboard event and
-        # simulate it by advancing the start of the selection (but only if the typed character matches).  This
-        # avoids flicker (if we were to allow the event through) as the selection is first collapsed then
-        # restored.
+        # As the user types characters which the match the prompted text, we suppress the keyboard event and
+        # simulate it by advancing the start of the selection (but only if the typed character matches).
+        # If we were to allow the event through, we would get flicker, as the selection is first collapsed and
+        # then (shortly afterwards) restored.
         if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
           @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
           @updateOnInput()
@@ -267,7 +266,7 @@ class VomnibarUI
   inputContainsASelectionRange: ->
     @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
 
-  # Return the text of the input, with any selected text removed.
+  # Return the text of the input, with any prompted text removed.
   getInputWithoutPromptedText: ->
     if @inputContainsASelectionRange()
       @input.value[0...@input.selectionStart] + @input.value[@input.selectionEnd..]
@@ -275,7 +274,7 @@ class VomnibarUI
       @input.value
 
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
-  # search engine keyword which is currently being suppressed, and strip any propted text.
+  # search engine keyword which is currently being suppressed, and strip any prompted text.
   getInputValueAsQuery: ->
     (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutPromptedText()
 
