@@ -1,5 +1,6 @@
 require "./test_helper.js"
 extend(global, require "../../lib/utils.js")
+extend(global, require "../../background_scripts/completion_engines.js")
 extend(global, require "../../background_scripts/completion.js")
 extend global, require "./test_chrome_stubs.js"
 
@@ -235,44 +236,43 @@ context "tab completer",
     assert.arrayEqual ["tab2.com"], results.map (tab) -> tab.url
     assert.arrayEqual [2], results.map (tab) -> tab.tabId
 
-context "search engines",
-  setup ->
-    searchEngines = "foo: bar?q=%s\n# comment\nbaz: qux?q=%s baz description"
-    Settings.set 'searchEngines', searchEngines
-    @completer = new SearchEngineCompleter()
-    # note, I couldn't just call @completer.refresh() here as I couldn't set root.Settings without errors
-    # workaround is below, would be good for someone that understands the testing system better than me to improve
-    @completer.searchEngines = SearchEngineCompleter.getSearchEngines()
-
-  should "return search engine suggestion without description", ->
-    results = filterCompleter(@completer, ["foo", "hello"])
-    assert.arrayEqual ["bar?q=hello"], results.map (result) -> result.url
-    assert.arrayEqual ["foo: hello"], results.map (result) -> result.title
-    assert.arrayEqual ["search"], results.map (result) -> result.type
-
-  should "return search engine suggestion with description", ->
-    results = filterCompleter(@completer, ["baz", "hello"])
-    assert.arrayEqual ["qux?q=hello"], results.map (result) -> result.url
-    assert.arrayEqual ["hello"], results.map (result) -> result.title
-    assert.arrayEqual ["baz description"], results.map (result) -> result.type
-
 context "suggestions",
   should "escape html in page titles", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "url", "title <span>", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["queryterm"]
+      type: "tab"
+      url: "url"
+      title: "title <span>"
+      relevancyFunction: returns 1
     assert.isTrue suggestion.generateHtml().indexOf("title &lt;span&gt;") >= 0
 
   should "highlight query words", ->
-    suggestion = new Suggestion(["ninj", "words"], "tab", "url", "ninjawords", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["ninj", "words"]
+      type: "tab"
+      url: "url"
+      title: "ninjawords"
+      relevancyFunction: returns 1
     expected = "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "highlight query words correctly when whey they overlap", ->
-    suggestion = new Suggestion(["ninj", "jaword"], "tab", "url", "ninjawords", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["ninj", "jaword"]
+      type: "tab"
+      url: "url"
+      title: "ninjawords"
+      relevancyFunction: returns 1
     expected = "<span class='vomnibarMatch'>ninjaword</span>s"
     assert.isTrue suggestion.generateHtml().indexOf(expected) >= 0
 
   should "shorten urls", ->
-    suggestion = new Suggestion(["queryterm"], "tab", "http://ninjawords.com", "ninjawords", returns(1))
+    suggestion = new Suggestion
+      queryTerms: ["queryterm"]
+      type: "tab"
+      url: "http://ninjawords.com"
+      title: "ninjawords"
+      relevancyFunction: returns 1
     assert.equal -1, suggestion.generateHtml().indexOf("http://ninjawords.com")
 
 context "RankingUtils.wordRelevancy",
@@ -465,7 +465,7 @@ context "TabRecency",
 # A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 filterCompleter = (completer, queryTerms) ->
   results = []
-  completer.filter(queryTerms, (completionResults) -> results = completionResults)
+  completer.filter({ queryTerms }, (completionResults) -> results = completionResults)
   results
 
 hours = (n) -> 1000 * 60 * 60 * n

@@ -43,20 +43,36 @@ chrome.storage.local.set
   vimiumSecret: Math.floor Math.random() * 2000000000
 
 completionSources =
-  bookmarks: new BookmarkCompleter()
-  history: new HistoryCompleter()
-  domains: new DomainCompleter()
-  tabs: new TabCompleter()
-  seachEngines: new SearchEngineCompleter()
+  bookmarks: new BookmarkCompleter
+  history: new HistoryCompleter
+  domains: new DomainCompleter
+  tabs: new TabCompleter
+  searchEngines: new SearchEngineCompleter
 
 completers =
-  omni: new MultiCompleter([
-    completionSources.seachEngines,
-    completionSources.bookmarks,
-    completionSources.history,
-    completionSources.domains])
-  bookmarks: new MultiCompleter([completionSources.bookmarks])
-  tabs: new MultiCompleter([completionSources.tabs])
+  omni: new MultiCompleter [
+    completionSources.bookmarks
+    completionSources.history
+    completionSources.domains
+    completionSources.searchEngines
+    ]
+  bookmarks: new MultiCompleter [completionSources.bookmarks]
+  tabs: new MultiCompleter [completionSources.tabs]
+
+completionHandlers =
+  filter: (completer, request, port) ->
+    completer.filter request, (response) ->
+      # We use try here because this may fail if the sender has already navigated away from the original page.
+      # This can happen, for example, when posting completion suggestions from the SearchEngineCompleter
+      # (which can be slow).
+      try
+        port.postMessage extend request, extend response, handler: "completions"
+
+  refresh: (completer, _, port) -> completer.refresh port
+  cancel: (completer, _, port) -> completer.cancel port
+
+handleCompletions = (request, port) ->
+  completionHandlers[request.handler] completers[request.name], request, port
 
 chrome.runtime.onConnect.addListener (port, name) ->
   senderTabId = if port.sender.tab then port.sender.tab.id else null
@@ -214,13 +230,6 @@ handleSettings = (request, port) ->
       values = request.values
       values[key] = Settings.get key for own key of values
       port.postMessage { values }
-
-refreshCompleter = (request) -> completers[request.name].refresh()
-
-whitespaceRegexp = /\s+/
-filterCompleter = (args, port) ->
-  queryTerms = if (args.query == "") then [] else args.query.split(whitespaceRegexp)
-  completers[args.name].filter(queryTerms, (results) -> port.postMessage({ id: args.id, results: results }))
 
 chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
   if (selectionChangedHandlers.length > 0)
@@ -640,7 +649,7 @@ bgLog = (request, sender) ->
 portHandlers =
   keyDown: handleKeyDown,
   settings: handleSettings,
-  filterCompleter: filterCompleter
+  completions: handleCompletions
 
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest
@@ -658,7 +667,6 @@ sendRequestHandlers =
   pasteFromClipboard: pasteFromClipboard
   isEnabledForUrl: isEnabledForUrl
   selectSpecificTab: selectSpecificTab
-  refreshCompleter: refreshCompleter
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
   setIcon: setIcon

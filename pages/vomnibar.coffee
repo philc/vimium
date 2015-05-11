@@ -9,13 +9,8 @@ Vomnibar =
   completers: {}
 
   getCompleter: (name) ->
-    if (!(name of @completers))
-      @completers[name] = new BackgroundCompleter(name)
-    @completers[name]
+    @completers[name] ?= new BackgroundCompleter name
 
-  #
-  # Activate the Vomnibox.
-  #
   activate: (userOptions) ->
     options =
       completer: "omni"
@@ -23,20 +18,17 @@ Vomnibar =
       newTab: false
       selectFirst: false
     extend options, userOptions
+    extend options, refreshInterval: if options.completer == "omni" then 150 else 0
 
-    options.refreshInterval = switch options.completer
-      when "omni" then 100
-      else 0
-
-    completer = @getCompleter(options.completer)
+    completer = @getCompleter options.completer
     @vomnibarUI ?= new VomnibarUI()
-    completer.refresh()
-    @vomnibarUI.setInitialSelectionValue(if options.selectFirst then 0 else -1)
-    @vomnibarUI.setCompleter(completer)
-    @vomnibarUI.setRefreshInterval(options.refreshInterval)
-    @vomnibarUI.setForceNewTab(options.newTab)
-    @vomnibarUI.setQuery(options.query)
-    @vomnibarUI.update()
+    completer.refresh @vomnibarUI
+    @vomnibarUI.setInitialSelectionValue if options.selectFirst then 0 else -1
+    @vomnibarUI.setCompleter completer
+    @vomnibarUI.setRefreshInterval options.refreshInterval
+    @vomnibarUI.setForceNewTab options.newTab
+    @vomnibarUI.setQuery options.query
+    @vomnibarUI.update true
 
   hide: -> @vomnibarUI?.hide()
   onHidden: -> @vomnibarUI?.onHidden()
@@ -48,18 +40,11 @@ class VomnibarUI
     @initDom()
 
   setQuery: (query) -> @input.value = query
-
-  setInitialSelectionValue: (initialSelectionValue) ->
-    @initialSelectionValue = initialSelectionValue
-
-  setCompleter: (completer) ->
-    @completer = completer
-    @reset()
-    @update(true)
-
-  setRefreshInterval: (refreshInterval) -> @refreshInterval = refreshInterval
-
-  setForceNewTab: (forceNewTab) -> @forceNewTab = forceNewTab
+  setInitialSelectionValue: (@initialSelectionValue) ->
+  setRefreshInterval: (@refreshInterval) ->
+  setForceNewTab: (@forceNewTab) ->
+  setCompleter: (@completer) -> @reset()
+  setKeywords: (@keywords) ->
 
   # The sequence of events when the vomnibar is hidden is as follows:
   # 1. Post a "hide" message to the host page.
@@ -71,32 +56,101 @@ class VomnibarUI
   hide: (@postHideCallback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
+    @completer?.reset()
 
   onHidden: ->
     @postHideCallback?()
     @postHideCallback = null
 
   reset: ->
+    @clearUpdateTimer()
     @completionList.style.display = ""
     @input.value = ""
-    @updateTimer = null
     @completions = []
+    @previousAutoSelect = null
+    @previousInputValue = null
+    @suppressedLeadingKeyword = null
+    @previousLength = 0
     @selection = @initialSelectionValue
+    @keywords = []
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
     # has just appeared or disappeared. If that happens, we set @selection to 0 or -1.
-    if @completions[0]
+    if 0 < @completions.length
       @selection = 0 if @completions[0].autoSelect and not @previousAutoSelect
       @selection = -1 if @previousAutoSelect and not @completions[0].autoSelect
       @previousAutoSelect = @completions[0].autoSelect
+    else
+      @previousAutoSelect = null
+
+    # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
+    # vomnibar input.
+    if @completions[0]?.suppressLeadingKeyword and not @suppressedLeadingKeyword?
+      queryTerms = @input.value.trim().split /\s+/
+      @suppressedLeadingKeyword = queryTerms[0]
+      @input.value = queryTerms[1..].join " "
+
+    # For suggestions from search-engine completion, we copy the suggested text into the input when the item
+    # is selected, and revert when it is not.  This allows the user to select a suggestion and then continue
+    # typing.
+    if 0 <= @selection and @completions[@selection].insertText?
+      @previousInputValue ?=
+        value: @input.value
+        selectionStart: @input.selectionStart
+        selectionEnd: @input.selectionEnd
+      @input.value = @completions[@selection].insertText + (if @selection == 0 then "" else " ")
+    else if @previousInputValue?
+      # Restore the text.
+      @input.value = @previousInputValue.value
+      # Restore the selection.
+      if @previousInputValue.selectionStart? and @previousInputValue.selectionEnd? and
+        @previousInputValue.selectionStart != @previousInputValue.selectionEnd
+          @input.setSelectionRange @previousInputValue.selectionStart, @previousInputValue.selectionEnd
+      @previousInputValue = null
+
+    # Highlight the selected entry, and only the selected entry.
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
-  #
-  # Returns the user's action ("up", "down", "enter", "dismiss" or null) based on their keypress.
-  # We support the arrow keys and other shortcuts for moving, so this method hides that complexity.
-  #
+  # This adds prompted text to the vomnibar input.  The propted text is a continuation of the text the user
+  # has typed already, taken from one of the search suggestions.  It is highlight (using the selection) and
+  # will be included with the query should the user type <Enter>.
+  addPromptedText: (response) ->
+    # Bail if we don't yet have the background completer's final word on the current query.
+    return unless response.mayCacheResults
+
+    # Bail if there's an update pending (because then @input and the completion state are out of sync).
+    return if @updateTimer?
+
+    value = @getInputWithoutPromptedText()
+    @previousLength ?= value.length
+    previousLength = @previousLength
+    currentLength = value.length
+    @previousLength = currentLength
+
+    return unless previousLength < currentLength
+    return if /^\s/.test(value) or /\s\s/.test value
+
+    completions = @completions.filter (completion) -> completion.customSearchEngineCompletionSuggestion
+    return unless 0 < completions.length
+
+    query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
+    suggestion = completions[0].title
+
+    index = suggestion.toLowerCase().indexOf query
+    return unless 0 <= index and index + query.length < suggestion.length
+
+    # If the typed text is all lower case, then make the prompted text lower case too.
+    suggestion = suggestion[index..]
+    suggestion = suggestion.toLowerCase() unless /[A-Z]/.test @getInputWithoutPromptedText()
+
+    suggestion = suggestion[query.length..]
+    @input.value = query + suggestion
+    @input.setSelectionRange query.length, query.length + suggestion.length
+
+  # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
+  # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
   actionFromKeyEvent: (event) ->
     key = KeyboardUtils.getKeyChar(event)
     if (KeyboardUtils.isEscape(event))
@@ -105,12 +159,20 @@ class VomnibarUI
         (event.shiftKey && event.keyCode == keyCodes.tab) ||
         (event.ctrlKey && (key == "k" || key == "p")))
       return "up"
+    else if (event.keyCode == keyCodes.tab && !event.shiftKey)
+      return "tab"
     else if (key == "down" ||
-        (event.keyCode == keyCodes.tab && !event.shiftKey) ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
     else if (event.keyCode == keyCodes.enter)
       return "enter"
+    else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+      return "delete"
+    else if key in [ "left", "right" ] and event.ctrlKey and
+        not (event.altKey or event.metaKey or event.shiftKey)
+      return "control-#{key}"
+
+    null
 
   onKeydown: (event) =>
     action = @actionFromKeyEvent(event)
@@ -120,69 +182,147 @@ class VomnibarUI
       (event.shiftKey || event.ctrlKey || KeyboardUtils.isPrimaryModifierKey(event))
     if (action == "dismiss")
       @hide()
+    else if action in [ "tab", "down" ]
+      @selection += 1
+      @selection = @initialSelectionValue if @selection == @completions.length
+      @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
-    else if (action == "down")
-      @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
-      @updateSelection()
     else if (action == "enter")
-      # If they type something and hit enter without selecting a completion from our list of suggestions,
-      # try to open their query as a URL directly. If it doesn't look like a URL, we will search using
-      # google.
-      if (@selection == -1)
+      if @selection == -1
+        # The user has not selected a suggestion.
         query = @input.value.trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
-        @hide ->
-          chrome.runtime.sendMessage
-            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-            url: query
+        if @suppressedLeadingKeyword?
+          # This is a custom search engine completion.  Because of the way we add prompted text to the input
+          # (addPromptedText), the text in the input might not correspond to any of the completions.  So we
+          # fire off the query to the background page and use the completion at the top of the list (which
+          # will be the right one).
+          window.getSelection()?.collapseToEnd() if @inputContainsASelectionRange()
+          @update true, =>
+            if @completions[0]
+              completion = @completions[0]
+              @hide -> completion.performAction openInNewTab
+        else
+          # If the user types something and hits enter without selecting a completion from the list, then try
+          # to open their query as a URL directly. If it doesn't look like a URL, then use the default search
+          # engine.
+          @hide ->
+            chrome.runtime.sendMessage
+              handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+              url: query
       else
-        @update true, =>
-          # Shift+Enter will open the result in a new tab instead of the current tab.
-          completion = @completions[@selection]
-          @hide -> completion.performAction openInNewTab
+        completion = @completions[@selection]
+        @hide -> completion.performAction openInNewTab
+    else if action == "delete"
+      if @suppressedLeadingKeyword? and @input.value.length == 0
+        # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") suppressed.  If
+        # the input is empty, then show the keyword again.
+        @input.value = @suppressedLeadingKeyword
+        @suppressedLeadingKeyword = null
+        @updateCompletions()
+      else
+        # Don't suppress the Delete.  We want it to happen.
+        return true
+    else if action == "control-right"
+      [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
+      return true unless @inputContainsASelectionRange() and end == @input.value.length
+      # "Control-Right" advances the start of the selection by a word.
+      text = @input.value[start...end]
+      newText = text.replace /^\s*\S+\s*/, ""
+      @input.setSelectionRange start + (text.length - newText.length), end
+
+    else if action == "control-left"
+      [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
+      return true unless @inputContainsASelectionRange() and end == @input.value.length
+      # "Control-Left" extends the start of the selection to the start of the current word.
+      text = @input.value[0...start]
+      newText = text.replace /\S+\s*$/, ""
+      @input.setSelectionRange start + (newText.length - text.length), end
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
     event.preventDefault()
     true
 
-  updateCompletions: (callback) ->
-    query = @input.value.trim()
+  onKeypress: (event) =>
+    # Handle typing with prompted text.
+    unless event.altKey or event.ctrlKey or event.metaKey
+      if @inputContainsASelectionRange()
+        # As the user types characters which the match prompted text, we suppress the keyboard event and
+        # simulate it by advancing the start of the selection (but only if the typed character matches).  This
+        # avoids flicker (if we were to allow the event through) as the selection is first collapsed then
+        # restored.
+        if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
+          @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
+          @updateOnInput()
+          event.stopImmediatePropagation()
+          event.preventDefault()
+    true
 
-    @completer.filter query, (completions) =>
-      @completions = completions
-      @populateUiWithCompletions(completions)
-      callback() if callback
+  # Test whether the input contains prompted text.
+  inputContainsASelectionRange: ->
+    @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
 
-  populateUiWithCompletions: (completions) ->
-    # update completion list with the new data
-    @completionList.innerHTML = completions.map((completion) -> "<li>#{completion.html}</li>").join("")
-    @completionList.style.display = if completions.length > 0 then "block" else ""
-    @selection = Math.min(Math.max(@initialSelectionValue, @selection), @completions.length - 1)
-    @updateSelection()
-
-  update: (updateSynchronously, callback) =>
-    if (updateSynchronously)
-      # cancel scheduled update
-      if (@updateTimer != null)
-        window.clearTimeout(@updateTimer)
-        @updateTimer = null
-      @updateCompletions(callback)
-    else if (@updateTimer != null)
-      # an update is already scheduled, don't do anything
-      return
+  # Return the text of the input, with any selected text removed.
+  getInputWithoutPromptedText: ->
+    if @inputContainsASelectionRange()
+      @input.value[0...@input.selectionStart] + @input.value[@input.selectionEnd..]
     else
-      # always update asynchronously for better user experience and to take some load off the CPU
-      # (not every keystroke will cause a dedicated update)
-      @updateTimer = setTimeout(=>
-        @updateCompletions(callback)
+      @input.value
+
+  # Return the background-page query corresponding to the current input state.  In other words, reinstate any
+  # search engine keyword which is currently being suppressed, and strip any propted text.
+  getInputValueAsQuery: ->
+    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutPromptedText()
+
+  updateCompletions: (callback = null) ->
+    @completer.filter @getInputValueAsQuery(), (response) =>
+      { results, mayCacheResults } = response
+      @completions = results
+      # Update completion list with the new suggestions.
+      @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
+      @completionList.style.display = if @completions.length > 0 then "block" else ""
+      @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
+      @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
+      @updateSelection()
+      @addPromptedText response
+      callback?()
+
+  updateOnInput: =>
+    @completer.cancel()
+    # If the user types, then don't reset any previous text, and restart auto select.
+    if @previousInputValue?
+      @previousInputValue = null
+      @previousAutoSelect = null
+      @selection = -1
+    @update false
+
+  clearUpdateTimer: ->
+    if @updateTimer?
+      window.clearTimeout @updateTimer
+      @updateTimer = null
+
+  isCustomSearch: ->
+    queryTerms = @input.value.ltrim().split /\s+/
+    1 < queryTerms.length and queryTerms[0] in @keywords
+
+  update: (updateSynchronously = false, callback = null) =>
+    # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
+    # synchronous update (so that the state is updated immediately).
+    updateSynchronously ||= @isCustomSearch() and not @suppressedLeadingKeyword?
+    if updateSynchronously
+      @clearUpdateTimer()
+      @updateCompletions callback
+    else if not @updateTimer?
+      # Update asynchronously for a better user experience, and to take some load off the CPU (not every
+      # keystroke will cause a dedicated update).
+      @updateTimer = Utils.setTimeout @refreshInterval, =>
         @updateTimer = null
-      @refreshInterval)
+        @updateCompletions callback
 
     @input.focus()
 
@@ -190,8 +330,9 @@ class VomnibarUI
     @box = document.getElementById("vomnibar")
 
     @input = @box.querySelector("input")
-    @input.addEventListener "input", @update
+    @input.addEventListener "input", @updateOnInput
     @input.addEventListener "keydown", @onKeydown
+    @input.addEventListener "keypress", @onKeypress
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
 
@@ -204,54 +345,86 @@ class VomnibarUI
     document.body.addEventListener "click", => @hide()
 
 #
-# Sends filter and refresh requests to a Vomnibox completer on the background page.
+# Sends requests to a Vomnibox completer on the background page.
 #
 class BackgroundCompleter
-  # We increment this counter on each message sent, and ignore responses which arrive too late.
-  @messageId: 0
+  debug: false
 
-  # - name: The background page completer that you want to interface with. Either "omni", "tabs", or
-  # "bookmarks". */
+  # The "name" is the background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
-    @filterPort = chrome.runtime.connect name: "filterCompleter"
+    @port = chrome.runtime.connect name: "completions"
+    @messageId = null
+    @reset()
 
-  refresh: ->
-    chrome.runtime.sendMessage handler: "refreshCompleter", name: @name
-
-  filter: (query, callback) ->
-    id = BackgroundCompleter.messageId += 1
-    @filterPort.onMessage.addListener handler = (msg) =>
-      if msg.id == id
-        @filterPort.onMessage.removeListener handler
-        if id == BackgroundCompleter.messageId
+    @port.onMessage.addListener (msg) =>
+      switch msg.handler
+        when "keywords"
+          @keywords = msg.keywords
+          @lastUI.setKeywords @keywords
+        when "completions"
           # The result objects coming from the background page will be of the form:
-          #   { html: "", type: "", url: "" }
-          # type will be one of [tab, bookmark, history, domain].
-          results = msg.results.map (result) ->
-            functionToCall = if (result.type == "tab")
-              BackgroundCompleter.completionActions.switchToTab.curry(result.tabId)
-            else
-              BackgroundCompleter.completionActions.navigateToUrl.curry(result.url)
-            result.performAction = functionToCall
-            result
-          callback(results)
+          #   { html: "", type: "", url: "", ... }
+          # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
+          for result in msg.results
+            extend result,
+              performAction:
+                if result.type == "tab"
+                  @completionActions.switchToTab result.tabId
+                else
+                  @completionActions.navigateToUrl result.url
 
-    @filterPort.postMessage id: id, name: @name, query: query
+          # Cache the results, but only if we have been told it's ok to do so (it could be that more results
+          # will be posted shortly).  We cache the results even if they arrive late.
+          if msg.mayCacheResults
+            console.log "cache set:", "-#{msg.cacheKey}-" if @debug
+            @cache[msg.cacheKey] = msg
+          else
+            console.log "not setting cache:", "-#{msg.cacheKey}-" if @debug
 
-extend BackgroundCompleter,
-  #
-  # These are the actions we can perform when the user selects a result in the Vomnibox.
-  #
+          # Handle the message, but only if it hasn't arrived too late.
+          @mostRecentCallback msg if msg.id == @messageId
+
+  filter: (query, @mostRecentCallback) ->
+    cacheKey = query.ltrim().split(/\s+/).join " "
+
+    if cacheKey of @cache
+      console.log "cache hit:", "-#{cacheKey}-" if @debug
+      @mostRecentCallback @cache[cacheKey]
+    else
+      console.log "cache miss:", "-#{cacheKey}-" if @debug
+      @port.postMessage
+        handler: "filter"
+        name: @name
+        id: @messageId = Utils.createUniqueId()
+        queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
+        query: query
+        cacheKey: cacheKey
+
+  reset: ->
+    [ @keywords, @cache ] = [ [], {} ]
+
+  refresh: (@lastUI) ->
+    @reset()
+    @port.postMessage name: @name, handler: "refresh"
+
+  cancel: ->
+    # Inform the background completer that it may (should it choose to do so) abandon any pending query
+    # (because the user is typing, and there will be another query along soon).
+    @port.postMessage name: @name, handler: "cancel"
+
+  # These are the actions we can perform when the user selects a result.
   completionActions:
-    navigateToUrl: (url, openInNewTab) ->
-      # If the URL is a bookmarklet prefixed with javascript:, we shouldn't open that in a new tab.
-      openInNewTab = false if url.startsWith("javascript:")
-      chrome.runtime.sendMessage(
+    navigateToUrl: (url) -> (openInNewTab) ->
+      # If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the current
+      # tab.
+      openInNewTab &&= not Utils.hasJavascriptPrefix url
+      chrome.runtime.sendMessage
         handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-        url: url,
-        selected: openInNewTab)
+        url: url
+        selected: openInNewTab
 
-    switchToTab: (tabId) -> chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId })
+    switchToTab: (tabId) -> ->
+      chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
 
 UIComponentServer.registerHandler (event) ->
   switch event.data

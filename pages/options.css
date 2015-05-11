@@ -107,9 +107,10 @@ input#linkHintNumbers {
 input#linkHintCharacters {
   width: 100%;
 }
-input#scrollStepSize {
-  width: 40px;
+input#scrollStepSize, input#omniSearchWeight {
+  width: 50px;
   margin-right: 3px;
+  padding-left: 3px;
 }
 textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
   width: 100%;;

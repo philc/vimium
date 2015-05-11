@@ -233,6 +233,33 @@ b: http://b.com/?q=%s description
               <div class="nonEmptyTextOption">
             </td>
           </tr>
+
+          <!-- Vimium Labs -->
+          <tr>
+            <td colspan="2"><header>Vimium Labs</header></td>
+          </tr>
+          <tr>
+            <td class="caption"></td>
+            <td>
+                <div class="help">
+                  <div class="example">
+                  </div>
+                </div>
+                These features are experimental and may be changed or removed in future releases.
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Search weighting</td>
+            <td>
+                <div class="help">
+                  <div class="example">
+                    How prominent should suggestions be in the vomnibar?
+                    <tt>0</tt> disables suggestions altogether.
+                  </div>
+                </div>
+              <input id="omniSearchWeight" type="number" min="0.0" max="1.0" step="0.05" />(0 to 1)
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>

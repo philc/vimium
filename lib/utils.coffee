@@ -107,11 +107,12 @@ Utils =
     query = query.split(/\s+/) if typeof(query) == "string"
     query.map(encodeURIComponent).join "+"
 
-  # Creates a search URL from the given :query.
-  createSearchUrl: (query) ->
-    # It would be better to pull the default search engine from chrome itself.  However, unfortunately chrome
-    # does not provide an API for doing so.
-    Settings.get("searchUrl") + @createSearchQuery query
+  # Create a search URL from the given :query (using either the provided search URL, or the default one).
+  # It would be better to pull the default search engine from chrome itself.  However, chrome does not provide
+  # an API for doing so.
+  createSearchUrl: (query, searchUrl = Settings.get("searchUrl")) ->
+    searchUrl += "%s" unless 0 <= searchUrl.indexOf "%s"
+    searchUrl.replace /%s/g, @createSearchQuery query
 
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
@@ -185,6 +186,29 @@ Utils =
     delete obj[property] for property in properties
     obj
 
+  # Does string match any of these regexps?
+  matchesAnyRegexp: (regexps, string) ->
+    for re in regexps
+      return true if re.test string
+    false
+
+  # Calculate the length of the longest shared prefix of a list of strings.
+  longestCommonPrefix: (strings) ->
+    return 0 unless 0 < strings.length
+    strings.sort (a,b) -> a.length - b.length
+    [ shortest, strings... ] = strings
+    for ch, index in shortest.split ""
+      for str in strings
+        return index if ch != str[index]
+    return shortest.length
+
+  # Convenience wrapper for setTimeout (with the arguments around the other way).
+  setTimeout: (ms, func) -> setTimeout func, ms
+
+  # Like Nodejs's nextTick.
+  nextTick: (func) -> @setTimeout 0, func
+
+
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
 Function::curry = ->
@@ -195,6 +219,8 @@ Function::curry = ->
 Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
 String::startsWith = (str) -> @indexOf(str) == 0
+String::ltrim = -> @replace /^\s+/, ""
+String::rtrim = -> @replace /\s+$/, ""
 
 globalRoot = window ? global
 globalRoot.extend = (hash1, hash2) ->
@@ -202,5 +228,91 @@ globalRoot.extend = (hash1, hash2) ->
     hash1[key] = hash2[key]
   hash1
 
+# A simple cache. Entries used within two expiry periods are retained, otherwise they are discarded.
+# At most 2 * @entries entries are retained.
+#
+# Note.  We need to be careful with @timer.  If all references to a cache are lost, then eventually its
+# contents must be garbage collected, which will not happen if there are active timers.
+class SimpleCache
+  # expiry: expiry time in milliseconds (default, one hour)
+  # entries: maximum number of entries in @cache (there may be this many entries in @previous, too)
+  constructor: (@expiry = 60 * 60 * 1000, @entries = 1000) ->
+    @cache = {}
+    @previous = {}
+    @timer = null
+
+  rotate: ->
+    @previous = @cache
+    @cache = {}
+    # We reset the timer every time the cache is rotated (which could be because a previous timer expired, or
+    # because the number of @entries was exceeded).  We only restart the timer if the cache is not empty.
+    clearTimeout @timer if @timer?
+    @timer = null
+    @checkTimer() if 0 < Object.keys(@previous).length
+
+  checkTimer: ->
+    unless @timer?
+      @timer = Utils.setTimeout @expiry, => @rotate()
+
+  has: (key) ->
+    (key of @cache) or key of @previous
+
+  # Set value, and return that value.  If value is null, then delete key.
+  set: (key, value = null) ->
+    @checkTimer()
+    if value?
+      @cache[key] = value
+      delete @previous[key]
+      @rotate() if @entries < Object.keys(@cache).length
+    else
+      delete @cache[key]
+      delete @previous[key]
+    value
+
+  get: (key) ->
+    if key of @cache
+      @cache[key]
+    else if key of @previous
+      @cache[key] = @previous[key]
+    else
+      null
+
+  clear: ->
+    @rotate()
+    @rotate()
+
+# This is a simple class for the common case where we want to use some data value which may be immediately
+# available, or for which we may have to wait.  It implements a use-immediately-or-wait queue, and calls the
+# fetch function to fetch the data asynchronously.
+class AsyncDataFetcher
+  constructor: (fetch) ->
+    @data = null
+    @queue = []
+    Utils.nextTick =>
+      fetch (@data) =>
+        callback @data for callback in @queue
+        @queue = null
+
+  use: (callback) ->
+    if @data? then callback @data else @queue.push callback
+
+# This takes a list of jobs (functions) and runs them, asynchronously.  Functions queued with @onReady() are
+# run once all of the jobs have completed.
+class JobRunner
+  constructor: (@jobs) ->
+    @fetcher = new AsyncDataFetcher (callback) =>
+      for job in @jobs
+        do (job) =>
+          Utils.nextTick =>
+            job =>
+              @jobs = @jobs.filter (j) -> j != job
+              callback true if @jobs.length == 0
+
+  onReady: (callback) ->
+    @fetcher.use callback
+
 root = exports ? window
 root.Utils = Utils
+root.SimpleCache = SimpleCache
+root.AsyncDataFetcher = AsyncDataFetcher
+root.JobRunner = JobRunner

@@ -32,9 +32,6 @@ root.Settings = Settings =
       root.Commands.parseCustomKeyMappings value
       root.refreshCompletionKeysAfterMappingSave()
 
-    searchEngines: (value) ->
-      root.SearchEngineCompleter.parseSearchEngines value
-
     exclusionRules: (value) ->
       root.Exclusions.postUpdateHook value
 
@@ -46,6 +43,7 @@ root.Settings = Settings =
   # or strings
   defaults:
     scrollStepSize: 60
+    omniSearchWeight: 0.6
     smoothScroll: true
     keyMappings: "# Insert your preferred key mappings here."
     linkHintCharacters: "sadfjklewcmpgh"
@@ -90,7 +88,24 @@ root.Settings = Settings =
     # default/fall back search engine
     searchUrl: "https://www.google.com/search?q="
     # put in an example search engine
-    searchEngines: "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s wikipedia"
+    searchEngines: [
+      "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
+      ""
+      "# More examples."
+      "#"
+      "# (Vimium has built-in completion for these.)"
+      "#"
+      "# g: http://www.google.com/search?q=%s Google"
+      "# l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
+      "# y: http://www.youtube.com/results?search_query=%s Youtube"
+      "# b: https://www.bing.com/search?q=%s Bing"
+      "# d: https://duckduckgo.com/?q=%s DuckDuckGo"
+      "# az: http://www.amazon.com/s/?field-keywords=%s Amazon"
+      "#"
+      "# Another example (for Vimium does not have completion)."
+      "#"
+      "# m: https://www.google.com/maps/search/%s Google Maps"
+      ].join "\n"
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
 

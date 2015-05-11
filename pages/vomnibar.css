@@ -134,3 +134,14 @@
   font-weight: normal;
 }
 
+#vomnibarInput::selection {
+  /* This is the light grey color of the vomnibar border. */
+  /* background-color: #F1F1F1; */
+
+  /* This is the light blue color of the vomnibar selected item. */
+  /* background-color: #BBCEE9; */
+
+  /* This is a considerably lighter blue than Vimium blue, which seems softer
+   * on the eye for this purpose. */
+  background-color: #E6EEFB;
+}
