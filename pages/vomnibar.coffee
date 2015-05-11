@@ -149,9 +149,8 @@ class VomnibarUI
     @input.value = query + suggestion
     @input.setSelectionRange query.length, query.length + suggestion.length
 
-  # Returns the user's action ("up", "down", "tab", "enter", "dismiss", "delete" or null) based on their
-  # keypress.  We support the arrow keys and various other shortcuts for moving. This method hides that
-  # complexity.
+  # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
+  # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
   actionFromKeyEvent: (event) ->
     key = KeyboardUtils.getKeyChar(event)
     if (KeyboardUtils.isEscape(event))
@@ -169,6 +168,10 @@ class VomnibarUI
       return "enter"
     else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
       return "delete"
+    else if key in [ "left", "right" ] and event.ctrlKey and
+        not (event.altKey or event.metaKey or event.shiftKey)
+      return "control-#{key}"
+
     null
 
   onKeydown: (event) =>
@@ -224,6 +227,19 @@ class VomnibarUI
       else
         # Don't suppress the Delete.  We want it to happen.
         return true
+    else if action == "control-right" and @inputContainsASelectionRange()
+      # "Control-Right" advances the start of the selection by a word.
+      [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
+      text = @input.value[start...end]
+      newText = text.replace /^\s*\S+\s*/, ""
+      @input.setSelectionRange start + (text.length - newText.length), end
+
+    else if action == "control-left"
+      # "Control-Left" extends the start of the selection to the start of the current word.
+      [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
+      text = @input.value[0...start]
+      newText = text.replace /\S+\s*$/, ""
+      @input.setSelectionRange start + (newText.length - text.length), end
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
@@ -231,6 +247,7 @@ class VomnibarUI
     true
 
   onKeypress: (event) =>
+    # Handle typing with prompted text.
     unless event.altKey or event.ctrlKey or event.metaKey
       if @inputContainsASelectionRange()
         # As the user types characters which the match prompted text, we suppress the keyboard event and
