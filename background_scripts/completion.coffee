@@ -416,7 +416,9 @@ class SearchEngineCompleter
     return onComplete [] unless custom or 0 < queryTerms.length
 
     query = queryTerms.join " "
+    factor = Settings.get "omniSearchWeight"
     haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
+    haveCompletionEngine = false unless 0.0 < factor
 
     # Relevancy:
     #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
@@ -429,7 +431,7 @@ class SearchEngineCompleter
     #     a useful suggestion from another completer.
     #
     characterCount = query.length - queryTerms.length + 1
-    relavancy = 0.6 * (Math.min(characterCount, 10.0)/10.0)
+    relavancy = factor * (Math.min(characterCount, 10.0)/10.0)
 
     # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
     # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
@@ -478,7 +480,7 @@ class SearchEngineCompleter
     # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
     # adding further suggestions.
     if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
-      if cachedSuggestions?
+      if cachedSuggestions? and 0 < factor
         console.log "cached suggestions:", cachedSuggestions.length, query if SearchEngineCompleter.debug
         suggestions.push cachedSuggestions.map(mkSuggestion)...
       return onComplete suggestions, { filter, continuation: null }
