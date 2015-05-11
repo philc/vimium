@@ -336,13 +336,8 @@ window.focusThisFrame = do ->
   # Inject stylesheet.
   _styleSheet = document.createElement "style"
   if _styleSheet.style?
-    _styleSheet.innerHTML = ""
+    _styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
     _shadowDOM.appendChild _styleSheet
-    # Load stylesheet.
-    xhr = new XMLHttpRequest()
-    xhr.onload = (e) -> _styleSheet.innerHTML = xhr.responseText
-    xhr.open "GET", chrome.runtime.getURL("content_scripts/vimium.css"), true
-    xhr.send()
 
   _frameEl = document.createElement "div"
   _frameEl.className = "vimiumReset vimiumHighlightedFrame"
