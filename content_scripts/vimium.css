@@ -110,7 +110,7 @@ div.internalVimiumSelectedInputHint span {
 }
 
 /* Frame Highlight Marker CSS*/
-div.vimiumHighlightedFrame {
+div#vimiumHighlightedFrame {
   position: fixed;
   top: 0px;
   left: 0px;

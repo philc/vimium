@@ -330,17 +330,21 @@ setScrollPosition = (scrollX, scrollY) ->
 window.focusThisFrame = do ->
   # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
   highlightedFrameElement = document.createElement "div"
-  # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
-  _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
 
-  # Inject stylesheet.
-  _styleSheet = document.createElement "style"
-  if _styleSheet.style?
+  if highlightedFrameElement.style?
+    # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
+    _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
+
+    # Inject stylesheet.
+    _styleSheet = document.createElement "style"
     _styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
     _shadowDOM.appendChild _styleSheet
+  else
+    _shadowDOM = highlightedFrameElement
 
   _frameEl = document.createElement "div"
-  _frameEl.className = "vimiumReset vimiumHighlightedFrame"
+  _frameEl.className = "vimiumReset"
+  _frameEl.id = "vimiumHighlightedFrame"
   _shadowDOM.appendChild _frameEl
 
   (request) ->
