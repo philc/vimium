@@ -10,7 +10,7 @@
 #  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
 #  - cancel(): (optional) cancels any pending, cancelable action.
 class Suggestion
-  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
 
   constructor: (@options) ->
     # Required options.
@@ -418,7 +418,7 @@ class SearchEngineCompleter
     query = queryTerms.join " "
     factor = Settings.get "omniSearchWeight"
     haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
-    haveCompletionEngine = false unless 0.0 < factor
+    haveCompletionEngine = false if factor == 0.0 and not custom
 
     # Relevancy:
     #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
@@ -431,7 +431,7 @@ class SearchEngineCompleter
     #     a useful suggestion from another completer.
     #
     characterCount = query.length - queryTerms.length + 1
-    relavancy = factor * (Math.min(characterCount, 10.0)/10.0)
+    relevancy = (if custom then 0.9 else factor) * (Math.min(characterCount, 10.0)/10.0)
 
     # This distinguishes two very different kinds of vomnibar baviours, the newer bahviour (true) and the
     # legacy behavior (false).  We retain the latter for the default search engine, and for custom search
@@ -467,7 +467,7 @@ class SearchEngineCompleter
           type: description
           url: Utils.createSearchUrl suggestion, searchUrl
           title: suggestion
-          relevancy: relavancy *= 0.9
+          relevancy: relevancy *= 0.9
           insertText: suggestion
           highlightTerms: false
           selectCommonMatches: true
@@ -480,7 +480,7 @@ class SearchEngineCompleter
     # Post suggestions and bail if we already have all of the suggestions, or if there is no prospect of
     # adding further suggestions.
     if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
-      if cachedSuggestions? and 0 < factor
+      if haveCompletionEngine and cachedSuggestions?
         console.log "cached suggestions:", cachedSuggestions.length, query if SearchEngineCompleter.debug
         suggestions.push cachedSuggestions.map(mkSuggestion)...
       return onComplete suggestions, { filter, continuation: null }
