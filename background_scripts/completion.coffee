@@ -365,6 +365,7 @@ class SearchEngineCompleter
       { queryTerms, query } = request
       keyword = queryTerms[0]
       if keyword and engines[keyword] and (1 < queryTerms.length or /\s$/.test query)
+        request.completers = [ this ]
         extend request,
           queryTerms: queryTerms[1..]
           keyword: keyword
@@ -501,9 +502,12 @@ class MultiCompleter
     return @mostRecentQuery = arguments if @filterInProgress
 
     # Provide each completer with an opportunity to see (and possibly alter) the request before it is
-    # launched.
-    for completer in @completers
-      completer.triageRequest? request
+    # launched.  The completer is provided with a list of the completers we're using (request.completers), and
+    # may change that list to override the default.
+    request.completers = @completers
+    completer.triageRequest? request for completer in @completers
+    completers = request.completers
+    delete request.completers
 
     RegexpCache.clear()
     { queryTerms } = request
@@ -512,7 +516,7 @@ class MultiCompleter
     [ suggestions, continuations, filters ] = [ [], [], [] ]
 
     # Run each of the completers (asynchronously).
-    jobs = new JobRunner @completers.map (completer) ->
+    jobs = new JobRunner completers.map (completer) ->
       (callback) ->
         completer.filter request, (newSuggestions = [], { continuation, filter } = {}) ->
           suggestions.push newSuggestions...
