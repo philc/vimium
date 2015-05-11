@@ -28,16 +28,11 @@ HUD =
   #
   # Retrieves the HUD HTML element.
   #
-  displayElement: ->
-    if (!@_displayElement)
-      @_displayElement = @createHudElement()
-      # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
-      @_displayElement.style.right = "150px"
-    @_displayElement
+  displayElement: -> @_displayElement ?= @createHudElement()
 
   createHudElement: ->
     element = document.createElement("div")
-    element.className = "vimiumReset vimiumHUD"
+    element.className = "vimiumReset vimiumHUD vimiumUIComponentHidden"
     document.body.appendChild(element)
     element
 

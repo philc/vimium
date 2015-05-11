@@ -237,6 +237,8 @@ div.vimiumHUD {
   display: block;
   position: fixed;
   bottom: 0px;
+  /* Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD. */
+  right: 150px;
   color: black;
   height: auto;
   min-height: 13px;
