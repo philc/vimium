@@ -284,6 +284,7 @@ initializeOnDomReady = ->
   CursorHider.init()
   # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
   Vomnibar.init() if DomUtils.isTopFrame()
+  HUD.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
