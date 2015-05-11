@@ -11,26 +11,26 @@ HUD =
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   showForDuration: (text, duration) ->
-    HUD.show(text)
-    HUD._showForDurationTimerId = setTimeout((-> HUD.hide()), duration)
+    @show(text)
+    @_showForDurationTimerId = setTimeout((=> @hide()), duration)
 
   show: (text) ->
-    return unless HUD.enabled()
-    clearTimeout(HUD._showForDurationTimerId)
-    HUD.displayElement().innerText = text
-    clearInterval(HUD._tweenId)
-    HUD._tweenId = Tween.fade(HUD.displayElement(), 1.0, 150)
-    HUD.displayElement().style.display = ""
+    return unless @enabled()
+    clearTimeout(@_showForDurationTimerId)
+    @displayElement().innerText = text
+    clearInterval(@_tweenId)
+    @_tweenId = Tween.fade(@displayElement(), 1.0, 150)
+    @displayElement().style.display = ""
 
   #
   # Retrieves the HUD HTML element.
   #
   displayElement: ->
-    if (!HUD._displayElement)
-      HUD._displayElement = HUD.createHudElement()
+    if (!@_displayElement)
+      @_displayElement = @createHudElement()
       # Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD.
-      HUD._displayElement.style.right = "150px"
-    HUD._displayElement
+      @_displayElement.style.right = "150px"
+    @_displayElement
 
   createHudElement: ->
     element = document.createElement("div")
@@ -43,12 +43,12 @@ HUD =
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
   # mode indicator, is when hide() is called for the mode indicator itself.
   hide: (immediate = false, updateIndicator = true) ->
-    clearInterval(HUD._tweenId)
+    clearInterval(@_tweenId)
     if immediate
-      HUD.displayElement().style.display = "none" unless updateIndicator
+      @displayElement().style.display = "none" unless updateIndicator
       Mode.setIndicator() if updateIndicator
     else
-      HUD._tweenId = Tween.fade HUD.displayElement(), 0, 150, -> HUD.hide true, updateIndicator
+      @_tweenId = Tween.fade @displayElement(), 0, 150, => @hide true, updateIndicator
 
   isReady: do ->
     ready = false
