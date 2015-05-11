@@ -135,8 +135,13 @@ class VomnibarUI
     completions = @completions.filter (completion) ->
       completion.selectCommonMatches? and completion.selectCommonMatches
 
+    # Bail on leading whitespace or on redundant whitespace.  This provides users with a way to force this
+    # feature off.
+    value = @input.value
+    return if /^\s/.test(value) or /\s\s/.test value
+
     # Fetch the query and the suggestion texts.
-    query = @input.value.ltrim().split(/\s+/).join(" ").toLowerCase()
+    query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
     suggestions = completions.map (completion) -> completion.title
 
     # Some completion engines add text at the start of the suggestion; for example, Bing takes "they might be"
