@@ -198,13 +198,18 @@ class VomnibarUI
     # Bail if there's an update pending (because then @input and the completion state are out of sync).
     return if @updateTimer?
 
-    @previousLength ?= @input.value.length
+    value = @getInputWithoutSelectionRange()
+    @previousLength ?= value.length
     previousLength = @previousLength
-    currentLength = @input.value.length
+    currentLength = value.length
     @previousLength = currentLength
 
     # We only highlight matches when the query gets longer (so, not on deletions).
     return unless previousLength < currentLength
+
+    # Bail on leading whitespace or on redundant whitespace.  This provides users with a way to force this
+    # feature off.
+    return if /^\s/.test(value) or /\s\s/.test value
 
     completion = do (completion) =>
       for completion in @completions
@@ -213,11 +218,6 @@ class VomnibarUI
       null
 
     return unless completion
-
-    # Bail on leading whitespace or on redundant whitespace.  This provides users with a way to force this
-    # feature off.
-    value = @input.value
-    return if /^\s/.test(value) or /\s\s/.test value
 
     # Fetch the query and the suggestion texts.
     query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
