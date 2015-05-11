@@ -227,16 +227,18 @@ class VomnibarUI
       else
         # Don't suppress the Delete.  We want it to happen.
         return true
-    else if action == "control-right" and @inputContainsASelectionRange()
-      # "Control-Right" advances the start of the selection by a word.
+    else if action == "control-right"
       [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
+      return true unless @inputContainsASelectionRange() and end == @input.value.length
+      # "Control-Right" advances the start of the selection by a word.
       text = @input.value[start...end]
       newText = text.replace /^\s*\S+\s*/, ""
       @input.setSelectionRange start + (text.length - newText.length), end
 
     else if action == "control-left"
-      # "Control-Left" extends the start of the selection to the start of the current word.
       [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
+      return true unless @inputContainsASelectionRange() and end == @input.value.length
+      # "Control-Left" extends the start of the selection to the start of the current word.
       text = @input.value[0...start]
       newText = text.replace /\S+\s*$/, ""
       @input.setSelectionRange start + (newText.length - text.length), end
