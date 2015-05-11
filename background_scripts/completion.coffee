@@ -231,8 +231,8 @@ class DomainCompleter
   #     If `referenceCount` goes to zero, the domain entry can and should be deleted.
   domains: null
 
-  filter: ({ queryTerms }, onComplete) ->
-    return onComplete([]) unless queryTerms.length == 1
+  filter: ({ queryTerms, query }, onComplete) ->
+    return onComplete [] unless queryTerms.length == 1 and not /\s$/.test query
     if @domains
       @performSearch(queryTerms, onComplete)
     else
