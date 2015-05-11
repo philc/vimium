@@ -214,8 +214,13 @@ class VomnibarUI
 
     return unless completion
 
-    # Fetch the query and suggestion.
-    query = @input.value.ltrim().split(/\s+/).join(" ").toLowerCase()
+    # Bail on leading whitespace or on redundant whitespace.  This provides users with a way to force this
+    # feature off.
+    value = @input.value
+    return if /^\s/.test(value) or /\s\s/.test value
+
+    # Fetch the query and the suggestion texts.
+    query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
     suggestion = completion.title
 
     index = suggestion.toLowerCase().indexOf query
