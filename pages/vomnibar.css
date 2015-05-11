@@ -139,5 +139,9 @@
   /* background-color: #F1F1F1; */
 
   /* This is the light blue color of the vomnibar selected item. */
-  background-color: #BBCEE9;
+  /* background-color: #BBCEE9; */
+
+  /* This is a considerably lighter blue than Vimium blue, which seems softer
+   * on the eye for this purpose. */
+  background-color: #E6EEFB;
 }
