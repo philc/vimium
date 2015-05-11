@@ -64,20 +64,17 @@ class Wikipedia extends RegexpEngine
   parse: (xhr) ->
     JSON.parse(xhr.responseText)[1]
 
+## Does not work...
 ## class GoogleMaps extends RegexpEngine
 ##   # Example search URL: https://www.google.com/maps/search/%s
 ##   constructor: ->
 ##     super [ new RegExp "^https?://www\.google\.com/maps/search/" ]
 ##
 ##   getUrl: (queryTerms) ->
-##     console.log "xxxxxxxxxxxxxxxxxxxxx"
 ##     "https://www.google.com/s?tbm=map&fp=1&gs_ri=maps&source=hp&suggest=p&authuser=0&hl=en&pf=p&tch=1&ech=2&q=#{Utils.createSearchQuery queryTerms}"
 ##
 ##   parse: (xhr) ->
-##     console.log "yyy", xhr.responseText
 ##     data = JSON.parse xhr.responseText
-##     console.log "zzz"
-##     console.log data
 ##     []
 
 class Bing extends RegexpEngine

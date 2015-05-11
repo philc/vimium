@@ -91,8 +91,9 @@ class VomnibarUI
       @suppressedLeadingKeyword = queryTerms[0]
       @input.value = queryTerms[1..].join " "
 
-    # For suggestions from search-engine completion, we copy the suggested text into the input when selected,
-    # and revert when not.  This allows the user to select a suggestion and then continue typing.
+    # For suggestions from search-engine completion, we copy the suggested text into the input when the item
+    # is selected, and revert when it is not.  This allows the user to select a suggestion and then continue
+    # typing.
     if 0 <= @selection and @completions[@selection].insertText?
       @previousInputValue ?=
         value: @input.value
@@ -112,125 +113,37 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
-  # This identifies the common part of all of the (relevant) suggestions which has yet to be typed, adds that
-  # text to the input and selects it. Tab (or just Enter) can then be used to accept the new text, or the user
-  # can just continue typing.
-  selectCommonMatches: (response) ->
+  # This adds prompted text to the vomnibar input.  The propted text is a continuation of the text the user
+  # has typed already, taken from one of the search suggestions.  It is highlight (using the selection) and
+  # will be included with the query should the user type <Enter>.
+  addPromptedText: (response) ->
     # Bail if we don't yet have the background completer's final word on the current query.
     return unless response.mayCacheResults
 
     # Bail if there's an update pending (because then @input and the completion state are out of sync).
     return if @updateTimer?
 
-    @previousLength ?= @input.value.length
-    previousLength = @previousLength
-    currentLength = @input.value.length
-    @previousLength = currentLength
-
-    # We only highlight matches when the query gets longer (so, not on deletions).
-    return unless previousLength < currentLength
-
-    # Get the completions from which we can select text to highlight.
-    completions = @completions.filter (completion) ->
-      completion.selectCommonMatches? and completion.selectCommonMatches
-
-    # Bail on leading whitespace or on redundant whitespace.  This provides users with a way to force this
-    # feature off.
-    value = @input.value
-    return if /^\s/.test(value) or /\s\s/.test value
-
-    # Fetch the query and the suggestion texts.
-    query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
-    suggestions = completions.map (completion) -> completion.title
-
-    # Some completion engines add text at the start of the suggestion; for example, Bing takes "they might be"
-    # and suggests "Ana Ng They Might be Giants".  In such cases, we should still be able to complete
-    # "giants". So, if the query string is present in the suggestion but there is extra text at the start, we
-    # strip the prefix.
-    suggestions =
-      for suggestion in suggestions
-        index = Math.max 0, suggestion.toLowerCase().indexOf query
-        suggestion[index..]
-
-    # Strip suggestions which aren't longer than the query (they can't help).
-    suggestions = suggestions.filter (suggestion) -> query.length < suggestion.length
-
-    # Ensure that the query is a prefix of all remaining suggestions.
-    for suggestion in suggestions
-      return unless 0 == suggestion.toLowerCase().indexOf query
-
-    # Bail if these aren't any remaining completions.
-    return unless 0 < completions.length
-
-    # Calculate the length of the shortest suggestion.
-    length = suggestions[0].length
-    length = Math.min length, suggestion.length for suggestion in suggestions
-
-    # Find the the length of the longest common continuation.
-    length = do (suggestions) ->
-      suggestions = suggestions.map (s) -> s.toLowerCase()
-      [ first, suggestions... ] = suggestions
-      for index in [query.length...length]
-        for suggestion in suggestions
-          return index if first[index] != suggestion[index]
-      length
-
-    # Bail if there's nothing to complete.
-    return unless query.length < length
-
-    completion = suggestions[0].slice query.length, length
-
-    # Don't complete trailing whitespace, strip it.  Then, verify that the completion is still long enough.
-    completion = completion.replace /\s+$/, ""
-    return unless 0 < completion.length
-
-    # If the typed text is all lower case, then make the completion lower case too.
-    completion = completion.toLowerCase() unless /[A-Z]/.test @input.value
-
-    # Insert the completion and highlight it.
-    @input.value = query + completion
-    @input.setSelectionRange query.length, query.length + completion.length
-
-  selectFirstSuggestion: (response) ->
-    # Bail if we don't yet have the background completer's final word on the current query.
-    return unless response.mayCacheResults
-
-    # Bail if there's an update pending (because then @input and the completion state are out of sync).
-    return if @updateTimer?
-
-    value = @getInputWithoutSelectionRange()
+    value = @getInputWithoutPromptedText()
     @previousLength ?= value.length
     previousLength = @previousLength
     currentLength = value.length
     @previousLength = currentLength
 
-    # We only highlight matches when the query gets longer (so, not on deletions).
     return unless previousLength < currentLength
-
-    # Bail on leading whitespace or on redundant whitespace.  This provides users with a way to force this
-    # feature off.
     return if /^\s/.test(value) or /\s\s/.test value
 
-    completion = do (completion) =>
-      for completion in @completions
-        continue if completion.custonSearchEnginePrimarySuggestion
-        return completion if completion.customSearchEngineCompletionSuggestion
-      null
+    completions = @completions.filter (completion) -> completion.customSearchEngineCompletionSuggestion
+    return unless 0 < completions.length
 
-    return unless completion
-
-    # Fetch the query and the suggestion texts.
     query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
-    suggestion = completion.title
+    suggestion = completions[0].title
 
     index = suggestion.toLowerCase().indexOf query
-    return unless 0 <= index
+    return unless 0 <= index and index + query.length < suggestion.length
 
+    # If the typed text is all lower case, then make the prompted text lower case too.
     suggestion = suggestion[index..]
-    return unless query.length < suggestion.length
-
-    # If the typed text is all lower case, then make the completion lower case too.
-    suggestion = suggestion.toLowerCase() unless /[A-Z]/.test @getInputWithoutSelectionRange()
+    suggestion = suggestion.toLowerCase() unless /[A-Z]/.test @getInputWithoutPromptedText()
 
     suggestion = suggestion[query.length..]
     @input.value = query + suggestion
@@ -267,20 +180,9 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      if action == "tab"
-        if @inputContainsASelectionRange()
-          # Tab moves the start of the selection to the end of the current word.
-          text = @input.value[@input.selectionStart..]
-          length = text.length
-          text = text.replace /^\s*\S+/, ""
-          @input.setSelectionRange @input.selectionStart + (length - text.length), @input.selectionEnd
-        else
-          # Other tabs behave the same as "down".
-          action = "down"
-      if action == "down"
-        @selection += 1
-        @selection = @initialSelectionValue if @selection == @completions.length
-        @updateSelection()
+      @selection += 1
+      @selection = @initialSelectionValue if @selection == @completions.length
+      @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
@@ -292,10 +194,11 @@ class VomnibarUI
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
         if @suppressedLeadingKeyword?
-          # This is a custom search engine completion.  Because of the way we add and highlight the text
-          # common to all completions in the input (selectCommonMatches), the text in the input might not
-          # correspond to any of the completions.  So we fire off the query to the background page and use the
-          # completion at the top of the list (which will be the right one).
+          # This is a custom search engine completion.  Because of the way we add prompted text to the input
+          # (addPromptedText), the text in the input might not correspond to any of the completions.  So we
+          # fire off the query to the background page and use the completion at the top of the list (which
+          # will be the right one).
+          window.getSelection()?.collapseToEnd() if @inputContainsASelectionRange()
           @update true, =>
             if @completions[0]
               completion = @completions[0]
@@ -313,6 +216,8 @@ class VomnibarUI
         @hide -> completion.performAction openInNewTab
     else if action == "delete"
       if @suppressedLeadingKeyword? and @input.value.length == 0
+        # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") suppressed.  If
+        # the input is empty, then show the keyword again.
         @input.value = @suppressedLeadingKeyword
         @suppressedLeadingKeyword = null
         @updateCompletions()
@@ -326,34 +231,34 @@ class VomnibarUI
     true
 
   onKeypress: (event) =>
-    if @inputContainsASelectionRange()
-      # As the user types characters which match a highlighted completion suggestion (in the text input), we
-      # suppress the keyboard event and "simulate" it by advancing the start of the highlighted selection (but
-      # only if the typed character matches).  This avoids flicker as the selection is first collapsed then
-      # replaced.
-      if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
-        console.log "extend selection:", @getInputWithoutSelectionRange()
-        @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
-        @updateOnInput()
-        event.stopImmediatePropagation()
-        event.preventDefault()
+    unless event.altKey or event.ctrlKey or event.metaKey
+      if @inputContainsASelectionRange()
+        # As the user types characters which the match prompted text, we suppress the keyboard event and
+        # simulate it by advancing the start of the selection (but only if the typed character matches).  This
+        # avoids flicker (if we were to allow the event through) as the selection is first collapsed then
+        # restored.
+        if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
+          @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
+          @updateOnInput()
+          event.stopImmediatePropagation()
+          event.preventDefault()
     true
 
-  # Test whether the input contains selected text.
+  # Test whether the input contains prompted text.
   inputContainsASelectionRange: ->
     @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
 
   # Return the text of the input, with any selected text removed.
-  getInputWithoutSelectionRange: ->
+  getInputWithoutPromptedText: ->
     if @inputContainsASelectionRange()
       @input.value[0...@input.selectionStart] + @input.value[@input.selectionEnd..]
     else
       @input.value
 
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
-  # search engine keyword which is currently stripped from the input, and strip any selection.
+  # search engine keyword which is currently being suppressed, and strip any propted text.
   getInputValueAsQuery: ->
-    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutSelectionRange()
+    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutPromptedText()
 
   updateCompletions: (callback = null) ->
     @completer.filter @getInputValueAsQuery(), (response) =>
@@ -365,12 +270,12 @@ class VomnibarUI
       @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
       @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
       @updateSelection()
-      @selectFirstSuggestion response
+      @addPromptedText response
       callback?()
 
   updateOnInput: =>
     @completer.cancel()
-    # If the user types, then don't reset any previous text, and re-enable auto-select.
+    # If the user types, then don't reset any previous text, and restart auto select.
     if @previousInputValue?
       @previousInputValue = null
       @previousAutoSelect = null
@@ -388,13 +293,13 @@ class VomnibarUI
 
   update: (updateSynchronously = false, callback = null) =>
     # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
-    # synchronous update (so that state is updated immediately).
+    # synchronous update (so that the state is updated immediately).
     updateSynchronously ||= @isCustomSearch() and not @suppressedLeadingKeyword?
     if updateSynchronously
       @clearUpdateTimer()
       @updateCompletions callback
     else if not @updateTimer?
-      # Update asynchronously for better user experience and to take some load off the CPU (not every
+      # Update asynchronously for a better user experience, and to take some load off the CPU (not every
       # keystroke will cause a dedicated update).
       @updateTimer = Utils.setTimeout @refreshInterval, =>
         @updateTimer = null
@@ -424,7 +329,7 @@ class VomnibarUI
 # Sends requests to a Vomnibox completer on the background page.
 #
 class BackgroundCompleter
-  debug: true
+  debug: false
 
   # The "name" is the background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
@@ -461,7 +366,6 @@ class BackgroundCompleter
           @mostRecentCallback msg if msg.id == @messageId
 
   filter: (query, @mostRecentCallback) ->
-    queryTerms = query.trim().split(/\s+/).filter (s) -> 0 < s.length
     cacheKey = query.ltrim().split(/\s+/).join " "
 
     if cacheKey of @cache
@@ -473,7 +377,7 @@ class BackgroundCompleter
         handler: "filter"
         name: @name
         id: @messageId = Utils.createUniqueId()
-        queryTerms: queryTerms
+        queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
         query: query
         cacheKey: cacheKey
 

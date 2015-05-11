@@ -1,6 +1,6 @@
 
 CompletionSearch =
-  debug: true
+  debug: false
   inTransit: {}
   completionCache: new SimpleCache 2 * 60 * 60 * 1000, 5000 # Two hour, 5000 entries.
   engineCache:new SimpleCache 1000 * 60 * 60 * 1000 # 1000 hours.
@@ -109,7 +109,7 @@ CompletionSearch =
               console.log "GET", url if @debug
             catch
               suggestions = []
-              # We cache failures too, but remove them after just thirty minutes.
+              # We allow failures to be cached too, but remove them after just thirty minutes.
               Utils.setTimeout 30 * 60 * 1000, => @completionCache.set completionCacheKey, null
               console.log "fail", url if @debug
 

@@ -355,12 +355,14 @@ class TabCompleter
       tabRecency.recencyScore(suggestion.tabId)
 
 class SearchEngineCompleter
+  @debug: false
   searchEngines: null
 
   cancel: ->
     CompletionSearch.cancel()
 
-  # Look up the search engine and, if one is found, then note it and remove its keyword from the query terms.
+  # This looks up the custom search engine and, if one is found, then notes it and removes its keyword from
+  # the query terms.  It also sets request.completers to indicate that only this completer should run.
   triageRequest: (request) ->
     @searchEngines.use (engines) =>
       { queryTerms, query } = request
@@ -450,7 +452,7 @@ class SearchEngineCompleter
         # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
         suppressLeadingKeyword: true
         selectCommonMatches: false
-        custonSearchEnginePrimarySuggestion: true
+        customSearchEnginePrimarySuggestion: true
         # Toggles for the legacy behaviour.
         autoSelect: not useExclusiveVomnibar
         forceAutoSelect: not useExclusiveVomnibar
@@ -477,7 +479,7 @@ class SearchEngineCompleter
     # adding further suggestions.
     if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
       if cachedSuggestions?
-        console.log "using cached suggestions:", query
+        console.log "cached suggestions:", cachedSuggestions.length, query if SearchEngineCompleter.debug
         suggestions.push cachedSuggestions.map(mkSuggestion)...
       return onComplete suggestions, { filter, continuation: null }
 
@@ -487,6 +489,7 @@ class SearchEngineCompleter
       filter: filter
       continuation: (onComplete) =>
         CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
+          console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
           onComplete suggestions.map mkSuggestion
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
@@ -495,18 +498,17 @@ class MultiCompleter
   maxResults: 10
 
   constructor: (@completers) ->
-
   refresh: (port) -> completer.refresh? port for completer in @completers
   cancel: (port) -> completer.cancel? port for completer in @completers
 
   filter: (request, onComplete) ->
-    @debug = true
     # Allow only one query to run at a time.
     return @mostRecentQuery = arguments if @filterInProgress
 
     # Provide each completer with an opportunity to see (and possibly alter) the request before it is
-    # launched.  Each completer is provided with a list of all of the completers we're using
-    # (request.completers), and may change that list to override the default.
+    # launched.  Each completer is also provided with a list of all of the completers we're using
+    # (request.completers), and may change that list to override the default (for example, the
+    # search-engine completer does this if it wants to be the *only* completer).
     request.completers = @completers
     completer.triageRequest? request for completer in @completers
     completers = request.completers
@@ -527,8 +529,8 @@ class MultiCompleter
           filters.push filter if filter?
           callback()
 
-    # Once all completers have finished, process and post the results, and run any continuations or pending
-    # queries.
+    # Once all completers have finished, process the results and post them, and run any continuations or
+    # pending queries.
     jobs.onReady =>
       suggestions = suggestions.filter filter for filter in filters
       shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
@@ -541,7 +543,9 @@ class MultiCompleter
           results: suggestions
           mayCacheResults: continuations.length == 0
 
-      # Run any continuations (asynchronously).
+      # Run any continuations (asynchronously); for example, the search-engine completer
+      # (SearchEngineCompleter) uses a continuation to fetch suggestions from completion engines
+      # asynchronously.
       if shouldRunContinuations
         jobs = new JobRunner continuations.map (continuation) ->
           (callback) ->
@@ -551,8 +555,8 @@ class MultiCompleter
 
         jobs.onReady =>
           suggestions = @prepareSuggestions queryTerms, suggestions
-          # We post these results even if a new query has started.  The vomnibar will not display the
-          # completions (they're arriving too late), but it will cache them.
+          # We post these results even if a new query has started.  The vomnibar will not display them
+          # (because they're arriving too late), but it will cache them.
           onComplete
             results: suggestions
             mayCacheResults: true
@@ -560,7 +564,6 @@ class MultiCompleter
       # Admit subsequent queries, and launch any pending query.
       @filterInProgress = false
       if @mostRecentQuery
-        console.log "running pending query:", @mostRecentQuery[0].query if @debug
         @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
