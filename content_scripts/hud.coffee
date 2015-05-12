@@ -4,6 +4,7 @@
 #
 HUD =
   tween: null
+  hudUI: null
   _displayElement: null
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
@@ -11,7 +12,9 @@ HUD =
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   init: ->
-    @tween = new Tween ".vimiumHUD.vimiumUIComponentVisible"
+    @hudUI = new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) =>
+      this[data.name]? data
+    @tween = new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
 
   showForDuration: (text, duration) ->
     @show(text)
@@ -20,21 +23,8 @@ HUD =
   show: (text) ->
     return unless @enabled()
     clearTimeout(@_showForDurationTimerId)
-    @displayElement().innerText = text
+    @hudUI.show {name: "show", text}
     @tween.fade 1.0, 150
-    @displayElement().classList.add "vimiumUIComponentVisible"
-    @displayElement().classList.remove "vimiumUIComponentHidden"
-
-  #
-  # Retrieves the HUD HTML element.
-  #
-  displayElement: -> @_displayElement ?= @createHudElement()
-
-  createHudElement: ->
-    element = document.createElement("div")
-    element.className = "vimiumReset vimiumHUD vimiumUIComponentHidden"
-    document.body.appendChild(element)
-    element
 
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
@@ -42,11 +32,12 @@ HUD =
   # mode indicator, is when hide() is called for the mode indicator itself.
   hide: (immediate = false, updateIndicator = true) ->
     return unless @tween?
+    clearTimeout(@_showForDurationTimerId)
     @tween.stop()
     if immediate
       unless updateIndicator
-        @displayElement().classList.remove "vimiumUIComponentVisible"
-        @displayElement().classList.add "vimiumUIComponentHidden"
+        @hudUI.hide()
+        @hudUI.postMessage {handler: "hide"}
       Mode.setIndicator() if updateIndicator
     else
       @tween.fade 0, 150, => @hide true, updateIndicator
@@ -64,11 +55,11 @@ class Tween
   intervalId: -1
   styleElement: null
 
-  constructor: (@cssSelector) ->
+  constructor: (@cssSelector, insertionPoint = document.documentElement) ->
     @styleElement = document.createElement "style"
     @styleElement.type = "text/css"
     @styleElement.innerHTML = ""
-    document.documentElement.appendChild @styleElement
+    insertionPoint.appendChild @styleElement
 
   fade: (toAlpha, duration, onComplete) ->
     clearInterval @intervalId

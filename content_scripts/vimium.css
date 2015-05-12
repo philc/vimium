@@ -238,7 +238,7 @@ div.vimiumHUD {
   position: fixed;
   bottom: 0px;
   /* Keep this far enough to the right so that it doesn't collide with the "popups blocked" chrome HUD. */
-  right: 150px;
+  right: 0px;
   color: black;
   height: auto;
   min-height: 13px;
@@ -253,10 +253,25 @@ div.vimiumHUD {
   border-radius: 4px 4px 0 0;
   font-family: "Lucida Grande", "Arial", "Sans";
   font-size: 12px;
-  /* One less than vimium's hint markers, so link hints can be shown e.g. for the HUD panel's close button. */
-  z-index: 2147483646;
   text-shadow: 0px 1px 2px #FFF;
   line-height: 1.0;
+}
+
+iframe.vimiumHUDFrame {
+  display: block;
+  background: none;
+  position: fixed;
+  bottom: 0px;
+  right: 150px;
+  height: 20px;
+  min-height: 20px;
+  width: 450px;
+  min-width: 150px;
+  padding: 0px;
+  margin: 0;
+  border: none;
+  /* One less than vimium's hint markers, so link hints can be shown e.g. for the HUD panel's close button. */
+  z-index: 2147483646;
   opacity: 0;
 }
 /* Hide the span between search box letters */

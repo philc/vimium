@@ -3,6 +3,7 @@ class UIComponent
   iframePort: null
   showing: null
   options: null
+  shadowDOM: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
     styleSheet = document.createElement "style"
@@ -18,9 +19,9 @@ class UIComponent
     @iframeElement.addEventListener "load", => @openPort()
     shadowWrapper = document.createElement "div"
     # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
-    shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
-    shadowDOM.appendChild styleSheet
-    shadowDOM.appendChild @iframeElement
+    @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
+    @shadowDOM.appendChild styleSheet
+    @shadowDOM.appendChild @iframeElement
     document.documentElement.appendChild shadowWrapper
 
     @showing = true # The iframe is visible now.
