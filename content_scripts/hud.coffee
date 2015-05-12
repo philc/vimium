@@ -11,13 +11,14 @@ HUD =
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   init: ->
-    @tween = new Tween ".vimiumHUD.vimiumUIComponentVisible"
+    @tween ?= new Tween ".vimiumHUD.vimiumUIComponentVisible"
 
   showForDuration: (text, duration) ->
     @show(text)
     @_showForDurationTimerId = setTimeout((=> @hide()), duration)
 
   show: (text) ->
+    @init()
     return unless @enabled()
     clearTimeout(@_showForDurationTimerId)
     @displayElement().innerText = text
@@ -41,6 +42,7 @@ HUD =
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
   # mode indicator, is when hide() is called for the mode indicator itself.
   hide: (immediate = false, updateIndicator = true) ->
+    @init()
     @tween.stop()
     if immediate
       unless updateIndicator
