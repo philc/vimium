@@ -191,16 +191,20 @@ class VomnibarUI
       @updateSelection()
     else if (action == "enter")
       if @selection == -1
+        # <Alt>/<Meta> includes prompted text in the query (normally it is not included).
+        #
+        # FIXME(smblott).  This is a terrible binding. <Ctrl-Enter> would be better, but that's already being
+        # used.  We need a better UX around how to include the prompted text in the query. <Right> then
+        # <Enter> works, but that's ugly too.
+        window.getSelection().collapseToEnd() if event.altKey or event.metaKey
         # The user has not selected a suggestion.
-        query = @input.value.trim()
+        query = @getInputWithoutPromptedText().trim()
         # <Enter> on an empty vomnibar is a no-op.
         return unless 0 < query.length
         if @suppressedLeadingKeyword?
-          # This is a custom search engine completion.  Because of the way we add prompted text to the input
-          # (addPromptedText), the text in the input might not correspond to any of the completions.  So we
-          # fire off the query to the background page and use the completion at the top of the list (which
-          # will be the right one).
-          window.getSelection()?.collapseToEnd() if @inputContainsASelectionRange()
+          # This is a custom search engine completion.  The text in the input might not correspond to any of
+          # the completions.  So we fire off the query to the background page and use the completion at the
+          # top of the list (which will be the right one).
           @update true, =>
             if @completions[0]
               completion = @completions[0]
