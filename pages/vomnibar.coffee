@@ -200,7 +200,10 @@ class VomnibarUI
           # (addPromptedText), the text in the input might not correspond to any of the completions.  So we
           # fire off the query to the background page and use the completion at the top of the list (which
           # will be the right one).
-          window.getSelection()?.collapseToEnd() if @inputContainsASelectionRange()
+          #
+          # <Enter> on its own selects only the text that the user has typed. <Control-Enter> also includes
+          # any prompted text.
+          window.getSelection()?.collapseToEnd() if @inputContainsASelectionRange() and event.ctrlKey
           @update true, =>
             if @completions[0]
               completion = @completions[0]
