@@ -132,7 +132,7 @@ class VomnibarUI
     # Bail if there's an update pending (because then @input and the completion state are out of sync).
     return if @updateTimer?
 
-    completions = @completions.filter (completion) -> completion.customSearchEngineCompletionSuggestion
+    completions = @completions.filter (completion) -> completion.searchEngineCompletionSuggestion
     return unless 0 < completions.length
 
     query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
