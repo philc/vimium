@@ -120,9 +120,6 @@ class VomnibarUI
     # Bail if we don't yet have the background completer's final word on the current query.
     return unless response.mayCacheResults
 
-    # Bail if there's an update pending (because then @input and the completion state are out of sync).
-    return if @updateTimer?
-
     value = @getInputWithoutPromptedText()
     @previousLength ?= value.length
     previousLength = @previousLength
@@ -131,6 +128,9 @@ class VomnibarUI
 
     return unless previousLength < currentLength
     return if /^\s/.test(value) or /\s\s/.test value
+
+    # Bail if there's an update pending (because then @input and the completion state are out of sync).
+    return if @updateTimer?
 
     completions = @completions.filter (completion) -> completion.customSearchEngineCompletionSuggestion
     return unless 0 < completions.length
@@ -168,8 +168,8 @@ class VomnibarUI
       return "enter"
     else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
       return "delete"
-    else if key in [ "left", "right" ] and event.ctrlKey and not (event.altKey or event.metaKey)
-      return "control-#{key}"
+    else if key in [ "left", "right" ]
+      return key
 
     null
 
@@ -228,23 +228,23 @@ class VomnibarUI
         @suppressedLeadingKeyword = null
         @updateCompletions()
       else
-        # Don't suppress the Delete.  We want it to happen.
-        return true
-    else if action == "control-right"
+        return true # Do not suppress event.
+    else if action in [ "left", "right" ]
       [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
-      return true unless @inputContainsASelectionRange() and end == @input.value.length
-      # "Control-Right" advances the start of the selection by a word.
-      text = @input.value[start...end]
-      newText = text.replace /^\s*\S+\s*/, ""
-      @input.setSelectionRange start + (text.length - newText.length), end
-
-    else if action == "control-left"
-      [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
-      return true unless @inputContainsASelectionRange() and end == @input.value.length
-      # "Control-Left" extends the start of the selection to the start of the current word.
-      text = @input.value[0...start]
-      newText = text.replace /\S+\s*$/, ""
-      @input.setSelectionRange start + (newText.length - text.length), end
+      @previousLength = end
+      if event.ctrlKey and not (event.altKey or event.metaKey)
+        return true unless @inputContainsASelectionRange() and end == @input.value.length
+        # "Control-Right" advances the start of the selection by a word.
+        text = @input.value[start...end]
+        switch action
+          when "right"
+            newText = text.replace /^\s*\S+\s*/, ""
+            @input.setSelectionRange start + (text.length - newText.length), end
+          when "left"
+            newText = text.replace /\S+\s*$/, ""
+            @input.setSelectionRange start + (newText.length - text.length), end
+      else
+        return true # Do not suppress event.
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
