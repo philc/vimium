@@ -42,7 +42,8 @@ class Google extends GoogleXMLRegexpEngine
       ]
 
   getUrl: (queryTerms) ->
-    "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{Utils.createSearchQuery queryTerms}"
+    Utils.createSearchUrl queryTerms,
+      "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
 
 class Youtube extends GoogleXMLRegexpEngine
   # Example search URL: http://www.youtube.com/results?search_query=%s
@@ -50,7 +51,8 @@ class Youtube extends GoogleXMLRegexpEngine
     super [ new RegExp "^https?://[a-z]+\.youtube\.com/results" ]
 
   getUrl: (queryTerms) ->
-    "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=#{Utils.createSearchQuery queryTerms}"
+    Utils.createSearchUrl queryTerms,
+      "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s"
 
 class Wikipedia extends RegexpEngine
   doNotCache: false # true (disbaled, experimental)
@@ -59,7 +61,8 @@ class Wikipedia extends RegexpEngine
     super [ new RegExp "^https?://[a-z]+\.wikipedia\.org/" ]
 
   getUrl: (queryTerms) ->
-    "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=#{Utils.createSearchQuery queryTerms}"
+    Utils.createSearchUrl queryTerms,
+      "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=%s"
 
   parse: (xhr) ->
     JSON.parse(xhr.responseText)[1]
@@ -80,19 +83,22 @@ class Wikipedia extends RegexpEngine
 class Bing extends RegexpEngine
   # Example search URL: https://www.bing.com/search?q=%s
   constructor: -> super [ new RegExp "^https?://www\.bing\.com/search" ]
-  getUrl: (queryTerms) -> "http://api.bing.com/osjson.aspx?query=#{Utils.createSearchQuery queryTerms}"
+  getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "http://api.bing.com/osjson.aspx?query=%s"
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
 class Amazon extends RegexpEngine
   # Example search URL: http://www.amazon.com/s/?field-keywords=%s
   constructor: -> super [ new RegExp "^https?://www\.amazon\.(com|co.uk|ca|com.au)/s/" ]
-  getUrl: (queryTerms) -> "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=#{Utils.createSearchQuery queryTerms}"
+  getUrl: (queryTerms) ->
+    Utils.createSearchUrl queryTerms,
+      "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s"
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
 class DuckDuckGo extends RegexpEngine
   # Example search URL: https://duckduckgo.com/?q=%s
   constructor: -> super [ new RegExp "^https?://([a-z]+\.)?duckduckgo\.com/" ]
-  getUrl: (queryTerms) -> "https://duckduckgo.com/ac/?q=#{Utils.createSearchQuery queryTerms}"
+  getUrl: (queryTerms) ->
+  getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "https://duckduckgo.com/ac/?q=%s"
   parse: (xhr) ->
     suggestion.phrase for suggestion in JSON.parse xhr.responseText
 
