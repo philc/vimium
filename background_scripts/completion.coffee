@@ -41,6 +41,7 @@ class Suggestion
     # or @relevancyFunction.
     @relevancy ?= @relevancyFunction this
 
+  # Note. This always returns a truthy value.
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
@@ -52,7 +53,7 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@shortenUrl @highlightQueryTerms Utils.escapeHtml @url}</span>
+        <span class="vimiumReset vomnibarUrl">#{@highlightQueryTerms Utils.escapeHtml @shortenUrl()}</span>
         #{relevancyHtml}
       </div>
       """
@@ -67,8 +68,6 @@ class Suggestion
     a = document.createElement 'a'
     a.href = url
     a.hostname
-
-  shortenUrl: (url) -> @stripTrailingSlash(url).replace(/^https?:\/\//, "")
 
   stripTrailingSlash: (url) ->
     url = url.substring(url, url.length - 1) if url[url.length - 1] == "/"
@@ -129,6 +128,28 @@ class Suggestion
         previous = range
     mergedRanges
 
+  # Simplify a suggestion's URL (by removing those parts which aren't useful for either display or comparison).
+  shortenUrl: () ->
+    return @shortUrl if @shortUrl?
+    url = @url
+    for [ filter, replacements ] in @stripPatterns
+      if new RegExp(filter).test url
+        for replace in replacements
+          url = url.replace replace, ""
+    @shortUrl = url
+
+  # Patterns to strip from URLs; of the form [ [ filter, replacements ], [ filter, replacements ], ... ]
+  #   - filter is a regexp; a URL must match this regexp first.
+  #   - replacements (itself a list) is a list of regexps, each of which is removed from matching URLs.
+  #
+  stripPatterns: [
+    # Google search specific replacements; replaces query parameters which are known to not be helpful.
+    [ '^https?://www\.google\.(com|ca|com\.au|co\.uk|ie)/.*[&?]q=',
+      "ei gws_rd url ved usg sa usg sig2".split(/\s+/).map (param) -> new RegExp "\&#{param}=[^&]+" ]
+
+    # General replacements; replaces leading and trailing fluff.
+    [ '.', [ "^https?://", "\\W+$" ].map (re) -> new RegExp re ]
+  ]
 
 class BookmarkCompleter
   folderSeparator: "/"
@@ -575,11 +596,23 @@ class MultiCompleter
         @filter @mostRecentQuery...
 
   prepareSuggestions: (queryTerms, suggestions) ->
+    # Compute suggestion relevancies and sort.
     suggestion.computeRelevancy queryTerms for suggestion in suggestions
     suggestions.sort (a, b) -> b.relevancy - a.relevancy
-    for suggestion in suggestions[0...@maxResults]
-      suggestion.generateHtml()
-      suggestion
+
+    # Simplify URLs and remove duplicates (duplicate simplified URLs, that is).
+    count = 0
+    seenUrls = {}
+    suggestions =
+      for suggestion in suggestions
+        url = suggestion.shortenUrl()
+        continue if seenUrls[url]
+        break if ++count == @maxResults
+        seenUrls[url] = suggestion
+
+    # Generate HTML for the remaining suggestions and return them.
+    suggestion.generateHtml() for suggestion in suggestions
+    suggestions
 
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
