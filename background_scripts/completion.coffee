@@ -41,7 +41,6 @@ class Suggestion
     # or @relevancyFunction.
     @relevancy ?= @relevancyFunction this
 
-  # Note. This always returns a truthy value.
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
@@ -142,9 +141,12 @@ class Suggestion
   #   - filter is a regexp; a URL must match this regexp first.
   #   - replacements (itself a list) is a list of regexps, each of which is removed from matching URLs.
   #
+  # This includes some site-specific patterns for very-popular sites with URLs which don't work well in the
+  # vomnibar.
+  #
   stripPatterns: [
     # Google search specific replacements; replaces query parameters which are known to not be helpful.
-    [ '^https?://www\.google\.(com|ca|com\.au|co\.uk|ie)/.*[&?]q=',
+    [ "^https?://www\.google\.(com|ca|com\.au|co\.uk|ie)/.*[&?]q="
       "ei gws_rd url ved usg sa usg sig2".split(/\s+/).map (param) -> new RegExp "\&#{param}=[^&]+" ]
 
     # General replacements; replaces leading and trailing fluff.
