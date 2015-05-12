@@ -141,8 +141,10 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-Changes since 1.51 (these have not yet been released)
+1.52 (not yet released)
 
+- Search engine completion for selected search engines (including Google, Youtube, Bing, DuckDuckGo, Wikipedia and Amazon).
+- Much improved custom search engine experience (including completion, where available).
 - Bug fixes: bookmarklets accessed from the vomnibar.
 
 1.51 (2015-05-02)
