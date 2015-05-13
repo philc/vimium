@@ -69,8 +69,7 @@ class VomnibarUI
     @completions = []
     @previousAutoSelect = null
     @previousInputValue = null
-    @lastUpdateTime = null
-    @suppressedLeadingKeyword = null
+    @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
 
@@ -84,70 +83,26 @@ class VomnibarUI
     else
       @previousAutoSelect = null
 
-    # Notwithstanding all of the above, disable autoSelect if the user is deleting text from the query.
-    if @lastAction == "delete"
-      @selection = -1
-      @previousAutoSelect = null
-
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
-    if @lastReponse.suppressLeadingKeyword and not @suppressedLeadingKeyword?
+    if @lastReponse.customSearchMode and not @customSearchMode?
       queryTerms = @input.value.trim().split /\s+/
-      @suppressedLeadingKeyword = queryTerms[0]
+      @customSearchMode = queryTerms[0]
       @input.value = queryTerms[1..].join " "
 
     # For suggestions for custom search engines, we copy the suggested text into the input when the item is
     # selected, and revert when it is not.  This allows the user to select a suggestion and then continue
     # typing.
     if 0 <= @selection and @completions[@selection].insertText?
-      @previousInputValue ?=
-        value: @input.value
-        selectionStart: @input.selectionStart
-        selectionEnd: @input.selectionEnd
+      @previousInputValue ?= @input.value
       @input.value = @completions[@selection].insertText + (if @selection == 0 then "" else " ")
     else if @previousInputValue?
-      # Restore the text.
-      @input.value = @previousInputValue.value
-      # Restore the selection.
-      if @previousInputValue.selectionStart? and @previousInputValue.selectionEnd? and
-        @previousInputValue.selectionStart != @previousInputValue.selectionEnd
-          @input.setSelectionRange @previousInputValue.selectionStart, @previousInputValue.selectionEnd
+      @input.value = @previousInputValue
       @previousInputValue = null
 
     # Highlight the selected entry, and only the selected entry.
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
-
-  # This adds prompted text to the vomnibar input.  The prompted text is a continuation of the text the user
-  # has already typed, taken from one of the search suggestions.  It is highlight (using the selection) and
-  # will be included with the query should the user type <Enter>.
-  addPromptedText: ->
-    # Bail if we don't yet have the background completer's final word on the current query.
-    return unless @lastReponse.mayCacheResults
-
-    # Bail if the last action was "delete"; or we may be putting back what the user just deleted.
-    return if @lastAction == "delete"
-
-    # Bail if there's an update pending, because @input and the completion state are out of sync.
-    return if @updateTimer?
-
-    completions = @completions.filter (completion) ->
-      completion. searchSuggestionType in [ "primary", "completion" ]
-    return unless 0 < completions.length
-
-    query = @getInputWithoutPromptedText().ltrim().split(/\s+/).join(" ").toLowerCase()
-    suggestion = completions[0].title
-
-    index = suggestion.toLowerCase().indexOf query
-    return unless 0 <= index and index + query.length < suggestion.length
-
-    # If the typed text is all lower case, then make the prompted text lower case too.
-    suggestion = suggestion[index..]
-    suggestion = suggestion.toLowerCase() unless /[A-Z]/.test @getInputWithoutPromptedText()
-
-    suggestion = suggestion[query.length..]
-    @input.value = query + suggestion
-    @input.setSelectionRange query.length, query.length + suggestion.length
 
   # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
   # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
@@ -182,12 +137,6 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      # if action == "tab"
-      #   if @inputContainsASelectionRange()
-      #     window.getSelection().collapseToEnd()
-      #   else
-      #     action = "down"
-      # if action == "down"
       @selection += 1
       @selection = @initialSelectionValue if @selection == @completions.length
       @updateSelection()
@@ -196,10 +145,6 @@ class VomnibarUI
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
-      # <Enter> immediately after new suggestions have been posted is ignored.  It's all too common that the
-      # user gets results they weren't intending.
-      return if @lastUpdateTime? and new Date() - @lastUpdateTime < 250 and @inputContainsASelectionRange()
-      @lastUpdateTime = null
       if @selection == -1
         query = @input.value.trim()
         # <Enter> on an empty query is a no-op.
@@ -217,27 +162,12 @@ class VomnibarUI
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
     else if action == "delete"
-      if @suppressedLeadingKeyword? and @input.value.length == 0
+      if @customSearchMode? and @input.value.length == 0
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
-        # If the input is empty, then show the keyword again.
-        @input.value = @suppressedLeadingKeyword
-        @suppressedLeadingKeyword = null
+        # If the input is empty, then reinstate the keyword (the "w").
+        @input.value = @customSearchMode
+        @customSearchMode = null
         @updateCompletions()
-      else
-        return true # Do not suppress event.
-    else if action in [ "left", "right" ]
-      [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
-      if event.ctrlKey and not (event.altKey or event.metaKey)
-        return true unless @inputContainsASelectionRange() and end == @input.value.length
-        # "Control-Right" advances the start of the selection by a word.
-        text = @input.value[start...end]
-        switch action
-          when "right"
-            newText = text.replace /^\s*\S+\s*/, ""
-            @input.setSelectionRange start + (text.length - newText.length), end
-          when "left"
-            newText = text.replace /\S+\s*$/, ""
-            @input.setSelectionRange start + (newText.length - text.length), end
       else
         return true # Do not suppress event.
 
@@ -246,38 +176,10 @@ class VomnibarUI
     event.preventDefault()
     true
 
-  onKeypress: (event) =>
-    # The user is typing. They know what they're doing.
-    @lastUpdateTime = null
-    # Handle typing together with prompted text.
-    unless event.altKey or event.ctrlKey or event.metaKey
-      if @inputContainsASelectionRange()
-        # As the user types characters which the match the prompted text, we suppress the keyboard event and
-        # simulate it by advancing the start of the selection (but only if the typed character matches).
-        # If we were to allow the event through, we would get flicker, as the selection is first collapsed and
-        # then (shortly afterwards) restored.
-        if @input.value[@input.selectionStart][0].toLowerCase() == (String.fromCharCode event.charCode).toLowerCase()
-          @input.setSelectionRange @input.selectionStart + 1, @input.selectionEnd
-          @updateOnInput()
-          event.stopImmediatePropagation()
-          event.preventDefault()
-    true
-
-  # Test whether the input contains prompted text.
-  inputContainsASelectionRange: ->
-    @input.selectionStart? and @input.selectionEnd? and @input.selectionStart != @input.selectionEnd
-
-  # Return the text of the input, with any prompted text removed.
-  getInputWithoutPromptedText: ->
-    if @inputContainsASelectionRange()
-      @input.value[0...@input.selectionStart] + @input.value[@input.selectionEnd..]
-    else
-      @input.value
-
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
   # search engine keyword which is currently being suppressed, and strip any prompted text.
   getInputValueAsQuery: ->
-    (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutPromptedText()
+    (if @customSearchMode? then @customSearchMode + " " else "") + @input.value
 
   updateCompletions: (callback = null) ->
     @completer.filter
@@ -291,8 +193,6 @@ class VomnibarUI
         @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
         @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
         @updateSelection()
-        @addPromptedText()
-        @lastUpdateTime = new Date()
         callback?()
 
   updateOnInput: =>
@@ -316,7 +216,7 @@ class VomnibarUI
   update: (updateSynchronously = false, callback = null) =>
     # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
     # synchronous update (so that the state is updated immediately).
-    updateSynchronously ||= @isCustomSearch() and not @suppressedLeadingKeyword?
+    updateSynchronously ||= @isCustomSearch() and not @customSearchMode?
     if updateSynchronously
       @clearUpdateTimer()
       @updateCompletions callback
@@ -335,7 +235,6 @@ class VomnibarUI
     @input = @box.querySelector("input")
     @input.addEventListener "input", @updateOnInput
     @input.addEventListener "keydown", @onKeydown
-    @input.addEventListener "keypress", @onKeypress
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
 
