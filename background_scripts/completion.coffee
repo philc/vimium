@@ -232,7 +232,8 @@ class DomainCompleter
   domains: null
 
   filter: ({ queryTerms, query }, onComplete) ->
-    return onComplete [] unless queryTerms.length == 1 and not /\s$/.test query
+    # Do not offer completions if the query is empty, or if the user has finished typing the first word.
+    return onComplete [] if queryTerms.length == 0 or /\S\s/.test query
     if @domains
       @performSearch(queryTerms, onComplete)
     else
