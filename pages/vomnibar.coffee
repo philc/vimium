@@ -63,7 +63,6 @@ class VomnibarUI
     @postHideCallback = null
 
   reset: ->
-    @fetchOnlyThePrimarySuggestion = false
     @clearUpdateTimer()
     @completionList.style.display = ""
     @input.value = ""
@@ -71,7 +70,6 @@ class VomnibarUI
     @previousAutoSelect = null
     @previousInputValue = null
     @suppressedLeadingKeyword = null
-    @previousLength = 0
     @selection = @initialSelectionValue
     @keywords = []
 
@@ -85,9 +83,14 @@ class VomnibarUI
     else
       @previousAutoSelect = null
 
+    # Notwithstanding all of the above, disable autoSelect if the user is deleting text from the query.
+    if @lastAction == "delete"
+      @selection = -1
+      @previousAutoSelect = null
+
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
-    if @completions[0]?.suppressLeadingKeyword and not @suppressedLeadingKeyword?
+    if @lastReponse.suppressLeadingKeyword and not @suppressedLeadingKeyword?
       queryTerms = @input.value.trim().split /\s+/
       @suppressedLeadingKeyword = queryTerms[0]
       @input.value = queryTerms[1..].join " "
@@ -117,26 +120,21 @@ class VomnibarUI
   # This adds prompted text to the vomnibar input.  The prompted text is a continuation of the text the user
   # has already typed, taken from one of the search suggestions.  It is highlight (using the selection) and
   # will be included with the query should the user type <Enter>.
-  addPromptedText: (response) ->
+  addPromptedText: ->
     # Bail if we don't yet have the background completer's final word on the current query.
-    return unless response.mayCacheResults
+    return unless @lastReponse.mayCacheResults
 
-    value = @getInputWithoutPromptedText()
-    @previousLength ?= value.length
-    previousLength = @previousLength
-    currentLength = value.length
-    @previousLength = currentLength
+    # Bail if the last action was "delete"; or we may be putting back what the user just deleted.
+    return if @lastAction == "delete"
 
-    return unless previousLength < currentLength
-    return if /^\s/.test(value) or /\s\s/.test value
-
-    # Bail if there's an update pending (because then @input and the completion state are out of sync).
+    # Bail if there's an update pending, because @input and the completion state are out of sync.
     return if @updateTimer?
 
-    completions = @completions.filter (completion) -> completion.searchEngineCompletionSuggestion
+    completions = @completions.filter (completion) ->
+      completion. searchSuggestionType in [ "primary", "completion" ]
     return unless 0 < completions.length
 
-    query = value.ltrim().split(/\s+/).join(" ").toLowerCase()
+    query = @getInputWithoutPromptedText().ltrim().split(/\s+/).join(" ").toLowerCase()
     suggestion = completions[0].title
 
     index = suggestion.toLowerCase().indexOf query
@@ -175,7 +173,7 @@ class VomnibarUI
     null
 
   onKeydown: (event) =>
-    action = @actionFromKeyEvent(event)
+    @lastAction = action = @actionFromKeyEvent event
     return true unless action # pass through
 
     openInNewTab = @forceNewTab ||
@@ -183,6 +181,12 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
+      # if action == "tab"
+      #   if @inputContainsASelectionRange()
+      #     window.getSelection().collapseToEnd()
+      #   else
+      #     action = "down"
+      # if action == "down"
       @selection += 1
       @selection = @initialSelectionValue if @selection == @completions.length
       @updateSelection()
@@ -192,26 +196,17 @@ class VomnibarUI
       @updateSelection()
     else if (action == "enter")
       if @selection == -1
-        switch @completer.name
-          when "omni"
-            return unless 0 < @getInputWithoutPromptedText().trim().length
-            # We ask the SearchEngineCompleter for its primary suggestion and launch it.  In some cases, this
-            # adds an extra (and not strictly necessary) round trip to the background completer.  However,
-            # this approach allows all of the various search-engine modes to be handled in a uniform way.
-            @fetchOnlyThePrimarySuggestion = true
-            @update true, =>
-              completion = @completions[0]
-              @hide -> completion?.performAction openInNewTab
-          else
-            # We're in "bookmark" or "tab" mode.
-            # If the user types something and hits enter without selecting a completion from the list, then try
-            # to open their query as a URL directly. If it doesn't look like a URL, then use the default search
-            # engine.
-            query = @getInputValueAsQuery()
-            @hide ->
-              chrome.runtime.sendMessage
-                handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-                url: query
+        query = @input.value.trim()
+        return unless 0 < query.length
+        # If the user types something and hits enter without selecting a completion from the list, then:
+        #   - If a search URL has been provided, then use it.  This is custom search engine request.
+        #   - Otherwise, send the query to the background page, which will open it as a URL or create a
+        #     default search, as appropriate.
+        query = Utils.createSearchUrl query, @lastReponse.searchUrl if @lastReponse.searchUrl?
+        @hide ->
+          chrome.runtime.sendMessage
+            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+            url: query
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
@@ -226,7 +221,6 @@ class VomnibarUI
         return true # Do not suppress event.
     else if action in [ "left", "right" ]
       [ start, end ] = [ @input.selectionStart, @input.selectionEnd ]
-      @previousLength = end
       if event.ctrlKey and not (event.altKey or event.metaKey)
         return true unless @inputContainsASelectionRange() and end == @input.value.length
         # "Control-Right" advances the start of the selection by a word.
@@ -280,10 +274,8 @@ class VomnibarUI
   updateCompletions: (callback = null) ->
     @completer.filter
       query: @getInputValueAsQuery()
-      fetchOnlyThePrimarySuggestion: @fetchOnlyThePrimarySuggestion
-      mayUseVomnibarCache: not @fetchOnlyThePrimarySuggestion
-      callback: (response) =>
-        { results, mayCacheResults } = response
+      callback: (@lastReponse) =>
+        { results } = @lastReponse
         @completions = results
         # Update completion list with the new suggestions.
         @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
@@ -291,7 +283,7 @@ class VomnibarUI
         @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
         @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
         @updateSelection()
-        @addPromptedText response
+        @addPromptedText()
         callback?()
 
   updateOnInput: =>
@@ -350,8 +342,6 @@ class VomnibarUI
 # Sends requests to a Vomnibox completer on the background page.
 #
 class BackgroundCompleter
-  debug: false
-
   # The "name" is the background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
     @port = chrome.runtime.connect name: "completions"
@@ -364,49 +354,36 @@ class BackgroundCompleter
           @keywords = msg.keywords
           @lastUI.setKeywords @keywords
         when "completions"
-          # The result objects coming from the background page will be of the form:
-          #   { html: "", type: "", url: "", ... }
-          # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
-          for result in msg.results
-            extend result,
-              performAction:
-                if result.type == "tab"
-                  @completionActions.switchToTab result.tabId
-                else
-                  @completionActions.navigateToUrl result.url
+          if msg.id == @messageId
+            # The result objects coming from the background page will be of the form:
+            #   { html: "", type: "", url: "", ... }
+            # Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
+            for result in msg.results
+              extend result,
+                performAction:
+                  if result.type == "tab"
+                    @completionActions.switchToTab result.tabId
+                  else
+                    @completionActions.navigateToUrl result.url
 
-          # Cache the results, but only if we have been told it's ok to do so (it could be that more results
-          # will be posted shortly).  We cache the results even if they arrive late.
-          if msg.mayCacheResults
-            console.log "cache set:", "-#{msg.cacheKey}-" if @debug
-            @cache[msg.cacheKey] = msg
-          else
-            console.log "not setting cache:", "-#{msg.cacheKey}-" if @debug
-
-          # Handle the message, but only if it hasn't arrived too late.
-          @mostRecentCallback msg if msg.id == @messageId
+            # Handle the message, but only if it hasn't arrived too late.
+            @mostRecentCallback msg
 
   filter: (request) ->
-    [ query, mayUseVomnibarCache, @mostRecentCallback ] = [ request.query, request.mayUseVomnibarCache,  request.callback ]
-    cacheKey = query.ltrim().split(/\s+/).join " "
+    { query, callback } = request
+    @mostRecentCallback = callback
 
-    if cacheKey of @cache and request.mayUseVomnibarCache
-      console.log "cache hit:", "-#{cacheKey}-" if @debug
-      @mostRecentCallback @cache[cacheKey]
-    else
-      console.log "cache miss:", "-#{cacheKey}-" if @debug
-      @port.postMessage extend request,
-        handler: "filter"
-        name: @name
-        id: @messageId = Utils.createUniqueId()
-        queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
-        cacheKey: cacheKey
-        # We don't send these keys.
-        callback: null
-        mayUseVomnibarCache: null
+    @port.postMessage extend request,
+      handler: "filter"
+      name: @name
+      id: @messageId = Utils.createUniqueId()
+      queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
+      # We don't send these keys.
+      callback: null
+      mayUseVomnibarCache: null
 
   reset: ->
-    [ @keywords, @cache ] = [ [], {} ]
+    @keywords = []
 
   refresh: (@lastUI) ->
     @reset()
