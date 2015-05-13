@@ -1,6 +1,6 @@
 
 CompletionSearch =
-  debug: false
+  debug: true
   inTransit: {}
   completionCache: new SimpleCache 2 * 60 * 60 * 1000, 5000 # Two hours, 5000 entries.
   engineCache:new SimpleCache 1000 * 60 * 60 * 1000 # 1000 hours.
@@ -75,13 +75,16 @@ CompletionSearch =
         # Verify that the previous query is a prefix of the current query.
         return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
         # Verify that every previous suggestion contains the text of the new query.
-        for suggestion in (@mostRecentSuggestions.map (s) -> s.toLowerCase())
+        # Note: @mostRecentSuggestions may also be empty, in which case we drop though. The effect is that
+        # previous queries with no suggestions suppress subsequent no-hope HTTP requests as the user continues
+        # to type.
+        for suggestion in @mostRecentSuggestions
           return false unless 0 <= suggestion.indexOf query
         # Ok. Re-use the suggestion.
         true
 
       if reusePreviousSuggestions
-        console.log "reuse previous query:", @mostRecentQuery if @debug
+        console.log "reuse previous query:", @mostRecentQuery, @mostRecentSuggestions.length if @debug
         return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
 
     # That's all of the caches we can try.  Bail if the caller is only requesting synchronous results.  We
@@ -104,8 +107,11 @@ CompletionSearch =
             # incorrect or out-of-date completion engines.
             try
               suggestions = engine.parse xhr
+              # Make all suggestions lower case.  It looks odd when suggestions from one completion engine are
+              # upper case, and those from another are lower case.
+              suggestions = (suggestion.toLowerCase() for suggestion in suggestions)
               # Filter out the query itself. It's not adding anything.
-              suggestions = (suggestion for suggestion in suggestions when suggestion.toLowerCase() != query)
+              suggestions = (suggestion for suggestion in suggestions when suggestion != query)
               console.log "GET", url if @debug
             catch
               suggestions = []
