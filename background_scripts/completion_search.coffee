@@ -69,7 +69,7 @@ CompletionSearch =
       return callback @completionCache.get completionCacheKey
 
     # If the user appears to be typing a continuation of the characters of the most recent query, then we can
-    # re-use the previous suggestions.
+    # sometimes re-use the previous suggestions.
     if @mostRecentQuery? and @mostRecentSuggestions?
       reusePreviousSuggestions = do =>
         # Verify that the previous query is a prefix of the current query.
@@ -84,7 +84,8 @@ CompletionSearch =
         console.log "reuse previous query:", @mostRecentQuery if @debug
         return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
 
-    # That's all of the caches we can try.  Bail if the caller is looking for synchronous results.
+    # That's all of the caches we can try.  Bail if the caller is only requesting synchronous results.  We
+    # signal that we haven't found a match by returning null.
     return callback null if returnResultsOnlyFromCache
 
     # We pause in case the user is still typing.
@@ -113,13 +114,13 @@ CompletionSearch =
               console.log "fail", url if @debug
 
             callback suggestions
+            delete @inTransit[completionCacheKey]
 
         # ... then use the suggestions.
         @inTransit[completionCacheKey].use (suggestions) =>
           @mostRecentQuery = query
           @mostRecentSuggestions = suggestions
           callback @completionCache.set completionCacheKey, suggestions
-          delete @inTransit[completionCacheKey]
 
   # Cancel any pending (ie. blocked on @delay) queries.  Does not cancel in-flight queries.  This is called
   # whenever the user is typing.
