@@ -421,7 +421,7 @@ class SearchEngineCompleter
 
     return onComplete [] unless custom or 0 < queryTerms.length
 
-    factor = Settings.get "omniSearchWeight"
+    factor = Math.max 0, Math.min 1, Settings.get "omniSearchWeight"
     haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
 
     # Relevancy:
