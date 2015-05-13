@@ -37,7 +37,7 @@ HUD =
     if immediate
       unless updateIndicator
         @hudUI.hide()
-        @hudUI.postMessage {handler: "hide"}
+        @hudUI.postMessage {name: "hide"}
       Mode.setIndicator() if updateIndicator
     else
       @tween.fade 0, 150, => @hide true, updateIndicator
