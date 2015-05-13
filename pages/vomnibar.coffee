@@ -69,6 +69,7 @@ class VomnibarUI
     @completions = []
     @previousAutoSelect = null
     @previousInputValue = null
+    @lastUpdateTime = null
     @suppressedLeadingKeyword = null
     @selection = @initialSelectionValue
     @keywords = []
@@ -195,8 +196,13 @@ class VomnibarUI
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
+      # <Enter> immediately after new suggestions have been posted is ignored.  It's all too common that the
+      # user gets results they weren't intending.
+      return if @lastUpdateTime? and new Date() - @lastUpdateTime < 250 and @inputContainsASelectionRange()
+      @lastUpdateTime = null
       if @selection == -1
         query = @input.value.trim()
+        # <Enter> on an empty query is a no-op.
         return unless 0 < query.length
         # If the user types something and hits enter without selecting a completion from the list, then:
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
@@ -241,6 +247,8 @@ class VomnibarUI
     true
 
   onKeypress: (event) =>
+    # The user is typing. They know what they're doing.
+    @lastUpdateTime = null
     # Handle typing together with prompted text.
     unless event.altKey or event.ctrlKey or event.metaKey
       if @inputContainsASelectionRange()
@@ -284,6 +292,7 @@ class VomnibarUI
         @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
         @updateSelection()
         @addPromptedText()
+        @lastUpdateTime = new Date()
         callback?()
 
   updateOnInput: =>
