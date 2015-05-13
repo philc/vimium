@@ -402,7 +402,7 @@ class SearchEngineCompleter
         handler: "keywords"
         keywords: key for own key of engines
 
-  filter: ({ queryTerms, query, engine }, onComplete) ->
+  filter: ({ queryTerms, query, engine, fetchOnlyThePrimarySuggestion }, onComplete) ->
     [ primarySuggestion, removePrimarySuggestion ] = [ null, false ]
 
     { custom, searchUrl, description } =
@@ -455,29 +455,27 @@ class SearchEngineCompleter
               # And the URL suffix (which must contain the query part) matches the current query.
               RankingUtils.matches queryTerms, suggestion.url[engine.searchUrlPrefix.length..])
 
-        # If we've delivered suggestions from a completion engine, then we can strip out the primary
-        # suggestion.
-        if removePrimarySuggestion
-          suggestions = suggestions.filter (suggestion) -> suggestion != primarySuggestion
+        if fetchOnlyThePrimarySuggestion
+          suggestions.filter (suggestion) -> suggestion == primarySuggestion
+        else if removePrimarySuggestion
+          suggestions.filter (suggestion) -> suggestion != primarySuggestion
+        else
+          suggestions
 
-        suggestions
-
-    # For custom search engines, we add a single, top-ranked entry for the unmodified query.  This
-    # suggestion appears at the top of the list.  This is the primary suggestion.
-    if custom
-      primarySuggestion = new Suggestion
-        queryTerms: queryTerms
-        type: description
-        url: Utils.createSearchUrl queryTerms, searchUrl
-        title: queryTerms.join " "
-        relevancy: 1
-        insertText: query
-        # We suppress the leading keyword, for example "w something" becomes "something" in the vomnibar.
-        suppressLeadingKeyword: true
-        # Toggles for the legacy behaviour.
-        autoSelect: not useExclusiveVomnibar
-        forceAutoSelect: not useExclusiveVomnibar
-        highlightTerms: not useExclusiveVomnibar
+    primarySuggestion = new Suggestion
+      queryTerms: queryTerms
+      type: description
+      url: Utils.createSearchUrl queryTerms, searchUrl
+      title: queryTerms.join " "
+      relevancy: relevancy
+      insertText: if useExclusiveVomnibar then query else null
+      # We suppress the leading keyword for custom search engines; for example, "w query terms" becomes just
+      # "query terms" in the vomnibar.
+      suppressLeadingKeyword: custom
+      # Toggles for the legacy behaviour.
+      autoSelect: not useExclusiveVomnibar
+      forceAutoSelect: not useExclusiveVomnibar
+      highlightTerms: not useExclusiveVomnibar
 
     mkSuggestion = (suggestion) ->
       new Suggestion
@@ -492,27 +490,27 @@ class SearchEngineCompleter
 
     deliverCompletions = (onComplete, completions, args...) ->
       # Make the first suggestion float to the top of the vomnibar (except if we would be competing with the
-      # domain completer).
+      # domain completer, which also assigns a relevancy of 1).
       if 0 < completions.length
-        if custom or (1 < queryTerms.length or /\S\s/.test query)
-          completions[0].relevancy = 1
+        completions[0].relevancy = 1 if custom or (1 < queryTerms.length or /\S\s/.test query)
       onComplete completions, args...
 
     # If we have cached suggestions, then we can bundle them immediately (otherwise we'll have to fetch them
     # asynchronously).
     cachedSuggestions = null
-    cachedSuggestions = CompletionSearch.complete searchUrl, queryTerms if haveCompletionEngine
+    cachedSuggestions = CompletionSearch.complete searchUrl, queryTerms if haveCompletionEngine and not fetchOnlyThePrimarySuggestion
 
     suggestions =
-      if haveCompletionEngine and cachedSuggestions? and 0 < cachedSuggestions.length
+      if haveCompletionEngine and cachedSuggestions? and 0 < cachedSuggestions.length and not fetchOnlyThePrimarySuggestion
         cachedSuggestions.map mkSuggestion
-      else if custom
+      else if custom or fetchOnlyThePrimarySuggestion
         [ primarySuggestion ]
       else
         []
 
-    if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
-      # There is no prospect of adding further completions.
+    if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine or fetchOnlyThePrimarySuggestion
+      # There is no prospect of adding further completions, or further completions will not be used (eg.
+      # because the vomnibar is closing and we've been asked for the primary suggestion only).
       deliverCompletions onComplete, suggestions, { filter, continuation: null }
     else
       # Post initial suggestions, then deliver further completions asynchronously, as a continuation.

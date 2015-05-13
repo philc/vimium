@@ -63,6 +63,7 @@ class VomnibarUI
     @postHideCallback = null
 
   reset: ->
+    @fetchOnlyThePrimarySuggestion = false
     @clearUpdateTimer()
     @completionList.style.display = ""
     @input.value = ""
@@ -191,32 +192,26 @@ class VomnibarUI
       @updateSelection()
     else if (action == "enter")
       if @selection == -1
-        # <Alt>/<Meta> includes prompted text in the query (normally it is not included).
-        #
-        # FIXME(smblott).  This is a terrible binding. <Ctrl-Enter> would be better, but that's already being
-        # used.  We need a better UX around how to include the prompted text in the query. <Right> then
-        # <Enter> works, but that's ugly too.
-        window.getSelection().collapseToEnd() if event.altKey or event.metaKey
-        # The user has not selected a suggestion.
-        query = @getInputWithoutPromptedText().trim()
-        # <Enter> on an empty vomnibar is a no-op.
-        return unless 0 < query.length
-        if @suppressedLeadingKeyword?
-          # This is a custom search engine completion.  The text in the input might not correspond to any of
-          # the completions.  So we fire off the query to the background page and use the completion at the
-          # top of the list (which will be the right one).
-          @update true, =>
-            if @completions[0]
+        switch @completer.name
+          when "omni"
+            return unless 0 < @getInputWithoutPromptedText().trim().length
+            # We ask the SearchEngineCompleter for its primary suggestion and launch it.  In some cases, this
+            # adds an extra (and not strictly necessary) round trip to the background completer.  However,
+            # this approach allows all of the various search-engine modes to be handled in a uniform way.
+            @fetchOnlyThePrimarySuggestion = true
+            @update true, =>
               completion = @completions[0]
-              @hide -> completion.performAction openInNewTab
-        else
-          # If the user types something and hits enter without selecting a completion from the list, then try
-          # to open their query as a URL directly. If it doesn't look like a URL, then use the default search
-          # engine.
-          @hide ->
-            chrome.runtime.sendMessage
-              handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-              url: query
+              @hide -> completion?.performAction openInNewTab
+          else
+            # We're in "bookmark" or "tab" mode.
+            # If the user types something and hits enter without selecting a completion from the list, then try
+            # to open their query as a URL directly. If it doesn't look like a URL, then use the default search
+            # engine.
+            query = @getInputValueAsQuery()
+            @hide ->
+              chrome.runtime.sendMessage
+                handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+                url: query
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
@@ -283,17 +278,21 @@ class VomnibarUI
     (if @suppressedLeadingKeyword? then @suppressedLeadingKeyword + " " else "") + @getInputWithoutPromptedText()
 
   updateCompletions: (callback = null) ->
-    @completer.filter @getInputValueAsQuery(), (response) =>
-      { results, mayCacheResults } = response
-      @completions = results
-      # Update completion list with the new suggestions.
-      @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
-      @completionList.style.display = if @completions.length > 0 then "block" else ""
-      @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
-      @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
-      @updateSelection()
-      @addPromptedText response
-      callback?()
+    @completer.filter
+      query: @getInputValueAsQuery()
+      fetchOnlyThePrimarySuggestion: @fetchOnlyThePrimarySuggestion
+      mayUseVomnibarCache: not @fetchOnlyThePrimarySuggestion
+      callback: (response) =>
+        { results, mayCacheResults } = response
+        @completions = results
+        # Update completion list with the new suggestions.
+        @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
+        @completionList.style.display = if @completions.length > 0 then "block" else ""
+        @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
+        @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
+        @updateSelection()
+        @addPromptedText response
+        callback?()
 
   updateOnInput: =>
     @completer.cancel()
@@ -387,21 +386,24 @@ class BackgroundCompleter
           # Handle the message, but only if it hasn't arrived too late.
           @mostRecentCallback msg if msg.id == @messageId
 
-  filter: (query, @mostRecentCallback) ->
+  filter: (request) ->
+    [ query, mayUseVomnibarCache, @mostRecentCallback ] = [ request.query, request.mayUseVomnibarCache,  request.callback ]
     cacheKey = query.ltrim().split(/\s+/).join " "
 
-    if cacheKey of @cache
+    if cacheKey of @cache and request.mayUseVomnibarCache
       console.log "cache hit:", "-#{cacheKey}-" if @debug
       @mostRecentCallback @cache[cacheKey]
     else
       console.log "cache miss:", "-#{cacheKey}-" if @debug
-      @port.postMessage
+      @port.postMessage extend request,
         handler: "filter"
         name: @name
         id: @messageId = Utils.createUniqueId()
         queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
-        query: query
         cacheKey: cacheKey
+        # We don't send these keys.
+        callback: null
+        mayUseVomnibarCache: null
 
   reset: ->
     [ @keywords, @cache ] = [ [], {} ]
