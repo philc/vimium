@@ -435,7 +435,7 @@ class SearchEngineCompleter
     #     a useful suggestion from another completer.
     #
     characterCount = query.length - queryTerms.length + 1
-    relevancy = (if custom then 0.9 else factor) * (Math.min(characterCount, 10.0)/10.0)
+    relevancy = (if custom then 0.9 else factor) * (Math.min(characterCount, 12.0)/12.0)
 
     # This filter is applied to all of the suggestions from all of the completers.
     filter = (suggestions) ->
@@ -483,12 +483,11 @@ class SearchEngineCompleter
       # Make the first suggestion float to the top of the vomnibar (except if we would be competing with the
       # domain completer, which also assigns a relevancy of 1).
       if 0 < completions.length
-        if custom or (1 < queryTerms.length or /\S\s/.test query)
+        if custom # or (1 < queryTerms.length or /\S\s/.test query)
           extend completions[0],
             relevancy: 1
             autoSelect: custom
             forceAutoSelect: custom
-            isPrimarySuggestion: custom
             insertText: null
       onComplete completions, args...
 
