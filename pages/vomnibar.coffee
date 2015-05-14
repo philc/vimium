@@ -123,8 +123,6 @@ class VomnibarUI
       return "enter"
     else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
       return "delete"
-    else if key in [ "left", "right" ]
-      return key
 
     null
 
