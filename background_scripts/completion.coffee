@@ -127,7 +127,7 @@ class Suggestion
         previous = range
     mergedRanges
 
-  # Simplify a suggestion's URL (by removing those parts which aren't useful for either display or comparison).
+  # Simplify a suggestion's URL (by removing those parts which aren't useful for display or comparison).
   shortenUrl: () ->
     return @shortUrl if @shortUrl?
     url = @url
@@ -138,14 +138,15 @@ class Suggestion
     @shortUrl = url
 
   # Patterns to strip from URLs; of the form [ [ filter, replacements ], [ filter, replacements ], ... ]
-  #   - filter is a regexp; a URL must match this regexp first.
-  #   - replacements (itself a list) is a list of regexps, each of which is removed from matching URLs.
+  #   - filter is a regexp string; a URL must match this regexp first.
+  #   - replacements (itself a list) is a list of regexp objects, each of which is removed from URLs matching
+  #     the filter.
   #
-  # This includes some site-specific patterns for very-popular sites with URLs which don't work well in the
+  # Note. This includes site-specific patterns for very-popular sites with URLs which don't work well in the
   # vomnibar.
   #
   stripPatterns: [
-    # Google search specific replacements; replaces query parameters which are known to not be helpful.
+    # Google search specific replacements; this replaces query parameters which are known to not be helpful.
     [ "^https?://www\.google\.(com|ca|com\.au|co\.uk|ie)/.*[&?]q="
       "ei gws_rd url ved usg sa usg sig2".split(/\s+/).map (param) -> new RegExp "\&#{param}=[^&]+" ]
 
