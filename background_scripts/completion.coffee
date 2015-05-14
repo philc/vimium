@@ -435,7 +435,6 @@ class SearchEngineCompleter
     #
     characterCount = query.length - queryTerms.length + 1
     relevancy = (if custom then 0.5 else factor) * 12.0 / Math.max 12.0, characterCount
-    console.log factor, relevancy
 
     # This filter is applied to all of the suggestions from all of the completers, after they have been
     # aggregated by the MultiCompleter.
