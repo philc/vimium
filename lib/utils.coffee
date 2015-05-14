@@ -230,56 +230,48 @@ globalRoot.extend = (hash1, hash2) ->
 
 # A simple cache. Entries used within two expiry periods are retained, otherwise they are discarded.
 # At most 2 * @entries entries are retained.
-#
-# Note.  We need to be careful with @timer.  If all references to a cache are lost, then eventually its
-# contents must be garbage collected, which will not happen if there are active timers.
 class SimpleCache
   # expiry: expiry time in milliseconds (default, one hour)
-  # entries: maximum number of entries in @cache (there may be this many entries in @previous, too)
+  # entries: maximum number of entries in @cache (there may be up to this many entries in @previous, too)
   constructor: (@expiry = 60 * 60 * 1000, @entries = 1000) ->
     @cache = {}
     @previous = {}
-    @timer = null
-
-  rotate: ->
-    @previous = @cache
-    @cache = {}
-    # We reset the timer every time the cache is rotated (which could be because a previous timer expired, or
-    # because the number of @entries was exceeded).  We only restart the timer if the cache is not empty.
-    clearTimeout @timer if @timer?
-    @timer = null
-    @checkTimer() if 0 < Object.keys(@previous).length
-
-  checkTimer: ->
-    unless @timer?
-      @timer = Utils.setTimeout @expiry, => @rotate()
+    @lastRotation = new Date()
 
   has: (key) ->
+    @rotate()
     (key of @cache) or key of @previous
 
   # Set value, and return that value.  If value is null, then delete key.
   set: (key, value = null) ->
-    @checkTimer()
+    @rotate()
+    delete @previous[key]
     if value?
       @cache[key] = value
-      delete @previous[key]
-      @rotate() if @entries < Object.keys(@cache).length
     else
       delete @cache[key]
-      delete @previous[key]
-    value
+      null
 
   get: (key) ->
+    @rotate()
     if key of @cache
       @cache[key]
     else if key of @previous
       @cache[key] = @previous[key]
+      delete @previous[key]
+      @cache[key]
     else
       null
 
+  rotate: (force = false) ->
+    if force or @entries < Object.keys(@cache).length or @expiry < new Date() - @lastRotation
+      @lastRotation = new Date()
+      @previous = @cache
+      @cache = {}
+
   clear: ->
-    @rotate()
-    @rotate()
+    @rotate true
+    @rotate true
 
 # This is a simple class for the common case where we want to use some data value which may be immediately
 # available, or for which we may have to wait.  It implements a use-immediately-or-wait queue, and calls the
