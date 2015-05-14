@@ -513,7 +513,15 @@ class SearchEngineCompleter
       # continuation.
       onComplete suggestions,
         filter: filter
-        continuation: (onComplete) =>
+        continuation: (suggestions, onComplete) =>
+          # Fetch completion suggestions from suggestion engines.
+
+          # We can skip this if any new suggestions we propose cannot score highly enough to make the list
+          # anyway.
+          if 10 <= suggestions.length and relevancy < suggestions[suggestions.length-1].relevancy
+            console.log "skip (cannot make the grade):", suggestions.length, query if SearchEngineCompleter.debug
+            return onComplete []
+
           CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
@@ -572,7 +580,7 @@ class MultiCompleter
       if shouldRunContinuations
         jobs = new JobRunner continuations.map (continuation) ->
           (callback) ->
-            continuation (newSuggestions) ->
+            continuation suggestions, (newSuggestions) ->
               suggestions.push newSuggestions...
               callback()
 
@@ -602,7 +610,7 @@ class MultiCompleter
       for suggestion in suggestions
         url = suggestion.shortenUrl()
         continue if seenUrls[url]
-        break if ++count == @maxResults
+        break if count++ == @maxResults
         seenUrls[url] = suggestion
 
     # Generate HTML for the remaining suggestions and return them.
