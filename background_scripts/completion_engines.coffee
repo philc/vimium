@@ -102,6 +102,12 @@ class DuckDuckGo extends RegexpEngine
   parse: (xhr) ->
     suggestion.phrase for suggestion in JSON.parse xhr.responseText
 
+class Webster extends RegexpEngine
+  # Example search URL: http://www.merriam-webster.com/dictionary/%s
+  constructor: -> super [ new RegExp "^https?://www.merriam-webster.com/dictionary/" ]
+  getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "http://www.merriam-webster.com/autocomplete?query=%s"
+  parse: (xhr) -> JSON.parse(xhr.responseText).suggestions
+
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine
@@ -119,6 +125,7 @@ CompletionEngines = [
   Wikipedia
   Bing
   Amazon
+  Webster
   DummyCompletionEngine
 ]
 
