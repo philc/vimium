@@ -61,11 +61,7 @@ completers =
     completionSources.queryHistory
     ]
 
-  bookmarks: new ToggleCompleter [
-    new MultiCompleter [completionSources.bookmarks]
-    completionSources.queryHistory
-    ]
-
+  bookmarks: new MultiCompleter [completionSources.bookmarks]
   tabs: new MultiCompleter [completionSources.tabs]
 
 completionHandlers =
