@@ -189,7 +189,7 @@ class VomnibarUI
         null
       else if obj.insertText and not obj.isCustomSearch
         # Pick up the text from (non-custom) searches.
-          obj.insertText
+        obj.insertText
       else if "string" == typeof obj
         # Pick up the text from regular searches.
         obj
@@ -197,7 +197,7 @@ class VomnibarUI
         # We ignore everything else.
         null
 
-    if chrome.extension.inIncognitoContext or not query
+    if not query
       callback()
     else
       # We record the query in chrome.storage.local *before* calling callback() to ensure that this tab stays
