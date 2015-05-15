@@ -136,7 +136,7 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      if action == "tab" and @input.value.trim().length == 0
+      if action == "tab" and @input.value.trim().length == 0 and @completions.length == 0
         # Allow the background completer to toggle the vomnibar mode, if required.
         @tabToggleCount += 1
         @update true

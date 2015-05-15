@@ -48,16 +48,20 @@ completionSources =
   domains: new DomainCompleter
   tabs: new TabCompleter
   searchEngines: new SearchEngineCompleter
+  queryHistory: new MultiCompleter [ new QueryHistoryCompleter ]
 
 completers =
-  omni: new MultiCompleter [
-    completionSources.bookmarks
-    completionSources.history
-    completionSources.domains
-    completionSources.searchEngines
+  omni: new ToggleCompleter [
+    new MultiCompleter [
+      completionSources.bookmarks
+      completionSources.history
+      completionSources.domains
+      completionSources.searchEngines
+      ]
+    completionSources.queryHistory
     ]
-  bookmarks: new MultiCompleter [completionSources.bookmarks]
-  tabs: new MultiCompleter [completionSources.tabs]
+  bookmarks: new ToggleCompleter [ new MultiCompleter([completionSources.bookmarks]), completionSources.queryHistory ]
+  tabs: new ToggleCompleter [ new MultiCompleter([completionSources.tabs]), completionSources.queryHistory ]
 
 completionHandlers =
   filter: (completer, request, port) ->

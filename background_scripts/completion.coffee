@@ -526,6 +526,19 @@ class SearchEngineCompleter
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
 
+# A completer which provides completions based on the user's query history (that is, those vomnibar queries
+# for which no suggestion was selected).
+class QueryHistoryCompleter
+  filter: (request, onComplete) ->
+    onComplete [
+      new Suggestion
+        queryTerms: request.queryTerms
+        type: "query"
+        url: "https://www.google.ie"
+        title: "Hello"
+        relevancy: 1
+      ]
+
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
 class MultiCompleter
@@ -618,6 +631,7 @@ class MultiCompleter
     suggestions
 
 # A completer which can toggle between two or more sub-completers (which must themselves be MultiCompleters).
+# The active completer is determined based on request.tabToggleCount, which is provided by the vomnibar.
 class ToggleCompleter
   constructor: (@completers) ->
 
@@ -835,6 +849,7 @@ root = exports ? window
 root.Suggestion = Suggestion
 root.BookmarkCompleter = BookmarkCompleter
 root.MultiCompleter = MultiCompleter
+root.ToggleCompleter = ToggleCompleter
 root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
@@ -843,3 +858,4 @@ root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache
 root.TabRecency = TabRecency
+root.QueryHistoryCompleter = QueryHistoryCompleter
