@@ -486,6 +486,7 @@ class SearchEngineCompleter
       autoSelect: custom
       forceAutoSelect: custom
       highlightTerms: not haveCompletionEngine
+      isCustomSearch: custom
 
     mkSuggestion = (suggestion) ->
       new Suggestion
@@ -496,6 +497,7 @@ class SearchEngineCompleter
         relevancy: relevancy *= 0.9
         insertText: suggestion
         highlightTerms: false
+        isCustomSearch: custom
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null

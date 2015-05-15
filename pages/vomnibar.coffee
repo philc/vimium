@@ -157,24 +157,16 @@ class VomnibarUI
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
         #   - Otherwise, send the query to the background page, which will open it as a URL or create a
         #     default search, as appropriate.
-        #
-        # If this is not a custom search, then we also record the query in the query history.
-        chrome.storage.local.get "vomnibarQueryHistory", (items) =>
-          queryHistory = items.vomnibarQueryHistory ? []
-          if @lastReponse.searchUrl?
-            query = Utils.createSearchUrl text, @lastReponse.searchUrl
-          else
-            queryHistory.push
-              timestamp: new Date().getTime()
-              text: text
-          chrome.storage.local.set { vomnibarQueryHistory: queryHistory }, =>
-            @hide ->
-              chrome.runtime.sendMessage
-                handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-                url: query
+        @recordQueryHistoryAndPerformAction query, =>
+          @hide ->
+            chrome.runtime.sendMessage
+              handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+              url: query
       else
         completion = @completions[@selection]
-        @hide -> completion.performAction openInNewTab
+        @recordQueryHistoryAndPerformAction completion, =>
+          @hide ->
+            completion.performAction openInNewTab
     else if action == "delete"
       if @customSearchMode? and @input.value.length == 0
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
@@ -189,6 +181,32 @@ class VomnibarUI
     event.stopImmediatePropagation()
     event.preventDefault()
     true
+
+  recordQueryHistoryAndPerformAction: (obj, callback) ->
+    query =
+      # Pick up the text from (non-custom) searches.
+      if obj.insertText and not obj.isCustomSearch
+        obj.insertText
+      # Pick up the text from regular searches.
+      else if "string" == typeof obj
+        obj
+      else
+        # We ignore everything else.
+        console.log "skip", obj.url
+        null
+
+    if not query
+      callback()
+    else
+      # We record the query in chrome.storage.local *before* calling callback() to ensure that this tab stays
+      # active until after the new query history has been saved.
+      chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+        if chrome.runtime.lastError
+          callback()
+        else
+          queryHistory = items.vomnibarQueryHistory ? []
+          queryHistory.push timestamp: new Date().getTime(), text: query
+          chrome.storage.local.set { vomnibarQueryHistory: queryHistory }, callback
 
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
   # search engine keyword which is currently being suppressed, and strip any prompted text.
