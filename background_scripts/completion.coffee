@@ -236,10 +236,11 @@ class HistoryCompleter
       onComplete results.map (entry) =>
         # If this history URL starts with the search URL, we reconstruct the original search terms, and insert
         # them into the vomnibar when this suggestion is selected.  We use try/catch because
-        # decodeURIComponent() throw an error.
+        # decodeURIComponent() can throw an error.
         insertText =
           try
             if entry.url.startsWith searchUrl
+              # This maps "https://www.google.ie/search?q=star+wars&..." to "star wars".
               entry.url[searchUrl.length..].split(searchUrlTerminator)[0].split("+").map(decodeURIComponent).join " "
           catch
             null
