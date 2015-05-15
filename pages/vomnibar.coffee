@@ -72,6 +72,7 @@ class VomnibarUI
     @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
+    @tabToggleCount = 0
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
@@ -135,27 +136,42 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
-      @updateSelection()
+      if action == "tab" and @input.value.trim().length == 0
+        # Allow the background completer to toggle the vomnibar mode, if required.
+        @tabToggleCount += 1
+        @update true
+      else
+        @selection += 1
+        @selection = @initialSelectionValue if @selection == @completions.length
+        @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
       if @selection == -1
-        query = @input.value.trim()
+        query = text = @input.value.trim()
         # <Enter> on an empty query is a no-op.
         return unless 0 < query.length
         # If the user types something and hits enter without selecting a completion from the list, then:
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
         #   - Otherwise, send the query to the background page, which will open it as a URL or create a
         #     default search, as appropriate.
-        query = Utils.createSearchUrl query, @lastReponse.searchUrl if @lastReponse.searchUrl?
-        @hide ->
-          chrome.runtime.sendMessage
-            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-            url: query
+        #
+        # If this is not a custom search, then we also record the query in the query history.
+        chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+          queryHistory = items.vomnibarQueryHistory ? []
+          if @lastReponse.searchUrl?
+            query = Utils.createSearchUrl text, @lastReponse.searchUrl
+          else
+            queryHistory.push
+              timestamp: new Date().getTime()
+              text: text
+          chrome.storage.local.set { vomnibarQueryHistory: queryHistory }, =>
+            @hide ->
+              chrome.runtime.sendMessage
+                handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+                url: query
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
@@ -182,6 +198,7 @@ class VomnibarUI
   updateCompletions: (callback = null) ->
     @completer.filter
       query: @getInputValueAsQuery()
+      tabToggleCount: @tabToggleCount
       callback: (@lastReponse) =>
         { results } = @lastReponse
         @completions = results
