@@ -1,6 +1,6 @@
 
 CompletionSearch =
-  debug: true
+  debug: false
   inTransit: {}
   completionCache: new SimpleCache 2 * 60 * 60 * 1000, 5000 # Two hours, 5000 entries.
   engineCache:new SimpleCache 1000 * 60 * 60 * 1000 # 1000 hours.
