@@ -256,6 +256,14 @@ class HistoryCompleter
     historyEntry = suggestion.relevancyData
     recencyScore = RankingUtils.recencyScore(historyEntry.lastVisitTime)
     wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    if suggestion.insertText?
+      # If this suggestion matches a previous search with the default search engine, then we also score the
+      # previous query terms themselves (suggestion.insertText) and, if that score is higher, then we use it
+      # in place of the wordRelevancy score.  Because the query terms are shorter than the original URL, this
+      # has the side effect of boosting the wordRelevancy score for previous searches with the default search
+      # engine.
+      wordRelevancy = Math.max wordRelevancy,
+        RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.insertText, suggestion.title
     # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
     (wordRelevancy + Math.max recencyScore, wordRelevancy) / 2
 
