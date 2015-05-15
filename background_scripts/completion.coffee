@@ -529,15 +529,31 @@ class SearchEngineCompleter
 # A completer which provides completions based on the user's query history (that is, those vomnibar queries
 # for which no suggestion was selected).
 class QueryHistoryCompleter
-  filter: (request, onComplete) ->
-    onComplete [
-      new Suggestion
-        queryTerms: request.queryTerms
-        type: "query"
-        url: "https://www.google.ie"
-        title: "Hello"
-        relevancy: 1
-      ]
+  filter: ({ queryTerms }, onComplete) ->
+    chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+      if chrome.runtime.lastError
+        onComplete []
+      else
+        queryHistory = (items.vomnibarQueryHistory ? []).filter (item) ->
+          RankingUtils.matches queryTerms, item.text
+        onComplete queryHistory.map ({ text, timestamp }) =>
+          new Suggestion
+            queryTerms: queryTerms
+            type: "query"
+            url: Utils.convertToUrl text
+            title: text
+            relevancyFunction: @computeRelevancy
+            timestamp: timestamp
+            autoSelect: true
+            insertText: text
+
+  computeRelevancy: ({ queryTerms, url, title, timestamp }) ->
+    wordRelevancy = if queryTerms.length == 0 then 0.0 else RankingUtils.wordRelevancy queryTerms, url, title
+    oneDayAgo = 1000 * 60 * 60 * 24
+    age = new Date() - Math.max timestamp, oneDayAgo
+    recencyScore = Math.pow 0.999, (age / (1000 * 60 * 60 * 10))
+    # We give a strong preference for the recency score.
+    (recencyScore * 0.9) + wordRelevancy * 0.1
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
