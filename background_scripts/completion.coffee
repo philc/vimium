@@ -539,7 +539,6 @@ class SearchEngineCompleter
 #
 class QueryHistoryCompleter
   maxHistory: 1000
-  filtersSinceRefresh: 0
 
   constructor: ->
     chrome.storage.onChanged.addListener (changes, area) =>
@@ -556,7 +555,6 @@ class QueryHistoryCompleter
         chrome.storage.local.set vomnibarQueryHistory: queryHistory[0...@maxHistory].reverse()
 
   filter: ({ queryTerms }, onComplete) ->
-    autoSelect = @filtersSinceRefresh++ == 0
     chrome.storage.local.get "vomnibarQueryHistory", (items) =>
       if chrome.runtime.lastError
         onComplete []
@@ -572,9 +570,6 @@ class QueryHistoryCompleter
             relevancyFunction: @computeRelevancy
             timestamp: timestamp
             insertText: text
-
-  refresh: ->
-    @filtersSinceRefresh = 0
 
   computeRelevancy: ({ queryTerms, url, title, timestamp }) ->
     wordRelevancy = if queryTerms.length == 0 then 0.0 else RankingUtils.wordRelevancy queryTerms, url, title
