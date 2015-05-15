@@ -534,6 +534,9 @@ class SearchEngineCompleter
 # QueryHistory entries area stored in chrome.storage.local under the key "vomnibarQueryHistory" in the form:
 #   [ { text: ..., timestamp: ...}, ... ]
 #
+# Insertions only happen in vomnibar.coffee(), and new entries are only ever appended.  Therefore, the list is
+# always ordered from least recent (at the start) to most recent (at the end).
+#
 class QueryHistoryCompleter
   maxHistory: 1000
   filtersSinceRefresh: 0
@@ -542,14 +545,13 @@ class QueryHistoryCompleter
     chrome.storage.onChanged.addListener (changes, area) =>
       if area == "local" and changes.vomnibarQueryHistory?.newValue
         seenHistory = {}
-        # We need to eleiminate duplicates.  New items are add at the end, so we reverse the list before
-        # checking (so we pick up the item with the newest timestamp first).  We then reverse the list again
-        # when saving it.
+        # We need to eliminate duplicates.  New items are add at the end, so we reverse the list before
+        # checking (so that we pick up the item with the newest timestamp first).  We then reverse the list
+        # again when saving it.
         queryHistory =
           for item in changes.vomnibarQueryHistory.newValue.reverse()
-            continue if seenHistory[item.text]
-            seenHistory[item.text] = true
-            item
+            continue if item.text of seenHistory
+            seenHistory[item.text] = item
 
         chrome.storage.local.set vomnibarQueryHistory: queryHistory[0...@maxHistory].reverse()
 
@@ -579,8 +581,12 @@ class QueryHistoryCompleter
     oneDayAgo = 1000 * 60 * 60 * 24
     age = new Date() - Math.max timestamp, oneDayAgo
     recencyScore = Math.pow 0.999, (age / (1000 * 60 * 60 * 10))
-    # We give a strong preference for the recency score.
-    (recencyScore * 0.9) + wordRelevancy * 0.1
+    if queryTerms.length == 0
+      recencyScore
+    else
+      # We give a strong bias towards the recency score, because the function of the query completer is
+      # intended to be for finding recent searches.
+      if wordRelevancy == 0 then 0 else (recencyScore * 0.7) + wordRelevancy * 0.3
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.

@@ -192,7 +192,6 @@ class VomnibarUI
         obj
       else
         # We ignore everything else.
-        console.log "skip", obj.url
         null
 
     if not query
