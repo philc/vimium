@@ -617,6 +617,16 @@ class MultiCompleter
     suggestion.generateHtml() for suggestion in suggestions
     suggestions
 
+# A completer which can toggle between two or more sub-completers (which must themselves be MultiCompleters).
+class ToggleCompleter
+  constructor: (@completers) ->
+
+  refresh: (port) -> completer.refresh? port for completer in @completers
+  cancel: (port) -> completer.cancel? port for completer in @completers
+
+  filter: (request, onComplete) ->
+    @completers[request.tabToggleCount % @completers.length].filter request, onComplete
+
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
   # Whether the given things (usually URLs or titles) match any one of the query terms.
