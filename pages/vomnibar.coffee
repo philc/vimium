@@ -184,17 +184,20 @@ class VomnibarUI
 
   recordQueryHistoryAndPerformAction: (obj, callback) ->
     query =
-      # Pick up the text from (non-custom) searches.
-      if obj.insertText and not obj.isCustomSearch
-        obj.insertText
-      # Pick up the text from regular searches.
+      if chrome.extension.inIncognitoContext
+        # We don't record queries in incognito mode at all.
+        null
+      else if obj.insertText and not obj.isCustomSearch
+        # Pick up the text from (non-custom) searches.
+          obj.insertText
       else if "string" == typeof obj
+        # Pick up the text from regular searches.
         obj
       else
         # We ignore everything else.
         null
 
-    if not query
+    if chrome.extension.inIncognitoContext or not query
       callback()
     else
       # We record the query in chrome.storage.local *before* calling callback() to ensure that this tab stays
