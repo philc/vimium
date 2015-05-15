@@ -226,12 +226,23 @@ class HistoryCompleter
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
+      searchUrl = Settings.get "searchUrl"
+      searchUrlTerminator = new RegExp "[&#/]"
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
         else
           []
       onComplete results.map (entry) =>
+        # If this history URL starts with the search URL, we reconstruct the original search terms, and insert
+        # them into the vomnibar when this suggestion is selected.
+        insertText =
+          if entry.url.startsWith searchUrl
+            try
+              entry.url[searchUrl.length..].split(searchUrlTerminator)[0].split("+").map(decodeURIComponent).join " "
+            catch
+              null
+
         new Suggestion
           queryTerms: queryTerms
           type: "history"
@@ -239,6 +250,7 @@ class HistoryCompleter
           title: entry.title
           relevancyFunction: @computeRelevancy
           relevancyData: entry
+          insertText: insertText
 
   computeRelevancy: (suggestion) ->
     historyEntry = suggestion.relevancyData
