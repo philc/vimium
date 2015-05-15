@@ -60,8 +60,13 @@ completers =
       ]
     completionSources.queryHistory
     ]
-  bookmarks: new ToggleCompleter [ new MultiCompleter([completionSources.bookmarks]), completionSources.queryHistory ]
-  tabs: new ToggleCompleter [ new MultiCompleter([completionSources.tabs]), completionSources.queryHistory ]
+
+  bookmarks: new ToggleCompleter [
+    new MultiCompleter [completionSources.bookmarks]
+    completionSources.queryHistory
+    ]
+
+  tabs: new MultiCompleter [completionSources.tabs]
 
 completionHandlers =
   filter: (completer, request, port) ->
