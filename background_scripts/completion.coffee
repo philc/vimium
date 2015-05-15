@@ -528,10 +528,9 @@ class SearchEngineCompleter
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
 
-# A completer which provides completions based on the user's query history (that is, those vomnibar queries
-# for which no suggestion was selected).
+# A completer which provides completions based on the user's query history using this default search URL.
 #
-# QueryHistory entries area stored in chrome.storage.local under the key "vomnibarQueryHistory" in the form:
+# QueryHistory entries are stored in chrome.storage.local under the key "vomnibarQueryHistory" in the form:
 #   [ { text: ..., timestamp: ...}, ... ]
 #
 # Insertions only happen in vomnibar.coffee(), and new entries are only ever appended.  Therefore, the list is
