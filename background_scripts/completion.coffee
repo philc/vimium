@@ -245,6 +245,10 @@ class HistoryCompleter
           catch
             null
 
+        # If this history item does not have a title and we found its query text above, then use its query
+        # text as its title.
+        entry.title ||= insertText if insertText?
+
         new Suggestion
           queryTerms: queryTerms
           type: "history"
