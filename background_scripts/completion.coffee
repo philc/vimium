@@ -528,8 +528,31 @@ class SearchEngineCompleter
 
 # A completer which provides completions based on the user's query history (that is, those vomnibar queries
 # for which no suggestion was selected).
+#
+# QueryHistory entries area stored in chrome.storage.local under the key "vomnibarQueryHistory" in the form:
+#   [ { text: ..., timestamp: ...}, ... ]
+#
 class QueryHistoryCompleter
+  maxHistory: 1000
+  filtersSinceRefresh: 0
+
+  constructor: ->
+    chrome.storage.onChanged.addListener (changes, area) =>
+      if area == "local" and changes.vomnibarQueryHistory?.newValue
+        seenHistory = {}
+        # We need to eleiminate duplicates.  New items are add at the end, so we reverse the list before
+        # checking (so we pick up the item with the newest timestamp first).  We then reverse the list again
+        # when saving it.
+        queryHistory =
+          for item in changes.vomnibarQueryHistory.newValue.reverse()
+            continue if seenHistory[item.text]
+            seenHistory[item.text] = true
+            item
+
+        chrome.storage.local.set vomnibarQueryHistory: queryHistory[0...@maxHistory].reverse()
+
   filter: ({ queryTerms }, onComplete) ->
+    autoSelect = @filtersSinceRefresh++ == 0
     chrome.storage.local.get "vomnibarQueryHistory", (items) =>
       if chrome.runtime.lastError
         onComplete []
@@ -539,13 +562,15 @@ class QueryHistoryCompleter
         onComplete queryHistory.map ({ text, timestamp }) =>
           new Suggestion
             queryTerms: queryTerms
-            type: "query"
+            type: "query history"
             url: Utils.convertToUrl text
             title: text
             relevancyFunction: @computeRelevancy
             timestamp: timestamp
-            autoSelect: true
             insertText: text
+
+  refresh: ->
+    @filtersSinceRefresh = 0
 
   computeRelevancy: ({ queryTerms, url, title, timestamp }) ->
     wordRelevancy = if queryTerms.length == 0 then 0.0 else RankingUtils.wordRelevancy queryTerms, url, title
