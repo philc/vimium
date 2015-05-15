@@ -227,7 +227,7 @@ class HistoryCompleter
     results = []
     HistoryCache.use (history) =>
       searchUrl = Settings.get "searchUrl"
-      searchUrlTerminator = new RegExp "[&#/]"
+      searchUrlTerminator = new RegExp "[?&#/]"
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
