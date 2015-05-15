@@ -504,7 +504,6 @@ class SearchEngineCompleter
       title: queryTerms.join " "
       relevancy: 1
       autoSelect: custom
-      forceAutoSelect: custom
       highlightTerms: not haveCompletionEngine
 
     mkSuggestion = (suggestion) ->

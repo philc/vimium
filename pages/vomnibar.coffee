@@ -67,22 +67,12 @@ class VomnibarUI
     @completionList.style.display = ""
     @input.value = ""
     @completions = []
-    @previousAutoSelect = null
     @previousInputValue = null
     @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
 
   updateSelection: ->
-    # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
-    # has just appeared or disappeared. If that happens, we set @selection to 0 or -1.
-    if 0 < @completions.length
-      @selection = 0 if @completions[0].autoSelect and not @previousAutoSelect
-      @selection = -1 if @previousAutoSelect and not @completions[0].autoSelect
-      @previousAutoSelect = @completions[0].autoSelect
-    else
-      @previousAutoSelect = null
-
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
     if @lastReponse.customSearchMode and not @customSearchMode?
@@ -185,20 +175,19 @@ class VomnibarUI
       callback: (@lastReponse) =>
         { results } = @lastReponse
         @completions = results
+        @selection = if @completions[0]?.autoSelect then 0 else @initialSelectionValue
         # Update completion list with the new suggestions.
         @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
         @completionList.style.display = if @completions.length > 0 then "block" else ""
         @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
-        @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
         @updateSelection()
         callback?()
 
   updateOnInput: =>
     @completer.cancel()
-    # If the user types, then don't reset any previous text, and restart auto select.
+    # If the user types, then don't reset any previous text, and reset the selection.
     if @previousInputValue?
       @previousInputValue = null
-      @previousAutoSelect = null
       @selection = -1
     @update false
 
