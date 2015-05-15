@@ -540,6 +540,7 @@ class QueryHistoryCompleter
   maxHistory: 1000
 
   constructor: ->
+    @createQueryHistoryFromHistory()
     chrome.storage.onChanged.addListener (changes, area) =>
       if area == "local" and changes.vomnibarQueryHistory?.newValue
         seenHistory = {}
@@ -581,6 +582,42 @@ class QueryHistoryCompleter
       # We give a strong bias towards the recency score, because the function of the query completer is
       # intended to be for finding recent searches.
       if wordRelevancy == 0 then 0 else (recencyScore * 0.7) + wordRelevancy * 0.3
+
+  # Import query history ("vomnibarQueryHistory" in crome.storage.local) from history.
+  # We take a history entry of the form "https://www.google.ie/search?q=pakistan+cricket+team&gws_rd=cr,ssl".
+  # And produce a query history entry with the text "pakistan cricket team".
+  #
+  # NOTE(smblott) This is migration code, added 2015-5-15.  It can safely be removed after some suitable
+  # period of time (and number of releases) has elapsed.
+  #
+  createQueryHistoryFromHistory: ->
+    chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+      unless chrome.runtime.lastError or items.vomnibarQueryHistory
+        HistoryCache.use (history) =>
+          searchUrl = Settings.get "searchUrl"
+          queryHistory =
+            for entry in history
+              [ url, timestamp ] = [ entry.url, entry.lastVisitTime ]
+              continue unless url.startsWith searchUrl
+              # We use try/catch because decodeURIComponent can raise an exception.
+              try
+                text = url[searchUrl.length..].split(/[/&?#]/)[0].split("+").map(decodeURIComponent).join " "
+              catch
+                continue
+              continue unless text? and 0 < text.length
+              { text, timestamp }
+
+          # Sort into decreasing order (by timestamp) and remove duplicates.
+          queryHistory.sort (a,b) -> b.timestamp - a.timestamp
+          [ seenText, seenCount ] = [ {}, 0 ]
+          queryHistory =
+            for entry in queryHistory
+              continue if entry.text of seenText
+              break if @maxHistory <= seenCount++
+              seenText[text] = entry
+
+          # Save to chrome.storage.local in increasing order (by timestamp).
+          chrome.storage.local.set vomnibarQueryHistory: queryHistory.reverse()
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
