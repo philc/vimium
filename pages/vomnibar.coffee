@@ -178,6 +178,11 @@ class VomnibarUI
         @input.value = @customSearchMode
         @customSearchMode = null
         @updateCompletions()
+      else if @input.value.length == 0
+        # Allow the background completer to toggle the vomnibar mode, if required.
+        # NOTE(smblott) Experimental binding.
+        @tabToggleCount += 1
+        @update true
       else
         return true # Do not suppress event.
 
