@@ -151,8 +151,12 @@ class VomnibarUI
     else if (action == "enter")
       if @selection == -1
         query = text = @input.value.trim()
-        # <Enter> on an empty query is a no-op.
-        return unless 0 < query.length
+        unless 0 < query.length
+          # Allow the background completer to toggle the vomnibar mode, if required.
+          # NOTE(smblott) Experimental binding.
+          @tabToggleCount += 1
+          @update true
+          return
         # If the user types something and hits enter without selecting a completion from the list, then:
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
         #   - Otherwise, send the query to the background page, which will open it as a URL or create a
