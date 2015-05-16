@@ -45,14 +45,17 @@ class Suggestion
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
+    insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
+    insertTextIndicator = "&#xfe62;" # A small plus sign.
+    insertTextIndicator = "&#xfe65;" # A small "greater than" sign.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
-         <span class="vimiumReset vomnibarSource">#{@type}</span>
+         <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@highlightQueryTerms Utils.escapeHtml @shortenUrl()}</span>
+        <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightQueryTerms Utils.escapeHtml @shortenUrl()}</span>
         #{relevancyHtml}
       </div>
       """
@@ -239,12 +242,21 @@ class HistoryCompleter
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
+      searchUrl = Settings.get "searchUrl"
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
         else
           []
       onComplete results.map (entry) =>
+        # This entry's URL might match the default search engine, in which case we'll insert its query text
+        # into the vomnibar input whenever this entry is selected.
+        insertText = Utils.extractQuery searchUrl, entry.url
+
+        # If this history item does not have a title and we successfully extracted query text above, then use
+        # that text in lieu of a title.
+        entry.title ||= insertText if insertText?
+
         new Suggestion
           queryTerms: queryTerms
           type: "history"
@@ -252,11 +264,20 @@ class HistoryCompleter
           title: entry.title
           relevancyFunction: @computeRelevancy
           relevancyData: entry
+          insertText: insertText
 
   computeRelevancy: (suggestion) ->
     historyEntry = suggestion.relevancyData
     recencyScore = RankingUtils.recencyScore(historyEntry.lastVisitTime)
     wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    if suggestion.insertText?
+      # If this suggestion matches a previous search with the default search engine, then we also score the
+      # previous query terms themselves (suggestion.insertText) and, if that score is higher, then we use it
+      # in place of the wordRelevancy score.  Because the query terms are shorter than the original URL, this
+      # has the side effect of boosting the wordRelevancy score for previous searches with the default search
+      # engine.
+      wordRelevancy = Math.max wordRelevancy,
+        RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.insertText, suggestion.title
     # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
     (wordRelevancy + Math.max recencyScore, wordRelevancy) / 2
 
@@ -488,7 +509,6 @@ class SearchEngineCompleter
       title: queryTerms.join " "
       relevancy: 1
       autoSelect: custom
-      forceAutoSelect: custom
       highlightTerms: not haveCompletionEngine
 
     mkSuggestion = (suggestion) =>
