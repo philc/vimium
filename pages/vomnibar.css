@@ -145,3 +145,10 @@
    * on the eye for this purpose. */
   background-color: #E6EEFB;
 }
+
+.vomnibarInsertText {
+}
+
+.vomnibarNoInsertText {
+  visibility: hidden;
+}
