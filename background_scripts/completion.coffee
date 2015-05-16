@@ -155,8 +155,9 @@ class Suggestion
     [ '.', [ "^https?://", "\\W+$" ].map (re) -> new RegExp re ]
   ]
 
-  # Boost a score by a factor (in the range (0,1.0)), while keeping the score in the range [0,1].  This makes
-  # greater adjustments to scores near the middle of the range (so, very poor relevancy scores remain poor).
+  # Boost a relevancy score by a factor (in the range (0,1.0)), while keeping the score in the range [0,1].
+  # This makes greater adjustments to scores near the middle of the range (so, very poor relevancy scores
+  # remain very poor).
   @boostRelevancyScore: (factor, score) ->
     score + if score < 0.5 then score * factor else (1.0 - score) * factor
 
@@ -453,9 +454,8 @@ class SearchEngineCompleter
     factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
     haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
 
-    # We weight the relevancy-score factor by the length of the query (exponentially).  The idea is that, the
-    # more the user has typed, the less likely it is that what the user is searching for is amonst the
-    # suggestions from other completers.
+    # We weight the relevancy factor by the length of the query (exponentially).  The idea is that, the
+    # more the user has typed, the less likely it is that another completer has proven fruitful.
     factor *= 1 - Math.pow 0.8, query.length
 
     # This filter is applied to all of the suggestions from all of the completers, after they have been
@@ -495,7 +495,7 @@ class SearchEngineCompleter
         isCustomSearch: custom
         relevancyFunction: @computeRelevancy
         # We reduce the relevancy factor as suggestions are added. This respects, to some extent, the
-        # suggestion order provided by the completion engine.
+        # order provided by the completion engine.
         relevancyData: factor *= 0.95
 
     cachedSuggestions =
