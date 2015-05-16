@@ -155,6 +155,11 @@ class Suggestion
     [ '.', [ "^https?://", "\\W+$" ].map (re) -> new RegExp re ]
   ]
 
+  # Boost a score by a factor (in the range (0,1.0)), while keeping the score in the range [0,1].  This makes
+  # greater adjustments to scores near the middle of the range (so, very poor relevancy scores remain poor).
+  @boostRelevancyScore: (factor, score) ->
+    score + if score < 0.5 then score * factor else (1.0 - score) * factor
+
 class BookmarkCompleter
   folderSeparator: "/"
   currentSearch: null
@@ -448,18 +453,10 @@ class SearchEngineCompleter
     factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
     haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
 
-    # Relevancy:
-    #   - Relevancy does not depend upon the actual suggestion (so, it does not depend upon word
-    #     relevancy, say).  We assume that the completion engine has already factored that in.  Also,
-    #     completion engines sometimes handle spelling mistakes, in which case we wouldn't find the query
-    #     terms in the suggestion anyway.
-    #   - Scores are weighted such that they retain the order provided by the completion engine.
-    #   - The relavancy is higher if the query term is longer.  The idea is that search suggestions are more
-    #     likely to be relevant if, after typing some number of characters, the user hasn't yet found
-    #     a useful suggestion from another completer.
-    #
-    characterCount = query.length - queryTerms.length + 1
-    relevancy = (if custom then 0.5 else factor) * 12.0 / Math.max 12.0, characterCount
+    # We weight the relevancy-score factor by the length of the query (exponentially).  The idea is that, the
+    # more the user has typed, the less likely it is that what the user is searching for is amonst the
+    # suggestions from other completers.
+    factor *= 1 - Math.pow 0.8, query.length
 
     # This filter is applied to all of the suggestions from all of the completers, after they have been
     # aggregated by the MultiCompleter.
@@ -487,15 +484,19 @@ class SearchEngineCompleter
       forceAutoSelect: custom
       highlightTerms: not haveCompletionEngine
 
-    mkSuggestion = (suggestion) ->
+    mkSuggestion = (suggestion) =>
       new Suggestion
         queryTerms: queryTerms
         type: description
         url: Utils.createSearchUrl suggestion, searchUrl
         title: suggestion
-        relevancy: relevancy *= 0.9
         insertText: suggestion
         highlightTerms: false
+        isCustomSearch: custom
+        relevancyFunction: @computeRelevancy
+        # We reduce the relevancy factor as suggestions are added. This respects, to some extent, the
+        # suggestion order provided by the completion engine.
+        relevancyData: factor *= 0.95
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
@@ -514,17 +515,17 @@ class SearchEngineCompleter
       onComplete suggestions,
         filter: filter
         continuation: (suggestions, onComplete) =>
-          # Fetch completion suggestions from suggestion engines.
-
-          # We can skip this if any new suggestions we propose cannot score highly enough to make the list
-          # anyway.
-          if 10 <= suggestions.length and relevancy < suggestions[suggestions.length-1].relevancy
-            console.log "skip (cannot make the grade):", suggestions.length, query if SearchEngineCompleter.debug
-            return onComplete []
-
           CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
+
+  computeRelevancy: ({ relevancyData, queryTerms, title }) ->
+    # Tweaks:
+    # - Calibration: we boost relevancy scores to try to achieve an appropriate balance between relevancy
+    #   scores here, and those provided by other completers.
+    # - Relevancy depends only on the title (which is the search terms), and not on the URL.
+    Suggestion.boostRelevancyScore 0.5,
+      relevancyData * RankingUtils.wordRelevancy queryTerms, title, title
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
