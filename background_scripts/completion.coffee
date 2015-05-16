@@ -554,22 +554,39 @@ class QueryHistoryCompleter
 
         chrome.storage.local.set vomnibarQueryHistory: queryHistory[0...@maxHistory].reverse()
 
-  filter: ({ queryTerms }, onComplete) ->
+  filter: ({ queryTerms, query }, onComplete) ->
     chrome.storage.local.get "vomnibarQueryHistory", (items) =>
       if chrome.runtime.lastError
         onComplete []
       else
         queryHistory = (items.vomnibarQueryHistory ? []).filter (item) ->
           RankingUtils.matches queryTerms, item.text
-        onComplete queryHistory.map ({ text, timestamp }) =>
-          new Suggestion
-            queryTerms: queryTerms
-            type: "query history"
-            url: Utils.convertToUrl text
-            title: text
-            relevancyFunction: @computeRelevancy
-            timestamp: timestamp
-            insertText: text
+        suggestions = []
+
+        suggestions.push new Suggestion
+          queryTerms: queryTerms
+          type: "search engine"
+          url: Utils.createSearchUrl queryTerms.join " "
+          title: query
+          relevancy: 1
+          insertText: null
+          queryText: queryTerms.join " "
+          autoSelect: true
+          highlightTerms: false
+
+        for { text, timestamp } in queryHistory
+          url = Utils.convertToUrl text
+          if queryTerms.length == 0 or RankingUtils.matches queryTerms, url, text
+            suggestions.push new Suggestion
+              queryTerms: queryTerms
+              type: "query history"
+              url: Utils.convertToUrl text
+              title: text
+              relevancyFunction: @computeRelevancy
+              timestamp: timestamp
+              insertText: text
+
+        onComplete suggestions
 
   computeRelevancy: ({ queryTerms, url, title, timestamp }) ->
     wordRelevancy = if queryTerms.length == 0 then 0.0 else RankingUtils.wordRelevancy queryTerms, url, title

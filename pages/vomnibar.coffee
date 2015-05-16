@@ -191,9 +191,9 @@ class VomnibarUI
       if chrome.extension.inIncognitoContext
         # We don't record queries in incognito mode at all.
         null
-      else if obj.insertText and not obj.isCustomSearch
-        # Pick up the text from (non-custom) searches.
-        obj.insertText
+      else if (obj.queryText or obj.insertText) and not obj.isCustomSearch
+        # Pick up the text from (non-custom) searches; queryText takes precedence over insertText.
+        obj.queryText or obj.insertText
       else if "string" == typeof obj
         # Pick up the text from regular searches.
         obj
