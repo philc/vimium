@@ -230,26 +230,18 @@ class HistoryCompleter
     results = []
     HistoryCache.use (history) =>
       searchUrl = Settings.get "searchUrl"
-      searchUrlTerminator = new RegExp "[?&#/]"
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
         else
           []
       onComplete results.map (entry) =>
-        # If this history URL starts with the search URL, we reconstruct the original search terms, and insert
-        # them into the vomnibar when this suggestion is selected.  We use try/catch because
-        # decodeURIComponent() can throw an error.
-        insertText =
-          try
-            if entry.url.startsWith searchUrl
-              # This maps "https://www.google.ie/search?q=star+wars&..." to "star wars".
-              entry.url[searchUrl.length..].split(searchUrlTerminator)[0].split("+").map(decodeURIComponent).join " "
-          catch
-            null
+        # This entry's URL might match the default search engine, in which case we'll insert its query text
+        # into the vomnibar input whenever this entry is selected.
+        insertText = Utils.extractQuery searchUrl, entry.url
 
-        # If this history item does not have a title and we found its query text above, then use its query
-        # text as its title.
+        # If this history item does not have a title and we successfully extracted query text above, then use
+        # that text in lieu of a title.
         entry.title ||= insertText if insertText?
 
         new Suggestion
