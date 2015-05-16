@@ -45,14 +45,17 @@ class Suggestion
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
+    insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
+    insertTextIndicator = "&#xfe62;" # A small plus sign.
+    insertTextIndicator = "&#xfe65;" # A small "greater than" sign.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
-         <span class="vimiumReset vomnibarSource">#{@type}</span>
+         <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
+        <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
         #{relevancyHtml}
       </div>
       """
