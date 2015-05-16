@@ -384,8 +384,8 @@ class SearchEngineCompleter
   @debug: false
   searchEngines: null
 
-  cancel: ->
-    CompletionSearch.cancel()
+  constructor: (@defaultSearchOnly = false) ->
+  cancel: -> CompletionSearch.cancel()
 
   # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
   # query terms.
@@ -402,7 +402,8 @@ class SearchEngineCompleter
 
   refresh: (port) ->
     # Parse the search-engine configuration.
-    @searchEngines = new AsyncDataFetcher (callback) ->
+    @searchEngines = new AsyncDataFetcher (callback) =>
+      return callback {} if @defaultSearchOnly
       engines = {}
       for line in Settings.get("searchEngines").split "\n"
         line = line.trim()
