@@ -48,7 +48,7 @@ completionSources =
   domains: new DomainCompleter
   tabs: new TabCompleter
   searchEngines: new SearchEngineCompleter
-  searchEnginesDefaultOnly: new SearchEngineCompleter true
+  searchEnginesDefaultOnly: new SearchEngineCompleter true, 0.5
   queryHistory: new QueryHistoryCompleter
 
 completers =

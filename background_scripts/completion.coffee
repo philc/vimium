@@ -384,7 +384,7 @@ class SearchEngineCompleter
   @debug: false
   searchEngines: null
 
-  constructor: (@defaultSearchOnly = false) ->
+  constructor: (@defaultSearchOnly = false, @initializationRelevancyFactor = 1.0) ->
   cancel: -> CompletionSearch.cancel()
 
   # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
@@ -446,7 +446,7 @@ class SearchEngineCompleter
 
     return onComplete [] unless custom or 0 < queryTerms.length
 
-    factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
+    factor = @initializationRelevancyFactor * Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
     haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
 
     # Relevancy:
