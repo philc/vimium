@@ -72,6 +72,7 @@ class VomnibarUI
     @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
+    @tabToggleCount = 0
 
   updateSelection: ->
     # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
@@ -135,30 +136,41 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
-      @updateSelection()
+      if action == "tab" and @input.value.trim().length == 0 and @completions.length == 0
+        # Allow the background completer to toggle the vomnibar mode, if required.
+        @tabToggleCount += 1
+        @update true
+      else
+        @selection += 1
+        @selection = @initialSelectionValue if @selection == @completions.length
+        @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
       if @selection == -1
-        query = @input.value.trim()
-        # <Enter> on an empty query is a no-op.
-        return unless 0 < query.length
+        query = text = @input.value.trim()
+        unless 0 < query.length
+          # Allow the background completer to toggle the vomnibar mode, if required.
+          # NOTE(smblott) Experimental binding.
+          @tabToggleCount += 1
+          @update true
+          return
         # If the user types something and hits enter without selecting a completion from the list, then:
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
         #   - Otherwise, send the query to the background page, which will open it as a URL or create a
         #     default search, as appropriate.
-        query = Utils.createSearchUrl query, @lastReponse.searchUrl if @lastReponse.searchUrl?
-        @hide ->
-          chrome.runtime.sendMessage
-            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-            url: query
+        @recordQueryHistoryAndPerformAction query, =>
+          @hide ->
+            chrome.runtime.sendMessage
+              handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+              url: query
       else
         completion = @completions[@selection]
-        @hide -> completion.performAction openInNewTab
+        @recordQueryHistoryAndPerformAction completion, =>
+          @hide ->
+            completion.performAction openInNewTab
     else if action == "delete"
       if @customSearchMode? and @input.value.length == 0
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
@@ -166,6 +178,11 @@ class VomnibarUI
         @input.value = @customSearchMode
         @customSearchMode = null
         @updateCompletions()
+      else if @input.value.length == 0
+        # Allow the background completer to toggle the vomnibar mode, if required.
+        # NOTE(smblott) Experimental binding.
+        @tabToggleCount += 1
+        @update true
       else
         return true # Do not suppress event.
 
@@ -173,6 +190,34 @@ class VomnibarUI
     event.stopImmediatePropagation()
     event.preventDefault()
     true
+
+  recordQueryHistoryAndPerformAction: (obj, callback) ->
+    query =
+      if chrome.extension.inIncognitoContext
+        # We don't record queries in incognito mode at all.
+        null
+      else if (obj.queryText or obj.insertText) and not obj.isCustomSearch
+        # Pick up the text from (non-custom) searches; queryText takes precedence over insertText.
+        obj.queryText or obj.insertText
+      else if "string" == typeof obj
+        # Pick up the text from regular searches.
+        obj
+      else
+        # We ignore everything else.
+        null
+
+    if not query
+      callback()
+    else
+      # We record the query in chrome.storage.local *before* calling callback() to ensure that this tab stays
+      # active until after the new query history has been saved.
+      chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+        if chrome.runtime.lastError
+          callback()
+        else
+          queryHistory = items.vomnibarQueryHistory ? []
+          queryHistory.push timestamp: new Date().getTime(), text: query
+          chrome.storage.local.set { vomnibarQueryHistory: queryHistory }, callback
 
   # Return the background-page query corresponding to the current input state.  In other words, reinstate any
   # search engine keyword which is currently being suppressed, and strip any prompted text.
@@ -182,6 +227,7 @@ class VomnibarUI
   updateCompletions: (callback = null) ->
     @completer.filter
       query: @getInputValueAsQuery()
+      tabToggleCount: @tabToggleCount
       callback: (@lastReponse) =>
         { results } = @lastReponse
         @completions = results

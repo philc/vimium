@@ -385,8 +385,8 @@ class SearchEngineCompleter
   @debug: false
   searchEngines: null
 
-  cancel: ->
-    CompletionSearch.cancel()
+  constructor: (@defaultSearchOnly = false) ->
+  cancel: -> CompletionSearch.cancel()
 
   # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
   # query terms.
@@ -403,7 +403,8 @@ class SearchEngineCompleter
 
   refresh: (port) ->
     # Parse the search-engine configuration.
-    @searchEngines = new AsyncDataFetcher (callback) ->
+    @searchEngines = new AsyncDataFetcher (callback) =>
+      return callback {} if @defaultSearchOnly
       engines = {}
       for line in Settings.get("searchEngines").split "\n"
         line = line.trim()
@@ -487,6 +488,7 @@ class SearchEngineCompleter
       autoSelect: custom
       forceAutoSelect: custom
       highlightTerms: not haveCompletionEngine
+      isCustomSearch: custom
 
     mkSuggestion = (suggestion) ->
       new Suggestion
@@ -497,6 +499,7 @@ class SearchEngineCompleter
         relevancy: relevancy *= 0.9
         insertText: suggestion
         highlightTerms: false
+        isCustomSearch: custom
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
@@ -526,6 +529,114 @@ class SearchEngineCompleter
           CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
+
+# A completer which provides completions based on the user's query history using this default search URL.
+#
+# QueryHistory entries are stored in chrome.storage.local under the key "vomnibarQueryHistory" in the form:
+#   [ { text: ..., timestamp: ...}, ... ]
+#
+# Insertions only happen in vomnibar.coffee(), and new entries are only ever appended.  Therefore, the list is
+# always ordered from least recent (at the start) to most recent (at the end).
+#
+class QueryHistoryCompleter
+  maxHistory: 1000
+
+  constructor: ->
+    @createQueryHistoryFromHistory()
+    chrome.storage.onChanged.addListener (changes, area) =>
+      if area == "local" and changes.vomnibarQueryHistory?.newValue
+        seenHistory = {}
+        # We need to eliminate duplicates.  New items are add at the end, so we reverse the list before
+        # checking (so that we pick up the item with the newest timestamp first).  We then reverse the list
+        # again when saving it.
+        queryHistory =
+          for item in changes.vomnibarQueryHistory.newValue.reverse()
+            continue if item.text of seenHistory
+            seenHistory[item.text] = item
+
+        chrome.storage.local.set vomnibarQueryHistory: queryHistory[0...@maxHistory].reverse()
+
+  filter: ({ queryTerms, query }, onComplete) ->
+    chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+      if chrome.runtime.lastError
+        onComplete []
+      else
+        queryHistory = (items.vomnibarQueryHistory ? []).filter (item) ->
+          RankingUtils.matches queryTerms, item.text
+        suggestions = []
+
+        suggestions.push new Suggestion
+          queryTerms: queryTerms
+          type: "search engine"
+          url: Utils.createSearchUrl queryTerms.join " "
+          title: query
+          relevancy: 1
+          insertText: null
+          queryText: queryTerms.join " "
+          autoSelect: true
+          highlightTerms: false
+
+        for { text, timestamp } in queryHistory
+          url = Utils.convertToUrl text
+          if queryTerms.length == 0 or RankingUtils.matches queryTerms, url, text
+            suggestions.push new Suggestion
+              queryTerms: queryTerms
+              type: "query history"
+              url: Utils.convertToUrl text
+              title: text
+              relevancyFunction: @computeRelevancy
+              timestamp: timestamp
+              insertText: text
+
+        onComplete suggestions
+
+  computeRelevancy: ({ queryTerms, url, title, timestamp }) ->
+    wordRelevancy = if queryTerms.length == 0 then 0.0 else RankingUtils.wordRelevancy queryTerms, url, title
+    oneDayAgo = 1000 * 60 * 60 * 24
+    age = new Date() - Math.max timestamp, oneDayAgo
+    recencyScore = Math.pow 0.999, (age / (1000 * 60 * 60 * 10))
+    if queryTerms.length == 0
+      recencyScore
+    else
+      # We give a strong bias towards the recency score, because the function of the query completer is
+      # intended to be for finding recent searches.
+      if wordRelevancy == 0 then 0 else (recencyScore * 0.7) + wordRelevancy * 0.3
+
+  # Import query history ("vomnibarQueryHistory" in crome.storage.local) from history.
+  # We take a history entry of the form "https://www.google.ie/search?q=pakistan+cricket+team&gws_rd=cr,ssl".
+  # And produce a query history entry with the text "pakistan cricket team".
+  #
+  # NOTE(smblott) This is migration code, added 2015-5-15.  It can safely be removed after some suitable
+  # period of time (and number of releases) has elapsed.
+  #
+  createQueryHistoryFromHistory: ->
+    chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+      unless chrome.runtime.lastError or items.vomnibarQueryHistory
+        HistoryCache.use (history) =>
+          searchUrl = Settings.get "searchUrl"
+          queryHistory =
+            for entry in history
+              [ url, timestamp ] = [ entry.url, entry.lastVisitTime ]
+              continue unless url.startsWith searchUrl
+              # We use try/catch because decodeURIComponent can raise an exception.
+              try
+                text = url[searchUrl.length..].split(/[/&?#]/)[0].split("+").map(decodeURIComponent).join " "
+              catch
+                continue
+              continue unless text? and 0 < text.length
+              { text, timestamp }
+
+          # Sort into decreasing order (by timestamp) and remove duplicates.
+          queryHistory.sort (a,b) -> b.timestamp - a.timestamp
+          [ seenText, seenCount ] = [ {}, 0 ]
+          queryHistory =
+            for entry in queryHistory
+              continue if entry.text of seenText
+              break if @maxHistory <= seenCount++
+              seenText[text] = entry
+
+          # Save to chrome.storage.local in increasing order (by timestamp).
+          chrome.storage.local.set vomnibarQueryHistory: queryHistory.reverse()
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
@@ -617,6 +728,17 @@ class MultiCompleter
     # Generate HTML for the remaining suggestions and return them.
     suggestion.generateHtml() for suggestion in suggestions
     suggestions
+
+# A completer which can toggle between two or more sub-completers (which must themselves be MultiCompleters).
+# The active completer is determined based on request.tabToggleCount, which is provided by the vomnibar.
+class ToggleCompleter
+  constructor: (@completers) ->
+
+  refresh: (port) -> completer.refresh? port for completer in @completers
+  cancel: (port) -> completer.cancel? port for completer in @completers
+
+  filter: (request, onComplete) ->
+    @completers[request.tabToggleCount % @completers.length].filter request, onComplete
 
 # Utilities which help us compute a relevancy score for a given item.
 RankingUtils =
@@ -826,6 +948,7 @@ root = exports ? window
 root.Suggestion = Suggestion
 root.BookmarkCompleter = BookmarkCompleter
 root.MultiCompleter = MultiCompleter
+root.ToggleCompleter = ToggleCompleter
 root.HistoryCompleter = HistoryCompleter
 root.DomainCompleter = DomainCompleter
 root.TabCompleter = TabCompleter
@@ -834,3 +957,4 @@ root.HistoryCache = HistoryCache
 root.RankingUtils = RankingUtils
 root.RegexpCache = RegexpCache
 root.TabRecency = TabRecency
+root.QueryHistoryCompleter = QueryHistoryCompleter

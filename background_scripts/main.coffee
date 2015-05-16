@@ -48,14 +48,23 @@ completionSources =
   domains: new DomainCompleter
   tabs: new TabCompleter
   searchEngines: new SearchEngineCompleter
+  searchEnginesDefaultOnly: new SearchEngineCompleter true
+  queryHistory: new QueryHistoryCompleter
 
 completers =
-  omni: new MultiCompleter [
-    completionSources.bookmarks
-    completionSources.history
-    completionSources.domains
-    completionSources.searchEngines
+  omni: new ToggleCompleter [
+    new MultiCompleter [
+      completionSources.bookmarks
+      completionSources.history
+      completionSources.domains
+      completionSources.searchEngines
+      ]
+    new MultiCompleter [
+      completionSources.queryHistory
+      completionSources.searchEnginesDefaultOnly
+      ]
     ]
+
   bookmarks: new MultiCompleter [completionSources.bookmarks]
   tabs: new MultiCompleter [completionSources.tabs]
 
