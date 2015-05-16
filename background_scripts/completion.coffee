@@ -130,7 +130,13 @@ class Suggestion
   # Simplify a suggestion's URL (by removing those parts which aren't useful for display or comparison).
   shortenUrl: () ->
     return @shortUrl if @shortUrl?
-    url = @url
+    # We get easier-to-read shortened URLs if we URI-decode them.
+    url =
+      try
+        # decodeURI can raise an exception.
+        url = decodeURI @url
+      catch
+        @url
     for [ filter, replacements ] in @stripPatterns
       if new RegExp(filter).test url
         for replace in replacements
