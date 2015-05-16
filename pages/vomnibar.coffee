@@ -186,17 +186,22 @@ class VomnibarUI
     event.preventDefault()
     true
 
+  # The obj argument may either be a string (which we add to the query history), or a completion object (from
+  # which we extract the query text to add, if possible).
   recordQueryHistoryAndPerformAction: (obj, callback) ->
     query =
       if chrome.extension.inIncognitoContext
         # We don't record queries in incognito mode at all.
         null
+      else if typeof(obj) == "string" and 0 < obj.length
+        # Pick up the text from regular searches.
+        obj
       else if (obj.queryText or obj.insertText) and not obj.isCustomSearch
         # Pick up the text from (non-custom) searches; queryText takes precedence over insertText.
         obj.queryText or obj.insertText
-      else if "string" == typeof obj
-        # Pick up the text from regular searches.
-        obj
+      else if obj.url and obj.searchUrl
+        # Pick up the text of other (possibly custom) searches which happen to use the default search engine.
+        Utils.extractQuery obj.searchUrl, obj.url
       else
         # We ignore everything else.
         null
@@ -206,7 +211,7 @@ class VomnibarUI
     else
       # We record the query in chrome.storage.local *before* calling callback() to ensure that this tab stays
       # active until after the new query history has been saved.
-      chrome.storage.local.get "vomnibarQueryHistory", (items) =>
+      chrome.storage.local.get "vomnibarQueryHistory", (items) ->
         if chrome.runtime.lastError
           callback()
         else
