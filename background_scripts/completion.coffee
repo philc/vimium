@@ -616,13 +616,8 @@ class QueryHistoryCompleter
           queryHistory =
             for entry in history
               [ url, timestamp ] = [ entry.url, entry.lastVisitTime ]
-              continue unless url.startsWith searchUrl
-              # We use try/catch because decodeURIComponent can raise an exception.
-              try
-                text = url[searchUrl.length..].split(/[/&?#]/)[0].split("+").map(decodeURIComponent).join " "
-              catch
-                continue
-              continue unless text? and 0 < text.length
+              text = Utils.extractQuery searchUrl, url
+              continue unless text
               { text, timestamp }
 
           # Sort into decreasing order (by timestamp) and remove duplicates.
