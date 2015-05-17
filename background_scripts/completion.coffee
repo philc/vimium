@@ -550,12 +550,12 @@ class SearchEngineCompleter
     return unless request.searchEngines
     engines = (engine for _, engine of request.searchEngines)
     engines.sort (a,b) -> b.searchUrl.length - a.searchUrl.length
-    engines.push insertTextPrefix: "", searchUrl: Settings.get "searchUrl"
+    engines.push insertTextPrefix: null, searchUrl: Settings.get "searchUrl"
     for suggestion in suggestions
       unless suggestion.isSearchSuggestion or suggestion.insertText
         for engine in engines
           if suggestion.insertText = Utils.extractQuery engine.searchUrl, suggestion.url
-            suggestion.insertText = "#{engine.insertTextPrefix}#{suggestion.insertText}"
+            suggestion.insertPrefixOnInput = engine.insertTextPrefix
             suggestion.title = suggestion.insertText
             suggestion.type = engine.description ? "search"
             break

@@ -195,11 +195,15 @@ class VomnibarUI
 
   updateOnInput: =>
     @completer.cancel()
+    updateSynchronously = false
+    if 0 < @selection and @completions[@selection].insertPrefixOnInput
+      @input.value = @completions[@selection].insertPrefixOnInput + @input.value
+      updateSynchronously = true
     # If the user types, then don't reset any previous text, and reset the selection.
     if @previousInputValue?
       @previousInputValue = null
       @selection = -1
-    @update false
+    @update updateSynchronously
 
   clearUpdateTimer: ->
     if @updateTimer?
