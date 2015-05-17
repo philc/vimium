@@ -556,7 +556,8 @@ class SearchEngineCompleter
         for engine in engines
           if suggestion.insertText = Utils.extractQuery engine.searchUrl, suggestion.url
             suggestion.insertText = "#{engine.insertTextPrefix}#{suggestion.insertText}"
-            suggestion.title ||= suggestion.insertText
+            suggestion.title = suggestion.insertText
+            suggestion.type = engine.description ? "search"
             break
     delete request.searchEngines
 
