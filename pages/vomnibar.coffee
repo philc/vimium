@@ -161,7 +161,7 @@ class VomnibarUI
         # If the input is empty, then reinstate the keyword (the "w").
         @input.value = @customSearchMode
         @customSearchMode = null
-        @updateCompletions()
+        @update true
       else if inputIsEmpty and @tabToOpen
         @tabToOpen = false
         @update true
