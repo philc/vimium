@@ -25,9 +25,6 @@ class Suggestion
     # If @autoSelect is truthy, then this suggestion is automatically pre-selected in the vomnibar.  There may
     # be at most one such suggestion.
     @autoSelect = false
-    # If truthy (and @autoSelect is truthy too), then this suggestion is always pre-selected when the query
-    # changes.  There may be at most one such suggestion.
-    @forceAutoSelect = false
     # If @highlightTerms is true, then we highlight matched terms in the title and URL.
     @highlightTerms = true
     # If @insertText is a string, then the indicated text is inserted into the vomnibar input when the
@@ -226,7 +223,6 @@ class HistoryCompleter
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
-      searchUrl = Settings.get "searchUrl"
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
