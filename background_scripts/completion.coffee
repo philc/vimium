@@ -131,13 +131,7 @@ class Suggestion
   shortenUrl: () ->
     return @shortUrl if @shortUrl?
     # We get easier-to-read shortened URLs if we URI-decode them.
-    url =
-      try
-        # decodeURI can raise an exception.
-        url = decodeURI @url
-      catch
-        @url
-    url = url.toLowerCase()
+    url = (Utils.decodeURIByParts(@url) || @url).toLowerCase()
     for [ filter, replacements ] in @stripPatterns
       if new RegExp(filter).test url
         for replace in replacements

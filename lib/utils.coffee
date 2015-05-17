@@ -39,10 +39,10 @@ Utils =
     urlPrefix = new RegExp "^[a-z]{3,}://."
     (url) -> urlPrefix.test url
 
-  # Decode valid escape sequences in a Javascript URI.  This is intended to mimic the best-effort decoding
+  # Decode valid escape sequences in a URI.  This is intended to mimic the best-effort decoding
   # Chrome itself seems to apply when a Javascript URI is enetered into the omnibox (or clicked).
   # See https://code.google.com/p/chromium/issues/detail?id=483000, #1611 and #1636.
-  decodeJavascriptURI: (uri) ->
+  decodeURIByParts: (uri) ->
     uri.split(/(?=%)/).map((uriComponent) ->
       try
         decodeURIComponent uriComponent
@@ -123,7 +123,7 @@ Utils =
     if Utils.hasChromePrefix string
       string
     else if Utils.hasJavascriptPrefix string
-      Utils.decodeJavascriptURI string
+      Utils.decodeURIByParts string
     else if Utils.isUrl string
       Utils.createFullUrl string
     else
