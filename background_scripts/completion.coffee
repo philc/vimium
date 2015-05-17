@@ -22,14 +22,17 @@ class Suggestion
     @title = ""
     # Extra data which will be available to the relevancy function.
     @relevancyData = null
-    # If @autoSelect is truthy, then this suggestion is automatically pre-selected in the vomnibar.  There may
-    # be at most one such suggestion.
+    # If @autoSelect is truthy, then this suggestion is automatically pre-selected in the vomnibar.  This only
+    # affects the suggestion in slot 0 in the vomnibar.
     @autoSelect = false
-    # If @highlightTerms is true, then we highlight matched terms in the title and URL.
+    # If @highlightTerms is true, then we highlight matched terms in the title and URL.  Otherwise we don't.
     @highlightTerms = true
-    # If @insertText is a string, then the indicated text is inserted into the vomnibar input when the
-    # suggestion is selected.
+    # @insertText is text to insert into the vomnibar input when the suggestion is selected.
     @insertText = null
+
+    # Other options set by individual completers include:
+    # - tabId (TabCompleter)
+    # - isSearchSuggestion, customSearchMode (SearchEngineCompleter)
 
     extend this, @options
 
@@ -539,6 +542,8 @@ class SearchEngineCompleter
       unless suggestion.isSearchSuggestion or suggestion.insertText
         for engine in engines
           if suggestion.insertText = Utils.extractQuery engine.searchUrl, suggestion.url
+            # suggestion.customSearchMode informs the vomnibar that, if the users edits the text from this
+            # suggestion, then custom search-engine mode should be activated.
             suggestion.customSearchMode = engine.keyword
             suggestion.title = suggestion.insertText
             console.log suggestion.insertText, engine unless engine.description
