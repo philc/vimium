@@ -546,7 +546,6 @@ class SearchEngineCompleter
             # suggestion, then custom search-engine mode should be activated.
             suggestion.customSearchMode = engine.keyword
             suggestion.title = suggestion.insertText
-            console.log suggestion.insertText, engine unless engine.description
             suggestion.type = engine.description ? "custom search"
             break
 
