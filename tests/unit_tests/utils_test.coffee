@@ -68,11 +68,11 @@ context "hasJavascriptPrefix",
     assert.isTrue Utils.hasJavascriptPrefix "javascript:foobar"
     assert.isFalse Utils.hasJavascriptPrefix "http:foobar"
 
-context "decodeJavascriptURI",
+context "decodeURIByParts",
   should "decode javascript: URLs", ->
-    assert.equal "foobar", Utils.decodeJavascriptURI "foobar"
-    assert.equal " ", Utils.decodeJavascriptURI "%20"
-    assert.equal "25 % 20 25 ", Utils.decodeJavascriptURI "25 % 20 25%20"
+    assert.equal "foobar", Utils.decodeURIByParts "foobar"
+    assert.equal " ", Utils.decodeURIByParts "%20"
+    assert.equal "25 % 20 25 ", Utils.decodeURIByParts "25 % 20 25%20"
 
 context "isUrl",
   should "identify URLs as URLs", ->
