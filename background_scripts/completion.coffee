@@ -137,6 +137,7 @@ class Suggestion
         url = decodeURI @url
       catch
         @url
+    url = url.toLowerCase()
     for [ filter, replacements ] in @stripPatterns
       if new RegExp(filter).test url
         for replace in replacements
