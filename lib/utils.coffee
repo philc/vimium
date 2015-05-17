@@ -121,10 +121,15 @@ Utils =
     httpProtocolRegexp = new RegExp "^https?://"
     (searchUrl, url) ->
       url = url.replace httpProtocolRegexp
-      searchUrl = searchUrl.split("%s")[0].replace httpProtocolRegexp
+      searchUrl = searchUrl.replace httpProtocolRegexp
+      [ searchUrl, suffixTerms... ] = searchUrl.split "%s"
+      # We require the URL to start with the search URL.
+      return null unless url.startsWith searchUrl
+      # We require any remaining terms in the search URL to also be present in the URL.
+      for suffix in suffixTerms
+        return null unless 0 <= url.indexOf suffix
       # We use try/catch because decodeURIComponent can throw an exception.
       try
-        if url.startsWith searchUrl
           url[searchUrl.length..].split(queryTerminator)[0].split("+").map(decodeURIComponent).join " "
       catch
         null
