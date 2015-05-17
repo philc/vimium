@@ -252,8 +252,8 @@ class HistoryCompleter
     historyEntry = suggestion.relevancyData
     recencyScore = RankingUtils.recencyScore(historyEntry.lastVisitTime)
     wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
-    # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
-    (wordRelevancy + Math.max recencyScore, wordRelevancy) / 2
+    # Average out the word relevancy and the recency.
+    (wordRelevancy + recencyScore) / 2
 
 # The domain completer is designed to match a single-word query which looks like it is a domain. This supports
 # the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
