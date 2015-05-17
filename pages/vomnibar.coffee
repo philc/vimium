@@ -71,6 +71,7 @@ class VomnibarUI
     @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
+    @tabToOpen = false
 
   updateSelection: ->
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
@@ -125,9 +126,13 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
-      @updateSelection()
+      if @input.value.trim().length == 0 and action == "tab" and not @tabToOpen
+        @tabToOpen = true
+        @update true
+      else
+        @selection += 1
+        @selection = @initialSelectionValue if @selection == @completions.length
+        @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
@@ -150,12 +155,16 @@ class VomnibarUI
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
     else if action == "delete"
-      if @customSearchMode? and @input.value.length == 0
+      inputIsEmpty = @input.value.length == 0
+      if inputIsEmpty and @customSearchMode?
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
         # If the input is empty, then reinstate the keyword (the "w").
         @input.value = @customSearchMode
         @customSearchMode = null
         @updateCompletions()
+      else if inputIsEmpty and @tabToOpen
+        @tabToOpen = false
+        @update true
       else
         return true # Do not suppress event.
 
@@ -172,6 +181,7 @@ class VomnibarUI
   updateCompletions: (callback = null) ->
     @completer.filter
       query: @getInputValueAsQuery()
+      tabToOpen: @tabToOpen
       callback: (@lastReponse) =>
         { results } = @lastReponse
         @completions = results
@@ -275,7 +285,6 @@ class BackgroundCompleter
       queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
       # We don't send these keys.
       callback: null
-      mayUseVomnibarCache: null
 
   reset: ->
     @keywords = []

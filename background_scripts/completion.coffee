@@ -225,7 +225,7 @@ class BookmarkCompleter
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
 
 class HistoryCompleter
-  filter: ({ queryTerms }, onComplete) ->
+  filter: ({ queryTerms, tabToOpen }, onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
@@ -233,6 +233,9 @@ class HistoryCompleter
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
+        else if tabToOpen
+          # <Tab> opens the completion list, even without a query.
+          history
         else
           []
       onComplete results.map (entry) =>
@@ -256,6 +259,8 @@ class HistoryCompleter
   computeRelevancy: (suggestion) ->
     historyEntry = suggestion.relevancyData
     recencyScore = RankingUtils.recencyScore(historyEntry.lastVisitTime)
+    # If there are no query terms, then relevancy is based on recency alone.
+    return recencyScore if suggestion.queryTerms.length == 0
     wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
     if suggestion.insertText?
       # If this suggestion matches a previous search with the default search engine, then we also score the
