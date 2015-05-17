@@ -114,7 +114,7 @@ Utils =
     searchUrl += "%s" unless 0 <= searchUrl.indexOf "%s"
     searchUrl.replace /%s/g, @createSearchQuery query
 
-  # Extract a query from url if it appears to be a URL created by createSearchQuery.
+  # Extract a query from url if it appears to be a URL created generated from the given search URL.
   # For example, map "https://www.google.ie/search?q=star+wars&foo&bar" to "star wars".
   extractQuery: do =>
     queryTerminator = new RegExp "[?&#/]"

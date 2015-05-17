@@ -45,17 +45,14 @@ class Suggestion
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
-    insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
-    insertTextIndicator = "&#xfe62;" # A small plus sign.
-    insertTextIndicator = "&#xfe65;" # A small "greater than" sign.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
-         <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
+         <span class="vimiumReset vomnibarSource">#{@type}</span>
          <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightQueryTerms Utils.escapeHtml @shortenUrl()}</span>
+        <span class="vimiumReset vomnibarUrl">#{@highlightQueryTerms Utils.escapeHtml @shortenUrl()}</span>
         #{relevancyHtml}
       </div>
       """
@@ -225,7 +222,7 @@ class BookmarkCompleter
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
 
 class HistoryCompleter
-  filter: ({ queryTerms, tabToOpen }, onComplete) ->
+  filter: ({ queryTerms, seenTabToOpenCompletionList }, onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     results = []
     HistoryCache.use (history) =>
@@ -233,7 +230,7 @@ class HistoryCompleter
       results =
         if queryTerms.length > 0
           history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-        else if tabToOpen
+        else if seenTabToOpenCompletionList
           # <Tab> opens the completion list, even without a query.
           history
         else
@@ -253,14 +250,6 @@ class HistoryCompleter
     # If there are no query terms, then relevancy is based on recency alone.
     return recencyScore if suggestion.queryTerms.length == 0
     wordRelevancy = RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
-    if suggestion.insertText?
-      # If this suggestion matches a previous search with the default search engine, then we also score the
-      # previous query terms themselves (suggestion.insertText) and, if that score is higher, then we use it
-      # in place of the wordRelevancy score.  Because the query terms are shorter than the original URL, this
-      # has the side effect of boosting the wordRelevancy score for previous searches with the default search
-      # engine.
-      wordRelevancy = Math.max wordRelevancy,
-        RankingUtils.wordRelevancy suggestion.queryTerms, suggestion.insertText, suggestion.title
     # Average out the word score and the recency. Recency has the ability to pull the score up, but not down.
     (wordRelevancy + Math.max recencyScore, wordRelevancy) / 2
 
@@ -406,7 +395,7 @@ class SearchEngineCompleter
 
   # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
   # query terms.
-  triageRequest: (request) ->
+  preprocessRequest: (request) ->
     @searchEngines.use (engines) =>
       { queryTerms, query } = request
       request.searchEngines = engines
@@ -559,7 +548,6 @@ class SearchEngineCompleter
             console.log suggestion.insertText, engine unless engine.description
             suggestion.type = engine.description ? "custom search"
             break
-    delete request.searchEngines
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
@@ -578,7 +566,7 @@ class MultiCompleter
 
     # Provide each completer with an opportunity to see (and possibly alter) the request before it is
     # launched.
-    completer.triageRequest? request for completer in @completers
+    completer.preprocessRequest? request for completer in @completers
 
     RegexpCache.clear()
     { queryTerms } = request
@@ -648,7 +636,7 @@ class MultiCompleter
         break if count++ == @maxResults
         seenUrls[url] = suggestion
 
-    # Give each completer an opportunity to tweak the suggestions.
+    # Give each completer the opportunity to tweak the suggestions.
     completer.postProcessSuggestions? request, suggestions for completer in @completers
 
     # Generate HTML for the remaining suggestions and return them.

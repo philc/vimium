@@ -71,7 +71,7 @@ class VomnibarUI
     @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
-    @tabToOpen = false
+    @seenTabToOpenCompletionList = false
 
   updateSelection: ->
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
@@ -126,8 +126,8 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      if @input.value.trim().length == 0 and action == "tab" and not @tabToOpen
-        @tabToOpen = true
+      if @input.value.trim().length == 0 and action == "tab" and not @seenTabToOpenCompletionList
+        @seenTabToOpenCompletionList = true
         @update true
       else
         @selection += 1
@@ -162,8 +162,8 @@ class VomnibarUI
         @input.value = @customSearchMode
         @customSearchMode = null
         @update true
-      else if inputIsEmpty and @tabToOpen
-        @tabToOpen = false
+      else if inputIsEmpty and @seenTabToOpenCompletionList
+        @seenTabToOpenCompletionList = false
         @update true
       else
         return true # Do not suppress event.
@@ -181,7 +181,7 @@ class VomnibarUI
   updateCompletions: (callback = null) ->
     @completer.filter
       query: @getInputValueAsQuery()
-      tabToOpen: @tabToOpen
+      seenTabToOpenCompletionList: @seenTabToOpenCompletionList
       callback: (@lastReponse) =>
         { results } = @lastReponse
         @completions = results
@@ -194,7 +194,7 @@ class VomnibarUI
         callback?()
 
   onInput: =>
-    @tabToOpen = false
+    @seenTabToOpenCompletionList = false
     @completer.cancel()
     if 0 <= @selection and @completions[@selection].customSearchMode and not @customSearchMode
       @customSearchMode = @completions[@selection].customSearchMode
