@@ -86,7 +86,7 @@ class VomnibarUI
     # typing.
     if 0 <= @selection and @completions[@selection].insertText?
       @previousInputValue ?= @input.value
-      @input.value = @completions[@selection].insertText + (if @selection == 0 then "" else " ")
+      @input.value = @completions[@selection].insertText
     else if @previousInputValue?
       @input.value = @previousInputValue
       @previousInputValue = null
@@ -193,11 +193,11 @@ class VomnibarUI
         @updateSelection()
         callback?()
 
-  updateOnInput: =>
+  onInput: =>
+    @tabToOpen = false
     @completer.cancel()
-    updateSynchronously = false
-    if 0 < @selection and @completions[@selection].insertPrefixOnInput
-      @input.value = @completions[@selection].insertPrefixOnInput + @input.value
+    if 0 <= @selection and @completions[@selection].customSearchMode and not @customSearchMode
+      @customSearchMode = @completions[@selection].customSearchMode
       updateSynchronously = true
     # If the user types, then don't reset any previous text, and reset the selection.
     if @previousInputValue?
@@ -210,14 +210,14 @@ class VomnibarUI
       window.clearTimeout @updateTimer
       @updateTimer = null
 
-  isCustomSearch: ->
+  shouldActivateCustomSearchMode: ->
     queryTerms = @input.value.ltrim().split /\s+/
-    1 < queryTerms.length and queryTerms[0] in @keywords
+    1 < queryTerms.length and queryTerms[0] in @keywords and not @customSearchMode
 
   update: (updateSynchronously = false, callback = null) =>
     # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
     # synchronous update (so that the state is updated immediately).
-    updateSynchronously ||= @isCustomSearch() and not @customSearchMode?
+    updateSynchronously ||= @shouldActivateCustomSearchMode()
     if updateSynchronously
       @clearUpdateTimer()
       @updateCompletions callback
@@ -234,7 +234,7 @@ class VomnibarUI
     @box = document.getElementById("vomnibar")
 
     @input = @box.querySelector("input")
-    @input.addEventListener "input", @updateOnInput
+    @input.addEventListener "input", @onInput
     @input.addEventListener "keydown", @onKeydown
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
