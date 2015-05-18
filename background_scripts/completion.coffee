@@ -52,7 +52,7 @@ class Suggestion
          <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
        </div>
        <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarUrl">#{@highlightQueryTerms Utils.escapeHtml @shortenUrl()}</span>
+        <span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
         #{relevancyHtml}
       </div>
       """
@@ -113,6 +113,9 @@ class Suggestion
         "<span class='vomnibarMatch'>#{string.substring(start, end)}</span>" +
         string.substring(end)
     string
+
+  highlightUrlTerms: (string) ->
+    if @highlightTermsExcludeUrl then string else @highlightQueryTerms string
 
   # Merges the given list of ranges such that any overlapping regions are combined. E.g.
   #   mergeRanges([0, 4], [3, 6]) => [0, 6].  A range is [startIndex, endIndex].
@@ -396,6 +399,7 @@ class TabCompleter
 class SearchEngineCompleter
   @debug: false
   searchEngines: null
+  previousSuggestions: null
 
   cancel: ->
     CompletionSearch.cancel()
@@ -415,6 +419,7 @@ class SearchEngineCompleter
           engine: engines[keyword]
 
   refresh: (port) ->
+    @previousSuggestions = {}
     # Parse the search-engine configuration.
     @searchEngines = new AsyncDataFetcher (callback) ->
       engines = {}
@@ -478,6 +483,17 @@ class SearchEngineCompleter
             # And the URL suffix (which must contain the query part) matches the current query.
             RankingUtils.matches queryTerms, suggestion.url[engine.searchUrlPrefix.length..])
 
+    # If a previous suggestion still matches the query, then we keep it (even if the completion engine may not
+    # return it for the current query).  This allows the user to pick suggestions by typing fragments of their
+    # text, without regard to whether the completion engine can complete the actual text of the query.
+    previousSuggestions =
+      for url, suggestion of @previousSuggestions
+        continue unless RankingUtils.matches queryTerms, suggestion.title
+        # Reset various fields, they may not be correct wrt. the current query.
+        extend suggestion, relevancy: null, html: null, highlightTerms: true, queryTerms: queryTerms
+        suggestion.relevancy = null
+        suggestion
+
     primarySuggestion = new Suggestion
       queryTerms: queryTerms
       type: description
@@ -491,13 +507,15 @@ class SearchEngineCompleter
     mkSuggestion = do =>
       count = 0
       (suggestion) =>
-        new Suggestion
+        url = Utils.createSearchUrl suggestion, searchUrl
+        @previousSuggestions[url] = new Suggestion
           queryTerms: queryTerms
           type: description
           url: Utils.createSearchUrl suggestion, searchUrl
           title: suggestion
           insertText: suggestion
           highlightTerms: false
+          highlightTermsExcludeUrl: true
           isCustomSearch: custom
           # The first (top) suggestion gets a score of 1.  This puts it two <Tab>s away if a domain completion
           # is present (which has a score of 2), and one <Tab> away otherwise.
@@ -508,7 +526,7 @@ class SearchEngineCompleter
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
 
-    suggestions = []
+    suggestions = previousSuggestions
     suggestions.push primarySuggestion if custom
     suggestions.push cachedSuggestions.map(mkSuggestion)... if custom and cachedSuggestions?
 
