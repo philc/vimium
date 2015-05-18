@@ -10,7 +10,7 @@
 #  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
 #  - cancel(): (optional) cancels any pending, cancelable action.
 class Suggestion
-  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
 
   constructor: (@options) ->
     # Required options.
