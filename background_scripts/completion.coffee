@@ -286,7 +286,7 @@ class DomainCompleter
         queryTerms: queryTerms
         type: "domain"
         url: domains[0]?[0] ? "" # This is the URL or an empty string, but not null.
-        relevancy: 1
+        relevancy: 2
       ].filter (s) -> 0 < s.url.length
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -462,10 +462,6 @@ class SearchEngineCompleter
     factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
     haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
 
-    # We weight the relevancy factor by the length of the query (exponentially).  The idea is that, the
-    # more the user has typed, the less likely it is that another completer has proven fruitful.
-    factor *= 1 - Math.pow 0.8, query.length
-
     # This filter is applied to all of the suggestions from all of the completers, after they have been
     # aggregated by the MultiCompleter.
     filter = (suggestions) ->
@@ -487,24 +483,27 @@ class SearchEngineCompleter
       type: description
       url: Utils.createSearchUrl queryTerms, searchUrl
       title: queryTerms.join " "
-      relevancy: 1
+      relevancy: 2
       autoSelect: custom
       highlightTerms: not haveCompletionEngine
       isSearchSuggestion: true
 
-    mkSuggestion = (suggestion) =>
-      new Suggestion
-        queryTerms: queryTerms
-        type: description
-        url: Utils.createSearchUrl suggestion, searchUrl
-        title: suggestion
-        insertText: suggestion
-        highlightTerms: false
-        isCustomSearch: custom
-        relevancyFunction: @computeRelevancy
-        # We reduce the relevancy factor as suggestions are added. This respects, to some extent, the
-        # order provided by the completion engine.
-        relevancyData: factor *= 0.95
+    mkSuggestion = do =>
+      count = 0
+      (suggestion) =>
+        new Suggestion
+          queryTerms: queryTerms
+          type: description
+          url: Utils.createSearchUrl suggestion, searchUrl
+          title: suggestion
+          insertText: suggestion
+          highlightTerms: false
+          isCustomSearch: custom
+          # The first (top) suggestion gets a score of 1.  This puts it two <Tab>s away if a domain completion
+          # is present (which has a score of 2), and one <Tab> away otherwise.
+          relevancy: if 0 < count++ then null else 1
+          relevancyFunction: @computeRelevancy
+          relevancyData: factor
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
