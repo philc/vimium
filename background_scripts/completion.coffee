@@ -396,6 +396,7 @@ class TabCompleter
 class SearchEngineCompleter
   @debug: false
   searchEngines: null
+  previousSuggestions: null
 
   cancel: ->
     CompletionSearch.cancel()
@@ -415,6 +416,7 @@ class SearchEngineCompleter
           engine: engines[keyword]
 
   refresh: (port) ->
+    @previousSuggestions = {}
     # Parse the search-engine configuration.
     @searchEngines = new AsyncDataFetcher (callback) ->
       engines = {}
@@ -478,6 +480,12 @@ class SearchEngineCompleter
             # And the URL suffix (which must contain the query part) matches the current query.
             RankingUtils.matches queryTerms, suggestion.url[engine.searchUrlPrefix.length..])
 
+    previousSuggestions =
+      for url, suggestion of @previousSuggestions
+        continue unless RankingUtils.matches queryTerms, suggestion.title
+        suggestion.relevancy = null
+        suggestion
+
     primarySuggestion = new Suggestion
       queryTerms: queryTerms
       type: description
@@ -491,7 +499,8 @@ class SearchEngineCompleter
     mkSuggestion = do =>
       count = 0
       (suggestion) =>
-        new Suggestion
+        url = Utils.createSearchUrl suggestion, searchUrl
+        @previousSuggestions[url] = new Suggestion
           queryTerms: queryTerms
           type: description
           url: Utils.createSearchUrl suggestion, searchUrl
@@ -508,7 +517,7 @@ class SearchEngineCompleter
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
 
-    suggestions = []
+    suggestions = previousSuggestions
     suggestions.push primarySuggestion if custom
     suggestions.push cachedSuggestions.map(mkSuggestion)... if custom and cachedSuggestions?
 
