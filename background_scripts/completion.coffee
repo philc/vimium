@@ -510,21 +510,19 @@ class SearchEngineCompleter
       highlightTerms: not haveCompletionEngine
       isSearchSuggestion: true
 
-    mkSuggestion = do =>
-      count = 0
-      (suggestion) =>
-        url = Utils.createSearchUrl suggestion, searchUrl
-        @previousSuggestions[url] = new Suggestion
-          queryTerms: queryTerms
-          type: description
-          url: url
-          title: suggestion
-          insertText: suggestion
-          highlightTerms: false
-          highlightTermsExcludeUrl: true
-          isCustomSearch: custom
-          relevancyFunction: @computeRelevancy
-          relevancyData: factor
+    mkSuggestion = (suggestion) =>
+      url = Utils.createSearchUrl suggestion, searchUrl
+      @previousSuggestions[url] = new Suggestion
+        queryTerms: queryTerms
+        type: description
+        url: url
+        title: suggestion
+        insertText: suggestion
+        highlightTerms: false
+        highlightTermsExcludeUrl: true
+        isCustomSearch: custom
+        relevancyFunction: @computeRelevancy
+        relevancyData: factor
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
