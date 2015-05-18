@@ -485,7 +485,6 @@ class SearchEngineCompleter
     mkSuggestion = do =>
       count = 0
       (suggestion) =>
-        console.log count
         new Suggestion
           queryTerms: queryTerms
           type: description
