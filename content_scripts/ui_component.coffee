@@ -45,14 +45,16 @@ class UIComponent
     chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) =>
       @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
 
+  # Posts a message; returns true if the message was sent, false otherwise.
   postMessage: (message) ->
     # We use "?" here because the iframe port is initialized asynchronously, and may not yet be ready.
     @iframePort?.postMessage message
+    @iframePort?
 
   activate: (@options) ->
-    @postMessage @options if @options?
-    @show() unless @showing
-    @iframeElement.focus()
+    if @postMessage @options
+      @show() unless @showing
+      @iframeElement.focus()
 
   show: (message) ->
     @postMessage message if message?
