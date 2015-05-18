@@ -480,9 +480,14 @@ class SearchEngineCompleter
             # And the URL suffix (which must contain the query part) matches the current query.
             RankingUtils.matches queryTerms, suggestion.url[engine.searchUrlPrefix.length..])
 
+    # If a previous suggestion still matches the query, then we keep it (even if the completion engine may not
+    # return it for the current query).  This allows the user to pick suggestions by typing fragments of their
+    # text, without regard to whether the completion engine can complete the actual text of the query.
     previousSuggestions =
       for url, suggestion of @previousSuggestions
         continue unless RankingUtils.matches queryTerms, suggestion.title
+        # Reset the previous relevancy and HTML, they may not be correct wrt. the current query.
+        extend suggestion, relevancy: null, html: null
         suggestion.relevancy = null
         suggestion
 
