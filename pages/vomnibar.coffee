@@ -67,22 +67,13 @@ class VomnibarUI
     @completionList.style.display = ""
     @input.value = ""
     @completions = []
-    @previousAutoSelect = null
     @previousInputValue = null
     @customSearchMode = null
     @selection = @initialSelectionValue
     @keywords = []
+    @seenTabToOpenCompletionList = false
 
   updateSelection: ->
-    # We retain global state here (previousAutoSelect) to tell if a search item (for which autoSelect is set)
-    # has just appeared or disappeared. If that happens, we set @selection to 0 or -1.
-    if 0 < @completions.length
-      @selection = 0 if @completions[0].autoSelect and not @previousAutoSelect
-      @selection = -1 if @previousAutoSelect and not @completions[0].autoSelect
-      @previousAutoSelect = @completions[0].autoSelect
-    else
-      @previousAutoSelect = null
-
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
     if @lastReponse.customSearchMode and not @customSearchMode?
@@ -95,7 +86,7 @@ class VomnibarUI
     # typing.
     if 0 <= @selection and @completions[@selection].insertText?
       @previousInputValue ?= @input.value
-      @input.value = @completions[@selection].insertText + (if @selection == 0 then "" else " ")
+      @input.value = @completions[@selection].insertText
     else if @previousInputValue?
       @input.value = @previousInputValue
       @previousInputValue = null
@@ -135,9 +126,13 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      @selection += 1
-      @selection = @initialSelectionValue if @selection == @completions.length
-      @updateSelection()
+      if @input.value.trim().length == 0 and action == "tab" and not @seenTabToOpenCompletionList
+        @seenTabToOpenCompletionList = true
+        @update true
+      else
+        @selection += 1
+        @selection = @initialSelectionValue if @selection == @completions.length
+        @updateSelection()
     else if (action == "up")
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
@@ -160,12 +155,16 @@ class VomnibarUI
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
     else if action == "delete"
-      if @customSearchMode? and @input.value.length == 0
+      inputIsEmpty = @input.value.length == 0
+      if inputIsEmpty and @customSearchMode?
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
         # If the input is empty, then reinstate the keyword (the "w").
         @input.value = @customSearchMode
         @customSearchMode = null
-        @updateCompletions()
+        @update true
+      else if inputIsEmpty and @seenTabToOpenCompletionList
+        @seenTabToOpenCompletionList = false
+        @update true
       else
         return true # Do not suppress event.
 
@@ -182,39 +181,43 @@ class VomnibarUI
   updateCompletions: (callback = null) ->
     @completer.filter
       query: @getInputValueAsQuery()
+      seenTabToOpenCompletionList: @seenTabToOpenCompletionList
       callback: (@lastReponse) =>
         { results } = @lastReponse
         @completions = results
+        @selection = if @completions[0]?.autoSelect then 0 else @initialSelectionValue
         # Update completion list with the new suggestions.
         @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
         @completionList.style.display = if @completions.length > 0 then "block" else ""
         @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
-        @previousAutoSelect = null if @completions[0]?.autoSelect and @completions[0]?.forceAutoSelect
         @updateSelection()
         callback?()
 
-  updateOnInput: =>
+  onInput: =>
+    @seenTabToOpenCompletionList = false
     @completer.cancel()
-    # If the user types, then don't reset any previous text, and restart auto select.
+    if 0 <= @selection and @completions[@selection].customSearchMode and not @customSearchMode
+      @customSearchMode = @completions[@selection].customSearchMode
+      updateSynchronously = true
+    # If the user types, then don't reset any previous text, and reset the selection.
     if @previousInputValue?
       @previousInputValue = null
-      @previousAutoSelect = null
       @selection = -1
-    @update false
+    @update updateSynchronously
 
   clearUpdateTimer: ->
     if @updateTimer?
       window.clearTimeout @updateTimer
       @updateTimer = null
 
-  isCustomSearch: ->
+  shouldActivateCustomSearchMode: ->
     queryTerms = @input.value.ltrim().split /\s+/
-    1 < queryTerms.length and queryTerms[0] in @keywords
+    1 < queryTerms.length and queryTerms[0] in @keywords and not @customSearchMode
 
   update: (updateSynchronously = false, callback = null) =>
     # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
     # synchronous update (so that the state is updated immediately).
-    updateSynchronously ||= @isCustomSearch() and not @customSearchMode?
+    updateSynchronously ||= @shouldActivateCustomSearchMode()
     if updateSynchronously
       @clearUpdateTimer()
       @updateCompletions callback
@@ -231,7 +234,7 @@ class VomnibarUI
     @box = document.getElementById("vomnibar")
 
     @input = @box.querySelector("input")
-    @input.addEventListener "input", @updateOnInput
+    @input.addEventListener "input", @onInput
     @input.addEventListener "keydown", @onKeydown
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
@@ -286,7 +289,6 @@ class BackgroundCompleter
       queryTerms: query.trim().split(/\s+/).filter (s) -> 0 < s.length
       # We don't send these keys.
       callback: null
-      mayUseVomnibarCache: null
 
   reset: ->
     @keywords = []

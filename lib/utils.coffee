@@ -114,6 +114,26 @@ Utils =
     searchUrl += "%s" unless 0 <= searchUrl.indexOf "%s"
     searchUrl.replace /%s/g, @createSearchQuery query
 
+  # Extract a query from url if it appears to be a URL created from the given search URL.
+  # For example, map "https://www.google.ie/search?q=star+wars&foo&bar" to "star wars".
+  extractQuery: do =>
+    queryTerminator = new RegExp "[?&#/]"
+    httpProtocolRegexp = new RegExp "^https?://"
+    (searchUrl, url) ->
+      url = url.replace httpProtocolRegexp
+      searchUrl = searchUrl.replace httpProtocolRegexp
+      [ searchUrl, suffixTerms... ] = searchUrl.split "%s"
+      # We require the URL to start with the search URL.
+      return null unless url.startsWith searchUrl
+      # We require any remaining terms in the search URL to also be present in the URL.
+      for suffix in suffixTerms
+        return null unless 0 <= url.indexOf suffix
+      # We use try/catch because decodeURIComponent can throw an exception.
+      try
+          url[searchUrl.length..].split(queryTerminator)[0].split("+").map(decodeURIComponent).join " "
+      catch
+        null
+
   # Converts :string into a Google search if it's not already a URL. We don't bother with escaping characters
   # as Chrome will do that for us.
   convertToUrl: (string) ->
