@@ -289,7 +289,7 @@ class DomainCompleter
         queryTerms: queryTerms
         type: "domain"
         url: domains[0]?[0] ? "" # This is the URL or an empty string, but not null.
-        relevancy: 2
+        relevancy: 1
       ].filter (s) -> 0 < s.url.length
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -499,7 +499,7 @@ class SearchEngineCompleter
       type: description
       url: Utils.createSearchUrl queryTerms, searchUrl
       title: queryTerms.join " "
-      relevancy: 2
+      relevancy: 1
       autoSelect: custom
       highlightTerms: not haveCompletionEngine
       isSearchSuggestion: true
@@ -511,15 +511,12 @@ class SearchEngineCompleter
         @previousSuggestions[url] = new Suggestion
           queryTerms: queryTerms
           type: description
-          url: Utils.createSearchUrl suggestion, searchUrl
+          url: url
           title: suggestion
           insertText: suggestion
           highlightTerms: false
           highlightTermsExcludeUrl: true
           isCustomSearch: custom
-          # The first (top) suggestion gets a score of 1.  This puts it two <Tab>s away if a domain completion
-          # is present (which has a score of 2), and one <Tab> away otherwise.
-          relevancy: if 0 < count++ then null else 1
           relevancyFunction: @computeRelevancy
           relevancyData: factor
 
