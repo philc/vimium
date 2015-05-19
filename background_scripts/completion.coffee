@@ -570,7 +570,7 @@ class SearchEngineCompleter
     return unless request.searchEngines
     engines = (engine for _, engine of request.searchEngines)
     engines.sort (a,b) -> b.searchUrl.length - a.searchUrl.length
-    engines.push keyword: null, description: "search", searchUrl: Settings.get "searchUrl"
+    engines.push keyword: null, description: "search history", searchUrl: Settings.get "searchUrl"
     for suggestion in suggestions
       unless suggestion.isSearchSuggestion or suggestion.insertText
         for engine in engines
@@ -579,7 +579,9 @@ class SearchEngineCompleter
             # suggestion, then custom search-engine mode should be activated.
             suggestion.customSearchMode = engine.keyword
             suggestion.title = suggestion.insertText
-            suggestion.type = engine.description ? "custom search"
+            # NOTE(smblott) The following is disabled: experimentation with UI.
+            # suggestion.highlightTermsExcludeUrl = true
+            # suggestion.type = engine.description ? "custom search history"
             break
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
