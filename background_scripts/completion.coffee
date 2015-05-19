@@ -415,7 +415,7 @@ class SearchEngineCompleter
       request.searchEngines = engines
       keyword = queryTerms[0]
       # Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
-      if keyword and engines[keyword] and (1 < queryTerms.length or /\s$/.test query)
+      if keyword and engines[keyword] and (1 < queryTerms.length or /\S\s/.test query)
         extend request,
           queryTerms: queryTerms[1..]
           keyword: keyword
@@ -631,9 +631,7 @@ class MultiCompleter
       # collapsing the vomnibar briefly before expanding it again, which looks ugly.
       unless suggestions.length == 0 and shouldRunContinuations
         suggestions = @prepareSuggestions request, queryTerms, suggestions
-        onComplete
-          results: suggestions
-          mayCacheResults: continuations.length == 0
+        onComplete results: suggestions
 
       # Run any continuations (asynchronously); for example, the search-engine completer
       # (SearchEngineCompleter) uses a continuation to fetch suggestions from completion engines
@@ -648,11 +646,7 @@ class MultiCompleter
         jobs.onReady =>
           suggestions = filter suggestions for filter in filters
           suggestions = @prepareSuggestions request, queryTerms, suggestions
-          # We post these results even if a new query has started.  The vomnibar will not display them
-          # (because they're arriving too late), but it will cache them.
-          onComplete
-            results: suggestions
-            mayCacheResults: true
+          onComplete results: suggestions
 
       # Admit subsequent queries and launch any pending query.
       @filterInProgress = false
