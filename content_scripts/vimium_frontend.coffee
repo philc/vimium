@@ -718,21 +718,16 @@ updateFindModeQuery = ->
   # character. here we grep for the relevant escape sequences.
   findModeQuery.isRegex = settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
-  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /\\./g, (match) ->
-    switch (match)
-      when "\\r"
+  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
+    return match if flag == "" or slashes.length != 1
+    switch (flag)
+      when "r"
         findModeQuery.isRegex = true
-        return ""
-      when "\\R"
+      when "R"
         findModeQuery.isRegex = false
-        return ""
-      when "\\I"
+      when "I"
         hasNoIgnoreCaseFlag = true
-        return ""
-      when "\\\\"
-        return "\\"
-      else
-        return match
+    ""
 
   # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
   findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
