@@ -52,6 +52,7 @@ Commands =
     key.replace(/<[acm]-/ig, (match) -> match.toLowerCase())
        .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
           "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
+       .replace /<space>/ig, " "
 
   parseCustomKeyMappings: (customKeyMappings) ->
     lines = customKeyMappings.split("\n")
