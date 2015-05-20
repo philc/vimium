@@ -718,7 +718,8 @@ updateFindModeQuery = ->
   # character. here we grep for the relevant escape sequences.
   findModeQuery.isRegex = settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
-  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI])/g, (match, slashes, flag) ->
+  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
+    return match if flag == ""
     if slashes.length == 2
       # The escape code is double-escaped (ie. \\r rather than \r). Strip the extra slash.
       "\\#{flag}"
