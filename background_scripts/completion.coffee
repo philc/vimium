@@ -581,7 +581,7 @@ class SearchEngineCompleter
             # suggestion.customSearchMode informs the vomnibar that, if the users edits the text from this
             # suggestion, then custom search-engine mode should be activated.
             suggestion.customSearchMode = engine.keyword
-            suggestion.title = suggestion.insertText
+            suggestion.title ||= suggestion.insertText
             # NOTE(smblott) The following is disabled: experimentation with UI.
             # suggestion.highlightTermsExcludeUrl = true
             # suggestion.type = engine.description ? "custom search history"
