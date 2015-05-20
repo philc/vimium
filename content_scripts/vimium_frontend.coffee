@@ -719,19 +719,15 @@ updateFindModeQuery = ->
   findModeQuery.isRegex = settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
-    return match if flag == ""
-    if slashes.length == 2
-      # The escape code is double-escaped (ie. \\r rather than \r). Strip the extra slash.
-      "\\#{flag}"
-    else
-      switch (match)
-        when "\\r"
-          findModeQuery.isRegex = true
-        when "\\R"
-          findModeQuery.isRegex = false
-        when "\\I"
-          hasNoIgnoreCaseFlag = true
-      ""
+    return match if flag == "" or slashes.length != 1
+    switch (flag)
+      when "r"
+        findModeQuery.isRegex = true
+      when "R"
+        findModeQuery.isRegex = false
+      when "I"
+        hasNoIgnoreCaseFlag = true
+    ""
 
   # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
   findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
