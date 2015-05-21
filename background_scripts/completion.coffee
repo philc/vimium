@@ -491,6 +491,8 @@ class SearchEngineCompleter
         defaultUrl = Utils.createSearchUrl queryTerms, searchUrl
         defaultQuery = queryTerms.join " "
         suggestions.filter (suggestion) -> Utils.extractQuery(searchUrl, suggestion.url) != defaultQuery
+      else
+        suggestions
 
     # If a previous suggestion still matches the query, then we keep it (even if the completion engine may not
     # return it for the current query).  This allows the user to pick suggestions by typing fragments of their
