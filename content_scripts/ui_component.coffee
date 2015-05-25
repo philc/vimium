@@ -16,7 +16,6 @@ class UIComponent
       className: className
       seamless: "seamless"
       src: chrome.runtime.getURL iframeUrl
-    @iframeElement.addEventListener "load", => @openPort()
     shadowWrapper = document.createElement "div"
     # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
     @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
@@ -28,6 +27,16 @@ class UIComponent
     # Hide the iframe, but don't interfere with the focus.
     @hide false
 
+    # Open a port and pass it to the iframe via window.postMessage.
+    @iframePort = new AsyncDataFetcher (setIframePort) =>
+      @iframeElement.addEventListener "load", =>
+        # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
+        chrome.storage.local.get "vimiumSecret", ({ vimiumSecret }) =>
+          { port1, port2 } = new MessageChannel
+          port1.onmessage = (event) => @handleMessage event
+          @iframeElement.contentWindow.postMessage vimiumSecret, chrome.runtime.getURL(""), [ port2 ]
+          setIframePort port1
+
     # If any other frame in the current tab receives the focus, then we hide the UI component.
     # NOTE(smblott) This is correct for the vomnibar, but might be incorrect (and need to be revisited) for
     # other UI components.
@@ -35,40 +44,31 @@ class UIComponent
       @postMessage "hide" if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
       false # Free up the sendResponse handler.
 
-  # Open a port and pass it to the iframe via window.postMessage.
-  openPort: ->
-    messageChannel = new MessageChannel()
-    @iframePort = messageChannel.port1
-    @iframePort.onmessage = (event) => @handleMessage event
-
-    # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
-    chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) =>
-      @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
-
-  # Posts a message; returns true if the message was sent, false otherwise.
-  postMessage: (message) ->
-    # We use "?" here because the iframe port is initialized asynchronously, and may not yet be ready.
-    @iframePort?.postMessage message
-    @iframePort?
+  # Posts a message (if one is provided), then calls continuation (if provided).  The continuation is only
+  # ever called *after* the message has been posted.
+  postMessage: (message = null, continuation = null) ->
+    @iframePort.use (port) =>
+      port.postMessage message if message?
+      continuation?()
 
   activate: (@options) ->
-    if @postMessage @options
+    @postMessage @options, =>
       @show() unless @showing
       @iframeElement.focus()
 
   show: (message) ->
-    @postMessage message if message?
-    @iframeElement.classList.remove "vimiumUIComponentHidden"
-    @iframeElement.classList.add "vimiumUIComponentVisible"
-    # The window may not have the focus.  We focus it now, to prevent the "focus" listener below from firing
-    # immediately.
-    window.focus()
-    window.addEventListener "focus", @onFocus = (event) =>
-      if event.target == window
-        window.removeEventListener "focus", @onFocus
-        @onFocus = null
-        @postMessage "hide"
-    @showing = true
+    @postMessage message, =>
+      @iframeElement.classList.remove "vimiumUIComponentHidden"
+      @iframeElement.classList.add "vimiumUIComponentVisible"
+      # The window may not have the focus.  We focus it now, to prevent the "focus" listener below from firing
+      # immediately.
+      window.focus()
+      window.addEventListener "focus", @onFocus = (event) =>
+        if event.target == window
+          window.removeEventListener "focus", @onFocus
+          @onFocus = null
+          @postMessage "hide"
+      @showing = true
 
   hide: (focusWindow = true)->
     @refocusSourceFrame @options?.sourceFrameId if focusWindow
