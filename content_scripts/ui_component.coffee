@@ -4,6 +4,8 @@ class UIComponent
   showing: null
   options: null
   shadowDOM: null
+  loaded: false
+  queuedActions: []
 
   constructor: (iframeUrl, className, @handleMessage) ->
     styleSheet = document.createElement "style"
@@ -44,19 +46,41 @@ class UIComponent
     # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
     chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) =>
       @iframeElement.contentWindow.postMessage secret, chrome.runtime.getURL(""), [messageChannel.port2]
+      @loaded = true
+      @onLoad()
 
-  # Posts a message; returns true if the message was sent, false otherwise.
+  queueAction: (functionName, args) -> @queuedActions.push {functionName, args}
+
+  onLoad: ->
+    return unless @loaded
+    # Run queued actions.
+    for {functionName, args} in @queuedActions
+      this[functionName].apply this, args
+    @queuedActions = null # No more actions should get queued, so make @queuedActions.push error if we try.
+
+  # Posts a message; returns true if the message was sent immediately, false if it has been queued.
   postMessage: (message) ->
-    # We use "?" here because the iframe port is initialized asynchronously, and may not yet be ready.
-    @iframePort?.postMessage message
-    @iframePort?
+    unless @loaded
+      @queueAction "postMessage", arguments
+      return false
+
+    @iframePort.postMessage message
+    true
 
   activate: (@options) ->
-    if @postMessage @options
+    unless @loaded
+      @queueAction "activate", arguments
+      return
+
+    if not @options? or @postMessage @options
       @show() unless @showing
       @iframeElement.focus()
 
   show: (message) ->
+    unless @loaded
+      @queueAction "show", arguments
+      return
+
     @postMessage message if message?
     @iframeElement.classList.remove "vimiumUIComponentHidden"
     @iframeElement.classList.add "vimiumUIComponentVisible"
@@ -71,6 +95,10 @@ class UIComponent
     @showing = true
 
   hide: (focusWindow = true)->
+    unless @loaded
+      @queueAction "hide", arguments
+      return
+
     @refocusSourceFrame @options?.sourceFrameId if focusWindow
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
