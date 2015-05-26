@@ -37,15 +37,20 @@ page.open testfile, (status) ->
     console.log 'Unable to load tests.'
     phantom.exit 1
 
-  testsFailed = page.evaluate ->
-    Tests.run()
-    return Tests.testsFailed
+  runTests = ->
+    testsFailed = page.evaluate ->
+      Tests.run()
+      return Tests.testsFailed
 
-  if system.args[1] == '--coverage'
-    data = page.evaluate -> JSON.stringify _$jscoverage
-    fs.write dirname + 'dom_tests_coverage.json', data, 'w'
+    if system.args[1] == '--coverage'
+      data = page.evaluate -> JSON.stringify _$jscoverage
+      fs.write dirname + 'dom_tests_coverage.json', data, 'w'
 
-  if testsFailed > 0
-    phantom.exit 1
-  else
-    phantom.exit 0
+    if testsFailed > 0
+      phantom.exit 1
+    else
+      phantom.exit 0
+
+  # We add a short delay to allow asynchronous initialization (that is, initialization which happens on
+  # "nextTick") to complete.
+  setTimeout runTests, 10
