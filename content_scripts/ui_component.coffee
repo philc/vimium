@@ -27,7 +27,9 @@ class UIComponent
     # Hide the iframe, but don't interfere with the focus.
     @hide false
 
-    # Open a port and pass it to the iframe via window.postMessage.
+    # Open a port and pass it to the iframe via window.postMessage.  We use an AsyncDataFetcher to handle
+    # requests which arrive before the frame (and its message handlers) have completed initialization.  See
+    # #1679.
     @iframePort = new AsyncDataFetcher (setIframePort) =>
       @iframeElement.addEventListener "load", =>
         # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
