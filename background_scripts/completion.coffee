@@ -44,10 +44,9 @@ class Suggestion
   generateHtml: ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
-    # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
-    insertTextIndicator = "&#xfe62;" # A small plus sign.
-    insertTextIndicator = "&#xfe65;" # A small "greater than" sign.
+    insertTextIndicator = "&#8618;" # A right hooked arrow.
+    # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       """
       <div class="vimiumReset vomnibarTopHalf">
