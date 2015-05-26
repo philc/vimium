@@ -15,7 +15,6 @@ class UIComponent
     extend @iframeElement,
       className: className
       seamless: "seamless"
-      src: chrome.runtime.getURL iframeUrl
     shadowWrapper = document.createElement "div"
     # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
     @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
@@ -28,9 +27,12 @@ class UIComponent
     @hide false
 
     # Open a port and pass it to the iframe via window.postMessage.  We use an AsyncDataFetcher to handle
-    # requests which arrive before the frame (and its message handlers) have completed initialization.  See
+    # requests which arrive before the iframe (and its message handlers) have completed initialization.  See
     # #1679.
     @iframePort = new AsyncDataFetcher (setIframePort) =>
+      # We set the iframe source here (and not above) to avoid a potential race condition vis-a-vis the "load"
+      # event (because this callback runs on "nextTick").
+      @iframeElement.src = chrome.runtime.getURL iframeUrl
       @iframeElement.addEventListener "load", =>
         # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
         chrome.storage.local.get "vimiumSecret", ({ vimiumSecret }) =>
