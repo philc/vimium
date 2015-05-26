@@ -20,7 +20,6 @@ class UIComponent
     @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
     @shadowDOM.appendChild styleSheet
     @shadowDOM.appendChild @iframeElement
-    document.documentElement.appendChild shadowWrapper
 
     @showing = true # The iframe is visible now.
     # Hide the iframe, but don't interfere with the focus.
@@ -30,9 +29,11 @@ class UIComponent
     # requests which arrive before the iframe (and its message handlers) have completed initialization.  See
     # #1679.
     @iframePort = new AsyncDataFetcher (setIframePort) =>
-      # We set the iframe source here (and not above) to avoid a potential race condition vis-a-vis the "load"
-      # event (because this callback runs on "nextTick").
+      # We set the iframe source and append the new element here (as opposed to above) to avoid a potential
+      # race condition vis-a-vis the "load" event (because this callback runs on "nextTick").
       @iframeElement.src = chrome.runtime.getURL iframeUrl
+      document.documentElement.appendChild shadowWrapper
+
       @iframeElement.addEventListener "load", =>
         # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
         chrome.storage.local.get "vimiumSecret", ({ vimiumSecret }) =>
