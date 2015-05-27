@@ -29,6 +29,8 @@ class Suggestion
     @highlightTerms = true
     # @insertText is text to insert into the vomnibar input when the suggestion is selected.
     @insertText = null
+    # @deDuplicate controls whether this suggestion is a candidate for deduplication.
+    @deDuplication = true
 
     # Other options set by individual completers include:
     # - tabId (TabCompleter)
@@ -390,6 +392,7 @@ class TabCompleter
           title: tab.title
           relevancyFunction: @computeRelevancy
           tabId: tab.id
+          deDuplicate: false
       onComplete suggestions
 
   computeRelevancy: (suggestion) ->
@@ -665,7 +668,7 @@ class MultiCompleter
     suggestions =
       for suggestion in suggestions
         url = suggestion.shortenUrl()
-        continue if seenUrls[url]
+        continue if suggestion.deDuplicate and seenUrls[url]
         break if count++ == @maxResults
         seenUrls[url] = suggestion
 
