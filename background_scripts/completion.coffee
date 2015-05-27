@@ -30,7 +30,7 @@ class Suggestion
     # @insertText is text to insert into the vomnibar input when the suggestion is selected.
     @insertText = null
     # @deDuplicate controls whether this suggestion is a candidate for deduplication.
-    @deDuplication = true
+    @deDuplicate = true
 
     # Other options set by individual completers include:
     # - tabId (TabCompleter)
@@ -665,9 +665,12 @@ class MultiCompleter
     # Simplify URLs and remove duplicates (duplicate simplified URLs, that is).
     count = 0
     seenUrls = {}
+    console.log ""
     suggestions =
       for suggestion in suggestions
         url = suggestion.shortenUrl()
+        console.log url
+        console.log suggestion.deDuplicate and seenUrls[url]
         continue if suggestion.deDuplicate and seenUrls[url]
         break if count++ == @maxResults
         seenUrls[url] = suggestion
