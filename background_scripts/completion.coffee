@@ -665,12 +665,9 @@ class MultiCompleter
     # Simplify URLs and remove duplicates (duplicate simplified URLs, that is).
     count = 0
     seenUrls = {}
-    console.log ""
     suggestions =
       for suggestion in suggestions
         url = suggestion.shortenUrl()
-        console.log url
-        console.log suggestion.deDuplicate and seenUrls[url]
         continue if suggestion.deDuplicate and seenUrls[url]
         break if count++ == @maxResults
         seenUrls[url] = suggestion
