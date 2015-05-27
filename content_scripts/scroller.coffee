@@ -105,6 +105,60 @@ checkVisibility = (element) ->
   if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth)
     activatedElement = element
 
+JumpHistory =
+  maxHistory: 50
+  init: ->
+    @reset()
+
+  reset: ->
+    @history = []
+    @position = 0
+    @lastPoint = null
+
+  updateLastPoint: (direction, prevPos) ->
+    @lastPoint?[direction] = prevPos
+
+  add: (direction, prevPos, newPos) ->
+    if @history.length == 0
+      # Add a starting point when the user first jumps.
+      @_addPoint(direction, prevPos)
+    else if @history.length != @position + 1
+      # If the user jumps while in the middle of the history,
+      # then the remaining history points are cut off.
+      @history[@position][direction] = prevPos
+      @history.length = @position + 1
+    else
+      # Update the last history point in case the user has scrolled
+      # to a different spot since jumping to that point.
+      @updateLastPoint(prevPos)
+
+    @_addPoint(direction, newPos)
+    @history = @history.slice(-@maxHistory)
+    @position = Math.min(@history.length, @maxHistory) - 1
+
+  _addPoint: (direction, pos) ->
+    point = {}
+    if direction == 'x'
+      point.x = pos
+      point.y = activatedElement[scrollProperties.y.axisName]
+    else
+      point.x = activatedElement[scrollProperties.x.axisName]
+      point.y = pos
+    @history.push(point)
+
+  jump: (direction, prevPos, newPos, isHistoryPoint) ->
+    if isHistoryPoint
+      @updateLastPoint(direction, prevPos)
+    else
+      @add(direction, prevPos, newPos)
+
+  goToPoint: (direction) ->
+    point = @history[@position + direction]
+    if point
+      @lastPoint = @history[@position]
+      @position += direction
+      point
+
 # How scrolling is handled by CoreScroller.
 #   - For jump scrolling, the entire scroll happens immediately.
 #   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key press.
@@ -122,6 +176,7 @@ CoreScroller =
     @time = 0
     @lastEvent = null
     @keyIsDown = false
+    @activeAnimations = []
 
     # NOTE(smblott) With extreme keyboard configurations, Chrome sometimes does not get a keyup event for
     # every keydown, in which case tapping "j" scrolls indefinitely.  This appears to be a Chrome/OS/XOrg bug
@@ -149,8 +204,10 @@ CoreScroller =
   maxCalibration: 1.6 # Controls how much we're willing to speed scrolls up; bigger means more speed up.
   calibrationBoundary: 150 # Boundary between scrolls which are considered too slow, or too fast.
 
+  isAnimating: -> @activeAnimations.length > 0
+
   # Scroll element by a relative amount (a number) in some direction.
-  scroll: (element, direction, amount, continuous = true) ->
+  scroll: (element, direction, amount, continuous = true, isJump) ->
     return unless amount
 
     unless @settings.get "smoothScroll"
@@ -178,7 +235,13 @@ CoreScroller =
     calibration = 1.0
     previousTimestamp = null
 
+    if isJump
+      for animation in @activeAnimations
+        animation.cancelled = true
+      @activeAnimations = []
+
     animate = (timestamp) =>
+      return if animate.cancelled
       previousTimestamp ?= timestamp
       return requestAnimationFrame(animate) if timestamp == previousTimestamp
 
@@ -205,12 +268,14 @@ CoreScroller =
       else
         # We're done.
         checkVisibility element
+        @activeAnimations.splice @activeAnimations.indexOf(animate, 1)
 
     # If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test always
     # fails.
     ++@time unless continuous
 
     # Launch animator.
+    @activeAnimations.push animate
     requestAnimationFrame animate
 
 # Scroller contains the two main scroll functions which are used by clients.
@@ -220,6 +285,7 @@ Scroller =
       _name: 'scroller/active-element'
       DOMActivate: (event) -> handlerStack.alwaysContinueBubbling -> activatedElement = event.target
     CoreScroller.init frontendSettings
+    JumpHistory.init()
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -242,13 +308,26 @@ Scroller =
       elementAmount = factor * getDimension element, direction, amount
       CoreScroller.scroll element, direction, elementAmount
 
-  scrollTo: (direction, pos) ->
+  scrollTo: (direction, pos, isHistoryPoint) ->
+    prevActivatedElement = activatedElement
     activatedElement ||= (document.body and firstScrollableElement()) or document.body
     return unless activatedElement
+    if activatedElement != prevActivatedElement
+      JumpHistory.reset()
 
     element = findScrollableElement activatedElement, direction, pos, 1
-    amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
-    CoreScroller.scroll element, direction, amount
+    prevPos = element[scrollProperties[direction].axisName]
+    newPos = getDimension(element, direction, pos)
+    amount = newPos - prevPos
+    if not CoreScroller.isAnimating()
+      JumpHistory.jump(direction, prevPos, newPos, isHistoryPoint)
+    CoreScroller.scroll element, direction, amount, true, true
+
+  scrollHistory: (direction) ->
+    point = JumpHistory.goToPoint(direction)
+    return unless point
+    @scrollTo "x", point.x, true
+    @scrollTo "y", point.y, true
 
   # Scroll the top, bottom, left and right of element into view.  The is used by visual mode to ensure the
   # focus remains visible.

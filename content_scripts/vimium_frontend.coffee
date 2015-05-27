@@ -371,6 +371,8 @@ extend window,
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
   scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
   scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
+  scrollBackward: -> Scroller.scrollHistory -1
+  scrollForward: -> Scroller.scrollHistory 1
 
 extend window,
   reload: -> window.location.reload()
