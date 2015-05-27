@@ -464,7 +464,7 @@ class SearchEngineCompleter
         searchUrl: Settings.get "searchUrl"
         description: "search"
 
-    return onComplete [] unless custom or 0 < queryTerms.length
+    return onComplete [] unless custom
 
     factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
     haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
@@ -513,6 +513,8 @@ class SearchEngineCompleter
       autoSelect: custom
       highlightTerms: not haveCompletionEngine
       isSearchSuggestion: true
+
+    return onComplete [ primarySuggestion ], { filter } if queryTerms.length == 0
 
     mkSuggestion = (suggestion) =>
       url = Utils.createSearchUrl suggestion, searchUrl
