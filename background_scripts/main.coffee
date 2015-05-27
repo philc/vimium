@@ -268,10 +268,10 @@ BackgroundCommands =
     chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
       tab = tabs[0]
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
-  nextTab: (callback) -> selectTab(callback, "next")
-  previousTab: (callback) -> selectTab(callback, "previous")
-  firstTab: (callback) -> selectTab(callback, "first")
-  lastTab: (callback) -> selectTab(callback, "last")
+  nextTab: (count) -> selectTab "next", count
+  previousTab: (count) -> selectTab "previous", count
+  firstTab: -> selectTab "first"
+  lastTab: -> selectTab "last"
   removeTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id)
@@ -345,21 +345,24 @@ removeTabsRelative = (direction) ->
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
-selectTab = (callback, direction) ->
-  chrome.tabs.getAllInWindow(null, (tabs) ->
+selectTab = (direction, count = 1) ->
+  chrome.tabs.getAllInWindow null, (tabs) ->
     return unless tabs.length > 1
-    chrome.tabs.getSelected(null, (currentTab) ->
-      switch direction
-        when "next"
-          toSelect = tabs[(currentTab.index + 1 + tabs.length) % tabs.length]
-        when "previous"
-          toSelect = tabs[(currentTab.index - 1 + tabs.length) % tabs.length]
-        when "first"
-          toSelect = tabs[0]
-        when "last"
-          toSelect = tabs[tabs.length - 1]
-      selectionChangedHandlers.push(callback)
-      chrome.tabs.update(toSelect.id, { selected: true })))
+    chrome.tabs.getSelected null, (currentTab) ->
+      toSelect =
+        switch direction
+          when "next"
+            currentTab.index + count
+          when "previous"
+            currentTab.index - count
+          when "first"
+            0
+          when "last"
+            tabs.length - 1
+      # Bring toSelect into the range [0,tabs.length).
+      toSelect += tabs.length while toSelect < 0
+      toSelect %= tabs.length
+      chrome.tabs.update tabs[toSelect].id, selected: true
 
 updateOpenTabs = (tab, deleteFrames = false) ->
   # Chrome might reuse the tab ID of a recently removed tab.
