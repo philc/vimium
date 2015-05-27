@@ -321,8 +321,8 @@ commandDescriptions =
   goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
 
   # Manipulating tabs
-  nextTab: ["Go one tab right", { background: true }]
-  previousTab: ["Go one tab left", { background: true }]
+  nextTab: ["Go one tab right", { background: true, passCountToFunction: true }]
+  previousTab: ["Go one tab left", { background: true, passCountToFunction: true }]
   firstTab: ["Go to the first tab", { background: true }]
   lastTab: ["Go to the last tab", { background: true }]
 
