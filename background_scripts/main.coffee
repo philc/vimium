@@ -360,8 +360,7 @@ selectTab = (direction, count = 1) ->
           when "last"
             tabs.length - 1
       # Bring toSelect into the range [0,tabs.length).
-      toSelect += tabs.length while toSelect < 0
-      toSelect %= tabs.length
+      toSelect = (toSelect + tabs.length * Math.abs count) % tabs.length
       chrome.tabs.update tabs[toSelect].id, selected: true
 
 updateOpenTabs = (tab, deleteFrames = false) ->
