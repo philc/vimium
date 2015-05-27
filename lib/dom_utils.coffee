@@ -62,17 +62,29 @@ DomUtils =
     # Note: this call will be expensive if we modify the DOM in between calls.
     clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
 
+    # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
+    # font-size contains text.
+    isInlineZeroHeight = ->
+      elementComputedStyle = window.getComputedStyle element, null
+      isInlineZeroFontSize = (0 == elementComputedStyle.getPropertyValue("display").indexOf "inline") and
+        (elementComputedStyle.getPropertyValue("font-size") == "0px")
+      # Override the function to return this value for the rest of this context.
+      isInlineZeroHeight = -> isInlineZeroFontSize
+      isInlineZeroFontSize
+
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
       if (clientRect.width == 0 or clientRect.height == 0) and testChildren
         for child in element.children
           computedStyle = window.getComputedStyle(child, null)
-          # Ignore child elements which are not floated and not absolutely positioned for parent elements with
-          # zero width/height
+          # Ignore child elements which are not floated and not absolutely positioned for parent elements
+          # with zero width/height, as long as the case described at isInlineZeroHeight does not apply.
           # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline
           # children.
-          continue if (computedStyle.getPropertyValue('float') == 'none' &&
-            computedStyle.getPropertyValue('position') != 'absolute')
+          continue if (computedStyle.getPropertyValue("float") == "none" and
+            computedStyle.getPropertyValue("position") != "absolute" and
+            not (clientRect.height == 0 and isInlineZeroHeight() and
+              0 == computedStyle.getPropertyValue("display").indexOf "inline"))
           childClientRect = @getVisibleClientRect child, true
           continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
           return childClientRect
