@@ -503,7 +503,7 @@ class SearchEngineCompleter
       for url, suggestion of @previousSuggestions
         continue unless RankingUtils.matches queryTerms, suggestion.title
         # Reset various fields, they may not be correct wrt. the current query.
-        extend suggestion, relevancy: null, html: null, highlightTerms: true, queryTerms: queryTerms
+        extend suggestion, relevancy: null, html: null, queryTerms: queryTerms
         suggestion.relevancy = null
         suggestion
 
