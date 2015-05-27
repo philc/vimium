@@ -126,9 +126,12 @@ class VomnibarUI
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
-      if @input.value.trim().length == 0 and action == "tab" and not @seenTabToOpenCompletionList
-        @seenTabToOpenCompletionList = true
-        @update true
+      if action == "tab" and
+        @completer.name == "omni" and
+        not @seenTabToOpenCompletionList and
+        @input.value.trim().length == 0
+          @seenTabToOpenCompletionList = true
+          @update true
       else
         @selection += 1
         @selection = @initialSelectionValue if @selection == @completions.length
