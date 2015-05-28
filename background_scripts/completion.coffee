@@ -420,7 +420,7 @@ class SearchEngineCompleter
   preprocessRequest: (request) ->
     @searchEngines.use (engines) =>
       { queryTerms, query } = request
-      request.searchEngines = engines
+      extend request, searchEngines: engines, keywords: key for own key of engines
       keyword = queryTerms[0]
       # Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
       if keyword and engines[keyword] and (1 < queryTerms.length or /\S\s/.test query)
@@ -461,23 +461,13 @@ class SearchEngineCompleter
 
   filter: (request, onComplete) ->
     { queryTerms, query, engine } = request
+    return onComplete [] unless engine
 
-    { custom, searchUrl, description } =
-      if engine
-        { keyword, searchUrl, description } = engine
-        extend request, { searchUrl, customSearchMode: true }
-        custom: true
-        searchUrl: searchUrl
-        description: description
-      else
-        custom: false
-        searchUrl: Settings.get "searchUrl"
-        description: "search"
-
-    return onComplete [] unless custom
+    { keyword, searchUrl, description } = engine
+    extend request, searchUrl, customSearchMode: true
 
     factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
-    haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
+    haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
 
     # This filter is applied to all of the suggestions from all of the completers, after they have been
     # aggregated by the MultiCompleter.
@@ -501,7 +491,7 @@ class SearchEngineCompleter
         for url, suggestion of @previousSuggestions
           continue unless RankingUtils.matches queryTerms, suggestion.title
           # Reset various fields, they may not be correct wrt. the current query.
-          extend suggestion, relevancy: null, html: null, highlightTerms: true, queryTerms: queryTerms
+          extend suggestion, relevancy: null, html: null, highlightTerms: false, queryTerms: queryTerms
           suggestion.relevancy = null
           suggestion
 
@@ -511,8 +501,8 @@ class SearchEngineCompleter
       url: Utils.createSearchUrl queryTerms, searchUrl
       title: queryTerms.join " "
       relevancy: 1
-      autoSelect: custom
-      highlightTerms: not haveCompletionEngine
+      autoSelect: true
+      highlightTerms: false
       isSearchSuggestion: true
 
     return onComplete [ primarySuggestion ], { filter } if queryTerms.length == 0
@@ -527,7 +517,7 @@ class SearchEngineCompleter
         insertText: suggestion
         highlightTerms: false
         highlightTermsExcludeUrl: true
-        isCustomSearch: custom
+        isCustomSearch: true
         relevancyFunction: @computeRelevancy
         relevancyData: factor
 
@@ -535,12 +525,11 @@ class SearchEngineCompleter
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
 
     suggestions = previousSuggestions
-    suggestions.push primarySuggestion if custom
-    suggestions.push cachedSuggestions.map(mkSuggestion)... if custom and cachedSuggestions?
+    suggestions.push primarySuggestion
+    suggestions.push cachedSuggestions.map(mkSuggestion)... if cachedSuggestions?
 
     if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
       # There is no prospect of adding further completions.
-      suggestions.push cachedSuggestions.map(mkSuggestion)... if cachedSuggestions?
       onComplete suggestions, { filter, continuation: null }
     else
       # Post the initial suggestions, but then deliver any further completions asynchronously, as a
@@ -586,9 +575,6 @@ class SearchEngineCompleter
             # suggestion, then custom search-engine mode should be activated.
             suggestion.customSearchMode = engine.keyword
             suggestion.title ||= suggestion.insertText
-            # NOTE(smblott) The following is disabled: experimentation with UI.
-            # suggestion.highlightTermsExcludeUrl = true
-            # suggestion.type = engine.description ? "custom search history"
             break
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top

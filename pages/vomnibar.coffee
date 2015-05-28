@@ -76,7 +76,7 @@ class VomnibarUI
   updateSelection: ->
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
-    if @lastReponse.customSearchMode and not @customSearchMode?
+    if @lastReponse.isCustomSearch and not @customSearchMode?
       queryTerms = @input.value.trim().split /\s+/
       @customSearchMode = queryTerms[0]
       @input.value = queryTerms[1..].join " "
