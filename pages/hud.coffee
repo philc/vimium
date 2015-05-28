@@ -29,9 +29,8 @@ handlers =
     countElement = document.getElementById "hud-match-count"
     return unless countElement? # Don't do anything if we're not in find mode.
 
-    plural = if matchCount == 1 then "" else "es"
     countText = if matchCount > 0
-      " (" + matchCount + " Match#{plural})"
+      " (#{matchCount} Match#{if matchCount == 1 then "" else "es"})"
     else
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
