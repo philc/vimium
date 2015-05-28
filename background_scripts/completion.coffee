@@ -301,7 +301,7 @@ class DomainCompleter
         queryTerms: queryTerms
         type: "domain"
         url: domains[0]?[0] ? "" # This is the URL or an empty string, but not null.
-        relevancy: 1
+        relevancy: 2.0
       ].filter (s) -> 0 < s.url.length
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -501,35 +501,38 @@ class SearchEngineCompleter
       type: description
       url: Utils.createSearchUrl queryTerms, searchUrl
       title: queryTerms.join " "
-      relevancy: 1
+      relevancy: 2.0
       autoSelect: true
       highlightTerms: false
       isSearchSuggestion: true
 
     return onComplete [ primarySuggestion ], { filter } if queryTerms.length == 0
 
-    mkSuggestion = (suggestion) =>
-      url = Utils.createSearchUrl suggestion, searchUrl
-      @previousSuggestions[url] = new Suggestion
-        queryTerms: queryTerms
-        type: description
-        url: url
-        title: suggestion
-        insertText: suggestion
-        highlightTerms: false
-        highlightTermsExcludeUrl: true
-        isCustomSearch: true
-        relevancyFunction: @computeRelevancy
+    mkSuggestion = do =>
+      count = 0
+      (suggestion) =>
+        url = Utils.createSearchUrl suggestion, searchUrl
+        @previousSuggestions[url] = new Suggestion
+          queryTerms: queryTerms
+          type: description
+          url: url
+          title: suggestion
+          insertText: suggestion
+          highlightTerms: false
+          highlightTermsExcludeUrl: true
+          isCustomSearch: true
+          relevancy: if ++count == 1 then 1.0 else null
+          relevancyFunction: @computeRelevancy
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
 
     suggestions = previousSuggestions
     suggestions.push primarySuggestion
-    suggestions.push cachedSuggestions.map(mkSuggestion)... if cachedSuggestions?
 
     if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
-      # There is no prospect of adding further completions.
+      # There is no prospect of adding further completions, so we're done.
+      suggestions.push cachedSuggestions.map(mkSuggestion)... if cachedSuggestions?
       onComplete suggestions, { filter, continuation: null }
     else
       # Post the initial suggestions, but then deliver any further completions asynchronously, as a
