@@ -72,7 +72,7 @@ class CustomSearchMode extends Mode
       indicator: @getIndicator()
       keydown: (event) => @handleKeydown event
       keypress: (event) => @handleKeypress event
-      keyup: => @stopBubblingAndFalse
+      keyup: -> false
 
     @exit "No custom search engines" unless 0 < @keywords.length
 
@@ -112,7 +112,7 @@ class CustomSearchMode extends Mode
         @exit null, => @activate keywords[0]
       else
         @setIndicator @getIndicator()
-    @stopBubblingAndFalse
+    false
 
   activate: (keyword = null) ->
     if @newTab
