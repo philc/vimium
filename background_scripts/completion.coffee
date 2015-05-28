@@ -505,6 +505,7 @@ class SearchEngineCompleter
       autoSelect: true
       highlightTerms: false
       isSearchSuggestion: true
+      isPrimarySuggestion: true
 
     return onComplete [ primarySuggestion ], { filter } if queryTerms.length == 0
 
