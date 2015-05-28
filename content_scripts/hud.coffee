@@ -26,6 +26,14 @@ HUD =
     @hudUI.show {name: "show", text}
     @tween.fade 1.0, 150
 
+  showFindMode: (text = "") ->
+    return unless @enabled()
+    @hudUI.show {name: "showFindMode", text}
+    @tween.fade 1.0, 150
+
+  updateMatchesCount: (matchCount, showMatchText = true) ->
+    @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
+
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the

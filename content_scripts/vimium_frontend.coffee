@@ -686,9 +686,6 @@ updateFindModeQuery = ->
   # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
   findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
 
-  # Don't count matches in the HUD.
-  HUD.hide(true)
-
   # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
   # sequentially so the browser handles the scrolling / text selection.
   if findModeQuery.isRegex
@@ -993,13 +990,11 @@ window.goNext = ->
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 showFindModeHUDForQuery = ->
-  if findModeQuery.rawQuery and (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    plural = if findModeQuery.matchCount == 1 then "" else "es"
-    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Match#{plural})")
-  else if findModeQuery.rawQuery
-    HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
-  else
-    HUD.show("/")
+  matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
+  showCount = findModeQuery.rawQuery.length > 0
+
+  HUD.showFindMode findModeQuery.rawQuery
+  HUD.updateMatchesCount matchCount, showCount
 
 getCurrentRange = ->
   selection = getSelection()
@@ -1027,7 +1022,7 @@ window.enterFindMode = (options = {}) ->
   findModeSaveSelection()
   findModeQuery = rawQuery: ""
   findMode = new FindMode options
-  HUD.show "/"
+  HUD.showFindMode()
   findMode
 
 window.showHelpDialog = (html, fid) ->
