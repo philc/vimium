@@ -228,6 +228,25 @@ Utils =
   # Like Nodejs's nextTick.
   nextTick: (func) -> @setTimeout 0, func
 
+  parseCustomSearchEngines: (str) ->
+    engines = {}
+    for line in str.split "\n"
+      line = line.trim()
+      continue if /^[#"]/.test line
+      tokens = line.split /\s+/
+      continue unless 2 <= tokens.length
+      keyword = tokens[0].split(":")[0]
+      url = tokens[1]
+      description = tokens[2..].join(" ") || "search (#{keyword})"
+      continue unless Utils.hasFullUrlPrefix url
+      engines[keyword] =
+        keyword: keyword
+        searchUrl: url
+        description: description
+        searchUrlPrefix: url.split("%s")[0]
+
+    engines
+
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
