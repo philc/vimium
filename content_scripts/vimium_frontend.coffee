@@ -5,7 +5,7 @@
 # "domReady".
 #
 
-findModeQuery = { rawQuery: "", matchCount: 0 }
+window.findModeQuery = { rawQuery: "", matchCount: 0 }
 findModeQueryHasResults = false
 findModeAnchorNode = null
 findModeInitialRange = null
@@ -666,7 +666,7 @@ FindModeHistory =
     ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
 
 # should be called whenever rawQuery is modified.
-updateFindModeQuery = ->
+window.updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
@@ -711,14 +711,8 @@ updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-updateQueryForFindMode = (rawQuery) ->
-  findModeQuery.rawQuery = rawQuery
-  updateFindModeQuery()
-  performFindInPlace()
-  showFindModeHUDForQuery()
-
 handleKeyCharForFindMode = (keyChar) ->
-  updateQueryForFindMode findModeQuery.rawQuery + keyChar
+  HUD.showFindMode findModeQuery.rawQuery + keyChar
 
 handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
@@ -737,7 +731,7 @@ handleDeleteForFindMode = ->
     HUD.hide()
     false
   else
-    updateQueryForFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
+    HUD.showFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
     true
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
@@ -774,12 +768,12 @@ class FindMode extends Mode
           if rawQuery = FindModeHistory.getQuery @historyIndex + 1
             @historyIndex += 1
             @partialQuery = findModeQuery.rawQuery if @historyIndex == 0
-            updateQueryForFindMode rawQuery
+            HUD.showFindMode rawQuery
           @suppressEvent
         else if event.keyCode == keyCodes.downArrow
           @historyIndex = Math.max -1, @historyIndex - 1
           rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
-          updateQueryForFindMode rawQuery
+          HUD.showFindMode rawQuery
           @suppressEvent
         else
           DomUtils.suppressPropagation(event)
@@ -800,7 +794,7 @@ class FindMode extends Mode
     if findModeQueryHasResults and event?.type != "click"
       new PostFindMode
 
-performFindInPlace = ->
+window.performFindInPlace = ->
   # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
   # match as the user adds matching characters, or removes previously-matched characters. See #1434.
   findModeRestoreSelection()
@@ -989,11 +983,10 @@ window.goNext = ->
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-showFindModeHUDForQuery = ->
+window.showFindModeHUDForQuery = ->
   matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
   showCount = findModeQuery.rawQuery.length > 0
 
-  HUD.showFindMode findModeQuery.rawQuery
   HUD.updateMatchesCount matchCount, showCount
 
 getCurrentRange = ->
@@ -1020,7 +1013,7 @@ window.enterFindMode = (options = {}) ->
   Marks.setPreviousPosition()
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
-  findModeQuery = rawQuery: ""
+  window.findModeQuery = rawQuery: ""
   findMode = new FindMode options
   HUD.showFindMode()
   findMode

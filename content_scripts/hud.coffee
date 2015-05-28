@@ -28,11 +28,24 @@ HUD =
 
   showFindMode: (text = "") ->
     return unless @enabled()
+    # NOTE(mrmr1993): We set findModeQuery.rawQuery here rather in search while we still handle keys in the
+    # main frame. When key handling is moved to the HUD iframe, this line should be deleted, and the
+    # equivalent in search should be uncommented.
+    findModeQuery.rawQuery = text
     @hudUI.show {name: "showFindMode", text}
     @tween.fade 1.0, 150
 
   updateMatchesCount: (matchCount, showMatchText = true) ->
     @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
+
+  search: (data) ->
+    # NOTE(mrmr1993): The following line is disabled as it is currently vulnerable to a race condition when a
+    # user types quickly. When all of the key handling is done in the HUD iframe, this should be uncommented,
+    # and the equivalent line in showFindMode should be deleted.
+    #findModeQuery.rawQuery = data.query
+    updateFindModeQuery()
+    performFindInPlace()
+    showFindModeHUDForQuery()
 
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
