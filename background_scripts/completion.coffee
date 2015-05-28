@@ -10,7 +10,7 @@
 #  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
 #  - cancel(): (optional) cancels any pending, cancelable action.
 class Suggestion
-  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
 
   constructor: (@options) ->
     # Required options.
@@ -539,20 +539,7 @@ class SearchEngineCompleter
       # continuation.
       onComplete suggestions,
         filter: filter
-        continuation: (suggestions, onComplete) =>
-
-          # We can skip querying the completion engine if any new suggestions we propose will not score highly
-          # enough to make the list anyway.  We construct a suggestion which perfectly matches the query, and
-          # ask the relevancy function what score it would get.  If that score is less than the score of the
-          # lowest-ranked suggestion from another completer (and there are already 10 suggestions), then
-          # there's no need to query the completion engine.
-          perfectRelevancyScore = @computeRelevancy new Suggestion
-            queryTerms: queryTerms, title: queryTerms.join " "
-
-          if 10 <= suggestions.length and perfectRelevancyScore < suggestions[suggestions.length-1].relevancy
-            console.log "skip (cannot make the grade):", suggestions.length, query if SearchEngineCompleter.debug
-            return onComplete []
-
+        continuation: (onComplete) =>
           CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
@@ -632,7 +619,7 @@ class MultiCompleter
       if shouldRunContinuations
         jobs = new JobRunner continuations.map (continuation) ->
           (callback) ->
-            continuation suggestions, (newSuggestions) ->
+            continuation (newSuggestions) ->
               suggestions.push newSuggestions...
               callback()
 
