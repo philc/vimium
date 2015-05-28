@@ -10,7 +10,7 @@
 #  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
 #  - cancel(): (optional) cancels any pending, cancelable action.
 class Suggestion
-  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
+  showRelevancy: true # Set this to true to render relevancy when debugging the ranking scores.
 
   constructor: (@options) ->
     # Required options.
@@ -54,6 +54,7 @@ class Suggestion
         <div class="vimiumReset vomnibarTopHalf">
            <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
            <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
+           #{relevancyHtml}
          </div>
         """
       else
@@ -466,7 +467,7 @@ class SearchEngineCompleter
     { keyword, searchUrl, description } = engine
     extend request, searchUrl, customSearchMode: true
 
-    factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
+    factor = 0.5
     haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
 
     # This filter is applied to all of the suggestions from all of the completers, after they have been
@@ -519,7 +520,6 @@ class SearchEngineCompleter
         highlightTermsExcludeUrl: true
         isCustomSearch: true
         relevancyFunction: @computeRelevancy
-        relevancyData: factor
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
@@ -544,7 +544,7 @@ class SearchEngineCompleter
           # lowest-ranked suggestion from another completer (and there are already 10 suggestions), then
           # there's no need to query the completion engine.
           perfectRelevancyScore = @computeRelevancy new Suggestion
-            queryTerms: queryTerms, title: queryTerms.join(" "), relevancyData: factor
+            queryTerms: queryTerms, title: queryTerms.join " "
 
           if 10 <= suggestions.length and perfectRelevancyScore < suggestions[suggestions.length-1].relevancy
             console.log "skip (cannot make the grade):", suggestions.length, query if SearchEngineCompleter.debug
@@ -560,7 +560,7 @@ class SearchEngineCompleter
     #   scores here, and those provided by other completers.
     # - Relevancy depends only on the title (which is the search terms), and not on the URL.
     Suggestion.boostRelevancyScore 0.5,
-      relevancyData * RankingUtils.wordRelevancy queryTerms, title, title
+      0.7 * RankingUtils.wordRelevancy queryTerms, title, title
 
   postProcessSuggestions: (request, suggestions) ->
     return unless request.searchEngines
