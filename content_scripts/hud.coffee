@@ -61,12 +61,19 @@ HUD =
     # iframe. To end up with the correct modes active, we create a focus/blur event manually after refocusing
     # this window.
     window.focus()
-    focusNode = window.getSelection().focusNode
-    focusNode = focusNode.parentElement if focusNode? and focusNode.nodeType != focusNode.ELEMENT_NODE
-    if focusNode? and DomUtils.isFocusable focusNode
-      focusNode.focus()
+
+    sel = window.getSelection()
+    focusNode = if not sel.focusNode?
+      null
+    else if sel.focusNode == sel.anchorNode and sel.focusOffset == sel.anchorOffset
+      # The selection either *is* an element, or is inside an opaque element (eg. <input>).
+      sel.focusNode.childNodes[sel.focusOffset]
+    else if sel.focusNode.nodeType != sel.focusNode.ELEMENT_NODE
+      sel.focusNode.parentElement
     else
-      document.activeElement?.blur()
+      sel.focusNode
+    document.activeElement?.blur()
+    focusNode?.focus()
 
     findModeQuery.rawQuery = data.query
     handlerStack.bubbleEvent "keydown", data.event
