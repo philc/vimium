@@ -359,5 +359,11 @@ commandDescriptions =
 
 Commands.init()
 
+# Register postUpdateHook for keyMappings setting.
+Settings.postUpdateHooks["keyMappings"] = (value) ->
+  Commands.clearKeyMappingsAndSetDefaults()
+  Commands.parseCustomKeyMappings value
+  refreshCompletionKeysAfterMappingSave()
+
 root = exports ? window
 root.Commands = Commands

@@ -1,7 +1,6 @@
 
 $ = (id) -> document.getElementById id
-bgUtils = chrome.extension.getBackgroundPage().Utils
-bgSettings = chrome.extension.getBackgroundPage().Settings
+Settings.init()
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
 
 #
@@ -22,21 +21,20 @@ class Option
   # Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
   # Return the fetched value.
   fetch: ->
-    @populateElement @previous = bgSettings.get @field
+    @populateElement @previous = Settings.get @field
     @previous
 
   # Write this option's new value back to localStorage, if necessary.
   save: ->
     value = @readValueFromElement()
     if not @areEqual value, @previous
-      bgSettings.set @field, @previous = value
-      bgSettings.performPostUpdateHook @field, value
+      Settings.set @field, @previous = value
 
   # Compare values; this is overridden by sub-classes.
   areEqual: (a,b) -> a == b
 
   restoreToDefault: ->
-    bgSettings.clear @field
+    Settings.clear @field
     @fetch()
 
   # Static method.

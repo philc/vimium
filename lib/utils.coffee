@@ -2,6 +2,13 @@ Utils =
   getCurrentVersion: ->
     chrome.runtime.getManifest().version
 
+  # Returns true whenever the current page is from the extension's origin (and thus can access the
+  # extension's localStorage).
+  isExtensionPage: -> document.location?.origin + "/" == chrome.extension.getURL ""
+
+  # Returns true whenever the current page is the extension's background page.
+  isBackgroundPage: -> @isExtensionPage() and chrome.extension.getBackgroundPage() == window
+
   # Takes a dot-notation object string and call the function
   # that it points to with the correct value for 'this'.
   invokeCommandString: (str, argArray) ->

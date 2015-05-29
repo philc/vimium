@@ -2,9 +2,8 @@ require "./test_helper.js"
 extend global, require "./test_chrome_stubs.js"
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.43'
-extend(global, require "../../background_scripts/sync.js")
-extend(global, require "../../background_scripts/settings.js")
-Sync.init()
+extend(global, require "../../lib/settings.js")
+Settings.init()
 
 context "isUrl",
   should "accept valid URLs", ->

@@ -14,9 +14,8 @@ root.Marks =
 
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
-extend(global,require "../../background_scripts/sync.js")
-extend(global,require "../../background_scripts/settings.js")
-Sync.init()
+extend(global,require "../../lib/settings.js")
+Settings.init()
 extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
