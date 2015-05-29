@@ -28,10 +28,6 @@ HUD =
 
   showFindMode: (text = "") ->
     return unless @enabled()
-    # NOTE(mrmr1993): We set findModeQuery.rawQuery here rather in search while we still handle keys in the
-    # main frame. When key handling is moved to the HUD iframe, this line should be deleted, and the
-    # equivalent in search should be uncommented.
-    findModeQuery.rawQuery = text
     @hudUI.show {name: "showFindMode", text}
     @tween.fade 1.0, 150
 
@@ -39,10 +35,7 @@ HUD =
     @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
 
   search: (data) ->
-    # NOTE(mrmr1993): The following line is disabled as it is currently vulnerable to a race condition when a
-    # user types quickly. When all of the key handling is done in the HUD iframe, this should be uncommented,
-    # and the equivalent line in showFindMode should be deleted.
-    #findModeQuery.rawQuery = data.query
+    findModeQuery.rawQuery = data.query
     updateFindModeQuery()
     performFindInPlace()
     showFindModeHUDForQuery()
@@ -62,6 +55,21 @@ HUD =
       Mode.setIndicator() if updateIndicator
     else
       @tween.fade 0, 150, => @hide true, updateIndicator
+
+  hideFindMode: (data) ->
+    # An element element won't receive a focus event if the search landed on it while we were in the HUD
+    # iframe. To end up with the correct modes active, we create a focus/blur event manually after refocusing
+    # this window.
+    window.focus()
+    focusNode = window.getSelection().focusNode
+    focusNode = focusNode.parentElement if focusNode? and focusNode.nodeType != focusNode.ELEMENT_NODE
+    if focusNode? and DomUtils.isFocusable focusNode
+      focusNode.focus()
+    else
+      document.activeElement?.blur()
+
+    findModeQuery.rawQuery = data.query
+    handlerStack.bubbleEvent "keydown", data.event
 
   isReady: do ->
     ready = false

@@ -776,7 +776,7 @@ class FindMode extends Mode
           HUD.showFindMode rawQuery
           @suppressEvent
         else
-          DomUtils.suppressPropagation(event)
+          DomUtils.suppressPropagation event if HandlerStack::isChromeEvent event
           handlerStack.stopBubblingAndFalse
 
       keypress: (event) =>

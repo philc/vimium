@@ -1,3 +1,20 @@
+document.addEventListener "keydown", (event) ->
+  inputElement = document.getElementById "hud-find-input"
+  return unless inputElement? # Don't do anything if we're not in find mode.
+  transferrableEvent = {}
+  for key, value of event
+    transferrableEvent[key] = value if typeof value in ["number", "string"]
+
+  if (event.keyCode in [keyCodes.backspace, keyCodes.deleteKey] and inputElement.textContent.length == 0) or
+     event.keyCode in [keyCodes.enter, keyCodes.upArrow, keyCodes.downArrow] or
+     KeyboardUtils.isEscape event
+
+    DomUtils.suppressEvent event
+    UIComponentServer.postMessage
+      name: "hideFindMode"
+      event: transferrableEvent
+      query: inputElement.textContent
+
 handlers =
   show: (data) ->
     document.getElementById("hud").innerText = data.text
@@ -15,13 +32,18 @@ handlers =
     hud.innerText = "/"
 
     inputElement = document.createElement "span"
+    inputElement.contentEditable = "plaintext-only"
     inputElement.textContent = data.text
     inputElement.id = "hud-find-input"
     hud.appendChild inputElement
 
+    inputElement.addEventListener "input", (event) ->
+      UIComponentServer.postMessage {name: "search", query: inputElement.textContent}
+
     countElement = document.createElement "span"
     countElement.id = "hud-match-count"
     hud.appendChild countElement
+    inputElement.focus()
 
     UIComponentServer.postMessage {name: "search", query: inputElement.textContent}
 
