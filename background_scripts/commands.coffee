@@ -133,6 +133,8 @@ Commands =
       "Marks.activateCreateMode",
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab",
+      "Vomnibar.activateCustomSearch",
+      "Vomnibar.activateCustomSearchInNewTab",
       "Marks.activateGotoMode"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
@@ -169,6 +171,8 @@ Commands =
     "LinkHints.activateModeToDownloadLink",
     "Vomnibar.activateEditUrl",
     "Vomnibar.activateEditUrlInNewTab",
+    "Vomnibar.activateCustomSearch",
+    "Vomnibar.activateCustomSearchInNewTab",
     "LinkHints.activateModeToOpenIncognito",
     "goNext",
     "goPrevious",
@@ -254,6 +258,9 @@ defaultKeyMappings =
 
   "ge": "Vomnibar.activateEditUrl"
   "gE": "Vomnibar.activateEditUrlInNewTab"
+
+  "s": "Vomnibar.activateCustomSearch"
+  "S": "Vomnibar.activateCustomSearchInNewTab"
 
   "gf": "nextFrame"
   "gF": "mainFrame"
@@ -350,6 +357,8 @@ commandDescriptions =
   "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { noRepeat: true }]
   "Vomnibar.activateEditUrl": ["Edit the current URL", { noRepeat: true }]
   "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { noRepeat: true }]
+  "Vomnibar.activateCustomSearch": ["Open a custom search", { noRepeat: true }]
+  "Vomnibar.activateCustomSearchInNewTab": ["Open a custom search for a new tab", { noRepeat: true }]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
   mainFrame: ["Select the tab's main/top frame", { background: true, noRepeat: true }]

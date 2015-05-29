@@ -438,22 +438,7 @@ class SearchEngineCompleter
     @previousSuggestions = {}
     # Parse the search-engine configuration.
     @searchEngines = new AsyncDataFetcher (callback) ->
-      engines = {}
-      for line in Settings.get("searchEngines").split "\n"
-        line = line.trim()
-        continue if /^[#"]/.test line
-        tokens = line.split /\s+/
-        continue unless 2 <= tokens.length
-        keyword = tokens[0].split(":")[0]
-        url = tokens[1]
-        description = tokens[2..].join(" ") || "search (#{keyword})"
-        continue unless Utils.hasFullUrlPrefix url
-        engines[keyword] =
-          keyword: keyword
-          searchUrl: url
-          description: description
-          searchUrlPrefix: url.split("%s")[0]
-
+      engines = Utils.parseCustomSearchEngines Settings.get "searchEngines"
       callback engines
 
       # Let the front-end vomnibar know the search-engine keywords.  It needs to know them so that, when the

@@ -25,17 +25,23 @@ Vomnibar =
     selectFirst: true
     newTab: true
   }
-  activateEditUrl: (sourceFrameId) -> @open sourceFrameId, {
-    completer: "omni"
-    selectFirst: false
-    query: window.location.href
-  }
-  activateEditUrlInNewTab: (sourceFrameId) -> @open sourceFrameId, {
-    completer: "omni"
-    selectFirst: false
-    query: window.location.href
-    newTab: true
-  }
+
+  activateEditUrl: (sourceFrameId, text = window.location.href) ->
+
+    @open sourceFrameId,
+      completer: "omni"
+      selectFirst: false
+      query: text
+
+  activateEditUrlInNewTab: (sourceFrameId, text = window.location.href) ->
+    @open sourceFrameId,
+      completer: "omni"
+      selectFirst: false
+      query: text
+      newTab: true
+
+  activateCustomSearch: (sourceFrameId) -> new CustomSearchMode this, sourceFrameId, false
+  activateCustomSearchInNewTab: (sourceFrameId) -> new CustomSearchMode this, sourceFrameId, true
 
   init: ->
     unless @vomnibarUI?
@@ -53,6 +59,71 @@ Vomnibar =
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
   open: (sourceFrameId, options) -> @vomnibarUI.activate extend options, { sourceFrameId }
+
+class CustomSearchMode extends Mode
+  constructor: (@vomnibar, @sourceFrameId, @newTab = false) ->
+    @engines = Utils.parseCustomSearchEngines settings.get "searchEngines"
+    @keywords = (key for own key of @engines).sort()
+    @search = ""
+
+    super
+      name: "custom-search"
+      exitOnEscape: true
+      indicator: @getIndicator()
+      keydown: (event) => @handleKeydown event
+      keypress: (event) => @handleKeypress event
+      keyup: -> false
+
+    @exit "No custom search engines" unless 0 < @keywords.length
+
+  getKeywords: ->
+    @keywords.filter (keyword) => keyword.startsWith @search
+
+  getIndicator: ->
+    keywords = @getKeywords()
+    if 10 < keywords.length
+      keywords = [ keywords[...10]..., "..." ]
+    keywords = keywords.join ","
+    "Search: " + keywords
+
+  handleKeydown: (event) ->
+    if event.keyCode == keyCodes.enter
+      @exit null, => @activate @getKeywords()[0]
+    else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+      if @search.length == 0
+        @exit()
+      else
+        @search = @search[0...@search.length - 1]
+        @setIndicator @getIndicator()
+    else
+      return @stopBubblingAndTrue
+
+    DomUtils.suppressEvent event
+    @stopBubblingAndTrue
+
+  handleKeypress: (event) ->
+    keyChar = String.fromCharCode event.charCode
+    @search += String.fromCharCode event.charCode
+    keywords = @getKeywords()
+    switch keywords.length
+      when 0
+        @exit "No matching keyword."
+      when 1
+        @exit null, => @activate keywords[0]
+      else
+        @setIndicator @getIndicator()
+    false
+
+  activate: (keyword = null) ->
+    if @newTab
+      @vomnibar.activateEditUrlInNewTab @sourceFrameId, "#{keyword} " if keyword?
+    else
+      @vomnibar.activateEditUrl @sourceFrameId, "#{keyword} " if keyword?
+
+  exit: (msg = null, continuation = null) ->
+    super()
+    HUD.showForDuration msg, 1000 if msg?
+    continuation?()
 
 root = exports ? window
 root.Vomnibar = Vomnibar
