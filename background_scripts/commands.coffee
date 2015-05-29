@@ -24,21 +24,13 @@ Commands =
       noRepeat: options.noRepeat
       repeatLimit: options.repeatLimit
 
-  mapKeyToCommand: (key, command) ->
+  mapKeyToCommand: ({ key, command, extras }) ->
     unless @availableCommands[command]
-      console.log(command, "doesn't exist!")
+      console.log command, "doesn't exist!"
       return
 
-    commandDetails = @availableCommands[command]
-
-    @keyToCommandRegistry[key] =
-      command: command
-      isBackgroundCommand: commandDetails.isBackgroundCommand
-      passCountToFunction: commandDetails.passCountToFunction
-      noRepeat: commandDetails.noRepeat
-      repeatLimit: commandDetails.repeatLimit
-
-  unmapKey: (key) -> delete @keyToCommandRegistry[key]
+    extras ?= []
+    @keyToCommandRegistry[key] = extend { command, extras }, @availableCommands[command]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -54,37 +46,29 @@ Commands =
           "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
 
   parseCustomKeyMappings: (customKeyMappings) ->
-    lines = customKeyMappings.split("\n")
+    for line in customKeyMappings.split "\n"
+      unless  line[0] == "\"" or line[0] == "#"
+        tokens = line.replace(/\s+$/, "").split /\s+/
+        switch tokens[0]
+          when "map"
+            [ _, key, command, extras... ] = tokens
+            if command? and @availableCommands[command]
+              key = @normalizeKey key
+              console.log "Mapping", key, "to", command
+              @mapKeyToCommand { key, command, extras }
 
-    for line in lines
-      continue if (line[0] == "\"" || line[0] == "#")
-      splitLine = line.replace(/\s+$/, "").split(/\s+/)
+          when "unmap"
+            if tokens.length == 2
+              key = @normalizeKey tokens[1]
+              console.log "Unmapping", key
+              delete @keyToCommandRegistry[key]
 
-      lineCommand = splitLine[0]
-
-      if (lineCommand == "map")
-        continue if (splitLine.length != 3)
-        key = @normalizeKey(splitLine[1])
-        vimiumCommand = splitLine[2]
-
-        continue unless @availableCommands[vimiumCommand]
-
-        console.log("Mapping", key, "to", vimiumCommand)
-        @mapKeyToCommand(key, vimiumCommand)
-      else if (lineCommand == "unmap")
-        continue if (splitLine.length != 2)
-
-        key = @normalizeKey(splitLine[1])
-        console.log("Unmapping", key)
-        @unmapKey(key)
-      else if (lineCommand == "unmapAll")
-        @keyToCommandRegistry = {}
+          when "unmapAll"
+            @keyToCommandRegistry = {}
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
-
-    for key of defaultKeyMappings
-      @mapKeyToCommand(key, defaultKeyMappings[key])
+    @mapKeyToCommand { key, command } for key, command of defaultKeyMappings
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
