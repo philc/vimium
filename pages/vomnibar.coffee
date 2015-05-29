@@ -17,6 +17,7 @@ Vomnibar =
       query: ""
       newTab: false
       selectFirst: false
+      keyword: null
     extend options, userOptions
     extend options, refreshInterval: if options.completer == "omni" then 150 else 0
 
@@ -28,6 +29,7 @@ Vomnibar =
     @vomnibarUI.setRefreshInterval options.refreshInterval
     @vomnibarUI.setForceNewTab options.newTab
     @vomnibarUI.setQuery options.query
+    @vomnibarUI.setKeyword options.keyword
     @vomnibarUI.update true
 
   hide: -> @vomnibarUI?.hide()
@@ -40,6 +42,7 @@ class VomnibarUI
     @initDom()
 
   setQuery: (query) -> @input.value = query
+  setKeyword: (keyword) -> @customSearchMode = keyword
   setInitialSelectionValue: (@initialSelectionValue) ->
   setRefreshInterval: (@refreshInterval) ->
   setForceNewTab: (@forceNewTab) ->

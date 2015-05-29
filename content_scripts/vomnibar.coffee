@@ -8,7 +8,7 @@ Vomnibar =
     extras = {}
     for extra in registryEntry.extras
       [ key, value ] = extra.split "="
-      extras.query = "#{value} " if key? and key == "keyword" and value? and 0 < value.length
+      extras.keyword = value if key? and key == "keyword" and value? and 0 < value.length
     extras
 
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
