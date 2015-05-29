@@ -126,7 +126,6 @@
 #vomnibar li em { font-style: italic; }
 #vomnibar li em .vomnibarMatch, #vomnibar li .vomnibarTitle .vomnibarMatch {
   color: #333;
-  text-decoration: underline;
 }
 
 #vomnibar li.vomnibarSelected {

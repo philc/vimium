@@ -43,7 +43,6 @@ root.Settings = Settings =
   # or strings
   defaults:
     scrollStepSize: 60
-    omniSearchWeight: 0.4
     smoothScroll: true
     keyMappings: "# Insert your preferred key mappings here."
     linkHintCharacters: "sadfjklewcmpgh"

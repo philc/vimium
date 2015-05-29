@@ -43,23 +43,33 @@ class Suggestion
     # or @relevancyFunction.
     @relevancy ?= @relevancyFunction this
 
-  generateHtml: ->
+  generateHtml: (request) ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
     insertTextIndicator = "&#8618;" # A right hooked arrow.
+    @title = @insertText if @insertText and request.isCustomSearch
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
-      """
-      <div class="vimiumReset vomnibarTopHalf">
-         <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
-         <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
-       </div>
-       <div class="vimiumReset vomnibarBottomHalf">
-        <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
-        #{relevancyHtml}
-      </div>
-      """
+      if request.isCustomSearch
+        """
+        <div class="vimiumReset vomnibarTopHalf">
+           <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
+           <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
+           #{relevancyHtml}
+         </div>
+        """
+      else
+        """
+        <div class="vimiumReset vomnibarTopHalf">
+           <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
+           <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
+         </div>
+         <div class="vimiumReset vomnibarBottomHalf">
+          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
+          #{relevancyHtml}
+        </div>
+        """
 
   # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
   getUrlRoot: (url) ->
@@ -293,7 +303,7 @@ class DomainCompleter
         queryTerms: queryTerms
         type: "domain"
         url: domains[0]?[0] ? "" # This is the URL or an empty string, but not null.
-        relevancy: 1
+        relevancy: 2.0
       ].filter (s) -> 0 < s.url.length
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -414,7 +424,7 @@ class SearchEngineCompleter
   preprocessRequest: (request) ->
     @searchEngines.use (engines) =>
       { queryTerms, query } = request
-      request.searchEngines = engines
+      extend request, searchEngines: engines, keywords: key for own key of engines
       keyword = queryTerms[0]
       # Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
       if keyword and engines[keyword] and (1 < queryTerms.length or /\S\s/.test query)
@@ -422,6 +432,7 @@ class SearchEngineCompleter
           queryTerms: queryTerms[1..]
           keyword: keyword
           engine: engines[keyword]
+          isCustomSearch: true
 
   refresh: (port) ->
     @previousSuggestions = {}
@@ -454,92 +465,77 @@ class SearchEngineCompleter
 
   filter: (request, onComplete) ->
     { queryTerms, query, engine } = request
+    return onComplete [] unless engine
 
-    { custom, searchUrl, description } =
-      if engine
-        { keyword, searchUrl, description } = engine
-        extend request, { searchUrl, customSearchMode: true }
-        custom: true
-        searchUrl: searchUrl
-        description: description
-      else
-        custom: false
-        searchUrl: Settings.get "searchUrl"
-        description: "search"
+    { keyword, searchUrl, description } = engine
+    extend request, searchUrl, customSearchMode: true
 
-    return onComplete [] unless custom or 0 < queryTerms.length
-
-    factor = Math.max 0.0, Math.min 1.0, Settings.get "omniSearchWeight"
-    haveCompletionEngine = (0.0 < factor or custom) and CompletionSearch.haveCompletionEngine searchUrl
+    factor = 0.5
+    haveCompletionEngine = CompletionSearch.haveCompletionEngine searchUrl
 
     # This filter is applied to all of the suggestions from all of the completers, after they have been
     # aggregated by the MultiCompleter.
     filter = (suggestions) ->
-      if custom and haveCompletionEngine
-        # We only accept suggestions:
-        #   - from this completer, or
-        #   - from other completers, but then only if their URL matches this search engine and matches this
-        #     query (that is only if their URL could have been generated by this search engine).
-        suggestions.filter (suggestion) ->
-          suggestion.type == description or
-            # This is a suggestion for the same search engine.
-            (suggestion.url.startsWith(engine.searchUrlPrefix) and
-              # And the URL suffix (which must contain the query part) matches the current query.
-              RankingUtils.matches queryTerms, suggestion.url[engine.searchUrlPrefix.length..])
-
-      else if not custom
-        # Filter out any suggestion which is just what the user would get if they hit <Enter> anyway.  For
-        # example, don't offer "https://www.google.com/search?q=vimium" if the query is "vimium".
-        defaultUrl = Utils.createSearchUrl queryTerms, searchUrl
-        defaultQuery = queryTerms.join " "
-        suggestions.filter (suggestion) -> Utils.extractQuery(searchUrl, suggestion.url) != defaultQuery
-      else
-        suggestions
+      suggestions.filter (suggestion) ->
+        # We only keep suggestions which either *were* generated by this search engine, or *could have
+        # been* generated by this search engine (and match the current query).
+        suggestion.isSearchSuggestion or suggestion.isCustomSearch or
+          (
+            terms = Utils.extractQuery searchUrl, suggestion.url
+            terms and RankingUtils.matches queryTerms, terms
+          )
 
     # If a previous suggestion still matches the query, then we keep it (even if the completion engine may not
     # return it for the current query).  This allows the user to pick suggestions by typing fragments of their
     # text, without regard to whether the completion engine can complete the actual text of the query.
     previousSuggestions =
-      for url, suggestion of @previousSuggestions
-        continue unless RankingUtils.matches queryTerms, suggestion.title
-        # Reset various fields, they may not be correct wrt. the current query.
-        extend suggestion, relevancy: null, html: null, queryTerms: queryTerms
-        suggestion.relevancy = null
-        suggestion
+      if queryTerms.length == 0
+        []
+      else
+        for url, suggestion of @previousSuggestions
+          continue unless RankingUtils.matches queryTerms, suggestion.title
+          # Reset various fields, they may not be correct wrt. the current query.
+          extend suggestion, relevancy: null, html: null, queryTerms: queryTerms
+          suggestion.relevancy = null
+          suggestion
 
     primarySuggestion = new Suggestion
       queryTerms: queryTerms
       type: description
       url: Utils.createSearchUrl queryTerms, searchUrl
       title: queryTerms.join " "
-      relevancy: 1
-      autoSelect: custom
-      highlightTerms: not haveCompletionEngine
+      relevancy: 2.0
+      autoSelect: true
+      highlightTerms: false
       isSearchSuggestion: true
+      isPrimarySuggestion: true
 
-    mkSuggestion = (suggestion) =>
-      url = Utils.createSearchUrl suggestion, searchUrl
-      @previousSuggestions[url] = new Suggestion
-        queryTerms: queryTerms
-        type: description
-        url: url
-        title: suggestion
-        insertText: suggestion
-        highlightTerms: false
-        highlightTermsExcludeUrl: true
-        isCustomSearch: custom
-        relevancyFunction: @computeRelevancy
-        relevancyData: factor
+    return onComplete [ primarySuggestion ], { filter } if queryTerms.length == 0
+
+    mkSuggestion = do =>
+      count = 0
+      (suggestion) =>
+        url = Utils.createSearchUrl suggestion, searchUrl
+        @previousSuggestions[url] = new Suggestion
+          queryTerms: queryTerms
+          type: description
+          url: url
+          title: suggestion
+          insertText: suggestion
+          highlightTerms: false
+          highlightTermsExcludeUrl: true
+          isCustomSearch: true
+          relevancy: if ++count == 1 then 1.0 else null
+          relevancyFunction: @computeRelevancy
 
     cachedSuggestions =
       if haveCompletionEngine then CompletionSearch.complete searchUrl, queryTerms else null
 
     suggestions = previousSuggestions
-    suggestions.push primarySuggestion if custom
-    suggestions.push cachedSuggestions.map(mkSuggestion)... if custom and cachedSuggestions?
+    suggestions.push primarySuggestion
 
     if queryTerms.length == 0 or cachedSuggestions? or not haveCompletionEngine
-      # There is no prospect of adding further completions.
+      # There is no prospect of adding further completions, so we're done.
       suggestions.push cachedSuggestions.map(mkSuggestion)... if cachedSuggestions?
       onComplete suggestions, { filter, continuation: null }
     else
@@ -547,20 +543,7 @@ class SearchEngineCompleter
       # continuation.
       onComplete suggestions,
         filter: filter
-        continuation: (suggestions, onComplete) =>
-
-          # We can skip querying the completion engine if any new suggestions we propose will not score highly
-          # enough to make the list anyway.  We construct a suggestion which perfectly matches the query, and
-          # ask the relevancy function what score it would get.  If that score is less than the score of the
-          # lowest-ranked suggestion from another completer (and there are already 10 suggestions), then
-          # there's no need to query the completion engine.
-          perfectRelevancyScore = @computeRelevancy new Suggestion
-            queryTerms: queryTerms, title: queryTerms.join(" "), relevancyData: factor
-
-          if 10 <= suggestions.length and perfectRelevancyScore < suggestions[suggestions.length-1].relevancy
-            console.log "skip (cannot make the grade):", suggestions.length, query if SearchEngineCompleter.debug
-            return onComplete []
-
+        continuation: (onComplete) =>
           CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
@@ -571,7 +554,7 @@ class SearchEngineCompleter
     #   scores here, and those provided by other completers.
     # - Relevancy depends only on the title (which is the search terms), and not on the URL.
     Suggestion.boostRelevancyScore 0.5,
-      relevancyData * RankingUtils.wordRelevancy queryTerms, title, title
+      0.7 * RankingUtils.wordRelevancy queryTerms, title, title
 
   postProcessSuggestions: (request, suggestions) ->
     return unless request.searchEngines
@@ -586,9 +569,6 @@ class SearchEngineCompleter
             # suggestion, then custom search-engine mode should be activated.
             suggestion.customSearchMode = engine.keyword
             suggestion.title ||= suggestion.insertText
-            # NOTE(smblott) The following is disabled: experimentation with UI.
-            # suggestion.highlightTermsExcludeUrl = true
-            # suggestion.type = engine.description ? "custom search history"
             break
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
@@ -643,7 +623,7 @@ class MultiCompleter
       if shouldRunContinuations
         jobs = new JobRunner continuations.map (continuation) ->
           (callback) ->
-            continuation suggestions, (newSuggestions) ->
+            continuation (newSuggestions) ->
               suggestions.push newSuggestions...
               callback()
 
@@ -676,7 +656,7 @@ class MultiCompleter
     completer.postProcessSuggestions? request, suggestions for completer in @completers
 
     # Generate HTML for the remaining suggestions and return them.
-    suggestion.generateHtml() for suggestion in suggestions
+    suggestion.generateHtml request for suggestion in suggestions
     suggestions
 
 # Utilities which help us compute a relevancy score for a given item.

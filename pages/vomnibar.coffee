@@ -76,7 +76,7 @@ class VomnibarUI
   updateSelection: ->
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     # vomnibar input.
-    if @lastReponse.customSearchMode and not @customSearchMode?
+    if @lastReponse.isCustomSearch and not @customSearchMode?
       queryTerms = @input.value.trim().split /\s+/
       @customSearchMode = queryTerms[0]
       @input.value = queryTerms[1..].join " "
@@ -141,15 +141,23 @@ class VomnibarUI
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
-      if @selection == -1
+      isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl?
+      if @selection == -1 or isCustomSearchPrimarySuggestion
         query = @input.value.trim()
         # <Enter> on an empty query is a no-op.
         return unless 0 < query.length
+        # First case (@selection == -1).
         # If the user types something and hits enter without selecting a completion from the list, then:
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
         #   - Otherwise, send the query to the background page, which will open it as a URL or create a
         #     default search, as appropriate.
-        query = Utils.createSearchUrl query, @lastReponse.searchUrl if @lastReponse.searchUrl?
+        #
+        # Second case (isCustomSearchPrimarySuggestion).
+        # Alternatively, the selected completion could be the primary selection for a custom search engine.
+        # Because the the suggestions are updated asynchronously in omni mode, the user may have typed more
+        # text than that which is included in the URL associated with the primary suggestion.  Therefore, to
+        # avoid a race condition, we construct the query from the actual contents of the input (query).
+        query = Utils.createSearchUrl query, @lastReponse.engine.searchUrl if isCustomSearchPrimarySuggestion
         @hide ->
           chrome.runtime.sendMessage
             handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
