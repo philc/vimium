@@ -413,7 +413,6 @@ class TabCompleter
 
 class SearchEngineCompleter
   @debug: false
-  searchEngines: null
   previousSuggestions: null
 
   cancel: ->
@@ -422,7 +421,7 @@ class SearchEngineCompleter
   # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
   # query terms.
   preprocessRequest: (request) ->
-    @searchEngines.use (engines) =>
+    SearchEngines.use (engines) =>
       { queryTerms, query } = request
       extend request, searchEngines: engines, keywords: key for own key of engines
       keyword = queryTerms[0]
@@ -436,26 +435,7 @@ class SearchEngineCompleter
 
   refresh: (port) ->
     @previousSuggestions = {}
-    # Parse the search-engine configuration.
-    @searchEngines = new AsyncDataFetcher (callback) ->
-      engines = {}
-      for line in Settings.get("searchEngines").split "\n"
-        line = line.trim()
-        continue if /^[#"]/.test line
-        tokens = line.split /\s+/
-        continue unless 2 <= tokens.length
-        keyword = tokens[0].split(":")[0]
-        url = tokens[1]
-        description = tokens[2..].join(" ") || "search (#{keyword})"
-        continue unless Utils.hasFullUrlPrefix url
-        engines[keyword] =
-          keyword: keyword
-          searchUrl: url
-          description: description
-          searchUrlPrefix: url.split("%s")[0]
-
-      callback engines
-
+    SearchEngines.refreshAndUse Settings.get("searchEngines"), (engines) ->
       # Let the front-end vomnibar know the search-engine keywords.  It needs to know them so that, when the
       # query goes from "w" to "w ", the vomnibar can synchronously launch the next filter() request (which
       # avoids an ugly delay/flicker).
