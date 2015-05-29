@@ -57,6 +57,12 @@ class Tween
 
   constructor: (@cssSelector, insertionPoint = document.documentElement) ->
     @styleElement = document.createElement "style"
+
+    unless @styleElement.style
+      # We're in an XML document, so we shouldn't inject any elements. See the comment in UIComponent.
+      Tween::fade = Tween::stop = Tween::updateStyle = ->
+      return
+
     @styleElement.type = "text/css"
     @styleElement.innerHTML = ""
     insertionPoint.appendChild @styleElement
