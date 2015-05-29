@@ -13,7 +13,8 @@ document.addEventListener "keydown", (event) ->
     UIComponentServer.postMessage
       name: "hideFindMode"
       event: transferrableEvent
-      query: inputElement.textContent
+      # Replace \u00A0 (&nbsp;) with a normal space.
+      query: inputElement.textContent.replace "\u00A0", " "
 
 handlers =
   show: (data) ->
@@ -38,14 +39,16 @@ handlers =
     hud.appendChild inputElement
 
     inputElement.addEventListener "input", (event) ->
-      UIComponentServer.postMessage {name: "search", query: inputElement.textContent}
+      # Replace \u00A0 (&nbsp;) with a normal space.
+      UIComponentServer.postMessage {name: "search", query: inputElement.textContent.replace "\u00A0", " "}
 
     countElement = document.createElement "span"
     countElement.id = "hud-match-count"
     hud.appendChild countElement
     inputElement.focus()
 
-    UIComponentServer.postMessage {name: "search", query: inputElement.textContent}
+    # Replace \u00A0 (&nbsp;) with a normal space.
+    UIComponentServer.postMessage {name: "search", query: inputElement.textContent.replace "\u00A0", " "}
 
   updateMatchesCount: ({matchCount, showMatchText}) ->
     countElement = document.getElementById "hud-match-count"
