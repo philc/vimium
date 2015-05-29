@@ -307,7 +307,7 @@ executePageCommand = (request) ->
     if DomUtils.isTopFrame()
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
       # which should receive the focus when the vomnibar closes.
-      Utils.invokeCommandString request.command, [ request.frameId ]
+      Utils.invokeCommandString request.command, [ request.frameId, request.registryEntry ]
       refreshCompletionKeys request
     return
 
