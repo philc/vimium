@@ -314,7 +314,7 @@ executePageCommand = (request) ->
   # All other commands are handled in their frame (but only if Vimium is enabled).
   return unless frameId == request.frameId and isEnabledForUrl
 
-  if (request.passCountToFunction)
+  if request.registryEntry.passCountToFunction
     Utils.invokeCommandString(request.command, [request.count])
   else
     Utils.invokeCommandString(request.command) for i in [0...request.count]

@@ -558,13 +558,13 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
     if runCommand
       if not registryEntry.isBackgroundCommand
-        chrome.tabs.sendMessage(tabId,
-          name: "executePageCommand",
-          command: registryEntry.command,
-          frameId: frameId,
-          count: count,
-          passCountToFunction: registryEntry.passCountToFunction,
-          completionKeys: generateCompletionKeys(""))
+        chrome.tabs.sendMessage tabId,
+          name: "executePageCommand"
+          command: registryEntry.command
+          frameId: frameId
+          count: count
+          completionKeys: generateCompletionKeys ""
+          registryEntry: registryEntry
         refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction
