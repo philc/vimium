@@ -92,7 +92,7 @@ root.Settings = Settings =
 
   # postUpdateHooks convenience wrapper
   performPostUpdateHook: (key, value) ->
-    @postUpdateHooks[key] value if @postUpdateHooks[key]
+    @postUpdateHooks[key]? value
 
   # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
   storeAndPropagate: (key, value) ->
