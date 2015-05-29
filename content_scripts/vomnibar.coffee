@@ -4,21 +4,35 @@
 Vomnibar =
   vomnibarUI: null
 
-  getOptions: (registryEntry = { extras: [] }) ->
-    extras = {}
-    for extra in registryEntry.extras
-      [ key, value ] = extra.split "="
-      extras.keyword = value if key? and key == "keyword" and value? and 0 < value.length
-    extras
+  # Parse any additional options from the command's registry entry.  Currently, this only includes a flag of
+  # the form "keyword=X", for direct activation of a custom search engine.
+  parseRegistryEntry: (registryEntry = { extras: [] }, callback = null) ->
+    options = {}
+    searchEngines = settings.get("searchEngines") ? ""
+    SearchEngines.refreshAndUse searchEngines, (engines) ->
+      for extra in registryEntry.extras
+        [ key, value ] = extra.split "="
+        switch key
+          when "keyword"
+            if value? and engines[value]?
+              options.keyword = value
+            else
+              console.log "Vimium configuration error: no such custom search engine: #{extra}."
+          else
+              console.log "Vimium configuration error: unused flag: #{extra}."
+
+      callback? options
 
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
   # from the current frame.
 
   activate: (sourceFrameId, registryEntry) ->
-    @open sourceFrameId, extend @getOptions(registryEntry), completer:"omni"
+    @parseRegistryEntry registryEntry, (options) =>
+      @open sourceFrameId, extend options, completer:"omni"
 
   activateInNewTab: (sourceFrameId, registryEntry) ->
-    @open sourceFrameId, extend @getOptions(registryEntry), completer: "omni", newTab: true
+    @parseRegistryEntry registryEntry, (options) =>
+      @open sourceFrameId, extend options, completer:"omni", newTab: true
 
   activateTabSelection: (sourceFrameId) -> @open sourceFrameId, {
     completer: "tabs"

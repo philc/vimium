@@ -245,14 +245,10 @@ SearchEngines =
           tokens = line.split /\s+/
           continue unless 2 <= tokens.length
           keyword = tokens[0].split(":")[0]
-          url = tokens[1]
+          searchUrl = tokens[1]
           description = tokens[2..].join(" ") || "search (#{keyword})"
-          continue unless Utils.hasFullUrlPrefix url
-          engines[keyword] =
-            keyword: keyword
-            searchUrl: url
-            description: description
-            searchUrlPrefix: url.split("%s")[0]
+          continue unless Utils.hasFullUrlPrefix searchUrl
+          engines[keyword] = { keyword, searchUrl, description }
 
         callback engines
 

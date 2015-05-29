@@ -62,6 +62,7 @@ settings =
     helpDialog_showAdvancedCommands: null
     smoothScroll: null
     grabBackFocus: null
+    searchEngines: null
 
   init: ->
     @port = chrome.runtime.connect name: "settings"
