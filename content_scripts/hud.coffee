@@ -56,6 +56,11 @@ class Tween
   styleElement: null
 
   constructor: (@cssSelector, insertionPoint = document.documentElement) ->
+    # Disable on XML pages.  See comment in UIComponent constructor.
+    unless styleSheet.style
+      @fade = @stop = @updateStyle = ->
+      return
+
     @styleElement = document.createElement "style"
     @styleElement.type = "text/css"
     @styleElement.innerHTML = ""
