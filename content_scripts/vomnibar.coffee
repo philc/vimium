@@ -4,14 +4,22 @@
 Vomnibar =
   vomnibarUI: null
 
+  getOptions: (registryEntry = { extras: [] }) ->
+    extras = {}
+    for extra in registryEntry.extras
+      [ key, value ] = extra.split "="
+      extras.query = "#{value} " if key? and key == "keyword" and value? and 0 < value.length
+    extras
+
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
   # from the current frame.
-  activate: (sourceFrameId) -> @open sourceFrameId, {completer:"omni"}
-  activateInNewTab: (sourceFrameId) -> @open sourceFrameId, {
-    completer: "omni"
-    selectFirst: false
-    newTab: true
-  }
+
+  activate: (sourceFrameId, registryEntry) ->
+    @open sourceFrameId, extend @getOptions(registryEntry), completer:"omni"
+
+  activateInNewTab: (sourceFrameId, registryEntry) ->
+    @open sourceFrameId, extend @getOptions(registryEntry), completer: "omni", newTab: true
+
   activateTabSelection: (sourceFrameId) -> @open sourceFrameId, {
     completer: "tabs"
     selectFirst: true
