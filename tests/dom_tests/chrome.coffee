@@ -5,6 +5,9 @@
 root = exports ? window
 root.chromeMessages = []
 
+# Add a styleSheet property so that UIComponents and the Tween initialize themselves.
+root.styleSheet = {}
+
 document.hasFocus = -> true
 
 root.chrome =
