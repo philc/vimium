@@ -1120,6 +1120,8 @@ window.showHelpDialog = (html, fid) ->
       chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
     false)
 
+  # Simulating a click on the help dialog makes it the active element for scrolling.
+  DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
