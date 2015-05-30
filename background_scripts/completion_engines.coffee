@@ -26,7 +26,6 @@ class RegexpEngine
 
 # Several Google completion engines package XML responses in this way.
 class GoogleXMLRegexpEngine extends RegexpEngine
-  doNotCache: false # true (disbaled, experimental)
   parse: (xhr) ->
     for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
       continue unless suggestion = suggestion.getAttribute "data"
@@ -38,7 +37,6 @@ class Google extends GoogleXMLRegexpEngine
     regexps ?= [
       # We match the major English-speaking TLDs.
       new RegExp "^https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/"
-      new RegExp "localhost/cgi-bin/booky" # Only for smblott.
       ]
     super regexps
 
@@ -77,7 +75,6 @@ class Youtube extends GoogleXMLRegexpEngine
       "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s"
 
 class Wikipedia extends RegexpEngine
-  doNotCache: false # true (disbaled, experimental)
   # Example search URL: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s
   constructor: ->
     super [ new RegExp "^https?://[a-z]+\.wikipedia\.org/" ]
