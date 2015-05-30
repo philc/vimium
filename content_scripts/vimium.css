@@ -208,13 +208,18 @@ div#vimiumHelpDialog a {
   text-decoration: underline;
 }
 
-div#vimiumHelpDialog .optionsPage {
+div#vimiumHelpDialog .wikiPage, div#vimiumHelpDialog .optionsPage {
   position: absolute;
   display: block;
   font-size: 11px;
   line-height: 130%;
-  right: 60px;
-  top: 8px;
+  top: 6px;
+}
+div#vimiumHelpDialog .optionsPage {
+  right: 40px;
+}
+div#vimiumHelpDialog .wikiPage {
+  right: 83px;
 }
 div#vimiumHelpDialog a.closeButton:hover {
   color:black;
