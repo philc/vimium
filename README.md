@@ -89,6 +89,8 @@ Additional advanced browsing commands:
     gU      go up to root of the URL hierarchy
     zH      scroll all the way left
     zL      scroll all the way right
+    v       enter visual mode; use p/P to paste-and-go, use y to yank
+    V       enter visual line mode
 
 Vimium supports command repetition so, for example, hitting `5t` will open 5 tabs in rapid succession. `<ESC>` (or
 `<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
