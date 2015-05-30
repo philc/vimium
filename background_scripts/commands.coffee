@@ -24,13 +24,13 @@ Commands =
       noRepeat: options.noRepeat
       repeatLimit: options.repeatLimit
 
-  mapKeyToCommand: ({ key, command, extras }) ->
+  mapKeyToCommand: ({ key, command, options }) ->
     unless @availableCommands[command]
       console.log command, "doesn't exist!"
       return
 
-    extras ?= []
-    @keyToCommandRegistry[key] = extend { command, extras }, @availableCommands[command]
+    options ?= []
+    @keyToCommandRegistry[key] = extend { command, options }, @availableCommands[command]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -51,11 +51,11 @@ Commands =
         tokens = line.replace(/\s+$/, "").split /\s+/
         switch tokens[0]
           when "map"
-            [ _, key, command, extras... ] = tokens
+            [ _, key, command, options... ] = tokens
             if command? and @availableCommands[command]
               key = @normalizeKey key
               console.log "Mapping", key, "to", command
-              @mapKeyToCommand { key, command, extras }
+              @mapKeyToCommand { key, command, options }
 
           when "unmap"
             if tokens.length == 2

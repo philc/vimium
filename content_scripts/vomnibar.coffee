@@ -6,20 +6,20 @@ Vomnibar =
 
   # Parse any additional options from the command's registry entry.  Currently, this only includes a flag of
   # the form "keyword=X", for direct activation of a custom search engine.
-  parseRegistryEntry: (registryEntry = { extras: [] }, callback = null) ->
+  parseRegistryEntry: (registryEntry = { options: [] }, callback = null) ->
     options = {}
     searchEngines = settings.get("searchEngines") ? ""
     SearchEngines.refreshAndUse searchEngines, (engines) ->
-      for extra in registryEntry.extras
-        [ key, value ] = extra.split "="
+      for option in registryEntry.options
+        [ key, value ] = option.split "="
         switch key
           when "keyword"
             if value? and engines[value]?
               options.keyword = value
             else
-              console.log "Vimium configuration error: no such custom search engine: #{extra}."
+              console.log "Vimium configuration error: no such custom search engine: #{option}."
           else
-              console.log "Vimium configuration error: unused flag: #{extra}."
+              console.log "Vimium configuration error: unused flag: #{option}."
 
       callback? options
 
