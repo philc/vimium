@@ -21,12 +21,11 @@
 
 # A base class for common regexp-based matching engines.
 class RegexpEngine
-  constructor: (@regexps) ->
+  constructor: (args...) -> @regexps = args.map (regexp) -> new RegExp regexp
   match: (searchUrl) -> Utils.matchesAnyRegexp @regexps, searchUrl
 
 # Several Google completion engines package XML responses in this way.
 class GoogleXMLRegexpEngine extends RegexpEngine
-  doNotCache: false # true (disbaled, experimental)
   parse: (xhr) ->
     for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
       continue unless suggestion = suggestion.getAttribute "data"
@@ -34,31 +33,47 @@ class GoogleXMLRegexpEngine extends RegexpEngine
 
 class Google extends GoogleXMLRegexpEngine
   # Example search URL: http://www.google.com/search?q=%s
-  constructor: ->
-    super [
-      # We match the major English-speaking TLDs.
-      new RegExp "^https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/"
-      new RegExp "localhost/cgi-bin/booky" # Only for smblott.
-      ]
+  constructor: (regexps = null) ->
+    super regexps ? "^https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/"
 
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
       "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
 
+# A wrapper class for Google completions.  This adds prefix terms to the query, and strips those terms from
+# the resulting suggestions.  For example, for Google Maps, we add "map of" as a prefix, then strip "map of"
+# from the resulting suggestions.
+class GoogleWithPrefix
+  constructor: (prefix, args...) ->
+    @engine = new Google args...
+    @prefix = "#{prefix.trim()} "
+    @queryTerms = @prefix.split /\s+/
+  match: (args...) -> @engine.match args...
+  getUrl: (queryTerms) -> @engine.getUrl [ @queryTerms..., queryTerms... ]
+  parse: (xhr) ->
+    @engine.parse(xhr)
+      .filter (suggestion) => suggestion.startsWith @prefix
+      .map (suggestion) => suggestion[@prefix.length..].ltrim()
+
+# For Google Maps, we add the prefix "map of" to the query, and send it to Google's general search engine,
+# then strip "map of" from the resulting suggestions.
+class GoogleMaps extends GoogleWithPrefix
+  # Example search URL: https://www.google.com/maps?q=%s
+  constructor: -> super "map of", "https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/maps"
+
 class Youtube extends GoogleXMLRegexpEngine
   # Example search URL: http://www.youtube.com/results?search_query=%s
   constructor: ->
-    super [ new RegExp "^https?://[a-z]+\.youtube\.com/results" ]
+    super "^https?://[a-z]+\.youtube\.com/results"
 
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
       "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s"
 
 class Wikipedia extends RegexpEngine
-  doNotCache: false # true (disbaled, experimental)
   # Example search URL: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s
   constructor: ->
-    super [ new RegExp "^https?://[a-z]+\.wikipedia\.org/" ]
+    super "^https?://[a-z]+\.wikipedia\.org/"
 
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
@@ -67,28 +82,15 @@ class Wikipedia extends RegexpEngine
   parse: (xhr) ->
     JSON.parse(xhr.responseText)[1]
 
-## Does not work...
-## class GoogleMaps extends RegexpEngine
-##   # Example search URL: https://www.google.com/maps/search/%s
-##   constructor: ->
-##     super [ new RegExp "^https?://www\.google\.com/maps/search/" ]
-##
-##   getUrl: (queryTerms) ->
-##     "https://www.google.com/s?tbm=map&fp=1&gs_ri=maps&source=hp&suggest=p&authuser=0&hl=en&pf=p&tch=1&ech=2&q=#{Utils.createSearchQuery queryTerms}"
-##
-##   parse: (xhr) ->
-##     data = JSON.parse xhr.responseText
-##     []
-
 class Bing extends RegexpEngine
   # Example search URL: https://www.bing.com/search?q=%s
-  constructor: -> super [ new RegExp "^https?://www\.bing\.com/search" ]
+  constructor: -> super "^https?://www\.bing\.com/search"
   getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "http://api.bing.com/osjson.aspx?query=%s"
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
 class Amazon extends RegexpEngine
   # Example search URL: http://www.amazon.com/s/?field-keywords=%s
-  constructor: -> super [ new RegExp "^https?://www\.amazon\.(com|co.uk|ca|com.au)/s/" ]
+  constructor: -> super "^https?://www\.amazon\.(com|co.uk|ca|com.au)/s/"
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
       "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s"
@@ -96,15 +98,14 @@ class Amazon extends RegexpEngine
 
 class DuckDuckGo extends RegexpEngine
   # Example search URL: https://duckduckgo.com/?q=%s
-  constructor: -> super [ new RegExp "^https?://([a-z]+\.)?duckduckgo\.com/" ]
-  getUrl: (queryTerms) ->
+  constructor: -> super "^https?://([a-z]+\.)?duckduckgo\.com/"
   getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "https://duckduckgo.com/ac/?q=%s"
   parse: (xhr) ->
     suggestion.phrase for suggestion in JSON.parse xhr.responseText
 
 class Webster extends RegexpEngine
   # Example search URL: http://www.merriam-webster.com/dictionary/%s
-  constructor: -> super [ new RegExp "^https?://www.merriam-webster.com/dictionary/" ]
+  constructor: -> super "^https?://www.merriam-webster.com/dictionary/"
   getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "http://www.merriam-webster.com/autocomplete?query=%s"
   parse: (xhr) -> JSON.parse(xhr.responseText).suggestions
 
@@ -120,6 +121,7 @@ class DummyCompletionEngine
 # Note: Order matters here.
 CompletionEngines = [
   Youtube
+  GoogleMaps
   Google
   DuckDuckGo
   Wikipedia
