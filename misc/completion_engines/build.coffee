@@ -23,7 +23,7 @@ header = """
 """
 
 content = header + "\n\n" + entries.join("\n\n") + "\n"
-filename = "completion_engines.md"
+filename = "misc/completion_engines/completion_engines.md"
 
 fs.writeFile filename, content, (error) ->
   if error
