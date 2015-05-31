@@ -59,7 +59,7 @@ class GoogleWithPrefix
 # then strip "map of" from the resulting suggestions.
 class GoogleMaps extends GoogleWithPrefix
   # Example search URL: https://www.google.com/maps?q=%s
-  constructor: -> super "map of", "https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
+  constructor: -> super "map of", "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
 
 class Youtube extends GoogleXMLRegexpEngine
   # Example search URL: http://www.youtube.com/results?search_query=%s
