@@ -146,9 +146,10 @@ Release Notes
 -------------
 1.52 (not yet released)
 
-- Improved custom-search engine experience (including completion for Google,
-  Youtube, Bing, DuckDuckGo, Wikipedia, Amazon and a number of other search
-  engines).
+- Search completion for selected popular search engines; for details, see the wiki
+  ([here](https://github.com/philc/vimium/wiki/Search-Completion) and
+  [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#repeat-recent-queries)).
+- A much improved interface for custom search engines.
 - Bug fixes: bookmarklets accessed from the vomnibar.
 
 1.51 (2015-05-02)
