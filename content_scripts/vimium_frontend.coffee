@@ -68,8 +68,6 @@ settings =
     @port = true
     Settings.init()
 
-  load: -> @init() unless @port
-
 #
 # Give this frame a unique (non-zero) id.
 #
@@ -156,7 +154,7 @@ window.initializeModes = ->
 #
 initializePreDomReady = ->
   Settings.addEventListener "load", LinkHints.init.bind LinkHints
-  settings.load()
+  Settings.init()
 
   initializeModes()
   checkIfEnabledForUrl()
@@ -240,7 +238,6 @@ window.installListeners = ->
 #
 onFocus = (event) ->
   if event.target == window
-    settings.load()
     chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId
     checkIfEnabledForUrl true
 
