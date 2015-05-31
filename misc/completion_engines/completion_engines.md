@@ -8,31 +8,31 @@ vomnibar.  Completions are not provided for searches with the default search eng
 
 ###### Youtube
 
-    ^https?://[a-z]+.youtube.com/results
+    ^https?://[a-z]+\.youtube\.com/results
 
 ###### GoogleMaps
 
-    https?://[a-z]+.google.(com|ie|co.uk|ca|com.au)/maps
+    https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/maps
 
 ###### Google
 
-    ^https?://[a-z]+.google.(com|ie|co.uk|ca|com.au)/
+    ^https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/
 
 ###### DuckDuckGo
 
-    ^https?://([a-z]+.)?duckduckgo.com/
+    ^https?://([a-z]+\.)?duckduckgo\.com/
 
 ###### Wikipedia
 
-    ^https?://[a-z]+.wikipedia.org/
+    ^https?://[a-z]+\.wikipedia\.org/
 
 ###### Bing
 
-    ^https?://www.bing.com/search
+    ^https?://www\.bing\.com/search
 
 ###### Amazon
 
-    ^https?://www.amazon.(com|co.uk|ca|com.au)/s/
+    ^https?://www\.amazon\.(com|co\.uk|ca|com\.au)/s/
 
 ###### Webster
 
