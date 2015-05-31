@@ -70,8 +70,6 @@ settings =
 
   load: -> @init() unless @port
 
-  addEventListener: Settings.addEventListener.bind Settings
-
 #
 # Give this frame a unique (non-zero) id.
 #
@@ -102,7 +100,7 @@ class GrabBackFocus extends Mode
       # An input may already be focused. If so, grab back the focus.
       @grabBackFocus document.activeElement if document.activeElement
 
-    if settings.isLoaded then activate() else settings.addEventListener "load", activate
+    if settings.isLoaded then activate() else Settings.addEventListener "load", activate
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isEditable element
@@ -157,7 +155,7 @@ window.initializeModes = ->
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-  settings.addEventListener("load", LinkHints.init.bind(LinkHints))
+  Settings.addEventListener "load", LinkHints.init.bind LinkHints
   settings.load()
 
   initializeModes()
