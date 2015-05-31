@@ -43,15 +43,15 @@ class Google extends GoogleXMLRegexpEngine
 # A wrapper class for Google completions.  This adds prefix terms to the query, and strips those terms from
 # the resulting suggestions.  For example, for Google Maps, we add "map of" as a prefix, then strip "map of"
 # from the resulting suggestions.
-class GoogleWithPrefix
+class GoogleWithPrefix extends Google
   constructor: (prefix, args...) ->
-    @engine = new Google args...
-    @prefix = "#{prefix.trim()} "
-    @queryTerms = @prefix.split /\s+/
-  match: (args...) -> @engine.match args...
-  getUrl: (queryTerms) -> @engine.getUrl [ @queryTerms..., queryTerms... ]
+    super args...
+    prefix = prefix.trim()
+    @prefix = "#{prefix} "
+    @queryTerms = prefix.split /\s+/
+  getUrl: (queryTerms) -> super [ @queryTerms..., queryTerms... ]
   parse: (xhr) ->
-    @engine.parse(xhr)
+    super(xhr)
       .filter (suggestion) => suggestion.startsWith @prefix
       .map (suggestion) => suggestion[@prefix.length..].ltrim()
 
