@@ -41,10 +41,9 @@ textInputXPath = (->
   DomUtils.makeXPath(inputElements)
 )()
 
-#
-# settings provides a browser-global localStorage-backed dict. get() and set() are synchronous, but load()
-# must be called beforehand to ensure get() will return up-to-date values.
-#
+# NOTE(mrmr1993): we use Settings everywhere instead of the dedicated implementation that was here.
+# Previously, only the values listed below would be loaded. If the space used by settings across all of our
+# content scripts is becoming an issue, then we can restrict the values we load to the list below.
 settings =
   values:
     scrollStepSize: null
