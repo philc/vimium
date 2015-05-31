@@ -117,8 +117,7 @@ checkVisibility = (element) ->
 # CoreScroller contains the core function (scroll) and logic for relative scrolls.  All scrolls are ultimately
 # translated to relative scrolls.  CoreScroller is not exported.
 CoreScroller =
-  init: (frontendSettings) ->
-    @settings = frontendSettings
+  init: ->
     @time = 0
     @lastEvent = null
     @keyIsDown = false
@@ -215,11 +214,11 @@ CoreScroller =
 
 # Scroller contains the two main scroll functions which are used by clients.
 Scroller =
-  init: (frontendSettings) ->
+  init: ->
     handlerStack.push
       _name: 'scroller/active-element'
       DOMActivate: (event) -> handlerStack.alwaysContinueBubbling -> activatedElement = event.target
-    CoreScroller.init frontendSettings
+    CoreScroller.init()
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.

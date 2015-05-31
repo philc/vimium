@@ -46,9 +46,6 @@ textInputXPath = (->
 # must be called beforehand to ensure get() will return up-to-date values.
 #
 settings =
-  isLoaded: false
-  port: null
-  eventListeners: {}
   values:
     scrollStepSize: null
     linkHintCharacters: null
@@ -63,10 +60,6 @@ settings =
     smoothScroll: null
     grabBackFocus: null
     searchEngines: null
-
-  init: ->
-    @port = true
-    Settings.init()
 
 #
 # Give this frame a unique (non-zero) id.
@@ -98,7 +91,7 @@ class GrabBackFocus extends Mode
       # An input may already be focused. If so, grab back the focus.
       @grabBackFocus document.activeElement if document.activeElement
 
-    if settings.isLoaded then activate() else Settings.addEventListener "load", activate
+    if Settings.isLoaded then activate() else Settings.addEventListener "load", activate
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isEditable element
@@ -147,7 +140,7 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
-  Scroller.init settings
+  Scroller.init()
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
