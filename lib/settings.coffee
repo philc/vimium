@@ -30,6 +30,7 @@ Sync =
       unless chrome.runtime.lastError
         for own key, value of items
           Settings.storeAndPropagate key, value if @shouldSyncKey key
+        Settings.isLoaded = true
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
@@ -58,15 +59,20 @@ Sync =
 if Utils.isExtensionPage()
   if Utils.isBackgroundPage()
     settingsCache = localStorage
+    isPreloaded = true
   else
     settingsCache = extend {}, localStorage # Make a copy of the cached settings from localStorage
+    isPreloaded = true
 else
   settingsCache = {}
+  isPreloaded = false
 
 root.Settings = Settings =
+  isLoaded: isPreloaded
   cache: settingsCache
   init: -> Sync.init()
   get: (key) ->
+    console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
     if (key of @cache) then JSON.parse(@cache[key]) else @defaults[key]
 
   set: (key, value) ->
