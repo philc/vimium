@@ -31,6 +31,8 @@ Sync =
         for own key, value of items
           Settings.storeAndPropagate key, value if @shouldSyncKey key
         Settings.isLoaded = true
+        unless isPreloaded
+          listener() while listener = Settings.eventListeners.load?.pop()
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
@@ -70,7 +72,13 @@ else
 root.Settings = Settings =
   isLoaded: isPreloaded
   cache: settingsCache
-  init: -> Sync.init()
+  eventListeners: {}
+
+  init: ->
+    Sync.init()
+    if isPreloaded
+      listener() while listener = Settings.eventListeners.load?.pop()
+
   get: (key) ->
     console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
     if (key of @cache) then JSON.parse(@cache[key]) else @defaults[key]
@@ -90,6 +98,9 @@ root.Settings = Settings =
     Sync.clear key
 
   has: (key) -> key of @cache
+
+  addEventListener: (eventName, callback) ->
+    (@eventListeners[eventName] ||= []).push callback
 
   # For settings which require action when their value changes, add hooks to this object, to be called from
   # options/options.coffee (when the options page is saved), and by Settings.storeAndPropagate (when an
