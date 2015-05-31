@@ -107,7 +107,7 @@ input#linkHintNumbers {
 input#linkHintCharacters {
   width: 100%;
 }
-input#scrollStepSize, input#omniSearchWeight {
+input#scrollStepSize {
   width: 50px;
   margin-right: 3px;
   padding-left: 3px;

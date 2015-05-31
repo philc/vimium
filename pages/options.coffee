@@ -258,7 +258,6 @@ initOptionsPage = ->
     searchEngines: TextOption
     searchUrl: NonEmptyTextOption
     userDefinedLinkHintCss: TextOption
-    omniSearchWeight: NumberOption
 
   # Populate options. The constructor adds each new object to "Option.all".
   for name, type of options
