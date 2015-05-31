@@ -65,37 +65,18 @@ settings =
     searchEngines: null
 
   init: ->
-    @port = chrome.runtime.connect name: "settings"
-    @port.onMessage.addListener (response) => @receiveMessage response
+    @port = true
+    Settings.init()
 
-    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
-    # settings object so we don't keep trying to connect to the extension even though it's gone away.
-    @port.onDisconnect.addListener =>
-      @port = null
-      for own property, value of this
-        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
-        @[property] = (->) if "function" == typeof value and property != "get"
-
-  get: (key) -> @values[key]
+  get: Settings.get.bind Settings
 
   set: (key, value) ->
     @init() unless @port
+    Settings.set key, value
 
-    @values[key] = value
-    @port.postMessage operation: "set", key: key, value: value
+  load: -> @init() unless @port
 
-  load: ->
-    @init() unless @port
-    @port.postMessage operation: "fetch", values: @values
-
-  receiveMessage: (response) ->
-    @values = response.values if response.values?
-    @values[response.key] = response.value if response.key? and response.value?
-    @isLoaded = true
-    listener() while listener = @eventListeners.load?.pop()
-
-  addEventListener: (eventName, callback) ->
-    (@eventListeners[eventName] ||= []).push callback
+  addEventListener: Settings.addEventListener.bind Settings
 
 #
 # Give this frame a unique (non-zero) id.

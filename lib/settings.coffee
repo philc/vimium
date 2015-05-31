@@ -81,7 +81,7 @@ root.Settings = Settings =
 
   get: (key) ->
     console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
-    if (key of @cache) then JSON.parse(@cache[key]) else @defaults[key]
+    if key of @cache and @cache[key]? then JSON.parse(@cache[key]) else @defaults[key]
 
   set: (key, value) ->
     # Don't store the value if it is equal to the default, so we can change the defaults in the future

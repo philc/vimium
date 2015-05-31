@@ -7,6 +7,9 @@ root.chromeMessages = []
 
 document.hasFocus = -> true
 
+fakeManifest =
+  version: "1.51"
+
 root.chrome =
   runtime:
     connect: ->
@@ -18,7 +21,7 @@ root.chrome =
     onMessage:
       addListener: ->
     sendMessage: (message) -> chromeMessages.unshift message
-    getManifest: ->
+    getManifest: -> fakeManifest
     getURL: (url) -> "../../#{url}"
   storage:
     local:
@@ -31,3 +34,4 @@ root.chrome =
       addListener: ->
   extension:
     inIncognitoContext: false
+    getURL: (url) -> chrome.runtime.getURL url

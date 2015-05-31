@@ -41,6 +41,7 @@
              "lib/rect.js",
              "lib/handler_stack.js",
              "lib/clipboard.js",
+             "lib/settings.js",
              "content_scripts/ui_component.js",
              "content_scripts/link_hints.js",
              "content_scripts/vomnibar.js",
