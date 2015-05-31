@@ -68,8 +68,6 @@ settings =
     @port = true
     Settings.init()
 
-  get: Settings.get.bind Settings
-
   set: (key, value) ->
     @init() unless @port
     Settings.set key, value
@@ -101,7 +99,7 @@ class GrabBackFocus extends Mode
       mousedown: => @alwaysContinueBubbling => @exit()
 
     activate = =>
-      return @exit() unless settings.get "grabBackFocus"
+      return @exit() unless Settings.get "grabBackFocus"
       @push
         _name: "grab-back-focus-focus"
         focus: (event) => @grabBackFocus event.target
@@ -345,14 +343,14 @@ extend window,
   scrollToTop: -> Scroller.scrollTo "y", 0
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
-  scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
+  scrollUp: -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize")
+  scrollDown: -> Scroller.scrollBy "y", Settings.get("scrollStepSize")
   scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
   scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
   scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
-  scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
-  scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
+  scrollLeft: -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize")
+  scrollRight: -> Scroller.scrollBy "x", Settings.get("scrollStepSize")
 
 extend window,
   reload: -> window.location.reload()
@@ -698,7 +696,7 @@ updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
-  findModeQuery.isRegex = settings.get 'regexFindMode'
+  findModeQuery.isRegex = Settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
     return match if flag == "" or slashes.length != 1
@@ -1010,12 +1008,12 @@ findAndFollowRel = (value) ->
         return true
 
 window.goPrevious = ->
-  previousPatterns = settings.get("previousPatterns") || ""
+  previousPatterns = Settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
 window.goNext = ->
-  nextPatterns = settings.get("nextPatterns") || ""
+  nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
@@ -1070,7 +1068,7 @@ window.showHelpDialog = (html, fid) ->
 
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
-    getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
+    getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
     init: () ->
       this.dialogElement = document.getElementById("vimiumHelpDialog")

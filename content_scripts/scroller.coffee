@@ -139,7 +139,7 @@ CoreScroller =
           @time += 1
 
   # Return true if CoreScroller would not initiate a new scroll right now.
-  wouldNotInitiateScroll: -> @lastEvent?.repeat and @settings.get "smoothScroll"
+  wouldNotInitiateScroll: -> @lastEvent?.repeat and Settings.get "smoothScroll"
 
   # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
   # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
@@ -153,7 +153,7 @@ CoreScroller =
   scroll: (element, direction, amount, continuous = true) ->
     return unless amount
 
-    unless @settings.get "smoothScroll"
+    unless Settings.get "smoothScroll"
       # Jump scrolling.
       performScroll element, direction, amount
       checkVisibility element
