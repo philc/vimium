@@ -1,4 +1,10 @@
 
+cleanUpRegexp = (re) ->
+  re.toString()
+    .replace /^\//, ''
+    .replace /\/$/, ''
+    .replace /\\\//g, "/"
+
 DomUtils.documentReady ->
   html = ""
   for engine in CompletionEngines[0...CompletionEngines.length-1]
@@ -7,9 +13,7 @@ DomUtils.documentReady ->
     html += "<div class=\"engine\">"
     if engine.regexps
       html += "<pre>"
-      for re in engine.regexps
-        re = re.toString().replace(/^\//, '').replace /\/$/, ''
-        html += "#{re}\n"
+      html += "#{cleanUpRegexp re}\n" for re in engine.regexps
       html += "</pre>"
     if engine.prefix
       html += "<p>This uses the general Google completion engine, but adds the prefix \"<tt>#{engine.prefix.trim()}</tt>\" to the query.</p>"
