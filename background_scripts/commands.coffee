@@ -105,19 +105,20 @@ Commands =
       "LinkHints.activateModeWithQueue",
       "LinkHints.activateModeToDownloadLink",
       "LinkHints.activateModeToOpenIncognito",
-      "Vomnibar.activate",
-      "Vomnibar.activateInNewTab",
-      "Vomnibar.activateTabSelection",
-      "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab",
       "goPrevious",
       "goNext",
       "nextFrame",
       "mainFrame",
       "Marks.activateCreateMode",
-      "Vomnibar.activateEditUrl",
-      "Vomnibar.activateEditUrlInNewTab",
       "Marks.activateGotoMode"]
+    vomnibarCommands:
+      ["Vomnibar.activate",
+      "Vomnibar.activateInNewTab",
+      "Vomnibar.activateTabSelection",
+      "Vomnibar.activateBookmarks",
+      "Vomnibar.activateBookmarksInNewTab",
+      "Vomnibar.activateEditUrl",
+      "Vomnibar.activateEditUrlInNewTab"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
