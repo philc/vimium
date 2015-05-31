@@ -1,4 +1,5 @@
 vomnibarFrame = null
+SearchEngines.refresh ""
 
 context "Keep selection within bounds",
 
