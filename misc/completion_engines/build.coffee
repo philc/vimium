@@ -10,6 +10,8 @@ entries =
     lines.push "###### #{engine.constructor.name}\n"
     if engine.regexps
       lines.push (engine.regexps.map (re) -> "    #{re.toString().replace(/^\//, '').replace /\/$/, ''}")...
+    if engine.prefix
+      lines.push "", "This uses the general Google completion engine, but adds the prefix `#{engine.prefix}` to your query."
     lines.join "\n"
 
 header = """

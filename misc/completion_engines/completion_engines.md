@@ -12,7 +12,9 @@ vomnibar.  Completions are not provided for searches with the default search eng
 
 ###### GoogleMaps
 
-    https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/maps
+    ^https?://[a-z]+\.google\.(com|ie|co\.uk|ca|com\.au)/maps
+
+This uses the general Google completion engine, but adds the prefix `map of ` to your query.
 
 ###### Google
 
