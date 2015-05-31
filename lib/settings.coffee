@@ -198,6 +198,7 @@ root.Settings = Settings =
     grabBackFocus: false
 
     settingsVersion: Utils.getCurrentVersion()
+    helpDialog_showAdvancedCommands: false
 
 # Export Sync via Settings for tests.
 root.Settings.Sync = Sync
