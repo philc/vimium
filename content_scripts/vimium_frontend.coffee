@@ -68,10 +68,6 @@ settings =
     @port = true
     Settings.init()
 
-  set: (key, value) ->
-    @init() unless @port
-    Settings.set key, value
-
   load: -> @init() unless @port
 
   addEventListener: Settings.addEventListener.bind Settings
@@ -1084,7 +1080,7 @@ window.showHelpDialog = (html, fid) ->
       event.preventDefault()
       showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
       VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
-      settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
+      Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
     showAdvancedCommands: (visible) ->
       VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
