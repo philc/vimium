@@ -38,6 +38,10 @@ task "build", "compile all coffeescript files to javascript", ->
   coffee = spawn "coffee", ["-c", __dirname]
   coffee.on 'exit', (returnCode) -> process.exit returnCode
 
+task "builddoc", "build completion-engine documentation", ->
+  coffee = spawn "coffee", ["misc/completion_engines/build.coffee"]
+  coffee.on 'exit', (returnCode) -> process.exit returnCode
+
 task "clean", "removes any js files which were compiled from coffeescript", ->
   visitDirectory __dirname, (filepath) ->
     return unless (path.extname filepath) == ".js"
