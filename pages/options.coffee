@@ -206,14 +206,13 @@ initOptionsPage = ->
       (event) ->
         if advancedMode
           $("advancedOptions").style.display = "none"
-          $("advancedOptionsLink").innerHTML = "Show advanced options&hellip;"
+          $("advancedOptionsButton").innerHTML = "Show Advanced Options"
         else
           $("advancedOptions").style.display = "table-row-group"
-          $("advancedOptionsLink").innerHTML = "Hide advanced options"
+          $("advancedOptionsButton").innerHTML = "Hide Advanced Options"
         advancedMode = !advancedMode
+        $("advancedOptionsButton").blur()
         event.preventDefault()
-        # Prevent the "advanced options" link from retaining the focus.
-        document.activeElement.blur()
 
   activateHelpDialog = ->
     showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
@@ -226,7 +225,7 @@ initOptionsPage = ->
     $("saveOptions").innerHTML = "No Changes"
 
   $("saveOptions").addEventListener "click", saveOptions
-  $("advancedOptionsLink").addEventListener "click", toggleAdvancedOptions
+  $("advancedOptionsButton").addEventListener "click", toggleAdvancedOptions
   $("showCommands").addEventListener "click", activateHelpDialog
   $("filterLinkHints").addEventListener "click", maintainLinkHintsView
 

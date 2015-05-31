@@ -137,7 +137,7 @@ input#searchUrl {
 }
 #buttonsPanel { width: 100%; }
 #advancedOptions { display: none; }
-#advancedOptionsLink { line-height: 24px; }
+#advancedOptionsButton { width: 170px; }
 .help {
   position: absolute;
   right: -320px;
