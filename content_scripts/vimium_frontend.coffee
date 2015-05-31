@@ -220,7 +220,7 @@ initializePreDomReady = ->
     # from the former.
     return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
     # These requests are delivered to the options page, but there are no handlers there.
-    return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame" ]
+    return if request.handler in [ "registerFrame", "frameFocused", "unregisterFrame", "setIcon" ]
     shouldHandleRequest = isEnabledForUrl
     # We always handle the message if it's one of these listed message types.
     shouldHandleRequest ||= request.name in [ "executePageCommand", "checkEnabledAfterURLChange" ]
