@@ -18,6 +18,10 @@
 #
 # The lookup logic which uses these completion engines is in "./completion_search.coffee".
 #
+# NOTE(smblott).  When new completion engines are added or regular expressions are changed, re-run "cake
+# builddoc" to generate the associated documentation.  See the "builddoc" target in Cakefile and
+# "../misc/completion_engines/build.coffee".
+#
 
 # A base class for common regexp-based matching engines.
 class RegexpEngine
