@@ -8,7 +8,7 @@ Vomnibar =
   # the form "keyword=X", for direct activation of a custom search engine.
   parseRegistryEntry: (registryEntry = { options: [] }, callback = null) ->
     options = {}
-    searchEngines = settings.get("searchEngines") ? ""
+    searchEngines = Settings.get("searchEngines") ? ""
     SearchEngines.refreshAndUse searchEngines, (engines) ->
       for option in registryEntry.options
         [ key, value ] = option.split "="

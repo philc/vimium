@@ -1,7 +1,12 @@
 
 $ = (id) -> document.getElementById id
-Settings.init()
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
+
+# We have to use Settings from the background page here (not Settings, directly) to avoid a race condition for
+# the page popup.  Specifically, we must ensure that the settings have been updated on the background page
+# *before* the popup closes.  This ensures that any exclusion-rule changes are in place before the page
+# regains the focus.
+bgSettings = chrome.extension.getBackgroundPage().Settings
 
 #
 # Class hierarchy for various types of option.
@@ -21,20 +26,21 @@ class Option
   # Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
   # Return the fetched value.
   fetch: ->
-    @populateElement @previous = Settings.get @field
+    @populateElement @previous = bgSettings.get @field
     @previous
 
   # Write this option's new value back to localStorage, if necessary.
   save: ->
     value = @readValueFromElement()
     if not @areEqual value, @previous
-      Settings.set @field, @previous = value
+      bgSettings.set @field, @previous = value
+      bgSettings.performPostUpdateHook @field, value
 
   # Compare values; this is overridden by sub-classes.
   areEqual: (a,b) -> a == b
 
   restoreToDefault: ->
-    Settings.clear @field
+    bgSettings.clear @field
     @fetch()
 
   # Static method.

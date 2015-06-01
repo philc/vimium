@@ -34,11 +34,19 @@ initializeModeState = ->
   handlerStack.bubbleEvent "registerKeyQueue",
     keyQueue: ""
 
+# Tell Settings that it's been loaded.
+Settings.isLoaded = true
+
+# Shoulda.js doesn't support async code, so we try not to use any.
+Utils.nextTick = (func) -> func()
+
 #
 # Retrieve the hint markers as an array object.
 #
 getHintMarkers = ->
   Array::slice.call document.getElementsByClassName("vimiumHintMarker"), 0
+
+stubSettings = (key, value) -> stub Settings.cache, key, JSON.stringify value
 
 #
 # Generate tests that are common to both default and filtered
@@ -52,8 +60,8 @@ createGeneralHintTests = (isFilteredMode) ->
       initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>"
       document.getElementById("test-div").innerHTML = testContent
-      stub settings.values, "filterLinkHints", false
-      stub settings.values, "linkHintCharacters", "ab"
+      stubSettings "filterLinkHints", false
+      stubSettings "linkHintCharacters", "ab"
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
@@ -92,8 +100,8 @@ context "Test link hints for focusing input elements correctly",
     testDiv = document.getElementById("test-div")
     testDiv.innerHTML = ""
 
-    stub settings.values, "filterLinkHints", false
-    stub settings.values, "linkHintCharacters", "ab"
+    stubSettings "filterLinkHints", false
+    stubSettings "linkHintCharacters", "ab"
 
     # Every HTML5 input type except for hidden. We should be able to activate all of them with link hints.
     inputTypes = ["button", "checkbox", "color", "date", "datetime", "datetime-local", "email", "file",
@@ -129,12 +137,11 @@ context "Alphabetical link hints",
 
   setup ->
     initializeModeState()
-    stub settings.values, "filterLinkHints", false
-    stub settings.values, "linkHintCharacters", "ab"
+    stubSettings "filterLinkHints", false
+    stubSettings "linkHintCharacters", "ab"
 
     # Three hints will trigger double hint chars.
     createLinks 3
-    LinkHints.init()
     LinkHints.activateMode()
 
   tearDown ->
@@ -161,8 +168,8 @@ context "Filtered link hints",
   # elements.
 
   setup ->
-    stub settings.values, "filterLinkHints", true
-    stub settings.values, "linkHintNumbers", "0123456789"
+    stubSettings "filterLinkHints", true
+    stubSettings "linkHintNumbers", "0123456789"
 
   context "Text hints",
 
@@ -170,7 +177,6 @@ context "Filtered link hints",
       initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>" + "<a>trait</a>" + "<a>track<img alt='alt text'/></a>"
       document.getElementById("test-div").innerHTML = testContent
-      LinkHints.init()
       LinkHints.activateMode()
 
     tearDown ->
@@ -289,7 +295,7 @@ context "Find prev / next links",
     <a href='#first'>nextcorrupted</a>
     <a href='#second'>next page</a>
     """
-    stub settings.values, "nextPatterns", "next"
+    stubSettings "nextPatterns", "next"
     goNext()
     assert.equal '#second', window.location.hash
 
@@ -297,7 +303,7 @@ context "Find prev / next links",
     document.getElementById("test-div").innerHTML = """
     <a href='#first'>&gt;&gt;</a>
     """
-    stub settings.values, "nextPatterns", ">>"
+    stubSettings "nextPatterns", ">>"
     goNext()
     assert.equal '#first', window.location.hash
 
@@ -306,7 +312,7 @@ context "Find prev / next links",
     <a href='#first'>lorem ipsum next</a>
     <a href='#second'>next!</a>
     """
-    stub settings.values, "nextPatterns", "next"
+    stubSettings "nextPatterns", "next"
     goNext()
     assert.equal '#second', window.location.hash
 

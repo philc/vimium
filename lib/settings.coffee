@@ -2,8 +2,6 @@
 # * Sync.set() and Sync.clear() propagate local changes to chrome.storage.sync.
 # * Sync.handleStorageUpdate() listens for changes to chrome.storage.sync and propagates those
 #   changes to localStorage and into vimium's internal state.
-# * Sync.fetchAsync() polls chrome.storage.sync at startup, similarly propagating
-#   changes to localStorage and into vimium's internal state.
 #
 # The effect is best-effort synchronization of vimium options/settings between
 # chrome/vimium instances.
@@ -13,28 +11,25 @@
 #   they're always non-empty strings.
 #
 
-root = exports ? window
 Sync =
-
   storage: chrome.storage.sync
   doNotSync: ["settingsVersion", "previousVersion"]
 
-  # This is called in main.coffee.
-  init: ->
-    chrome.storage.onChanged.addListener (changes, area) -> Sync.handleStorageUpdate changes, area
-    @fetchAsync()
-
-  # Asynchronous fetch from synced storage, called only at startup.
-  fetchAsync: ->
+  init: (onReady) ->
+    chrome.storage.onChanged.addListener (changes, area) => @handleStorageUpdate changes, area
     @storage.get null, (items) =>
       unless chrome.runtime.lastError
         for own key, value of items
           Settings.storeAndPropagate key, value if @shouldSyncKey key
+      # We call onReady() even if @storage.get() fails; otherwise, the initialization of Settings never
+      # completes.
+      onReady?()
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
-    for own key, change of changes
-      Settings.storeAndPropagate key, change?.newValue if @shouldSyncKey key
+    if area == "sync"
+      for own key, change of changes
+        Settings.storeAndPropagate key, change?.newValue if @shouldSyncKey key
 
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates to the rest of vimium, that's already been done.
@@ -50,24 +45,28 @@ Sync =
   # Should we synchronize this key?
   shouldSyncKey: (key) -> key not in @doNotSync
 
-#
-# Used by all parts of Vimium to manipulate localStorage.
-#
+Settings =
+  isLoaded: false
+  cache: {}
+  onLoadedListeners: []
 
-# Select the object to use as the cache for settings.
-if Utils.isExtensionPage()
-  if Utils.isBackgroundPage()
-    settingsCache = localStorage
-  else
-    settingsCache = extend {}, localStorage # Make a copy of the cached settings from localStorage
-else
-  settingsCache = {}
+  init: ->
+    # On extension pages, we use localStorage (or a copy of it) as the cache.
+    if Utils.isExtensionPage()
+      @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
+      @postInit()
 
-root.Settings = Settings =
-  cache: settingsCache
-  init: -> Sync.init()
+    Sync.init => @postInit()
+
+  postInit: ->
+    wasLoaded = @isLoaded
+    @isLoaded = true
+    unless wasLoaded
+      listener() while listener = @onLoadedListeners.pop()
+
   get: (key) ->
-    if (key of @cache) then JSON.parse(@cache[key]) else @defaults[key]
+    console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
+    if key of @cache and @cache[key]? then JSON.parse(@cache[key]) else @defaults[key]
 
   set: (key, value) ->
     # Don't store the value if it is equal to the default, so we can change the defaults in the future
@@ -85,6 +84,10 @@ root.Settings = Settings =
 
   has: (key) -> key of @cache
 
+  getAsync: (key, callback) ->
+    callCallback = => callback @get key
+    if @isLoaded then callCallback() else @onLoadedListeners.push => callCallback
+
   # For settings which require action when their value changes, add hooks to this object, to be called from
   # options/options.coffee (when the options page is saved), and by Settings.storeAndPropagate (when an
   # update propagates from chrome.storage.sync).
@@ -94,7 +97,7 @@ root.Settings = Settings =
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key]? value
 
-  # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
+  # Only ever called from asynchronous synced-storage callbacks (on start up and handleStorageUpdate).
   storeAndPropagate: (key, value) ->
     return unless key of @defaults
     return if value and key of @cache and @cache[key] is value
@@ -181,9 +184,9 @@ root.Settings = Settings =
     grabBackFocus: false
 
     settingsVersion: Utils.getCurrentVersion()
+    helpDialog_showAdvancedCommands: false
 
-# Export Sync via Settings for tests.
-root.Settings.Sync = Sync
+Settings.init()
 
 # Perform migration from old settings versions, if this is the background page.
 if Utils.isBackgroundPage()
@@ -200,3 +203,9 @@ if Utils.isBackgroundPage()
     unless chrome.runtime.lastError or items.findModeRawQueryList
       rawQuery = Settings.get "findModeRawQuery"
       chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
+
+root = exports ? window
+root.Settings = Settings
+
+# Export Sync via Settings for tests.
+root.Settings.Sync = Sync

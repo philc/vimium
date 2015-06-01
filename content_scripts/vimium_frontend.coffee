@@ -42,62 +42,6 @@ textInputXPath = (->
 )()
 
 #
-# settings provides a browser-global localStorage-backed dict. get() and set() are synchronous, but load()
-# must be called beforehand to ensure get() will return up-to-date values.
-#
-settings =
-  isLoaded: false
-  port: null
-  eventListeners: {}
-  values:
-    scrollStepSize: null
-    linkHintCharacters: null
-    linkHintNumbers: null
-    filterLinkHints: null
-    hideHud: null
-    previousPatterns: null
-    nextPatterns: null
-    regexFindMode: null
-    userDefinedLinkHintCss: null
-    helpDialog_showAdvancedCommands: null
-    smoothScroll: null
-    grabBackFocus: null
-    searchEngines: null
-
-  init: ->
-    @port = chrome.runtime.connect name: "settings"
-    @port.onMessage.addListener (response) => @receiveMessage response
-
-    # If the port is closed, the background page has gone away (since we never close it ourselves). Stub the
-    # settings object so we don't keep trying to connect to the extension even though it's gone away.
-    @port.onDisconnect.addListener =>
-      @port = null
-      for own property, value of this
-        # @get doesn't depend on @port, so we can continue to support it to try and reduce errors.
-        @[property] = (->) if "function" == typeof value and property != "get"
-
-  get: (key) -> @values[key]
-
-  set: (key, value) ->
-    @init() unless @port
-
-    @values[key] = value
-    @port.postMessage operation: "set", key: key, value: value
-
-  load: ->
-    @init() unless @port
-    @port.postMessage operation: "fetch", values: @values
-
-  receiveMessage: (response) ->
-    @values = response.values if response.values?
-    @values[response.key] = response.value if response.key? and response.value?
-    @isLoaded = true
-    listener() while listener = @eventListeners.load?.pop()
-
-  addEventListener: (eventName, callback) ->
-    (@eventListeners[eventName] ||= []).push callback
-
-#
 # Give this frame a unique (non-zero) id.
 #
 frameId = 1 + Math.floor(Math.random()*999999999)
@@ -119,15 +63,15 @@ class GrabBackFocus extends Mode
       _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
 
-    activate = =>
-      return @exit() unless settings.get "grabBackFocus"
-      @push
-        _name: "grab-back-focus-focus"
-        focus: (event) => @grabBackFocus event.target
-      # An input may already be focused. If so, grab back the focus.
-      @grabBackFocus document.activeElement if document.activeElement
-
-    if settings.isLoaded then activate() else settings.addEventListener "load", activate
+    Settings.getAsync "grabBackFocus", (grabBackFocus) =>
+      if grabBackFocus
+        @push
+          _name: "grab-back-focus-focus"
+          focus: (event) => @grabBackFocus event.target
+        # An input may already be focused. If so, grab back the focus.
+        @grabBackFocus document.activeElement if document.activeElement
+      else
+        @exit()
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isEditable element
@@ -176,15 +120,12 @@ window.initializeModes = ->
   new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
-  Scroller.init settings
+  Scroller.init()
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-  settings.addEventListener("load", LinkHints.init.bind(LinkHints))
-  settings.load()
-
   initializeModes()
   checkIfEnabledForUrl()
   refreshCompletionKeys()
@@ -261,13 +202,11 @@ window.installListeners = ->
 
 #
 # Whenever we get the focus:
-# - Reload settings (they may have changed).
 # - Tell the background page this frame's URL.
 # - Check if we should be enabled.
 #
 onFocus = (event) ->
   if event.target == window
-    settings.load()
     chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId
     checkIfEnabledForUrl true
 
@@ -364,14 +303,14 @@ extend window,
   scrollToTop: -> Scroller.scrollTo "y", 0
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: -> Scroller.scrollBy "y", -1 * settings.get("scrollStepSize")
-  scrollDown: -> Scroller.scrollBy "y", settings.get("scrollStepSize")
+  scrollUp: -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize")
+  scrollDown: -> Scroller.scrollBy "y", Settings.get("scrollStepSize")
   scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
   scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
   scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
-  scrollLeft: -> Scroller.scrollBy "x", -1 * settings.get("scrollStepSize")
-  scrollRight: -> Scroller.scrollBy "x", settings.get("scrollStepSize")
+  scrollLeft: -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize")
+  scrollRight: -> Scroller.scrollBy "x", Settings.get("scrollStepSize")
 
 extend window,
   reload: -> window.location.reload()
@@ -717,7 +656,7 @@ updateFindModeQuery = ->
   # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
   # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
   # character. here we grep for the relevant escape sequences.
-  findModeQuery.isRegex = settings.get 'regexFindMode'
+  findModeQuery.isRegex = Settings.get 'regexFindMode'
   hasNoIgnoreCaseFlag = false
   findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
     return match if flag == "" or slashes.length != 1
@@ -1029,12 +968,12 @@ findAndFollowRel = (value) ->
         return true
 
 window.goPrevious = ->
-  previousPatterns = settings.get("previousPatterns") || ""
+  previousPatterns = Settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
 window.goNext = ->
-  nextPatterns = settings.get("nextPatterns") || ""
+  nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
@@ -1089,7 +1028,7 @@ window.showHelpDialog = (html, fid) ->
 
   VimiumHelpDialog =
     # This setting is pulled out of local storage. It's false by default.
-    getShowAdvancedCommands: -> settings.get("helpDialog_showAdvancedCommands")
+    getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
     init: () ->
       this.dialogElement = document.getElementById("vimiumHelpDialog")
@@ -1105,7 +1044,7 @@ window.showHelpDialog = (html, fid) ->
       event.preventDefault()
       showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
       VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
-      settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
+      Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
     showAdvancedCommands: (visible) ->
       VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
@@ -1184,7 +1123,6 @@ window.onbeforeunload = ->
     scrollY: window.scrollY)
 
 root = exports ? window
-root.settings = settings
 root.handlerStack = handlerStack
 root.frameId = frameId
 root.windowIsFocused = windowIsFocused
