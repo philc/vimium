@@ -63,7 +63,7 @@ class GrabBackFocus extends Mode
       _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
 
-    Settings.use "grabBackFocus", (grabBackFocus) =>
+    Settings.getAsync "grabBackFocus", (grabBackFocus) =>
       if grabBackFocus
         @push
           _name: "grab-back-focus-focus"

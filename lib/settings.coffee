@@ -84,7 +84,7 @@ Settings =
 
   has: (key) -> key of @cache
 
-  use: (key, callback) ->
+  getAsync: (key, callback) ->
     callCallback = => callback @get key
     if @isLoaded then callCallback() else @onLoadedListeners.push => callCallback
 
