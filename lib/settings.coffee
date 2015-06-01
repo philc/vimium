@@ -127,24 +127,23 @@ Settings =
     # default/fall back search engine
     searchUrl: "https://www.google.com/search?q="
     # put in an example search engine
-    searchEngines: [
-      "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
-      ""
-      "# More examples."
-      "#"
-      "# (Vimium has built-in completion for these.)"
-      "#"
-      "# g: http://www.google.com/search?q=%s Google"
-      "# l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
-      "# y: http://www.youtube.com/results?search_query=%s Youtube"
-      "# b: https://www.bing.com/search?q=%s Bing"
-      "# d: https://duckduckgo.com/?q=%s DuckDuckGo"
-      "# az: http://www.amazon.com/s/?field-keywords=%s Amazon"
-      "#"
-      "# Another example (for Vimium does not have completion)."
-      "#"
-      "# m: https://www.google.com/maps/search/%s Google Maps"
-      ].join "\n"
+    searchEngines:
+      """
+      w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia
+
+      # More examples.
+      #
+      # (Vimium supports search completion Wikipedia, as
+      # above, and for these.)
+      #
+      # g: http://www.google.com/search?q=%s Google
+      # l: http://www.google.com/search?q=%s&btnI I'm feeling lucky...
+      # y: http://www.youtube.com/results?search_query=%s Youtube
+      # gm: https://www.google.com/maps?q=%s Google maps
+      # b: https://www.bing.com/search?q=%s Bing
+      # d: https://duckduckgo.com/?q=%s DuckDuckGo
+      # az: http://www.amazon.com/s/?field-keywords=%s Amazon
+      """
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
 
