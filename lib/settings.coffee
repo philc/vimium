@@ -2,8 +2,6 @@
 # * Sync.set() and Sync.clear() propagate local changes to chrome.storage.sync.
 # * Sync.handleStorageUpdate() listens for changes to chrome.storage.sync and propagates those
 #   changes to localStorage and into vimium's internal state.
-# * Sync.fetchAsync() polls chrome.storage.sync at startup, similarly propagating
-#   changes to localStorage and into vimium's internal state.
 #
 # The effect is best-effort synchronization of vimium options/settings between
 # chrome/vimium instances.
@@ -13,26 +11,19 @@
 #   they're always non-empty strings.
 #
 
-root = exports ? window
 Sync =
-
   storage: chrome.storage.sync
   doNotSync: ["settingsVersion", "previousVersion"]
 
-  # This is called in main.coffee.
-  init: ->
-    chrome.storage.onChanged.addListener (changes, area) -> Sync.handleStorageUpdate changes, area
-    @fetchAsync()
-
-  # Asynchronous fetch from synced storage, called only at startup.
-  fetchAsync: ->
+  init: (onReady) ->
+    chrome.storage.onChanged.addListener (changes, area) => @handleStorageUpdate changes, area
     @storage.get null, (items) =>
       unless chrome.runtime.lastError
         for own key, value of items
           Settings.storeAndPropagate key, value if @shouldSyncKey key
-        Settings.isLoaded = true
-        unless isPreloaded
-          listener() while listener = Settings.eventListeners.load?.pop()
+      # We call onReady() even if @storage.get() fails; otherwise, the initialization of Settings never
+      # completes.
+      onReady?()
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
@@ -53,31 +44,24 @@ Sync =
   # Should we synchronize this key?
   shouldSyncKey: (key) -> key not in @doNotSync
 
-#
-# Used by all parts of Vimium to manipulate localStorage.
-#
-
-# Select the object to use as the cache for settings.
-if Utils.isExtensionPage()
-  if Utils.isBackgroundPage()
-    settingsCache = localStorage
-    isPreloaded = true
-  else
-    settingsCache = extend {}, localStorage # Make a copy of the cached settings from localStorage
-    isPreloaded = true
-else
-  settingsCache = {}
-  isPreloaded = false
-
-root.Settings = Settings =
-  isLoaded: isPreloaded
-  cache: settingsCache
-  eventListeners: {}
+Settings =
+  isLoaded: false
+  cache: {}
+  onLoadedListeners: []
 
   init: ->
-    Sync.init()
-    if isPreloaded
-      listener() while listener = Settings.eventListeners.load?.pop()
+    # On extension pages, we use localStorage (or a copy of it) as the cache.
+    if Utils.isExtensionPage()
+      @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
+      @postInit()
+
+    Sync.init => @postInit()
+
+  postInit: ->
+    wasLoaded = @isLoaded
+    @isLoaded = true
+    unless wasLoaded
+      listener() while listener = @onLoadedListeners.pop()
 
   get: (key) ->
     console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
@@ -99,8 +83,9 @@ root.Settings = Settings =
 
   has: (key) -> key of @cache
 
-  addEventListener: (eventName, callback) ->
-    (@eventListeners[eventName] ||= []).push callback
+  use: (key, callback) ->
+    callCallback = => callback @get key
+    if @isLoaded then callCallback() else @onLoadedListeners.push => callCallback
 
   # For settings which require action when their value changes, add hooks to this object, to be called from
   # options/options.coffee (when the options page is saved), and by Settings.storeAndPropagate (when an
@@ -111,7 +96,7 @@ root.Settings = Settings =
   performPostUpdateHook: (key, value) ->
     @postUpdateHooks[key]? value
 
-  # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
+  # Only ever called from asynchronous synced-storage callbacks (on start up and handleStorageUpdate).
   storeAndPropagate: (key, value) ->
     return unless key of @defaults
     return if value and key of @cache and @cache[key] is value
@@ -200,8 +185,7 @@ root.Settings = Settings =
     settingsVersion: Utils.getCurrentVersion()
     helpDialog_showAdvancedCommands: false
 
-# Export Sync via Settings for tests.
-root.Settings.Sync = Sync
+Settings.init()
 
 # Perform migration from old settings versions, if this is the background page.
 if Utils.isBackgroundPage()
@@ -218,3 +202,9 @@ if Utils.isBackgroundPage()
     unless chrome.runtime.lastError or items.findModeRawQueryList
       rawQuery = Settings.get "findModeRawQuery"
       chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
+
+root = exports ? window
+root.Settings = Settings
+
+# Export Sync via Settings for tests.
+root.Settings.Sync = Sync

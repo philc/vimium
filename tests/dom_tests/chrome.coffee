@@ -28,7 +28,7 @@ root.chrome =
       get: ->
       set: ->
     sync:
-      get: ->
+      get: (_, callback) -> callback? {}
       set: ->
     onChanged:
       addListener: ->

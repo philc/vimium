@@ -26,7 +26,7 @@ LinkHints =
   linkActivator: undefined
   # While in delayMode, all keypresses have no effect.
   delayMode: false
-  # Handle the link hinting marker generation and matching. Must be initialized after settings have been
+  # Handle the link hinting marker generation and matching. Must be initialized after Settings have been
   # loaded, so that we can retrieve the option setting.
   getMarkerMatcher: ->
     if Settings.get("filterLinkHints") then filterHints else alphabetHints

@@ -1,6 +1,5 @@
 
 $ = (id) -> document.getElementById id
-Settings.init()
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
 
 #

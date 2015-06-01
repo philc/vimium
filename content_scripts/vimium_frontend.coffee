@@ -41,25 +41,6 @@ textInputXPath = (->
   DomUtils.makeXPath(inputElements)
 )()
 
-# NOTE(mrmr1993): we use Settings everywhere instead of the dedicated implementation that was here.
-# Previously, only the values listed below would be loaded. If the space used by settings across all of our
-# content scripts is becoming an issue, then we can restrict the values we load to the list below.
-settings =
-  values:
-    scrollStepSize: null
-    linkHintCharacters: null
-    linkHintNumbers: null
-    filterLinkHints: null
-    hideHud: null
-    previousPatterns: null
-    nextPatterns: null
-    regexFindMode: null
-    userDefinedLinkHintCss: null
-    helpDialog_showAdvancedCommands: null
-    smoothScroll: null
-    grabBackFocus: null
-    searchEngines: null
-
 #
 # Give this frame a unique (non-zero) id.
 #
@@ -82,15 +63,15 @@ class GrabBackFocus extends Mode
       _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
 
-    activate = =>
-      return @exit() unless Settings.get "grabBackFocus"
-      @push
-        _name: "grab-back-focus-focus"
-        focus: (event) => @grabBackFocus event.target
-      # An input may already be focused. If so, grab back the focus.
-      @grabBackFocus document.activeElement if document.activeElement
-
-    if Settings.isLoaded then activate() else Settings.addEventListener "load", activate
+    Settings.use "grabBackFocus", (grabBackFocus) =>
+      if grabBackFocus
+        @push
+          _name: "grab-back-focus-focus"
+          focus: (event) => @grabBackFocus event.target
+        # An input may already be focused. If so, grab back the focus.
+        @grabBackFocus document.activeElement if document.activeElement
+      else
+        @exit()
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isEditable element
@@ -145,8 +126,7 @@ window.initializeModes = ->
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-  Settings.addEventListener "load", LinkHints.init.bind LinkHints
-  Settings.init()
+  Settings.use "theKeyHereDoesNotMatter", LinkHints.init.bind LinkHints
 
   initializeModes()
   checkIfEnabledForUrl()
@@ -224,7 +204,6 @@ window.installListeners = ->
 
 #
 # Whenever we get the focus:
-# - Reload settings (they may have changed).
 # - Tell the background page this frame's URL.
 # - Check if we should be enabled.
 #
@@ -1146,7 +1125,6 @@ window.onbeforeunload = ->
     scrollY: window.scrollY)
 
 root = exports ? window
-root.settings = settings
 root.handlerStack = handlerStack
 root.frameId = frameId
 root.windowIsFocused = windowIsFocused
