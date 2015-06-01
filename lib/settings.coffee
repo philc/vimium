@@ -27,8 +27,9 @@ Sync =
 
   # Asynchronous message from synced storage.
   handleStorageUpdate: (changes, area) ->
-    for own key, change of changes
-      Settings.storeAndPropagate key, change?.newValue if @shouldSyncKey key
+    if area == "sync"
+      for own key, change of changes
+        Settings.storeAndPropagate key, change?.newValue if @shouldSyncKey key
 
   # Only called synchronously from within vimium, never on a callback.
   # No need to propagate updates to the rest of vimium, that's already been done.
