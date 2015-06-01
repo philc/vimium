@@ -35,11 +35,6 @@ LinkHints =
   # Call this function on exit (if defined).
   onExit: null
 
-  #
-  # To be called after linkHints has been generated from linkHintsBase.
-  #
-  init: ->
-
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
   activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)

@@ -142,7 +142,6 @@ context "Alphabetical link hints",
 
     # Three hints will trigger double hint chars.
     createLinks 3
-    LinkHints.init()
     LinkHints.activateMode()
 
   tearDown ->
@@ -178,7 +177,6 @@ context "Filtered link hints",
       initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>" + "<a>trait</a>" + "<a>track<img alt='alt text'/></a>"
       document.getElementById("test-div").innerHTML = testContent
-      LinkHints.init()
       LinkHints.activateMode()
 
     tearDown ->

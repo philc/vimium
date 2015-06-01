@@ -126,8 +126,6 @@ window.initializeModes = ->
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-  Settings.use "theKeyHereDoesNotMatter", LinkHints.init.bind LinkHints
-
   initializeModes()
   checkIfEnabledForUrl()
   refreshCompletionKeys()
