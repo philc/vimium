@@ -55,6 +55,8 @@ Settings =
 
   set: (key, value) ->
     # Don't store the value if it is equal to the default, so we can change the defaults in the future.
+    # FIXME(smblott).  This test is broken for exclusionRules (for which it is never true).  In this case, we
+    # need some kind of structural equality (or perhaps comparison of JSONified strings).
     if value == @defaults[key]
       @clear key
     else
