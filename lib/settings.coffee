@@ -1,118 +1,88 @@
-#
-# * Sync.set() and Sync.clear() propagate local changes to chrome.storage.sync.
-# * Sync.handleStorageUpdate() listens for changes to chrome.storage.sync and propagates those
-#   changes to localStorage and into vimium's internal state.
-# * Sync.fetchAsync() polls chrome.storage.sync at startup, similarly propagating
-#   changes to localStorage and into vimium's internal state.
-#
-# The effect is best-effort synchronization of vimium options/settings between
-# chrome/vimium instances.
-#
-# NOTE:
-#   Values handled within this module are ALWAYS already JSON.stringifed, so
-#   they're always non-empty strings.
-#
 
-root = exports ? window
-Sync =
-
+Settings =
   storage: chrome.storage.sync
-  doNotSync: ["settingsVersion", "previousVersion"]
+  cache: {}
+  isLoaded: false
+  onLoadedCallbacks: []
 
-  # This is called in main.coffee.
   init: ->
-    chrome.storage.onChanged.addListener (changes, area) -> Sync.handleStorageUpdate changes, area
-    @fetchAsync()
+    if Utils.isExtensionPage()
+      # On extension pages, we use localStorage (or a copy of it) as the cache.
+      @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
+      @onLoaded()
 
-  # Asynchronous fetch from synced storage, called only at startup.
-  fetchAsync: ->
     @storage.get null, (items) =>
       unless chrome.runtime.lastError
-        for own key, value of items
-          Settings.storeAndPropagate key, value if @shouldSyncKey key
+        @handleUpdateFromChromeStorage key, value for own key, value of items
 
-  # Asynchronous message from synced storage.
-  handleStorageUpdate: (changes, area) ->
-    for own key, change of changes
-      Settings.storeAndPropagate key, change?.newValue if @shouldSyncKey key
+      chrome.storage.onChanged.addListener (changes, area) =>
+        @propagateChangesFromChromeStorage changes if area == "sync"
 
-  # Only called synchronously from within vimium, never on a callback.
-  # No need to propagate updates to the rest of vimium, that's already been done.
-  set: (key, value) ->
+      @onLoaded()
+
+  # Called after @cache has been initialized.  On extension pages, this will be called twice, but that does
+  # not matter because it's idempotent.
+  onLoaded: ->
+    @isLoaded = true
+    callback() while callback = @onLoadedCallbacks.pop()
+
+  shouldSyncKey: (key) ->
+    (key of @defaults) and key not in [ "settingsVersion", "previousVersion" ]
+
+  propagateChangesFromChromeStorage: (changes) ->
+    @handleUpdateFromChromeStorage key, change?.newValue for own key, change of changes
+
+  handleUpdateFromChromeStorage: (key, value) ->
+    # Note: value here is either null or a JSONified string.  Therefore, even falsy settings values (like
+    # false, 0 or "") are truthy here.  Only null is falsy.
     if @shouldSyncKey key
-      setting = {}; setting[key] = value
-      @storage.set setting
+      unless value and key of @cache and @cache[key] == value
+        defaultValue = @defaults[key]
+        defaultValueJSON = JSON.stringify defaultValue
 
-  # Only called synchronously from within vimium, never on a callback.
-  clear: (key) ->
-    @storage.remove key if @shouldSyncKey key
+        if value and value != defaultValueJSON
+          # Key/value has been changed to a non-default value.
+          @cache[key] = value
+          @performPostUpdateHook key, JSON.parse value
+        else
+          # The key has been reset to its default value.
+          delete @cache[key] if key of @cache
+          @performPostUpdateHook key, defaultValue
 
-  # Should we synchronize this key?
-  shouldSyncKey: (key) -> key not in @doNotSync
-
-#
-# Used by all parts of Vimium to manipulate localStorage.
-#
-
-# Select the object to use as the cache for settings.
-if Utils.isExtensionPage()
-  if Utils.isBackgroundPage()
-    settingsCache = localStorage
-  else
-    settingsCache = extend {}, localStorage # Make a copy of the cached settings from localStorage
-else
-  settingsCache = {}
-
-root.Settings = Settings =
-  cache: settingsCache
-  init: -> Sync.init()
   get: (key) ->
-    if (key of @cache) then JSON.parse(@cache[key]) else @defaults[key]
+    console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
+    if key of @cache and @cache[key]? then JSON.parse @cache[key] else @defaults[key]
 
   set: (key, value) ->
-    # Don't store the value if it is equal to the default, so we can change the defaults in the future
-    if (value == @defaults[key])
-      @clear(key)
+    # Don't store the value if it is equal to the default, so we can change the defaults in the future.
+    # FIXME(smblott).  This test is broken for exclusionRules (for which it is never true).  In this case, we
+    # need some kind of structural equality (or perhaps comparison of JSONified strings).
+    if value == @defaults[key]
+      @clear key
     else
       jsonValue = JSON.stringify value
       @cache[key] = jsonValue
-      Sync.set key, jsonValue
+      if @shouldSyncKey key
+        setting = {}; setting[key] = jsonValue
+        @storage.set setting
+      @performPostUpdateHook key, value
 
   clear: (key) ->
-    if @has key
-      delete @cache[key]
-    Sync.clear key
+    delete @cache[key] if @has key
+    @storage.remove key if @shouldSyncKey key
+    @performPostUpdateHook key, @get key
 
   has: (key) -> key of @cache
 
-  # For settings which require action when their value changes, add hooks to this object, to be called from
-  # options/options.coffee (when the options page is saved), and by Settings.storeAndPropagate (when an
-  # update propagates from chrome.storage.sync).
+  use: (key, callback) ->
+    invokeCallback = => callback @get key
+    if @isLoaded then invokeCallback() else @onLoadedCallbacks.push invokeCallback
+
+  # For settings which require action when their value changes, add hooks to this object.
   postUpdateHooks: {}
+  performPostUpdateHook: (key, value) -> @postUpdateHooks[key]? value
 
-  # postUpdateHooks convenience wrapper
-  performPostUpdateHook: (key, value) ->
-    @postUpdateHooks[key]? value
-
-  # Only ever called from asynchronous synced-storage callbacks (fetchAsync and handleStorageUpdate).
-  storeAndPropagate: (key, value) ->
-    return unless key of @defaults
-    return if value and key of @cache and @cache[key] is value
-    defaultValue = @defaults[key]
-    defaultValueJSON = JSON.stringify(defaultValue)
-
-    if value and value != defaultValueJSON
-      # Key/value has been changed to non-default value at remote instance.
-      @cache[key] = value
-      @performPostUpdateHook key, JSON.parse(value)
-    else
-      # Key has been reset to default value at remote instance.
-      if key of @cache
-        delete @cache[key]
-      @performPostUpdateHook key, defaultValue
-
-  # options.coffee and options.html only handle booleans and strings; therefore all defaults must be booleans
-  # or strings
+  # Default values for all settings.
   defaults:
     scrollStepSize: 60
     smoothScroll: true
@@ -144,7 +114,7 @@ root.Settings = Settings =
     exclusionRules:
       [
         # Disable Vimium on Gmail.
-        { pattern: "http*://mail.google.com/*", passKeys: "" }
+        { pattern: "https?://mail.google.com/*", passKeys: "" }
       ]
 
     # NOTE: If a page contains both a single angle-bracket link and a double angle-bracket link, then in
@@ -159,31 +129,30 @@ root.Settings = Settings =
     # default/fall back search engine
     searchUrl: "https://www.google.com/search?q="
     # put in an example search engine
-    searchEngines: [
-      "w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
-      ""
-      "# More examples."
-      "#"
-      "# (Vimium has built-in completion for these.)"
-      "#"
-      "# g: http://www.google.com/search?q=%s Google"
-      "# l: http://www.google.com/search?q=%s&btnI I'm feeling lucky..."
-      "# y: http://www.youtube.com/results?search_query=%s Youtube"
-      "# b: https://www.bing.com/search?q=%s Bing"
-      "# d: https://duckduckgo.com/?q=%s DuckDuckGo"
-      "# az: http://www.amazon.com/s/?field-keywords=%s Amazon"
-      "#"
-      "# Another example (for Vimium does not have completion)."
-      "#"
-      "# m: https://www.google.com/maps/search/%s Google Maps"
-      ].join "\n"
+    searchEngines:
+      """
+      w: http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia
+
+      # More examples.
+      #
+      # (Vimium supports search completion Wikipedia, as
+      # above, and for these.)
+      #
+      # g: http://www.google.com/search?q=%s Google
+      # l: http://www.google.com/search?q=%s&btnI I'm feeling lucky...
+      # y: http://www.youtube.com/results?search_query=%s Youtube
+      # gm: https://www.google.com/maps?q=%s Google maps
+      # b: https://www.bing.com/search?q=%s Bing
+      # d: https://duckduckgo.com/?q=%s DuckDuckGo
+      # az: http://www.amazon.com/s/?field-keywords=%s Amazon
+      """
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
 
     settingsVersion: Utils.getCurrentVersion()
+    helpDialog_showAdvancedCommands: false
 
-# Export Sync via Settings for tests.
-root.Settings.Sync = Sync
+Settings.init()
 
 # Perform migration from old settings versions, if this is the background page.
 if Utils.isBackgroundPage()
@@ -200,3 +169,6 @@ if Utils.isBackgroundPage()
     unless chrome.runtime.lastError or items.findModeRawQueryList
       rawQuery = Settings.get "findModeRawQuery"
       chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
+
+root = exports ? window
+root.Settings = Settings

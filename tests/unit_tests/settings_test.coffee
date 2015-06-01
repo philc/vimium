@@ -14,7 +14,6 @@ context "settings",
     stub global, 'localStorage', {}
     Settings.cache = global.localStorage # Point the settings cache to the new localStorage object.
     Settings.postUpdateHooks = {} # Avoid running update hooks which include calls to outside of settings.
-    Settings.init()
 
   should "save settings in localStorage as JSONified strings", ->
     Settings.set 'dummy', ""
@@ -39,16 +38,23 @@ context "settings",
     Settings.clear 'scrollStepSize'
     assert.equal Settings.get('scrollStepSize'), 60
 
+context "synced settings",
+
+  setup ->
+    stub global, 'localStorage', {}
+    Settings.cache = global.localStorage # Point the settings cache to the new localStorage object.
+    Settings.postUpdateHooks = {} # Avoid running update hooks which include calls to outside of settings.
+
   should "propagate non-default value via synced storage listener", ->
     Settings.set 'scrollStepSize', 20
     assert.equal Settings.get('scrollStepSize'), 20
-    Settings.Sync.handleStorageUpdate { scrollStepSize: { newValue: "40" } }
+    Settings.propagateChangesFromChromeStorage { scrollStepSize: { newValue: "40" } }
     assert.equal Settings.get('scrollStepSize'), 40
 
   should "propagate default value via synced storage listener", ->
     Settings.set 'scrollStepSize', 20
     assert.equal Settings.get('scrollStepSize'), 20
-    Settings.Sync.handleStorageUpdate { scrollStepSize: { newValue: "60" } }
+    Settings.propagateChangesFromChromeStorage { scrollStepSize: { newValue: "60" } }
     assert.isFalse Settings.has 'scrollStepSize'
 
   should "propagate non-default values from synced storage", ->

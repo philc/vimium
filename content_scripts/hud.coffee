@@ -48,7 +48,7 @@ HUD =
     -> ready and document.body != null
 
   # A preference which can be toggled in the Options page. */
-  enabled: -> !settings.get("hideHud")
+  enabled: -> !Settings.get("hideHud")
 
 class Tween
   opacity: 0

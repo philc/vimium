@@ -70,14 +70,14 @@ exports.chrome =
         chrome.runtime.lastError = undefined
         key_value = {}
         key_value[key] = { newValue: value }
-        @func(key_value,'synced storage stub') if @func
+        @func(key_value,'sync') if @func
 
       callEmpty: (key) ->
         chrome.runtime.lastError = undefined
         if @func
           items = {}
           items[key] = {}
-          @func(items,'synced storage stub')
+          @func(items,'sync')
 
     session:
       MAX_SESSION_RESULTS: 25
