@@ -32,7 +32,7 @@ class Option
   # Write this option's new value back to localStorage, if necessary.
   save: ->
     value = @readValueFromElement()
-    if JSON.stringify value != JSON.stringify @previous
+    if JSON.stringify(value) != JSON.stringify @previous
       bgSettings.set @field, @previous = value
 
   restoreToDefault: ->
