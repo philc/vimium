@@ -32,11 +32,8 @@ class Option
   # Write this option's new value back to localStorage, if necessary.
   save: ->
     value = @readValueFromElement()
-    if not @areEqual value, @previous
+    if JSON.stringify value != JSON.stringify @previous
       bgSettings.set @field, @previous = value
-
-  # Compare values; this is overridden by sub-classes.
-  areEqual: (a,b) -> a == b
 
   restoreToDefault: ->
     bgSettings.clear @field
@@ -124,12 +121,6 @@ class ExclusionRulesOption extends Option
         pattern: @getPattern(element).value.trim()
         passKeys: @getPassKeys(element).value.trim()
     rules.filter (rule) -> rule.pattern
-
-  areEqual: (a,b) ->
-    # Flatten each list of rules to a newline-separated string representation, and then use string equality.
-    # This is correct because patterns and passKeys cannot themselves contain newlines.
-    flatten = (rule) -> if rule and rule.pattern then rule.pattern + "\n" + rule.passKeys else ""
-    a.map(flatten).join("\n") == b.map(flatten).join("\n")
 
   # Accessors for the three main sub-elements of an "exclusionRuleTemplateInstance".
   getPattern: (element) -> element.querySelector(".pattern")
