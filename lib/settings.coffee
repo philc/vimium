@@ -65,10 +65,12 @@ Settings =
       if @shouldSyncKey key
         setting = {}; setting[key] = jsonValue
         @storage.set setting
+      @performPostUpdateHook key, value
 
   clear: (key) ->
     delete @cache[key] if @has key
     @storage.remove key if @shouldSyncKey key
+    @performPostUpdateHook key, @get key
 
   has: (key) -> key of @cache
 

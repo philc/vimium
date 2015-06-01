@@ -34,7 +34,6 @@ class Option
     value = @readValueFromElement()
     if not @areEqual value, @previous
       bgSettings.set @field, @previous = value
-      bgSettings.performPostUpdateHook @field, value
 
   # Compare values; this is overridden by sub-classes.
   areEqual: (a,b) -> a == b
