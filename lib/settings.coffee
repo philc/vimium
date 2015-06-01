@@ -12,7 +12,8 @@ Settings =
       @onLoaded()
 
     @storage.get null, (items) =>
-      @propagateChangesFromChromeStorage items unless chrome.runtime.lastError
+      unless chrome.runtime.lastError
+        @handleUpdateFromChromeStorage key, value for own key, value of items
 
       chrome.storage.onChanged.addListener (changes, area) =>
         @propagateChangesFromChromeStorage changes if area == "sync"
