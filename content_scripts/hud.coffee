@@ -63,16 +63,7 @@ HUD =
     # this window.
     window.focus()
 
-    sel = window.getSelection()
-    focusNode = if not sel.focusNode?
-      null
-    else if sel.focusNode == sel.anchorNode and sel.focusOffset == sel.anchorOffset
-      # The selection either *is* an element, or is inside an opaque element (eg. <input>).
-      sel.focusNode.childNodes[sel.focusOffset]
-    else if sel.focusNode.nodeType != sel.focusNode.ELEMENT_NODE
-      sel.focusNode.parentElement
-    else
-      sel.focusNode
+    focusNode = DomUtils.getSelectionFocusElement()
     document.activeElement?.blur()
     focusNode?.focus()
 
