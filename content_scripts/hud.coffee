@@ -35,6 +35,7 @@ HUD =
     @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
 
   search: (data) ->
+    window.scrollTo findMode.scrollX, findMode.scrollY if findMode.options.returnToViewport
     findModeQuery.rawQuery = data.query
     updateFindModeQuery()
     performFindInPlace()
