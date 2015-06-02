@@ -2,13 +2,16 @@
 # This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
 # most recent first.
 FindModeHistory =
-  storage: chrome.storage.local
+  storage: chrome?.storage.local # Guard against chrome being undefined (in the HUD iframe).
   key: "findModeRawQueryList"
   max: 50
   rawQueryList: null
-  isIncognitoMode: chrome.extension.inIncognitoContext
 
   init: ->
+    @isIncognitoMode = chrome?.extension.inIncognitoContext
+
+    return unless @isIncognitoMode? # chrome is undefined in the HUD iframe during tests, so we do nothing.
+
     unless @rawQueryList
       @rawQueryList = [] # Prevent repeated initialization.
       @key = "findModeRawQueryListIncognito" if @isIncognitoMode
