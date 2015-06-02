@@ -630,15 +630,16 @@ window.FindModeHistory =
   key: "findModeRawQueryList"
   max: 50
   rawQueryList: null
+  isIncognitoMode: chrome.extension.inIncognitoContext
 
   init: ->
     unless @rawQueryList
       @rawQueryList = [] # Prevent repeated initialization.
-      @key = "findModeRawQueryListIncognito" if isIncognitoMode
+      @key = "findModeRawQueryListIncognito" if @isIncognitoMode
       @storage.get @key, (items) =>
         unless chrome.runtime.lastError
           @rawQueryList = items[@key] if items[@key]
-          if isIncognitoMode and not items[@key]
+          if @isIncognitoMode and not items[@key]
             # This is the first incognito tab, so we need to initialize the incognito-mode query history.
             @storage.get "findModeRawQueryList", (items) =>
               unless chrome.runtime.lastError
@@ -657,7 +658,7 @@ window.FindModeHistory =
       newSetting = {}; newSetting[@key] = @rawQueryList
       @storage.set newSetting
       # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
-      unless isIncognitoMode
+      unless @isIncognitoMode
         @storage.get "findModeRawQueryListIncognito", (items) =>
           if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
             @storage.set
