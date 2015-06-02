@@ -63,3 +63,5 @@ handlers =
 UIComponentServer.registerHandler (event) ->
   {data} = event
   handlers[data.name]? data
+
+FindModeHistory.init()
