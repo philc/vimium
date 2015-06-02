@@ -740,7 +740,6 @@ class FindMode extends Mode
     super
       name: "find"
       indicator: false
-      exitOnEscape: true
       exitOnClick: true
 
       keydown: (event) =>
@@ -760,6 +759,8 @@ class FindMode extends Mode
           @historyIndex = Math.max -1, @historyIndex - 1
           rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
           HUD.showFindMode rawQuery
+        else if KeyboardUtils.isEscape event
+          @exit event
 
   exit: (event) ->
     super()
