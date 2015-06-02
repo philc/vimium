@@ -366,7 +366,7 @@ class Movement extends CountPrefix
         @movements.n = (count) -> executeFind count, false
         @movements.N = (count) -> executeFind count, true
         @movements["/"] = ->
-          @findMode = window.enterFindMode returnToViewport: true
+          @findMode = new FindMode returnToViewport: true
           @findMode.onExit => @changeMode VisualMode
     #
     # End of Movement constructor.

@@ -922,9 +922,9 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
   selection.addRange range
 
 # Enters find mode.  Returns the new find-mode instance.
-window.enterFindMode = (options = {}) ->
+window.enterFindMode = ->
   Marks.setPreviousPosition()
-  window.findMode = new FindMode options
+  window.findMode = new FindMode()
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
