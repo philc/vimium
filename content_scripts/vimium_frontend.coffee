@@ -7,7 +7,7 @@
 
 window.findModeQuery = { rawQuery: "", matchCount: 0 }
 window.findMode = null
-findModeQueryHasResults = false
+window.findModeQueryHasResults = false
 findModeAnchorNode = null
 findModeInitialRange = null
 isShowingHelpDialog = false
@@ -625,7 +625,7 @@ isValidFirstKey = (keyChar) ->
 
 # This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
 # most recent first.
-FindModeHistory =
+window.FindModeHistory =
   storage: chrome.storage.local
   key: "findModeRawQueryList"
   max: 50
@@ -712,7 +712,7 @@ window.updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleEscapeForFindMode = ->
+window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
   # back to the default color.
@@ -726,7 +726,7 @@ handleEscapeForFindMode = ->
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-handleEnterForFindMode = ->
+window.handleEnterForFindMode = ->
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
   FindModeHistory.saveQuery findModeQuery.rawQuery
@@ -743,29 +743,6 @@ class FindMode extends Mode
       indicator: false
       exitOnClick: true
 
-      keydown: (event) =>
-        window.scrollTo findMode.scrollX, findMode.scrollY if findMode.options.returnToViewport
-        if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-          findMode.exit()
-          new PostFindMode if findModeQueryHasResults
-        else if event.keyCode == keyCodes.enter
-          handleEnterForFindMode()
-          findMode.exit()
-          new PostFindMode if findModeQueryHasResults
-        else if event.keyCode == keyCodes.upArrow
-          if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
-            findMode.historyIndex += 1
-            findMode.partialQuery = findModeQuery.rawQuery if findMode.historyIndex == 0
-            HUD.showFindMode rawQuery
-        else if event.keyCode == keyCodes.downArrow
-          findMode.historyIndex = Math.max -1, findMode.historyIndex - 1
-          rawQuery = if 0 <= findMode.historyIndex then FindModeHistory.getQuery findMode.historyIndex else findMode.partialQuery
-          HUD.showFindMode rawQuery
-        else if KeyboardUtils.isEscape event
-          findMode.exit()
-          handleEscapeForFindMode()
-          new PostFindMode if findModeQueryHasResults
-
   exit: (event) ->
     super()
     handleEscapeForFindMode() if event
@@ -775,7 +752,7 @@ window.performFindInPlace = ->
   # match as the user adds matching characters, or removes previously-matched characters. See #1434.
   findModeRestoreSelection()
   query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-  findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
+  window.findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 executeFind = (query, options) ->
@@ -845,7 +822,7 @@ findAndFocus = (backwards) ->
   Marks.setPreviousPosition()
   query = getFindModeQuery backwards
 
-  findModeQueryHasResults =
+  window.findModeQueryHasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
 
   if findModeQueryHasResults
