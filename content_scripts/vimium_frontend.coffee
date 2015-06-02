@@ -711,9 +711,6 @@ window.updateFindModeQuery = ->
     text = document.body.innerText
     findModeQuery.matchCount = text.match(pattern)?.length
 
-handleKeyCharForFindMode = (keyChar) ->
-  HUD.showFindMode findModeQuery.rawQuery + keyChar
-
 handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
