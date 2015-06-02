@@ -722,8 +722,6 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-handleDeleteForFindMode = -> HUD.hide(); false
-
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
@@ -748,26 +746,20 @@ class FindMode extends Mode
       keydown: (event) =>
         window.scrollTo @scrollX, @scrollY if options.returnToViewport
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-          @exit() unless handleDeleteForFindMode()
-          @suppressEvent
+          HUD.hide()
+          @exit()
         else if event.keyCode == keyCodes.enter
           handleEnterForFindMode()
           @exit()
-          @suppressEvent
         else if event.keyCode == keyCodes.upArrow
           if rawQuery = FindModeHistory.getQuery @historyIndex + 1
             @historyIndex += 1
             @partialQuery = findModeQuery.rawQuery if @historyIndex == 0
             HUD.showFindMode rawQuery
-          @suppressEvent
         else if event.keyCode == keyCodes.downArrow
           @historyIndex = Math.max -1, @historyIndex - 1
           rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
           HUD.showFindMode rawQuery
-          @suppressEvent
-        else
-          DomUtils.suppressPropagation event if HandlerStack::isChromeEvent event
-          handlerStack.stopBubblingAndFalse
 
   exit: (event) ->
     super()
