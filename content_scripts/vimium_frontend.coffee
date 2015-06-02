@@ -772,14 +772,6 @@ class FindMode extends Mode
           DomUtils.suppressPropagation event if HandlerStack::isChromeEvent event
           handlerStack.stopBubblingAndFalse
 
-      keypress: (event) =>
-        handlerStack.neverContinueBubbling =>
-          if event.keyCode > 31
-            keyChar = String.fromCharCode event.charCode
-            handleKeyCharForFindMode keyChar if keyChar
-
-      keyup: (event) => @suppressEvent
-
   exit: (event) ->
     super()
     handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
