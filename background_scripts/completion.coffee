@@ -166,9 +166,13 @@ class Suggestion
   stripPatterns: [
     # Google search specific replacements; this replaces query parameters which are known to not be helpful.
     # There's some additional information here: http://www.teknoids.net/content/google-search-parameters-2012
-    [ "^https?://www\.google\.(com|ca|com\.au|co\.uk|ie)/.*[&?]q="
+    [ "^https?://www\\.google\\.(com|ca|com\\.au|co\\.uk|ie)/.*[&?]q="
       "ei gws_rd url ved usg sa usg sig2 bih biw cd aqs ie sourceid es_sm"
         .split(/\s+/).map (param) -> new RegExp "\&#{param}=[^&]+" ]
+
+    # On Google maps, we get a new history entry for every pan and zoom event.
+    [ "^https?://www\\.google\\.(com|ca|com\\.au|co\\.uk|ie)/maps/place/.*/@"
+      [ new RegExp "/@.*" ] ]
 
     # General replacements; replaces leading and trailing fluff.
     [ '.', [ "^https?://", "\\W+$" ].map (re) -> new RegExp re ]
