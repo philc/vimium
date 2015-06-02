@@ -747,9 +747,11 @@ class FindMode extends Mode
         if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
           HUD.hide()
           @exit()
+          new PostFindMode if findModeQueryHasResults
         else if event.keyCode == keyCodes.enter
           handleEnterForFindMode()
           @exit()
+          new PostFindMode if findModeQueryHasResults
         else if event.keyCode == keyCodes.upArrow
           if rawQuery = FindModeHistory.getQuery @historyIndex + 1
             @historyIndex += 1
@@ -760,14 +762,13 @@ class FindMode extends Mode
           rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
           HUD.showFindMode rawQuery
         else if KeyboardUtils.isEscape event
-          @exit event
+          @exit()
+          handleEscapeForFindMode()
+          new PostFindMode if findModeQueryHasResults
 
   exit: (event) ->
     super()
-    handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
-    handleEscapeForFindMode() if event?.type == "click"
-    if findModeQueryHasResults and event?.type != "click"
-      new PostFindMode
+    handleEscapeForFindMode() if event
 
 window.performFindInPlace = ->
   # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
