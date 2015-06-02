@@ -9,7 +9,6 @@ window.findModeQuery = { rawQuery: "", matchCount: 0 }
 window.findMode = null
 window.findModeQueryHasResults = false
 findModeAnchorNode = null
-findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
@@ -691,7 +690,7 @@ window.handleEnterForFindMode = ->
 class FindMode extends Mode
   constructor: (@options = {}) ->
     # Save the selection, so performFindInPlace can restore it.
-    findModeSaveSelection()
+    @initialRange = getCurrentRange()
     window.findModeQuery = rawQuery: ""
     if @options.returnToViewport
       @scrollX = window.scrollX
@@ -913,10 +912,8 @@ getCurrentRange = ->
     selection.collapseToStart() if selection.type == "Range"
     selection.getRangeAt 0
 
-findModeSaveSelection = ->
-  findModeInitialRange = getCurrentRange()
-
-findModeRestoreSelection = (range = findModeInitialRange) ->
+findModeRestoreSelection = ->
+  range = findMode.initialRange
   selection = getSelection()
   selection.removeAllRanges()
   selection.addRange range
