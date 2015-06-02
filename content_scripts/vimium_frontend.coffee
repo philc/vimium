@@ -690,6 +690,9 @@ window.handleEnterForFindMode = ->
 
 class FindMode extends Mode
   constructor: (@options = {}) ->
+    # Save the selection, so performFindInPlace can restore it.
+    findModeSaveSelection()
+    window.findModeQuery = rawQuery: ""
     if @options.returnToViewport
       @scrollX = window.scrollX
       @scrollY = window.scrollY
@@ -697,6 +700,8 @@ class FindMode extends Mode
       name: "find"
       indicator: false
       exitOnClick: true
+
+    HUD.showFindMode()
 
   exit: (event) ->
     super()
@@ -919,12 +924,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
 # Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = (options = {}) ->
   Marks.setPreviousPosition()
-  # Save the selection, so performFindInPlace can restore it.
-  findModeSaveSelection()
-  window.findModeQuery = rawQuery: ""
   window.findMode = new FindMode options
-  HUD.showFindMode()
-  findMode
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
