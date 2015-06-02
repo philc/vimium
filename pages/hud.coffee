@@ -1,3 +1,5 @@
+findMode = null
+
 document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
@@ -6,8 +8,7 @@ document.addEventListener "keydown", (event) ->
     transferrableEvent[key] = value if typeof value in ["number", "string"]
 
   if (event.keyCode in [keyCodes.backspace, keyCodes.deleteKey] and inputElement.textContent.length == 0) or
-     event.keyCode in [keyCodes.enter, keyCodes.upArrow, keyCodes.downArrow] or
-     KeyboardUtils.isEscape event
+     event.keyCode == keyCodes.enter or KeyboardUtils.isEscape event
 
     DomUtils.suppressEvent event
     UIComponentServer.postMessage
@@ -15,6 +16,16 @@ document.addEventListener "keydown", (event) ->
       event: transferrableEvent
       # Replace \u00A0 (&nbsp;) with a normal space.
       query: inputElement.textContent.replace "\u00A0", " "
+
+  else if event.keyCode == keyCodes.upArrow
+    if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
+      findMode.historyIndex += 1
+      findMode.partialQuery = findModeQuery.rawQuery if findMode.historyIndex == 0
+      handlers.showFindMode rawQuery
+  else if event.keyCode == keyCodes.downArrow
+    findMode.historyIndex = Math.max -1, findMode.historyIndex - 1
+    rawQuery = if 0 <= findMode.historyIndex then FindModeHistory.getQuery findMode.historyIndex else findMode.partialQuery
+    handlers.showFindMode rawQuery
 
 handlers =
   show: (data) ->
@@ -49,6 +60,10 @@ handlers =
 
     # Replace \u00A0 (&nbsp;) with a normal space.
     UIComponentServer.postMessage {name: "search", query: inputElement.textContent.replace "\u00A0", " "}
+
+    findMode =
+      historyIndex: -1
+      partialQuery: ""
 
   updateMatchesCount: ({matchCount, showMatchText}) ->
     countElement = document.getElementById "hud-match-count"

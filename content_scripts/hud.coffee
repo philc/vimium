@@ -88,15 +88,6 @@ HUD =
       handleEnterForFindMode()
       findMode.exit()
       new PostFindMode if findModeQueryHasResults
-    else if event.keyCode == keyCodes.upArrow
-      if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
-        findMode.historyIndex += 1
-        findMode.partialQuery = findModeQuery.rawQuery if findMode.historyIndex == 0
-        HUD.showFindMode rawQuery
-    else if event.keyCode == keyCodes.downArrow
-      findMode.historyIndex = Math.max -1, findMode.historyIndex - 1
-      rawQuery = if 0 <= findMode.historyIndex then FindModeHistory.getQuery findMode.historyIndex else findMode.partialQuery
-      HUD.showFindMode rawQuery
     else if KeyboardUtils.isEscape event
       findMode.exit()
       handleEscapeForFindMode()

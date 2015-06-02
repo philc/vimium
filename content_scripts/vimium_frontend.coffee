@@ -690,8 +690,6 @@ window.handleEnterForFindMode = ->
 
 class FindMode extends Mode
   constructor: (@options = {}) ->
-    @historyIndex = -1
-    @partialQuery = ""
     if @options.returnToViewport
       @scrollX = window.scrollX
       @scrollY = window.scrollY
