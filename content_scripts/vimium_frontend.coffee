@@ -725,14 +725,7 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-# Return true if character deleted, false otherwise.
-handleDeleteForFindMode = ->
-  if findModeQuery.rawQuery.length == 0
-    HUD.hide()
-    false
-  else
-    HUD.showFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
-    true
+handleDeleteForFindMode = -> HUD.hide(); false
 
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
