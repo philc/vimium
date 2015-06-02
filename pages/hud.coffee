@@ -14,18 +14,19 @@ document.addEventListener "keydown", (event) ->
     UIComponentServer.postMessage
       name: "hideFindMode"
       event: transferrableEvent
-      # Replace \u00A0 (&nbsp;) with a normal space.
-      query: inputElement.textContent.replace "\u00A0", " "
+      query: findMode.rawQuery
 
   else if event.keyCode == keyCodes.upArrow
     if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
       findMode.historyIndex += 1
-      findMode.partialQuery = findModeQuery.rawQuery if findMode.historyIndex == 0
-      handlers.showFindMode rawQuery
+      findMode.partialQuery = findMode.rawQuery if findMode.historyIndex == 0
+      inputElement.textContent = rawQuery
+      findMode.executeQuery()
   else if event.keyCode == keyCodes.downArrow
     findMode.historyIndex = Math.max -1, findMode.historyIndex - 1
     rawQuery = if 0 <= findMode.historyIndex then FindModeHistory.getQuery findMode.historyIndex else findMode.partialQuery
-    handlers.showFindMode rawQuery
+    inputElement.textContent = rawQuery
+    findMode.executeQuery()
 
 handlers =
   show: (data) ->
@@ -49,9 +50,10 @@ handlers =
     inputElement.id = "hud-find-input"
     hud.appendChild inputElement
 
-    inputElement.addEventListener "input", (event) ->
+    inputElement.addEventListener "input", executeQuery = (event) ->
       # Replace \u00A0 (&nbsp;) with a normal space.
-      UIComponentServer.postMessage {name: "search", query: inputElement.textContent.replace "\u00A0", " "}
+      findMode.rawQuery = inputElement.textContent.replace "\u00A0", " "
+      UIComponentServer.postMessage {name: "search", query: findMode.rawQuery}
 
     countElement = document.createElement "span"
     countElement.id = "hud-match-count"
@@ -64,6 +66,8 @@ handlers =
     findMode =
       historyIndex: -1
       partialQuery: ""
+      rawQuery: ""
+      executeQuery: executeQuery
 
   updateMatchesCount: ({matchCount, showMatchText}) ->
     countElement = document.getElementById "hud-match-count"
