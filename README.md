@@ -83,7 +83,8 @@ Using marks:
 
     ma, mA  set local mark "a" (global mark "A")
     `a, `A  jump to local mark "a" (global mark "A")
-    ``      jump back to the position before the previous jump -- before gg, G, n, N, / or `a
+    ``      jump back to the position before the previous jump
+               -- that is, before the previous gg, G, n, N, / or `a
 
 Additional advanced browsing commands:
 
