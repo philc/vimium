@@ -76,15 +76,15 @@ HUD =
     window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
     if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
       @findMode.exit()
-      new PostFindMode if findModeQueryHasResults
+      new PostFindMode if findModeQuery.hasResults
     else if event.keyCode == keyCodes.enter
       handleEnterForFindMode()
       @findMode.exit()
-      new PostFindMode if findModeQueryHasResults
+      new PostFindMode if findModeQuery.hasResults
     else if KeyboardUtils.isEscape event
       @findMode.exit()
       handleEscapeForFindMode()
-      new PostFindMode if findModeQueryHasResults
+      new PostFindMode if findModeQuery.hasResults
 
   isReady: do ->
     ready = false

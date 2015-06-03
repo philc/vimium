@@ -84,7 +84,7 @@ class FindMode extends Mode
     # match as the user adds matching characters, or removes previously-matched characters. See #1434.
     @restoreSelection()
     query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-    window.findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
+    window.findModeQuery.hasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 getCurrentRange = ->
   selection = getSelection()
