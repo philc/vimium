@@ -128,7 +128,7 @@ Examples:
 - `unmap r` removes any mapping for the r key.
 
 Available Vimium commands can be found via the "Show available commands" link
-near the key mapping box one the options page. The command name appears to the
+near the key mapping box on the options page. The command name appears to the
 right of the description in parenthesis.
 
 You can add comments to key mappings by starting a line with `"` or `#`.
