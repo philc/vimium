@@ -60,6 +60,8 @@ HUD =
       @tween.fade 0, 150, => @hide true, updateIndicator
 
   hideFindMode: (data) ->
+    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
+
     # An element element won't receive a focus event if the search landed on it while we were in the HUD
     # iframe. To end up with the correct modes active, we create a focus/blur event manually after refocusing
     # this window.
@@ -70,11 +72,7 @@ HUD =
     focusNode?.focus()
 
     findModeQuery.rawQuery = data.query
-    @findModeKeydown data.event
-
-  findModeKeydown: (event) ->
-    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
-    postExit = null
+    {event} = data
 
     if event.keyCode == keyCodes.enter
       handleEnterForFindMode()
