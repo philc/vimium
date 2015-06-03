@@ -2,15 +2,13 @@
 exit = (mode, continuation = null) ->
   mode.exit()
   continuation?()
-  false
 
 Marks =
   activateCreateMode: ->
     mode = new Mode
       name: "create-mark"
       indicator: "Create mark?"
-      keypress: -> false
-      keyup: -> false
+      suppressAllKeyboardEvents: true
       keydown: (event) ->
         keyChar = KeyboardUtils.getKeyChar(event)
         if /[A-Z]/.test keyChar
@@ -27,17 +25,14 @@ Marks =
             scrollX: window.scrollX,
             scrollY: window.scrollY
           exit mode, -> HUD.showForDuration "Created local mark '#{keyChar}'.", 1000
-        else if event.shiftKey
-          false
-        else
+        else if not event.shiftKey
           exit mode
 
   activateGotoMode: ->
     mode = new Mode
       name: "goto-mark"
       indicator: "Go to mark?"
-      keypress: -> false
-      keyup: -> false
+      suppressAllKeyboardEvents: true
       keydown: (event) ->
         keyChar = KeyboardUtils.getKeyChar(event)
         if /[A-Z]/.test keyChar
@@ -55,9 +50,7 @@ Marks =
               HUD.showForDuration "Jumped to local mark '#{keyChar}'", 1000
             else
               HUD.showForDuration "Local mark not set: '#{keyChar}'.", 1000
-        else if event.shiftKey
-          false
-        else
+        else if not event.shiftKey
           exit mode
 
 root = exports ? window
