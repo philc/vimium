@@ -31,18 +31,16 @@ HUD =
     @hudUI.show {name: "showFindMode", text}
     @tween.fade 1.0, 150
 
-  updateMatchesCount: (matchCount, showMatchText = true) ->
-    @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
-
   search: (data) ->
     window.scrollTo findMode.scrollX, findMode.scrollY if findMode.options.returnToViewport
     findModeQuery.rawQuery = data.query
     updateFindModeQuery()
     findMode.findInPlace()
 
+    # Show the number of matches in the HUD UI.
     matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
-    showCount = findModeQuery.rawQuery.length > 0
-    HUD.updateMatchesCount matchCount, showCount
+    showMatchText = findModeQuery.rawQuery.length > 0
+    @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
 
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
