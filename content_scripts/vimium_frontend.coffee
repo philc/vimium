@@ -688,7 +688,7 @@ window.handleEnterForFindMode = ->
 
 class FindMode extends Mode
   constructor: (@options = {}) ->
-    # Save the selection, so performFindInPlace can restore it.
+    # Save the selection, so findInPlace can restore it.
     @initialRange = getCurrentRange()
     window.findModeQuery = rawQuery: ""
     if @options.returnToViewport
@@ -711,12 +711,12 @@ class FindMode extends Mode
     selection.removeAllRanges()
     selection.addRange range
 
-window.performFindInPlace = ->
-  # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
-  # match as the user adds matching characters, or removes previously-matched characters. See #1434.
-  findMode.restoreSelection()
-  query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-  window.findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
+  findInPlace: ->
+    # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
+    # match as the user adds matching characters, or removes previously-matched characters. See #1434.
+    @restoreSelection()
+    query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
+    window.findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 executeFind = (query, options) ->

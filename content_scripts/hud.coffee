@@ -38,7 +38,7 @@ HUD =
     window.scrollTo findMode.scrollX, findMode.scrollY if findMode.options.returnToViewport
     findModeQuery.rawQuery = data.query
     updateFindModeQuery()
-    performFindInPlace()
+    findMode.findInPlace()
     showFindModeHUDForQuery()
 
   # Hide the HUD.
