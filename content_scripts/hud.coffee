@@ -39,7 +39,10 @@ HUD =
     findModeQuery.rawQuery = data.query
     updateFindModeQuery()
     findMode.findInPlace()
-    showFindModeHUDForQuery()
+
+    matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
+    showCount = findModeQuery.rawQuery.length > 0
+    HUD.updateMatchesCount matchCount, showCount
 
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).

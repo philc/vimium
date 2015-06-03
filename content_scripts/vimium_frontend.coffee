@@ -897,12 +897,6 @@ window.goNext = ->
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-window.showFindModeHUDForQuery = ->
-  matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
-  showCount = findModeQuery.rawQuery.length > 0
-
-  HUD.updateMatchesCount matchCount, showCount
-
 getCurrentRange = ->
   selection = getSelection()
   if selection.type == "None"
