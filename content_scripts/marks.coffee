@@ -54,16 +54,15 @@ Marks =
       indicator: "Go to mark..."
       suppressAllKeyboardEvents: true
       keypress: (event) =>
-        keyChar = String.fromCharCode event.charCode
-        if event.shiftKey
-          @exit ->
+        @exit =>
+          keyChar = String.fromCharCode event.charCode
+          if event.shiftKey
             chrome.runtime.sendMessage
               handler: 'gotoMark'
               markName: keyChar
-        else
-          markString =
-            if keyChar == previousPositionKey then @previousPosition else localStorage[@getLocationKey keyChar]
-          @exit =>
+          else
+            markString =
+              if keyChar == previousPositionKey then @previousPosition else localStorage[@getLocationKey keyChar]
             if markString?
               @setPreviousPosition()
               position = JSON.parse markString
