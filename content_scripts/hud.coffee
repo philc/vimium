@@ -6,6 +6,7 @@ HUD =
   tween: null
   hudUI: null
   _displayElement: null
+  findMode: null
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
@@ -26,16 +27,16 @@ HUD =
     @hudUI.show {name: "show", text}
     @tween.fade 1.0, 150
 
-  showFindMode: ->
+  showFindMode: (@findMode = null) ->
     return unless @enabled()
     @hudUI.show {name: "showFindMode", text: ""}
     @tween.fade 1.0, 150
 
   search: (data) ->
-    window.scrollTo findMode.scrollX, findMode.scrollY if findMode.options.returnToViewport
+    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
     findModeQuery.rawQuery = data.query
     updateFindModeQuery()
-    findMode.findInPlace()
+    @findMode.findInPlace()
 
     # Show the number of matches in the HUD UI.
     matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
@@ -72,16 +73,16 @@ HUD =
     @findModeKeydown data.event
 
   findModeKeydown: (event) ->
-    window.scrollTo findMode.scrollX, findMode.scrollY if findMode.options.returnToViewport
+    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
     if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-      findMode.exit()
+      @findMode.exit()
       new PostFindMode if findModeQueryHasResults
     else if event.keyCode == keyCodes.enter
       handleEnterForFindMode()
-      findMode.exit()
+      @findMode.exit()
       new PostFindMode if findModeQueryHasResults
     else if KeyboardUtils.isEscape event
-      findMode.exit()
+      @findMode.exit()
       handleEscapeForFindMode()
       new PostFindMode if findModeQueryHasResults
 

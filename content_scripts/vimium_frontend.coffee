@@ -6,7 +6,6 @@
 #
 
 window.findModeQuery = { rawQuery: "", matchCount: 0 }
-window.findMode = null
 window.findModeQueryHasResults = false
 isShowingHelpDialog = false
 keyPort = null
@@ -868,7 +867,7 @@ window.goNext = ->
 # Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = ->
   Marks.setPreviousPosition()
-  window.findMode = new FindMode()
+  new FindMode()
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)

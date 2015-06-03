@@ -67,7 +67,7 @@ class FindMode extends Mode
       indicator: false
       exitOnClick: true
 
-    HUD.showFindMode()
+    HUD.showFindMode this
 
   exit: (event) ->
     super()
