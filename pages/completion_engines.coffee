@@ -17,9 +17,13 @@ DomUtils.documentReady ->
       html += "</pre>"
     if engine.prefix
       html += "<p>This uses the general Google completion engine, but adds the prefix \"<tt>#{engine.prefix.trim()}</tt>\" to the query.</p>"
-    if engine.example
+    if engine.exampleSearchUrl and engine.exampleKeyword
+      engine.exampleDescription ||= engine.constructor.name
       html += "<p>"
-      html += "Example search URL: \"<tt>#{engine.example}</tt>\"."
+      html += "Example:"
+      html += "<pre>"
+      html += "#{engine.exampleKeyword}: #{engine.exampleSearchUrl} #{engine.exampleDescription}"
+      html += "</pre>"
       html += "</p>"
     html += "</div>"
 

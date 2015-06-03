@@ -34,7 +34,8 @@ class GoogleXMLRegexpEngine extends RegexpEngine
 class Google extends GoogleXMLRegexpEngine
   constructor: (regexps = null) ->
     super regexps ? "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/"
-    @example = "http://www.google.com/search?q=%s"
+    @exampleSearchUrl = "http://www.google.com/search?q=%s"
+    @exampleKeyword = "m"
 
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
@@ -60,12 +61,15 @@ class GoogleWithPrefix extends Google
 class GoogleMaps extends GoogleWithPrefix
   constructor: ->
     super "map of", "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
-    @example = "https://www.google.com/maps?q=%s"
+    @exampleSearchUrl = "https://www.google.com/maps?q=%s"
+    @exampleKeyword = "m"
+    @exampleDescription = "Google maps"
 
 class Youtube extends GoogleXMLRegexpEngine
   constructor: ->
     super "^https?://[a-z]+\\.youtube\\.com/results"
-    @example = "http://www.youtube.com/results?search_query=%s"
+    @exampleSearchUrl = "http://www.youtube.com/results?search_query=%s"
+    @exampleKeyword = "y"
 
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
@@ -74,7 +78,8 @@ class Youtube extends GoogleXMLRegexpEngine
 class Wikipedia extends RegexpEngine
   constructor: ->
     super "^https?://[a-z]+\\.wikipedia\\.org/"
-    @example = "http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
+    @exampleSearchUrl = "http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
+    @exampleKeyword = "y"
 
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
@@ -84,17 +89,18 @@ class Wikipedia extends RegexpEngine
     JSON.parse(xhr.responseText)[1]
 
 class Bing extends RegexpEngine
-  # Example search URL: https://www.bing.com/search?q=%s
   constructor: ->
     super "^https?://www\\.bing\\.com/search"
-    @example = "https://www.bing.com/search?q=%s"
+    @exampleSearchUrl = "https://www.bing.com/search?q=%s"
+    @exampleKeyword = "b"
   getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "http://api.bing.com/osjson.aspx?query=%s"
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
 class Amazon extends RegexpEngine
   constructor: ->
     super "^https?://www\\.amazon\\.(com|co\\.uk|ca|com\\.au)/s/"
-    @example = "http://www.amazon.com/s/?field-keywords=%s"
+    @exampleSearchUrl = "http://www.amazon.com/s/?field-keywords=%s"
+    @exampleKeyword = "a"
   getUrl: (queryTerms) ->
     Utils.createSearchUrl queryTerms,
       "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s"
@@ -103,7 +109,8 @@ class Amazon extends RegexpEngine
 class DuckDuckGo extends RegexpEngine
   constructor: ->
     super "^https?://([a-z]+\\.)?duckduckgo\\.com/"
-    @example = "https://duckduckgo.com/?q=%s"
+    @exampleSearchUrl = "https://duckduckgo.com/?q=%s"
+    @exampleKeyword = "d"
   getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "https://duckduckgo.com/ac/?q=%s"
   parse: (xhr) ->
     suggestion.phrase for suggestion in JSON.parse xhr.responseText
@@ -111,7 +118,9 @@ class DuckDuckGo extends RegexpEngine
 class Webster extends RegexpEngine
   constructor: ->
     super "^https?://www.merriam-webster.com/dictionary/"
-    @example = "http://www.merriam-webster.com/dictionary/%s"
+    @exampleSearchUrl = "http://www.merriam-webster.com/dictionary/%s"
+    @exampleKeyword = "dw"
+    @exampleDescription = "Dictionary"
   getUrl: (queryTerms) -> Utils.createSearchUrl queryTerms, "http://www.merriam-webster.com/autocomplete?query=%s"
   parse: (xhr) -> JSON.parse(xhr.responseText).suggestions
 
