@@ -74,17 +74,18 @@ HUD =
 
   findModeKeydown: (event) ->
     window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
-    if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-      @findMode.exit()
-      new PostFindMode if findModeQuery.hasResults
-    else if event.keyCode == keyCodes.enter
+    postExit = null
+
+    if event.keyCode == keyCodes.enter
       handleEnterForFindMode()
-      @findMode.exit()
-      new PostFindMode if findModeQuery.hasResults
     else if KeyboardUtils.isEscape event
-      @findMode.exit()
-      handleEscapeForFindMode()
-      new PostFindMode if findModeQuery.hasResults
+      # We don't want FindMode to handle the click events that handleEscapeForFindMode can generate, so we
+      # wait until the mode is closed before running it.
+      postExit = handleEscapeForFindMode
+
+    @findMode.exit()
+    postExit?()
+    new PostFindMode if findModeQuery.hasResults
 
   isReady: do ->
     ready = false
