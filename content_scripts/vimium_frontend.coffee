@@ -266,7 +266,9 @@ executePageCommand = (request) ->
 
 setScrollPosition = (scrollX, scrollY) ->
   if (scrollX > 0 || scrollY > 0)
-    DomUtils.documentReady(-> window.scrollTo(scrollX, scrollY))
+    DomUtils.documentReady ->
+      Marks.markPosition()
+      window.scrollTo scrollX, scrollY
 
 #
 # Called from the backend in order to change frame focus.

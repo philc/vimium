@@ -52,8 +52,7 @@ class Mode
     # and 2) worry about their return value.
     if @options.suppressAllKeyboardEvents
       for type in [ "keydown", "keypress", "keyup" ]
-        do (type) =>
-          handler = @options[type]
+        do (handler = @options[type]) =>
           @options[type] = (event) => handler? event; @stopBubblingAndFalse
 
     @push
