@@ -54,7 +54,7 @@ class Mode
       for type in [ "keydown", "keypress", "keyup" ]
         do (type) =>
           handler = @options[type]
-          @options[type] = (event) -> handler? event; false
+          @options[type] = (event) => handler? event; @stopBubblingAndFalse
 
     @push
       keydown: @options.keydown || null

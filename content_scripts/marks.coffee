@@ -1,57 +1,77 @@
 
-exit = (mode, continuation = null) ->
-  mode.exit()
-  continuation?()
-
 Marks =
+  mode: null
+  previousPosition: null
+
+  exit: (continuation = null) ->
+    @mode?.exit()
+    @mode = null
+    continuation?()
+
+  # This returns the key which is used for storing mark locations in localStorage.
+  getLocationKey: (keyChar) ->
+    "vimiumMark|#{window.location.href.split('#')[0]}|#{keyChar}"
+
+  showMessage: (message, keyChar) ->
+    HUD.showForDuration "#{message} \"#{keyChar}\".", 1000
+
   activateCreateMode: ->
-    mode = new Mode
+    @mode = new Mode
       name: "create-mark"
-      indicator: "Create mark?"
+      indicator: "Create mark..."
       suppressAllKeyboardEvents: true
-      keydown: (event) ->
-        keyChar = KeyboardUtils.getKeyChar(event)
-        if /[A-Z]/.test keyChar
-          exit mode, ->
+      keypress: (event) =>
+        keyChar = String.fromCharCode event.charCode
+        # If <Shift> is depressed, then it's a global mark, otherwise it's a local mark.  This is consistent
+        # vim's [A-Z] for global marks, [a-z] for local marks.  However, it also admits other non-Latin
+        # characters.
+        if event.shiftKey
+          @exit =>
             chrome.runtime.sendMessage
               handler: 'createMark'
               markName: keyChar
               scrollX: window.scrollX
               scrollY: window.scrollY
-            , -> HUD.showForDuration "Created global mark '#{keyChar}'.", 1000
-        else if /[a-z]/.test keyChar
-          [baseLocation, sep, hash] = window.location.href.split '#'
-          localStorage["vimiumMark|#{baseLocation}|#{keyChar}"] = JSON.stringify
-            scrollX: window.scrollX,
-            scrollY: window.scrollY
-          exit mode, -> HUD.showForDuration "Created local mark '#{keyChar}'.", 1000
-        else if not event.shiftKey
-          exit mode
+            , => @showMessage "Created global mark", keyChar
+        else
+          @exit => @markPosition keyChar
 
-  activateGotoMode: ->
-    mode = new Mode
+  markPosition: (keyChar = null) ->
+    markString = JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
+    if keyChar?
+      localStorage[@getLocationKey keyChar] = markString
+      @showMessage "Created local mark", keyChar
+    else
+      @previousPosition = markString
+
+  activateGotoMode: (registryEntry) ->
+    # We pick off the last character of the key sequence used to launch this command. Usually this is just "`".
+    # We then use that character, so together usually the sequence "``", to jump back to the previous
+    # position.  The "previous position" is recorded below, and is registered via @markPosition() elsewhere
+    # for various other jump-like commands.
+    previousPositionKey = registryEntry.key[registryEntry.key.length-1..]
+    @mode = new Mode
       name: "goto-mark"
-      indicator: "Go to mark?"
+      indicator: "Go to mark..."
       suppressAllKeyboardEvents: true
-      keydown: (event) ->
-        keyChar = KeyboardUtils.getKeyChar(event)
-        if /[A-Z]/.test keyChar
-          exit mode, ->
+      keypress: (event) =>
+        keyChar = String.fromCharCode event.charCode
+        if event.shiftKey
+          @exit ->
             chrome.runtime.sendMessage
               handler: 'gotoMark'
               markName: keyChar
-        else if /[a-z]/.test keyChar
-          [baseLocation, sep, hash] = window.location.href.split '#'
-          markString = localStorage["vimiumMark|#{baseLocation}|#{keyChar}"]
-          exit mode, ->
+        else
+          markString =
+            if keyChar == previousPositionKey then @previousPosition else localStorage[@getLocationKey keyChar]
+          @exit =>
             if markString?
-              mark = JSON.parse markString
-              window.scrollTo mark.scrollX, mark.scrollY
-              HUD.showForDuration "Jumped to local mark '#{keyChar}'", 1000
+              @markPosition()
+              position = JSON.parse markString
+              window.scrollTo position.scrollX, position.scrollY
+              @showMessage "Jumped to local mark", keyChar
             else
-              HUD.showForDuration "Local mark not set: '#{keyChar}'.", 1000
-        else if not event.shiftKey
-          exit mode
+              @showMessage "Local mark not set", keyChar
 
 root = exports ? window
 root.Marks =  Marks
