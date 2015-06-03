@@ -127,10 +127,11 @@ Examples:
 - `unmap <c-d>` removes any mapping for ctrl+d and restores Chrome's default behavior.
 - `unmap r` removes any mapping for the r key.
 
-Available Vimium commands can be found via the "Show Available Commands" link near the key mapping box. The
-command name appears to the right of the description in parenthesis.
+Available Vimium commands can be found via the "Show available commands" link
+near the key mapping box one the options page. The command name appears to the
+right of the description in parenthesis.
 
-You can add comments to your key mappings by starting a line with `"` or `#`.
+You can add comments to key mappings by starting a line with `"` or `#`.
 
 The following special keys are available for mapping:
 
