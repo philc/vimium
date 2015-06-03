@@ -150,6 +150,7 @@ Release Notes
   ([here](https://github.com/philc/vimium/wiki/Search-Completion) and
   [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#repeat-recent-queries)).
 - A much improved interface for custom search engines.
+- Added "\`\`" to jump back to previous position after a jump.
 - Bug fixes: bookmarklets accessed from the vomnibar, global marks.
 
 1.51 (2015-05-02)
