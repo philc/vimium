@@ -81,9 +81,9 @@ Manipulating tabs:
 
 Using marks:
 
-    ma, mA  set local (global) mark "a" ("A")
-    `a, `A  jump to local (global) mark "a" ("A")
-    ``      jump back to position before previous jump -- before gg, G, n, N, / and `a
+    ma, mA  set local mark "a" (global mark "A")
+    `a, `A  jump to local mark "a" (global mark "A")
+    ``      jump back to the position before previous jump -- before gg, G, n, N, / and `a
 
 Additional advanced browsing commands:
 
