@@ -8,7 +8,6 @@
 window.findModeQuery = { rawQuery: "", matchCount: 0 }
 window.findMode = null
 window.findModeQueryHasResults = false
-findModeAnchorNode = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
@@ -739,9 +738,6 @@ executeFind = (query, options) ->
   if document.activeElement and DomUtils.isEditable document.activeElement
     document.activeElement.blur() unless DomUtils.isSelected document.activeElement
 
-  # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
-  # preventDefault()
-  findModeAnchorNode = document.getSelection().anchorNode
   result
 
 restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
@@ -752,10 +748,10 @@ focusFoundLink = ->
     link.focus() if link
 
 selectFoundInputElement = ->
-  # if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
-  # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
-  # the current one might be disabled and therefore unable to receive focus), we use the approximate
-  # heuristic of checking that the last anchor node is an ancestor of our element.
+  # Since the last focused element might not be the one currently pointed to by find (e.g.  the current one
+  # might be disabled and therefore unable to receive focus), we use the approximate heuristic of checking
+  # that the last anchor node is an ancestor of our element.
+  findModeAnchorNode = document.getSelection().anchorNode
   if (findModeQueryHasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
