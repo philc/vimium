@@ -686,38 +686,6 @@ window.handleEnterForFindMode = ->
   document.body.classList.add("vimiumFindMode")
   FindModeHistory.saveQuery findModeQuery.rawQuery
 
-class FindMode extends Mode
-  constructor: (@options = {}) ->
-    # Save the selection, so findInPlace can restore it.
-    @initialRange = getCurrentRange()
-    window.findModeQuery = rawQuery: ""
-    if @options.returnToViewport
-      @scrollX = window.scrollX
-      @scrollY = window.scrollY
-    super
-      name: "find"
-      indicator: false
-      exitOnClick: true
-
-    HUD.showFindMode()
-
-  exit: (event) ->
-    super()
-    handleEscapeForFindMode() if event
-
-  restoreSelection: ->
-    range = @initialRange
-    selection = getSelection()
-    selection.removeAllRanges()
-    selection.addRange range
-
-  findInPlace: ->
-    # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
-    # match as the user adds matching characters, or removes previously-matched characters. See #1434.
-    @restoreSelection()
-    query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-    window.findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
-
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 window.executeFind = (query, options) ->
   result = null
@@ -896,17 +864,6 @@ window.goNext = ->
   nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
-
-getCurrentRange = ->
-  selection = getSelection()
-  if selection.type == "None"
-    range = document.createRange()
-    range.setStart document.body, 0
-    range.setEnd document.body, 0
-    range
-  else
-    selection.collapseToStart() if selection.type == "Range"
-    selection.getRangeAt 0
 
 # Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = ->
