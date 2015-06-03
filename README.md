@@ -110,8 +110,7 @@ list.
 Custom Key Mappings
 -------------------
 
-You may remap or unmap any of the default key bindings in the "Key mappings" section under "Advanced Options"
-on the options page.
+You may remap or unmap any of the default key bindings in the "Custom key mappings" on the options page.
 
 Enter one of the following key mapping commands per line:
 
