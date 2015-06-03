@@ -50,11 +50,11 @@ class Mode
     # If options.suppressAllKeyboardEvents is truthy, then all keyboard events are suppressed.  This avoids
     # the need for modes which block all keyboard events to 1) provide handlers for all keyboard events,
     # and 2) worry about their return value.
-    if options.suppressAllKeyboardEvents
+    if @options.suppressAllKeyboardEvents
       for type in [ "keydown", "keypress", "keyup" ]
-        do (type) ->
-          handler = options[type]
-          options[type] = (event) -> handler? event; false
+        do (type) =>
+          handler = @options[type]
+          @options[type] = (event) -> handler? event; false
 
     @push
       keydown: @options.keydown || null
