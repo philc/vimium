@@ -46,9 +46,6 @@ Navigating the current page:
     yf      copy a link url to the clipboard
     gf      cycle forward to the next frame
     gF      focus the main/top frame
-    ma, mA  set local (global) mark "a" ("A")
-    `a, `A  jump to local (global) mark "a" ("A")
-    ``      jump back to position before previous jump -- before gg, G, n, N, / and `a
 
 Navigating to new pages:
 
@@ -81,6 +78,12 @@ Manipulating tabs:
     X          restore closed tab (i.e. unwind the 'x' command)
     T          search through your open tabs
     <a-p>      pin/unpin current tab
+
+Using marks:
+
+    ma, mA  set local (global) mark "a" ("A")
+    `a, `A  jump to local (global) mark "a" ("A")
+    ``      jump back to position before previous jump -- before gg, G, n, N, / and `a
 
 Additional advanced browsing commands:
 
