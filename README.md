@@ -41,7 +41,7 @@ Navigating the current page:
     F       open a link in a new tab
     r       reload
     gs      view source
-    i       enter insert mode -- all commands will be ignored until you hit esc to exit
+    i       enter insert mode -- all commands will be ignored until you hit Esc to exit
     yy      copy the current url to the clipboard
     yf      copy a link url to the clipboard
     gf      cycle forward to the next frame
@@ -57,7 +57,7 @@ Navigating to new pages:
 Using find:
 
     /       enter find mode
-              -- type your search query and hit enter to search, or ESC to cancel
+              -- type your search query and hit enter to search, or Esc to cancel
     n       cycle forward to the next find match
     N       cycle backward to the previous find match
 
@@ -90,8 +90,8 @@ Using marks:
 
 Additional advanced browsing commands:
 
-    ]]      Follow the link labeled 'next' or '>'. Helpful for browsing paginated sites.
-    [[      Follow the link labeled 'previous' or '<'. Helpful for browsing paginated sites.
+    ]], [[  Follow the link labeled 'next' or '>' ('previous' or '<')
+              - helpful for browsing paginated sites
     <a-f>   open multiple links in a new tab
     gi      focus the first (or n-th) text input box on the page
     gu      go up one level in the URL hierarchy
@@ -101,7 +101,7 @@ Additional advanced browsing commands:
     v       enter visual mode; use p/P to paste-and-go, use y to yank
     V       enter visual line mode
 
-Vimium supports command repetition so, for example, hitting `5t` will open 5 tabs in rapid succession. `<ESC>` (or
+Vimium supports command repetition so, for example, hitting `5t` will open 5 tabs in rapid succession. `<Esc>` (or
 `<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
 There are some advanced commands which aren't documented here; refer to the help dialog (type `?`) for a full
@@ -383,7 +383,7 @@ does not support command repetition.
 -  Bug fixes related to entering insert mode when the page first loads, and when focusing Flash embeds.
 -  Added command listing to the Options page for easy reference.
 -  `J` & `K` have reversed for tab switching: `J` goes left and `K` goes right.
--  `<c-[>` is now equivalent to ESC, to match the behavior of VIM.
+-  `<c-[>` is now equivalent to `Esc`, to match the behavior of VIM.
 -  `<c-e>` and `<c-y>` are now mapped to scroll down and up respectively.
 -  The characters used for link hints are now configurable under Advanced Options.
 
@@ -393,7 +393,7 @@ does not support command repetition.
 -  Command `yy` to yank (copy) the current tab's url to the clipboard.
 -  Better Linux support.
 -  Fix for `Shift+F` link hints.
--  `ESC` now clears the keyQueue. So, for example, hitting `g`, `ESC`, `g` will no longer scroll the page.
+-  `Esc` now clears the keyQueue. So, for example, hitting `g`, `Esc`, `g` will no longer scroll the page.
 
 1.1 (2010-01-03)
 
