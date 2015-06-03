@@ -31,19 +31,17 @@ Marks =
         # If <Shift> is depressed, then it's a global mark, otherwise it's a local mark.  This is consistent
         # vim's [A-Z] for global marks, [a-z] for local marks.  However, it also admits other non-Latin
         # characters.
-        if event.shiftKey
-          @exit =>
-            chrome.runtime.sendMessage
-              handler: 'createMark'
-              markName: keyChar
-              scrollX: window.scrollX
-              scrollY: window.scrollY
-            , => @showMessage "Created global mark", keyChar
-        else
-          @exit =>
-            markString = JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
-            localStorage[@getLocationKey keyChar] = @getMarkString()
-            @showMessage "Created local mark", keyChar
+        @exit =>
+          if event.shiftKey
+              chrome.runtime.sendMessage
+                handler: 'createMark'
+                markName: keyChar
+                scrollX: window.scrollX
+                scrollY: window.scrollY
+              , => @showMessage "Created global mark", keyChar
+          else
+              localStorage[@getLocationKey keyChar] = @getMarkString()
+              @showMessage "Created local mark", keyChar
 
   activateGotoMode: (registryEntry) ->
     # We pick off the last character of the key sequence used to launch this command. Usually this is just "`".
