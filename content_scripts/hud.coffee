@@ -26,9 +26,9 @@ HUD =
     @hudUI.show {name: "show", text}
     @tween.fade 1.0, 150
 
-  showFindMode: (text = "") ->
+  showFindMode: ->
     return unless @enabled()
-    @hudUI.show {name: "showFindMode", text}
+    @hudUI.show {name: "showFindMode", text: ""}
     @tween.fade 1.0, 150
 
   search: (data) ->
