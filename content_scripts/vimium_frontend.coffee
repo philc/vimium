@@ -267,7 +267,7 @@ executePageCommand = (request) ->
 setScrollPosition = (scrollX, scrollY) ->
   if (scrollX > 0 || scrollY > 0)
     DomUtils.documentReady ->
-      Marks.markPosition()
+      Marks.setPreviousPosition()
       window.scrollTo scrollX, scrollY
 
 #
@@ -305,10 +305,10 @@ window.focusThisFrame = do ->
 
 extend window,
   scrollToBottom: ->
-    Marks.markPosition()
+    Marks.setPreviousPosition()
     Scroller.scrollTo "y", "max"
   scrollToTop: ->
-    Marks.markPosition()
+    Marks.setPreviousPosition()
     Scroller.scrollTo "y", 0
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
@@ -870,7 +870,7 @@ window.getFindModeQuery = (backwards) ->
     findModeQuery.parsedQuery
 
 findAndFocus = (backwards) ->
-  Marks.markPosition()
+  Marks.setPreviousPosition()
   query = getFindModeQuery backwards
 
   findModeQueryHasResults =
@@ -1017,7 +1017,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
 
 # Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = (options = {}) ->
-  Marks.markPosition()
+  Marks.setPreviousPosition()
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = rawQuery: ""

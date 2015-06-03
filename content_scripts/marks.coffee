@@ -12,6 +12,12 @@ Marks =
   getLocationKey: (keyChar) ->
     "vimiumMark|#{window.location.href.split('#')[0]}|#{keyChar}"
 
+  getMarkString: ->
+    JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
+
+  setPreviousPosition: ->
+    @previousPosition = @getMarkString()
+
   showMessage: (message, keyChar) ->
     HUD.showForDuration "#{message} \"#{keyChar}\".", 1000
 
@@ -34,21 +40,16 @@ Marks =
               scrollY: window.scrollY
             , => @showMessage "Created global mark", keyChar
         else
-          @exit => @markPosition keyChar
-
-  markPosition: (keyChar = null) ->
-    markString = JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
-    if keyChar?
-      localStorage[@getLocationKey keyChar] = markString
-      @showMessage "Created local mark", keyChar
-    else
-      @previousPosition = markString
+          @exit =>
+            markString = JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
+            localStorage[@getLocationKey keyChar] = @getMarkString()
+            @showMessage "Created local mark", keyChar
 
   activateGotoMode: (registryEntry) ->
     # We pick off the last character of the key sequence used to launch this command. Usually this is just "`".
     # We then use that character, so together usually the sequence "``", to jump back to the previous
-    # position.  The "previous position" is recorded below, and is registered via @markPosition() elsewhere
-    # for various other jump-like commands.
+    # position.  The "previous position" is recorded below, and is registered via @setPreviousPosition()
+    # elsewhere for various other jump-like commands.
     previousPositionKey = registryEntry.key[registryEntry.key.length-1..]
     @mode = new Mode
       name: "goto-mark"
@@ -66,7 +67,7 @@ Marks =
             if keyChar == previousPositionKey then @previousPosition else localStorage[@getLocationKey keyChar]
           @exit =>
             if markString?
-              @markPosition()
+              @setPreviousPosition()
               position = JSON.parse markString
               window.scrollTo position.scrollX, position.scrollY
               @showMessage "Jumped to local mark", keyChar
