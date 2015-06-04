@@ -14,7 +14,7 @@ Marks =
         url: sender.tab.url
         scrollX: req.scrollX
         scrollY: req.scrollY
-      console.log item
+        markName: req.markName
       chrome.storage.local.set item
 
   goto: (req, sender) ->
@@ -32,25 +32,35 @@ Marks =
         @focusOrLaunch markInfo
       else
         # Check whether markInfo.tabId still exists.
-        { tabId, url, scrollX, scrollY } = markInfo
-        chrome.tabs.get tabId, (tab) =>
+        chrome.tabs.get markInfo.tabId, (tab) =>
           if chrome.runtime.lastError or not tab
-            # The tab no longer exists.
+            # The original tab no longer exists.
             @focusOrLaunch markInfo
           else
             # The original tab still exists.
-            chrome.tabs.update tabId, { selected: true }, ->
-              chrome.tabs.sendMessage tabId,
-                { name: "setScrollPosition", scrollX: scrollX, scrollY: scrollY }, ->
-                  chrome.tabs.sendMessage tabId,
-                    name: "showHUDforDuration",
-                    text: "Jumped to global mark '#{req.markName}'."
-                    duration: 1000
+            @gotoPositionInTab markInfo
+
+  gotoPositionInTab: ({ tabId, scrollX, scrollY, markName }) ->
+    chrome.tabs.update tabId, { selected: true }, ->
+      chrome.tabs.sendMessage tabId,
+        { name: "setScrollPosition", scrollX: scrollX, scrollY: scrollY }, ->
+          chrome.tabs.sendMessage tabId,
+            name: "showHUDforDuration",
+            text: "Jumped to global mark '#{markName}'."
+            duration: 1000
 
   # The tab we're trying to find no longer exists.  Either find another tab with a matching URL and use it, or
   # create a new tab.
-  focusOrLaunch: (info) ->
-    console.log info
+  focusOrLaunch: (markInfo) ->
+    chrome.windows.getAll { populate: true }, (windows) =>
+      baseUrl = @getBaseUrl markInfo.url
+      for window in windows
+        for tab in window.tabs
+          if baseUrl == @getBaseUrl tab.url
+            # We have a matching tab.  We'll use it.
+            return @gotoPositionInTab extend markInfo, tabId: tab.id
+
+  getBaseUrl: (url) -> url.split("#")[0]
 
 root = exports ? window
 root.Marks = Marks
