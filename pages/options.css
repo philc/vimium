@@ -114,7 +114,7 @@ input#scrollStepSize {
 }
 textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
   width: 100%;;
-  min-height: 130px;
+  min-height: 140px;
   white-space: nowrap;
 }
 input#previousPatterns, input#nextPatterns {
