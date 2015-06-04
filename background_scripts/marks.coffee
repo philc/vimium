@@ -65,14 +65,22 @@ Marks =
   focusOrLaunch: (markInfo) ->
     chrome.tabs.query { url: markInfo.url }, (tabs) =>
       if 0 < tabs.length
-        # We have a matching tab: use it.
-        @gotoPositionInTab extend markInfo, tabId: tabs[0].id
+        # We have a matching tab: use it (prefering, if there are more than one, one in the current window).
+        @pickTabInWindow tabs, (tab) =>
+          @gotoPositionInTab extend markInfo, tabId: tab.id
       else
         # There is no existing matching tab, we'll have to create one.
         chrome.tabs.create { url: @getBaseUrl markInfo.url }, (tab) =>
           # Note. tabLoadedHandlers is defined in "main.coffee".  The handler below will be called when the tab
           # is loaded, its DOM is ready and it registers with the background page.
           tabLoadedHandlers[tab.id] = => @gotoPositionInTab extend markInfo, tabId: tab.id
+
+  # Given a list of tabs, pick one in the current window, if possible, otherwise just pick any.
+  pickTabInWindow: (tabs, continuation) ->
+    chrome.windows.getCurrent ({ id }) ->
+      tabsInWindow = tabs.filter (tab) -> tab.windowId == id
+      continuation tabsInWindow[0] ? tabs[0]
+
 
 root = exports ? window
 root.Marks = Marks
