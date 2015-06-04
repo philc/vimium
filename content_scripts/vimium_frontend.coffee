@@ -142,7 +142,7 @@ initializePreDomReady = ->
     window.removeEventListener "focus", onFocus
 
   requestHandlers =
-    showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
+    showHUDforDuration: handleShowHUDforDuration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
@@ -264,13 +264,16 @@ executePageCommand = (request) ->
 
   refreshCompletionKeys(request)
 
-# Set the scroll position (but only in the main frame).  Some pages (like Facebook) get confused if you set
-# the scroll position in all frames.
+handleShowHUDforDuration = ({ text, duration }) ->
+  if DomUtils.isTopFrame()
+    DomUtils.documentReady -> HUD.showForDuration text, duration
+
 setScrollPosition = ({ scrollX, scrollY }) ->
   if DomUtils.isTopFrame()
-    if scrollX > 0 or scrollY > 0
-      DomUtils.documentReady ->
-        window.focus()
+    DomUtils.documentReady ->
+      window.focus()
+      document.body.focus()
+      if 0 < scrollX or 0 < scrollY
         Marks.setPreviousPosition()
         window.scrollTo scrollX, scrollY
 
