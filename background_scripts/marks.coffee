@@ -63,18 +63,16 @@ Marks =
   # The tab we're trying to find no longer exists.  We either find another tab with a matching URL and use it,
   # or we create a new tab.
   focusOrLaunch: (markInfo) ->
-    chrome.windows.getAll { populate: true }, (windows) =>
-      for window in windows
-        for tab in window.tabs
-          if markInfo.url == @getBaseUrl tab.url
-            # We have a matching tab: use it.
-            @gotoPositionInTab extend markInfo, tabId: tab.id
-            return
-      # There is no existing matching tab, we'll have to create one.
-      chrome.tabs.create { url: @getBaseUrl markInfo.url }, (tab) =>
-        # Note. tabLoadedHandlers is defined in "main.coffee".  The handler below will be called when the tab
-        # is loaded, its DOM is ready and it registers with the background page.
-        tabLoadedHandlers[tab.id] = => @gotoPositionInTab extend markInfo, tabId: tab.id
+    chrome.tabs.query { url: markInfo.url }, (tabs) =>
+      if 0 < tabs.length
+        # We have a matching tab: use it.
+        @gotoPositionInTab extend markInfo, tabId: tabs[0].id
+      else
+        # There is no existing matching tab, we'll have to create one.
+        chrome.tabs.create { url: @getBaseUrl markInfo.url }, (tab) =>
+          # Note. tabLoadedHandlers is defined in "main.coffee".  The handler below will be called when the tab
+          # is loaded, its DOM is ready and it registers with the background page.
+          tabLoadedHandlers[tab.id] = => @gotoPositionInTab extend markInfo, tabId: tab.id
 
 root = exports ? window
 root.Marks = Marks
