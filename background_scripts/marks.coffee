@@ -1,6 +1,6 @@
 
 Marks =
-  # This returns the key which is used for storing mark locations in chrome.storage.local.
+  # This returns the key which is used for storing mark locations in chrome.storage.sync.
   getLocationKey: (markName) -> "vimiumGlobalMark|#{markName}"
 
   # Get the part of a URL we use for matching here (that is, everything up to the first anchor).
@@ -19,31 +19,33 @@ Marks =
         scrollX: req.scrollX
         scrollY: req.scrollY
         markName: req.markName
-      chrome.storage.local.set item
+      chrome.storage.sync.set item
 
   goto: (req, sender) ->
-    key = @getLocationKey req.markName
-    chrome.storage.local.get [ "vimiumSecret", key ], (items) =>
-      markInfo = items[key]
-      if not markInfo
-        # The mark is not defined.
-        chrome.tabs.sendMessage sender.tab.id,
-          name: "showHUDforDuration",
-          text: "Global mark not set: '#{req.markName}'."
-          duration: 1000
-      else if markInfo.vimiumSecret != items.vimiumSecret
-        # This is a different Vimium instantiation, so markInfo.tabId is definitely out of date.
-        @focusOrLaunch markInfo
-      else
-        # Check whether markInfo.tabId still exists.  According to here (https://developer.chrome.com/extensions/tabs),
-        # tab Ids are unqiue within a Chrome session.  So, if we find a match, we can use.
-        chrome.tabs.get markInfo.tabId, (tab) =>
-          if not chrome.runtime.lastError and tab?.url and markInfo.url == @getBaseUrl tab.url
-            # The original tab still exists.
-            @gotoPositionInTab markInfo
-          else
-            # The original tab no longer exists.
-            @focusOrLaunch markInfo
+    chrome.storage.local.get "vimiumSecret", (items) =>
+      vimiumSecret = items.vimiumSecret
+      key = @getLocationKey req.markName
+      chrome.storage.sync.get key, (items) =>
+        markInfo = items[key]
+        if not markInfo
+          # The mark is not defined.
+          chrome.tabs.sendMessage sender.tab.id,
+            name: "showHUDforDuration",
+            text: "Global mark not set: '#{req.markName}'."
+            duration: 1000
+        else if markInfo.vimiumSecret != items.vimiumSecret
+          # This is a different Vimium instantiation, so markInfo.tabId is definitely out of date.
+          @focusOrLaunch markInfo
+        else
+          # Check whether markInfo.tabId still exists.  According to here (https://developer.chrome.com/extensions/tabs),
+          # tab Ids are unqiue within a Chrome session.  So, if we find a match, we can use.
+          chrome.tabs.get markInfo.tabId, (tab) =>
+            if not chrome.runtime.lastError and tab?.url and markInfo.url == @getBaseUrl tab.url
+              # The original tab still exists.
+              @gotoPositionInTab markInfo
+            else
+              # The original tab no longer exists.
+              @focusOrLaunch markInfo
 
   gotoPositionInTab: ({ tabId, scrollX, scrollY, markName }) ->
     chrome.tabs.update tabId, { selected: true }, ->
