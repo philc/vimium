@@ -12,7 +12,7 @@ CompletionSearch =
   get: (searchUrl, url, callback) ->
     xhr = new XMLHttpRequest()
     xhr.open "GET", url, true
-    xhr.timeout = 1000
+    xhr.timeout = 2500
     xhr.ontimeout = xhr.onerror = -> callback null
     xhr.send()
 
@@ -115,8 +115,8 @@ CompletionSearch =
               console.log "GET", url if @debug
             catch
               suggestions = []
-              # We allow failures to be cached too, but remove them after just thirty minutes.
-              Utils.setTimeout 30 * 60 * 1000, => @completionCache.set completionCacheKey, null
+              # We allow failures to be cached too, but remove them after just thirty seconds.
+              Utils.setTimeout 30 * 1000, => @completionCache.set completionCacheKey, null
               console.log "fail", url if @debug
 
             callback suggestions

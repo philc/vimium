@@ -46,14 +46,14 @@ class Google extends GoogleXMLRegexpEngine
 class GoogleWithPrefix
   constructor: (prefix, args...) ->
     @engine = new Google args...
-    @prefix = "#{prefix.trim()} "
-    @queryTerms = @prefix.split /\s+/
+    @prefix = "#{prefix} "
+    @queryTerms = prefix.split /\s+/
   match: (args...) -> @engine.match args...
   getUrl: (queryTerms) -> @engine.getUrl [ @queryTerms..., queryTerms... ]
   parse: (xhr) ->
-    @engine.parse(xhr)
-      .filter (suggestion) => suggestion.startsWith @prefix
-      .map (suggestion) => suggestion[@prefix.length..].ltrim()
+    for suggestion in @engine.parse xhr
+      continue unless suggestion.startsWith @prefix
+      suggestion[@prefix.length..].ltrim()
 
 # For Google Maps, we add the prefix "map of" to the query, and send it to Google's general search engine,
 # then strip "map of" from the resulting suggestions.
