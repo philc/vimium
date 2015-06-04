@@ -25,6 +25,7 @@ Marks =
     @mode = new Mode
       name: "create-mark"
       indicator: "Create mark..."
+      exitOnEscape: true
       suppressAllKeyboardEvents: true
       keypress: (event) =>
         keyChar = String.fromCharCode event.charCode
@@ -52,6 +53,7 @@ Marks =
     @mode = new Mode
       name: "goto-mark"
       indicator: "Go to mark..."
+      exitOnEscape: true
       suppressAllKeyboardEvents: true
       keypress: (event) =>
         @exit =>
