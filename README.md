@@ -160,6 +160,7 @@ Release Notes
   [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#repeat-recent-queries)).
 - A much improved interface for custom search engines.
 - Added <tt>\`\`</tt> to jump back to the previous position after selected jump-like movements.
+- Global marks are now persistent (across tab closes and browser sessions) and synced.
 - Bug fixes, including:
     - Bookmarklets accessed from the vomnibar.
     - Global marks on non-Windows platforms.
