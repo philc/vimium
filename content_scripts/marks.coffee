@@ -1,7 +1,8 @@
 
 Marks =
+  previousPositionRegisters: [ "`", "'" ]
+  localRegisters: {}
   mode: null
-  previousPosition: null
 
   exit: (continuation = null) ->
     @mode?.exit()
@@ -16,7 +17,8 @@ Marks =
     JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
 
   setPreviousPosition: ->
-    @previousPosition = @getMarkString()
+    markString = @getMarkString()
+    @localRegisters[reg] = markString for reg in @previousPositionRegisters
 
   showMessage: (message, keyChar) ->
     HUD.showForDuration "#{message} \"#{keyChar}\".", 1000
@@ -45,11 +47,6 @@ Marks =
               @showMessage "Created local mark", keyChar
 
   activateGotoMode: (registryEntry) ->
-    # We pick off the last character of the key sequence used to launch this command. Usually this is just "`".
-    # We then use that character, so together usually the sequence "``", to jump back to the previous
-    # position.  The "previous position" is recorded below, and is registered via @setPreviousPosition()
-    # elsewhere for various other jump-like commands.
-    previousPositionKey = registryEntry.key[registryEntry.key.length-1..]
     @mode = new Mode
       name: "goto-mark"
       indicator: "Go to mark..."
@@ -63,8 +60,7 @@ Marks =
               handler: 'gotoMark'
               markName: keyChar
           else
-            markString =
-              if keyChar == previousPositionKey then @previousPosition else localStorage[@getLocationKey keyChar]
+            markString = @localRegisters[keyChar] ? localStorage[@getLocationKey keyChar]
             if markString?
               @setPreviousPosition()
               position = JSON.parse markString
