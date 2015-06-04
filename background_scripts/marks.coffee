@@ -81,6 +81,5 @@ Marks =
       tabsInWindow = tabs.filter (tab) -> tab.windowId == id
       continuation tabsInWindow[0] ? tabs[0]
 
-
 root = exports ? window
 root.Marks = Marks

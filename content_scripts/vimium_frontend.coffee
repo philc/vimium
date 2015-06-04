@@ -147,7 +147,7 @@ initializePreDomReady = ->
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
-    setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
+    setScrollPosition: setScrollPosition
     executePageCommand: executePageCommand
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
@@ -264,11 +264,15 @@ executePageCommand = (request) ->
 
   refreshCompletionKeys(request)
 
-setScrollPosition = (scrollX, scrollY) ->
-  if (scrollX > 0 || scrollY > 0)
-    DomUtils.documentReady ->
-      Marks.setPreviousPosition()
-      window.scrollTo scrollX, scrollY
+# Set the scroll position (but only in the main frame).  Some pages (like Facebook) get confused if you set
+# the scroll position in all frames.
+setScrollPosition = ({ scrollX, scrollY }) ->
+  if DomUtils.isTopFrame()
+    if scrollX > 0 or scrollY > 0
+      DomUtils.documentReady ->
+        window.focus()
+        Marks.setPreviousPosition()
+        window.scrollTo scrollX, scrollY
 
 #
 # Called from the backend in order to change frame focus.
