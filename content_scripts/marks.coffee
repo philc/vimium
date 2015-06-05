@@ -36,15 +36,15 @@ Marks =
         # characters.
         @exit =>
           if event.shiftKey
-              chrome.runtime.sendMessage
-                handler: 'createMark'
-                markName: keyChar
-                scrollX: window.scrollX
-                scrollY: window.scrollY
-              , => @showMessage "Created global mark", keyChar
+            chrome.runtime.sendMessage
+              handler: 'createMark'
+              markName: keyChar
+              scrollX: window.scrollX
+              scrollY: window.scrollY
+            , => @showMessage "Created global mark", keyChar
           else
-              localStorage[@getLocationKey keyChar] = @getMarkString()
-              @showMessage "Created local mark", keyChar
+            localStorage[@getLocationKey keyChar] = @getMarkString()
+            @showMessage "Created local mark", keyChar
 
   activateGotoMode: (registryEntry) ->
     @mode = new Mode
