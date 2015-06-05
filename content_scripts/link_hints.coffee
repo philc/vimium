@@ -68,10 +68,12 @@ LinkHints =
       name: "hint/#{mode.name}"
       indicator: false
       passInitialKeyupEvents: true
-      keydown: @onKeyDownInMode.bind this, hintMarkers
-      # Trap all other key events.
-      keypress: -> false
-      keyup: -> false
+      suppressAllKeyboardEvents: true
+      exitOnEscape: true
+      keypress: @onKeyDownInMode.bind this, hintMarkers
+
+    @hintMode.onExit =>
+      @deactivateMode() if @isActive
 
     @setOpenLinkMode mode
 
@@ -285,11 +287,7 @@ LinkHints =
             @setOpenLinkMode previousMode if @isActive
           true
 
-    # TODO(philc): Ignore keys that have modifiers.
-    if (KeyboardUtils.isEscape(event))
-      DomUtils.suppressKeyupAfterEscape handlerStack
-      @deactivateMode()
-    else if (event.keyCode != keyCodes.shiftKey and event.keyCode != keyCodes.ctrlKey)
+    if (event.keyCode != keyCodes.shiftKey and event.keyCode != keyCodes.ctrlKey)
       keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
       linksMatched = keyResult.linksMatched
       delay = keyResult.delay ? 0
@@ -340,10 +338,8 @@ LinkHints =
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
-  #
-  # If called without arguments, it executes immediately.  Othewise, it
-  # executes after 'delay' and invokes 'callback' when it is finished.
-  #
+  # If called without arguments, it executes immediately.  Othewise, it executes after 'delay' and invokes
+  # 'callback' when it is finished.
   deactivateMode: (delay, callback) ->
     deactivate = =>
       if (LinkHints.getMarkerMatcher().deactivate)
@@ -351,21 +347,20 @@ LinkHints =
       if (LinkHints.hintMarkerContainingDiv)
         DomUtils.removeElement LinkHints.hintMarkerContainingDiv
       LinkHints.hintMarkerContainingDiv = null
+      @isActive = false
       @hintMode.exit()
       @onExit?()
       @onExit = null
-      @isActive = false
 
-    # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
-    # deactivateMode can be tested synchronously
-    if (!delay)
-      deactivate()
-      callback() if (callback)
-    else
-      setTimeout(->
+    if delay
+      Utils.setTimeout delay, ->
         deactivate()
-        callback() if callback
-      delay)
+        callback?()
+    else
+      # We invoke deactivate() directly (instead of setting a timeout of 0) so that deactivateMode() can be
+      # tested synchronously.
+      deactivate()
+      callback?()
 
 alphabetHints =
   hintKeystrokeQueue: []
@@ -421,7 +416,7 @@ alphabetHints =
 
   matchHintsByKey: (hintMarkers, event) ->
     # If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
-    keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
+    keyChar = String.fromCharCode(event.charCode).toLowerCase()
 
     if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       if (!@hintKeystrokeQueue.pop())
@@ -499,7 +494,7 @@ filterHints =
     hintMarkers
 
   matchHintsByKey: (hintMarkers, event) ->
-    keyChar = KeyboardUtils.getKeyChar(event)
+    keyChar = String.fromCharCode event.charCode
     delay = 0
     userIsTypingLinkText = false
 
