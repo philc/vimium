@@ -35,7 +35,8 @@ namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
 selectionChangedHandlers = []
-tabLoadedHandlers = {} # tabId -> function()
+# Note. tabLoadedHandlers handlers is exported for use also by "marks.coffee".
+root.tabLoadedHandlers = {} # tabId -> function()
 
 # A secret, available only within the current instantiation of Vimium.  The secret is big, likely unguessable
 # in practice, but less than 2^31.

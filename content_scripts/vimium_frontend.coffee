@@ -142,12 +142,12 @@ initializePreDomReady = ->
     window.removeEventListener "focus", onFocus
 
   requestHandlers =
-    showHUDforDuration: (request) -> HUD.showForDuration request.text, request.duration
+    showHUDforDuration: handleShowHUDforDuration
     toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
-    setScrollPosition: (request) -> setScrollPosition request.scrollX, request.scrollY
+    setScrollPosition: setScrollPosition
     executePageCommand: executePageCommand
     currentKeyQueue: (request) ->
       keyQueue = request.keyQueue
@@ -241,9 +241,10 @@ unregisterFrame = ->
     tab_is_closing: DomUtils.isTopFrame()
 
 executePageCommand = (request) ->
+  commandType = request.command.split(".")[0]
   # Vomnibar commands are handled in the tab's main/top frame.  They are handled even if Vimium is otherwise
   # disabled in the frame.
-  if request.command.split(".")[0] == "Vomnibar"
+  if commandType == "Vomnibar"
     if DomUtils.isTopFrame()
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
       # which should receive the focus when the vomnibar closes.
@@ -261,9 +262,18 @@ executePageCommand = (request) ->
 
   refreshCompletionKeys(request)
 
-setScrollPosition = (scrollX, scrollY) ->
-  if (scrollX > 0 || scrollY > 0)
-    DomUtils.documentReady(-> window.scrollTo(scrollX, scrollY))
+handleShowHUDforDuration = ({ text, duration }) ->
+  if DomUtils.isTopFrame()
+    DomUtils.documentReady -> HUD.showForDuration text, duration
+
+setScrollPosition = ({ scrollX, scrollY }) ->
+  if DomUtils.isTopFrame()
+    DomUtils.documentReady ->
+      window.focus()
+      document.body.focus()
+      if 0 < scrollX or 0 < scrollY
+        Marks.setPreviousPosition()
+        window.scrollTo scrollX, scrollY
 
 #
 # Called from the backend in order to change frame focus.
@@ -299,8 +309,12 @@ window.focusThisFrame = do ->
       setTimeout (-> highlightedFrameElement.remove()), 200
 
 extend window,
-  scrollToBottom: -> Scroller.scrollTo "y", "max"
-  scrollToTop: -> Scroller.scrollTo "y", 0
+  scrollToBottom: ->
+    Marks.setPreviousPosition()
+    Scroller.scrollTo "y", "max"
+  scrollToTop: ->
+    Marks.setPreviousPosition()
+    Scroller.scrollTo "y", 0
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize")
@@ -861,6 +875,7 @@ window.getFindModeQuery = (backwards) ->
     findModeQuery.parsedQuery
 
 findAndFocus = (backwards) ->
+  Marks.setPreviousPosition()
   query = getFindModeQuery backwards
 
   findModeQueryHasResults =
@@ -1007,6 +1022,7 @@ findModeRestoreSelection = (range = findModeInitialRange) ->
 
 # Enters find mode.  Returns the new find-mode instance.
 window.enterFindMode = (options = {}) ->
+  Marks.setPreviousPosition()
   # Save the selection, so performFindInPlace can restore it.
   findModeSaveSelection()
   findModeQuery = rawQuery: ""
