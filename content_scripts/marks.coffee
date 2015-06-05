@@ -23,6 +23,12 @@ Marks =
   showMessage: (message, keyChar) ->
     HUD.showForDuration "#{message} \"#{keyChar}\".", 1000
 
+  # If <Shift> is depressed, then it's a global mark, otherwise it's a local mark.  This is consistent
+  # vim's [A-Z] for global marks and [a-z] for local marks.  However, it also admits other non-Latin
+  # characters.  The exceptions are "`" and "'", which are always considered local marks.
+  isGlobalMark: (event, keyChar) ->
+    event.shiftKey and keyChar not in @previousPositionRegisters
+
   activateCreateMode: ->
     @mode = new Mode
       name: "create-mark"
@@ -31,11 +37,8 @@ Marks =
       suppressAllKeyboardEvents: true
       keypress: (event) =>
         keyChar = String.fromCharCode event.charCode
-        # If <Shift> is depressed, then it's a global mark, otherwise it's a local mark.  This is consistent
-        # vim's [A-Z] for global marks, [a-z] for local marks.  However, it also admits other non-Latin
-        # characters.
         @exit =>
-          if event.shiftKey
+          if @isGlobalMark event, keyChar
             # We record the current scroll position, but only if this is the top frame within the tab.
             # Otherwise, we'll fetch the scroll position of the top frame from the background page later.
             [ scrollX, scrollY ] = [ window.scrollX, window.scrollY ] if DomUtils.isTopFrame()
@@ -58,7 +61,7 @@ Marks =
       keypress: (event) =>
         @exit =>
           keyChar = String.fromCharCode event.charCode
-          if event.shiftKey
+          if @isGlobalMark event, keyChar
             chrome.runtime.sendMessage
               handler: 'gotoMark'
               markName: keyChar
