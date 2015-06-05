@@ -11,15 +11,27 @@ Marks =
   # tabId can be considered valid.
   create: (req, sender) ->
     chrome.storage.local.get "vimiumSecret", (items) =>
-      item = {}
-      item[@getLocationKey req.markName] =
+      markInfo =
         vimiumSecret: items.vimiumSecret
         markName: req.markName
         url: @getBaseUrl sender.tab.url
         tabId: sender.tab.id
         scrollX: req.scrollX
         scrollY: req.scrollY
-      chrome.storage.sync.set item
+
+      if markInfo.scrollX? and markInfo.scrollY?
+        @saveMark markInfo
+      else
+        # The front-end frame hasn't provided the scroll position (because it's not the top frame within its
+        # tab).  We need to ask the top frame what its scroll position is. (With the frame Id set to 0, below,
+        # the request will only be handled by the top frame within the tab.)
+        chrome.tabs.sendMessage sender.tab.id, name: "getScrollPosition", frameId: 0, (response) =>
+          @saveMark extend markInfo, scrollX: response.scrollX, scrollY: response.scrollY
+
+  saveMark: (markInfo) ->
+    item = {}
+    item[@getLocationKey markInfo.markName] = markInfo
+    chrome.storage.sync.set item
 
   # Goto a global mark.  We try to find the original tab.  If we can't find that, then we try to find another
   # tab with the original URL, and use that.  And if we can't find such an existing tab, then we create a new

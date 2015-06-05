@@ -36,11 +36,14 @@ Marks =
         # characters.
         @exit =>
           if event.shiftKey
+            # We record the current scroll position, but only if this is the top frame within the tab.
+            # Otherwise, we'll fetch the scroll position of the top frame from the background page later.
+            [ scrollX, scrollY ] = [ window.scrollX, window.scrollY ] if DomUtils.isTopFrame()
             chrome.runtime.sendMessage
               handler: 'createMark'
               markName: keyChar
-              scrollX: window.scrollX
-              scrollY: window.scrollY
+              scrollX: scrollX
+              scrollY: scrollY
             , => @showMessage "Created global mark", keyChar
           else
             localStorage[@getLocationKey keyChar] = @getMarkString()
