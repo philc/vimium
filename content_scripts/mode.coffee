@@ -48,12 +48,11 @@ class Mode
     @log "activate:", @id
 
     # If options.suppressAllKeyboardEvents is truthy, then all keyboard events are suppressed.  This avoids
-    # the need for modes which block all keyboard events 1) to provide handlers for all keyboard events,
-    # and 2) to worry about their return values.
+    # the need for modes which suppress all keyboard events 1) to provide handlers for all of those events,
+    # or 2) to worry about event suppression and event-handler return values.
     if @options.suppressAllKeyboardEvents
       for type in [ "keydown", "keypress", "keyup" ]
-        do (handler = @options[type]) =>
-          @options[type] = (event) => handler? event; @stopBubblingAndFalse
+        @options[type] = @alwaysSuppressEvent @options[type]
 
     @push
       keydown: @options.keydown || null
@@ -178,6 +177,13 @@ class Mode
   # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common
   # case), because they do not need to be concerned with the value they yield.
   alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
+
+  # Shorthand for an event handler which always suppresses event propagation.
+  alwaysSuppressEvent: (handler = null) ->
+    (event) =>
+      handler? event
+      DomUtils.suppressPropagation event
+      @stopBubblingAndFalse
 
   # Activate a new instance of this mode, together with all of its original options (except its main
   # keybaord-event handlers; these will be recreated).
