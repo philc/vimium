@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>Vimium Search Completion</title>
+    <!-- We re-use some styling from the options page, so that the look and feel here is similar -->
+    <link rel="stylesheet" type="text/css" href="options.css">
+    <link rel="stylesheet" type="text/css" href="completion_engines.css">
+    <script src="content_script_loader.js"></script>
+    <script type="text/javascript" src="../lib/settings.js"></script>
+    <script src="../background_scripts/completion_engines.js"></script>
+    <script src="completion_engines.js"></script>
+  </head>
+
+  <body>
+    <div id="wrapper">
+      <header>Vimium Search Completion</header>
+      <p>
+        Search completion is available for custom search engines whose search URL matches one of Vimium's
+        built-in completion engines; that is, the search URL matches one of the regular expressions below.
+        Search completion is not available for the default search engine.
+      </p>
+      <p>
+        Custom search engines can be configured on the <a href="options.html" target="_blank">options</a>
+        page. <br/>
+        Further information is available on the <a href="https://github.com/philc/vimium/wiki/Search-Completion">wiki</a>.
+      </p>
+      <header>Available Completion Engines</header>
+      <p>
+        <dl id="engineList"></dl>
+      </p>
+    </div>
+  </body>
+</html>

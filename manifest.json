@@ -73,6 +73,7 @@
   "web_accessible_resources": [
     "pages/vomnibar.html",
     "content_scripts/vimium.css",
-    "pages/hud.html"
+    "pages/hud.html",
+    "pages/completion_engines.html"
   ]
 }
