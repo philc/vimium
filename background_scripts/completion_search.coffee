@@ -1,12 +1,38 @@
 
-class EngineWrapper
+# This is a wrapper class for completion engines.  It handles the case where a custom search engine includes a
+# prefix query term (or terms).  For example:
+#
+#   http://www.google.com/search?q=javascript+%s
+#
+# In this case, we get better suggestions if we include the term "javascript" in queries sent to the
+# completion engine.  This wrapper handles adding such prefixes to completion-engine queries and removing them
+# from the resulting suggestions.
+class EnginePrefixWrapper
   constructor: (@searchUrl, @engine) ->
 
   getUrl: (queryTerms) ->
+    # This tests whether @searchUrl contains something of the form "...=abc+def+%s...", from which we extract
+    # a prefix of the form "abc def ".
+    if /\=.+\+%s/.test @searchUrl
+      terms = @searchUrl.replace /\+%s.*/, ""
+      terms = terms.replace /.*=/, ""
+      terms = terms.replace /\+/g, " "
+
+      queryTerms = [ terms.split(" ")..., queryTerms... ]
+      prefix = "#{terms} "
+
+      @postprocessSuggestions =
+        (suggestions) ->
+          for suggestion in suggestions
+            continue unless suggestion.startsWith prefix
+            suggestion[prefix.length..]
+
     @engine.getUrl queryTerms
 
   parse: (xhr) ->
-    @engine.parse xhr
+    @postprocessSuggestions @engine.parse xhr
+
+  postprocessSuggestions: (suggestions) -> suggestions
 
 CompletionSearch =
   debug: false
@@ -74,22 +100,23 @@ CompletionSearch =
 
     # If the user appears to be typing a continuation of the characters of the most recent query, then we can
     # sometimes re-use the previous suggestions.
-    if @mostRecentQuery? and @mostRecentSuggestions?
-      reusePreviousSuggestions = do =>
-        # Verify that the previous query is a prefix of the current query.
-        return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
-        # Verify that every previous suggestion contains the text of the new query.
-        # Note: @mostRecentSuggestions may also be empty, in which case we drop though. The effect is that
-        # previous queries with no suggestions suppress subsequent no-hope HTTP requests as the user continues
-        # to type.
-        for suggestion in @mostRecentSuggestions
-          return false unless 0 <= suggestion.indexOf query
-        # Ok. Re-use the suggestion.
-        true
+    if @mostRecentQuery? and @mostRecentSuggestions? and @mostRecentSearchUrl?
+      if searchUrl == @mostRecentSearchUrl
+        reusePreviousSuggestions = do =>
+          # Verify that the previous query is a prefix of the current query.
+          return false unless 0 == query.indexOf @mostRecentQuery.toLowerCase()
+          # Verify that every previous suggestion contains the text of the new query.
+          # Note: @mostRecentSuggestions may also be empty, in which case we drop though. The effect is that
+          # previous queries with no suggestions suppress subsequent no-hope HTTP requests as the user continues
+          # to type.
+          for suggestion in @mostRecentSuggestions
+            return false unless 0 <= suggestion.indexOf query
+          # Ok. Re-use the suggestion.
+          true
 
-      if reusePreviousSuggestions
-        console.log "reuse previous query:", @mostRecentQuery, @mostRecentSuggestions.length if @debug
-        return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
+        if reusePreviousSuggestions
+          console.log "reuse previous query:", @mostRecentQuery, @mostRecentSuggestions.length if @debug
+          return callback @completionCache.set completionCacheKey, @mostRecentSuggestions
 
     # That's all of the caches we can try.  Bail if the caller is only requesting synchronous results.  We
     # signal that we haven't found a match by returning null.
@@ -102,7 +129,7 @@ CompletionSearch =
 
         # Elide duplicate requests. First fetch the suggestions...
         @inTransit[completionCacheKey] ?= new AsyncDataFetcher (callback) =>
-          engine = new EngineWrapper searchUrl, @lookupEngine searchUrl
+          engine = new EnginePrefixWrapper searchUrl, @lookupEngine searchUrl
           url = engine.getUrl queryTerms
 
           @get searchUrl, url, (xhr = null) =>
@@ -128,6 +155,7 @@ CompletionSearch =
 
         # ... then use the suggestions.
         @inTransit[completionCacheKey].use (suggestions) =>
+          @mostRecentSearchUrl = searchUrl
           @mostRecentQuery = query
           @mostRecentSuggestions = suggestions
           callback @completionCache.set completionCacheKey, suggestions

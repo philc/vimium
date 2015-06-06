@@ -11,12 +11,15 @@ DomUtils.documentReady ->
     engine = new engine
     html.push "<h4>#{engine.constructor.name}</h4>\n"
     html.push "<div class=\"engine\">"
+    if engine.example.explanation
+      html.push "<p>#{engine.example.explanation}</p>"
     if engine.regexps
+      html.push "<p>"
+      html.push "Regular expression#{if 1 < engine.regexps.length then 's' else ''}:"
       html.push "<pre>"
       html.push "#{cleanUpRegexp re}\n" for re in engine.regexps
       html.push "</pre>"
-    if engine.prefix
-      html.push "<p>This uses the general Google completion engine, but adds the prefix \"<tt>#{engine.prefix.trim()}</tt>\" to the query.</p>"
+      html.push "</p>"
     if engine.example.searchUrl and engine.example.keyword
       engine.example.description ||= engine.constructor.name
       html.push "<p>"

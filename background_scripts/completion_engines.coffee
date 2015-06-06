@@ -15,9 +15,9 @@
 #      successfully), and returns a list of suggestions (a list of strings).  This method is always executed
 #      within the context of a try/catch block, so errors do not propagate.
 #
-#   4. For documentation only, each completion engine *must* and example custom search engine.  The example
-#      must include an example "keyword" and and example "searchUrl", and may include and example
-#      "description".
+#   4. Each completion engine *must* include an example custom search engine.  The example must include an
+#      example "keyword" and an example "searchUrl", and may include an example "description" and an
+#      "explanation".
 #
 # Each new completion engine must be added to the list "CompletionEngines" at the bottom of this file.
 #
@@ -45,37 +45,34 @@ class GoogleXMLBaseEngine extends BaseEngine
       suggestion
 
 class Google extends GoogleXMLBaseEngine
-  constructor: (regexps = null) ->
+  constructor: () ->
     super
       engineUrl: "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
-      regexps: regexps ? "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/"
+      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/"
       example:
         searchUrl: "http://www.google.com/search?q=%s"
         keyword: "g"
 
-## # A wrapper class for Google completions.  This adds prefix terms to the query, and strips those terms from
-## # the resulting suggestions.  For example, for Google Maps, we add "map of" as a prefix, then strip "map of"
-## # from the resulting suggestions.
-## class GoogleWithPrefix extends Google
-##   constructor: (prefix, args...) ->
-##     super args...
-##     prefix = prefix.trim()
-##     @prefix = "#{prefix} "
-##     @queryTerms = prefix.split /\s+/
-##   getUrl: (queryTerms) -> super [ @queryTerms..., queryTerms... ]
-##   parse: (xhr) ->
-##     super(xhr)
-##       .filter (suggestion) => suggestion.startsWith @prefix
-##       .map (suggestion) => suggestion[@prefix.length..].ltrim()
-##
-## # For Google Maps, we add the prefix "map of" to the query, and send it to Google's general search engine,
-## # then strip "map of" from the resulting suggestions.
-## class GoogleMaps extends GoogleWithPrefix
-##   constructor: ->
-##     super "map of", "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
-##     @exampleSearchUrl = "https://www.google.com/maps?q=%s"
-##     @exampleKeyword = "m"
-##     @exampleDescription = "Google maps"
+class GoogleMaps extends GoogleXMLBaseEngine
+  prefix: "map of "
+  constructor: () ->
+    super
+      engineUrl: "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{@prefix.split(' ').join '+'}%s"
+      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
+      example:
+        searchUrl: "https://www.google.com/maps?q=%s"
+        keyword: "m"
+        explanation:
+          """
+          This uses regular Google completion, but prepends the text "<tt>map of</tt>" to the query.  It works
+          well for places, countries, states, geographical regions and the like, but will not perform address
+          search.
+          """
+
+  parse: (xhr) ->
+    for suggestion in super xhr
+      continue unless suggestion.startsWith @prefix
+      suggestion[@prefix.length..]
 
 class Youtube extends GoogleXMLBaseEngine
   constructor: ->
@@ -154,7 +151,7 @@ class DummyCompletionEngine extends BaseEngine
 # Note: Order matters here.
 CompletionEngines = [
   Youtube
-  # GoogleMaps
+  GoogleMaps
   Google
   DuckDuckGo
   Wikipedia
