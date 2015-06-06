@@ -1,4 +1,13 @@
 
+class EngineWrapper
+  constructor: (@searchUrl, @engine) ->
+
+  getUrl: (queryTerms) ->
+    @engine.getUrl queryTerms
+
+  parse: (xhr) ->
+    @engine.parse xhr
+
 CompletionSearch =
   debug: false
   inTransit: {}
@@ -93,7 +102,7 @@ CompletionSearch =
 
         # Elide duplicate requests. First fetch the suggestions...
         @inTransit[completionCacheKey] ?= new AsyncDataFetcher (callback) =>
-          engine = @lookupEngine searchUrl
+          engine = new EngineWrapper searchUrl, @lookupEngine searchUrl
           url = engine.getUrl queryTerms
 
           @get searchUrl, url, (xhr = null) =>
