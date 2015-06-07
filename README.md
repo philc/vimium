@@ -163,6 +163,7 @@ Release Notes
   jump-like movements (`gg`, `G`, `/`, `n`, `N` and local mark movements).
 - Global marks are now persistent across tab closes and browser sessions, and
   are synced between browser instances.
+- If link hints are filtered by text (see the options page, not the default), then `Tab` now selects the next available hint.
 - Bug fixes, including:
     - Bookmarklets accessed from the vomnibar.
     - Global marks on non-Windows platforms.
