@@ -440,6 +440,7 @@ filterHints =
   linkTextKeystrokeQueue: []
   labelMap: {}
   previousActiveHintMarker: null
+  tabCount: 0
 
   #
   # Generate a map of input element => label
@@ -504,12 +505,12 @@ filterHints =
     keyChar = KeyboardUtils.getKeyChar(event)
     delay = 0
     userIsTypingLinkText = false
+    tabCountAdjustment = 0
 
     if (event.keyCode == keyCodes.enter)
-      # activate the lowest-numbered link hint that is visible
-      for marker in hintMarkers
-        if (marker.style.display != "none")
-          return { linksMatched: [ marker ] }
+      return linksMatched: [ @previousActiveHintMarker ]
+    else if event.keyCode == keyCodes.tab
+      tabCountAdjustment = if event.shiftKey then -1 else 1
     else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
       # backspace clears hint key queue first, then acts on link text key queue.
       # if both queues are empty. exit hinting mode
@@ -538,6 +539,9 @@ filterHints =
       # control back to command mode immediately after a match is found.
       delay = 200
 
+    # We add linksMatched.length here to ensure that @tabCount remains positive.
+    @tabCount = if tabCountAdjustment then @tabCount + linksMatched.length + tabCountAdjustment else 0
+
     @highlightActiveHintMarker linksMatched
     { linksMatched: linksMatched, delay: delay }
 
@@ -565,7 +569,7 @@ filterHints =
 
   highlightActiveHintMarker: (linksMatched) ->
     @previousActiveHintMarker?.classList.remove "vimiumActiveHintMarker"
-    @previousActiveHintMarker = linksMatched[0]
+    @previousActiveHintMarker = linksMatched[@tabCount % linksMatched.length]
     @previousActiveHintMarker?.classList.add "vimiumActiveHintMarker"
 
   deactivate: (delay, callback) ->
@@ -573,6 +577,7 @@ filterHints =
     @linkTextKeystrokeQueue = []
     @labelMap = {}
     @previousActiveHintMarker = null
+    @tabCount = 0
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
