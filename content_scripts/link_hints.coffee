@@ -70,6 +70,8 @@ LinkHints =
       passInitialKeyupEvents: true
       suppressAllKeyboardEvents: true
       exitOnEscape: true
+      exitOnClick: true
+      exitOnScroll: true
       keypress: @onKeyDownInMode.bind this, hintMarkers
 
     @hintMode.onExit =>

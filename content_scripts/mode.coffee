@@ -101,6 +101,12 @@ class Mode
         "focus": (event) => @alwaysContinueBubbling =>
           @exit event if DomUtils.isFocusable event.target
 
+    # If @options.exitOnScroll is truthy, then the mode will exit on any scroll event.
+    if @options.exitOnScroll
+      @push
+        _name: "mode-#{@id}/exitOnScroll"
+        "scroll": (event) => @alwaysContinueBubbling => @exit event
+
     # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
     # if @options.singleton is truthy.  The value of @options.singleton should be the key which is intended to
     # be unique.  New instances deactivate existing instances with the same key.
