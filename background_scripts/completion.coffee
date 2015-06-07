@@ -252,25 +252,26 @@ class BookmarkCompleter
 
 class HistoryCompleter
   filter: ({ queryTerms, seenTabToOpenCompletionList }, onComplete) ->
-    @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
-    results = []
-    HistoryCache.use (history) =>
-      results =
-        if queryTerms.length > 0
-          history.filter (entry) -> RankingUtils.matches(queryTerms, entry.url, entry.title)
-        else if seenTabToOpenCompletionList
-          # <Tab> opens the completion list, even without a query.
-          history
-        else
-          []
-      onComplete results.map (entry) =>
-        new Suggestion
-          queryTerms: queryTerms
-          type: "history"
-          url: entry.url
-          title: entry.title
-          relevancyFunction: @computeRelevancy
-          relevancyData: entry
+    if queryTerms.length == 0 and not seenTabToOpenCompletionList
+      onComplete []
+      # Prime the history cache so that it will (hopefully) be available on the user's next keystroke.
+      Utils.nextTick -> HistoryCache.use ->
+    else
+      HistoryCache.use (history) =>
+        results =
+          if 0 < queryTerms.length
+            history.filter (entry) -> RankingUtils.matches queryTerms, entry.url, entry.title
+          else
+            # The user has typed <Tab> to open the entire history (sorted by recency).
+            history
+        onComplete results.map (entry) =>
+          new Suggestion
+            queryTerms: queryTerms
+            type: "history"
+            url: entry.url
+            title: entry.title
+            relevancyFunction: @computeRelevancy
+            relevancyData: entry
 
   computeRelevancy: (suggestion) ->
     historyEntry = suggestion.relevancyData
