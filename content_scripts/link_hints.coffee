@@ -439,6 +439,7 @@ filterHints =
   hintKeystrokeQueue: []
   linkTextKeystrokeQueue: []
   labelMap: {}
+  previousActiveHintMarker: null
 
   #
   # Generate a map of input element => label
@@ -496,6 +497,7 @@ filterHints =
       marker.showLinkText = linkTextObject.show
       @renderMarker(marker)
 
+    @highlightActiveHintMarker hintMarkers
     hintMarkers
 
   matchHintsByKey: (hintMarkers, event) ->
@@ -536,6 +538,7 @@ filterHints =
       # control back to command mode immediately after a match is found.
       delay = 200
 
+    @highlightActiveHintMarker linksMatched
     { linksMatched: linksMatched, delay: delay }
 
   #
@@ -560,10 +563,16 @@ filterHints =
 
     linksMatched
 
+  highlightActiveHintMarker: (linksMatched) ->
+    @previousActiveHintMarker?.classList.remove "vimiumActiveHintMarker"
+    @previousActiveHintMarker = linksMatched[0]
+    @previousActiveHintMarker?.classList.add "vimiumActiveHintMarker"
+
   deactivate: (delay, callback) ->
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
     @labelMap = {}
+    @previousActiveHintMarker = null
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
