@@ -164,6 +164,7 @@ Release Notes
 - Bug fixes, including:
     - Bookmarklets accessed from the vomnibar.
     - Global marks on non-Windows platforms.
+    - Link-hints for non-Latin keyboards.
 
 1.51 (2015-05-02)
 
