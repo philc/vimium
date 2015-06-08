@@ -60,8 +60,8 @@ LinkHints =
       length = (el) -> el.element.innerHTML?.length ? 0
       elements.sort (a,b) -> length(a) - length b
     hintMarkers = (@createMarkerFor(el) for el in elements)
-    @markerMatcher = if Settings.get("filterLinkHints") then filterHints else alphabetHints
-    @markerMatcher.fillInMarkers(hintMarkers)
+    @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
+    @markerMatcher.fillInMarkers hintMarkers
 
     @hintMode = new Mode
       name: "hint/#{mode.name}"
@@ -308,6 +308,9 @@ LinkHints =
       @markerMatcher.pushKeyChar keyChar
       @updateVisibleMarkers hintMarkers
 
+    # We've handled the event, so suppress it.
+    DomUtils.suppressEvent event
+
   updateVisibleMarkers: (hintMarkers, activateFirst = false) ->
     keyResult = @markerMatcher.getMatchingHints hintMarkers
     linksMatched = keyResult.linksMatched
@@ -350,7 +353,6 @@ LinkHints =
   #
   showMarker: (linkMarker, matchingCharCount) ->
     linkMarker.style.display = ""
-    # TODO(philc):
     for j in [0...linkMarker.childNodes.length]
       if (j < matchingCharCount)
         linkMarker.childNodes[j].classList.add("matchingCharacter")
@@ -363,9 +365,9 @@ LinkHints =
   # 'callback' is invoked (if it is provided).
   deactivateMode: (delay, callback) ->
     deactivate = =>
-      @markerMatcher?.deactivate?()
       DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
       @hintMarkerContainingDiv = null
+      @markerMatcher = null
       @isActive = false
       @hintMode?.exit()
       @hintMode = null
@@ -382,10 +384,13 @@ LinkHints =
       deactivate()
       callback?()
 
-alphabetHints =
-  activateOnEnter: false
-  hintKeystrokeQueue: []
+# Use characters for hints, and do not filter links by their text.
+class AlphabetHints
   logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
+
+  constructor: ->
+    @activateOnEnter = false
+    @hintKeystrokeQueue = []
 
   fillInMarkers: (hintMarkers) ->
     hintStrings = @hintStrings(hintMarkers.length)
@@ -442,13 +447,13 @@ alphabetHints =
   pushKeyChar: (keyChar) -> @hintKeystrokeQueue.push keyChar
   popKeyChar: -> @hintKeystrokeQueue.pop()
 
-  deactivate: -> @hintKeystrokeQueue = []
-
-filterHints =
-  activateOnEnter: true
-  hintKeystrokeQueue: []
-  linkTextKeystrokeQueue: []
-  labelMap: {}
+# Use numbers (usually) for hints, and also filter links by their text.
+class FilterHints
+  constructor: ->
+    @activateOnEnter = true
+    @hintKeystrokeQueue = []
+    @linkTextKeystrokeQueue = []
+    @labelMap = {}
 
   #
   # Generate a map of input element => label
@@ -545,11 +550,6 @@ filterHints =
       linkMarker.hintString = @generateHintString idx++
       @renderMarker linkMarker
       linkMarker
-
-  deactivate: (delay, callback) ->
-    @hintKeystrokeQueue = []
-    @linkTextKeystrokeQueue = []
-    @labelMap = {}
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
