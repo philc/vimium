@@ -15,9 +15,6 @@ class InsertMode extends Mode
       target = event.srcElement
       if target and DomUtils.isFocusable target
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
-        # NOTE(smblott, 2014/12/22) Including embeds for .blur() etc. here is experimental.  It appears to be
-        # the right thing to do for most common use cases.  However, it could also cripple flash-based sites and
-        # games.  See discussion in #1211 and #1194.
         target.blur()
       else if target?.shadowRoot and @insertModeLock
         # An editable element in a shadow DOM is focused; blur it.
