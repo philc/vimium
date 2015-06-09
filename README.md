@@ -161,6 +161,7 @@ Release Notes
 - A much improved interface for custom search engines.
 - Added <tt>\`\`</tt> to jump back to the previous position after selected jump-like movements.
 - Global marks are now persistent (across tab closes and browser sessions) and synced.
+- For filtered link hints (not the default), you can now use `Tab` to select hints.
 - Bug fixes, including:
     - Bookmarklets accessed from the vomnibar.
     - Global marks on non-Windows platforms.

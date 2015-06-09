@@ -32,6 +32,8 @@ LinkHints =
   hintMode: null
   # Call this function on exit (if defined).
   onExit: null
+  # A count of the number of Tab presses since the last non-Tab keyboard event.
+  tabCount: 0
 
   # We need this as a top-level function because our command system doesn't yet support arguments.
   activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
@@ -266,8 +268,12 @@ LinkHints =
     return if @delayMode or event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
+    previousTabCount = @tabCount
+    @tabCount = 0
+
     if event.keyCode in [ keyCodes.shiftKey, keyCodes.ctrlKey ] and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
+        @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
         previousMode = @mode
         keyCode = event.keyCode
@@ -292,7 +298,11 @@ LinkHints =
 
     else if @markerMatcher.activateOnEnter and event.keyCode == keyCodes.enter
       # Activate the lowest-numbered link hint that matches the current state.
-      @updateVisibleMarkers hintMarkers, true
+      @updateVisibleMarkers hintMarkers, true, previousTabCount
+
+    else if event.keyCode == keyCodes.tab
+      @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
+      @updateVisibleMarkers hintMarkers, false, @tabCount
 
     else
       return
@@ -312,13 +322,14 @@ LinkHints =
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
 
-  updateVisibleMarkers: (hintMarkers, activateFirst = false) ->
-    keyResult = @markerMatcher.getMatchingHints hintMarkers
+  updateVisibleMarkers: (hintMarkers, activateActiveHint = false, tabCount = 0) ->
+    keyResult = @markerMatcher.getMatchingHints hintMarkers, tabCount
     linksMatched = keyResult.linksMatched
     if (linksMatched.length == 0)
       @deactivateMode()
-    else if activateFirst
-      @activateLink(linksMatched[0], 0)
+    else if activateActiveHint
+      tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
+      @activateLink(linksMatched[tabCount], 0)
     else if (linksMatched.length == 1)
       @activateLink(linksMatched[0], keyResult.delay ? 0)
     else
@@ -374,6 +385,7 @@ LinkHints =
       @hintMode = null
       @onExit?()
       @onExit = null
+      @tabCount = 0
 
     if delay
       Utils.setTimeout delay, ->
@@ -462,6 +474,7 @@ class FilterHints
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
     @labelMap = {}
+    @previousActiveHintMarker = null
 
   #
   # Generate a map of input element => label
@@ -519,9 +532,12 @@ class FilterHints
       marker.showLinkText = linkTextObject.show
       @renderMarker(marker)
 
+    @previousActiveHintMarker = hintMarkers[0]
+    @previousActiveHintMarker?.classList.add "vimiumActiveHintMarker"
+
     hintMarkers
 
-  getMatchingHints: (hintMarkers) ->
+  getMatchingHints: (hintMarkers, tabCount = 0) ->
     delay = 0
 
     # At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
@@ -534,6 +550,13 @@ class FilterHints
       # In filter mode, people tend to type out words past the point needed for a unique match. Hence we
       # should avoid passing control back to command mode immediately after a match is found.
       delay = 200
+
+    # Visually highlight of the active hint (that is, the one that will be activated if the user
+    # types <Enter>).
+    tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
+    @previousActiveHintMarker?.classList.remove "vimiumActiveHintMarker"
+    @previousActiveHintMarker = linksMatched[tabCount]
+    @previousActiveHintMarker?.classList.add "vimiumActiveHintMarker"
 
     { linksMatched: linksMatched, delay: delay }
 
