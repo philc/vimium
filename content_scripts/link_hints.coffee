@@ -264,6 +264,7 @@ LinkHints =
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (hintMarkers, event) ->
     return if @delayMode or event.repeat
+    @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     if event.keyCode in [ keyCodes.shiftKey, keyCodes.ctrlKey ] and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
@@ -305,7 +306,7 @@ LinkHints =
 
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
-      @markerMatcher.pushKeyChar keyChar
+      @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
       @updateVisibleMarkers hintMarkers
 
     # We've handled the event, so suppress it.
@@ -389,6 +390,11 @@ class AlphabetHints
   logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
 
   constructor: ->
+    @linkHintCharacters = Settings.get "linkHintCharacters"
+    # We use the keyChar from keydown if the link-hint characters are all "a-z".  This is the default, and
+    # preserves the legacy behavior (which always used keydown) for users which are familiar with that
+    # behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin characters. See #1722.
+    @useKeydown = /^[a-z]*$/.test @linkHintCharacters
     @activateOnEnter = false
     @hintKeystrokeQueue = []
 
@@ -405,27 +411,26 @@ class AlphabetHints
   # may be of different lengths.
   #
   hintStrings: (linkCount) ->
-    linkHintCharacters = Settings.get("linkHintCharacters")
     # Determine how many digits the link hints will require in the worst case. Usually we do not need
     # all of these digits for every link single hint, so we can show shorter hints for a few of the links.
-    digitsNeeded = Math.ceil(@logXOfBase(linkCount, linkHintCharacters.length))
+    digitsNeeded = Math.ceil(@logXOfBase(linkCount, @linkHintCharacters.length))
     # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
     shortHintCount = Math.floor(
-      (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) /
-      linkHintCharacters.length)
+      (Math.pow(@linkHintCharacters.length, digitsNeeded) - linkCount) /
+      @linkHintCharacters.length)
     longHintCount = linkCount - shortHintCount
 
     hintStrings = []
 
     if (digitsNeeded > 1)
       for i in [0...shortHintCount]
-        hintStrings.push(numberToHintString(i, linkHintCharacters, digitsNeeded - 1))
+        hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded - 1))
 
-    start = shortHintCount * linkHintCharacters.length
+    start = shortHintCount * @linkHintCharacters.length
     for i in [start...(start + longHintCount)]
-      hintStrings.push(numberToHintString(i, linkHintCharacters, digitsNeeded))
+      hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded))
 
-    @shuffleHints(hintStrings, linkHintCharacters.length)
+    @shuffleHints(hintStrings, @linkHintCharacters.length)
 
   #
   # This shuffles the given set of hints so that they're scattered -- hints starting with the same character
@@ -444,7 +449,8 @@ class AlphabetHints
     matchString = @hintKeystrokeQueue.join ""
     linksMatched: hintMarkers.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
 
-  pushKeyChar: (keyChar) -> @hintKeystrokeQueue.push keyChar
+  pushKeyChar: (keyChar, keydownKeyChar) ->
+    @hintKeystrokeQueue.push (if @useKeydown then keydownKeyChar else keyChar)
   popKeyChar: -> @hintKeystrokeQueue.pop()
 
 # Use numbers (usually) for hints, and also filter links by their text.
@@ -529,7 +535,7 @@ class FilterHints
 
     { linksMatched: linksMatched, delay: delay }
 
-  pushKeyChar: (keyChar) ->
+  pushKeyChar: (keyChar, keydownKeyChar) ->
     if 0 <= Settings.get("linkHintNumbers").indexOf keyChar
       @hintKeystrokeQueue.push keyChar
     else
