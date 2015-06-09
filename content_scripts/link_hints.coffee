@@ -19,6 +19,16 @@ OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
 
 LinkHints =
+  activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
+
+  activateModeToOpenInNewTab: -> @activateMode OPEN_IN_NEW_BG_TAB
+  activateModeToOpenInNewForegroundTab: -> @activateMode OPEN_IN_NEW_FG_TAB
+  activateModeToCopyLinkUrl: -> @activateMode COPY_LINK_URL
+  activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
+  activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
+  activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+
+class LinkHintsMode
   hintMarkerContainingDiv: null
   # One of the enums listed at the top of this file.
   mode: undefined
@@ -35,15 +45,7 @@ LinkHints =
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  # We need this as a top-level function because our command system doesn't yet support arguments.
-  activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
-  activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
-  activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
-  activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
-  activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
-  activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
-
-  activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
