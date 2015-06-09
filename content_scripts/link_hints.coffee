@@ -48,9 +48,6 @@ class LinkHintsMode
   constructor: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
-
-    if @isActive
-      return
     @isActive = true
 
     elements = @getVisibleClickableElements()
@@ -84,10 +81,9 @@ class LinkHintsMode
     @setOpenLinkMode mode
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
-    # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
-    # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
-    @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
-      { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
+    # because some clickable elements cannot contain children, e.g. submit buttons.
+    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
+      id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
@@ -327,18 +323,16 @@ class LinkHintsMode
   updateVisibleMarkers: (hintMarkers, activateActiveHint = false, tabCount = 0) ->
     keyResult = @markerMatcher.getMatchingHints hintMarkers, tabCount
     linksMatched = keyResult.linksMatched
-    if (linksMatched.length == 0)
+    if linksMatched.length == 0
       @deactivateMode()
     else if activateActiveHint
       tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
-      @activateLink(linksMatched[tabCount], 0)
-    else if (linksMatched.length == 1)
-      @activateLink(linksMatched[0], keyResult.delay ? 0)
+      @activateLink linksMatched[tabCount], 0
+    else if linksMatched.length == 1
+      @activateLink linksMatched[0], keyResult.delay ? 0
     else
-      for marker in hintMarkers
-        @hideMarker(marker)
-      for matched in linksMatched
-        @showMarker(matched, @markerMatcher.hintKeystrokeQueue.length)
+      @hideMarker marker for marker in hintMarkers
+      @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
   #
   # When only one link hint remains, this function activates it in the appropriate way.
