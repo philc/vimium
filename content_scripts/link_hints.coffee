@@ -391,10 +391,11 @@ class AlphabetHints
 
   constructor: ->
     @linkHintCharacters = Settings.get "linkHintCharacters"
-    # We use the keyChar from keydown if the link-hint characters are all "a-z".  This is the default, and
-    # preserves the legacy behavior (which always used keydown) for users which are familiar with that
-    # behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin characters. See #1722.
-    @useKeydown = /^[a-z]*$/.test @linkHintCharacters
+    # We use the keyChar from keydown if the link-hint characters are all "a-z0-9".  This is the default
+    # settings value, and preserves the legacy behavior (which always used keydown) for users which are
+    # familiar with that behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin
+    # characters. See #1722.
+    @useKeydown = /^[a-z0-9]*$/.test @linkHintCharacters
     @activateOnEnter = false
     @hintKeystrokeQueue = []
 
@@ -537,6 +538,9 @@ class FilterHints
     { linksMatched: linksMatched, delay: delay }
 
   pushKeyChar: (keyChar, keydownKeyChar) ->
+    # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
+    # easy-to-understand meaning for choosing one of keyChar or keydownKeyChar (as there is for alphabet
+    # hints).
     if 0 <= @linkHintNumbers.indexOf keyChar
       @hintKeystrokeQueue.push keyChar
     else
