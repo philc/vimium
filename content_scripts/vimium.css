@@ -90,6 +90,10 @@ div.internalVimiumHintMarker > .matchingCharacter {
   color: #D4AC3A;
 }
 
+div > .vimiumActiveHintMarker span {
+  color: #A07555 !important;
+}
+
 /* Input hints CSS */
 
 div.internalVimiumInputHint {
