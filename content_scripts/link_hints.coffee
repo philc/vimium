@@ -456,6 +456,7 @@ class AlphabetHints
 # Use numbers (usually) for hints, and also filter links by their text.
 class FilterHints
   constructor: ->
+    @linkHintNumbers = Settings.get "linkHintNumbers"
     @activateOnEnter = true
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
@@ -476,7 +477,7 @@ class FilterHints
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    (numberToHintString linkHintNumber + 1, Settings.get "linkHintNumbers").toUpperCase()
+    numberToHintString linkHintNumber + 1, @linkHintNumbers.toUpperCase()
 
   generateLinkText: (element) ->
     linkText = ""
@@ -536,7 +537,7 @@ class FilterHints
     { linksMatched: linksMatched, delay: delay }
 
   pushKeyChar: (keyChar, keydownKeyChar) ->
-    if 0 <= Settings.get("linkHintNumbers").indexOf keyChar
+    if 0 <= @linkHintNumbers.indexOf keyChar
       @hintKeystrokeQueue.push keyChar
     else
       # Since we might renumber the hints, we should reset the current hintKeyStrokeQueue.
