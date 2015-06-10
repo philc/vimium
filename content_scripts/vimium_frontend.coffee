@@ -686,7 +686,7 @@ findAndFocus = (backwards) ->
 
   if findModeQuery.hasResults
     focusFoundLink()
-    new PostFindMode() if findModeQuery.hasResults
+    new PostFindMode()
   else
     HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
 
