@@ -687,7 +687,7 @@ findAndFocus = (backwards) ->
     focusFoundLink()
     new PostFindMode()
   else
-    HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
+    HUD.showForDuration("No matches for '#{findModeQuery.rawQuery}'", 1000)
 
 window.performFind = -> findAndFocus()
 
