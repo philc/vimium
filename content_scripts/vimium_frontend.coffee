@@ -692,7 +692,7 @@ window.getFindModeQuery = (backwards) ->
   mostRecentQuery = FindModeHistory.getQuery()
   if (mostRecentQuery != findModeQuery.rawQuery)
     findModeQuery.rawQuery = mostRecentQuery
-    updateFindModeQuery()
+    FindMode.updateQuery()
 
   if findModeQuery.isRegex
     getNextQueryFromRegexMatches(if backwards then -1 else 1)

@@ -35,7 +35,7 @@ HUD =
   search: (data) ->
     window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
     findModeQuery.rawQuery = data.query
-    updateFindModeQuery()
+    FindMode.updateQuery()
     @findMode.findInPlace()
 
     # Show the number of matches in the HUD UI.
