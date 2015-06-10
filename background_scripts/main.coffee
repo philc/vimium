@@ -239,9 +239,7 @@ repeatFunction = (func, totalCount, currentCount, frameId) ->
 
 moveTab = (count) ->
   chrome.tabs.getAllInWindow null, (tabs) ->
-    pinnedCount = 0
-    for tab in tabs
-      pinnedCount += 1 if tab.pinned
+    pinnedCount = (tabs.filter (tab) -> tab.pinned).length
     chrome.tabs.getSelected null, (tab) ->
       chrome.tabs.move tab.id,
         index: Math.max pinnedCount, Math.min tabs.length - 1, tab.index + count
