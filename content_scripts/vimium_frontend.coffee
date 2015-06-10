@@ -641,7 +641,8 @@ window.handleEnterForFindMode = ->
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 window.executeFind = (query, options) ->
   result = null
-  options = options || {}
+  options = extend {backwards: false, caseSensitive: !findModeQuery.ignoreCase}, options
+  query ?= FindMode.getQuery options.backwards
 
   document.body.classList.add("vimiumFindMode")
 
@@ -679,10 +680,8 @@ selectFoundInputElement = ->
 
 findAndFocus = (backwards) ->
   Marks.setPreviousPosition()
-  query = FindMode.getQuery backwards
-
   window.findModeQuery.hasResults =
-    executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
+    executeFind null, {backwards}
 
   if findModeQuery.hasResults
     focusFoundLink()
