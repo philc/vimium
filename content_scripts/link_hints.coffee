@@ -88,11 +88,11 @@ class LinkHintsMode
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
-        @hintMode.setIndicator "Open link in new tab"
+        @hintMode.setIndicator "Open link in new tab."
       else if @mode is OPEN_IN_NEW_FG_TAB
-        @hintMode.setIndicator "Open link in new tab and switch to it"
+        @hintMode.setIndicator "Open link in new tab and switch to it."
       else
-        @hintMode.setIndicator "Open multiple links in a new tab"
+        @hintMode.setIndicator "Open multiple links in new tabs."
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -102,7 +102,7 @@ class LinkHintsMode
           ctrlKey: KeyboardUtils.platform != "Mac"
           altKey: false
     else if @mode is COPY_LINK_URL
-      @hintMode.setIndicator "Copy link URL to Clipboard"
+      @hintMode.setIndicator "Copy link URL to Clipboard."
       @linkActivator = (link) =>
         if link.href?
           chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -112,15 +112,15 @@ class LinkHintsMode
         else
           @onExit = -> HUD.showForDuration "No link to yank.", 2000
     else if @mode is OPEN_INCOGNITO
-      @hintMode.setIndicator "Open link in incognito window"
+      @hintMode.setIndicator "Open link in incognito window."
       @linkActivator = (link) ->
         chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
-      @hintMode.setIndicator "Download link URL"
+      @hintMode.setIndicator "Download link URL."
       @linkActivator = (link) ->
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
-      @hintMode.setIndicator "Open link in current tab"
+      @hintMode.setIndicator "Open link in current tab."
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
 
   #
@@ -294,13 +294,13 @@ class LinkHintsMode
       else
         @deactivateMode()
 
-    else if @markerMatcher.activateOnEnter and event.keyCode == keyCodes.enter
-      # Activate the lowest-numbered link hint that matches the current state.
-      @updateVisibleMarkers hintMarkers, true, previousTabCount
+    else if event.keyCode == keyCodes.enter
+      # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
+      @activateLink @markerMatcher.activeHintMarker if @markerMatcher.activeHintMarker
 
     else if event.keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
-      @updateVisibleMarkers hintMarkers, false, @tabCount
+      @updateVisibleMarkers hintMarkers, @tabCount
 
     else
       return
@@ -320,14 +320,11 @@ class LinkHintsMode
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
 
-  updateVisibleMarkers: (hintMarkers, activateActiveHint = false, tabCount = 0) ->
+  updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
     keyResult = @markerMatcher.getMatchingHints hintMarkers, tabCount
     linksMatched = keyResult.linksMatched
     if linksMatched.length == 0
       @deactivateMode()
-    else if activateActiveHint
-      tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
-      @activateLink linksMatched[tabCount], 0
     else if linksMatched.length == 1
       @activateLink linksMatched[0], keyResult.delay ? 0
     else
@@ -337,7 +334,7 @@ class LinkHintsMode
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (matchedLink, delay) ->
+  activateLink: (matchedLink, delay = 0) ->
     @delayMode = true
     clickEl = matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
@@ -404,7 +401,6 @@ class AlphabetHints
     # familiar with that behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin
     # characters. See #1722.
     @useKeydown = /^[a-z0-9]*$/.test @linkHintCharacters
-    @activateOnEnter = false
     @hintKeystrokeQueue = []
 
   fillInMarkers: (hintMarkers) ->
@@ -466,11 +462,10 @@ class AlphabetHints
 class FilterHints
   constructor: ->
     @linkHintNumbers = Settings.get "linkHintNumbers"
-    @activateOnEnter = true
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
     @labelMap = {}
-    @previousActiveHintMarker = null
+    @activeHintMarker = null
 
   #
   # Generate a map of input element => label
@@ -528,8 +523,8 @@ class FilterHints
       marker.showLinkText = linkTextObject.show
       @renderMarker(marker)
 
-    @previousActiveHintMarker = hintMarkers[0]
-    @previousActiveHintMarker?.classList.add "vimiumActiveHintMarker"
+    @activeHintMarker = hintMarkers[0]
+    @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
     hintMarkers
 
@@ -550,9 +545,9 @@ class FilterHints
     # Visually highlight of the active hint (that is, the one that will be activated if the user
     # types <Enter>).
     tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
-    @previousActiveHintMarker?.classList.remove "vimiumActiveHintMarker"
-    @previousActiveHintMarker = linksMatched[tabCount]
-    @previousActiveHintMarker?.classList.add "vimiumActiveHintMarker"
+    @activeHintMarker?.classList.remove "vimiumActiveHintMarker"
+    @activeHintMarker = linksMatched[tabCount]
+    @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
     { linksMatched: linksMatched, delay: delay }
 
