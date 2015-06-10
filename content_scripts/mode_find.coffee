@@ -86,6 +86,52 @@ class FindMode extends Mode
     query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
     window.findModeQuery.hasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
+# should be called whenever rawQuery is modified.
+window.updateFindModeQuery = ->
+  # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
+  # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
+  # character. here we grep for the relevant escape sequences.
+  findModeQuery.isRegex = Settings.get 'regexFindMode'
+  hasNoIgnoreCaseFlag = false
+  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
+    return match if flag == "" or slashes.length != 1
+    switch (flag)
+      when "r"
+        findModeQuery.isRegex = true
+      when "R"
+        findModeQuery.isRegex = false
+      when "I"
+        hasNoIgnoreCaseFlag = true
+    ""
+
+  # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
+  findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
+
+  # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
+  # sequentially so the browser handles the scrolling / text selection.
+  if findModeQuery.isRegex
+    try
+      pattern = new RegExp(findModeQuery.parsedQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+    catch error
+      # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
+      return
+    # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
+    text = document.body.innerText
+    findModeQuery.regexMatches = text.match(pattern)
+    findModeQuery.activeRegexIndex = 0
+    findModeQuery.matchCount = findModeQuery.regexMatches?.length
+  # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
+  # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
+  # from the internal representation used by window.find.
+  else
+    # escape all special characters, so RegExp just parses the string 'as is'.
+    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
+    pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+    text = document.body.innerText
+    findModeQuery.matchCount = text.match(pattern)?.length
+
 getCurrentRange = ->
   selection = getSelection()
   if selection.type == "None"
