@@ -158,12 +158,14 @@ Release Notes
 - Search completion for selected popular search engines; for details, see the wiki
   ([here](https://github.com/philc/vimium/wiki/Search-Completion) and
   [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#repeat-recent-queries)).
-- A much improved interface for custom search engines.
-- Added <tt>\`\`</tt> to jump back to the previous position after selected jump-like movements.
+- A much improved user interface for custom search engines.
+- `Tab` on an empty Vomnibar now expands the Vomnibar with your recent history.
+- Added <tt>\`\`</tt> to jump back to the previous position after selected jump-like movements: <br/>
+    (`gg`, `G`, `n`, `N`, `/` and local mark movements).
 - Global marks are now persistent (across tab closes and browser sessions) and synced.
 - For filtered link hints (not the default), you can now use `Tab` to select hints.
 - Bug fixes, including:
-    - Bookmarklets accessed from the vomnibar.
+    - Bookmarklets accessed from the Vomnibar.
     - Global marks on non-Windows platforms.
     - Link-hints for non-Latin keyboards.
 
