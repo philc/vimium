@@ -19,36 +19,35 @@ OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
 
 LinkHints =
+  activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
+
+  activateModeToOpenInNewTab: -> @activateMode OPEN_IN_NEW_BG_TAB
+  activateModeToOpenInNewForegroundTab: -> @activateMode OPEN_IN_NEW_FG_TAB
+  activateModeToCopyLinkUrl: -> @activateMode COPY_LINK_URL
+  activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
+  activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
+  activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+
+class LinkHintsMode
   hintMarkerContainingDiv: null
-  # one of the enums listed at the top of this file
+  # One of the enums listed at the top of this file.
   mode: undefined
-  # function that does the appropriate action on the selected link
+  # Function that does the appropriate action on the selected link.
   linkActivator: undefined
   # While in delayMode, all keypresses have no effect.
   delayMode: false
-  # Handle the link hinting marker generation and matching. Must be initialized after Settings have been
-  # loaded, so that we can retrieve the option setting.
-  getMarkerMatcher: ->
-    if Settings.get("filterLinkHints") then filterHints else alphabetHints
-  # lock to ensure only one instance runs at a time
+  # Lock to ensure only one instance runs at a time.
   isActive: false
+  # The link-hints "mode" (in the key-handler, indicator sense).
+  hintMode: null
   # Call this function on exit (if defined).
   onExit: null
+  # A count of the number of Tab presses since the last non-Tab keyboard event.
+  tabCount: 0
 
-  # We need this as a top-level function because our command system doesn't yet support arguments.
-  activateModeToOpenInNewTab: -> @activateMode(OPEN_IN_NEW_BG_TAB)
-  activateModeToOpenInNewForegroundTab: -> @activateMode(OPEN_IN_NEW_FG_TAB)
-  activateModeToCopyLinkUrl: -> @activateMode(COPY_LINK_URL)
-  activateModeWithQueue: -> @activateMode(OPEN_WITH_QUEUE)
-  activateModeToOpenIncognito: -> @activateMode(OPEN_INCOGNITO)
-  activateModeToDownloadLink: -> @activateMode(DOWNLOAD_LINK_URL)
-
-  activateMode: (mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
-
-    if @isActive
-      return
     @isActive = true
 
     elements = @getVisibleClickableElements()
@@ -62,33 +61,38 @@ LinkHints =
       length = (el) -> el.element.innerHTML?.length ? 0
       elements.sort (a,b) -> length(a) - length b
     hintMarkers = (@createMarkerFor(el) for el in elements)
-    @getMarkerMatcher().fillInMarkers(hintMarkers)
+    @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
+    @markerMatcher.fillInMarkers hintMarkers
 
     @hintMode = new Mode
       name: "hint/#{mode.name}"
       indicator: false
       passInitialKeyupEvents: true
+      suppressAllKeyboardEvents: true
+      exitOnEscape: true
+      exitOnClick: true
+      exitOnScroll: true
       keydown: @onKeyDownInMode.bind this, hintMarkers
-      # Trap all other key events.
-      keypress: -> false
-      keyup: -> false
+      keypress: @onKeyPressInMode.bind this, hintMarkers
+
+    @hintMode.onExit =>
+      @deactivateMode() if @isActive
 
     @setOpenLinkMode mode
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
-    # because some clickable elements cannot contain children, e.g. submit buttons. This has the caveat
-    # that if you scroll the page and the link has position=fixed, the marker will not stay fixed.
-    @hintMarkerContainingDiv = DomUtils.addElementList(hintMarkers,
-      { id: "vimiumHintMarkerContainer", className: "vimiumReset" })
+    # because some clickable elements cannot contain children, e.g. submit buttons.
+    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
+      id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
-        @hintMode.setIndicator "Open link in new tab"
+        @hintMode.setIndicator "Open link in new tab."
       else if @mode is OPEN_IN_NEW_FG_TAB
-        @hintMode.setIndicator "Open link in new tab and switch to it"
+        @hintMode.setIndicator "Open link in new tab and switch to it."
       else
-        @hintMode.setIndicator "Open multiple links in a new tab"
+        @hintMode.setIndicator "Open multiple links in new tabs."
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -98,7 +102,7 @@ LinkHints =
           ctrlKey: KeyboardUtils.platform != "Mac"
           altKey: false
     else if @mode is COPY_LINK_URL
-      @hintMode.setIndicator "Copy link URL to Clipboard"
+      @hintMode.setIndicator "Copy link URL to Clipboard."
       @linkActivator = (link) =>
         if link.href?
           chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -108,15 +112,15 @@ LinkHints =
         else
           @onExit = -> HUD.showForDuration "No link to yank.", 2000
     else if @mode is OPEN_INCOGNITO
-      @hintMode.setIndicator "Open link in incognito window"
+      @hintMode.setIndicator "Open link in incognito window."
       @linkActivator = (link) ->
         chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
-      @hintMode.setIndicator "Download link URL"
+      @hintMode.setIndicator "Download link URL."
       @linkActivator = (link) ->
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
-      @hintMode.setIndicator "Open link in current tab"
+      @hintMode.setIndicator "Open link in current tab."
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
 
   #
@@ -257,62 +261,85 @@ LinkHints =
 
     nonOverlappingElements
 
-  #
-  # Handles shift and esc keys. The other keys are passed to getMarkerMatcher().matchHintsByKey.
-  #
+  # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (hintMarkers, event) ->
     return if @delayMode or event.repeat
+    @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
-    if ((event.keyCode == keyCodes.shiftKey or event.keyCode == keyCodes.ctrlKey) and
-        (@mode == OPEN_IN_CURRENT_TAB or
-         @mode == OPEN_WITH_QUEUE or
-         @mode == OPEN_IN_NEW_BG_TAB or
-         @mode == OPEN_IN_NEW_FG_TAB))
-      # Toggle whether to open the link in a new or current tab.
-      previousMode = @mode
-      keyCode = event.keyCode
+    previousTabCount = @tabCount
+    @tabCount = 0
 
-      switch keyCode
-        when keyCodes.shiftKey
-          @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
-        when keyCodes.ctrlKey
-          @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
+    if event.keyCode in [ keyCodes.shiftKey, keyCodes.ctrlKey ] and
+      @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
+        @tabCount = previousTabCount
+        # Toggle whether to open the link in a new or current tab.
+        previousMode = @mode
+        keyCode = event.keyCode
 
-      handlerStack.push
-        keyup: (event) =>
-          if event.keyCode == keyCode
-            handlerStack.remove()
-            @setOpenLinkMode previousMode if @isActive
-          true
+        switch keyCode
+          when keyCodes.shiftKey
+            @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
+          when keyCodes.ctrlKey
+            @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
-    # TODO(philc): Ignore keys that have modifiers.
-    if (KeyboardUtils.isEscape(event))
-      DomUtils.suppressKeyupAfterEscape handlerStack
-      @deactivateMode()
-    else if (event.keyCode != keyCodes.shiftKey and event.keyCode != keyCodes.ctrlKey)
-      keyResult = @getMarkerMatcher().matchHintsByKey(hintMarkers, event)
-      linksMatched = keyResult.linksMatched
-      delay = keyResult.delay ? 0
-      if (linksMatched.length == 0)
-        @deactivateMode()
-      else if (linksMatched.length == 1)
-        @activateLink(linksMatched[0], delay)
+        handlerStack.push
+          keyup: (event) =>
+            if event.keyCode == keyCode
+              handlerStack.remove()
+              @setOpenLinkMode previousMode if @isActive
+
+    else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+      if @markerMatcher.popKeyChar()
+        @updateVisibleMarkers hintMarkers
       else
-        for marker in hintMarkers
-          @hideMarker(marker)
-        for matched in linksMatched
-          @showMarker(matched, @getMarkerMatcher().hintKeystrokeQueue.length)
-    false # We've handled this key, so prevent propagation.
+        @deactivateMode()
+
+    else if event.keyCode == keyCodes.enter
+      # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
+      @activateLink @markerMatcher.activeHintMarker if @markerMatcher.activeHintMarker
+
+    else if event.keyCode == keyCodes.tab
+      @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
+      @updateVisibleMarkers hintMarkers, @tabCount
+
+    else
+      return
+
+    # We've handled the event, so suppress it.
+    DomUtils.suppressEvent event
+
+  # Handles normal input.
+  onKeyPressInMode: (hintMarkers, event) ->
+    return if @delayMode or event.repeat
+
+    keyChar = String.fromCharCode(event.charCode).toLowerCase()
+    if keyChar
+      @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
+      @updateVisibleMarkers hintMarkers
+
+    # We've handled the event, so suppress it.
+    DomUtils.suppressEvent event
+
+  updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
+    keyResult = @markerMatcher.getMatchingHints hintMarkers, tabCount
+    linksMatched = keyResult.linksMatched
+    if linksMatched.length == 0
+      @deactivateMode()
+    else if linksMatched.length == 1
+      @activateLink linksMatched[0], keyResult.delay ? 0
+    else
+      @hideMarker marker for marker in hintMarkers
+      @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (matchedLink, delay) ->
+  activateLink: (matchedLink, delay = 0) ->
     @delayMode = true
     clickEl = matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
-      @deactivateMode(delay, -> LinkHints.delayMode = false)
+      @deactivateMode delay
     else
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
@@ -320,18 +347,15 @@ LinkHints =
       DomUtils.flashRect(matchedLink.rect)
       @linkActivator(clickEl)
       if @mode is OPEN_WITH_QUEUE
-        @deactivateMode delay, ->
-          LinkHints.delayMode = false
-          LinkHints.activateModeWithQueue()
+        @deactivateMode delay, -> LinkHints.activateModeWithQueue()
       else
-        @deactivateMode(delay, -> LinkHints.delayMode = false)
+        @deactivateMode delay
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
   #
   showMarker: (linkMarker, matchingCharCount) ->
     linkMarker.style.display = ""
-    # TODO(philc):
     for j in [0...linkMarker.childNodes.length]
       if (j < matchingCharCount)
         linkMarker.childNodes[j].classList.add("matchingCharacter")
@@ -340,36 +364,40 @@ LinkHints =
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
-  #
-  # If called without arguments, it executes immediately.  Othewise, it
-  # executes after 'delay' and invokes 'callback' when it is finished.
-  #
-  deactivateMode: (delay, callback) ->
+  deactivateMode: (delay = 0, callback = null) ->
     deactivate = =>
-      if (LinkHints.getMarkerMatcher().deactivate)
-        LinkHints.getMarkerMatcher().deactivate()
-      if (LinkHints.hintMarkerContainingDiv)
-        DomUtils.removeElement LinkHints.hintMarkerContainingDiv
-      LinkHints.hintMarkerContainingDiv = null
-      @hintMode.exit()
+      DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
+      @hintMarkerContainingDiv = null
+      @markerMatcher = null
+      @isActive = false
+      @hintMode?.exit()
+      @hintMode = null
       @onExit?()
       @onExit = null
-      @isActive = false
+      @tabCount = 0
 
-    # we invoke the deactivate() function directly instead of using setTimeout(callback, 0) so that
-    # deactivateMode can be tested synchronously
-    if (!delay)
-      deactivate()
-      callback() if (callback)
-    else
-      setTimeout(->
+    if delay
+      Utils.setTimeout delay, ->
         deactivate()
-        callback() if callback
-      delay)
+        callback?()
+    else
+      # We invoke deactivate() directly (instead of setting a timeout of 0) so that deactivateMode() can be
+      # tested synchronously.
+      deactivate()
+      callback?()
 
-alphabetHints =
-  hintKeystrokeQueue: []
+# Use characters for hints, and do not filter links by their text.
+class AlphabetHints
   logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
+
+  constructor: ->
+    @linkHintCharacters = Settings.get "linkHintCharacters"
+    # We use the keyChar from keydown if the link-hint characters are all "a-z0-9".  This is the default
+    # settings value, and preserves the legacy behavior (which always used keydown) for users which are
+    # familiar with that behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin
+    # characters. See #1722.
+    @useKeydown = /^[a-z0-9]*$/.test @linkHintCharacters
+    @hintKeystrokeQueue = []
 
   fillInMarkers: (hintMarkers) ->
     hintStrings = @hintStrings(hintMarkers.length)
@@ -384,27 +412,26 @@ alphabetHints =
   # may be of different lengths.
   #
   hintStrings: (linkCount) ->
-    linkHintCharacters = Settings.get("linkHintCharacters")
     # Determine how many digits the link hints will require in the worst case. Usually we do not need
     # all of these digits for every link single hint, so we can show shorter hints for a few of the links.
-    digitsNeeded = Math.ceil(@logXOfBase(linkCount, linkHintCharacters.length))
+    digitsNeeded = Math.ceil(@logXOfBase(linkCount, @linkHintCharacters.length))
     # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
     shortHintCount = Math.floor(
-      (Math.pow(linkHintCharacters.length, digitsNeeded) - linkCount) /
-      linkHintCharacters.length)
+      (Math.pow(@linkHintCharacters.length, digitsNeeded) - linkCount) /
+      @linkHintCharacters.length)
     longHintCount = linkCount - shortHintCount
 
     hintStrings = []
 
     if (digitsNeeded > 1)
       for i in [0...shortHintCount]
-        hintStrings.push(numberToHintString(i, linkHintCharacters, digitsNeeded - 1))
+        hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded - 1))
 
-    start = shortHintCount * linkHintCharacters.length
+    start = shortHintCount * @linkHintCharacters.length
     for i in [start...(start + longHintCount)]
-      hintStrings.push(numberToHintString(i, linkHintCharacters, digitsNeeded))
+      hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded))
 
-    @shuffleHints(hintStrings, linkHintCharacters.length)
+    @shuffleHints(hintStrings, @linkHintCharacters.length)
 
   #
   # This shuffles the given set of hints so that they're scattered -- hints starting with the same character
@@ -419,26 +446,22 @@ alphabetHints =
       result = result.concat(bucket)
     result
 
-  matchHintsByKey: (hintMarkers, event) ->
-    # If a shifted-character is typed, treat it as lowerase for the purposes of matching hints.
-    keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
+  getMatchingHints: (hintMarkers) ->
+    matchString = @hintKeystrokeQueue.join ""
+    linksMatched: hintMarkers.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
 
-    if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      if (!@hintKeystrokeQueue.pop())
-        return { linksMatched: [] }
-    else if keyChar
-      @hintKeystrokeQueue.push(keyChar)
+  pushKeyChar: (keyChar, keydownKeyChar) ->
+    @hintKeystrokeQueue.push (if @useKeydown then keydownKeyChar else keyChar)
+  popKeyChar: -> @hintKeystrokeQueue.pop()
 
-    matchString = @hintKeystrokeQueue.join("")
-    linksMatched = hintMarkers.filter((linkMarker) -> linkMarker.hintString.indexOf(matchString) == 0)
-    { linksMatched: linksMatched }
-
-  deactivate: -> @hintKeystrokeQueue = []
-
-filterHints =
-  hintKeystrokeQueue: []
-  linkTextKeystrokeQueue: []
-  labelMap: {}
+# Use numbers (usually) for hints, and also filter links by their text.
+class FilterHints
+  constructor: ->
+    @linkHintNumbers = Settings.get "linkHintNumbers"
+    @hintKeystrokeQueue = []
+    @linkTextKeystrokeQueue = []
+    @labelMap = {}
+    @activeHintMarker = null
 
   #
   # Generate a map of input element => label
@@ -455,7 +478,7 @@ filterHints =
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    (numberToHintString linkHintNumber + 1, Settings.get "linkHintNumbers").toUpperCase()
+    numberToHintString linkHintNumber + 1, @linkHintNumbers.toUpperCase()
 
   generateLinkText: (element) ->
     linkText = ""
@@ -496,74 +519,58 @@ filterHints =
       marker.showLinkText = linkTextObject.show
       @renderMarker(marker)
 
+    @activeHintMarker = hintMarkers[0]
+    @activeHintMarker?.classList.add "vimiumActiveHintMarker"
+
     hintMarkers
 
-  matchHintsByKey: (hintMarkers, event) ->
-    keyChar = KeyboardUtils.getKeyChar(event)
+  getMatchingHints: (hintMarkers, tabCount = 0) ->
     delay = 0
-    userIsTypingLinkText = false
 
-    if (event.keyCode == keyCodes.enter)
-      # activate the lowest-numbered link hint that is visible
-      for marker in hintMarkers
-        if (marker.style.display != "none")
-          return { linksMatched: [ marker ] }
-    else if (event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey)
-      # backspace clears hint key queue first, then acts on link text key queue.
-      # if both queues are empty. exit hinting mode
-      if (!@hintKeystrokeQueue.pop() && !@linkTextKeystrokeQueue.pop())
-        return { linksMatched: [] }
-    else if (keyChar)
-      if (Settings.get("linkHintNumbers").indexOf(keyChar) >= 0)
-        @hintKeystrokeQueue.push(keyChar)
-      else
-        # since we might renumber the hints, the current hintKeyStrokeQueue
-        # should be rendered invalid (i.e. reset).
-        @hintKeystrokeQueue = []
-        @linkTextKeystrokeQueue.push(keyChar)
-        userIsTypingLinkText = true
-
-    # at this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
+    # At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
     # input. use them to filter the link hints accordingly.
-    linksMatched = @filterLinkHints(hintMarkers)
-    matchString = @hintKeystrokeQueue.join("")
-    linksMatched = linksMatched.filter((linkMarker) ->
-      !linkMarker.filtered && linkMarker.hintString.indexOf(matchString) == 0)
+    matchString = @hintKeystrokeQueue.join ""
+    linksMatched = @filterLinkHints hintMarkers
+    linksMatched = linksMatched.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
 
-    if (linksMatched.length == 1 && userIsTypingLinkText)
-      # In filter mode, people tend to type out words past the point
-      # needed for a unique match. Hence we should avoid passing
-      # control back to command mode immediately after a match is found.
+    if linksMatched.length == 1 && @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
+      # In filter mode, people tend to type out words past the point needed for a unique match. Hence we
+      # should avoid passing control back to command mode immediately after a match is found.
       delay = 200
+
+    # Visually highlight of the active hint (that is, the one that will be activated if the user
+    # types <Enter>).
+    tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
+    @activeHintMarker?.classList.remove "vimiumActiveHintMarker"
+    @activeHintMarker = linksMatched[tabCount]
+    @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
     { linksMatched: linksMatched, delay: delay }
 
-  #
-  # Marks the links that do not match the linkText search string with the 'filtered' DOM property. Renumbers
-  # the remainder if necessary.
-  #
+  pushKeyChar: (keyChar, keydownKeyChar) ->
+    # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
+    # easy-to-understand meaning for choosing one of keyChar or keydownKeyChar (as there is for alphabet
+    # hints).
+    if 0 <= @linkHintNumbers.indexOf keyChar
+      @hintKeystrokeQueue.push keyChar
+    else
+      # Since we might renumber the hints, we should reset the current hintKeyStrokeQueue.
+      @hintKeystrokeQueue = []
+      @linkTextKeystrokeQueue.push keyChar
+
+  popKeyChar: ->
+    @hintKeystrokeQueue.pop() or @linkTextKeystrokeQueue.pop()
+
+  # Filter link hints by search string, renumbering the hints as necessary.
   filterLinkHints: (hintMarkers) ->
-    linksMatched = []
-    linkSearchString = @linkTextKeystrokeQueue.join("")
+    idx = 0
+    linkSearchString = @linkTextKeystrokeQueue.join("").toLowerCase()
 
     for linkMarker in hintMarkers
-      matchedLink = linkMarker.linkText.toLowerCase().indexOf(linkSearchString.toLowerCase()) >= 0
-
-      if (!matchedLink)
-        linkMarker.filtered = true
-      else
-        linkMarker.filtered = false
-        oldHintString = linkMarker.hintString
-        linkMarker.hintString = @generateHintString(linksMatched.length)
-        @renderMarker(linkMarker) if (linkMarker.hintString != oldHintString)
-        linksMatched.push(linkMarker)
-
-    linksMatched
-
-  deactivate: (delay, callback) ->
-    @hintKeystrokeQueue = []
-    @linkTextKeystrokeQueue = []
-    @labelMap = {}
+      continue unless 0 <= linkMarker.linkText.toLowerCase().indexOf linkSearchString
+      linkMarker.hintString = @generateHintString idx++
+      @renderMarker linkMarker
+      linkMarker
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
