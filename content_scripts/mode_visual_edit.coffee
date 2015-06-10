@@ -356,7 +356,7 @@ class Movement extends CountPrefix
           for [0...count] by 1
             unless executeFind null, {colorSelection: false, backwards}
               @setSelectionRange initialRange
-              HUD.showForDuration("No matches for '#{findModeQuery.rawQuery}'", 1000)
+              HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
               return
           # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
           # drop back into visual mode.

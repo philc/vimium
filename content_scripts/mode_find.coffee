@@ -55,10 +55,15 @@ class PostFindMode extends SuppressPrintable
           @continueBubbling
 
 class FindMode extends Mode
+  @query:
+    rawQuery: ""
+    matchCount: 0
+    hasResults: false
+
   constructor: (@options = {}) ->
     # Save the selection, so findInPlace can restore it.
     @initialRange = getCurrentRange()
-    window.findModeQuery = rawQuery: ""
+    FindMode.query = rawQuery: ""
     if @options.returnToViewport
       @scrollX = window.scrollX
       @scrollY = window.scrollY
@@ -83,43 +88,43 @@ class FindMode extends Mode
     # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
     # match as the user adds matching characters, or removes previously-matched characters. See #1434.
     @restoreSelection()
-    query = if findModeQuery.isRegex then FindMode.getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-    window.findModeQuery.hasResults = executeFind query
+    query = if FindMode.query.isRegex then FindMode.getNextQueryFromRegexMatches(0) else FindMode.query.parsedQuery
+    FindMode.query.hasResults = executeFind query
 
   # should be called whenever rawQuery is modified.
   @updateQuery: ->
     # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
     # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
     # character. here we grep for the relevant escape sequences.
-    findModeQuery.isRegex = Settings.get 'regexFindMode'
+    @query.isRegex = Settings.get 'regexFindMode'
     hasNoIgnoreCaseFlag = false
-    findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
+    @query.parsedQuery = @query.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
       return match if flag == "" or slashes.length != 1
       switch (flag)
         when "r"
-          findModeQuery.isRegex = true
+          @query.isRegex = true
         when "R"
-          findModeQuery.isRegex = false
+          @query.isRegex = false
         when "I"
           hasNoIgnoreCaseFlag = true
       ""
 
     # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
-    findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
+    @query.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(@query.parsedQuery)
 
     # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
     # sequentially so the browser handles the scrolling / text selection.
-    if findModeQuery.isRegex
+    if @query.isRegex
       try
-        pattern = new RegExp(findModeQuery.parsedQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+        pattern = new RegExp(@query.parsedQuery, "g" + (if @query.ignoreCase then "i" else ""))
       catch error
         # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
         return
       # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
       text = document.body.innerText
-      findModeQuery.regexMatches = text.match(pattern)
-      findModeQuery.activeRegexIndex = 0
-      findModeQuery.matchCount = findModeQuery.regexMatches?.length
+      @query.regexMatches = text.match(pattern)
+      @query.activeRegexIndex = 0
+      @query.matchCount = @query.regexMatches?.length
     # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
     # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
     # from the internal representation used by window.find.
@@ -127,34 +132,34 @@ class FindMode extends Mode
       # escape all special characters, so RegExp just parses the string 'as is'.
       # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
       escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
-      parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
-      pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
+      parsedNonRegexQuery = @query.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
+      pattern = new RegExp(parsedNonRegexQuery, "g" + (if @query.ignoreCase then "i" else ""))
       text = document.body.innerText
-      findModeQuery.matchCount = text.match(pattern)?.length
+      @query.matchCount = text.match(pattern)?.length
 
   @getNextQueryFromRegexMatches: (stepSize) ->
     # find()ing an empty query always returns false
-    return "" unless findModeQuery.regexMatches
+    return "" unless @query.regexMatches
 
-    totalMatches = findModeQuery.regexMatches.length
-    findModeQuery.activeRegexIndex += stepSize + totalMatches
-    findModeQuery.activeRegexIndex %= totalMatches
+    totalMatches = @query.regexMatches.length
+    @query.activeRegexIndex += stepSize + totalMatches
+    @query.activeRegexIndex %= totalMatches
 
-    findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
+    @query.regexMatches[@query.activeRegexIndex]
 
   @getQuery: (backwards) ->
     # check if the query has been changed by a script in another frame
     mostRecentQuery = FindModeHistory.getQuery()
-    if (mostRecentQuery != findModeQuery.rawQuery)
-      findModeQuery.rawQuery = mostRecentQuery
-      FindMode.updateQuery()
+    if (mostRecentQuery != @query.rawQuery)
+      @query.rawQuery = mostRecentQuery
+      @updateQuery()
 
-    if findModeQuery.isRegex
+    if @query.isRegex
       @getNextQueryFromRegexMatches(if backwards then -1 else 1)
     else
-      findModeQuery.parsedQuery
+      @query.parsedQuery
 
-  @saveQuery: -> FindModeHistory.saveQuery findModeQuery.rawQuery
+  @saveQuery: -> FindModeHistory.saveQuery @query.rawQuery
 
 getCurrentRange = ->
   selection = getSelection()

@@ -34,13 +34,13 @@ HUD =
 
   search: (data) ->
     window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
-    findModeQuery.rawQuery = data.query
+    FindMode.query.rawQuery = data.query
     FindMode.updateQuery()
     @findMode.findInPlace()
 
     # Show the number of matches in the HUD UI.
-    matchCount = if findModeQuery.parsedQuery.length > 0 then findModeQuery.matchCount else 0
-    showMatchText = findModeQuery.rawQuery.length > 0
+    matchCount = if FindMode.query.parsedQuery.length > 0 then FindMode.query.matchCount else 0
+    showMatchText = FindMode.query.rawQuery.length > 0
     @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
 
   # Hide the HUD.
@@ -71,7 +71,7 @@ HUD =
     document.activeElement?.blur()
     focusNode?.focus()
 
-    findModeQuery.rawQuery = data.query
+    FindMode.query.rawQuery = data.query
     {event} = data
 
     if event.keyCode == keyCodes.enter
@@ -83,7 +83,7 @@ HUD =
 
     @findMode.exit()
     postExit?()
-    new PostFindMode if findModeQuery.hasResults
+    new PostFindMode if FindMode.query.hasResults
 
   isReady: do ->
     ready = false

@@ -5,7 +5,6 @@
 # "domReady".
 #
 
-window.findModeQuery = { rawQuery: "", matchCount: 0, hasResults: false }
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
@@ -643,7 +642,7 @@ window.executeFind = (query, options) ->
   result = null
   options = extend {
     backwards: false
-    caseSensitive: !findModeQuery.ignoreCase
+    caseSensitive: !FindMode.query.ignoreCase
     colorSelection: true
   }, options
   query ?= FindMode.getQuery options.backwards
@@ -671,7 +670,7 @@ window.executeFind = (query, options) ->
 restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
 
 focusFoundLink = ->
-  if (findModeQuery.hasResults)
+  if (FindMode.query.hasResults)
     link = getLinkFromSelection()
     link.focus() if link
 
@@ -680,21 +679,20 @@ selectFoundInputElement = ->
   # might be disabled and therefore unable to receive focus), we use the approximate heuristic of checking
   # that the last anchor node is an ancestor of our element.
   findModeAnchorNode = document.getSelection().anchorNode
-  if (findModeQuery.hasResults && document.activeElement &&
+  if (FindMode.query.hasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
 
 findAndFocus = (backwards) ->
   Marks.setPreviousPosition()
-  window.findModeQuery.hasResults =
-    executeFind null, {backwards}
+  FindMode.query.hasResults = executeFind null, {backwards}
 
-  if findModeQuery.hasResults
+  if FindMode.query.hasResults
     focusFoundLink()
     new PostFindMode()
   else
-    HUD.showForDuration("No matches for '#{findModeQuery.rawQuery}'", 1000)
+    HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
 
 window.performFind = -> findAndFocus()
 
