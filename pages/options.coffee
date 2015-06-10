@@ -229,6 +229,7 @@ initOptionsPage = ->
     element.className = element.className + " example info"
     element.innerHTML = "Leave empty to reset this option."
 
+  $("filterLinkHints").checked = bgSettings.get "filterLinkHints"
   maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
