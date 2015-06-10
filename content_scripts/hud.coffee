@@ -34,8 +34,7 @@ HUD =
 
   search: (data) ->
     window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
-    FindMode.query.rawQuery = data.query
-    FindMode.updateQuery()
+    FindMode.updateQuery data.query
     @findMode.findInPlace()
 
     # Show the number of matches in the HUD UI.
@@ -71,7 +70,6 @@ HUD =
     document.activeElement?.blur()
     focusNode?.focus()
 
-    FindMode.query.rawQuery = data.query
     {event} = data
 
     if event.keyCode == keyCodes.enter

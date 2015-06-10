@@ -91,8 +91,8 @@ class FindMode extends Mode
     query = if FindMode.query.isRegex then FindMode.getNextQueryFromRegexMatches(0) else FindMode.query.parsedQuery
     FindMode.query.hasResults = FindMode.execute query
 
-  # should be called whenever rawQuery is modified.
-  @updateQuery: ->
+  @updateQuery: (query) ->
+    @query.rawQuery = query
     # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
     # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
     # character. here we grep for the relevant escape sequences.
@@ -151,8 +151,7 @@ class FindMode extends Mode
     # check if the query has been changed by a script in another frame
     mostRecentQuery = FindModeHistory.getQuery()
     if (mostRecentQuery != @query.rawQuery)
-      @query.rawQuery = mostRecentQuery
-      @updateQuery()
+      @updateQuery mostRecentQuery
 
     if @query.isRegex
       @getNextQueryFromRegexMatches(if backwards then -1 else 1)
