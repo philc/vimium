@@ -565,12 +565,40 @@ class FilterHints
   filterLinkHints: (hintMarkers) ->
     idx = 0
     linkSearchString = @linkTextKeystrokeQueue.join("").toLowerCase()
+    do (scoreFunction = @scoreLinkHint linkSearchString) ->
+      linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
+    hintMarkers = hintMarkers[..].sort (a,b) -> b.score - a.score
 
     for linkMarker in hintMarkers
-      continue unless 0 <= linkMarker.linkText.toLowerCase().indexOf linkSearchString
+      continue unless 0 < linkMarker.score
       linkMarker.hintString = @generateHintString idx++
       @renderMarker linkMarker
       linkMarker
+
+  # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
+  # a word, and a considerably higher score still for matches which are whole words.
+  # Note(smblott) if linkSearchString is empty, then every hint get a score of 2.
+  scoreLinkHint: (linkSearchString) ->
+    searchWords = linkSearchString.trim().split /\s+/
+    (linkMarker) ->
+      linkWords = linkMarker.linkWords ?= linkMarker.linkText.trim().toLowerCase().split /\s+/
+
+      searchWordScores =
+        for searchWord in searchWords
+          linkWordScores =
+            for linkWord in linkWords
+              if linkWord == searchWord
+                5
+              else if linkWord.startsWith searchWord
+                2
+              else if 0 <= linkWord.indexOf searchWord
+                1
+              else
+                0
+          Math.max linkWordScores...
+
+      addFunc = (a,b) -> a + b
+      if 0 in searchWordScores then 0 else searchWordScores.reduce addFunc, 0
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
