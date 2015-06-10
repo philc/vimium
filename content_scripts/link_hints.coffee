@@ -478,7 +478,7 @@ class FilterHints
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    numberToHintString linkHintNumber + 1, @linkHintNumbers.toUpperCase()
+    numberToHintString linkHintNumber, @linkHintNumbers.toUpperCase()
 
   generateLinkText: (element) ->
     linkText = ""
@@ -512,8 +512,7 @@ class FilterHints
   fillInMarkers: (hintMarkers) ->
     @generateLabelMap()
     DomUtils.textContent.reset()
-    for marker, idx in hintMarkers
-      marker.hintString = @generateHintString(idx)
+    for marker in hintMarkers
       linkTextObject = @generateLinkText(marker.clickableItem)
       marker.linkText = linkTextObject.text
       marker.showLinkText = linkTextObject.show
@@ -522,7 +521,9 @@ class FilterHints
     @activeHintMarker = hintMarkers[0]
     @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
-    hintMarkers
+    # We use @filterLinkHints() here (although we know that all of the hints will match) to fill in the hint
+    # strings.  This ensures that we always get hint strings in the same order.
+    @filterLinkHints hintMarkers
 
   getMatchingHints: (hintMarkers, tabCount = 0) ->
     delay = 0
@@ -563,10 +564,7 @@ class FilterHints
 
   # Filter link hints by search string, renumbering the hints as necessary.
   filterLinkHints: (hintMarkers) ->
-    idx = 0
     linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
-    return hintMarkers unless 0 < linkSearchString.length
-
     do (scoreFunction = @scoreLinkHint linkSearchString) ->
       linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
     # The Javascript sort() method is known not to be stable.  Nevertheless, we require (and assume, here)
@@ -575,9 +573,10 @@ class FilterHints
     # filtering here).
     hintMarkers = hintMarkers[..].sort (a,b) -> b.score - a.score
 
+    linkHintNumber = 1
     for linkMarker in hintMarkers
       continue unless 0 < linkMarker.score
-      linkMarker.hintString = @generateHintString idx++
+      linkMarker.hintString = @generateHintString linkHintNumber++
       @renderMarker linkMarker
       linkMarker
 

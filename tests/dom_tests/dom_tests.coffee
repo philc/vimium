@@ -212,11 +212,14 @@ context "Filtered link hints",
       @linkHints.deactivateMode()
 
     should "label the images", ->
-      hintMarkers = getHintMarkers()
-      assert.equal "1: alt text", hintMarkers[0].textContent.toLowerCase()
-      assert.equal "2: some title", hintMarkers[1].textContent.toLowerCase()
-      assert.equal "3: alt text", hintMarkers[2].textContent.toLowerCase()
-      assert.equal "4", hintMarkers[3].textContent.toLowerCase()
+      hintMarkers = getHintMarkers().map (marker) -> marker.textContent.toLowerCase()
+      # We don't know the actual hint numbers which will be assigned, so we replace them with "N".
+      hintMarkers = hintMarkers.map (str) -> str.replace /^[1-4]/, "N"
+      assert.equal 4, hintMarkers.length
+      assert.isTrue "N: alt text" in hintMarkers
+      assert.isTrue "N: some title" in hintMarkers
+      assert.isTrue "N: alt text" in hintMarkers
+      assert.isTrue "N" in hintMarkers
 
   context "Input hints",
 
@@ -235,11 +238,15 @@ context "Filtered link hints",
 
     should "label the input elements", ->
       hintMarkers = getHintMarkers()
-      assert.equal "1", hintMarkers[0].textContent.toLowerCase()
-      assert.equal "2", hintMarkers[1].textContent.toLowerCase()
-      assert.equal "3: a label", hintMarkers[2].textContent.toLowerCase()
-      assert.equal "4: a label", hintMarkers[3].textContent.toLowerCase()
-      assert.equal "5", hintMarkers[4].textContent.toLowerCase()
+      hintMarkers = getHintMarkers().map (marker) -> marker.textContent.toLowerCase()
+      # We don't know the actual hint numbers which will be assigned, so we replace them with "N".
+      hintMarkers = hintMarkers.map (str) -> str.replace /^[1-5]/, "N"
+      assert.equal 5, hintMarkers.length
+      assert.isTrue "N" in hintMarkers
+      assert.isTrue "N" in hintMarkers
+      assert.isTrue "N: a label" in hintMarkers
+      assert.isTrue "N: a label" in hintMarkers
+      assert.isTrue "N" in hintMarkers
 
 context "Input focus",
 
