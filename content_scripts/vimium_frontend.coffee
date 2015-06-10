@@ -757,7 +757,7 @@ selectFoundInputElement = ->
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
 
-getNextQueryFromRegexMatches = (stepSize) ->
+window.getNextQueryFromRegexMatches = (stepSize) ->
   # find()ing an empty query always returns false
   return "" unless findModeQuery.regexMatches
 
