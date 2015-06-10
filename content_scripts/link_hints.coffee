@@ -586,11 +586,11 @@ class FilterHints
       searchWordScores =
         for searchWord in searchWords
           linkWordScores =
-            for linkWord in linkWords
+            for linkWord, idx in linkWords
               if linkWord == searchWord
-                5
+                if idx == 0 then 8 else 6
               else if linkWord.startsWith searchWord
-                2
+                if idx == 0 then 4 else 2
               else if 0 <= linkWord.indexOf searchWord
                 1
               else
