@@ -564,9 +564,15 @@ class FilterHints
   # Filter link hints by search string, renumbering the hints as necessary.
   filterLinkHints: (hintMarkers) ->
     idx = 0
-    linkSearchString = @linkTextKeystrokeQueue.join("").toLowerCase()
+    linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
+    return hintMarkers unless 0 < linkSearchString.length
+
     do (scoreFunction = @scoreLinkHint linkSearchString) ->
       linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
+    # The Javascript sort() method is known not to be stable.  Nevertheless, we require (and assume, here)
+    # that it is deterministic.  So, if the user is typing hint characters, then hints will always end up in
+    # the same order and hence with the same hint strings (because hint-string filtering happens after the
+    # filtering here).
     hintMarkers = hintMarkers[..].sort (a,b) -> b.score - a.score
 
     for linkMarker in hintMarkers
@@ -577,7 +583,6 @@ class FilterHints
 
   # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
   # a word, and a considerably higher score still for matches which are whole words.
-  # Note(smblott) if linkSearchString is empty, then every hint get a score of 4.
   scoreLinkHint: (linkSearchString) ->
     searchWords = linkSearchString.trim().split /\s+/
     (linkMarker) ->
