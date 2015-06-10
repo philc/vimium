@@ -719,7 +719,7 @@ class FindMode extends Mode
     window.findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
-executeFind = (query, options) ->
+window.executeFind = (query, options) ->
   result = null
   options = options || {}
 
