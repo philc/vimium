@@ -132,6 +132,28 @@ class FindMode extends Mode
       text = document.body.innerText
       findModeQuery.matchCount = text.match(pattern)?.length
 
+window.getNextQueryFromRegexMatches = (stepSize) ->
+  # find()ing an empty query always returns false
+  return "" unless findModeQuery.regexMatches
+
+  totalMatches = findModeQuery.regexMatches.length
+  findModeQuery.activeRegexIndex += stepSize + totalMatches
+  findModeQuery.activeRegexIndex %= totalMatches
+
+  findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
+
+window.getFindModeQuery = (backwards) ->
+  # check if the query has been changed by a script in another frame
+  mostRecentQuery = FindModeHistory.getQuery()
+  if (mostRecentQuery != findModeQuery.rawQuery)
+    findModeQuery.rawQuery = mostRecentQuery
+    FindMode.updateQuery()
+
+  if findModeQuery.isRegex
+    getNextQueryFromRegexMatches(if backwards then -1 else 1)
+  else
+    findModeQuery.parsedQuery
+
 getCurrentRange = ->
   selection = getSelection()
   if selection.type == "None"
