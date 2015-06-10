@@ -154,6 +154,8 @@ class FindMode extends Mode
     else
       findModeQuery.parsedQuery
 
+  @saveQuery: -> FindModeHistory.saveQuery findModeQuery.rawQuery
+
 getCurrentRange = ->
   selection = getSelection()
   if selection.type == "None"

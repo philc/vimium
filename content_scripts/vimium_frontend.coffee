@@ -636,7 +636,7 @@ window.handleEscapeForFindMode = ->
 window.handleEnterForFindMode = ->
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  FindModeHistory.saveQuery findModeQuery.rawQuery
+  FindMode.saveQuery()
 
 # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
 window.executeFind = (query, options) ->
