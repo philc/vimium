@@ -679,7 +679,7 @@ selectFoundInputElement = ->
 
 findAndFocus = (backwards) ->
   Marks.setPreviousPosition()
-  query = getFindModeQuery backwards
+  query = FindMode.getQuery backwards
 
   window.findModeQuery.hasResults =
     executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })

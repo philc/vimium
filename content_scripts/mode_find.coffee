@@ -83,7 +83,7 @@ class FindMode extends Mode
     # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
     # match as the user adds matching characters, or removes previously-matched characters. See #1434.
     @restoreSelection()
-    query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
+    query = if findModeQuery.isRegex then FindMode.getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
     window.findModeQuery.hasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
 
   # should be called whenever rawQuery is modified.
@@ -132,27 +132,27 @@ class FindMode extends Mode
       text = document.body.innerText
       findModeQuery.matchCount = text.match(pattern)?.length
 
-window.getNextQueryFromRegexMatches = (stepSize) ->
-  # find()ing an empty query always returns false
-  return "" unless findModeQuery.regexMatches
+  @getNextQueryFromRegexMatches: (stepSize) ->
+    # find()ing an empty query always returns false
+    return "" unless findModeQuery.regexMatches
 
-  totalMatches = findModeQuery.regexMatches.length
-  findModeQuery.activeRegexIndex += stepSize + totalMatches
-  findModeQuery.activeRegexIndex %= totalMatches
+    totalMatches = findModeQuery.regexMatches.length
+    findModeQuery.activeRegexIndex += stepSize + totalMatches
+    findModeQuery.activeRegexIndex %= totalMatches
 
-  findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
+    findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
 
-window.getFindModeQuery = (backwards) ->
-  # check if the query has been changed by a script in another frame
-  mostRecentQuery = FindModeHistory.getQuery()
-  if (mostRecentQuery != findModeQuery.rawQuery)
-    findModeQuery.rawQuery = mostRecentQuery
-    FindMode.updateQuery()
+  @getQuery: (backwards) ->
+    # check if the query has been changed by a script in another frame
+    mostRecentQuery = FindModeHistory.getQuery()
+    if (mostRecentQuery != findModeQuery.rawQuery)
+      findModeQuery.rawQuery = mostRecentQuery
+      FindMode.updateQuery()
 
-  if findModeQuery.isRegex
-    getNextQueryFromRegexMatches(if backwards then -1 else 1)
-  else
-    findModeQuery.parsedQuery
+    if findModeQuery.isRegex
+      @getNextQueryFromRegexMatches(if backwards then -1 else 1)
+    else
+      findModeQuery.parsedQuery
 
 getCurrentRange = ->
   selection = getSelection()
