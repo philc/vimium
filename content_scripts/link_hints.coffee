@@ -577,7 +577,7 @@ class FilterHints
 
   # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
   # a word, and a considerably higher score still for matches which are whole words.
-  # Note(smblott) if linkSearchString is empty, then every hint get a score of 2.
+  # Note(smblott) if linkSearchString is empty, then every hint get a score of 4.
   scoreLinkHint: (linkSearchString) ->
     searchWords = linkSearchString.trim().split /\s+/
     (linkMarker) ->
