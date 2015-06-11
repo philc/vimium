@@ -532,7 +532,7 @@ class FilterHints
     # input. use them to filter the link hints accordingly.
     matchString = @hintKeystrokeQueue.join ""
     linksMatched = @filterLinkHints hintMarkers
-    linksMatched = linksMatched.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
+    linksMatched = linksMatched.filter (linkMarker) -> linkMarker.hintString.toLowerCase().startsWith matchString
 
     if linksMatched.length == 1 && @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
       # In filter mode, people tend to type out words past the point needed for a unique match. Hence we
