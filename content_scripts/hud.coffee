@@ -74,6 +74,8 @@ HUD =
 
     if event.keyCode == keyCodes.enter
       handleEnterForFindMode()
+      if FindMode.query.hasResults
+        postExit = -> new PostFindMode
     else if KeyboardUtils.isEscape event
       # We don't want FindMode to handle the click events that handleEscapeForFindMode can generate, so we
       # wait until the mode is closed before running it.
@@ -81,7 +83,6 @@ HUD =
 
     @findMode.exit()
     postExit?()
-    new PostFindMode if FindMode.query.hasResults
 
   isReady: do ->
     ready = false
