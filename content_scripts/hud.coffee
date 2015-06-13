@@ -33,9 +33,7 @@ HUD =
     @tween.fade 1.0, 150
 
   search: (data) ->
-    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
-    FindMode.updateQuery data.query
-    @findMode.findInPlace()
+    @findMode.findInPlace data.query
 
     # Show the number of matches in the HUD UI.
     matchCount = if FindMode.query.parsedQuery.length > 0 then FindMode.query.matchCount else 0
