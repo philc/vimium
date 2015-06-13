@@ -61,7 +61,6 @@ class FindMode extends Mode
     hasResults: false
 
   constructor: (options = {}) ->
-    console.log "constructor", @options
     # Save the selection, so findInPlace can restore it.
     @initialRange = getCurrentRange()
     FindMode.query = rawQuery: ""
