@@ -22,7 +22,6 @@ document.addEventListener "keydown", (event) ->
   if (event.keyCode in [keyCodes.backspace, keyCodes.deleteKey] and inputElement.textContent.length == 0) or
      event.keyCode == keyCodes.enter or KeyboardUtils.isEscape event
 
-    DomUtils.suppressEvent event
     UIComponentServer.postMessage
       name: "hideFindMode"
       event: transferrableEvent
@@ -39,6 +38,11 @@ document.addEventListener "keydown", (event) ->
     rawQuery = if 0 <= findMode.historyIndex then FindModeHistory.getQuery findMode.historyIndex else findMode.partialQuery
     setTextInInputElement inputElement, rawQuery
     findMode.executeQuery()
+  else
+    return
+
+  DomUtils.suppressEvent event
+  false
 
 handlers =
   show: (data) ->
