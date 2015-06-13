@@ -33,9 +33,7 @@ HUD =
     @tween.fade 1.0, 150
 
   search: (data) ->
-    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
-    FindMode.updateQuery data.query
-    @findMode.findInPlace()
+    @findMode.findInPlace data.query
 
     # Show the number of matches in the HUD UI.
     matchCount = if FindMode.query.parsedQuery.length > 0 then FindMode.query.matchCount else 0
@@ -59,7 +57,7 @@ HUD =
       @tween.fade 0, 150, => @hide true, updateIndicator
 
   hideFindMode: (data) ->
-    window.scrollTo @findMode.scrollX, @findMode.scrollY if @findMode.options.returnToViewport
+    @findMode.checkReturnToViewPort()
 
     # An element element won't receive a focus event if the search landed on it while we were in the HUD
     # iframe. To end up with the correct modes active, we create a focus/blur event manually after refocusing

@@ -353,7 +353,7 @@ class Movement extends CountPrefix
       do =>
         doFind = (count, backwards) =>
           initialRange = @selection.getRangeAt(0).cloneRange()
-          for [0...count] by 1
+          for [0...count]
             unless FindMode.execute null, {colorSelection: false, backwards}
               @setSelectionRange initialRange
               HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)

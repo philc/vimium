@@ -60,14 +60,15 @@ class FindMode extends Mode
     matchCount: 0
     hasResults: false
 
-  constructor: (@options = {}) ->
+  constructor: (options = {}) ->
+    console.log "constructor", @options
     # Save the selection, so findInPlace can restore it.
     @initialRange = getCurrentRange()
     FindMode.query = rawQuery: ""
-    if @options.returnToViewport
+    if options.returnToViewport
       @scrollX = window.scrollX
       @scrollY = window.scrollY
-    super
+    super extend options,
       name: "find"
       indicator: false
       exitOnClick: true
@@ -84,7 +85,10 @@ class FindMode extends Mode
     selection.removeAllRanges()
     selection.addRange range
 
-  findInPlace: ->
+  findInPlace: (query) ->
+    # If requested, restore the scroll position (so that failed searches leave the scroll position unchanged).
+    @checkReturnToViewPort()
+    FindMode.updateQuery query
     # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
     # match as the user adds matching characters, or removes previously-matched characters. See #1434.
     @restoreSelection()
@@ -191,6 +195,9 @@ class FindMode extends Mode
     result
 
   @restoreDefaultSelectionHighlight: -> document.body.classList.remove("vimiumFindMode")
+
+  checkReturnToViewPort: ->
+    window.scrollTo @scrollX, @scrollY if @options.returnToViewport
 
 getCurrentRange = ->
   selection = getSelection()
