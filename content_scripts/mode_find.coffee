@@ -87,7 +87,7 @@ class FindMode extends Mode
 
   findInPlace: (query) ->
     # If requested, restore the scroll position (so that failed searches leave the scroll position unchanged).
-    window.scrollTo @scrollX, @scrollY if @options.returnToViewport
+    @checkReturnToViewPort()
     FindMode.updateQuery query
     # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
     # match as the user adds matching characters, or removes previously-matched characters. See #1434.
@@ -195,6 +195,9 @@ class FindMode extends Mode
     result
 
   @restoreDefaultSelectionHighlight: -> document.body.classList.remove("vimiumFindMode")
+
+  checkReturnToViewPort: ->
+    window.scrollTo @scrollX, @scrollY if @options.returnToViewport
 
 getCurrentRange = ->
   selection = getSelection()
