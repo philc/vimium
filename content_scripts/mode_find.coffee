@@ -60,14 +60,15 @@ class FindMode extends Mode
     matchCount: 0
     hasResults: false
 
-  constructor: (@options = {}) ->
+  constructor: (options = {}) ->
+    console.log "constructor", @options
     # Save the selection, so findInPlace can restore it.
     @initialRange = getCurrentRange()
     FindMode.query = rawQuery: ""
-    if @options.returnToViewport
+    if options.returnToViewport
       @scrollX = window.scrollX
       @scrollY = window.scrollY
-    super
+    super extend options,
       name: "find"
       indicator: false
       exitOnClick: true
