@@ -158,6 +158,20 @@ if Utils.isBackgroundPage()
   # We use settingsVersion to coordinate any necessary schema changes.
   if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
     Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
+
+  # Any settings set before we started using chrome.storage.sync were only stored in localStorage. If they've
+  # remained unchanged, then they won't be in chrome.storage.sync, and hence unusable with chrome.storage-
+  # backed Settings in the frontend. Here, we push settings in localStorage to chrome.storage.
+  # NOTE(mrmr1993): We only push settings for which there is no corresponding value in chrome.storage.sync.
+  # If there is a corresponding value, our value is either the most recent, or will be updated to it soon.
+  if Utils.compareVersions("1.52", Settings.get("settingsVersion")) == 1
+    localStorageClone = {}
+    for key, value of localStorage
+      localStorageClone[key] = value if Settings.shouldSyncKey key
+    chrome.storage.sync.get Object.keys(localStorageClone), (items) ->
+      delete localStorageClone[key] for key of items
+      chrome.storage.sync.set localStorageClone
+
   Settings.set("settingsVersion", Utils.getCurrentVersion())
 
   # Migration (after 1.49, 2015/2/1).
