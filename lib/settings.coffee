@@ -15,8 +15,33 @@ Settings =
       unless chrome.runtime.lastError
         @handleUpdateFromChromeStorage key, value for own key, value of items
 
+      @loadSettingsFromLocalStorage()
+
       chrome.storage.onChanged.addListener (changes, area) =>
         @propagateChangesFromChromeStorage changes if area == "sync"
+
+  loadSettingsFromLocalStorage: ->
+    chrome.storage.local.get null, (items) =>
+      unless chrome.runtime.lastError
+        overriddenBySync = []
+        for own key, value of items
+          if @shouldSyncKey key
+            if key of @cache
+              overriddenBySync.push key # This key has already been set from chrome.storage.sync.
+            else
+              @handleUpdateFromChromeStorage key, value
+
+        # All of the values in overriddenBySync have equivalents in chrome.storage.sync which take
+        # priority, so we remove them.
+        chrome.storage.local.remove overriddenBySync if Utils.isBackgroundPage()
+
+      chrome.storage.onChanged.addListener (changes, area) =>
+        return unless area == "local"
+        for key, change of changes
+          # If change.newValue is non-null, a value has been added to chrome.storage.sync. For settings,
+          # the only values we care about here, this should only happen on the first run after the 1.52
+          # version bump. Everything else is filtered out in the following function call.
+          @handleUpdateFromChromeStorage key, change.newValue if change?.newValue?
 
       @onLoaded()
 
