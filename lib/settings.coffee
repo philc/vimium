@@ -171,7 +171,7 @@ if Utils.isBackgroundPage()
       localStorageClone[key] = value if Settings.shouldSyncKey key
     chrome.storage.sync.get Object.keys(localStorageClone), (items) ->
       delete localStorageClone[key] for key of items
-      chrome.storage.sync.set localStorageClone
+      chrome.storage.local.set localStorageClone
 
   Settings.set("settingsVersion", Utils.getCurrentVersion())
 
