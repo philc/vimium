@@ -2,6 +2,7 @@
 Settings =
   storage: chrome.storage.sync
   cache: {}
+  localSettings: {}
   isLoaded: false
   onLoadedCallbacks: []
 
@@ -15,21 +16,22 @@ Settings =
       unless chrome.runtime.lastError
         @handleUpdateFromChromeStorage key, value for own key, value of items
 
-      @loadSettingsFromLocalStorage()
+      @loadSettingsFromLocalStorage items, chrome.runtime.lastError
 
       chrome.storage.onChanged.addListener (changes, area) =>
         @propagateChangesFromChromeStorage changes if area == "sync"
 
-  loadSettingsFromLocalStorage: ->
+  loadSettingsFromLocalStorage: (syncItems, syncLastError) ->
     chrome.storage.local.get null, (items) =>
-      unless chrome.runtime.lastError
+      unless chrome.runtime.lastError or syncLastError
         overriddenBySync = []
         for own key, value of items
-          if @shouldSyncKey key
-            if key of @cache
-              overriddenBySync.push key # This key has already been set from chrome.storage.sync.
-            else
-              @handleUpdateFromChromeStorage key, value
+          continue unless @shouldSyncKey key
+          if key of syncItems
+            overriddenBySync.push key # This key has already been set from chrome.storage.sync.
+          else
+            @localSettings[key] = value
+            @handleUpdateFromChromeStorage key, value
 
         # All of the values in overriddenBySync have equivalents in chrome.storage.sync which take
         # priority, so we remove them.
@@ -55,7 +57,16 @@ Settings =
     (key of @defaults) and key not in [ "settingsVersion", "previousVersion" ]
 
   propagateChangesFromChromeStorage: (changes) ->
-    @handleUpdateFromChromeStorage key, change?.newValue for own key, change of changes
+    overwrittenLocalSettings = []
+    for own key, change of changes
+      @handleUpdateFromChromeStorage key, change?.newValue
+
+      if key of @localSettings
+        delete @localSettings[key]
+        overwrittenLocalSettings.push key
+
+    if Utils.isBackgroundPage() and overwrittenLocalSettings.length > 0
+      chrome.storage.local.remove overwrittenLocalSettings
 
   handleUpdateFromChromeStorage: (key, value) ->
     # Note: value here is either null or a JSONified string.  Therefore, even falsy settings values (like
@@ -92,7 +103,10 @@ Settings =
 
   clear: (key) ->
     delete @cache[key] if @has key
-    @storage.remove key if @shouldSyncKey key
+    if @shouldSyncKey
+      @storage.remove key
+      chrome.storage.local.remove key
+      delete @localSettings[key]
     @performPostUpdateHook key, @get key
 
   has: (key) -> key of @cache
