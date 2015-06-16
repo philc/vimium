@@ -206,12 +206,18 @@ if Utils.isBackgroundPage()
   # backed Settings in the frontend. Here, we push settings in localStorage to chrome.storage.
   # NOTE(mrmr1993): We only push settings for which there is no corresponding value in chrome.storage.sync.
   # If there is a corresponding value, our value is either the most recent, or will be updated to it soon.
-  if Utils.compareVersions("1.52", Settings.get("settingsVersion")) == 1
+  lessThan152 = Utils.compareVersions("1.52", Settings.get("settingsVersion")) == 1
+  if lessThan152 or not Settings.get "localStorageMigrated"
+    if lessThan152
+      delete localStorage["localStorageMigrated"]
+    else
+      localStorage["localStorageMigrated"] = true
+
     localStorageClone = {}
     for key, value of localStorage
       localStorageClone[key] = value if Settings.shouldSyncKey key
     chrome.storage.sync.get Object.keys(localStorageClone), (items) ->
-      delete localStorageClone[key] for key of items
+      delete localStorageClone[key] for own key of items
       chrome.storage.local.set localStorageClone
 
   Settings.set("settingsVersion", Utils.getCurrentVersion())
