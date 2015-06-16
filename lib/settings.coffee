@@ -43,7 +43,9 @@ Settings =
           # If change.newValue is non-null, a value has been added to chrome.storage.sync. For settings,
           # the only values we care about here, this should only happen on the first run after the 1.52
           # version bump. Everything else is filtered out in the following function call.
-          @handleUpdateFromChromeStorage key, change.newValue if change?.newValue?
+          # If @localSettings[key] is non-null, we've been using this key's value from chrome.storage.local
+          # before, and so we propagate its updated value too.
+          @handleUpdateFromChromeStorage key, change.newValue if change?.newValue? or @localSettings[key]
 
       @onLoaded()
 
