@@ -126,7 +126,6 @@ window.initializeModes = ->
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
-  initializeModes()
   checkIfEnabledForUrl()
   refreshCompletionKeys()
 
@@ -190,6 +189,7 @@ installListener = (element, event, callback) ->
 installedListeners = false
 window.installListeners = ->
   unless installedListeners
+    initializeModes()
     # Key event handlers fire on window before they do on document. Prefer window for key events so the page
     # can't set handlers to grab the keys before us.
     for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll" ]
