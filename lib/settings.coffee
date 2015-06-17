@@ -6,6 +6,11 @@ Settings =
   onLoadedCallbacks: []
 
   init: ->
+    if Utils.isExtensionPage()
+      # On extension pages, we use localStorage (or a copy of it) as the cache.
+      @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
+      @onLoaded()
+
     chrome.storage.local.get null, (localItems) =>
       localItems = {} if chrome.runtime.lastError
       @storage.get null, (syncedItems) =>
