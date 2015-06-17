@@ -6,19 +6,16 @@ Settings =
   onLoadedCallbacks: []
 
   init: ->
-    if Utils.isExtensionPage()
-      # On extension pages, we use localStorage (or a copy of it) as the cache.
-      @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
-      @onLoaded()
+    chrome.storage.local.get null, (localItems) =>
+      localItems = {} if chrome.runtime.lastError
+      @storage.get null, (syncedItems) =>
+        unless chrome.runtime.lastError
+          @handleUpdateFromChromeStorage key, value for own key, value of extend localItems, syncedItems
 
-    @storage.get null, (items) =>
-      unless chrome.runtime.lastError
-        @handleUpdateFromChromeStorage key, value for own key, value of items
+        chrome.storage.onChanged.addListener (changes, area) =>
+          @propagateChangesFromChromeStorage changes if area == "sync"
 
-      chrome.storage.onChanged.addListener (changes, area) =>
-        @propagateChangesFromChromeStorage changes if area == "sync"
-
-      @onLoaded()
+        @onLoaded()
 
   # Called after @cache has been initialized.  On extension pages, this will be called twice, but that does
   # not matter because it's idempotent.
@@ -37,38 +34,25 @@ Settings =
     # false, 0 or "") are truthy here.  Only null is falsy.
     if @shouldSyncKey key
       unless value and key of @cache and @cache[key] == value
-        defaultValue = @defaults[key]
-        defaultValueJSON = JSON.stringify defaultValue
-
-        if value and value != defaultValueJSON
-          # Key/value has been changed to a non-default value.
-          @cache[key] = value
-          @performPostUpdateHook key, JSON.parse value
-        else
-          # The key has been reset to its default value.
-          delete @cache[key] if key of @cache
-          @performPostUpdateHook key, defaultValue
+        value ?= JSON.stringify @defaults[key]
+        @set key, JSON.parse(value), false
 
   get: (key) ->
     console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
     if key of @cache and @cache[key]? then JSON.parse @cache[key] else @defaults[key]
 
-  set: (key, value) ->
-    # Don't store the value if it is equal to the default, so we can change the defaults in the future.
-    if JSON.stringify(value) == JSON.stringify @defaults[key]
-      @clear key
-    else
-      jsonValue = JSON.stringify value
-      @cache[key] = jsonValue
-      if @shouldSyncKey key
-        setting = {}; setting[key] = jsonValue
+  set: (key, value, shouldSetInSyncedStorage = true) ->
+    @cache[key] = JSON.stringify value
+    if @shouldSyncKey key
+      if shouldSetInSyncedStorage
+        setting = {}; setting[key] = @cache[key]
         @storage.set setting
-      @performPostUpdateHook key, value
+      # Remove settings installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
+      chrome.storage.local.remove key if Utils.isBackgroundPage()
+    @performPostUpdateHook key, value
 
   clear: (key) ->
-    delete @cache[key] if @has key
-    @storage.remove key if @shouldSyncKey key
-    @performPostUpdateHook key, @get key
+    @set key, @defaults[key]
 
   has: (key) -> key of @cache
 
@@ -168,6 +152,20 @@ if Utils.isBackgroundPage()
     unless chrome.runtime.lastError or items.findModeRawQueryList
       rawQuery = Settings.get "findModeRawQuery"
       chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
+
+  # Migration (after 1.51, 2015/6/17).
+  # Copy settings with non-default values (and which are not in synced storage) to chrome.storage.local;
+  # thereby making these settings accessible within content scripts.
+  do (migrationKey = "copyNonDefaultsToChromeStorage-20150717") ->
+    unless localStorage[migrationKey]
+      chrome.storage.sync.get null, (items) ->
+        unless chrome.runtime.lastError
+          updates = {}
+          for own key of localStorage
+            if Settings.shouldSyncKey(key) and not items[key]
+              updates[key] = localStorage[key]
+          chrome.storage.local.set updates, ->
+            localStorage[migrationKey] = not chrome.runtime.lastError
 
 root = exports ? window
 root.Settings = Settings

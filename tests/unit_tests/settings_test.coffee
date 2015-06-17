@@ -27,12 +27,6 @@ context "settings",
     Settings.set 'scrollStepSize', 20
     assert.equal Settings.get('scrollStepSize'), 20
 
-  should "not store values equal to the default", ->
-    Settings.set 'scrollStepSize', 20
-    assert.isTrue Settings.has 'scrollStepSize'
-    Settings.set 'scrollStepSize', 60
-    assert.isFalse Settings.has 'scrollStepSize'
-
   should "revert to defaults if no key is stored", ->
     Settings.set 'scrollStepSize', 20
     Settings.clear 'scrollStepSize'
@@ -55,7 +49,7 @@ context "synced settings",
     Settings.set 'scrollStepSize', 20
     assert.equal Settings.get('scrollStepSize'), 20
     Settings.propagateChangesFromChromeStorage { scrollStepSize: { newValue: "60" } }
-    assert.isFalse Settings.has 'scrollStepSize'
+    assert.equal Settings.get('scrollStepSize'), 60
 
   should "propagate non-default values from synced storage", ->
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(20) }
@@ -64,12 +58,12 @@ context "synced settings",
   should "propagate default values from synced storage", ->
     Settings.set 'scrollStepSize', 20
     chrome.storage.sync.set { scrollStepSize: JSON.stringify(60) }
-    assert.isFalse Settings.has 'scrollStepSize'
+    assert.equal Settings.get('scrollStepSize'), 60
 
   should "clear a setting from synced storage", ->
     Settings.set 'scrollStepSize', 20
     chrome.storage.sync.remove 'scrollStepSize'
-    assert.isFalse Settings.has 'scrollStepSize'
+    assert.equal Settings.get('scrollStepSize'), 60
 
   should "trigger a postUpdateHook", ->
     message = "Hello World"
