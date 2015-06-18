@@ -166,25 +166,26 @@ class LinkHintsMode
     if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
       return [] # This element should never have a link hint.
-      
-      # checks for every valid version of ng-click
-      ngPrefixes = ['', 'data-', 'x-']
-      ngSeparators = ['-', ':', '_']
-      ng = 'ng'
-      click = 'click'
-      hasNgClick: (element) ->
-        for prefix in ngPrefixes
-          for separator in ngSeparators
-            attr = prefix + ng + separator + click
-            if element.attributes.hasOwnProperty(attr)
-              return true
+
+    # checks for every valid version of ng-click
+    ngPrefixes = ['', 'data-', 'x-']
+    ngSeparators = ['-', ':', '_']
+    ng = 'ng'
+    click = 'click'
+    hasNgClick = () ->
+      for prefix in ngPrefixes
+        for separator in ngSeparators
+          attr = prefix + ng + separator + click
+          if element.attributes.hasOwnProperty(attr)
+            return true
+      return false
 
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"]) or
-        hasNgClick element
+        hasNgClick 
       isClickable = true
 
     # Check for jsaction event listeners on the element.
