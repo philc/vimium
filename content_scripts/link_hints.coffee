@@ -185,7 +185,7 @@ class LinkHintsMode
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"]) or
-        hasNgClick 
+        hasNgClick()
       isClickable = true
 
     # Check for jsaction event listeners on the element.
