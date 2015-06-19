@@ -167,8 +167,7 @@ class LinkHintsMode
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
       return [] # This element should never have a link hint.
 
-    # The quite popular (http://w3techs.com/technologies/market/javascript_library/20) JavaScript framework AngularJS
-    # uses the proprietary click attribute "ng-click". This checks for every valid way it may occur.
+    # Check for AngularJS listeners on the element.
     ngPrefixes = ['', 'data-', 'x-']
     ngSeparators = ['-', ':', '_']
     hasNgClick = () ->
