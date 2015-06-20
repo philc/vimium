@@ -1,4 +1,15 @@
 
+# A "setting" is a stored key/value pair.  An "option" is setting which has a default value and whose value
+# can be changed on the options page.
+#
+# Option values which have never been changed by the user are in Settings.defaults.
+#
+# Settings whose values have been changed are:
+# 1. stored either in chrome.storage.sync or in chrome.storage.local (but never both), and
+# 2. cached in Settings.cache; on extension pages, Settings.cache uses localStorage (so it persists).
+#
+# In all cases except Settings.defaults, values are stored as jsonified strings.
+
 Settings =
   storage: chrome.storage.sync
   cache: {}
@@ -159,7 +170,7 @@ if Utils.isBackgroundPage()
       chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
 
   # Migration (after 1.51, 2015/6/17).
-  # Copy settings with non-default values (and which are not in synced storage) to chrome.storage.local;
+  # Copy options with non-default values (and which are not in synced storage) to chrome.storage.local;
   # thereby making these settings accessible within content scripts.
   do (migrationKey = "copyNonDefaultsToChromeStorage-20150717") ->
     unless localStorage[migrationKey]
