@@ -1,5 +1,5 @@
 
-# A "setting" is a stored key/value pair.  An "option" is setting which has a default value and whose value
+# A "setting" is a stored key/value pair.  An "option" is a setting which has a default value and whose value
 # can be changed on the options page.
 #
 # Option values which have never been changed by the user are in Settings.defaults.
