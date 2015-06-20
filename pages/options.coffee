@@ -197,18 +197,20 @@ initOptionsPage = ->
       show $("linkHintCharacters")
       hide $("linkHintNumbers")
 
-  toggleAdvancedOptions =
-    do (advancedMode=false) ->
-      (event) ->
-        if advancedMode
-          $("advancedOptions").style.display = "none"
-          $("advancedOptionsButton").innerHTML = "Show Advanced Options"
-        else
-          $("advancedOptions").style.display = "table-row-group"
-          $("advancedOptionsButton").innerHTML = "Hide Advanced Options"
-        advancedMode = !advancedMode
-        $("advancedOptionsButton").blur()
-        event.preventDefault()
+  maintainAdvancedOptions = ->
+    if bgSettings.get "optionsPage_showAdvancedOptions"
+      $("advancedOptions").style.display = "table-row-group"
+      $("advancedOptionsButton").innerHTML = "Hide Advanced Options"
+    else
+      $("advancedOptions").style.display = "none"
+      $("advancedOptionsButton").innerHTML = "Show Advanced Options"
+  maintainAdvancedOptions()
+
+  toggleAdvancedOptions = (event) ->
+    bgSettings.set "optionsPage_showAdvancedOptions", not bgSettings.get "optionsPage_showAdvancedOptions"
+    maintainAdvancedOptions()
+    $("advancedOptionsButton").blur()
+    event.preventDefault()
 
   activateHelpDialog = ->
     showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
