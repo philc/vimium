@@ -323,14 +323,15 @@ class SimpleCache
       null
 
   rotate: (force = false) ->
-    if force or @entries < Object.keys(@cache).length or @expiry < new Date() - @lastRotation
-      @lastRotation = new Date()
-      @previous = @cache
-      @cache = {}
+    Utils.nextTick =>
+      if force or @entries < Object.keys(@cache).length or @expiry < new Date() - @lastRotation
+        @lastRotation = new Date()
+        @previous = @cache
+        @cache = {}
 
   clear: ->
-    @rotate true
-    @rotate true
+    @cache = {}
+    @previous = {}
 
 # This is a simple class for the common case where we want to use some data value which may be immediately
 # available, or for which we may have to wait.  It implements a use-immediately-or-wait queue, and calls the
