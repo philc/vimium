@@ -22,6 +22,10 @@ class Option
     @element.addEventListener "change", @onUpdated
     @fetch()
     Option.all.push @
+    # All options-page settings must have default values.
+    # Note(smblott) It would be better to have a test for this.
+    unless bgSettings.defaults[@field]?
+      console.error "error: option #{@field} has no default value in settings."
 
   # Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
   # Return the fetched value.
