@@ -11,6 +11,7 @@
 # In all cases except Settings.defaults, values are stored as jsonified strings.
 
 Settings =
+  debug: false
   storage: chrome.storage.sync
   cache: {}
   isLoaded: false
@@ -36,6 +37,7 @@ Settings =
   # Called after @cache has been initialized.  On extension pages, this will be called twice, but that does
   # not matter because it's idempotent.
   onLoaded: ->
+    @log "onLoaded: #{@onLoadedCallbacks.length} callback(s)"
     @isLoaded = true
     callback() while callback = @onLoadedCallbacks.pop()
 
@@ -46,6 +48,7 @@ Settings =
     @handleUpdateFromChromeStorage key, change?.newValue for own key, change of changes
 
   handleUpdateFromChromeStorage: (key, value) ->
+    @log "handleUpdateFromChromeStorage: #{key}"
     # Note: value here is either null or a JSONified string.  Therefore, even falsy settings values (like
     # false, 0 or "") are truthy here.  Only null is falsy.
     if @shouldSyncKey key
@@ -59,26 +62,36 @@ Settings =
 
   set: (key, value, shouldSetInSyncedStorage = true) ->
     @cache[key] = JSON.stringify value
+    @log "set: #{key} (length=#{@cache[key].length}, shouldSetInSyncedStorage=#{shouldSetInSyncedStorage})"
     if @shouldSyncKey key
       if shouldSetInSyncedStorage
         setting = {}; setting[key] = @cache[key]
+        @log "   chrome.storage.sync.set(#{key})"
         @storage.set setting
-      # Remove settings installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
-      chrome.storage.local.remove key if Utils.isBackgroundPage()
+      if Utils.isBackgroundPage()
+        # Remove options installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
+        @log "   chrome.storage.local.remove(#{key})"
+        chrome.storage.local.remove key
     @performPostUpdateHook key, value
 
   clear: (key) ->
+    @log "clear: #{key}"
     @set key, @defaults[key]
 
   has: (key) -> key of @cache
 
   use: (key, callback) ->
+    @log "use: #{key} (isLoaded=#{@isLoaded})"
     invokeCallback = => callback @get key
     if @isLoaded then invokeCallback() else @onLoadedCallbacks.push invokeCallback
 
   # For settings which require action when their value changes, add hooks to this object.
   postUpdateHooks: {}
   performPostUpdateHook: (key, value) -> @postUpdateHooks[key]? value
+
+  # For development only.
+  log: (args...) ->
+    console.log "settings:", args... if @debug
 
   # Default values for all settings.
   defaults:
