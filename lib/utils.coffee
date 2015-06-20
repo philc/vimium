@@ -330,8 +330,8 @@ class SimpleCache
         @cache = {}
 
   clear: ->
-    @cache = {}
-    @previous = {}
+    @rotate true
+    @rotate true
 
 # This is a simple class for the common case where we want to use some data value which may be immediately
 # available, or for which we may have to wait.  It implements a use-immediately-or-wait queue, and calls the
