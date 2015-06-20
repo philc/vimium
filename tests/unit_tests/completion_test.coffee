@@ -4,9 +4,6 @@ extend(global, require "../../background_scripts/completion_engines.js")
 extend(global, require "../../background_scripts/completion.js")
 extend global, require "./test_chrome_stubs.js"
 
-global.document =
-  createElement: -> {}
-
 context "bookmark completer",
   setup ->
     @bookmark3 = { title: "bookmark3", url: "bookmark3.com" }

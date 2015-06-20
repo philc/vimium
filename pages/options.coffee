@@ -181,6 +181,24 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
     else
       @url + "*"
 
+Options =
+  exclusionRules: ExclusionRulesOption
+  filterLinkHints: CheckBoxOption
+  hideHud: CheckBoxOption
+  keyMappings: TextOption
+  linkHintCharacters: NonEmptyTextOption
+  linkHintNumbers: NonEmptyTextOption
+  newTabUrl: NonEmptyTextOption
+  nextPatterns: NonEmptyTextOption
+  previousPatterns: NonEmptyTextOption
+  regexFindMode: CheckBoxOption
+  scrollStepSize: NumberOption
+  smoothScroll: CheckBoxOption
+  grabBackFocus: CheckBoxOption
+  searchEngines: TextOption
+  searchUrl: NonEmptyTextOption
+  userDefinedLinkHintCss: TextOption
+
 initOptionsPage = ->
   onUpdated = ->
     $("saveOptions").removeAttribute "disabled"
@@ -238,26 +256,8 @@ initOptionsPage = ->
       document.activeElement.blur() if document?.activeElement?.blur
       saveOptions()
 
-  options =
-    exclusionRules: ExclusionRulesOption
-    filterLinkHints: CheckBoxOption
-    hideHud: CheckBoxOption
-    keyMappings: TextOption
-    linkHintCharacters: NonEmptyTextOption
-    linkHintNumbers: NonEmptyTextOption
-    newTabUrl: NonEmptyTextOption
-    nextPatterns: NonEmptyTextOption
-    previousPatterns: NonEmptyTextOption
-    regexFindMode: CheckBoxOption
-    scrollStepSize: NumberOption
-    smoothScroll: CheckBoxOption
-    grabBackFocus: CheckBoxOption
-    searchEngines: TextOption
-    searchUrl: NonEmptyTextOption
-    userDefinedLinkHintCss: TextOption
-
   # Populate options. The constructor adds each new object to "Option.all".
-  for name, type of options
+  for name, type of Options
     new type(name,onUpdated)
 
   maintainLinkHintsView()
@@ -319,3 +319,6 @@ document.addEventListener "DOMContentLoaded", ->
 
   xhr.send()
 
+# Exported for tests.
+root = exports ? window
+root.Options = Options

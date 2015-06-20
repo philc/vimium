@@ -8,6 +8,10 @@
 exports.window = {}
 exports.localStorage = {}
 
+global.document =
+  createElement: -> {}
+  addEventListener: ->
+
 exports.chrome =
   runtime:
     getManifest: () ->
@@ -21,6 +25,7 @@ exports.chrome =
 
   extension:
     getURL: (path) -> path
+    getBackgroundPage: -> {}
 
   tabs:
     onSelectionChanged:
