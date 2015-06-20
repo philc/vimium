@@ -167,19 +167,19 @@ class LinkHintsMode
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
       return [] # This element should never have a link hint.
 
-    # Check for AngularJS listeners on the element.
+    # Check for AngularJS listeners on the element.  These are becoming increasingly preferred instead of
+    # Javascript's native onclick listeners.
     ngPrefixes = ['', 'data-', 'x-']
     ngSeparators = ['-', ':', '_']
     hasNgClick = () ->
       for prefix in ngPrefixes
         for separator in ngSeparators
           attr = "#{prefix}ng#{separator}click"
-          if element.hasAttribute(attr)
+          if element.hasAttribute attr
             return true
       return false
       
-    if hasNgClick()
-      isClickable = true
+    isClickable ||= hasNgClick()
 
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
