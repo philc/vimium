@@ -2,6 +2,7 @@
 Settings =
   storage: chrome.storage.sync
   cache: {}
+  localSettings: {}
   isLoaded: false
   onLoadedCallbacks: []
 
@@ -15,8 +16,36 @@ Settings =
       unless chrome.runtime.lastError
         @handleUpdateFromChromeStorage key, value for own key, value of items
 
+      @loadSettingsFromLocalStorage items, chrome.runtime.lastError
+
       chrome.storage.onChanged.addListener (changes, area) =>
         @propagateChangesFromChromeStorage changes if area == "sync"
+
+  loadSettingsFromLocalStorage: (syncItems, syncLastError) ->
+    chrome.storage.local.get null, (items) =>
+      unless chrome.runtime.lastError or syncLastError
+        overriddenBySync = []
+        for own key, value of items
+          continue unless @shouldSyncKey key
+          if key of syncItems
+            overriddenBySync.push key # This key has already been set from chrome.storage.sync.
+          else
+            @localSettings[key] = value
+            @handleUpdateFromChromeStorage key, value
+
+        # All of the values in overriddenBySync have equivalents in chrome.storage.sync which take
+        # priority, so we remove them.
+        chrome.storage.local.remove overriddenBySync if Utils.isBackgroundPage()
+
+      chrome.storage.onChanged.addListener (changes, area) =>
+        return unless area == "local"
+        for key, change of changes
+          # If change.newValue is non-null, a value has been added to chrome.storage.sync. For settings,
+          # the only values we care about here, this should only happen on the first run after the 1.52
+          # version bump. Everything else is filtered out in the following function call.
+          # If @localSettings[key] is non-null, we've been using this key's value from chrome.storage.local
+          # before, and so we propagate its updated value too.
+          @handleUpdateFromChromeStorage key, change.newValue if change?.newValue? or @localSettings[key]
 
       @onLoaded()
 
@@ -30,7 +59,16 @@ Settings =
     (key of @defaults) and key not in [ "settingsVersion", "previousVersion" ]
 
   propagateChangesFromChromeStorage: (changes) ->
-    @handleUpdateFromChromeStorage key, change?.newValue for own key, change of changes
+    overwrittenLocalSettings = []
+    for own key, change of changes
+      @handleUpdateFromChromeStorage key, change?.newValue
+
+      if key of @localSettings
+        delete @localSettings[key]
+        overwrittenLocalSettings.push key
+
+    if Utils.isBackgroundPage() and overwrittenLocalSettings.length > 0
+      chrome.storage.local.remove overwrittenLocalSettings
 
   handleUpdateFromChromeStorage: (key, value) ->
     # Note: value here is either null or a JSONified string.  Therefore, even falsy settings values (like
@@ -67,7 +105,10 @@ Settings =
 
   clear: (key) ->
     delete @cache[key] if @has key
-    @storage.remove key if @shouldSyncKey key
+    if @shouldSyncKey
+      @storage.remove key
+      chrome.storage.local.remove key
+      delete @localSettings[key]
     @performPostUpdateHook key, @get key
 
   has: (key) -> key of @cache
@@ -160,6 +201,26 @@ if Utils.isBackgroundPage()
   # We use settingsVersion to coordinate any necessary schema changes.
   if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
     Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
+
+  # Any settings set before we started using chrome.storage.sync were only stored in localStorage. If they've
+  # remained unchanged, then they won't be in chrome.storage.sync, and hence unusable with chrome.storage-
+  # backed Settings in the frontend. Here, we push settings in localStorage to chrome.storage.
+  # NOTE(mrmr1993): We only push settings for which there is no corresponding value in chrome.storage.sync.
+  # If there is a corresponding value, our value is either the most recent, or will be updated to it soon.
+  lessThan152 = Utils.compareVersions("1.52", Settings.get("settingsVersion")) == 1
+  if lessThan152 or not Settings.get "localStorageMigrated"
+    if lessThan152
+      delete localStorage["localStorageMigrated"]
+    else
+      localStorage["localStorageMigrated"] = true
+
+    localStorageClone = {}
+    for key, value of localStorage
+      localStorageClone[key] = value if Settings.shouldSyncKey key
+    chrome.storage.sync.get Object.keys(localStorageClone), (items) ->
+      delete localStorageClone[key] for own key of items
+      chrome.storage.local.set localStorageClone
+
   Settings.set("settingsVersion", Utils.getCurrentVersion())
 
   # Migration (after 1.49, 2015/2/1).

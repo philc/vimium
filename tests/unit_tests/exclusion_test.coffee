@@ -15,6 +15,7 @@ root.Marks =
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
 extend(global,require "../../lib/settings.js")
+Settings.isLoaded = true
 extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
