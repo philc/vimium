@@ -375,8 +375,10 @@ class Movement extends CountPrefix
   # it.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
-    @selection.deleteFromDocument() if @options.deleteFromDocument or args.deleteFromDocument
-    @selection.collapseToStart() unless @options.parentMode
+    if @options.deleteFromDocument or args.deleteFromDocument
+      @selection.deleteFromDocument()
+    else
+      @selection.collapseToStart()
 
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length
