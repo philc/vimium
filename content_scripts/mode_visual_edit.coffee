@@ -351,22 +351,21 @@ class Movement extends CountPrefix
     # element), or if this instance has been created to execute only a single movement.
     unless @options.parentMode or options.oneMovementOnly
       do =>
-        executeFind = (count, findBackwards) =>
-          if query = getFindModeQuery findBackwards
-            initialRange = @selection.getRangeAt(0).cloneRange()
-            for [0...count]
-              unless window.find query, Utils.hasUpperCase(query), findBackwards, true, false, true, false
-                @setSelectionRange initialRange
-                HUD.showForDuration("No matches for '" + query + "'", 1000)
-                return
-            # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
-            # drop back into visual mode.
-            @changeMode VisualMode if @name == "caret" and 0 < @selection.toString().length
+        doFind = (count, backwards) =>
+          initialRange = @selection.getRangeAt(0).cloneRange()
+          for [0...count] by 1
+            unless FindMode.execute null, {colorSelection: false, backwards}
+              @setSelectionRange initialRange
+              HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
+              return
+          # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
+          # drop back into visual mode.
+          @changeMode VisualMode if @name == "caret" and 0 < @selection.toString().length
 
-        @movements.n = (count) -> executeFind count, false
-        @movements.N = (count) -> executeFind count, true
+        @movements.n = (count) -> doFind count, false
+        @movements.N = (count) -> doFind count, true
         @movements["/"] = ->
-          @findMode = window.enterFindMode returnToViewport: true
+          @findMode = new FindMode returnToViewport: true
           @findMode.onExit => @changeMode VisualMode
     #
     # End of Movement constructor.

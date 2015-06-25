@@ -326,6 +326,18 @@ DomUtils =
       document.body.removeChild div
       coordinates
 
+  getSelectionFocusElement: ->
+    sel = window.getSelection()
+    if not sel.focusNode?
+      null
+    else if sel.focusNode == sel.anchorNode and sel.focusOffset == sel.anchorOffset
+      # The selection either *is* an element, or is inside an opaque element (eg. <input>).
+      sel.focusNode.childNodes[sel.focusOffset]
+    else if sel.focusNode.nodeType != sel.focusNode.ELEMENT_NODE
+      sel.focusNode.parentElement
+    else
+      sel.focusNode
+
   # Get the text content of an element (and its descendents), but omit the text content of previously-visited
   # nodes.  See #1514.
   # NOTE(smblott).  This is currently O(N^2) (when called on N elements).  An alternative would be to mark

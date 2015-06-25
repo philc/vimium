@@ -54,5 +54,161 @@ class PostFindMode extends SuppressPrintable
           handlerStack.remove()
           @continueBubbling
 
+class FindMode extends Mode
+  @query:
+    rawQuery: ""
+    matchCount: 0
+    hasResults: false
+
+  constructor: (options = {}) ->
+    # Save the selection, so findInPlace can restore it.
+    @initialRange = getCurrentRange()
+    FindMode.query = rawQuery: ""
+    if options.returnToViewport
+      @scrollX = window.scrollX
+      @scrollY = window.scrollY
+    super extend options,
+      name: "find"
+      indicator: false
+      exitOnClick: true
+
+    HUD.showFindMode this
+
+  exit: (event) ->
+    super()
+    handleEscapeForFindMode() if event
+
+  restoreSelection: ->
+    range = @initialRange
+    selection = getSelection()
+    selection.removeAllRanges()
+    selection.addRange range
+
+  findInPlace: (query) ->
+    # If requested, restore the scroll position (so that failed searches leave the scroll position unchanged).
+    @checkReturnToViewPort()
+    FindMode.updateQuery query
+    # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
+    # match as the user adds matching characters, or removes previously-matched characters. See #1434.
+    @restoreSelection()
+    query = if FindMode.query.isRegex then FindMode.getNextQueryFromRegexMatches(0) else FindMode.query.parsedQuery
+    FindMode.query.hasResults = FindMode.execute query
+
+  @updateQuery: (query) ->
+    @query.rawQuery = query
+    # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
+    # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
+    # character. here we grep for the relevant escape sequences.
+    @query.isRegex = Settings.get 'regexFindMode'
+    hasNoIgnoreCaseFlag = false
+    @query.parsedQuery = @query.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
+      return match if flag == "" or slashes.length != 1
+      switch (flag)
+        when "r"
+          @query.isRegex = true
+        when "R"
+          @query.isRegex = false
+        when "I"
+          hasNoIgnoreCaseFlag = true
+      ""
+
+    # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
+    @query.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(@query.parsedQuery)
+
+    # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
+    # sequentially so the browser handles the scrolling / text selection.
+    if @query.isRegex
+      try
+        pattern = new RegExp(@query.parsedQuery, "g" + (if @query.ignoreCase then "i" else ""))
+      catch error
+        # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
+        return
+      # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
+      text = document.body.innerText
+      @query.regexMatches = text.match(pattern)
+      @query.activeRegexIndex = 0
+      @query.matchCount = @query.regexMatches?.length
+    # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
+    # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
+    # from the internal representation used by window.find.
+    else
+      # escape all special characters, so RegExp just parses the string 'as is'.
+      # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+      escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+      parsedNonRegexQuery = @query.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
+      pattern = new RegExp(parsedNonRegexQuery, "g" + (if @query.ignoreCase then "i" else ""))
+      text = document.body.innerText
+      @query.matchCount = text.match(pattern)?.length
+
+  @getNextQueryFromRegexMatches: (stepSize) ->
+    # find()ing an empty query always returns false
+    return "" unless @query.regexMatches
+
+    totalMatches = @query.regexMatches.length
+    @query.activeRegexIndex += stepSize + totalMatches
+    @query.activeRegexIndex %= totalMatches
+
+    @query.regexMatches[@query.activeRegexIndex]
+
+  @getQuery: (backwards) ->
+    # check if the query has been changed by a script in another frame
+    mostRecentQuery = FindModeHistory.getQuery()
+    if (mostRecentQuery != @query.rawQuery)
+      @updateQuery mostRecentQuery
+
+    if @query.isRegex
+      @getNextQueryFromRegexMatches(if backwards then -1 else 1)
+    else
+      @query.parsedQuery
+
+  @saveQuery: -> FindModeHistory.saveQuery @query.rawQuery
+
+  # :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
+  @execute: (query, options) ->
+    result = null
+    options = extend {
+      backwards: false
+      caseSensitive: !@query.ignoreCase
+      colorSelection: true
+    }, options
+    query ?= FindMode.getQuery options.backwards
+
+    if options.colorSelection
+      document.body.classList.add("vimiumFindMode")
+      # ignore the selectionchange event generated by find()
+      document.removeEventListener("selectionchange", @restoreDefaultSelectionHighlight, true)
+
+    result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
+
+    if options.colorSelection
+      setTimeout(
+        -> document.addEventListener("selectionchange", @restoreDefaultSelectionHighlight, true)
+      , 0)
+
+    # We are either in normal mode ("n"), or find mode ("/").  We are not in insert mode.  Nevertheless, if a
+    # previous find landed in an editable element, then that element may still be activated.  In this case, we
+    # don't want to leave it behind (see #1412).
+    if document.activeElement and DomUtils.isEditable document.activeElement
+      document.activeElement.blur() unless DomUtils.isSelected document.activeElement
+
+    result
+
+  @restoreDefaultSelectionHighlight: -> document.body.classList.remove("vimiumFindMode")
+
+  checkReturnToViewPort: ->
+    window.scrollTo @scrollX, @scrollY if @options.returnToViewport
+
+getCurrentRange = ->
+  selection = getSelection()
+  if selection.type == "None"
+    range = document.createRange()
+    range.setStart document.body, 0
+    range.setEnd document.body, 0
+    range
+  else
+    selection.collapseToStart() if selection.type == "Range"
+    selection.getRangeAt 0
+
 root = exports ? window
 root.PostFindMode = PostFindMode
+root.FindMode = FindMode

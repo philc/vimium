@@ -62,9 +62,9 @@ exports.chrome =
   storage:
     # chrome.storage.local
     local:
-      get: ->
-      set: ->
-      remove: ->
+      get: (_, callback) -> callback?()
+      set: (_, callback) -> callback?()
+      remove: (_, callback) -> callback?()
 
     # chrome.storage.onChanged
     onChanged:

@@ -5,10 +5,6 @@
 # "domReady".
 #
 
-findModeQuery = { rawQuery: "", matchCount: 0 }
-findModeQueryHasResults = false
-findModeAnchorNode = null
-findModeInitialRange = null
 isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
@@ -622,108 +618,7 @@ window.refreshCompletionKeys = (response) ->
 isValidFirstKey = (keyChar) ->
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
-# This implements find-mode query history (using the "findModeRawQueryList" setting) as a list of raw queries,
-# most recent first.
-FindModeHistory =
-  storage: chrome.storage.local
-  key: "findModeRawQueryList"
-  max: 50
-  rawQueryList: null
-
-  init: ->
-    unless @rawQueryList
-      @rawQueryList = [] # Prevent repeated initialization.
-      @key = "findModeRawQueryListIncognito" if isIncognitoMode
-      @storage.get @key, (items) =>
-        unless chrome.runtime.lastError
-          @rawQueryList = items[@key] if items[@key]
-          if isIncognitoMode and not items[@key]
-            # This is the first incognito tab, so we need to initialize the incognito-mode query history.
-            @storage.get "findModeRawQueryList", (items) =>
-              unless chrome.runtime.lastError
-                @rawQueryList = items.findModeRawQueryList
-                @storage.set findModeRawQueryListIncognito: @rawQueryList
-
-    chrome.storage.onChanged.addListener (changes, area) =>
-      @rawQueryList = changes[@key].newValue if changes[@key]
-
-  getQuery: (index = 0) ->
-    @rawQueryList[index] or ""
-
-  saveQuery: (query) ->
-    if 0 < query.length
-      @rawQueryList = @refreshRawQueryList query, @rawQueryList
-      newSetting = {}; newSetting[@key] = @rawQueryList
-      @storage.set newSetting
-      # If there are any active incognito-mode tabs, then propagte this query to those tabs too.
-      unless isIncognitoMode
-        @storage.get "findModeRawQueryListIncognito", (items) =>
-          if not chrome.runtime.lastError and items.findModeRawQueryListIncognito
-            @storage.set
-              findModeRawQueryListIncognito: @refreshRawQueryList query, items.findModeRawQueryListIncognito
-
-  refreshRawQueryList: (query, rawQueryList) ->
-    ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
-
-# should be called whenever rawQuery is modified.
-updateFindModeQuery = ->
-  # the query can be treated differently (e.g. as a plain string versus regex depending on the presence of
-  # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
-  # character. here we grep for the relevant escape sequences.
-  findModeQuery.isRegex = Settings.get 'regexFindMode'
-  hasNoIgnoreCaseFlag = false
-  findModeQuery.parsedQuery = findModeQuery.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
-    return match if flag == "" or slashes.length != 1
-    switch (flag)
-      when "r"
-        findModeQuery.isRegex = true
-      when "R"
-        findModeQuery.isRegex = false
-      when "I"
-        hasNoIgnoreCaseFlag = true
-    ""
-
-  # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
-  findModeQuery.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(findModeQuery.parsedQuery)
-
-  # Don't count matches in the HUD.
-  HUD.hide(true)
-
-  # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
-  # sequentially so the browser handles the scrolling / text selection.
-  if findModeQuery.isRegex
-    try
-      pattern = new RegExp(findModeQuery.parsedQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
-    catch error
-      # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
-      return
-    # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
-    text = document.body.innerText
-    findModeQuery.regexMatches = text.match(pattern)
-    findModeQuery.activeRegexIndex = 0
-    findModeQuery.matchCount = findModeQuery.regexMatches?.length
-  # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
-  # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
-  # from the internal representation used by window.find.
-  else
-    # escape all special characters, so RegExp just parses the string 'as is'.
-    # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-    escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
-    parsedNonRegexQuery = findModeQuery.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
-    pattern = new RegExp(parsedNonRegexQuery, "g" + (if findModeQuery.ignoreCase then "i" else ""))
-    text = document.body.innerText
-    findModeQuery.matchCount = text.match(pattern)?.length
-
-updateQueryForFindMode = (rawQuery) ->
-  findModeQuery.rawQuery = rawQuery
-  updateFindModeQuery()
-  performFindInPlace()
-  showFindModeHUDForQuery()
-
-handleKeyCharForFindMode = (keyChar) ->
-  updateQueryForFindMode findModeQuery.rawQuery + keyChar
-
-handleEscapeForFindMode = ->
+window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
   # back to the default color.
@@ -734,158 +629,38 @@ handleEscapeForFindMode = ->
     window.getSelection().addRange(range)
   focusFoundLink() || selectFoundInputElement()
 
-# Return true if character deleted, false otherwise.
-handleDeleteForFindMode = ->
-  if findModeQuery.rawQuery.length == 0
-    HUD.hide()
-    false
-  else
-    updateQueryForFindMode findModeQuery.rawQuery.substring(0, findModeQuery.rawQuery.length - 1)
-    true
-
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-handleEnterForFindMode = ->
+window.handleEnterForFindMode = ->
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
-  FindModeHistory.saveQuery findModeQuery.rawQuery
-
-class FindMode extends Mode
-  constructor: (options = {}) ->
-    @historyIndex = -1
-    @partialQuery = ""
-    if options.returnToViewport
-      @scrollX = window.scrollX
-      @scrollY = window.scrollY
-    super
-      name: "find"
-      indicator: false
-      exitOnEscape: true
-      exitOnClick: true
-
-      keydown: (event) =>
-        window.scrollTo @scrollX, @scrollY if options.returnToViewport
-        if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
-          @exit() unless handleDeleteForFindMode()
-          @suppressEvent
-        else if event.keyCode == keyCodes.enter
-          handleEnterForFindMode()
-          @exit()
-          @suppressEvent
-        else if event.keyCode == keyCodes.upArrow
-          if rawQuery = FindModeHistory.getQuery @historyIndex + 1
-            @historyIndex += 1
-            @partialQuery = findModeQuery.rawQuery if @historyIndex == 0
-            updateQueryForFindMode rawQuery
-          @suppressEvent
-        else if event.keyCode == keyCodes.downArrow
-          @historyIndex = Math.max -1, @historyIndex - 1
-          rawQuery = if 0 <= @historyIndex then FindModeHistory.getQuery @historyIndex else @partialQuery
-          updateQueryForFindMode rawQuery
-          @suppressEvent
-        else
-          DomUtils.suppressPropagation(event)
-          handlerStack.stopBubblingAndFalse
-
-      keypress: (event) =>
-        handlerStack.neverContinueBubbling =>
-          if event.keyCode > 31
-            keyChar = String.fromCharCode event.charCode
-            handleKeyCharForFindMode keyChar if keyChar
-
-      keyup: (event) => @suppressEvent
-
-  exit: (event) ->
-    super()
-    handleEscapeForFindMode() if event?.type == "keydown" and KeyboardUtils.isEscape event
-    handleEscapeForFindMode() if event?.type == "click"
-    if findModeQueryHasResults and event?.type != "click"
-      new PostFindMode
-
-performFindInPlace = ->
-  # Restore the selection.  That way, we're always searching forward from the same place, so we find the right
-  # match as the user adds matching characters, or removes previously-matched characters. See #1434.
-  findModeRestoreSelection()
-  query = if findModeQuery.isRegex then getNextQueryFromRegexMatches(0) else findModeQuery.parsedQuery
-  findModeQueryHasResults = executeFind(query, { caseSensitive: !findModeQuery.ignoreCase })
-
-# :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
-executeFind = (query, options) ->
-  result = null
-  options = options || {}
-
-  document.body.classList.add("vimiumFindMode")
-
-  # ignore the selectionchange event generated by find()
-  document.removeEventListener("selectionchange",restoreDefaultSelectionHighlight, true)
-  result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
-  setTimeout(
-    -> document.addEventListener("selectionchange", restoreDefaultSelectionHighlight, true)
-    0)
-
-  # We are either in normal mode ("n"), or find mode ("/").  We are not in insert mode.  Nevertheless, if a
-  # previous find landed in an editable element, then that element may still be activated.  In this case, we
-  # don't want to leave it behind (see #1412).
-  if document.activeElement and DomUtils.isEditable document.activeElement
-    document.activeElement.blur() unless DomUtils.isSelected document.activeElement
-
-  # we need to save the anchor node here because <esc> seems to nullify it, regardless of whether we do
-  # preventDefault()
-  findModeAnchorNode = document.getSelection().anchorNode
-  result
-
-restoreDefaultSelectionHighlight = -> document.body.classList.remove("vimiumFindMode")
+  FindMode.saveQuery()
 
 focusFoundLink = ->
-  if (findModeQueryHasResults)
+  if (FindMode.query.hasResults)
     link = getLinkFromSelection()
     link.focus() if link
 
 selectFoundInputElement = ->
-  # if the found text is in an input element, getSelection().anchorNode will be null, so we use activeElement
-  # instead. however, since the last focused element might not be the one currently pointed to by find (e.g.
-  # the current one might be disabled and therefore unable to receive focus), we use the approximate
-  # heuristic of checking that the last anchor node is an ancestor of our element.
-  if (findModeQueryHasResults && document.activeElement &&
+  # Since the last focused element might not be the one currently pointed to by find (e.g.  the current one
+  # might be disabled and therefore unable to receive focus), we use the approximate heuristic of checking
+  # that the last anchor node is an ancestor of our element.
+  findModeAnchorNode = document.getSelection().anchorNode
+  if (FindMode.query.hasResults && document.activeElement &&
       DomUtils.isSelectable(document.activeElement) &&
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
 
-getNextQueryFromRegexMatches = (stepSize) ->
-  # find()ing an empty query always returns false
-  return "" unless findModeQuery.regexMatches
-
-  totalMatches = findModeQuery.regexMatches.length
-  findModeQuery.activeRegexIndex += stepSize + totalMatches
-  findModeQuery.activeRegexIndex %= totalMatches
-
-  findModeQuery.regexMatches[findModeQuery.activeRegexIndex]
-
-window.getFindModeQuery = (backwards) ->
-  # check if the query has been changed by a script in another frame
-  mostRecentQuery = FindModeHistory.getQuery()
-  if (mostRecentQuery != findModeQuery.rawQuery)
-    findModeQuery.rawQuery = mostRecentQuery
-    updateFindModeQuery()
-
-  if findModeQuery.isRegex
-    getNextQueryFromRegexMatches(if backwards then -1 else 1)
-  else
-    findModeQuery.parsedQuery
-
 findAndFocus = (backwards) ->
   Marks.setPreviousPosition()
-  query = getFindModeQuery backwards
+  FindMode.query.hasResults = FindMode.execute null, {backwards}
 
-  findModeQueryHasResults =
-    executeFind(query, { backwards: backwards, caseSensitive: !findModeQuery.ignoreCase })
-
-  if findModeQueryHasResults
+  if FindMode.query.hasResults
     focusFoundLink()
-    new PostFindMode() if findModeQueryHasResults
+    new PostFindMode()
   else
-    HUD.showForDuration("No matches for '" + findModeQuery.rawQuery + "'", 1000)
+    HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
 
 window.performFind = -> findAndFocus()
 
@@ -992,43 +767,10 @@ window.goNext = ->
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-showFindModeHUDForQuery = ->
-  if findModeQuery.rawQuery and (findModeQueryHasResults || findModeQuery.parsedQuery.length == 0)
-    plural = if findModeQuery.matchCount == 1 then "" else "es"
-    HUD.show("/" + findModeQuery.rawQuery + " (" + findModeQuery.matchCount + " Match#{plural})")
-  else if findModeQuery.rawQuery
-    HUD.show("/" + findModeQuery.rawQuery + " (No Matches)")
-  else
-    HUD.show("/")
-
-getCurrentRange = ->
-  selection = getSelection()
-  if selection.type == "None"
-    range = document.createRange()
-    range.setStart document.body, 0
-    range.setEnd document.body, 0
-    range
-  else
-    selection.collapseToStart() if selection.type == "Range"
-    selection.getRangeAt 0
-
-findModeSaveSelection = ->
-  findModeInitialRange = getCurrentRange()
-
-findModeRestoreSelection = (range = findModeInitialRange) ->
-  selection = getSelection()
-  selection.removeAllRanges()
-  selection.addRange range
-
 # Enters find mode.  Returns the new find-mode instance.
-window.enterFindMode = (options = {}) ->
+window.enterFindMode = ->
   Marks.setPreviousPosition()
-  # Save the selection, so performFindInPlace can restore it.
-  findModeSaveSelection()
-  findModeQuery = rawQuery: ""
-  findMode = new FindMode options
-  HUD.show "/"
-  findMode
+  new FindMode()
 
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)

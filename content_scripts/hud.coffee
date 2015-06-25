@@ -6,6 +6,7 @@ HUD =
   tween: null
   hudUI: null
   _displayElement: null
+  findMode: null
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
@@ -26,6 +27,19 @@ HUD =
     @hudUI.show {name: "show", text}
     @tween.fade 1.0, 150
 
+  showFindMode: (@findMode = null) ->
+    return unless @enabled()
+    @hudUI.show {name: "showFindMode", text: ""}
+    @tween.fade 1.0, 150
+
+  search: (data) ->
+    @findMode.findInPlace data.query
+
+    # Show the number of matches in the HUD UI.
+    matchCount = if FindMode.query.parsedQuery.length > 0 then FindMode.query.matchCount else 0
+    showMatchText = FindMode.query.rawQuery.length > 0
+    @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
+
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
@@ -41,6 +55,32 @@ HUD =
       Mode.setIndicator() if updateIndicator
     else
       @tween.fade 0, 150, => @hide true, updateIndicator
+
+  hideFindMode: (data) ->
+    @findMode.checkReturnToViewPort()
+
+    # An element element won't receive a focus event if the search landed on it while we were in the HUD
+    # iframe. To end up with the correct modes active, we create a focus/blur event manually after refocusing
+    # this window.
+    window.focus()
+
+    focusNode = DomUtils.getSelectionFocusElement()
+    document.activeElement?.blur()
+    focusNode?.focus()
+
+    {event} = data
+
+    if event.keyCode == keyCodes.enter
+      handleEnterForFindMode()
+      if FindMode.query.hasResults
+        postExit = -> new PostFindMode
+    else if KeyboardUtils.isEscape event
+      # We don't want FindMode to handle the click events that handleEscapeForFindMode can generate, so we
+      # wait until the mode is closed before running it.
+      postExit = handleEscapeForFindMode
+
+    @findMode.exit()
+    postExit?()
 
   isReady: do ->
     ready = false

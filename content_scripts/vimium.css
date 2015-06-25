@@ -284,6 +284,22 @@ iframe.vimiumHUDFrame {
   opacity: 0;
 }
 
+div.vimiumHUD span#hud-find-input, div.vimiumHUD span#hud-match-count {
+  display: inline;
+  outline: none;
+  white-space: nowrap;
+  overflow-y: hidden;
+}
+
+div.vimiumHUD span#hud-find-input br {
+  display: none;
+}
+
+div.vimiumHUD span#hud-find-input * {
+  display: inline;
+  white-space: nowrap;
+}
+
 body.vimiumFindMode ::selection {
   background: #ff9632;
 }

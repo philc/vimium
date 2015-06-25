@@ -1,5 +1,17 @@
 
+# A "setting" is a stored key/value pair.  An "option" is a setting which has a default value and whose value
+# can be changed on the options page.
+#
+# Option values which have never been changed by the user are in Settings.defaults.
+#
+# Settings whose values have been changed are:
+# 1. stored either in chrome.storage.sync or in chrome.storage.local (but never both), and
+# 2. cached in Settings.cache; on extension pages, Settings.cache uses localStorage (so it persists).
+#
+# In all cases except Settings.defaults, values are stored as jsonified strings.
+
 Settings =
+  debug: false
   storage: chrome.storage.sync
   cache: {}
   isLoaded: false
@@ -11,18 +23,21 @@ Settings =
       @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
       @onLoaded()
 
-    @storage.get null, (items) =>
-      unless chrome.runtime.lastError
-        @handleUpdateFromChromeStorage key, value for own key, value of items
+    chrome.storage.local.get null, (localItems) =>
+      localItems = {} if chrome.runtime.lastError
+      @storage.get null, (syncedItems) =>
+        unless chrome.runtime.lastError
+          @handleUpdateFromChromeStorage key, value for own key, value of extend localItems, syncedItems
 
-      chrome.storage.onChanged.addListener (changes, area) =>
-        @propagateChangesFromChromeStorage changes if area == "sync"
+        chrome.storage.onChanged.addListener (changes, area) =>
+          @propagateChangesFromChromeStorage changes if area == "sync"
 
-      @onLoaded()
+        @onLoaded()
 
   # Called after @cache has been initialized.  On extension pages, this will be called twice, but that does
   # not matter because it's idempotent.
   onLoaded: ->
+    @log "onLoaded: #{@onLoadedCallbacks.length} callback(s)"
     @isLoaded = true
     callback() while callback = @onLoadedCallbacks.pop()
 
@@ -33,52 +48,50 @@ Settings =
     @handleUpdateFromChromeStorage key, change?.newValue for own key, change of changes
 
   handleUpdateFromChromeStorage: (key, value) ->
+    @log "handleUpdateFromChromeStorage: #{key}"
     # Note: value here is either null or a JSONified string.  Therefore, even falsy settings values (like
     # false, 0 or "") are truthy here.  Only null is falsy.
     if @shouldSyncKey key
       unless value and key of @cache and @cache[key] == value
-        defaultValue = @defaults[key]
-        defaultValueJSON = JSON.stringify defaultValue
-
-        if value and value != defaultValueJSON
-          # Key/value has been changed to a non-default value.
-          @cache[key] = value
-          @performPostUpdateHook key, JSON.parse value
-        else
-          # The key has been reset to its default value.
-          delete @cache[key] if key of @cache
-          @performPostUpdateHook key, defaultValue
+        value ?= JSON.stringify @defaults[key]
+        @set key, JSON.parse(value), false
 
   get: (key) ->
     console.log "WARNING: Settings have not loaded yet; using the default value for #{key}." unless @isLoaded
     if key of @cache and @cache[key]? then JSON.parse @cache[key] else @defaults[key]
 
-  set: (key, value) ->
-    # Don't store the value if it is equal to the default, so we can change the defaults in the future.
-    if JSON.stringify(value) == JSON.stringify @defaults[key]
-      @clear key
-    else
-      jsonValue = JSON.stringify value
-      @cache[key] = jsonValue
-      if @shouldSyncKey key
-        setting = {}; setting[key] = jsonValue
+  set: (key, value, shouldSetInSyncedStorage = true) ->
+    @cache[key] = JSON.stringify value
+    @log "set: #{key} (length=#{@cache[key].length}, shouldSetInSyncedStorage=#{shouldSetInSyncedStorage})"
+    if @shouldSyncKey key
+      if shouldSetInSyncedStorage
+        setting = {}; setting[key] = @cache[key]
+        @log "   chrome.storage.sync.set(#{key})"
         @storage.set setting
-      @performPostUpdateHook key, value
+      if Utils.isBackgroundPage()
+        # Remove options installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
+        @log "   chrome.storage.local.remove(#{key})"
+        chrome.storage.local.remove key
+    @performPostUpdateHook key, value
 
   clear: (key) ->
-    delete @cache[key] if @has key
-    @storage.remove key if @shouldSyncKey key
-    @performPostUpdateHook key, @get key
+    @log "clear: #{key}"
+    @set key, @defaults[key]
 
   has: (key) -> key of @cache
 
   use: (key, callback) ->
+    @log "use: #{key} (isLoaded=#{@isLoaded})"
     invokeCallback = => callback @get key
     if @isLoaded then invokeCallback() else @onLoadedCallbacks.push invokeCallback
 
   # For settings which require action when their value changes, add hooks to this object.
   postUpdateHooks: {}
   performPostUpdateHook: (key, value) -> @postUpdateHooks[key]? value
+
+  # For development only.
+  log: (args...) ->
+    console.log "settings:", args... if @debug
 
   # Default values for all settings.
   defaults:
@@ -169,6 +182,20 @@ if Utils.isBackgroundPage()
     unless chrome.runtime.lastError or items.findModeRawQueryList
       rawQuery = Settings.get "findModeRawQuery"
       chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
+
+  # Migration (after 1.51, 2015/6/17).
+  # Copy options with non-default values (and which are not in synced storage) to chrome.storage.local;
+  # thereby making these settings accessible within content scripts.
+  do (migrationKey = "copyNonDefaultsToChromeStorage-20150717") ->
+    unless localStorage[migrationKey]
+      chrome.storage.sync.get null, (items) ->
+        unless chrome.runtime.lastError
+          updates = {}
+          for own key of localStorage
+            if Settings.shouldSyncKey(key) and not items[key]
+              updates[key] = localStorage[key]
+          chrome.storage.local.set updates, ->
+            localStorage[migrationKey] = not chrome.runtime.lastError
 
 root = exports ? window
 root.Settings = Settings
