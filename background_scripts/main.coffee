@@ -204,6 +204,7 @@ openUrlInNewTab = (request, callback) ->
       index: tab.index + 1
       selected: true
       windowId: tab.windowId
+      openerTabId: tab.id
     # FIXME(smblott). openUrlInNewTab is being called in two different ways with different arguments.  We
     # should refactor it such that this check on callback isn't necessary.
     callback = (->) unless typeof callback == "function"
