@@ -229,7 +229,6 @@ initOptionsPage = ->
     element.className = element.className + " example info"
     element.innerHTML = "Leave empty to reset this option."
 
-  maintainLinkHintsView()
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
   document.addEventListener "keyup", (event) ->
@@ -258,6 +257,8 @@ initOptionsPage = ->
   # Populate options. The constructor adds each new object to "Option.all".
   for name, type of options
     new type(name,onUpdated)
+
+  maintainLinkHintsView()
 
 initPopupPage = ->
   chrome.tabs.getSelected null, (tab) ->

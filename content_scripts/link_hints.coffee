@@ -478,7 +478,7 @@ class FilterHints
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    numberToHintString linkHintNumber + 1, @linkHintNumbers.toUpperCase()
+    numberToHintString linkHintNumber, @linkHintNumbers.toUpperCase()
 
   generateLinkText: (element) ->
     linkText = ""
@@ -512,8 +512,7 @@ class FilterHints
   fillInMarkers: (hintMarkers) ->
     @generateLabelMap()
     DomUtils.textContent.reset()
-    for marker, idx in hintMarkers
-      marker.hintString = @generateHintString(idx)
+    for marker in hintMarkers
       linkTextObject = @generateLinkText(marker.clickableItem)
       marker.linkText = linkTextObject.text
       marker.showLinkText = linkTextObject.show
@@ -522,7 +521,9 @@ class FilterHints
     @activeHintMarker = hintMarkers[0]
     @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
-    hintMarkers
+    # We use @filterLinkHints() here (although we know that all of the hints will match) to fill in the hint
+    # strings.  This ensures that we always get hint strings in the same order.
+    @filterLinkHints hintMarkers
 
   getMatchingHints: (hintMarkers, tabCount = 0) ->
     delay = 0
@@ -563,14 +564,45 @@ class FilterHints
 
   # Filter link hints by search string, renumbering the hints as necessary.
   filterLinkHints: (hintMarkers) ->
-    idx = 0
-    linkSearchString = @linkTextKeystrokeQueue.join("").toLowerCase()
+    linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
+    do (scoreFunction = @scoreLinkHint linkSearchString) ->
+      linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
+    # The Javascript sort() method is known not to be stable.  Nevertheless, we require (and assume, here)
+    # that it is deterministic.  So, if the user is typing hint characters, then hints will always end up in
+    # the same order and hence with the same hint strings (because hint-string filtering happens after the
+    # filtering here).
+    hintMarkers = hintMarkers[..].sort (a,b) -> b.score - a.score
 
+    linkHintNumber = 1
     for linkMarker in hintMarkers
-      continue unless 0 <= linkMarker.linkText.toLowerCase().indexOf linkSearchString
-      linkMarker.hintString = @generateHintString idx++
+      continue unless 0 < linkMarker.score
+      linkMarker.hintString = @generateHintString linkHintNumber++
       @renderMarker linkMarker
       linkMarker
+
+  # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
+  # a word, and a considerably higher score still for matches which are whole words.
+  scoreLinkHint: (linkSearchString) ->
+    searchWords = linkSearchString.trim().split /\s+/
+    (linkMarker) ->
+      linkWords = linkMarker.linkWords ?= linkMarker.linkText.trim().toLowerCase().split /\s+/
+
+      searchWordScores =
+        for searchWord in searchWords
+          linkWordScores =
+            for linkWord, idx in linkWords
+              if linkWord == searchWord
+                if idx == 0 then 8 else 6
+              else if linkWord.startsWith searchWord
+                if idx == 0 then 4 else 2
+              else if 0 <= linkWord.indexOf searchWord
+                1
+              else
+                0
+          Math.max linkWordScores...
+
+      addFunc = (a,b) -> a + b
+      if 0 in searchWordScores then 0 else searchWordScores.reduce addFunc, 0
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
