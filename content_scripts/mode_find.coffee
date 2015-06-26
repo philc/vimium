@@ -101,7 +101,7 @@ class FindMode extends Mode
     # character. here we grep for the relevant escape sequences.
     @query.isRegex = Settings.get 'regexFindMode'
     hasNoIgnoreCaseFlag = false
-    @query.parsedQuery = @query.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) ->
+    @query.parsedQuery = @query.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) =>
       return match if flag == "" or slashes.length != 1
       switch (flag)
         when "r"
