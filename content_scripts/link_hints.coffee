@@ -100,15 +100,18 @@ class LinkHintsMode
 
   setOpenLinkMode: (@mode) ->
     @hintMode.setIndicator @mode.indicator
+    keys = {}
+    # Default to clicking the link with the modifier keys described in `keys`. This is overridden for modes
+    # which use another kind of activator.
+    @linkActivator = (link) -> DomUtils.simulateClick link, keys
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
-      @linkActivator = (link) ->
-        # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
-        # windows) to open it in a new tab if necessary.
-        DomUtils.simulateClick link,
-          shiftKey: @mode is OPEN_IN_NEW_FG_TAB
-          metaKey: KeyboardUtils.platform == "Mac"
-          ctrlKey: KeyboardUtils.platform != "Mac"
-          altKey: false
+      # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
+      # windows) to open it in a new tab if necessary.
+      keys =
+        shiftKey: @mode is OPEN_IN_NEW_FG_TAB
+        metaKey: KeyboardUtils.platform == "Mac"
+        ctrlKey: KeyboardUtils.platform != "Mac"
+        altKey: false
     else if @mode is COPY_LINK_URL
       @linkActivator = (link) =>
         if link.href?
@@ -122,10 +125,9 @@ class LinkHintsMode
       @linkActivator = (link) ->
         chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
-      @linkActivator = (link) ->
-        DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
+      keys = altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+      keys = {}
 
   #
   # Creates a link marker for the given link.
