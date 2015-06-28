@@ -10,13 +10,27 @@
 #
 # The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
-OPEN_IN_CURRENT_TAB = name: "curr-tab"
-OPEN_IN_NEW_BG_TAB = name: "bg-tab"
-OPEN_IN_NEW_FG_TAB = name: "fg-tab"
-OPEN_WITH_QUEUE = name: "queue"
-COPY_LINK_URL = name: "link"
-OPEN_INCOGNITO = name: "incognito"
-DOWNLOAD_LINK_URL = name: "download"
+OPEN_IN_CURRENT_TAB =
+  name: "curr-tab"
+  indicator: "Open link in current tab."
+OPEN_IN_NEW_BG_TAB =
+  name: "bg-tab"
+  indicator: "Open link in new tab."
+OPEN_IN_NEW_FG_TAB =
+  name: "fg-tab"
+  indicator: "Open link in new tab and switch to it."
+OPEN_WITH_QUEUE =
+  name: "queue"
+  indicator: "Open multiple links in new tabs."
+COPY_LINK_URL =
+  name: "link"
+  indicator: "Copy link URL to Clipboard."
+OPEN_INCOGNITO =
+  name: "incognito"
+  indicator: "Open link in incognito window."
+DOWNLOAD_LINK_URL =
+  name: "download"
+  indicator: "Download link URL."
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -85,13 +99,8 @@ class LinkHintsMode
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
+    @hintMode.setIndicator @mode.indicator
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
-      if @mode is OPEN_IN_NEW_BG_TAB
-        @hintMode.setIndicator "Open link in new tab."
-      else if @mode is OPEN_IN_NEW_FG_TAB
-        @hintMode.setIndicator "Open link in new tab and switch to it."
-      else
-        @hintMode.setIndicator "Open multiple links in new tabs."
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -101,7 +110,6 @@ class LinkHintsMode
           ctrlKey: KeyboardUtils.platform != "Mac"
           altKey: false
     else if @mode is COPY_LINK_URL
-      @hintMode.setIndicator "Copy link URL to Clipboard."
       @linkActivator = (link) =>
         if link.href?
           chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -111,15 +119,12 @@ class LinkHintsMode
         else
           @onExit = -> HUD.showForDuration "No link to yank.", 2000
     else if @mode is OPEN_INCOGNITO
-      @hintMode.setIndicator "Open link in incognito window."
       @linkActivator = (link) ->
         chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
-      @hintMode.setIndicator "Download link URL."
       @linkActivator = (link) ->
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
-      @hintMode.setIndicator "Open link in current tab."
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
 
   #
