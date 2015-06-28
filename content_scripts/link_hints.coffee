@@ -53,6 +53,15 @@ DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL."
   keys: altKey: true
+CHANGE_FRAME =
+  name: "frame"
+  indicator: "Move focus to new frame."
+  linkActivator: (frameElement) -> frameElement.contentWindow.focus()
+  getVisibleClickable: (element) ->
+    return [] unless element.tagName.toUpperCase() in ["IFRAME", "FRAME"]
+
+    clientRect = DomUtils.getVisibleClientRect element, true
+    if clientRect then [{element: element, rect: clientRect}] else []
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -63,6 +72,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
   activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
   activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+  activateModeToChangeFrame: -> @activateMode CHANGE_FRAME
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
