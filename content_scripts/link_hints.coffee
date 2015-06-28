@@ -58,6 +58,8 @@ class LinkHintsMode
       exitOnEscape: true
       exitOnClick: true
       exitOnScroll: true
+      keydown: @onKeyDownInMode
+      keypress: @onKeyPressInMode
 
     @setOpenLinkMode mode
 
@@ -71,19 +73,15 @@ class LinkHintsMode
       # ancestors.
       length = (el) -> el.element.innerHTML?.length ? 0
       elements.sort (a,b) -> length(a) - length b
-    hintMarkers = (@createMarkerFor(el) for el in elements)
+    @hintMarkers = (@createMarkerFor(el) for el in elements)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
-    @markerMatcher.fillInMarkers hintMarkers
-
-    @hintMode.push
-      keydown: @onKeyDownInMode.bind this, hintMarkers
-      keypress: @onKeyPressInMode.bind this, hintMarkers
+    @markerMatcher.fillInMarkers @hintMarkers
 
     @hintMode.onExit =>
       @deactivateMode() if @isActive
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
-    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
+    @hintMarkerContainingDiv = DomUtils.addElementList @hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
@@ -263,7 +261,7 @@ class LinkHintsMode
     nonOverlappingElements
 
   # Handles <Shift> and <Ctrl>.
-  onKeyDownInMode: (hintMarkers, event) ->
+  onKeyDownInMode: (event) =>
     return if @delayMode or event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
@@ -291,7 +289,7 @@ class LinkHintsMode
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
-        @updateVisibleMarkers hintMarkers
+        @updateVisibleMarkers @hintMarkers
       else
         @deactivateMode()
 
@@ -301,7 +299,7 @@ class LinkHintsMode
 
     else if event.keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
-      @updateVisibleMarkers hintMarkers, @tabCount
+      @updateVisibleMarkers @hintMarkers, @tabCount
 
     else
       return
@@ -310,13 +308,13 @@ class LinkHintsMode
     DomUtils.suppressEvent event
 
   # Handles normal input.
-  onKeyPressInMode: (hintMarkers, event) ->
+  onKeyPressInMode: (event) =>
     return if @delayMode or event.repeat
 
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
       @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers hintMarkers
+      @updateVisibleMarkers @hintMarkers
 
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
