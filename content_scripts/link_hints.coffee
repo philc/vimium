@@ -149,6 +149,8 @@ class LinkHintsMode
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
+  # If the active mode object has the property getVisibleClickable, that will be called instead of this.
+  #
   getVisibleClickable: (element) ->
     tagName = element.tagName.toLowerCase()
     isClickable = false
@@ -230,7 +232,7 @@ class LinkHintsMode
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      visibleElement = @getVisibleClickable element
+      visibleElement = (@mode.getVisibleClickable ? @getVisibleClickable) element
       visibleElements.push visibleElement...
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
