@@ -114,9 +114,19 @@ class LinkHintsMode
 
   setOpenLinkMode: (@mode) ->
     @hintMode.setIndicator @mode.indicator
-    @linkActivator = @mode.linkActivator ? (link) ->
+    @linkActivator = @mode.linkActivator ? (link, rect, callbackObject) ->
       # If the mode has no linkActivator, we default to a simulated click, with modifiers @mode.keys
-      DomUtils.simulateClick link, @mode.keys
+      if (DomUtils.isSelectable(link))
+        DomUtils.simulateSelect(link)
+      else
+        # TODO figure out which other input elements should not receive focus
+        if (link.nodeName.toLowerCase() == "input" and link.type not in ["button", "submit"])
+          link.focus()
+        DomUtils.flashRect(rect)
+        DomUtils.simulateClick link, @mode.keys
+        if @mode is OPEN_WITH_QUEUE
+          callbackObject.callback = -> LinkHints.activateModeWithQueue()
+
 
   #
   # Creates a link marker for the given link.
@@ -332,19 +342,9 @@ class LinkHintsMode
   activateLink: (matchedLink, delay = 0) ->
     @delayMode = true
     clickEl = matchedLink.clickableItem
-    callbackObject = {}
+    callbackObject = {callback: null} # We pass this as an argument so linkActivators can set a callback.
 
-    if (DomUtils.isSelectable(clickEl))
-      DomUtils.simulateSelect(clickEl)
-    else
-      # TODO figure out which other input elements should not receive focus
-      if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
-        clickEl.focus()
-      DomUtils.flashRect(matchedLink.rect)
-      @linkActivator(clickEl)
-      if @mode is OPEN_WITH_QUEUE
-        callbackObject.callback = -> LinkHints.activateModeWithQueue()
-
+    @linkActivator clickEl, matchedLink.rect, callbackObject
     @deactivateMode delay, callbackObject.callback
 
   #
