@@ -10,18 +10,22 @@
 #
 # The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
+isPlatformMac = KeyboardUtils.platform == "Mac"
 OPEN_IN_CURRENT_TAB =
   name: "curr-tab"
   indicator: "Open link in current tab."
 OPEN_IN_NEW_BG_TAB =
   name: "bg-tab"
   indicator: "Open link in new tab."
+  keys: metaKey: isPlatformMac, ctrlKey: not isPlatformMac
 OPEN_IN_NEW_FG_TAB =
   name: "fg-tab"
   indicator: "Open link in new tab and switch to it."
+  keys: shiftKey: true, metaKey: isPlatformMac, ctrlKey: not isPlatformMac
 OPEN_WITH_QUEUE =
   name: "queue"
   indicator: "Open multiple links in new tabs."
+  keys: metaKey: isPlatformMac, ctrlKey: not isPlatformMac
 COPY_LINK_URL =
   name: "link"
   indicator: "Copy link URL to Clipboard."
@@ -31,6 +35,7 @@ OPEN_INCOGNITO =
 DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL."
+  keys: altKey: true
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -100,19 +105,10 @@ class LinkHintsMode
 
   setOpenLinkMode: (@mode) ->
     @hintMode.setIndicator @mode.indicator
-    keys = {}
     # Default to clicking the link with the modifier keys described in `keys`. This is overridden for modes
     # which use another kind of activator.
-    @linkActivator = (link) -> DomUtils.simulateClick link, keys
-    if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
-      # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
-      # windows) to open it in a new tab if necessary.
-      keys =
-        shiftKey: @mode is OPEN_IN_NEW_FG_TAB
-        metaKey: KeyboardUtils.platform == "Mac"
-        ctrlKey: KeyboardUtils.platform != "Mac"
-        altKey: false
-    else if @mode is COPY_LINK_URL
+    @linkActivator = (link) -> DomUtils.simulateClick link, @mode.keys
+    if @mode is COPY_LINK_URL
       @linkActivator = (link) =>
         if link.href?
           chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -124,10 +120,6 @@ class LinkHintsMode
     else if @mode is OPEN_INCOGNITO
       @linkActivator = (link) ->
         chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
-    else if @mode is DOWNLOAD_LINK_URL
-      keys = altKey: true, ctrlKey: false, metaKey: false
-    else # OPEN_IN_CURRENT_TAB
-      keys = {}
 
   #
   # Creates a link marker for the given link.
