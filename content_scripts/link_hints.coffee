@@ -332,9 +332,10 @@ class LinkHintsMode
   activateLink: (matchedLink, delay = 0) ->
     @delayMode = true
     clickEl = matchedLink.clickableItem
+    callbackObject = {}
+
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
-      @deactivateMode delay
     else
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
@@ -342,9 +343,9 @@ class LinkHintsMode
       DomUtils.flashRect(matchedLink.rect)
       @linkActivator(clickEl)
       if @mode is OPEN_WITH_QUEUE
-        @deactivateMode delay, -> LinkHints.activateModeWithQueue()
-      else
-        @deactivateMode delay
+        callbackObject.callback = -> LinkHints.activateModeWithQueue()
+
+    @deactivateMode delay, callbackObject.callback
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -359,7 +360,7 @@ class LinkHintsMode
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
-  deactivateMode: (delay = 0, callback = null) ->
+  deactivateMode: (delay = 0, callback) ->
     deactivate = =>
       DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
       @hintMarkerContainingDiv = null
