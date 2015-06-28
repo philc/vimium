@@ -50,6 +50,17 @@ class LinkHintsMode
     return unless document.documentElement
     @isActive = true
 
+    @hintMode = new Mode
+      name: "hint/#{mode.name}"
+      indicator: false
+      passInitialKeyupEvents: true
+      suppressAllKeyboardEvents: true
+      exitOnEscape: true
+      exitOnClick: true
+      exitOnScroll: true
+
+    @setOpenLinkMode mode
+
     elements = @getVisibleClickableElements()
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
@@ -64,22 +75,12 @@ class LinkHintsMode
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
     @markerMatcher.fillInMarkers hintMarkers
 
-    @hintMode = new Mode
-      name: "hint/#{mode.name}"
-      indicator: false
-      passInitialKeyupEvents: true
-      suppressAllKeyboardEvents: true
-      exitOnEscape: true
-      exitOnClick: true
-      exitOnScroll: true
+    @hintMode.push
       keydown: @onKeyDownInMode.bind this, hintMarkers
       keypress: @onKeyPressInMode.bind this, hintMarkers
 
     @hintMode.onExit =>
       @deactivateMode() if @isActive
-
-    @setOpenLinkMode mode
-
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
     @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
