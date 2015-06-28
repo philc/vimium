@@ -29,9 +29,18 @@ OPEN_WITH_QUEUE =
 COPY_LINK_URL =
   name: "link"
   indicator: "Copy link URL to Clipboard."
+  linkActivator: (link) -> # `this` will be an instance of LinkHintsMode at call-time.
+    if link.href?
+      chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+      url = link.href
+      url = url[0..25] + "...." if 28 < url.length
+      @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+    else
+      @onExit = -> HUD.showForDuration "No link to yank.", 2000
 OPEN_INCOGNITO =
   name: "incognito"
   indicator: "Open link in incognito window."
+  linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
 DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL."
@@ -105,21 +114,9 @@ class LinkHintsMode
 
   setOpenLinkMode: (@mode) ->
     @hintMode.setIndicator @mode.indicator
-    # Default to clicking the link with the modifier keys described in `keys`. This is overridden for modes
-    # which use another kind of activator.
-    @linkActivator = (link) -> DomUtils.simulateClick link, @mode.keys
-    if @mode is COPY_LINK_URL
-      @linkActivator = (link) =>
-        if link.href?
-          chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
-          url = link.href
-          url = url[0..25] + "...." if 28 < url.length
-          @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
-        else
-          @onExit = -> HUD.showForDuration "No link to yank.", 2000
-    else if @mode is OPEN_INCOGNITO
-      @linkActivator = (link) ->
-        chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
+    @linkActivator = @mode.linkActivator ? (link) ->
+      # If the mode has no linkActivator, we default to a simulated click, with modifiers @mode.keys
+      DomUtils.simulateClick link, @mode.keys
 
   #
   # Creates a link marker for the given link.
