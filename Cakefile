@@ -56,15 +56,12 @@ task "autobuild", "continually rebuild coffeescript files using coffee --watch",
   coffee = spawn "coffee", ["-cw", __dirname]
 
 task "package", "Builds a zip file for submission to the Chrome store. The output is in dist/", ->
-  # To get exec-sync, `npm install exec-sync`. We use this for synchronously executing shell commands.
-  execSync = require("exec-sync")
-
   vimium_version = JSON.parse(fs.readFileSync("manifest.json").toString())["version"]
 
   invoke "build"
 
-  execSync "rm -rf dist/vimium"
-  execSync "mkdir -p dist/vimium"
+  child_process.execSync("rm -rf dist/vimium")
+  child_process.execSync("mkdir -p dist/vimium")
 
   blacklist = [".*", "*.coffee", "*.md", "reference", "test_harnesses", "tests", "dist", "git_hooks",
                "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile"]
@@ -72,8 +69,8 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
     ["-r", ".", "dist/vimium"],
     blacklist.map((item) -> ["--exclude", "'#{item}'"]))
 
-  execSync "rsync " + rsyncOptions.join(" ")
-  execSync "cd dist && zip -r vimium-#{vimium_version}.zip vimium"
+  child_process.execSync("rsync " + rsyncOptions.join(" "))
+  child_process.execSync("cd dist && zip -r vimium-#{vimium_version}.zip vimium")
 
 # This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
 # Vimium and want to distribute their fork?
