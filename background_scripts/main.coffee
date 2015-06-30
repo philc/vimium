@@ -187,30 +187,28 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
 
-#
-# Opens the url in the current tab.
-#
-openUrlInCurrentTab = (request) ->
-  chrome.tabs.getSelected(null,
-    (tab) -> chrome.tabs.update(tab.id, { url: Utils.convertToUrl(request.url) }))
+TabOperations =
+  # Opens the url in the current tab.
+  openUrlInCurrentTab: (request, callback = (->)) ->
+    chrome.tabs.getSelected null, (tab) ->
+      callback = (->) unless typeof callback == "function"
+      chrome.tabs.update tab.id, { url: Utils.convertToUrl(request.url) }, callback
 
-#
-# Opens request.url in new tab and switches to it if request.selected is true.
-#
-openUrlInNewTab = (request, callback) ->
-  chrome.tabs.getSelected null, (tab) ->
-    tabConfig =
-      url: Utils.convertToUrl request.url
-      index: tab.index + 1
-      selected: true
-      windowId: tab.windowId
-    # FIXME(smblott). openUrlInNewTab is being called in two different ways with different arguments.  We
-    # should refactor it such that this check on callback isn't necessary.
+  # Opens request.url in new tab and switches to it if request.selected is true.
+  openUrlInNewTab: (request, callback = (->)) ->
+    chrome.tabs.getSelected null, (tab) ->
+      tabConfig =
+        url: Utils.convertToUrl request.url
+        index: tab.index + 1
+        selected: true
+        windowId: tab.windowId
+      openerTabId: tab.id
+      callback = (->) unless typeof callback == "function"
+      chrome.tabs.create tabConfig, callback
+
+  openUrlInIncognito: (request, callback = (->)) ->
     callback = (->) unless typeof callback == "function"
-    chrome.tabs.create tabConfig, callback
-
-openUrlInIncognito = (request) ->
-  chrome.windows.create({ url: Utils.convertToUrl(request.url), incognito: true})
+    chrome.windows.create {url: Utils.convertToUrl(request.url), incognito: true}, callback
 
 #
 # Copies or pastes some data (request.data) to/from the clipboard.
@@ -256,7 +254,7 @@ BackgroundCommands =
       if url == "pages/blank.html"
         # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
         url = if tab.incognito then "chrome://newtab" else chrome.runtime.getURL url
-      openUrlInNewTab { url }, callback
+      TabOperations.openUrlInNewTab { url }, callback
   duplicateTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
@@ -296,8 +294,8 @@ BackgroundCommands =
               scrollX: tabQueueEntry.scrollX,
               scrollY: tabQueueEntry.scrollY)
           callback()))
-  openCopiedUrlInCurrentTab: (request) -> openUrlInCurrentTab({ url: Clipboard.paste() })
-  openCopiedUrlInNewTab: (request) -> openUrlInNewTab({ url: Clipboard.paste() })
+  openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab({ url: Clipboard.paste() })
+  openCopiedUrlInNewTab: (request) -> TabOperations.openUrlInNewTab({ url: Clipboard.paste() })
   togglePinTab: (request) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
@@ -652,9 +650,9 @@ portHandlers =
 sendRequestHandlers =
   getCompletionKeys: getCompletionKeysRequest
   getCurrentTabUrl: getCurrentTabUrl
-  openUrlInNewTab: openUrlInNewTab
-  openUrlInIncognito: openUrlInIncognito
-  openUrlInCurrentTab: openUrlInCurrentTab
+  openUrlInNewTab: TabOperations.openUrlInNewTab
+  openUrlInIncognito: TabOperations.openUrlInIncognito
+  openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
   openOptionsPageInNewTab: openOptionsPageInNewTab
   registerFrame: registerFrame
   unregisterFrame: unregisterFrame
@@ -725,7 +723,7 @@ showUpgradeMessage = ->
           Settings.set "previousVersion", currentVersion
           chrome.notifications.onClicked.addListener (id) ->
             if id == notificationId
-              openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
+              TabOperations.openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
     else
       # We need to wait for the user to accept the "notifications" permission.
       chrome.permissions.onAdded.addListener showUpgradeMessage
@@ -740,3 +738,5 @@ chrome.windows.getAll { populate: true }, (windows) ->
       chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
 
 showUpgradeMessage()
+
+root.TabOperations = TabOperations

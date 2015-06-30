@@ -82,7 +82,7 @@ Marks =
           @gotoPositionInTab extend markInfo, tabId: tab.id
       else
         # There is no existing matching tab, we'll have to create one.
-        chrome.tabs.create { url: @getBaseUrl markInfo.url }, (tab) =>
+        TabOperations.openUrlInNewTab { url: @getBaseUrl markInfo.url }, (tab) =>
           # Note. tabLoadedHandlers is defined in "main.coffee".  The handler below will be called when the tab
           # is loaded, its DOM is ready and it registers with the background page.
           tabLoadedHandlers[tab.id] = => @gotoPositionInTab extend markInfo, tabId: tab.id
