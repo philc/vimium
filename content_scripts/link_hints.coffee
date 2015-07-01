@@ -168,18 +168,21 @@ class LinkHintsMode
       return [] # This element should never have a link hint.
 
     # Check for AngularJS listeners on the element.
-    ngPrefixes = ['', 'data-', 'x-']
-    ngSeparators = ['-', ':', '_']
-    hasNgClick = () ->
-      for prefix in ngPrefixes
-        for separator in ngSeparators
-          attr = "#{prefix}ng#{separator}click"
-          if element.hasAttribute(attr)
-            return true
-      return false
-      
-    if hasNgClick()
-      isClickable = true
+    @checkForAngularJs ?= do ->
+      angularElements = document.body.getElementsByClassName "ng-scope"
+      if angularElements.length == 0
+        -> false
+      else
+        ngAttributes = []
+        for prefix in [ '', 'data-', 'x-' ]
+          for separator in [ '-', ':', '_' ]
+            ngAttributes.push "#{prefix}ng#{separator}click"
+        (element) ->
+          for attribute in ngAttributes
+            return true if element.hasAttribute attribute
+          false
+
+    isClickable ||= @checkForAngularJs element
 
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
