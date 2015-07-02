@@ -169,7 +169,7 @@ class LinkHintsMode
 
     # Check for AngularJS listeners on the element.
     @checkForAngularJs ?= do ->
-      angularElements = document.body.getElementsByClassName "ng-scope"
+      angularElements = document.getElementsByClassName "ng-scope"
       if angularElements.length == 0
         -> false
       else
