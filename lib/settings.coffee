@@ -121,6 +121,7 @@ Settings =
       div > .vimiumHintMarker > .matchingCharacter {
       }
       """
+    userDefinedCssClassesForLinks: ""
     # Default exclusion rules.
     exclusionRules:
       [

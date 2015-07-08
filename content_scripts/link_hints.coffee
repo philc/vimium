@@ -144,7 +144,7 @@ class LinkHintsMode
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element) ->
+  getVisibleClickable: (element, clickableClasses) ->
     tagName = element.tagName.toLowerCase()
     isClickable = false
     onlyHasTabIndex = false
@@ -173,6 +173,11 @@ class LinkHintsMode
         element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
       isClickable = true
+
+    for clickableClass in clickableClasses
+      if (!!clickableClass and element.getAttribute("class")?.toLowerCase().indexOf(clickableClass) >= 0)
+        isClickable = true
+        break
 
     # Check for jsaction event listeners on the element.
     if element.hasAttribute "jsaction"
@@ -224,8 +229,9 @@ class LinkHintsMode
     # is the sensible, efficient way to ensure this happens.
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
+    clickableClasses = Settings.get("userDefinedCssClassesForLinks").split(/\r\n|\r|\n/g)
     for element in elements
-      visibleElement = @getVisibleClickable element
+      visibleElement = @getVisibleClickable element, clickableClasses
       visibleElements.push visibleElement...
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
