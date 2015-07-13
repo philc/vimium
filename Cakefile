@@ -15,6 +15,14 @@ spawn = (procName, optArray, silent=false) ->
     proc.stderr.on 'data', (data) -> process.stderr.write data
   proc
 
+spawnMultiple = (spawnDetailsArray, callback) ->
+  return callback?() if spawnDetailsArray.length == 0
+  {procName, optArray, silent} = spawnDetailsArray.shift()
+  process = spawn procName, optArray, silent
+  process.on 'exit', (returnCode) ->
+    if returnCode == 0
+      spawnMultiple spawnDetailsArray, callback
+
 optArrayFromDict = (opts) ->
   result = []
   for key, value of opts
@@ -56,24 +64,22 @@ task "autobuild", "continually rebuild coffeescript files using coffee --watch",
   coffee = spawn "coffee", ["-cw", __dirname]
 
 task "package", "Builds a zip file for submission to the Chrome store. The output is in dist/", ->
-  # To get exec-sync, `npm install exec-sync`. We use this for synchronously executing shell commands.
-  execSync = require("exec-sync")
-
   vimium_version = JSON.parse(fs.readFileSync("manifest.json").toString())["version"]
 
   invoke "build"
-
-  execSync "rm -rf dist/vimium"
-  execSync "mkdir -p dist/vimium"
 
   blacklist = [".*", "*.coffee", "*.md", "reference", "test_harnesses", "tests", "dist", "git_hooks",
                "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile"]
   rsyncOptions = [].concat.apply(
     ["-r", ".", "dist/vimium"],
-    blacklist.map((item) -> ["--exclude", "'#{item}'"]))
+    blacklist.map((item) -> ["--exclude", "#{item}"]))
 
-  execSync "rsync " + rsyncOptions.join(" ")
-  execSync "cd dist && zip -r vimium-#{vimium_version}.zip vimium"
+  spawnMultiple [
+    {procName: "rm", optArray: ["-rf", "dist/vimium"]},
+    {procName: "mkdir", optArray: ["-p", "dist/vimium"]},
+    {procName: "rsync", optArray: rsyncOptions},
+    {procName: "zip", optArray: ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"]}
+  ]
 
 # This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
 # Vimium and want to distribute their fork?
