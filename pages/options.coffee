@@ -198,6 +198,7 @@ Options =
   searchEngines: TextOption
   searchUrl: NonEmptyTextOption
   userDefinedLinkHintCss: TextOption
+  userDefinedCssClassesForLinks: TextOption
 
 initOptionsPage = ->
   onUpdated = ->
