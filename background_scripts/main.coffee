@@ -506,10 +506,8 @@ generateCompletionKeys = (keysToCheck) ->
   completionKeys = singleKeyCommands.slice(0)
 
   if (getActualKeyStrokeLength(command) == 1)
-    for key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
+    for keys of commandKeys
+      completionKeys.push keys[1] if keys[0] == command
 
   completionKeys
 
