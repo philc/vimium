@@ -117,12 +117,9 @@ window.initializeModes = ->
 
     isCommandKey: (key) ->
       for keys in commandKeys
-        return true if keys.length > 1 and keys[0] == key
+        return true if keys[0] == key
 
       return true if /^[1-9]/.test(key) # Accept 1-9 to allow number prefixes.
-
-      for keys in commandKeys
-        return true if keys.length == 1 and keys[0] == key
 
       splitKeyQueue = (queue) ->
         match = /([1-9][0-9]*)?(.*)/.exec(queue)
@@ -140,7 +137,6 @@ window.initializeModes = ->
 
       splitHash = splitKeyQueue @keyQueue
       command = splitHash.command
-      count = splitHash.count
 
       if (isSingleKey(command))
         for keys of commandKeys
