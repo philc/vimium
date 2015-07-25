@@ -263,7 +263,6 @@ executePageCommand = (request) ->
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
       # which should receive the focus when the vomnibar closes.
       Utils.invokeCommandString request.command, [ request.frameId, request.registryEntry ]
-      refreshCompletionKeys request
     return
 
   # All other commands are handled in their frame (but only if Vimium is enabled).
@@ -273,8 +272,6 @@ executePageCommand = (request) ->
     Utils.invokeCommandString(request.command, [request.count])
   else
     Utils.invokeCommandString(request.command) for i in [0...request.count]
-
-  refreshCompletionKeys(request)
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()

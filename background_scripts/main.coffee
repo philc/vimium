@@ -499,20 +499,6 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
   sendRequestToAllTabs(getCompletionKeysRequest())
 
-# Generates a list of keys that can complete a valid command given the current key queue or the one passed in
-generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueueArray.join(""))
-  command = splitHash.command
-  count = splitHash.count
-
-  completionKeys = singleKeyCommands.slice(0)
-
-  if (getActualKeyStrokeLength(command) == 1)
-    for keys of commandKeys
-      completionKeys.push keys[1] if keys[0] == command
-
-  completionKeys
-
 splitKeyQueue = (queue) ->
   match = /([1-9][0-9]*)?(.*)/.exec(queue)
   count = parseInt(match[1], 10)
@@ -591,7 +577,6 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
           command: registryEntry.command
           frameId: frameId
           count: count
-          completionKeys: generateCompletionKeys ""
           registryEntry: registryEntry
         refreshedCompletionKeys = true
       else
