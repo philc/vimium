@@ -23,6 +23,7 @@ tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
+commandKeys = []
 singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
@@ -186,6 +187,7 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
+  commandKeys: commandKeys
 
 TabOperations =
   # Opens the url in the current tab.
@@ -477,11 +479,21 @@ populateSingleKeyCommands = ->
     if (getActualKeyStrokeLength(key) == 1)
       singleKeyCommands.push(key)
 
+populateCommandKeys = ->
+  for key of Commands.keyToCommandRegistry
+    splitKey = splitKeyIntoFirstAndSecond(key)
+    if splitKey.second
+      commandKeys.push [splitKey.first, splitKey.second]
+    else
+      commandKeys.push [splitKey.first]
+
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
   validFirstKeys = {}
   singleKeyCommands = []
+  commandKeys = []
 
+  populateCommandKeys()
   populateValidFirstKeys()
   populateSingleKeyCommands()
 
@@ -701,6 +713,7 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
+populateCommandKeys()
 populateValidFirstKeys()
 populateSingleKeyCommands()
 
