@@ -523,8 +523,13 @@ splitKeyQueue = (queue) ->
   { count: count, command: command }
 
 handleKeyDown = (request, port) ->
-  key = request.keyChar
-  if (key == "<ESC>")
+  {keyChar: key, keyQueue: queue} = request
+  if queue?
+    newKeyQueue = checkKeyQueue(queue, port.sender.tab.id, request.frameId)
+    unless newKeyQueue == ""
+      # The queue passed wasn't for a whole command. This shouldn't happen, so we log a message if it does.
+      console.log "Incomplete key queue passed to the background page. This should not happen."
+  else if (key == "<ESC>")
     console.log("clearing keyQueue")
     keyQueue = ""
   else
