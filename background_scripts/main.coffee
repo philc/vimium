@@ -21,7 +21,10 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
 currentVersion = Utils.getCurrentVersion()
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
-keyQueue = "" # Queue of keys typed
+
+# Queue of keys typed. If keyQueueArray.numericPrefix is true, its 0th entry is the current command's numeric
+# prefix.
+keyQueueArray = []
 validFirstKeys = {}
 commandKeys = []
 singleKeyCommands = []
@@ -496,9 +499,26 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
   sendRequestToAllTabs(getCompletionKeysRequest())
 
+keyQueueToKeyQueueArray = (keyQueue) ->
+  {count, command} = splitKeyQueue keyQueue
+
+  newKeyQueueArray = [] if command.length == 0
+
+  splitKey = splitKeyIntoFirstAndSecond(command)
+  if splitKey.second
+    newKeyQueueArray = [splitKey.first, splitKey.second]
+  else
+    newKeyQueueArray = [splitKey.first]
+
+  unless isNaN count
+    newKeyQueueArray.numericPrefix = true
+    newKeyQueueArray.unshift count.toString()
+
+  newKeyQueueArray
+
 # Generates a list of keys that can complete a valid command given the current key queue or the one passed in
 generateCompletionKeys = (keysToCheck) ->
-  splitHash = splitKeyQueue(keysToCheck || keyQueue)
+  splitHash = splitKeyQueue(keysToCheck || keyQueueArray.join(""))
   command = splitHash.command
   count = splitHash.count
 
@@ -521,16 +541,16 @@ handleKeyDown = (request, port) ->
   {keyChar: key, keyQueue: queue} = request
   if queue?
     newKeyQueue = checkKeyQueue(queue, port.sender.tab.id, request.frameId)
-    unless newKeyQueue == ""
+    unless newKeyQueue == []
       # The queue passed wasn't for a whole command. This shouldn't happen, so we log a message if it does.
       console.log "Incomplete key queue passed to the background page. This should not happen."
   else if (key == "<ESC>")
     console.log("clearing keyQueue")
-    keyQueue = ""
+    keyQueueArray = []
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
-    keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
+    console.log("checking keyQueue: [", keyQueueArray.join("") + key, "]")
+    keyQueueArray = keyQueueToKeyQueueArray checkKeyQueue(keyQueueArray.join("") + key, port.sender.tab.id, request.frameId)
+    console.log("new KeyQueue: " + keyQueueArray.join(""))
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
@@ -538,7 +558,7 @@ handleKeyDown = (request, port) ->
   # Steve (23 Aug, 14).
   chrome.tabs.sendMessage(port.sender.tab.id,
     name: "currentKeyQueue",
-    keyQueue: keyQueue)
+    keyQueue: keyQueueArray.join(""))
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false
