@@ -118,10 +118,8 @@ window.initializeModes = ->
     isCommandKey: (key) ->
       return true if isValidFirstKey(key)
 
-      singleKeyCommands = []
       for keys in commandKeys
-        if (keys.length == 1)
-          singleKeyCommands.push(keys[0])
+        return true if keys.length == 1 and keys[0] == key
 
       splitKeyQueue = (queue) ->
         match = /([1-9][0-9]*)?(.*)/.exec(queue)
@@ -142,13 +140,11 @@ window.initializeModes = ->
       command = splitHash.command
       count = splitHash.count
 
-      completionKeys = singleKeyCommands.slice(0)
-
       if (getActualKeyStrokeLength(command) == 1)
         for keys of commandKeys
-          completionKeys.push keys[1] if keys[0] == command
+          return true if keys[0] == command and keys[1] == key
 
-      completionKeys.indexOf(key) != -1
+      false
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
