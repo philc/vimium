@@ -471,9 +471,9 @@ getActualKeyStrokeLength = (key) ->
 
 populateValidFirstKeys = ->
   validFirstKeys = {}
-  for key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
-      validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
+  for keys in commandKeys
+    if (keys.length > 1)
+      validFirstKeys[keys[0]] = true
 
 populateSingleKeyCommands = ->
   singleKeyCommands = []
