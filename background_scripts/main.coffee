@@ -548,8 +548,9 @@ handleKeyDown = (request, port) ->
     console.log("clearing keyQueue")
     keyQueueArray = []
   else
-    console.log("checking keyQueue: [", keyQueueArray.join("") + key, "]")
-    keyQueueArray = keyQueueToKeyQueueArray checkKeyQueue(keyQueueArray.join("") + key, port.sender.tab.id, request.frameId)
+    keyQueueArray.push key
+    console.log("checking keyQueue: [", keyQueueArray.join(""), "]")
+    keyQueueArray = checkKeyQueue(keyQueueArray, port.sender.tab.id, request.frameId)
     console.log("new KeyQueue: " + keyQueueArray.join(""))
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
@@ -560,17 +561,34 @@ handleKeyDown = (request, port) ->
     name: "currentKeyQueue",
     keyQueue: keyQueueArray.join(""))
 
+simplifyNumericPrefix = (keys) ->
+  keys = keys[0..] # Make a copy of keys so the passed array isn't mutated.
+  keys.numericPrefix = /^[1-9]/.test (keys[0] or "")
+
+  if keys.numericPrefix
+    i = 1
+    i++ while i < keys.length and /^[0-9]/.test keys[i]
+    # keysToCheck[1..i] are numeric, remove them from the array and append them to the prefix.
+    keys[0] += keys.splice(1, i - 1).join ""
+
+  keys
+
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   refreshedCompletionKeys = false
-  splitHash = splitKeyQueue(keysToCheck)
-  command = splitHash.command
-  count = splitHash.count
+
+  keys = simplifyNumericPrefix keysToCheck
+
+  if keys.numericPrefix
+    [count, command...] = keys
+    count = (parseInt count, 10) or 1
+  else
+    command = keys
+    count = 1
 
   return keysToCheck if command.length == 0
-  count = 1 if isNaN(count)
 
-  if (Commands.keyToCommandRegistry[command])
-    registryEntry = Commands.keyToCommandRegistry[command]
+  if (Commands.keyToCommandRegistry[command.join ""])
+    registryEntry = Commands.keyToCommandRegistry[command.join ""]
     runCommand = true
 
     if registryEntry.noRepeat
@@ -601,17 +619,15 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         else
           repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
-    newKeyQueue = ""
-  else if (getActualKeyStrokeLength(command) > 1)
-    splitKey = splitKeyIntoFirstAndSecond(command)
-
+    newKeyQueue = []
+  else if (command.length > 1)
     # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[splitKey.second])
-      newKeyQueue = checkKeyQueue(splitKey.second, tabId, frameId)
+    if (Commands.keyToCommandRegistry[command[1]])
+      newKeyQueue = checkKeyQueue(command[1..], tabId, frameId)
     else
-      newKeyQueue = (if validFirstKeys[splitKey.second] then splitKey.second else "")
+      newKeyQueue = (if validFirstKeys[command[1]] then [command[1]] else [])
   else
-    newKeyQueue = (if validFirstKeys[command] then count.toString() + command else "")
+    newKeyQueue = (if validFirstKeys[command] then keys  else [])
 
   # If we haven't sent the completion keys piggybacked on executePageCommand,
   # send them by themselves.
