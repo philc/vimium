@@ -103,6 +103,7 @@ handlerStack.push
 # Only exported for tests.
 window.initializeModes = ->
   class NormalMode extends Mode
+    keyQueue: ""
     constructor: ->
       super
         name: "normal"
@@ -110,6 +111,10 @@ window.initializeModes = ->
         keydown: (event) => onKeydown.call @, event
         keypress: (event) => onKeypress.call @, event
         keyup: (event) => onKeyup.call @, event
+
+      @push
+        _name: "mode-#{@id}/registerKeyQueue"
+        registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
     isCommandKey: (key) -> currentCompletionKeys.indexOf(key) != -1 or isValidFirstKey(key)
 
