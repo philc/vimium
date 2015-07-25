@@ -116,7 +116,10 @@ window.initializeModes = ->
         registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
     isCommandKey: (key) ->
-      return true if isValidFirstKey(key)
+      for keys in commandKeys
+        return true if keys.length > 1 and keys[0] == key
+
+      return true if /^[1-9]/.test(key) # Accept 1-9 to allow number prefixes.
 
       for keys in commandKeys
         return true if keys.length == 1 and keys[0] == key
@@ -645,12 +648,6 @@ window.refreshCompletionKeys = (response) ->
       commandKeys = response.commandKeys
   else
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
-
-isValidFirstKey = (keyChar) ->
-  for keys in commandKeys
-    return true if keys.length > 1 and keys[0] == keyChar
-
-  /^[1-9]/.test(keyChar) # Accept 1-9 to allow number prefixes.
 
 window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
