@@ -27,7 +27,7 @@ initializeModeState = ->
   initializeModes()
   # We use "m" as the only mapped key, "p" as a passkey, and "u" as an unmapped key.
   refreshCompletionKeys
-    completionKeys: "mp"
+    commandKeys: [["m"], ["p"]]
   handlerStack.bubbleEvent "registerStateChange",
     enabled: true
     passKeys: "p"

@@ -12,7 +12,6 @@ isIncognitoMode = chrome.extension.inIncognitoContext
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = ""
 commandKeys = []
 
 # We track whther the current window has the focus or not.
@@ -116,7 +115,45 @@ window.initializeModes = ->
         _name: "mode-#{@id}/registerKeyQueue"
         registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
-    isCommandKey: (key) -> currentCompletionKeys.indexOf(key) != -1 or isValidFirstKey(key)
+    isCommandKey: (key) ->
+      return true if isValidFirstKey(key)
+
+      singleKeyCommands = []
+      for keys in commandKeys
+        if (keys.length == 1)
+          singleKeyCommands.push(keys[0])
+
+      splitKeyQueue = (queue) ->
+        match = /([1-9][0-9]*)?(.*)/.exec(queue)
+        count = parseInt(match[1], 10)
+        command = match[2]
+
+        { count: count, command: command }
+
+      namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
+
+      getActualKeyStrokeLength = (key) ->
+        if (key.search(namedKeyRegex) == 0)
+          1 + getActualKeyStrokeLength(RegExp.$2)
+        else
+          key.length
+
+      generateCompletionKeys = (keysToCheck) ->
+        splitHash = splitKeyQueue(keysToCheck || keyQueue)
+        command = splitHash.command
+        count = splitHash.count
+
+        completionKeys = singleKeyCommands.slice(0)
+
+        if (getActualKeyStrokeLength(command) == 1)
+          for keys of commandKeys
+            completionKeys.push keys[1] if keys[0] == command
+
+        completionKeys
+
+      currentCompletionKeys = generateCompletionKeys @keyQueue
+
+      currentCompletionKeys.indexOf(key) != -1
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
@@ -614,8 +651,6 @@ checkEnabledAfterURLChange = ->
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->
   if (response)
-    currentCompletionKeys = response.completionKeys
-
     if (response.commandKeys)
       commandKeys = response.commandKeys
   else
