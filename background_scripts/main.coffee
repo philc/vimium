@@ -407,9 +407,9 @@ populateValidFirstKeys = ->
 
 populateSingleKeyCommands = ->
   singleKeyCommands = []
-  for own key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
-      singleKeyCommands.push(key)
+  for keys in commandKeys
+    if (keys.length == 1)
+      singleKeyCommands.push(keys[0])
 
 populateCommandKeys = ->
   commandKeys = []
