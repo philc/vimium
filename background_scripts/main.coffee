@@ -400,16 +400,19 @@ getActualKeyStrokeLength = (key) ->
     key.length
 
 populateValidFirstKeys = ->
+  validFirstKeys = {}
   for own key of Commands.keyToCommandRegistry
     if (getActualKeyStrokeLength(key) == 2)
       validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
 
 populateSingleKeyCommands = ->
+  singleKeyCommands = []
   for own key of Commands.keyToCommandRegistry
     if (getActualKeyStrokeLength(key) == 1)
       singleKeyCommands.push(key)
 
 populateCommandKeys = ->
+  commandKeys = []
   for key of Commands.keyToCommandRegistry
     splitKey = splitKeyIntoFirstAndSecond(key)
     if splitKey.second
@@ -419,10 +422,6 @@ populateCommandKeys = ->
 
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
-  validFirstKeys = {}
-  singleKeyCommands = []
-  commandKeys = []
-
   populateCommandKeys()
   populateValidFirstKeys()
   populateSingleKeyCommands()
