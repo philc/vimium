@@ -499,23 +499,6 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
   sendRequestToAllTabs(getCompletionKeysRequest())
 
-keyQueueToKeyQueueArray = (keyQueue) ->
-  {count, command} = splitKeyQueue keyQueue
-
-  newKeyQueueArray = [] if command.length == 0
-
-  splitKey = splitKeyIntoFirstAndSecond(command)
-  if splitKey.second
-    newKeyQueueArray = [splitKey.first, splitKey.second]
-  else
-    newKeyQueueArray = [splitKey.first]
-
-  unless isNaN count
-    newKeyQueueArray.numericPrefix = true
-    newKeyQueueArray.unshift count.toString()
-
-  newKeyQueueArray
-
 # Generates a list of keys that can complete a valid command given the current key queue or the one passed in
 generateCompletionKeys = (keysToCheck) ->
   splitHash = splitKeyQueue(keysToCheck || keyQueueArray.join(""))
