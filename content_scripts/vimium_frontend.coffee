@@ -128,19 +128,18 @@ window.initializeModes = ->
 
         { count: count, command: command }
 
-      namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
-
-      getActualKeyStrokeLength = (key) ->
+      isSingleKey = (key) ->
+        namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
         if (key.search(namedKeyRegex) == 0)
-          1 + getActualKeyStrokeLength(RegExp.$2)
+          RegExp.$2 == ""
         else
-          key.length
+          key.length == 1
 
       splitHash = splitKeyQueue @keyQueue
       command = splitHash.command
       count = splitHash.count
 
-      if (getActualKeyStrokeLength(command) == 1)
+      if (isSingleKey(command))
         for keys of commandKeys
           return true if keys[0] == command and keys[1] == key
 
