@@ -102,7 +102,6 @@ handlerStack.push
 # Only exported for tests.
 window.initializeModes = ->
   class NormalMode extends Mode
-    keyQueue: ""
     constructor: ->
       super
         name: "normal"
@@ -111,6 +110,7 @@ window.initializeModes = ->
         keypress: (event) => onKeypress.call @, event
         keyup: (event) => onKeyup.call @, event
 
+      @keyQueue = []
       @push
         _name: "mode-#{@id}/registerKeyQueue"
         registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
@@ -121,26 +121,11 @@ window.initializeModes = ->
 
       return true if /^[1-9]/.test(key) # Accept 1-9 to allow number prefixes.
 
-      splitKeyQueue = (queue) ->
-        match = /([1-9][0-9]*)?(.*)/.exec(queue)
-        count = parseInt(match[1], 10)
-        command = match[2]
+      command = if @keyQueue.numericPrefix then @keyQueue else @keyQueue[1..]
 
-        { count: count, command: command }
-
-      isSingleKey = (key) ->
-        namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
-        if (key.search(namedKeyRegex) == 0)
-          RegExp.$2 == ""
-        else
-          key.length == 1
-
-      splitHash = splitKeyQueue @keyQueue
-      command = splitHash.command
-
-      if (isSingleKey(command))
+      if (command.length == 1)
         for keys of commandKeys
-          return true if keys[0] == command and keys[1] == key
+          return true if keys[0] == command[0] and keys[1] == key
 
       false
 

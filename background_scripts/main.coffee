@@ -542,7 +542,7 @@ handleKeyDown = (request, port) ->
   # Steve (23 Aug, 14).
   chrome.tabs.sendMessage(port.sender.tab.id,
     name: "currentKeyQueue",
-    keyQueue: keyQueueArray.join(""))
+    keyQueue: keyQueueArray)
 
 simplifyNumericPrefix = (keys) ->
   keys = keys[0..] # Make a copy of keys so the passed array isn't mutated.

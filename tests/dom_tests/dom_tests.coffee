@@ -32,7 +32,7 @@ initializeModeState = ->
     enabled: true
     passKeys: "p"
   handlerStack.bubbleEvent "registerKeyQueue",
-    keyQueue: ""
+    keyQueue: []
 
 # Tell Settings that it's been loaded.
 Settings.isLoaded = true
@@ -372,7 +372,7 @@ context "Normal mode",
     assert.equal pageKeyboardEventCount, 3
 
   should "suppress passKeys with a non-empty keyQueue", ->
-    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "p"
+    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: ["p"]
     sendKeyboardEvent "p"
     assert.equal pageKeyboardEventCount, 0
 
@@ -500,9 +500,9 @@ context "Mode utilities",
 
   should "register the keyQueue", ->
     test = new Mode trackState: true
-    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "hello"
+    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "hello".split ""
 
-    assert.isTrue test.keyQueue == "hello"
+    assert.isTrue test.keyQueue.join("") == "hello"
 
 context "PostFindMode",
   setup ->
