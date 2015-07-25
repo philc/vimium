@@ -186,7 +186,6 @@ fetchFileContents = (extensionFileName) ->
 getCompletionKeysRequest = (request, keysToCheck = "") ->
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
-  validFirstKeys: validFirstKeys
   commandKeys: commandKeys
 
 TabOperations =

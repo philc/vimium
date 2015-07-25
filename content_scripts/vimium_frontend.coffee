@@ -13,7 +13,6 @@ passKeys = null
 keyQueue = null
 # The user's operating system.
 currentCompletionKeys = ""
-validFirstKeys = ""
 commandKeys = []
 
 # We track whther the current window has the focus or not.
@@ -612,14 +611,16 @@ window.refreshCompletionKeys = (response) ->
   if (response)
     currentCompletionKeys = response.completionKeys
 
-    if (response.validFirstKeys)
-      validFirstKeys = response.validFirstKeys
     if (response.commandKeys)
       commandKeys = response.commandKeys
   else
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
 isValidFirstKey = (keyChar) ->
+  validFirstKeys = {}
+  for keys in commandKeys
+    if (keys.length > 1)
+      validFirstKeys[keys[0]] = true
   validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 window.handleEscapeForFindMode = ->
