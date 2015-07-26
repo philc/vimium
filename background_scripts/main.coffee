@@ -522,8 +522,6 @@ simplifyNumericPrefix = (keys) ->
   keys
 
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
-  refreshedCompletionKeys = false
-
   keys = simplifyNumericPrefix keysToCheck
 
   if keys.numericPrefix
@@ -557,7 +555,6 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
           frameId: frameId
           count: count
           registryEntry: registryEntry
-        refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction
           BackgroundCommands[registryEntry.command](count, frameId)
@@ -575,11 +572,6 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
       newKeyQueue = (if validFirstKeys[command[1]] then [command[1]] else [])
   else
     newKeyQueue = (if validFirstKeys[command] then keys  else [])
-
-  # If we haven't sent the completion keys piggybacked on executePageCommand,
-  # send them by themselves.
-  unless refreshedCompletionKeys
-    chrome.tabs.sendMessage(tabId, getCompletionKeysRequest(null, newKeyQueue), null)
 
   newKeyQueue
 
