@@ -129,16 +129,16 @@ class NormalMode extends Mode
 
     false
 
+  clearKeyQueue: ->
+    bgLog "clearing keyQueue"
+    @keyQueue = []
+
   pushKeyToKeyQueue: (key) ->
-    if (key == "<ESC>")
-      bgLog "clearing keyQueue"
-      @keyQueue = []
-    else
-      @keyQueue.push key
-      bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
-      @keyQueue = checkKeyQueue @keyQueue
-      handlerStack.bubbleEvent "registerKeyQueue", {keyQueue: @keyQueue}
-      bgLog "new KeyQueue: " + @keyQueue.join("")
+    @keyQueue.push key
+    bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
+    @keyQueue = checkKeyQueue @keyQueue
+    handlerStack.bubbleEvent "registerKeyQueue", {keyQueue: @keyQueue}
+    bgLog "new KeyQueue: " + @keyQueue.join("")
 
 # Returns true if the keys in keys1 match the first keys in keys2.
 keysPartialMatch = (keys1, keys2) ->
@@ -628,7 +628,7 @@ onKeydown = (event) ->
       @pushKeyToKeyQueue keyChar
 
     else if (KeyboardUtils.isEscape(event))
-      @pushKeyToKeyQueue "<ESC>"
+      @clearKeyQueue()
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
