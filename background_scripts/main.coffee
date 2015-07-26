@@ -474,14 +474,7 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
 handleKeyDown = (request, port) ->
   {keyChar: key, keyQueue} = request
-  if (key == "<ESC>")
-    console.log("clearing keyQueue")
-    keyQueue = []
-  else
-    keyQueue.push key
-    console.log("checking keyQueue: [", keyQueue.join(""), "]")
-    keyQueue = checkKeyQueue(keyQueue, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue.join(""))
+  keyQueue = checkKeyQueue(keyQueue, port.sender.tab.id, request.frameId)
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
