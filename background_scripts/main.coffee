@@ -518,9 +518,9 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
 
   if partiallyMatchingCommands.length > 0
-    registryEntry = Commands.keyToCommandRegistry[command.join ""]
-    if registryEntry
-      executeCommand registryEntry, count, tabId, frameId
+    [finalCommand] = partiallyMatchingCommands.filter ({length}) -> command.length == length
+    if finalCommand
+      executeCommand finalCommand.join(""), count, tabId, frameId
       newKeyQueue = []
     else
       newKeyQueue = keys
@@ -529,7 +529,8 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   newKeyQueue
 
-executeCommand = (registryEntry, count, tabId, frameId) ->
+executeCommand = (command, count, tabId, frameId) ->
+  registryEntry = Commands.keyToCommandRegistry[command]
   runCommand = true
 
   if registryEntry.noRepeat
