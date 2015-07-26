@@ -108,6 +108,18 @@ class NormalMode extends Mode
       keypress: (event) => onKeypress.call @, event
       keyup: (event) => onKeyup.call @, event
 
+    @push
+      _name: "mode-#{@id}/escCloseHelpDialog"
+      keydown: (event) =>
+        if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+          hideHelpDialog()
+          DomUtils.suppressEvent event
+          KeydownEvents.push event
+          @stopBubblingAndTrue
+        else
+          @continueBubbling
+
+
     # Queue of keys typed. If keyQueue.numericPrefix is true, its 0th entry is the current command's numeric
     # prefix.
     @keyQueue = []
@@ -610,21 +622,14 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
-    hideHelpDialog()
-    DomUtils.suppressEvent event
-    KeydownEvents.push event
-    return @stopBubblingAndTrue
+  if (keyChar)
+    if @pushKeyToKeyQueue keyChar
+      DomUtils.suppressEvent event
+      KeydownEvents.push event
+      return @stopBubblingAndTrue
 
-  else
-    if (keyChar)
-      if @pushKeyToKeyQueue keyChar
-        DomUtils.suppressEvent event
-        KeydownEvents.push event
-        return @stopBubblingAndTrue
-
-    else if (KeyboardUtils.isEscape(event))
-      @clearKeyQueue()
+  else if (KeyboardUtils.isEscape(event))
+    @clearKeyQueue()
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
