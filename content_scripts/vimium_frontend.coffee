@@ -108,6 +108,8 @@ class NormalMode extends Mode
       keypress: (event) => onKeypress.call @, event
       keyup: (event) => onKeyup.call @, event
 
+    # Queue of keys typed. If keyQueue.numericPrefix is true, its 0th entry is the current command's numeric
+    # prefix.
     @keyQueue = []
     @push
       _name: "mode-#{@id}/registerKeyQueue"
@@ -128,7 +130,7 @@ class NormalMode extends Mode
     false
 
   pushKeyToKeyQueue: (key) ->
-    keyPort.postMessage {keyChar: key, frameId}
+    keyPort.postMessage {keyChar: key, keyQueue: @keyQueue, frameId}
 
 # Only exported for tests.
 window.initializeModes = ->

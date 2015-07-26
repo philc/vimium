@@ -21,10 +21,6 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
 currentVersion = Utils.getCurrentVersion()
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
-
-# Queue of keys typed. If keyQueue.numericPrefix is true, its 0th entry is the current command's numeric
-# prefix.
-keyQueue = []
 commandKeys = []
 focusedFrame = null
 frameIdsForTab = {}
@@ -477,13 +473,8 @@ root.refreshCompletionKeysAfterMappingSave = ->
   sendRequestToAllTabs(getCompletionKeysRequest())
 
 handleKeyDown = (request, port) ->
-  {keyChar: key, keyQueue: queue} = request
-  if queue?
-    newKeyQueue = checkKeyQueue(queue, port.sender.tab.id, request.frameId)
-    unless newKeyQueue == []
-      # The queue passed wasn't for a whole command. This shouldn't happen, so we log a message if it does.
-      console.log "Incomplete key queue passed to the background page. This should not happen."
-  else if (key == "<ESC>")
+  {keyChar: key, keyQueue} = request
+  if (key == "<ESC>")
     console.log("clearing keyQueue")
     keyQueue = []
   else
