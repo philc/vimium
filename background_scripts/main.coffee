@@ -475,9 +475,7 @@ populateValidFirstKeys = ->
       validFirstKeys[keys[0]] = true
 
 populateCommandKeys = ->
-  commandKeys = []
-  for key of Commands.keyToCommandRegistry
-    commandKeys.push splitByKeys key
+  commandKeys = (splitByKeys key for key of Commands.keyToCommandRegistry)
 
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
