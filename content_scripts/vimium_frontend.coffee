@@ -131,13 +131,13 @@ class NormalMode extends Mode
 
   pushKeyToKeyQueue: (key) ->
     if (key == "<ESC>")
-      console.log("clearing keyQueue")
+      bgLog "clearing keyQueue"
       @keyQueue = []
     else
       @keyQueue.push key
-      console.log("checking keyQueue: [", @keyQueue.join(""), "]")
+      bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
       keyPort.postMessage {keyChar: key, keyQueue: @keyQueue, frameId}
-      console.log("new KeyQueue: " + @keyQueue.join(""))
+      bgLog "new KeyQueue: " + @keyQueue.join("")
 
 # Only exported for tests.
 window.initializeModes = ->
