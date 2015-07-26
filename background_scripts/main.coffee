@@ -515,16 +515,17 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   return keysToCheck if command.length == 0
 
-  registryEntry = Commands.keyToCommandRegistry[command.join ""]
-  if registryEntry
-    executeCommand registryEntry, count, tabId, frameId
-    newKeyQueue = []
-  else
-    partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
-    if partiallyMatchingCommands.length > 0
-      newKeyQueue = keys
+  partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
+
+  if partiallyMatchingCommands.length > 0
+    registryEntry = Commands.keyToCommandRegistry[command.join ""]
+    if registryEntry
+      executeCommand registryEntry, count, tabId, frameId
+      newKeyQueue = []
     else
-      newKeyQueue = checkKeyQueue command[1..], tabId, frameId
+      newKeyQueue = keys
+  else
+    newKeyQueue = checkKeyQueue command[1..], tabId, frameId
 
   newKeyQueue
 
