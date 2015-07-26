@@ -68,7 +68,7 @@ checkKeyQueue = (keysToCheck, commandKeys, successCallback, partialMatchCallback
 
   if command.length == 0
     partialMatchCallback? "", count if keys.numericPrefix
-    return keysToCheck
+    return keys
 
   partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
 
