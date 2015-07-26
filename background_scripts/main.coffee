@@ -533,36 +533,9 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   return keysToCheck if command.length == 0
 
-  if (Commands.keyToCommandRegistry[command.join ""])
-    registryEntry = Commands.keyToCommandRegistry[command.join ""]
-    runCommand = true
-
-    if registryEntry.noRepeat
-      count = 1
-    else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
-      runCommand = confirm """
-        You have asked Vimium to perform #{count} repeats of the command:
-        #{Commands.availableCommands[registryEntry.command].description}
-
-        Are you sure you want to continue?
-      """
-
-    if runCommand
-      if not registryEntry.isBackgroundCommand
-        chrome.tabs.sendMessage tabId,
-          name: "executePageCommand"
-          command: registryEntry.command
-          frameId: frameId
-          count: count
-          registryEntry: registryEntry
-      else
-        if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count, frameId)
-        else if registryEntry.noRepeat
-          BackgroundCommands[registryEntry.command](frameId)
-        else
-          repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
-
+  registryEntry = Commands.keyToCommandRegistry[command.join ""]
+  if registryEntry
+    executeCommand registryEntry, count, tabId, frameId
     newKeyQueue = []
   else if (command.length > 1)
     # The second key might be a valid command by its self.
@@ -574,6 +547,35 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
     newKeyQueue = (if validFirstKeys[command] then keys  else [])
 
   newKeyQueue
+
+executeCommand = (registryEntry, count, tabId, frameId) ->
+  runCommand = true
+
+  if registryEntry.noRepeat
+    count = 1
+  else if registryEntry.repeatLimit and count > registryEntry.repeatLimit
+    runCommand = confirm """
+      You have asked Vimium to perform #{count} repeats of the command:
+      #{Commands.availableCommands[registryEntry.command].description}
+
+      Are you sure you want to continue?
+    """
+
+  if runCommand
+    if not registryEntry.isBackgroundCommand
+      chrome.tabs.sendMessage tabId,
+        name: "executePageCommand"
+        command: registryEntry.command
+        frameId: frameId
+        count: count
+        registryEntry: registryEntry
+    else
+      if registryEntry.passCountToFunction
+        BackgroundCommands[registryEntry.command](count, frameId)
+      else if registryEntry.noRepeat
+        BackgroundCommands[registryEntry.command](frameId)
+      else
+        repeatFunction(BackgroundCommands[registryEntry.command], count, 0, frameId)
 
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
