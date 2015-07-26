@@ -165,23 +165,17 @@ onKeydown = (event) ->
       event.keyIdentifier && event.keyIdentifier.slice(0, 2) != "U+"))
     keyChar = KeyboardUtils.getKeyChar(event)
     # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
-    if (keyChar != "")
-      modifiers = []
+    if keyChar != ""
+      keyChar = keyChar.toUpperCase() if event.shiftKey
 
-      if (event.shiftKey)
-        keyChar = keyChar.toUpperCase()
-      if (event.metaKey)
-        modifiers.push("m")
-      if (event.ctrlKey)
-        modifiers.push("c")
-      if (event.altKey)
-        modifiers.push("a")
+      modifiers = ""
 
-      for i of modifiers
-        keyChar = modifiers[i] + "-" + keyChar
+      modifiers += "m-" if event.metaKey
+      modifiers += "c-" if event.ctrlKey
+      modifiers += "a-" if event.altKey
 
-      if (modifiers.length > 0 || keyChar.length > 1)
-        keyChar = "<" + keyChar + ">"
+      keyChar = modifiers + keyChar
+      keyChar = "<#{keyChar}>" if keyChar.length > 1
 
   if (keyChar)
     if @pushKeyToKeyQueue keyChar
