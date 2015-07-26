@@ -463,12 +463,6 @@ splitKeyIntoFirstAndSecond = (key) ->
   else
     { first: key[0], second: key.slice(1) }
 
-getActualKeyStrokeLength = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    1 + getActualKeyStrokeLength(RegExp.$2)
-  else
-    key.length
-
 populateValidFirstKeys = ->
   validFirstKeys = {}
   for keys in commandKeys
