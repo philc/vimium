@@ -457,11 +457,16 @@ updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
         openTabInfo.positionIndex = tab.index
         openTabInfo.windowId = tab.windowId)
 
-splitKeyIntoFirstAndSecond = (key) ->
-  if (key.search(namedKeyRegex) == 0)
-    { first: RegExp.$1, second: RegExp.$2 }
-  else
-    { first: key[0], second: key.slice(1) }
+splitByKeys = (key) ->
+  returnArray = []
+  while key
+    if (key.search(namedKeyRegex) == 0)
+      returnArray.push RegExp.$1
+      key = RegExp.$2
+    else
+      returnArray.push key[0]
+      key = key[1..]
+  returnArray
 
 populateValidFirstKeys = ->
   validFirstKeys = {}
@@ -472,11 +477,7 @@ populateValidFirstKeys = ->
 populateCommandKeys = ->
   commandKeys = []
   for key of Commands.keyToCommandRegistry
-    splitKey = splitKeyIntoFirstAndSecond(key)
-    if splitKey.second
-      commandKeys.push [splitKey.first, splitKey.second]
-    else
-      commandKeys.push [splitKey.first]
+    commandKeys.push splitByKeys key
 
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
