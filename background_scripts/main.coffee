@@ -27,7 +27,6 @@ tabInfoMap = {} # tabId -> object with various tab properties
 keyQueueArray = []
 validFirstKeys = {}
 commandKeys = []
-singleKeyCommands = []
 focusedFrame = null
 frameIdsForTab = {}
 root.urlForTab = {}
@@ -476,12 +475,6 @@ populateValidFirstKeys = ->
     if (keys.length > 1)
       validFirstKeys[keys[0]] = true
 
-populateSingleKeyCommands = ->
-  singleKeyCommands = []
-  for keys in commandKeys
-    if (keys.length == 1)
-      singleKeyCommands.push(keys[0])
-
 populateCommandKeys = ->
   commandKeys = []
   for key of Commands.keyToCommandRegistry
@@ -495,7 +488,6 @@ populateCommandKeys = ->
 root.refreshCompletionKeysAfterMappingSave = ->
   populateCommandKeys()
   populateValidFirstKeys()
-  populateSingleKeyCommands()
 
   sendRequestToAllTabs(getCompletionKeysRequest())
 
@@ -712,7 +704,6 @@ if Settings.has("keyMappings")
 
 populateCommandKeys()
 populateValidFirstKeys()
-populateSingleKeyCommands()
 
 # Show notification on upgrade.
 showUpgradeMessage = ->
