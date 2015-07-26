@@ -127,6 +127,9 @@ class NormalMode extends Mode
 
     false
 
+  pushKeyToKeyQueue: (key) ->
+    keyPort.postMessage {keyChar: key, frameId}
+
 # Only exported for tests.
 window.initializeModes = ->
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
@@ -516,10 +519,10 @@ onKeypress = (event) ->
     if (keyChar)
       if @isCommandKey keyChar
         DomUtils.suppressEvent(event)
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        @pushKeyToKeyQueue keyChar
         return @stopBubblingAndTrue
 
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+      @pushKeyToKeyQueue keyChar
 
   return @continueBubbling
 
@@ -563,13 +566,13 @@ onKeydown = (event) ->
       if (@isCommandKey keyChar)
         DomUtils.suppressEvent event
         KeydownEvents.push event
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+        @pushKeyToKeyQueue keyChar
         return @stopBubblingAndTrue
 
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+      @pushKeyToKeyQueue keyChar
 
     else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
+      @pushKeyToKeyQueue "<ESC>"
 
   # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
   # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
