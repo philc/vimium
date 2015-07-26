@@ -136,8 +136,58 @@ class NormalMode extends Mode
     else
       @keyQueue.push key
       bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
+      @keyQueue = checkKeyQueue @keyQueue
       keyPort.postMessage {keyChar: key, keyQueue: @keyQueue, frameId}
       bgLog "new KeyQueue: " + @keyQueue.join("")
+
+# Returns true if the keys in keys1 match the first keys in keys2.
+keysPartialMatch = (keys1, keys2) ->
+  return false if keys1.length > keys2.length
+  for key, i in keys1
+    return false if key != keys2[i]
+  true
+
+simplifyNumericPrefix = (keys) ->
+  keys = keys[0..] # Make a copy of keys so the passed array isn't mutated.
+  keys.numericPrefix = /^[1-9]/.test (keys[0] or "")
+
+  if keys.numericPrefix
+    i = 1
+    i++ while i < keys.length and /^[0-9]/.test keys[i]
+    # keysToCheck[1..i] are numeric, remove them from the array and append them to the prefix.
+    keys[0] += keys.splice(1, i - 1).join ""
+
+  keys
+
+checkKeyQueue = (keysToCheck) ->
+  keys = simplifyNumericPrefix keysToCheck
+
+  if keys.numericPrefix
+    [count, command...] = keys
+    count = (parseInt count, 10) or 1
+  else
+    command = keys
+    count = 1
+
+  return keysToCheck if command.length == 0
+
+  partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
+
+  if partiallyMatchingCommands.length > 0
+    [finalCommand] = partiallyMatchingCommands.filter ({length}) -> command.length == length
+    if finalCommand
+      chrome.runtime.sendMessage
+        handler: "executeCommand"
+        command: finalCommand.join("")
+        count
+        frameId
+      newKeyQueue = []
+    else
+      newKeyQueue = keys
+  else
+    newKeyQueue = checkKeyQueue command[1..]
+
+  newKeyQueue
 
 # Only exported for tests.
 window.initializeModes = ->
