@@ -25,7 +25,6 @@ tabInfoMap = {} # tabId -> object with various tab properties
 # Queue of keys typed. If keyQueueArray.numericPrefix is true, its 0th entry is the current command's numeric
 # prefix.
 keyQueueArray = []
-validFirstKeys = {}
 commandKeys = []
 focusedFrame = null
 frameIdsForTab = {}
@@ -468,19 +467,12 @@ splitByKeys = (key) ->
       key = key[1..]
   returnArray
 
-populateValidFirstKeys = ->
-  validFirstKeys = {}
-  for keys in commandKeys
-    if (keys.length > 1)
-      validFirstKeys[keys[0]] = true
-
 populateCommandKeys = ->
   commandKeys = (splitByKeys key for key of Commands.keyToCommandRegistry)
 
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
   populateCommandKeys()
-  populateValidFirstKeys()
 
   sendRequestToAllTabs(getCompletionKeysRequest())
 
@@ -695,7 +687,6 @@ if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
 populateCommandKeys()
-populateValidFirstKeys()
 
 # Show notification on upgrade.
 showUpgradeMessage = ->
