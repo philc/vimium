@@ -1,4 +1,3 @@
-
 class PassKeysMode extends Mode
   constructor: ->
     super
@@ -13,7 +12,12 @@ class PassKeysMode extends Mode
   handleKeyChar: (event, keyChar) ->
     return @continueBubbling if event.altKey or event.ctrlKey or event.metaKey
     if keyChar and @keyQueue.length == 0 and keyChar.length == 1 and 0 <= @passKeys.indexOf keyChar
-      @stopBubblingAndTrue
+      if event.type == "keyup" and KeydownEvents.pop event
+        # This event corresponds to a keydown handled by NormalMode. We ignore it and send it onward.
+        KeydownEvents.push event
+        @continueBubbling
+      else
+        @stopBubblingAndTrue
     else
       @continueBubbling
 

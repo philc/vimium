@@ -951,6 +951,7 @@ window.onbeforeunload = ->
 root = exports ? window
 root.handlerStack = handlerStack
 root.NormalMode = NormalMode
+root.KeydownEvents = KeydownEvents
 root.frameId = frameId
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
