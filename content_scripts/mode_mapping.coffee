@@ -1,3 +1,30 @@
+#
+# Implements key handling for modes with mappings.
+#
+# This class attempts to match typed keys against mappings, accepting an optional numeric prefix of the form
+# /[1-9][0-9]*/. It suppresses matched keys and calls @matchedKeyHandler with a complete mapping when one has
+# been entered.
+#
+# Modes inheriting from this need to supply:
+#
+# getCommandKeys:
+#   A function which accepts no arguments.
+#   The return value should be an array of accepted mappings, where each mapping is an array of strings, one
+#   string per key.
+#
+# matchedKeyHandler:
+#   A function which accepts arguments command and count.
+#   command:
+#     A string representing a mapping (equivalent to .join("") -ing one of the mappings from getCommandKeys).
+#   count:
+#     the number of numeric prefix of the command, representing how many times the command should be
+#     repeated.
+#   This function is run when the user enters a complete mapping, optionally including a numeric prefix.
+#
+# A mode inheriting from this *cannot* use keydown/keypress/keyup in the options argument to register
+# corresponding event listeners; these will be overwritten by the listeners for this mode. Any other option
+# supported by Mode can be passed and will be instantiated as on Mode.
+#
 class MappingMode extends Mode
   constructor: (options) ->
     extend options,
@@ -14,6 +41,7 @@ class MappingMode extends Mode
       _name: "mode-#{@id}/registerKeyQueue"
       registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
+  # Tests whether the key is part of a mapping, given the current state of the key queue.
   isCommandKey: (key) ->
     matched = false
     checkKeyQueue @keyQueue.concat([key]), @getCommandKeys(), (-> matched = true), (-> matched = true)
@@ -23,6 +51,8 @@ class MappingMode extends Mode
     bgLog "clearing keyQueue"
     @keyQueue = []
 
+  # Adds the key to the current key queue, and test the key queue to see if any mappings match.
+  # Returns truthy for a partial or complete match. Also triggers @matchedKeyHandler for complete matches.
   pushKeyToKeyQueue: (key) ->
     @keyQueue.push key
     bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
@@ -44,6 +74,8 @@ keysPartialMatch = (keys1, keys2) ->
     return false if key != keys2[i]
   true
 
+# Combine any keys that represent a numeric prefix into a single string. If such a numeric prefix exists,
+# numericPrefix = true will be set on the returned array.
 simplifyNumericPrefix = (keys) ->
   keys = keys[0..] # Make a copy of keys so the passed array isn't mutated.
   keys.numericPrefix = /^[1-9]/.test (keys[0] or "")
@@ -56,6 +88,21 @@ simplifyNumericPrefix = (keys) ->
 
   keys
 
+# Check whether keysToCheck represents a partial or full match for any of the mappings provided by
+# commandKeys.
+# If keysToCheck matches a mapping in commandKeys completely, successCallback is called with arguments
+#   command:
+#     A string representing the mapping that was matched.
+#   count:
+#     The number prefix associated with this match, representing the number of times to repeat the command.
+# If keysToCheck matches a mapping in commandKeys partially, partialMatchCallback is called with arguments
+#   command:
+#     A string representing the typed command in its current state of completion.
+#   count:
+#     The number prefix.
+# The return value is the new state of the key queue. For a full match, all keys have been consumed, so []
+# will be returned. Otherwise, the largest suffix of keysToCheck which partially matches a mapping is
+# returned instead.
 checkKeyQueue = (keysToCheck, commandKeys, successCallback, partialMatchCallback) ->
   keys = simplifyNumericPrefix keysToCheck
 
@@ -86,13 +133,9 @@ checkKeyQueue = (keysToCheck, commandKeys, successCallback, partialMatchCallback
   newKeyQueue
 
 #
-# Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
-# insert mode which is local state to the page. The key will be are either a single ascii letter or a
-# key-modifier pair, e.g. <c-a> for control a.
+# Adds printing characters to the key queue, and suppresses the event if there is a match.
 #
-# Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
-#
-# @/this, here, is the the normal-mode Mode object.
+# The this/@ object is an instance of MappingMode.
 onKeypress = (event) ->
   keyChar = ""
 
@@ -107,7 +150,11 @@ onKeypress = (event) ->
 
   return @continueBubbling
 
-# @/this, here, is the the normal-mode Mode object.
+#
+# Adds non-printing characters to the key queue, and suppresses the event if there is a match.
+# Also suppresses events for printing character that look as though they will match.
+#
+# The this/@ object is an instance of MappingMode.
 onKeydown = (event) ->
   keyChar = ""
 
@@ -159,7 +206,10 @@ onKeydown = (event) ->
 
   return @continueBubbling
 
-# @/this, here, is the the normal-mode Mode object.
+#
+# Suppresses the event if a corresponding keydown event was passed previously.
+#
+# The this/@ object is an instance of MappingMode.
 onKeyup = (event) ->
   return @continueBubbling unless KeydownEvents.pop event
   DomUtils.suppressPropagation(event)
