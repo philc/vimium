@@ -22,9 +22,9 @@ currentVersion = Utils.getCurrentVersion()
 tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 
-# Queue of keys typed. If keyQueueArray.numericPrefix is true, its 0th entry is the current command's numeric
+# Queue of keys typed. If keyQueue.numericPrefix is true, its 0th entry is the current command's numeric
 # prefix.
-keyQueueArray = []
+keyQueue = []
 commandKeys = []
 focusedFrame = null
 frameIdsForTab = {}
@@ -485,12 +485,12 @@ handleKeyDown = (request, port) ->
       console.log "Incomplete key queue passed to the background page. This should not happen."
   else if (key == "<ESC>")
     console.log("clearing keyQueue")
-    keyQueueArray = []
+    keyQueue = []
   else
-    keyQueueArray.push key
-    console.log("checking keyQueue: [", keyQueueArray.join(""), "]")
-    keyQueueArray = checkKeyQueue(keyQueueArray, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueueArray.join(""))
+    keyQueue.push key
+    console.log("checking keyQueue: [", keyQueue.join(""), "]")
+    keyQueue = checkKeyQueue(keyQueue, port.sender.tab.id, request.frameId)
+    console.log("new KeyQueue: " + keyQueue.join(""))
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
@@ -498,7 +498,7 @@ handleKeyDown = (request, port) ->
   # Steve (23 Aug, 14).
   chrome.tabs.sendMessage(port.sender.tab.id,
     name: "currentKeyQueue",
-    keyQueue: keyQueueArray)
+    keyQueue: keyQueue)
 
 simplifyNumericPrefix = (keys) ->
   keys = keys[0..] # Make a copy of keys so the passed array isn't mutated.
