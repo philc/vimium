@@ -115,6 +115,9 @@ class NormalMode extends Mode
       _name: "mode-#{@id}/registerKeyQueue"
       registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
+  matchedKeyHandler: (command, count) ->
+    chrome.runtime.sendMessage {handler: "executeCommand", command, count, frameId}
+
   isCommandKey: (key) ->
     matched = false
     checkKeyQueue @keyQueue.concat([key]), (-> matched = true), (-> matched = true)
@@ -130,7 +133,7 @@ class NormalMode extends Mode
     matched = false
 
     @keyQueue = checkKeyQueue @keyQueue, ((command, count) ->
-      chrome.runtime.sendMessage {handler: "executeCommand", command, count, frameId}
+      @matchedKeyHandler command, count
       matched = true
     ), (-> matched = true)
 
