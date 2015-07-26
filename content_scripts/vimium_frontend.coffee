@@ -118,9 +118,11 @@ class NormalMode extends Mode
   matchedKeyHandler: (command, count) ->
     chrome.runtime.sendMessage {handler: "executeCommand", command, count, frameId}
 
+  getCommandKeys: -> commandKeys
+
   isCommandKey: (key) ->
     matched = false
-    checkKeyQueue @keyQueue.concat([key]), (-> matched = true), (-> matched = true)
+    checkKeyQueue @keyQueue.concat([key]), @getCommandKeys(), (-> matched = true), (-> matched = true)
     matched
 
   clearKeyQueue: ->
@@ -132,7 +134,7 @@ class NormalMode extends Mode
     bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
     matched = false
 
-    @keyQueue = checkKeyQueue @keyQueue, ((command, count) ->
+    @keyQueue = checkKeyQueue @keyQueue, @getCommandKeys(), ((command, count) =>
       @matchedKeyHandler command, count
       matched = true
     ), (-> matched = true)
@@ -160,7 +162,7 @@ simplifyNumericPrefix = (keys) ->
 
   keys
 
-checkKeyQueue = (keysToCheck, successCallback, partialMatchCallback) ->
+checkKeyQueue = (keysToCheck, commandKeys, successCallback, partialMatchCallback) ->
   keys = simplifyNumericPrefix keysToCheck
 
   if keys.numericPrefix
@@ -185,7 +187,7 @@ checkKeyQueue = (keysToCheck, successCallback, partialMatchCallback) ->
       newKeyQueue = keys
       partialMatchCallback? command.join(""), count
   else
-    newKeyQueue = checkKeyQueue command[1..], successCallback, partialMatchCallback
+    newKeyQueue = checkKeyQueue command[1..], commandKeys, successCallback, partialMatchCallback
 
   newKeyQueue
 
