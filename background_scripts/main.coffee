@@ -474,7 +474,7 @@ root.refreshCompletionKeysAfterMappingSave = ->
 
 handleKeyDown = (request, port) ->
   {keyChar: key, keyQueue} = request
-  keyQueue = checkKeyQueue(keyQueue, port.sender.tab.id, request.frameId)
+  keyQueue = checkKeyQueue(keyQueue, request.frameId, port.sender)
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
@@ -503,7 +503,7 @@ keysPartialMatch = (keys1, keys2) ->
     return false if key != keys2[i]
   true
 
-checkKeyQueue = (keysToCheck, tabId, frameId) ->
+checkKeyQueue = (keysToCheck, frameId, sender) ->
   keys = simplifyNumericPrefix keysToCheck
 
   if keys.numericPrefix
@@ -520,7 +520,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   if partiallyMatchingCommands.length > 0
     [finalCommand] = partiallyMatchingCommands.filter ({length}) -> command.length == length
     if finalCommand
-      executeCommand finalCommand.join(""), count, tabId, frameId
+      executeCommand {command: finalCommand.join(""), count, frameId}, sender
       newKeyQueue = []
     else
       newKeyQueue = keys
@@ -529,7 +529,8 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   newKeyQueue
 
-executeCommand = (command, count, tabId, frameId) ->
+executeCommand = (request, sender) ->
+  {command, count, frameId} = request
   registryEntry = Commands.keyToCommandRegistry[command]
   runCommand = true
 
@@ -545,7 +546,7 @@ executeCommand = (command, count, tabId, frameId) ->
 
   if runCommand
     if not registryEntry.isBackgroundCommand
-      chrome.tabs.sendMessage tabId,
+      chrome.tabs.sendMessage sender.tab.id,
         name: "executePageCommand"
         command: registryEntry.command
         frameId: frameId
@@ -625,6 +626,7 @@ sendRequestHandlers =
   openUrlInIncognito: TabOperations.openUrlInIncognito
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
   openOptionsPageInNewTab: openOptionsPageInNewTab
+  executeCommand: executeCommand
   registerFrame: registerFrame
   unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
