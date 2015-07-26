@@ -116,18 +116,9 @@ class NormalMode extends Mode
       registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
 
   isCommandKey: (key) ->
-    for keys in commandKeys
-      return true if keys[0] == key
-
-    return true if /^[1-9]/.test(key) # Accept 1-9 to allow number prefixes.
-
-    command = if @keyQueue.numericPrefix then @keyQueue else @keyQueue[1..]
-
-    if (command.length == 1)
-      for keys of commandKeys
-        return true if keys[0] == command[0] and keys[1] == key
-
-    false
+    matched = false
+    checkKeyQueue @keyQueue.concat([key]), (-> matched = true), (-> matched = true)
+    matched
 
   clearKeyQueue: ->
     bgLog "clearing keyQueue"
@@ -136,9 +127,16 @@ class NormalMode extends Mode
   pushKeyToKeyQueue: (key) ->
     @keyQueue.push key
     bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
-    @keyQueue = checkKeyQueue @keyQueue
+    matched = false
+
+    @keyQueue = checkKeyQueue @keyQueue, ((command, count) ->
+      chrome.runtime.sendMessage {handler: "executeCommand", command, count, frameId}
+      matched = true
+    ), (-> matched = true)
+
     handlerStack.bubbleEvent "registerKeyQueue", {keyQueue: @keyQueue}
     bgLog "new KeyQueue: " + @keyQueue.join("")
+    matched
 
 # Returns true if the keys in keys1 match the first keys in keys2.
 keysPartialMatch = (keys1, keys2) ->
@@ -159,7 +157,7 @@ simplifyNumericPrefix = (keys) ->
 
   keys
 
-checkKeyQueue = (keysToCheck) ->
+checkKeyQueue = (keysToCheck, successCallback, partialMatchCallback) ->
   keys = simplifyNumericPrefix keysToCheck
 
   if keys.numericPrefix
@@ -169,23 +167,22 @@ checkKeyQueue = (keysToCheck) ->
     command = keys
     count = 1
 
-  return keysToCheck if command.length == 0
+  if command.length == 0
+    partialMatchCallback? "", count if keys.numericPrefix
+    return keysToCheck
 
   partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
 
   if partiallyMatchingCommands.length > 0
     [finalCommand] = partiallyMatchingCommands.filter ({length}) -> command.length == length
     if finalCommand
-      chrome.runtime.sendMessage
-        handler: "executeCommand"
-        command: finalCommand.join("")
-        count
-        frameId
+      successCallback? command.join(""), count
       newKeyQueue = []
     else
       newKeyQueue = keys
+      partialMatchCallback? command.join(""), count
   else
-    newKeyQueue = checkKeyQueue command[1..]
+    newKeyQueue = checkKeyQueue command[1..], successCallback, partialMatchCallback
 
   newKeyQueue
 
