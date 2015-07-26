@@ -570,12 +570,9 @@ onKeypress = (event) ->
     keyChar = String.fromCharCode(event.charCode)
 
     if (keyChar)
-      if @isCommandKey keyChar
+      if @pushKeyToKeyQueue keyChar
         DomUtils.suppressEvent(event)
-        @pushKeyToKeyQueue keyChar
         return @stopBubblingAndTrue
-
-      @pushKeyToKeyQueue keyChar
 
   return @continueBubbling
 
@@ -616,13 +613,10 @@ onKeydown = (event) ->
 
   else
     if (keyChar)
-      if (@isCommandKey keyChar)
+      if @pushKeyToKeyQueue keyChar
         DomUtils.suppressEvent event
         KeydownEvents.push event
-        @pushKeyToKeyQueue keyChar
         return @stopBubblingAndTrue
-
-      @pushKeyToKeyQueue keyChar
 
     else if (KeyboardUtils.isEscape(event))
       @clearKeyQueue()
