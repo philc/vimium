@@ -473,15 +473,6 @@ root.refreshCompletionKeysAfterMappingSave = ->
   sendRequestToAllTabs(getCompletionKeysRequest())
 
 handleKeyDown = (request, port) ->
-  {keyChar: key, keyQueue} = request
-  # Tell the content script whether there are keys in the queue.
-  # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
-  # back there before or after the next keystroke.
-  # That being said, I suspect there are other similar race conditions here, for example in checkKeyQueue().
-  # Steve (23 Aug, 14).
-  chrome.tabs.sendMessage(port.sender.tab.id,
-    name: "currentKeyQueue",
-    keyQueue: keyQueue)
 
 executeCommand = (request, sender) ->
   {command, count, frameId} = request

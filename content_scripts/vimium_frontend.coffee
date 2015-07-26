@@ -137,7 +137,7 @@ class NormalMode extends Mode
       @keyQueue.push key
       bgLog "checking keyQueue: [", @keyQueue.join(""), "]"
       @keyQueue = checkKeyQueue @keyQueue
-      keyPort.postMessage {keyChar: key, keyQueue: @keyQueue, frameId}
+      handlerStack.bubbleEvent "registerKeyQueue", {keyQueue: @keyQueue}
       bgLog "new KeyQueue: " + @keyQueue.join("")
 
 # Returns true if the keys in keys1 match the first keys in keys2.
@@ -224,9 +224,6 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: setScrollPosition
     executePageCommand: executePageCommand
-    currentKeyQueue: (request) ->
-      keyQueue = request.keyQueue
-      handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
