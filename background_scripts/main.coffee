@@ -520,6 +520,13 @@ simplifyNumericPrefix = (keys) ->
 
   keys
 
+# Returns true if the keys in keys1 match the first keys in keys2.
+keysPartialMatch = (keys1, keys2) ->
+  return false if keys1.length > keys2.length
+  for key, i in keys1
+    return false if key != keys2[i]
+  true
+
 checkKeyQueue = (keysToCheck, tabId, frameId) ->
   keys = simplifyNumericPrefix keysToCheck
 
@@ -536,14 +543,12 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   if registryEntry
     executeCommand registryEntry, count, tabId, frameId
     newKeyQueue = []
-  else if (command.length > 1)
-    # The second key might be a valid command by its self.
-    if (Commands.keyToCommandRegistry[command[1]])
-      newKeyQueue = checkKeyQueue(command[1..], tabId, frameId)
-    else
-      newKeyQueue = (if validFirstKeys[command[1]] then [command[1]] else [])
   else
-    newKeyQueue = (if validFirstKeys[command] then keys  else [])
+    partiallyMatchingCommands = commandKeys.filter keysPartialMatch.bind null, command
+    if partiallyMatchingCommands.length > 0
+      newKeyQueue = keys
+    else
+      newKeyQueue = checkKeyQueue command[1..], tabId, frameId
 
   newKeyQueue
 
