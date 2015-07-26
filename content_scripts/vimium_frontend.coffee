@@ -99,36 +99,36 @@ handlerStack.push
         target = target.parentElement
     true
 
+class NormalMode extends Mode
+  constructor: ->
+    super
+      name: "normal"
+      indicator: false # There is no mode indicator in normal mode.
+      keydown: (event) => onKeydown.call @, event
+      keypress: (event) => onKeypress.call @, event
+      keyup: (event) => onKeyup.call @, event
+
+    @keyQueue = []
+    @push
+      _name: "mode-#{@id}/registerKeyQueue"
+      registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
+
+  isCommandKey: (key) ->
+    for keys in commandKeys
+      return true if keys[0] == key
+
+    return true if /^[1-9]/.test(key) # Accept 1-9 to allow number prefixes.
+
+    command = if @keyQueue.numericPrefix then @keyQueue else @keyQueue[1..]
+
+    if (command.length == 1)
+      for keys of commandKeys
+        return true if keys[0] == command[0] and keys[1] == key
+
+    false
+
 # Only exported for tests.
 window.initializeModes = ->
-  class NormalMode extends Mode
-    constructor: ->
-      super
-        name: "normal"
-        indicator: false # There is no mode indicator in normal mode.
-        keydown: (event) => onKeydown.call @, event
-        keypress: (event) => onKeypress.call @, event
-        keyup: (event) => onKeyup.call @, event
-
-      @keyQueue = []
-      @push
-        _name: "mode-#{@id}/registerKeyQueue"
-        registerKeyQueue: ({keyQueue}) => @alwaysContinueBubbling => @keyQueue = keyQueue
-
-    isCommandKey: (key) ->
-      for keys in commandKeys
-        return true if keys[0] == key
-
-      return true if /^[1-9]/.test(key) # Accept 1-9 to allow number prefixes.
-
-      command = if @keyQueue.numericPrefix then @keyQueue else @keyQueue[1..]
-
-      if (command.length == 1)
-        for keys of commandKeys
-          return true if keys[0] == command[0] and keys[1] == key
-
-      false
-
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
   new NormalMode
@@ -891,6 +891,7 @@ window.onbeforeunload = ->
 
 root = exports ? window
 root.handlerStack = handlerStack
+root.NormalMode = NormalMode
 root.frameId = frameId
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
