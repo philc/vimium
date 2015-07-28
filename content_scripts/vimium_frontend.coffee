@@ -461,26 +461,20 @@ extend window,
 # Track which keydown events we have handled, so that we can subsequently suppress the corresponding keyup
 # event.
 KeydownEvents =
-  handledEvents: {}
-
-  stringify: (event) ->
-    JSON.stringify
-      metaKey: event.metaKey
-      altKey: event.altKey
-      ctrlKey: event.ctrlKey
-      keyIdentifier: event.keyIdentifier
-      keyCode: event.keyCode
+  handledEvents: new Uint8Array(256)
 
   push: (event) ->
-    @handledEvents[@stringify event] = true
+    @handledEvents[event.keyCode] = 1
 
   # Yields truthy or falsy depending upon whether a corresponding keydown event is present (and removes that
   # event).
   pop: (event) ->
-    detailString = @stringify event
-    value = @handledEvents[detailString]
-    delete @handledEvents[detailString]
-    value
+    keyCode = event.keyCode
+    if @handledEvents[keyCode]
+      @handledEvents[keyCode] = 0
+      true
+    else
+      false
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
