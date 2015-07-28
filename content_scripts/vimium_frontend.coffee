@@ -463,13 +463,7 @@ extend window,
 KeydownEvents =
   handledEvents: {}
 
-  stringify: (event) ->
-    JSON.stringify
-      metaKey: event.metaKey
-      altKey: event.altKey
-      ctrlKey: event.ctrlKey
-      keyIdentifier: event.keyIdentifier
-      keyCode: event.keyCode
+  stringify: (event) -> event.keyCode
 
   push: (event) ->
     @handledEvents[@stringify event] = true
@@ -481,6 +475,12 @@ KeydownEvents =
     value = @handledEvents[detailString]
     delete @handledEvents[detailString]
     value
+
+  clear: -> @handledEvents = {}
+
+handlerStack.push
+  _name: "KeydownEvents-cleanup"
+  blur: (event) -> KeydownEvents.clear() if event.target == window; true
 
 #
 # Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
