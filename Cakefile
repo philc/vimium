@@ -3,16 +3,21 @@ fs = require "fs"
 path = require "path"
 child_process = require "child_process"
 
-spawn = (procName, optArray, silent=false) ->
+spawn = (procName, optArray, silent = false, sync = false) ->
   if process.platform is "win32"
     # if win32, prefix arguments with "/c {original command}"
     # e.g. "coffee -c c:\git\vimium" becomes "cmd.exe /c coffee -c c:\git\vimium"
     optArray.unshift "/c", procName
     procName = "cmd.exe"
-  proc = child_process.spawn procName, optArray
-  unless silent
-    proc.stdout.on 'data', (data) -> process.stdout.write data
-    proc.stderr.on 'data', (data) -> process.stderr.write data
+  if sync
+    proc = child_process.spawnSync procName, optArray, {
+      stdio: [undefined, process.stdout, process.stderr]
+    }
+  else
+    proc = child_process.spawn procName, optArray
+    unless silent
+      proc.stdout.on 'data', (data) -> process.stdout.write data
+      proc.stderr.on 'data', (data) -> process.stderr.write data
   proc
 
 spawnMultiple = (spawnDetailsArray, callback) ->
@@ -74,12 +79,10 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
     ["-r", ".", "dist/vimium"],
     blacklist.map((item) -> ["--exclude", "#{item}"]))
 
-  spawnMultiple [
-    {procName: "rm", optArray: ["-rf", "dist/vimium"]},
-    {procName: "mkdir", optArray: ["-p", "dist/vimium"]},
-    {procName: "rsync", optArray: rsyncOptions},
-    {procName: "zip", optArray: ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"]}
-  ]
+  spawn "rm", ["-rf", "dist/vimium"], false, true
+  spawn "mkdir", ["-p", "dist/vimium"], false, true
+  spawn "rsync", rsyncOptions, false, true
+  spawn "zip", ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"], false, true
 
 # This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
 # Vimium and want to distribute their fork?
