@@ -20,14 +20,6 @@ spawn = (procName, optArray, silent = false, sync = false) ->
       proc.stderr.on 'data', (data) -> process.stderr.write data
   proc
 
-spawnMultiple = (spawnDetailsArray, callback) ->
-  return callback?() if spawnDetailsArray.length == 0
-  {procName, optArray, silent} = spawnDetailsArray.shift()
-  process = spawn procName, optArray, silent
-  process.on 'exit', (returnCode) ->
-    if returnCode == 0
-      spawnMultiple spawnDetailsArray, callback
-
 optArrayFromDict = (opts) ->
   result = []
   for key, value of opts
@@ -73,14 +65,15 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
 
   invoke "build"
 
+  spawn "rm", ["-rf", "dist/vimium"], false, true
+  spawn "mkdir", ["-p", "dist/vimium"], false, true
+
   blacklist = [".*", "*.coffee", "*.md", "reference", "test_harnesses", "tests", "dist", "git_hooks",
                "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile"]
   rsyncOptions = [].concat.apply(
     ["-r", ".", "dist/vimium"],
     blacklist.map((item) -> ["--exclude", "#{item}"]))
 
-  spawn "rm", ["-rf", "dist/vimium"], false, true
-  spawn "mkdir", ["-p", "dist/vimium"], false, true
   spawn "rsync", rsyncOptions, false, true
   spawn "zip", ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"], false, true
 
