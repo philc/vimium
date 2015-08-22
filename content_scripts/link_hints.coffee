@@ -167,6 +167,23 @@ class LinkHintsMode
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
       return [] # This element should never have a link hint.
 
+    # Check for AngularJS listeners on the element.
+    @checkForAngularJs ?= do ->
+      angularElements = document.getElementsByClassName "ng-scope"
+      if angularElements.length == 0
+        -> false
+      else
+        ngAttributes = []
+        for prefix in [ '', 'data-', 'x-' ]
+          for separator in [ '-', ':', '_' ]
+            ngAttributes.push "#{prefix}ng#{separator}click"
+        (element) ->
+          for attribute in ngAttributes
+            return true if element.hasAttribute attribute
+          false
+
+    isClickable ||= @checkForAngularJs element
+
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
