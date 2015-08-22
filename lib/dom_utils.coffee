@@ -82,7 +82,7 @@ DomUtils =
           # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline
           # children.
           continue if (computedStyle.getPropertyValue("float") == "none" and
-            computedStyle.getPropertyValue("position") != "absolute" and
+            not (computedStyle.getPropertyValue("position") in ["absolute", "fixed"]) and
             not (clientRect.height == 0 and isInlineZeroHeight() and
               0 == computedStyle.getPropertyValue("display").indexOf "inline"))
           childClientRect = @getVisibleClientRect child, true
