@@ -429,7 +429,7 @@ extend window,
                 hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
                 # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
                 @deactivateSingleton visibleInputs[selectedInputIndex].element
-                visibleInputs[selectedInputIndex].element.focus()
+                DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
                 @suppressEvent
               else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
                 @exit()
@@ -442,7 +442,7 @@ extend window,
 
           # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
           @deactivateSingleton visibleInputs[selectedInputIndex].element
-          visibleInputs[selectedInputIndex].element.focus()
+          DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
           if visibleInputs.length == 1
             @exit()
             return
