@@ -136,6 +136,9 @@ CoreScroller =
         handlerStack.alwaysContinueBubbling =>
           @keyIsDown = false
           @time += 1
+      blur: =>
+        handlerStack.alwaysContinueBubbling =>
+          @time += 1 if event.target == window
 
   # Return true if CoreScroller would not initiate a new scroll right now.
   wouldNotInitiateScroll: -> @lastEvent?.repeat and Settings.get "smoothScroll"
