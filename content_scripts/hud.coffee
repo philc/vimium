@@ -96,7 +96,7 @@ class Tween
   styleElement: null
 
   constructor: (@cssSelector, insertionPoint = document.documentElement) ->
-    @styleElement = document.createElement "style"
+    @styleElement = DomUtils.createElement "style"
 
     unless @styleElement.style
       # We're in an XML document, so we shouldn't inject any elements. See the comment in UIComponent.

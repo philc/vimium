@@ -6,28 +6,17 @@ class UIComponent
   shadowDOM: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
-    styleSheet = document.createElement "style"
-
-    unless styleSheet.style
-      # If this is an XML document, nothing we do here works:
-      # * <style> elements show their contents inline,
-      # * <iframe> elements don't load any content,
-      # * document.createElement generates elements that have style == null and ignore CSS.
-      # If this is the case we don't want to pollute the DOM to no or negative effect.  So we bail
-      # immediately, and disable all externally-called methods.
-      @postMessage = @activate = @show = @hide = ->
-        console.log "This vimium feature is disabled because it is incompatible with this page."
-      return
+    styleSheet = DomUtils.createElement "style"
 
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
     styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
 
-    @iframeElement = document.createElement "iframe"
+    @iframeElement = DomUtils.createElement "iframe"
     extend @iframeElement,
       className: className
       seamless: "seamless"
-    shadowWrapper = document.createElement "div"
+    shadowWrapper = DomUtils.createElement "div"
     # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
     @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
     @shadowDOM.appendChild styleSheet

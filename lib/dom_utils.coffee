@@ -8,12 +8,22 @@ DomUtils =
     else
       func()
 
+  createElement: (tagName) ->
+    element = document.createElement tagName
+    if element.style
+      # The document namespace provides (X)HTML elements, so we can use them directly.
+      element
+    else
+      # The document namespace doesn't give (X)HTML elements, so we create them with the correct namespace
+      # manually.
+      document.createElementNS "http://www.w3.org/1999/xhtml", tagName
+
   #
   # Adds a list of elements to a page.
   # Note that adding these nodes all at once (via the parent div) is significantly faster than one-by-one.
   #
   addElementList: (els, overlayOptions) ->
-    parent = document.createElement("div")
+    parent = DomUtils.createElement("div")
     parent.id = overlayOptions.id if overlayOptions.id?
     parent.className = overlayOptions.className if overlayOptions.className?
     parent.appendChild(el) for el in els
@@ -236,7 +246,7 @@ DomUtils =
 
   # momentarily flash a rectangular border to give user some visual feedback
   flashRect: (rect) ->
-    flashEl = document.createElement("div")
+    flashEl = DomUtils.createElement("div")
     flashEl.id = "vimiumFlash"
     flashEl.className = "vimiumReset"
     flashEl.style.left = rect.left + window.scrollX + "px"
@@ -297,7 +307,7 @@ DomUtils =
       'letterSpacing', 'wordSpacing' ]
 
     (element, position) ->
-      div = document.createElement "div"
+      div = DomUtils.createElement "div"
       div.id = "vimium-input-textarea-caret-position-mirror-div"
       document.body.appendChild div
 
@@ -315,7 +325,7 @@ DomUtils =
       if element.nodeName.toLowerCase() == "input"
         div.textContent = div.textContent.replace /\s/g, "\u00a0"
 
-      span = document.createElement "span"
+      span = DomUtils.createElement "span"
       span.textContent = element.value.substring(position) || "."
       div.appendChild span
 

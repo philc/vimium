@@ -21,7 +21,7 @@ Utils =
 
   # Creates a single DOM element from :html
   createElementFromHtml: (html) ->
-    tmp = document.createElement("div")
+    tmp = DomUtils.createElement("div")
     tmp.innerHTML = html
     tmp.firstChild
 
