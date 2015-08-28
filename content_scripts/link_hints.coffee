@@ -127,7 +127,7 @@ class LinkHintsMode
   # Creates a link marker for the given link.
   #
   createMarkerFor: (link) ->
-    marker = DomUtils.createElement("div")
+    marker = DomUtils.createElement "div"
     marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
     marker.clickableItem = link.element
 

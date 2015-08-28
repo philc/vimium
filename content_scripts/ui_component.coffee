@@ -7,7 +7,6 @@ class UIComponent
 
   constructor: (iframeUrl, className, @handleMessage) ->
     styleSheet = DomUtils.createElement "style"
-
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
     styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"

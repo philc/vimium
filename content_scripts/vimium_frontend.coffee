@@ -775,7 +775,7 @@ window.enterFindMode = ->
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
-  container = DomUtils.createElement("div")
+  container = DomUtils.createElement "div"
   container.id = "vimiumHelpDialogContainer"
   container.className = "vimiumReset"
 
@@ -861,7 +861,7 @@ CursorHider =
     # See #1345 and #1348.
     return unless Utils.haveChromeVersion "39.0.2171.71"
 
-    @cursorHideStyle = DomUtils.createElement("style")
+    @cursorHideStyle = DomUtils.createElement "style"
     @cursorHideStyle.innerHTML = """
       body * {pointer-events: none !important; cursor: none !important;}
       body, html {cursor: none !important;}
