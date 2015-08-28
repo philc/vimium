@@ -18,7 +18,7 @@ DomUtils =
       # The document namespace doesn't give (X)HTML elements, so we create them with the correct namespace
       # manually.
       @createElement = (tagName) ->
-        document.createElementNS document, "http://www.w3.org/1999/xhtml", tagName
+        document.createElementNS "http://www.w3.org/1999/xhtml", tagName
       @createElement(tagName)
 
   #
