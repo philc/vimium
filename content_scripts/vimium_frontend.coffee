@@ -274,7 +274,7 @@ setScrollPosition = ({ scrollX, scrollY }) ->
 #
 # Called from the backend in order to change frame focus.
 #
-window.focusThisFrame = do ->
+setTimeout (->
   # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
   highlightedFrameElement = DomUtils.createElement "div"
   # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
@@ -289,7 +289,7 @@ window.focusThisFrame = do ->
   _frameEl.className = "vimiumReset vimiumHighlightedFrame"
   _shadowDOM.appendChild _frameEl
 
-  (request) ->
+  window.focusThisFrame = (request) ->
     if window.innerWidth < 3 or window.innerHeight < 3
       # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
       # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
@@ -302,6 +302,7 @@ window.focusThisFrame = do ->
     if shouldHighlight
       document.documentElement.appendChild highlightedFrameElement
       setTimeout (-> highlightedFrameElement.remove()), 200
+), 0
 
 extend window,
   scrollToBottom: ->
