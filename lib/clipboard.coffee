@@ -1,6 +1,6 @@
 Clipboard =
   _createTextArea: ->
-    textArea = DomUtils.createElement("textarea")
+    textArea = document.createElement "textarea"
     textArea.style.position = "absolute"
     textArea.style.left = "-100%"
     textArea
