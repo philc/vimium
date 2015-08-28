@@ -12,12 +12,13 @@ DomUtils =
     element = document.createElement tagName
     if element.style
       # The document namespace provides (X)HTML elements, so we can use them directly.
-      @createElement = document.createElement.bind document
+      @createElement = (tagName) -> document.createElement tagName
       element
     else
       # The document namespace doesn't give (X)HTML elements, so we create them with the correct namespace
       # manually.
-      @createElement = document.createElementNS.bind document, "http://www.w3.org/1999/xhtml"
+      @createElement = (tagName) ->
+        document.createElementNS document, "http://www.w3.org/1999/xhtml", tagName
       @createElement(tagName)
 
   #
