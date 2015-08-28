@@ -19,12 +19,6 @@ Utils =
     func = obj[components.pop()]
     func.apply(obj, argArray)
 
-  # Creates a single DOM element from :html
-  createElementFromHtml: (html) ->
-    tmp = DomUtils.createElement("div")
-    tmp.innerHTML = html
-    tmp.firstChild
-
   escapeHtml: (string) -> string.replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
   # Generates a unique ID
