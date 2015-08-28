@@ -10,7 +10,7 @@ DomUtils =
 
   createElement: (tagName) ->
     element = document.createElement tagName
-    if element.style
+    if element instanceof HTMLElement
       # The document namespace provides (X)HTML elements, so we can use them directly.
       @createElement = (tagName) -> document.createElement tagName
       element
