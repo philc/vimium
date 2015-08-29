@@ -274,7 +274,7 @@ setScrollPosition = ({ scrollX, scrollY }) ->
 #
 # Called from the backend in order to change frame focus.
 #
-setTimeout (->
+DomUtils.documentReady ->
   # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
   highlightedFrameElement = DomUtils.createElement "div"
   # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
@@ -302,7 +302,8 @@ setTimeout (->
     if shouldHighlight
       document.documentElement.appendChild highlightedFrameElement
       setTimeout (-> highlightedFrameElement.remove()), 200
-), 0
+
+window.focusThisFrame = ->
 
 extend window,
   scrollToBottom: ->
