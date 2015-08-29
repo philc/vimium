@@ -16,7 +16,7 @@ Clipboard =
     document.body.removeChild(textArea)
 
   paste: ->
-    textArea = @._createTextArea()
+    textArea = @_createTextArea()
     document.body.appendChild(textArea)
     textArea.focus()
     document.execCommand("Paste")
