@@ -274,23 +274,22 @@ setScrollPosition = ({ scrollX, scrollY }) ->
 #
 # Called from the backend in order to change frame focus.
 #
-window.focusThisFrame = do ->
+DomUtils.documentReady ->
   # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
-  highlightedFrameElement = document.createElement "div"
+  highlightedFrameElement = DomUtils.createElement "div"
   # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
   _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
 
   # Inject stylesheet.
-  _styleSheet = document.createElement "style"
-  if _styleSheet.style?
-    _styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
-    _shadowDOM.appendChild _styleSheet
+  _styleSheet = DomUtils.createElement "style"
+  _styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
+  _shadowDOM.appendChild _styleSheet
 
-  _frameEl = document.createElement "div"
+  _frameEl = DomUtils.createElement "div"
   _frameEl.className = "vimiumReset vimiumHighlightedFrame"
   _shadowDOM.appendChild _frameEl
 
-  (request) ->
+  window.focusThisFrame = (request) ->
     if window.innerWidth < 3 or window.innerHeight < 3
       # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
       # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
@@ -303,6 +302,8 @@ window.focusThisFrame = do ->
     if shouldHighlight
       document.documentElement.appendChild highlightedFrameElement
       setTimeout (-> highlightedFrameElement.remove()), 200
+
+window.focusThisFrame = ->
 
 extend window,
   scrollToBottom: ->
@@ -405,7 +406,7 @@ extend window,
           Math.min(count, visibleInputs.length) - 1
 
       hints = for tuple in visibleInputs
-        hint = document.createElement "div"
+        hint = DomUtils.createElement "div"
         hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
         # minus 1 for the border
@@ -775,7 +776,7 @@ window.enterFindMode = ->
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
-  container = document.createElement("div")
+  container = DomUtils.createElement "div"
   container.id = "vimiumHelpDialogContainer"
   container.className = "vimiumReset"
 
@@ -861,7 +862,7 @@ CursorHider =
     # See #1345 and #1348.
     return unless Utils.haveChromeVersion "39.0.2171.71"
 
-    @cursorHideStyle = document.createElement("style")
+    @cursorHideStyle = DomUtils.createElement "style"
     @cursorHideStyle.innerHTML = """
       body * {pointer-events: none !important; cursor: none !important;}
       body, html {cursor: none !important;}
