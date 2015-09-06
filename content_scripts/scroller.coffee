@@ -81,7 +81,7 @@ doesScroll = (element, direction, amount, factor) ->
 findScrollableElement = (element, direction, amount, factor) ->
   while element != document.body and
     not (doesScroll(element, direction, amount, factor) and shouldScroll(element, direction))
-      element = element.parentElement || document.body
+      element = (DomUtils.getContainingElement element) ? document.body
   element
 
 # On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
@@ -220,7 +220,12 @@ Scroller =
   init: ->
     handlerStack.push
       _name: 'scroller/active-element'
-      DOMActivate: (event) -> handlerStack.alwaysContinueBubbling -> activatedElement = event.target
+      DOMActivate: (event) -> handlerStack.alwaysContinueBubbling ->
+        # If event.path is present, the true event taget (potentially inside a Shadow DOM inside
+        # event.target) can be found as its first element.
+        # NOTE(mrmr1993): event.path has been renamed to event.deepPath in the spec, but this change is not
+        # yet implemented by Chrome.
+        activatedElement = event.deepPath?[0] ? event.path?[0] ? event.target
     CoreScroller.init()
 
   # scroll the active element in :direction by :amount * :factor.
