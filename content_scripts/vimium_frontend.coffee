@@ -463,15 +463,15 @@ extend window,
 KeydownEvents =
   handledEvents: {}
 
-  stringify: (event) -> event.keyCode
+  getEventCode: (event) -> event.keyCode
 
   push: (event) ->
-    @handledEvents[@stringify event] = true
+    @handledEvents[@getEventCode event] = true
 
   # Yields truthy or falsy depending upon whether a corresponding keydown event is present (and removes that
   # event).
   pop: (event) ->
-    detailString = @stringify event
+    detailString = @getEventCode event
     value = @handledEvents[detailString]
     delete @handledEvents[detailString]
     value
