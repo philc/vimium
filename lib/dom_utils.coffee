@@ -370,5 +370,11 @@ DomUtils =
           text
       texts.join " "
 
+  # Get the element in the DOM hierachy that contains `element`.
+  # If the element is rendered in a shadow DOM via a <content> element, the <content> element will be
+  # returned, so the shadow DOM is traversed rather than passed over.
+  getContainingElement: (element) ->
+    element.getDestinationInsertionPoints()[0] or element.parentElement
+
 root = exports ? window
 root.DomUtils = DomUtils
