@@ -155,14 +155,14 @@ Release Notes
 -------------
 1.52 (not yet released)
 
-- Search completion for selected custom search engines; for details, see the wiki
-  ([here](https://github.com/philc/vimium/wiki/Search-Completion)).
-- Use `Tab` on an empty Vomnibar to repeat or edit recent queries; for details, see the wiki
-  ([here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#repeat-recent-vomnibar-queries).
+- Search completion for selected custom search engines
+  (details on the [wiki](https://github.com/philc/vimium/wiki/Search-Completion)).
+- Use `Tab` on an empty Vomnibar to repeat or edit recent queries
+  (details on the [wiki](https://github.com/philc/vimium/wiki/Tips-and-Tricks#repeat-recent-vomnibar-queries)).
 - Marks:
     - Use <tt>\`\`</tt> to jump back to the previous position after selected jump-like movements: <br/>
         (`gg`, `G`, `n`, `N`, `/` and local mark movements).
-    - Global marks now persistent (across tab closes and browser sessions) and are synced.
+    - Global marks are now persistent and synced.
 - For filtered link hints (not the default), you can now use `Tab` and `Enter`
   to select hints, and hints are ordered by best match.
 - Find mode now uses an HTML input (so you can paste and edit the search text).
@@ -171,6 +171,7 @@ Release Notes
     - Global marks on non-Windows platforms.
     - Link-hints for non-Latin keyboards.
     - Vimium now works on XML pages (instead of breaking them).
+    - Scrolling within web components (e.g. Google Play Music).
 
 1.51 (2015-05-02)
 
