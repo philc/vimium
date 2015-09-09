@@ -80,7 +80,6 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
 # This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
 # Vimium and want to distribute their fork?
 task "package-custom-crx", "build .crx file", ->
-  # To get exec-sync, use `npm install exec-sync`. We use this for synchronously executing shell commands.
   # To get crxmake, use `sudo gem install crxmake`.
   invoke "build"
 
