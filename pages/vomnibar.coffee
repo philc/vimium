@@ -212,12 +212,12 @@ class VomnibarUI
     @completer.cancel()
     if 0 <= @selection and @completions[@selection].customSearchMode and not @customSearchMode
       @customSearchMode = @completions[@selection].customSearchMode
-      updateSynchronously = true
+      mustRun = true
     # If the user types, then don't reset any previous text, and reset the selection.
     if @previousInputValue?
       @previousInputValue = null
       @selection = -1
-    @update updateSynchronously
+    @update mustRun
 
   clearUpdateTimer: ->
     if @updateTimer?
@@ -228,19 +228,19 @@ class VomnibarUI
     queryTerms = @input.value.ltrim().split /\s+/
     1 < queryTerms.length and queryTerms[0] in @keywords and not @customSearchMode
 
-  update: (updateSynchronously = false, callback = null) =>
+  update: (mustRun = false, callback = null) =>
     # If the query text becomes a custom search (the user enters a search keyword), then we need to force a
     # synchronous update (so that the state is updated immediately).
-    updateSynchronously ||= @shouldActivateCustomSearchMode()
-    if updateSynchronously
+    mustRun ||= @shouldActivateCustomSearchMode()
+    if mustRun
       @clearUpdateTimer()
       @updateCompletions callback
     else if not @updateTimer?
-      # Update asynchronously for a better user experience, and to take some load off the CPU (not every
+      # Throttle requests for a better user experience, and to take some load off the CPU (not every
       # keystroke will cause a dedicated update).
       @updateTimer = Utils.setTimeout @refreshInterval, =>
         @updateTimer = null
-        @updateCompletions callback
+      @updateCompletions callback
 
     @input.focus()
 
