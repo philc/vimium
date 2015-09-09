@@ -238,9 +238,14 @@ class VomnibarUI
     else if not @updateTimer?
       # Throttle requests for a better user experience, and to take some load off the CPU (not every
       # keystroke will cause a dedicated update).
+      @shouldUpdateCompletionsOnTimeout = false
       @updateTimer = Utils.setTimeout @refreshInterval, =>
         @updateTimer = null
+        @updateCompletions() if @shouldUpdateCompletionsOnTimeout
       @updateCompletions callback
+    else
+      # Don't execute this request now, but we need to send a request for it eventually.
+      @shouldUpdateCompletionsOnTimeout = true
 
     @input.focus()
 
