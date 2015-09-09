@@ -153,7 +153,7 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-1.52 (not yet released)
+1.52 (2015-09-09)
 
 - Search completion for selected custom search engines
   (details on the [wiki](https://github.com/philc/vimium/wiki/Search-Completion)).
