@@ -134,9 +134,9 @@ Settings =
     # for first.
 
     # "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
-    previousPatterns: "prev,previous,back,<,\u2190,\xab,\u226a,<<"
+    previousPatterns: "prev,previous,back,older,<,\u2190,\xab,\u226a,<<"
     # "\bnext\b,\bmore\b,>,→,»,≫,>>"
-    nextPatterns: "next,more,>,\u2192,\xbb,\u226b,>>"
+    nextPatterns: "next,more,newer,>,\u2192,\xbb,\u226b,>>"
     # default/fall back search engine
     searchUrl: "https://www.google.com/search?q="
     # put in an example search engine
