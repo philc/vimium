@@ -156,6 +156,7 @@ Settings =
       # b: https://www.bing.com/search?q=%s Bing
       # d: https://duckduckgo.com/?q=%s DuckDuckGo
       # az: http://www.amazon.com/s/?field-keywords=%s Amazon
+      # qw: https://www.qwant.com/?q=%s Qwant
       """
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
