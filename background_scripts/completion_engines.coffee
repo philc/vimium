@@ -149,7 +149,8 @@ class Qwant extends BaseEngine
         searchUrl: "https://www.qwant.com/?q=%s"
         keyword: "qw"
 
-  parse: (xhr) -> JSON.parse(xhr.responseText)[1]
+  parse: (xhr) ->
+    suggestion.value for suggestion in JSON.parse(xhr.responseText).data.items
 
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will always be a completion engine match.
