@@ -234,19 +234,20 @@ DomUtils =
           if element.selectionStart == 0 and element.selectionEnd == 0
             element.setSelectionRange element.value.length, element.value.length
 
-
+  simulateUnhover: (element, modifiers) -> @simulateMouseEvent "mouseout", element, modifiers
 
   simulateClick: (element, modifiers) ->
-    modifiers ||= {}
-
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
-      mouseEvent = document.createEvent("MouseEvents")
-      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
-      modifiers.shiftKey, modifiers.metaKey, 0, null)
-      # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
-      # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
-      element.dispatchEvent(mouseEvent)
+      @simulateMouseEvent event, element, modifiers
+
+  simulateMouseEvent: (event, element, modifiers = {}) ->
+    mouseEvent = document.createEvent("MouseEvents")
+    mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
+    modifiers.shiftKey, modifiers.metaKey, 0, null)
+    # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
+    # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
+    element.dispatchEvent(mouseEvent)
 
   # momentarily flash a rectangular border to give user some visual feedback
   flashRect: (rect) ->

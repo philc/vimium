@@ -93,6 +93,7 @@ class LinkHintsMode
       else
         @hintMode.setIndicator "Open multiple links in new tabs."
       @linkActivator = (link) ->
+        @unhoverLast link
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick link,
@@ -117,10 +118,13 @@ class LinkHintsMode
     else if @mode is DOWNLOAD_LINK_URL
       @hintMode.setIndicator "Download link URL."
       @linkActivator = (link) ->
+        @unhoverLast link
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
       @hintMode.setIndicator "Open link in current tab."
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+      @linkActivator = (link) ->
+        @unhoverLast link
+        DomUtils.simulateClick link
 
   #
   # Creates a link marker for the given link.
@@ -376,6 +380,12 @@ class LinkHintsMode
         @deactivateMode delay, -> LinkHints.activateModeWithQueue()
       else
         @deactivateMode delay
+
+  unhoverLast: do ->
+    lastHoveredElement = null
+    (element) ->
+      DomUtils.simulateUnhover lastHoveredElement if lastHoveredElement?
+      lastHoveredElement = element
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
