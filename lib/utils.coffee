@@ -144,7 +144,7 @@ Utils =
     if Utils.hasChromePrefix string
       string
     else if Utils.hasJavascriptPrefix string
-      # In Chrome versions older than 46.0.2467.2, encoded javascript URIs weren't handled correctly by.
+      # In Chrome versions older than 46.0.2467.2, encoded javascript URIs weren't handled correctly.
       if Utils.haveChromeVersion "46.0.2467.2" then string else Utils.decodeURIByParts string
     else if Utils.isUrl string
       Utils.createFullUrl string
