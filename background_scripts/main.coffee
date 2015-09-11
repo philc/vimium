@@ -239,8 +239,10 @@ moveTab = (count) ->
   chrome.tabs.getAllInWindow null, (tabs) ->
     pinnedCount = (tabs.filter (tab) -> tab.pinned).length
     chrome.tabs.getSelected null, (tab) ->
+      minIndex = if tab.pinned then 0 else pinnedCount
+      maxIndex = (if tab.pinned then pinnedCount else tabs.length) - 1
       chrome.tabs.move tab.id,
-        index: Math.max pinnedCount, Math.min tabs.length - 1, tab.index + count
+        index: Math.max minIndex, Math.min maxIndex, tab.index + count
 
 # Start action functions
 
