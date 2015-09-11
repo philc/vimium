@@ -115,27 +115,27 @@ class FindMode extends Mode
     # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
     @query.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(@query.parsedQuery)
 
-    # if we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
-    # sequentially so the browser handles the scrolling / text selection.
-    if @query.isRegex
-      try
-        pattern = new RegExp(@query.parsedQuery, "g" + (if @query.ignoreCase then "i" else ""))
-      catch error
-        # if we catch a SyntaxError, assume the user is not done typing yet and return quietly
-        return
-      # innerText will not return the text of hidden elements, and strip out tags while preserving newlines
-      text = document.body.innerText
-      @query.regexMatches = text.match(pattern)
-      @query.activeRegexIndex = 0
-      @query.matchCount = @query.regexMatches?.length
-    # if we are doing a basic plain string match, we still want to grep for matches of the string, so we can
-    # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
-    # from the internal representation used by window.find.
+    regexPattern = if @query.isRegex
+      @query.parsedQuery
     else
-      parsedNonRegexQuery = Utils.escapeRegexSpecialCharacters @query.parsedQuery
-      pattern = new RegExp(parsedNonRegexQuery, "g" + (if @query.ignoreCase then "i" else ""))
-      text = document.body.innerText
-      @query.matchCount = text.match(pattern)?.length
+      Utils.escapeRegexSpecialCharacters @query.parsedQuery
+
+    # If we are dealing with a regex, grep for all matches in the text, and then call window.find() on them
+    # sequentially so the browser handles the scrolling / text selection.
+    # If we are doing a basic plain string match, we still want to grep for matches of the string, so we can
+    # show a the number of results.
+    try
+      pattern = new RegExp regexPattern, "g#{if @query.ignoreCase then "i" else ""}"
+    catch error
+      return # If we catch a SyntaxError, assume the user is not done typing yet and return quietly.
+
+    # innerText will not return the text of hidden elements, and strip out tags while preserving newlines.
+    # NOTE(mrmr1993): innerText doesn't include the text contents of <input>s and <textarea>s. See #1118.
+    text = document.body.innerText
+    regexMatches = text.match pattern
+    @query.regexMatches = regexMatches if @query.isRegex
+    @query.activeRegexIndex = 0 if @query.isRegex
+    @query.matchCount = regexMatches?.length
 
   @getNextQueryFromRegexMatches: (stepSize) ->
     # find()ing an empty query always returns false
