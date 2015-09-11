@@ -132,10 +132,7 @@ class FindMode extends Mode
     # show a the number of results. We can grep on document.body.innerText, as it should be indistinguishable
     # from the internal representation used by window.find.
     else
-      # escape all special characters, so RegExp just parses the string 'as is'.
-      # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-      escapeRegExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
-      parsedNonRegexQuery = @query.parsedQuery.replace(escapeRegExp, (char) -> "\\" + char)
+      parsedNonRegexQuery = Utils.escapeRegexSpecialCharacters @query.parsedQuery
       pattern = new RegExp(parsedNonRegexQuery, "g" + (if @query.ignoreCase then "i" else ""))
       text = document.body.innerText
       @query.matchCount = text.match(pattern)?.length
