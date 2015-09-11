@@ -144,7 +144,8 @@ Utils =
     if Utils.hasChromePrefix string
       string
     else if Utils.hasJavascriptPrefix string
-      Utils.decodeURIByParts string
+      # In Chrome versions older than 46.0.2467.2, encoded javascript URIs weren't handled correctly by.
+      if Utils.haveChromeVersion "46.0.2467.2" then string else Utils.decodeURIByParts string
     else if Utils.isUrl string
       Utils.createFullUrl string
     else
@@ -176,7 +177,7 @@ Utils =
 
   # True if the current Chrome version is at least the required version.
   haveChromeVersion: (required) ->
-    chromeVersion = navigator.appVersion.match(/Chrome\/(.*?) /)?[1]
+    chromeVersion = navigator.appVersion.match(/Chrom(e|ium)\/(.*?) /)?[2]
     chromeVersion and 0 <= Utils.compareVersions chromeVersion, required
 
   # Zip two (or more) arrays:
