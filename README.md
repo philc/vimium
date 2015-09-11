@@ -153,6 +153,11 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+Updates since 1.52 (not yet released)
+
+- Bug fixes:
+    - Fix `moveTabLeft` and `moveTabRight` for pinned tabs (#1814 and #1815).
+
 1.52 (2015-09-09)
 
 - Search completion for selected custom search engines
