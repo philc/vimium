@@ -185,18 +185,21 @@ context "Filtered link hints",
 
     should "label the hints", ->
       hintMarkers = getHintMarkers()
-      for i in [0...4]
-        assert.equal (i + 1).toString(), hintMarkers[i].textContent.toLowerCase()
+      expectedMarkers = [1..4].map (m) -> m.toString()
+      actualMarkers = [0...4].map (i) -> hintMarkers[i].textContent.toLowerCase()
+      assert.equal expectedMarkers.length, actualMarkers.length
+      for marker in expectedMarkers
+        assert.isTrue marker in actualMarkers
 
     should "narrow the hints", ->
       hintMarkers = getHintMarkers()
       sendKeyboardEvent "T"
       sendKeyboardEvent "R"
       assert.equal "none", hintMarkers[0].style.display
-      assert.equal "1", hintMarkers[1].hintString
+      assert.equal "3", hintMarkers[1].hintString
       assert.equal "", hintMarkers[1].style.display
       sendKeyboardEvent "A"
-      assert.equal "2", hintMarkers[3].hintString
+      assert.equal "1", hintMarkers[3].hintString
 
   context "Image hints",
 

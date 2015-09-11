@@ -126,18 +126,22 @@ class LinkHintsMode
   #
   # Creates a link marker for the given link.
   #
-  createMarkerFor: (link) ->
-    marker = DomUtils.createElement "div"
-    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-    marker.clickableItem = link.element
+  createMarkerFor: do ->
+    # This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort stable.
+    stableSortCount = 0
+    (link) ->
+      marker = DomUtils.createElement "div"
+      marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+      marker.clickableItem = link.element
+      marker.stableSortCount = ++stableSortCount
 
-    clientRect = link.rect
-    marker.style.left = clientRect.left + window.scrollX + "px"
-    marker.style.top = clientRect.top  + window.scrollY  + "px"
+      clientRect = link.rect
+      marker.style.left = clientRect.left + window.scrollX + "px"
+      marker.style.top = clientRect.top  + window.scrollY  + "px"
 
-    marker.rect = link.rect
+      marker.rect = link.rect
 
-    marker
+      marker
 
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -584,11 +588,8 @@ class FilterHints
     linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
     do (scoreFunction = @scoreLinkHint linkSearchString) ->
       linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
-    # The Javascript sort() method is known not to be stable.  Nevertheless, we require (and assume, here)
-    # that it is deterministic.  So, if the user is typing hint characters, then hints will always end up in
-    # the same order and hence with the same hint strings (because hint-string filtering happens after the
-    # filtering here).
-    hintMarkers = hintMarkers[..].sort (a,b) -> b.score - a.score
+    hintMarkers = hintMarkers[..].sort (a,b) ->
+      if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
     linkHintNumber = 1
     for linkMarker in hintMarkers
