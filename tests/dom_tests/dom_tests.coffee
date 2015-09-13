@@ -244,7 +244,7 @@ context "Filtered link hints",
       hintMarkers = getHintMarkers().map (marker) -> marker.textContent.toLowerCase()
       # We don't know the actual hint numbers which will be assigned, so we replace them with "N".
       hintMarkers = hintMarkers.map (str) -> str.replace /^[0-9]+/, "N"
-      assert.equal 7, hintMarkers.length
+      assert.equal 5, hintMarkers.length
       assert.isTrue "N" in hintMarkers
       assert.isTrue "N" in hintMarkers
       assert.isTrue "N: a label" in hintMarkers
