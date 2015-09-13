@@ -9,7 +9,10 @@ class UIComponent
     styleSheet = DomUtils.createElement "style"
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
-    styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
+    styleSheet.innerHTML = """
+      @import url("#{chrome.runtime.getURL("content_scripts/vimium.css")}");
+      iframe {display: none;}
+    """
 
     @iframeElement = DomUtils.createElement "iframe"
     extend @iframeElement,
