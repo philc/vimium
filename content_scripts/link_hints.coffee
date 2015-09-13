@@ -214,6 +214,8 @@ class LinkHintsMode
                              (element.readOnly and DomUtils.isSelectable element))
       when "button", "select"
         isClickable ||= not element.disabled
+      when "label"
+        isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
 
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
