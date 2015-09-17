@@ -267,8 +267,8 @@ BackgroundCommands =
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
   nextTab: (count) -> selectTab "next", count
   previousTab: (count) -> selectTab "previous", count
-  firstTab: -> selectTab "first"
-  lastTab: -> selectTab "last"
+  firstTab: (count) -> selectTab "first", count
+  lastTab: (count) -> selectTab "last", count
   removeTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id)
@@ -349,15 +349,13 @@ selectTab = (direction, count = 1) ->
       toSelect =
         switch direction
           when "next"
-            currentTab.index + count
+            Math.min tabs.length - 1, currentTab.index + count
           when "previous"
-            currentTab.index - count
+            Math.max 0, currentTab.index - count
           when "first"
-            0
+            Math.min tabs.length - 1, count - 1
           when "last"
-            tabs.length - 1
-      # Bring toSelect into the range [0,tabs.length).
-      toSelect = (toSelect + tabs.length * Math.abs count) % tabs.length
+            Math.max 0, tabs.length - count
       chrome.tabs.update tabs[toSelect].id, selected: true
 
 updateOpenTabs = (tab, deleteFrames = false) ->
