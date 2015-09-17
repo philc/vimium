@@ -155,6 +155,7 @@ Release Notes
 -------------
 Updates since 1.52 (not yet released)
 
+- `g0` and `g$` now accept count prefixes; so `2g0` selects the second tab, and so on.
 - Bug fixes:
     - Fix `moveTabLeft` and `moveTabRight` for pinned tabs (#1814 and #1815).
 
