@@ -325,8 +325,8 @@ extend window,
 
 extend window,
   reload: -> window.location.reload()
-  goBack: (count) -> history.go(-count)
-  goForward: (count) -> history.go(count)
+  goBack: (count) -> history.go Math.max -count, -(history.length - 1)
+  goForward: (count) -> history.go Math.min count, history.length - 1
 
   goUp: (count) ->
     url = window.location.href
