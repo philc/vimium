@@ -309,8 +309,8 @@ commandDescriptions =
   # Manipulating tabs
   nextTab: ["Go one tab right", { background: true, passCountToFunction: true }]
   previousTab: ["Go one tab left", { background: true, passCountToFunction: true }]
-  firstTab: ["Go to the first tab", { background: true }]
-  lastTab: ["Go to the last tab", { background: true }]
+  firstTab: ["Go to the first tab", { background: true, passCountToFunction: true }]
+  lastTab: ["Go to the last tab", { background: true, passCountToFunction: true }]
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
