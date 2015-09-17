@@ -349,9 +349,9 @@ selectTab = (direction, count = 1) ->
       toSelect =
         switch direction
           when "next"
-            Math.min tabs.length - 1, currentTab.index + count
+            (currentTab.index + count) % tabs.length
           when "previous"
-            Math.max 0, currentTab.index - count
+            (currentTab.index - count + count * tabs.length) % tabs.length
           when "first"
             Math.min tabs.length - 1, count - 1
           when "last"
