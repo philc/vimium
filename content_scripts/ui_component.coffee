@@ -4,15 +4,16 @@ class UIComponent
   showing: null
   options: null
   shadowDOM: null
+  styleSheetGetter: null
 
   constructor: (iframeUrl, className, @handleMessage) ->
     styleSheet = DomUtils.createElement "style"
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
-    styleSheet.innerHTML = """
-      @import url("#{chrome.runtime.getURL("content_scripts/vimium.css")}");
-      iframe {display: none;}
-    """
+    styleSheet.innerHTML = "iframe {display: none;}"
+
+    UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchStyles
+    @styleSheetGetter.use (styles) -> styleSheet.innerHTML = styles
 
     @iframeElement = DomUtils.createElement "iframe"
     extend @iframeElement,
@@ -114,6 +115,23 @@ class UIComponent
           if event.target == window
             window.removeEventListener "focus", handler
             refocusSourceFrame()
+
+  fetchStyles: (callback) ->
+    stylesheetRequest = new XMLHttpRequest()
+
+    stylesheetRequest.onload = ->
+      return stylesheetRequest.onerror() unless stylesheetRequest.status == 200
+      callback stylesheetRequest.responseText
+
+    stylesheetRequest.onerror = ->
+      chrome.runtime.sendMessage
+        handler: "fetchFileContents"
+        fileName: "content_scripts/vimium.css"
+      , callback
+
+    stylesheetRequest.open "GET", (chrome.runtime.getURL "content_scripts/vimium.css"), true
+    stylesheetRequest.send()
+
 
 root = exports ? window
 root.UIComponent = UIComponent

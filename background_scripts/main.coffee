@@ -668,6 +668,7 @@ sendRequestHandlers =
   setIcon: setIcon
   sendMessageToFrames: sendMessageToFrames
   log: bgLog
+  fetchFileContents: (request, sender) -> fetchFileContents request.fileName
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"
