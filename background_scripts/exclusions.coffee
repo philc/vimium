@@ -28,6 +28,7 @@ root.Exclusions = Exclusions =
   # is the default.  However, when called from the page popup, we are testing what effect candidate new rules
   # would have on the current tab.  In this case, the candidate rules are provided by the caller.
   getRule: (url, rules=@rules) ->
+    return forceDisableRule if forceDisableRule = @checkForChromiumNewTabPageBug url
     matches = (rule for rule in rules when rule.pattern and 0 <= url.search(RegexpCache.get(rule.pattern)))
     # An absolute exclusion rule (with no passKeys) takes priority.
     for rule in matches
@@ -47,6 +48,20 @@ root.Exclusions = Exclusions =
 
   postUpdateHook: (@rules) ->
     RegexpCache.clear()
+
+  # There is a Chrome bug in the versions indicated below which prevents the Vimium CSS from loading on the
+  # new-tab page.  This check disables Vimium on the NTP for those Chrome versions.
+  # Remove this when Chrome v47 becomes "old".  See #1817.
+  checkForChromiumNewTabPageBug: do ->
+    newTabPattern = "^https://www.google.[a-z.]+/_/chrome/newtab"
+    if Utils.haveChromeVersion("46.0.2490.22") and not Utils.haveChromeVersion "47.0.2503.0"
+      (url) ->
+        if 0 == url.search RegexpCache.get newTabPattern
+          pattern: newTabPattern, passkeys: ""
+        else
+          null
+    else
+      -> null
 
 # Development and debug only.
 # Enable this (temporarily) to restore legacy exclusion rules from backup.
