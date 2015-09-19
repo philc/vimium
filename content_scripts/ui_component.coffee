@@ -12,7 +12,7 @@ class UIComponent
     # Default to everything hidden while the stylesheet loads.
     styleSheet.innerHTML = "iframe {display: none;}"
 
-    UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchStyles
+    UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchFileContents "content_scripts/vimium.css"
     @styleSheetGetter.use (styles) -> styleSheet.innerHTML = styles
 
     @iframeElement = DomUtils.createElement "iframe"
@@ -116,21 +116,26 @@ class UIComponent
             window.removeEventListener "focus", handler
             refocusSourceFrame()
 
-  fetchStyles: (callback) ->
-    stylesheetRequest = new XMLHttpRequest()
+  # Fetch a Vimium file/resource (such as "content_scripts/vimium.css").
+  # We try making an XMLHttpRequest request.  That can fail (see #1817), in which case we fetch the
+  # file/resource via the background page.
+  fetchFileContents: (file) -> (callback) ->
+    request = new XMLHttpRequest()
 
-    stylesheetRequest.onload = ->
-      return stylesheetRequest.onerror() unless stylesheetRequest.status == 200
-      callback stylesheetRequest.responseText
+    request.onload = ->
+      if request.status == 200
+        callback request.responseText
+      else
+        request.onerror()
 
-    stylesheetRequest.onerror = ->
+    request.onerror = ->
       chrome.runtime.sendMessage
         handler: "fetchFileContents"
-        fileName: "content_scripts/vimium.css"
+        fileName: file
       , callback
 
-    stylesheetRequest.open "GET", (chrome.runtime.getURL "content_scripts/vimium.css"), true
-    stylesheetRequest.send()
+    request.open "GET", (chrome.runtime.getURL file), true
+    request.send()
 
 
 root = exports ? window
