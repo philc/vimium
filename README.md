@@ -155,10 +155,9 @@ Release Notes
 -------------
 Updates since 1.52 (not yet released)
 
+- Vimium now works on the new-tab page for Chrome 47.
 - `g0` and `g$` now accept count prefixes; so `2g0` selects the second tab, and so on.
 - Bug fixes:
-    - Vomnibar visible on new-tab page for certain Chrome versions (#1817). Note: this should
-      fix itself as the fix for [this Chromium bug](https://code.google.com/p/chromium/issues/detail?id=466876) rolls out.
     - Fix `moveTabLeft` and `moveTabRight` for pinned tabs (#1814 and #1815).
 
 1.52 (2015-09-09)
