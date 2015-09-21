@@ -19,6 +19,12 @@ Utils =
     func = obj[components.pop()]
     func.apply(obj, argArray)
 
+  # Escape all special characters, so RegExp will parse the string 'as is'.
+  # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+  escapeRegexSpecialCharacters: do ->
+    escapeRegex = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
+    (str) -> str.replace escapeRegex, "\\$&"
+
   escapeHtml: (string) -> string.replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
   # Generates a unique ID
