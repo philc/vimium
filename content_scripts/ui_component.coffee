@@ -12,6 +12,8 @@ class UIComponent
     # Default to everything hidden while the stylesheet loads.
     styleSheet.innerHTML = "iframe {display: none;}"
 
+    # Use an XMLHttpRequest, possibly via the background page, to fetch the stylesheet. This allows us to
+    # catch and recover from failures that we could not have caught when using CSS @include (eg. #1817).
     UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchFileContents "content_scripts/vimium.css"
     @styleSheetGetter.use (styles) -> styleSheet.innerHTML = styles
 
