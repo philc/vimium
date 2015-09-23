@@ -231,7 +231,7 @@ class LinkHintsMode
 
     # If we didn't successfully hook addEventListener, fall back to older methods of detecting clickable
     # elements.
-    if not isClickable and document.documentElement.hasAttribute "vimium-listening-for-onclick-listeners"
+    unless isClickable
       # Match the element if any of its classes contain "button".
       isClickable = element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0
 

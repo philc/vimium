@@ -54,7 +54,8 @@
              "content_scripts/mode_find.js",
              "content_scripts/mode_visual_edit.js",
              "content_scripts/hud.js",
-             "content_scripts/vimium_frontend.js"
+             "content_scripts/vimium_frontend.js",
+             "content_scripts/inject_script.js"
             ],
       "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
@@ -63,12 +64,6 @@
     {
       "matches": ["file:///", "file:///*/"],
       "css": ["content_scripts/file_urls.css"],
-      "run_at": "document_start",
-      "all_frames": true
-    },
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content_scripts/inject_script.js"],
       "run_at": "document_start",
       "all_frames": true
     }
