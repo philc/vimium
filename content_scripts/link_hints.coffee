@@ -202,6 +202,7 @@ class LinkHintsMode
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
+        element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"] or
         element.hasAttribute("vimium-has-onclick-listener"))
       isClickable = true
@@ -228,19 +229,12 @@ class LinkHintsMode
       when "label"
         isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
 
-
-    # If we didn't successfully hook addEventListener, fall back to older methods of detecting clickable
-    # elements.
-    unless isClickable
-      # Match the element if any of its classes contain "button".
-      isClickable = element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0
-
-      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-      # citizens when it improves UX, so take special note of them.
-      tabIndexValue = element.getAttribute("tabindex")
-      tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-      unless isClickable or isNaN(tabIndex) or tabIndex < 0
-        isClickable = onlyHasTabIndex = true
+    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+    # citizens when it improves UX, so take special note of them.
+    tabIndexValue = element.getAttribute("tabindex")
+    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+    unless isClickable or isNaN(tabIndex) or tabIndex < 0
+      isClickable = onlyHasTabIndex = true
 
     if isClickable
       clientRect = DomUtils.getVisibleClientRect element, true
