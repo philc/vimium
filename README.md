@@ -153,7 +153,7 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-Updates since 1.52 (not yet released)
+1.53 (2015-09-25)
 
 - Vimium now works on the new-tab page for Chrome 47.
 - `g0` and `g$` now accept count prefixes; so `2g0` selects the second tab, and so on.
