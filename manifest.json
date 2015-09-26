@@ -48,6 +48,7 @@
              "content_scripts/scroller.js",
              "content_scripts/marks.js",
              "content_scripts/mode.js",
+             "content_scripts/mode_mapping.js",
              "content_scripts/mode_insert.js",
              "content_scripts/mode_passkeys.js",
              "content_scripts/mode_find.js",

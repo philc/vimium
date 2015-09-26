@@ -12,8 +12,7 @@ isIncognitoMode = chrome.extension.inIncognitoContext
 passKeys = null
 keyQueue = null
 # The user's operating system.
-currentCompletionKeys = ""
-validFirstKeys = ""
+commandKeys = []
 
 # We track whther the current window has the focus or not.
 windowIsFocused = do ->
@@ -100,17 +99,30 @@ handlerStack.push
         target = target.parentElement
     true
 
+class NormalMode extends MappingMode
+  constructor: ->
+    super
+      name: "normal"
+      indicator: false # There is no mode indicator in normal mode.
+
+    @push
+      _name: "mode-#{@id}/escCloseHelpDialog"
+      keydown: (event) =>
+        if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+          hideHelpDialog()
+          DomUtils.suppressEvent event
+          KeydownEvents.push event
+          @stopBubblingAndTrue
+        else
+          @continueBubbling
+
+  matchedKeyHandler: (command, count) ->
+    chrome.runtime.sendMessage {handler: "executeCommand", command, count, frameId}
+
+  getCommandKeys: -> commandKeys
+
 # Only exported for tests.
 window.initializeModes = ->
-  class NormalMode extends Mode
-    constructor: ->
-      super
-        name: "normal"
-        indicator: false # There is no mode indicator in normal mode.
-        keydown: (event) => onKeydown.call @, event
-        keypress: (event) => onKeypress.call @, event
-        keyup: (event) => onKeyup.call @, event
-
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
   new NormalMode
@@ -144,9 +156,6 @@ initializePreDomReady = ->
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: setScrollPosition
     executePageCommand: executePageCommand
-    currentKeyQueue: (request) ->
-      keyQueue = request.keyQueue
-      handlerStack.bubbleEvent "registerKeyQueue", { keyQueue: keyQueue }
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
@@ -245,7 +254,6 @@ executePageCommand = (request) ->
       # We pass the frameId from request.  That's the frame which originated the request, so that's the frame
       # which should receive the focus when the vomnibar closes.
       Utils.invokeCommandString request.command, [ request.frameId, request.registryEntry ]
-      refreshCompletionKeys request
     return
 
   # All other commands are handled in their frame (but only if Vimium is enabled).
@@ -255,8 +263,6 @@ executePageCommand = (request) ->
     Utils.invokeCommandString(request.command, [request.count])
   else
     Utils.invokeCommandString(request.command) for i in [0...request.count]
-
-  refreshCompletionKeys(request)
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -483,101 +489,6 @@ handlerStack.push
   _name: "KeydownEvents-cleanup"
   blur: (event) -> KeydownEvents.clear() if event.target == window; true
 
-#
-# Sends everything except i & ESC to the handler in background_page. i & ESC are special because they control
-# insert mode which is local state to the page. The key will be are either a single ascii letter or a
-# key-modifier pair, e.g. <c-a> for control a.
-#
-# Note that some keys will only register keydown events and not keystroke events, e.g. ESC.
-#
-# @/this, here, is the the normal-mode Mode object.
-onKeypress = (event) ->
-  keyChar = ""
-
-  # Ignore modifier keys by themselves.
-  if (event.keyCode > 31)
-    keyChar = String.fromCharCode(event.charCode)
-
-    if (keyChar)
-      if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
-        DomUtils.suppressEvent(event)
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-        return @stopBubblingAndTrue
-
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-
-  return @continueBubbling
-
-# @/this, here, is the the normal-mode Mode object.
-onKeydown = (event) ->
-  keyChar = ""
-
-  # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
-  # avoid / being interpreted as ?
-  if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31) || (
-      # TODO(philc): some events don't have a keyidentifier. How is that possible?
-      event.keyIdentifier && event.keyIdentifier.slice(0, 2) != "U+"))
-    keyChar = KeyboardUtils.getKeyChar(event)
-    # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
-    if (keyChar != "")
-      modifiers = []
-
-      if (event.shiftKey)
-        keyChar = keyChar.toUpperCase()
-      if (event.metaKey)
-        modifiers.push("m")
-      if (event.ctrlKey)
-        modifiers.push("c")
-      if (event.altKey)
-        modifiers.push("a")
-
-      for i of modifiers
-        keyChar = modifiers[i] + "-" + keyChar
-
-      if (modifiers.length > 0 || keyChar.length > 1)
-        keyChar = "<" + keyChar + ">"
-
-  if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
-    hideHelpDialog()
-    DomUtils.suppressEvent event
-    KeydownEvents.push event
-    return @stopBubblingAndTrue
-
-  else
-    if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
-        DomUtils.suppressEvent event
-        KeydownEvents.push event
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-        return @stopBubblingAndTrue
-
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-
-    else if (KeyboardUtils.isEscape(event))
-      keyPort.postMessage({ keyChar:"<ESC>", frameId:frameId })
-
-  # Added to prevent propagating this event to other listeners if it's one that'll trigger a Vimium command.
-  # The goal is to avoid the scenario where Google Instant Search uses every keydown event to dump us
-  # back into the search box. As a side effect, this should also prevent overriding by other sites.
-  #
-  # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
-  #
-  # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if keyChar == "" &&
-     (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event)))
-    DomUtils.suppressPropagation(event)
-    KeydownEvents.push event
-    return @stopBubblingAndTrue
-
-  return @continueBubbling
-
-# @/this, here, is the the normal-mode Mode object.
-onKeyup = (event) ->
-  return @continueBubbling unless KeydownEvents.pop event
-  DomUtils.suppressPropagation(event)
-  @stopBubblingAndTrue
-
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL.
 checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
@@ -609,15 +520,10 @@ checkEnabledAfterURLChange = ->
 # Exported to window, but only for DOM tests.
 window.refreshCompletionKeys = (response) ->
   if (response)
-    currentCompletionKeys = response.completionKeys
-
-    if (response.validFirstKeys)
-      validFirstKeys = response.validFirstKeys
+    if (response.commandKeys)
+      commandKeys = response.commandKeys
   else
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
-
-isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
 
 window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
@@ -883,6 +789,8 @@ window.onbeforeunload = ->
 
 root = exports ? window
 root.handlerStack = handlerStack
+root.NormalMode = NormalMode
+root.KeydownEvents = KeydownEvents
 root.frameId = frameId
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
