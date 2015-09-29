@@ -10,13 +10,58 @@
 #
 # The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
-OPEN_IN_CURRENT_TAB = name: "curr-tab"
-OPEN_IN_NEW_BG_TAB = name: "bg-tab"
-OPEN_IN_NEW_FG_TAB = name: "fg-tab"
-OPEN_WITH_QUEUE = name: "queue"
-COPY_LINK_URL = name: "link"
-OPEN_INCOGNITO = name: "incognito"
-DOWNLOAD_LINK_URL = name: "download"
+isPlatformMac = KeyboardUtils.platform == "Mac"
+OPEN_IN_CURRENT_TAB =
+  name: "curr-tab"
+  indicator: "Open link in current tab."
+OPEN_IN_NEW_BG_TAB =
+  name: "bg-tab"
+  indicator: "Open link in new tab."
+  keys: metaKey: isPlatformMac, ctrlKey: not isPlatformMac
+OPEN_IN_NEW_FG_TAB =
+  name: "fg-tab"
+  indicator: "Open link in new tab and switch to it."
+  keys: shiftKey: true, metaKey: isPlatformMac, ctrlKey: not isPlatformMac
+OPEN_WITH_QUEUE =
+  name: "queue"
+  indicator: "Open multiple links in new tabs."
+  keys: metaKey: isPlatformMac, ctrlKey: not isPlatformMac
+COPY_LINK_URL =
+  name: "link"
+  indicator: "Copy link URL to Clipboard."
+  linkActivator: (link) -> # `this` will be an instance of LinkHintsMode at call-time.
+    if link.href?
+      chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+      url = link.href
+      url = url[0..25] + "...." if 28 < url.length
+      @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+    else
+      @onExit = -> HUD.showForDuration "No link to yank.", 2000
+
+  getVisibleClickable: isLinkWithHref = (element) ->
+    return [] unless element.tagName.toUpperCase() == "A" and element.hasProperty "href"
+
+    clientRect = DomUtils.getVisibleClientRect element, true
+    if clientRect then [{element: element, rect: clientRect}] else []
+
+OPEN_INCOGNITO =
+  name: "incognito"
+  indicator: "Open link in incognito window."
+  linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
+  getVisibleClickable: isLinkWithHref # Re-use COPY_LINK_URL.linkActivator.
+DOWNLOAD_LINK_URL =
+  name: "download"
+  indicator: "Download link URL."
+  keys: altKey: true
+CHANGE_FRAME =
+  name: "frame"
+  indicator: "Move focus to new frame."
+  linkActivator: (frameElement) -> frameElement.contentWindow.focus()
+  getVisibleClickable: (element) ->
+    return [] unless element.tagName.toUpperCase() in ["IFRAME", "FRAME"]
+
+    clientRect = DomUtils.getVisibleClientRect element, true
+    if clientRect then [{element: element, rect: clientRect}] else []
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -27,6 +72,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
   activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
   activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+  activateModeToChangeFrame: -> @activateMode CHANGE_FRAME
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -50,20 +96,6 @@ class LinkHintsMode
     return unless document.documentElement
     @isActive = true
 
-    elements = @getVisibleClickableElements()
-    # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
-    # with them).
-    elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
-    if Settings.get "filterLinkHints"
-      # When using text filtering, we sort the elements such that we visit descendants before their ancestors.
-      # This allows us to exclude the text used for matching descendants from that used for matching their
-      # ancestors.
-      length = (el) -> el.element.innerHTML?.length ? 0
-      elements.sort (a,b) -> length(a) - length b
-    hintMarkers = (@createMarkerFor(el) for el in elements)
-    @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
-    @markerMatcher.fillInMarkers hintMarkers
-
     @hintMode = new Mode
       name: "hint/#{mode.name}"
       indicator: false
@@ -72,56 +104,44 @@ class LinkHintsMode
       exitOnEscape: true
       exitOnClick: true
       exitOnScroll: true
-      keydown: @onKeyDownInMode.bind this, hintMarkers
-      keypress: @onKeyPressInMode.bind this, hintMarkers
-
-    @hintMode.onExit =>
-      @deactivateMode() if @isActive
+      keydown: @onKeyDownInMode
+      keypress: @onKeyPressInMode
 
     @setOpenLinkMode mode
 
+    elements = @getVisibleClickableElements()
+    if Settings.get "filterLinkHints"
+      # When using text filtering, we sort the elements such that we visit descendants before their ancestors.
+      # This allows us to exclude the text used for matching descendants from that used for matching their
+      # ancestors.
+      length = (el) -> el.element.innerHTML?.length ? 0
+      elements.sort (a,b) -> length(a) - length b
+    @hintMarkers = (@createMarkerFor(el) for el in elements)
+    @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
+    @markerMatcher.fillInMarkers @hintMarkers
+
+    @hintMode.onExit =>
+      @deactivateMode() if @isActive
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
-    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
+    @hintMarkerContainingDiv = DomUtils.addElementList @hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
-    if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
-      if @mode is OPEN_IN_NEW_BG_TAB
-        @hintMode.setIndicator "Open link in new tab."
-      else if @mode is OPEN_IN_NEW_FG_TAB
-        @hintMode.setIndicator "Open link in new tab and switch to it."
+    @hintMode.setIndicator @mode.indicator
+    @linkActivator = @mode.linkActivator ? (link, rect, callbackObject) ->
+      # If the mode has no linkActivator, we default to a simulated click, with modifiers @mode.keys
+      if (DomUtils.isSelectable(link))
+        DomUtils.simulateSelect(link)
       else
-        @hintMode.setIndicator "Open multiple links in new tabs."
-      @linkActivator = (link) ->
-        # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
-        # windows) to open it in a new tab if necessary.
-        DomUtils.simulateClick link,
-          shiftKey: @mode is OPEN_IN_NEW_FG_TAB
-          metaKey: KeyboardUtils.platform == "Mac"
-          ctrlKey: KeyboardUtils.platform != "Mac"
-          altKey: false
-    else if @mode is COPY_LINK_URL
-      @hintMode.setIndicator "Copy link URL to Clipboard."
-      @linkActivator = (link) =>
-        if link.href?
-          chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
-          url = link.href
-          url = url[0..25] + "...." if 28 < url.length
-          @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
-        else
-          @onExit = -> HUD.showForDuration "No link to yank.", 2000
-    else if @mode is OPEN_INCOGNITO
-      @hintMode.setIndicator "Open link in incognito window."
-      @linkActivator = (link) ->
-        chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
-    else if @mode is DOWNLOAD_LINK_URL
-      @hintMode.setIndicator "Download link URL."
-      @linkActivator = (link) ->
-        DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
-    else # OPEN_IN_CURRENT_TAB
-      @hintMode.setIndicator "Open link in current tab."
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+        # TODO figure out which other input elements should not receive focus
+        if (link.nodeName.toLowerCase() == "input" and link.type not in ["button", "submit"])
+          link.focus()
+        DomUtils.flashRect(rect)
+        DomUtils.simulateClick link, @mode.keys
+        if @mode is OPEN_WITH_QUEUE
+          callbackObject.callback = -> LinkHints.activateModeWithQueue()
+
 
   #
   # Creates a link marker for the given link.
@@ -147,6 +167,8 @@ class LinkHintsMode
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
+  #
+  # If the active mode object has the property getVisibleClickable, that will be called instead of this.
   #
   getVisibleClickable: (element) ->
     tagName = element.tagName.toLowerCase()
@@ -248,7 +270,7 @@ class LinkHintsMode
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      visibleElement = @getVisibleClickable element
+      visibleElement = (@mode.getVisibleClickable ? @getVisibleClickable) element
       visibleElements.push visibleElement...
 
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
@@ -285,7 +307,7 @@ class LinkHintsMode
     nonOverlappingElements
 
   # Handles <Shift> and <Ctrl>.
-  onKeyDownInMode: (hintMarkers, event) ->
+  onKeyDownInMode: (event) =>
     return if @delayMode or event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
@@ -313,7 +335,7 @@ class LinkHintsMode
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
-        @updateVisibleMarkers hintMarkers
+        @updateVisibleMarkers @hintMarkers
       else
         @deactivateMode()
 
@@ -323,7 +345,7 @@ class LinkHintsMode
 
     else if event.keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
-      @updateVisibleMarkers hintMarkers, @tabCount
+      @updateVisibleMarkers @hintMarkers, @tabCount
 
     else
       return
@@ -332,13 +354,13 @@ class LinkHintsMode
     DomUtils.suppressEvent event
 
   # Handles normal input.
-  onKeyPressInMode: (hintMarkers, event) ->
+  onKeyPressInMode: (event) =>
     return if @delayMode or event.repeat
 
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
       @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers hintMarkers
+      @updateVisibleMarkers @hintMarkers
 
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
@@ -360,19 +382,10 @@ class LinkHintsMode
   activateLink: (matchedLink, delay = 0) ->
     @delayMode = true
     clickEl = matchedLink.clickableItem
-    if (DomUtils.isSelectable(clickEl))
-      DomUtils.simulateSelect(clickEl)
-      @deactivateMode delay
-    else
-      # TODO figure out which other input elements should not receive focus
-      if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
-        clickEl.focus()
-      DomUtils.flashRect(matchedLink.rect)
-      @linkActivator(clickEl)
-      if @mode is OPEN_WITH_QUEUE
-        @deactivateMode delay, -> LinkHints.activateModeWithQueue()
-      else
-        @deactivateMode delay
+    callbackObject = {callback: null} # We pass this as an argument so linkActivators can set a callback.
+
+    @linkActivator clickEl, matchedLink.rect, callbackObject
+    @deactivateMode delay, callbackObject.callback
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -387,7 +400,7 @@ class LinkHintsMode
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
-  deactivateMode: (delay = 0, callback = null) ->
+  deactivateMode: (delay = 0, callback) ->
     deactivate = =>
       DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
       @hintMarkerContainingDiv = null
