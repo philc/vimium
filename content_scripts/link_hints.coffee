@@ -204,7 +204,7 @@ class LinkHintsMode
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"] or
-        element.hasAttribute("vimium-has-onclick-listener"))
+        element.vimiumHasOnclick)
       isClickable = true
 
     # Check for jsaction event listeners on the element.
@@ -251,7 +251,7 @@ class LinkHintsMode
   # element.
   #
   getVisibleClickableElements: ->
-    elements = document.documentElement.getElementsByTagName "*"
+    elements = document.getElementsByTagName "*"
     visibleElements = []
 
     # The order of elements here is important; they should appear in the order they are in the DOM, so that
@@ -672,7 +672,6 @@ class TypingProtector extends Mode
 
     @onExit callback
 
-
 class WaitForEnter extends Mode
   constructor: (rect, callback) ->
     super
@@ -692,6 +691,19 @@ class WaitForEnter extends Mode
 
     flashEl = DomUtils.addFlashRect rect
     @onExit -> DomUtils.removeElement flashEl
+
+markTargetClickable = (event) ->
+  event.target.vimiumHasOnclick = true
+  @stopBubblingAndFalse
+
+# Handlers to allow the injected addEventListener hook to send detatched DOM nodes
+handlerStack.push
+  "VimiumRegistrationElementEvent": (event) ->
+    registrationElement = event.target
+    registrationElement.addEventListener "VimiumRegistrationElementEvent-onclick", markTargetClickable, true
+    @stopBubblingAndFalse
+
+  "VimiumRegistrationElementEvent-onclick": markTargetClickable
 
 root = exports ? window
 root.LinkHints = LinkHints

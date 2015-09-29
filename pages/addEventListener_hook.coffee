@@ -1,13 +1,44 @@
 _addEventListener = Element::addEventListener
 
+loaded = false
+elementsToRegister = []
+registrationElement = null
+
 EventTarget::addEventListener = (type, listener, useCapture) ->
   eventTarget = if this in [document, window] then document.documentElement else this
   if type == "click" and eventTarget instanceof Element
-    # TODO(mrmr1993): Instead of using an attribute, use a vimium-specific event, dispatched on the element.
-    # If document.contains is false, however, we should refrain from doing this, since the event will not go
-    # to window, and so we cannot capture it in the content script. In this case, we ought dispatch the event
-    # when the element is added to the document. I'm not yet sure how best to do this, or if it's even
-    # possible to do it without a potentially huge memory leak.
-    unless eventTarget.hasAttribute "vimium-has-onclick-listener"
-      eventTarget.setAttribute "vimium-has-onclick-listener", ""
+    setTimeout (-> registerElementWithContentScripts eventTarget, "onclick"), 0
   _addEventListener.apply this, arguments
+
+onLoaded = ->
+  loaded = true
+
+  # Create an element detatched from the DOM, register it with the content scripts.
+  registrationElement = document.createElementNS "http://www.w3.org/1999/xhtml", "div"
+  registrationEvent = new CustomEvent "VimiumRegistrationElementEvent"
+  document.documentElement.appendChild registrationElement
+  registrationElement.dispatchEvent registrationEvent
+  document.documentElement.removeChild registrationElement
+
+  elementsToRegister.map (args) ->
+    # Chrome stops us from using events to jump back and forth into extension code multiple times within the
+    # same synchronous execution, so we execute these registration events asynchronously.
+    setTimeout (-> registerElementWithContentScripts.apply null, args), 0
+
+# The registration event fails if sent before DOMContentLoaded (except when stepping through in developer
+# tools?!), so we wait to dispatch it.
+_addEventListener.call window, "DOMContentLoaded", onLoaded, true
+
+registerElementWithContentScripts = (element, type) ->
+  unless loaded
+    elementsToRegister.push arguments
+    return
+
+  wrapInRegistrationElement = not document.contains element
+  registrationElement.appendChild element if wrapInRegistrationElement
+
+  # Dispatch an event to the content scripts, where the event listener will mark the element.
+  registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
+  element.dispatchEvent registrationEvent
+
+  registrationElement.removeChild element if wrapInRegistrationElement
