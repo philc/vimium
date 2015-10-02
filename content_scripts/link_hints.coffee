@@ -34,8 +34,6 @@ class LinkHintsMode
   mode: undefined
   # Function that does the appropriate action on the selected link.
   linkActivator: undefined
-  # While in delayMode, all keypresses have no effect.
-  delayMode: false
   # Lock to ensure only one instance runs at a time.
   isActive: false
   # The link-hints "mode" (in the key-handler, indicator sense).
@@ -286,7 +284,7 @@ class LinkHintsMode
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (hintMarkers, event) ->
-    return if @delayMode or event.repeat
+    return if event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     previousTabCount = @tabCount
@@ -333,7 +331,7 @@ class LinkHintsMode
 
   # Handles normal input.
   onKeyPressInMode: (hintMarkers, event) ->
-    return if @delayMode or event.repeat
+    return if event.repeat
 
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
@@ -358,7 +356,6 @@ class LinkHintsMode
   # When only one link hint remains, this function activates it in the appropriate way.
   #
   activateLink: (matchedLink, delay = 0) ->
-    @delayMode = true
     clickEl = matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
@@ -400,7 +397,9 @@ class LinkHintsMode
       @tabCount = 0
 
     if delay
-      Utils.setTimeout delay, ->
+      # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
+      # user from inadvertently launching Vimium commands when typing the link text.
+      new TypingProtector delay, ->
         deactivate()
         callback?()
     else
@@ -656,6 +655,24 @@ numberToHintString = (number, characterSet, numHintDigits = 0) ->
 
   hintString.join("")
 
+# Suppress all keyboard events until the user stops typing for sufficiently long.
+class TypingProtector extends Mode
+  constructor: (delay, callback) ->
+    @timer = Utils.setTimeout delay, => @exit()
+
+    handler = (event) =>
+      clearTimeout @timer
+      @timer = Utils.setTimeout 150, => @exit()
+      DomUtils.suppressEvent event
+      @suppressEvent
+
+    super
+      name: "hint/typing-protector"
+      keydown: handler
+      keypress: handler
+      keyup: => @stopBubblingAndTrue
+
+    @onExit callback
 
 root = exports ? window
 root.LinkHints = LinkHints
