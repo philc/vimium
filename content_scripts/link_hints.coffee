@@ -663,14 +663,12 @@ class TypingProtector extends Mode
     handler = (event) =>
       clearTimeout @timer
       @timer = Utils.setTimeout 150, => @exit()
-      DomUtils.suppressEvent event
-      @suppressEvent
 
     super
       name: "hint/typing-protector"
+      suppressAllKeyboardEvents: true
       keydown: handler
       keypress: handler
-      keyup: => @stopBubblingAndTrue
 
     @onExit callback
 
