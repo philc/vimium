@@ -41,6 +41,7 @@ class Mode
     @handlers = []
     @exitHandlers = []
     @modeIsActive = true
+    @modeIsExiting = false
     @name = @options.name || "anonymous"
 
     @count = ++count
@@ -189,8 +190,10 @@ class Mode
   exit: ->
     if @modeIsActive
       @log "deactivate:", @id
-      handler() for handler in @exitHandlers
-      handlerStack.remove handlerId for handlerId in @handlers
+      unless @modeIsExiting
+        @modeIsExiting = true
+        handler() for handler in @exitHandlers
+        handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
       @modeIsActive = false
       @setIndicator()
