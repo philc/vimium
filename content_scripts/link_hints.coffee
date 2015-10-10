@@ -69,6 +69,7 @@ class LinkHintsMode
       indicator: false
       passInitialKeyupEvents: true
       suppressAllKeyboardEvents: true
+      suppressTrailingKeyEvents: true
       exitOnEscape: true
       exitOnClick: true
       exitOnScroll: true
