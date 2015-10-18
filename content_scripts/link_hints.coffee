@@ -708,7 +708,7 @@ handlerStack.push
   "VimiumRegistrationElementEvent-onclick": markTargetClickable
 
 for type in ["VimiumRegistrationElementEvent", "VimiumRegistrationElementEvent-onclick"]
-  do (type) -> window.addEventListener type, (event) -> handlerStack.bubbleEvent type, event
+  do (type) -> window.addEventListener type, ((event) -> handlerStack.bubbleEvent type, event), true
 
 root = exports ? window
 root.LinkHints = LinkHints
