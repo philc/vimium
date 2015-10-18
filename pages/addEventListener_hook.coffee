@@ -35,10 +35,13 @@ registerElementWithContentScripts = (element, type) ->
     return
 
   wrapInRegistrationElement = not document.contains element
-  registrationElement.appendChild element if wrapInRegistrationElement
+  if wrapInRegistrationElement
+    elementToWrap = element
+    elementToWrap = elementToWrap.parentElement while elementToWrap.parentElement?
+    registrationElement.appendChild elementToWrap
 
   # Dispatch an event to the content scripts, where the event listener will mark the element.
   registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
   element.dispatchEvent registrationEvent
 
-  registrationElement.removeChild element if wrapInRegistrationElement
+  registrationElement.removeChild elementToWrap if wrapInRegistrationElement
