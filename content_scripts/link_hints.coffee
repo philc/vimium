@@ -694,7 +694,7 @@ class WaitForEnter extends Mode
 
 markTargetClickable = (event) ->
   event.target.vimiumHasOnclick = true
-  @stopBubblingAndFalse
+  false
 
 # Handlers to allow the injected addEventListener hook to send detatched DOM nodes
 handlerStack.push
