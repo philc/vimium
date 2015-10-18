@@ -7,7 +7,7 @@ fetchFileContents = (extensionFileName) ->
   req.responseText
 
 for script in injectScripts
-  # Inject the script, which will be executed before the page scripts, as long as it is injected directly as
+  # Inject the script, which seems only to be executed before the page scripts if it is injected directly as
   # text.
   # TODO(mrmr1993): Find a reasonable way to inline the scripts to inject here at build time, since doing a
   # synchronous XMLHttpRequest will slow down every page load.

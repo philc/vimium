@@ -36,6 +36,8 @@ registerElementWithContentScripts = (element, type) ->
 
   wrapInRegistrationElement = not document.contains element
   if wrapInRegistrationElement
+    # The element isn't currently in the DOM. To avoid rendering it, firing MutationObservers, etc., we add
+    # it to our registrationElement, which will capture the events without interfering with the DOM.
     elementToWrap = element
     elementToWrap = elementToWrap.parentElement while elementToWrap.parentElement?
     registrationElement.appendChild elementToWrap

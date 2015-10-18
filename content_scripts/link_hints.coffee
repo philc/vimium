@@ -696,7 +696,9 @@ markTargetClickable = (event) ->
   event.target.vimiumHasOnclick = true
   false
 
-# Handlers to allow the injected addEventListener hook to send detatched DOM nodes
+# Handlers to allow the injected addEventListener hook to send detatched DOM nodes.
+# NOTE(mrmr1993): We communicate DOM nodes as the target of events, since there is no other obvious way to
+# inform content scripts about them from the main page context.
 handlerStack.push
   "VimiumRegistrationElementEvent": (event) ->
     registrationElement = event.target
