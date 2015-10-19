@@ -70,5 +70,6 @@ for script in injectScripts
   # Inject the script, which seems only to be executed before the page scripts if it is injected directly as
   # text.
   scriptEl = document.createElement "script"
-  scriptEl.innerHTML = "(#{script.toString()})();"
+  scriptEl.innerHTML = "(#{script.toString()})();\
+  document.currentScript.parentElement.removeChild(document.currentScript);"
   document.documentElement.insertBefore scriptEl, document.documentElement.firstElementChild
