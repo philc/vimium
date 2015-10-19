@@ -41,7 +41,12 @@ injectScripts = [
         # add it to our registrationElement, which will capture the events without interfering with the DOM.
         elementToWrap = element
         elementToWrap = elementToWrap.parentElement while elementToWrap.parentElement?
-        registrationElement.appendChild elementToWrap
+
+        # If the element is in a shadow DOM, we would need a more complicated approach to pass it to the
+        # content script. However, LinkHints doesn't check shadow DOMs for links, so we are safe to bail.
+        return if elementToWrap.parentNode instanceof ShadowRoot
+
+      registrationElement.appendChild elementToWrap if wrapInRegistrationElement
 
       # Dispatch an event to the content scripts, where the event listener will mark the element.
       registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
