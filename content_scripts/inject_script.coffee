@@ -1,3 +1,6 @@
+# We can't inject inline scripts into our chrome-extension pages (eg. options), so don't try.
+return if window.location.protocol == "chrome-extension:"
+
 injectScripts = [
   ( -> # Hook addEventListener to tell link hints when a click listener is added.
     _addEventListener = Element::addEventListener
@@ -26,8 +29,8 @@ injectScripts = [
 
       elementsToRegister = null
 
-     # The registration event fails if sent before DOMContentLoaded (except when stepping through in
-     # developer tools?!), so we wait to dispatch it.
+    # The registration event fails if sent before DOMContentLoaded (except when stepping through in
+    # developer tools?!), so we wait to dispatch it.
     _addEventListener.call window, "DOMContentLoaded", onLoaded, true
 
     # Use custom events to pass the element to our content scripts as the event target. We do this in one of
