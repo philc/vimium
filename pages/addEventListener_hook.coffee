@@ -1,6 +1,5 @@
 _addEventListener = Element::addEventListener
 
-loaded = false
 elementsToRegister = []
 registrationElement = null
 
@@ -11,8 +10,6 @@ EventTarget::addEventListener = (type, listener, useCapture) ->
   _addEventListener.apply this, arguments
 
 onLoaded = ->
-  loaded = true
-
   # Create an element detatched from the DOM, register it with the content scripts.
   registrationElement = document.createElementNS "http://www.w3.org/1999/xhtml", "div"
   registrationEvent = new CustomEvent "VimiumRegistrationElementEvent"
@@ -25,12 +22,14 @@ onLoaded = ->
     # same synchronous execution, so we execute these registration events asynchronously.
     setTimeout (-> registerElementWithContentScripts.apply null, args), 0
 
+  elementsToRegister = null
+
 # The registration event fails if sent before DOMContentLoaded (except when stepping through in developer
 # tools?!), so we wait to dispatch it.
 _addEventListener.call window, "DOMContentLoaded", onLoaded, true
 
 registerElementWithContentScripts = (element, type) ->
-  unless loaded
+  if elementsToRegister?
     elementsToRegister.push arguments
     return
 
