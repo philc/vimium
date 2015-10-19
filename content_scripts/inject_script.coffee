@@ -30,6 +30,13 @@ injectScripts = [
      # developer tools?!), so we wait to dispatch it.
     _addEventListener.call window, "DOMContentLoaded", onLoaded, true
 
+    # Use custom events to pass the element to our content scripts as the event target. We do this in one of
+    # two ways:
+    #  * if the element is in the document, then the content script's event listener will capture the custom
+    #    event as it bubbles through the document.
+    #  * otherwise, the element is orphaned. Since we don't want to disrupt the DOM, we add its outermost
+    #    parent (which must also be orphaned) to registrationElement instead, and the event bubbles to the
+    #    content script's event listener on registrationElement.
     registerElementWithContentScripts = (element, type) ->
       if elementsToRegister?
         elementsToRegister.push arguments
