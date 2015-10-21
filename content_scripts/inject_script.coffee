@@ -3,7 +3,7 @@ return if window.location.protocol == "chrome-extension:"
 
 injectScripts = [
   ( -> # Hook addEventListener to tell link hints when a click listener is added.
-    _addEventListener = Element::addEventListener
+    _addEventListener = EventTarget::addEventListener
 
     elementsToRegister = []
     registrationElement = null
@@ -22,10 +22,10 @@ injectScripts = [
       registrationElement.dispatchEvent registrationEvent
       document.documentElement.removeChild registrationElement
 
-      elementsToRegister.map (args) ->
+      for args in elementsToRegister
         # Chrome stops us from using events to jump back and forth into extension code multiple times within
         # the same synchronous execution, so we execute these registration events asynchronously.
-        setTimeout (-> registerElementWithContentScripts.apply null, args), 0
+        do (args) -> setTimeout (-> registerElementWithContentScripts.apply null, args), 0
 
       elementsToRegister = null
 
