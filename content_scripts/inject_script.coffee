@@ -1,75 +1,62 @@
-# We can't inject inline scripts into our chrome-extension pages (eg. options), so don't try.
-return if window.location.protocol == "chrome-extension:"
+DomUtils.injectScript( -> # Hook addEventListener to tell link hints when a click listener is added.
+  _addEventListener = EventTarget::addEventListener
 
-injectScripts = [
-  ( -> # Hook addEventListener to tell link hints when a click listener is added.
-    _addEventListener = EventTarget::addEventListener
+  elementsToRegister = []
+  registrationElement = null
 
-    elementsToRegister = []
-    registrationElement = null
+  EventTarget::addEventListener = (type, listener, useCapture) ->
+    eventTarget = if this in [document, window] then document.documentElement else this
+    if type == "click" and eventTarget instanceof Element
+      setTimeout (-> registerElementWithContentScripts eventTarget, "onclick"), 0
+    _addEventListener.apply this, arguments
 
-    EventTarget::addEventListener = (type, listener, useCapture) ->
-      eventTarget = if this in [document, window] then document.documentElement else this
-      if type == "click" and eventTarget instanceof Element
-        setTimeout (-> registerElementWithContentScripts eventTarget, "onclick"), 0
-      _addEventListener.apply this, arguments
+  onLoaded = ->
+    # Create an element detatched from the DOM, register it with the content scripts.
+    registrationElement = document.createElementNS "http://www.w3.org/1999/xhtml", "div"
+    registrationEvent = new CustomEvent "VimiumRegistrationElementEvent"
+    document.documentElement.appendChild registrationElement
+    registrationElement.dispatchEvent registrationEvent
+    document.documentElement.removeChild registrationElement
 
-    onLoaded = ->
-      # Create an element detatched from the DOM, register it with the content scripts.
-      registrationElement = document.createElementNS "http://www.w3.org/1999/xhtml", "div"
-      registrationEvent = new CustomEvent "VimiumRegistrationElementEvent"
-      document.documentElement.appendChild registrationElement
-      registrationElement.dispatchEvent registrationEvent
-      document.documentElement.removeChild registrationElement
+    for args in elementsToRegister
+      # Chrome stops us from using events to jump back and forth into extension code multiple times within
+      # the same synchronous execution, so we execute these registration events asynchronously.
+      do (args) -> setTimeout (-> registerElementWithContentScripts.apply null, args), 0
 
-      for args in elementsToRegister
-        # Chrome stops us from using events to jump back and forth into extension code multiple times within
-        # the same synchronous execution, so we execute these registration events asynchronously.
-        do (args) -> setTimeout (-> registerElementWithContentScripts.apply null, args), 0
+    elementsToRegister = null
 
-      elementsToRegister = null
+  # The registration event fails if sent before DOMContentLoaded (except when stepping through in developer
+  # tools?!), so we wait to dispatch it.
+  _addEventListener.call window, "DOMContentLoaded", onLoaded, true
 
-    # The registration event fails if sent before DOMContentLoaded (except when stepping through in
-    # developer tools?!), so we wait to dispatch it.
-    _addEventListener.call window, "DOMContentLoaded", onLoaded, true
+  # Use custom events to pass the element to our content scripts as the event target. We do this in one of
+  # two ways:
+  #  * if the element is in the document, then the content script's event listener will capture the custom
+  #    event as it bubbles through the document.
+  #  * otherwise, the element is orphaned. Since we don't want to disrupt the DOM, we add its outermost
+  #    parent (which must also be orphaned) to registrationElement instead, and the event bubbles to the
+  #    content script's event listener on registrationElement.
+  registerElementWithContentScripts = (element, type) ->
+    if elementsToRegister?
+      elementsToRegister.push arguments
+      return
 
-    # Use custom events to pass the element to our content scripts as the event target. We do this in one of
-    # two ways:
-    #  * if the element is in the document, then the content script's event listener will capture the custom
-    #    event as it bubbles through the document.
-    #  * otherwise, the element is orphaned. Since we don't want to disrupt the DOM, we add its outermost
-    #    parent (which must also be orphaned) to registrationElement instead, and the event bubbles to the
-    #    content script's event listener on registrationElement.
-    registerElementWithContentScripts = (element, type) ->
-      if elementsToRegister?
-        elementsToRegister.push arguments
-        return
+    wrapInRegistrationElement = not document.contains element
+    if wrapInRegistrationElement
+      # The element isn't currently in the DOM. To avoid rendering it, firing MutationObservers, etc., we add
+      # it to our registrationElement, which will capture the events without interfering with the DOM.
+      elementToWrap = element
+      elementToWrap = elementToWrap.parentElement while elementToWrap.parentElement?
 
-      wrapInRegistrationElement = not document.contains element
-      if wrapInRegistrationElement
-        # The element isn't currently in the DOM. To avoid rendering it, firing MutationObservers, etc., we
-        # add it to our registrationElement, which will capture the events without interfering with the DOM.
-        elementToWrap = element
-        elementToWrap = elementToWrap.parentElement while elementToWrap.parentElement?
+      # If the element is in a shadow DOM, we would need a more complicated approach to pass it to the
+      # content script. However, LinkHints doesn't check shadow DOMs for links, so we are safe to bail.
+      return if elementToWrap.parentNode instanceof ShadowRoot
 
-        # If the element is in a shadow DOM, we would need a more complicated approach to pass it to the
-        # content script. However, LinkHints doesn't check shadow DOMs for links, so we are safe to bail.
-        return if elementToWrap.parentNode instanceof ShadowRoot
+    registrationElement.appendChild elementToWrap if wrapInRegistrationElement
 
-      registrationElement.appendChild elementToWrap if wrapInRegistrationElement
+    # Dispatch an event to the content scripts, where the event listener will mark the element.
+    registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
+    element.dispatchEvent registrationEvent
 
-      # Dispatch an event to the content scripts, where the event listener will mark the element.
-      registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
-      element.dispatchEvent registrationEvent
-
-      registrationElement.removeChild elementToWrap if wrapInRegistrationElement
-  )
-]
-
-for script in injectScripts
-  # Inject the script, which seems only to be executed before the page scripts if it is injected directly as
-  # text.
-  scriptEl = document.createElement "script"
-  scriptEl.innerHTML = "(#{script.toString()})();\
-  document.currentScript.parentElement.removeChild(document.currentScript);"
-  document.documentElement.insertBefore scriptEl, document.documentElement.firstElementChild
+    registrationElement.removeChild elementToWrap if wrapInRegistrationElement
+)

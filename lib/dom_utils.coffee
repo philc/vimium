@@ -8,6 +8,21 @@ DomUtils =
     else
       func()
 
+  #
+  # Run |func| in the page context (ie. not in content scripts) synchronously.
+  # Local scope *will not* be available to function, as it is injected as a string.
+  #
+  injectScript: (func) ->
+    if window.location.protocol == "chrome-extension:"
+      # We're already in page context, just run the function.
+      func()
+      return
+
+    scriptEl = document.createElement "script"
+    scriptEl.innerHTML = "(#{func.toString()})();\
+    document.currentScript.parentElement.removeChild(document.currentScript);"
+    document.documentElement.insertBefore scriptEl, document.documentElement.firstElementChild
+
   createElement: (tagName) ->
     element = document.createElement tagName
     if element instanceof HTMLElement
