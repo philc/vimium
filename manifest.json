@@ -55,7 +55,7 @@
              "content_scripts/mode_visual_edit.js",
              "content_scripts/hud.js",
              "content_scripts/vimium_frontend.js",
-             "content_scripts/inject_script.js"
+             "injected_scripts/hook_addEventListener.js"
             ],
       "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
