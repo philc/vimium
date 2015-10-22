@@ -692,6 +692,8 @@ class WaitForEnter extends Mode
     flashEl = DomUtils.addFlashRect rect
     @onExit -> DomUtils.removeElement flashEl
 
+# TODO(mrmr1993): Use event.deepPath to traverse into shadow DOMs, as part of a solution to #1861. This
+# requires Chromium 531990.
 markTargetClickable = (event) ->
   event.target.vimiumHasOnclick = true
   false
