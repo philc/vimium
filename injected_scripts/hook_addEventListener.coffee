@@ -45,11 +45,14 @@ DomUtils.injectScript( -> # Hook addEventListener to tell link hints when a clic
 
       @registrationElement.appendChild elementToWrap if wrapInRegistrationElement
 
-      # Dispatch an event to the content scripts, where the event listener will mark the element.
-      registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
-      element.dispatchEvent registrationEvent
+      @sendRegistrationEvent element, type
 
       @registrationElement.removeChild elementToWrap if wrapInRegistrationElement
+
+    # Dispatch an event to the content scripts, where the event listener will mark the element.
+    sendRegistrationEvent: (element, type) ->
+      registrationEvent = new CustomEvent "VimiumRegistrationElementEvent-#{type}"
+      element.dispatchEvent registrationEvent
 
   EventTarget::addEventListener = (type, listener, useCapture) ->
     eventTarget = if this in [document, window] then document.documentElement else this
