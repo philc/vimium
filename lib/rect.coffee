@@ -78,5 +78,9 @@ Rect =
       return false if rect1[property] != rect2[property]
     true
 
+  intersect: (rect1, rect2) ->
+    @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
+        (Math.min rect1.right, rect2.right), (Math.min rect1.bottom, rect2.bottom)
+
 root = exports ? window
 root.Rect = Rect
