@@ -149,18 +149,16 @@ context "Alphabetical link hints",
     document.getElementById("test-div").innerHTML = ""
 
   should "label the hints correctly", ->
-    # TODO(philc): This test verifies the current behavior, but the current behavior is incorrect.
-    # The output here should be something like aa, ab, b.
     hintMarkers = getHintMarkers()
-    expectedHints = ["aa", "ba", "ab"]
+    expectedHints = ["a", "bb", "ba"]
     for hint, i in expectedHints
       assert.equal hint, hintMarkers[i].hintString
 
   should "narrow the hints", ->
     hintMarkers = getHintMarkers()
-    sendKeyboardEvent "A"
-    assert.equal "none", hintMarkers[1].style.display
-    assert.equal "", hintMarkers[0].style.display
+    sendKeyboardEvent "B"
+    assert.equal "none", hintMarkers[0].style.display
+    assert.equal "", hintMarkers[1].style.display
 
 context "Filtered link hints",
   # Note.  In all of these tests, the order of the elements returned by getHintMarkers() may be different from
