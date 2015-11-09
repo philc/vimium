@@ -3,6 +3,7 @@
 #
 Vomnibar =
   vomnibarUI: null
+  overlay: null
 
   # Parse any additional options from the command's registry entry.  Currently, this only includes a flag of
   # the form "keyword=X", for direct activation of a custom search engine.
@@ -61,7 +62,7 @@ Vomnibar =
 
   init: ->
     unless @vomnibarUI?
-      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", (event) =>
+      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", true, (event) =>
         @vomnibarUI.hide() if event.data == "hide"
       # Whenever the window receives the focus, we tell the Vomnibar UI that it has been hidden (regardless of
       # whether it was previously visible).
