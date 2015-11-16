@@ -63,7 +63,7 @@ Vomnibar =
 
   init: ->
     unless @vomnibarUI?
-      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", true, (event) =>
+      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", true && Settings.get("overlayBehindVomnibar"), (event) =>
         @vomnibarUI.hide() if event.data == "hide"
       # Whenever the window receives the focus, we tell the Vomnibar UI that it has been hidden (regardless of
       # whether it was previously visible).

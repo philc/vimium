@@ -199,6 +199,8 @@ Options =
   searchUrl: NonEmptyTextOption
   userDefinedLinkHintCss: TextOption
   userDefinedVomnibarCss: TextOption
+  overlayBehindVomnibar: CheckBoxOption
+  userDefinedVomnibarOverlayCss: TextOption
 
 initOptionsPage = ->
   onUpdated = ->

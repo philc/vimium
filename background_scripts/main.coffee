@@ -405,6 +405,15 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
+
+chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
+  return unless changeInfo.status == "loading" # only do this once per URL change
+  cssConf =
+    allFrames: true
+    code: Settings.get("userDefinedVomnibarOverlayCss")
+    runAt: "document_start"
+  chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
+  updateOpenTabs(tab) if changeInfo.url?
   updateOpenTabs(tab) if changeInfo.url?
 
 chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->

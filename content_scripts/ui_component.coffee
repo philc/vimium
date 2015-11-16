@@ -102,7 +102,8 @@ class UIComponent
     unless @overlay?
       @overlay = document.createElement 'div'
       @overlay.className = 'vomnibarBackgroundOverlay'
-      document.body.appendChild @overlay
+      document.body.insertBefore(@overlay, document.body.firstChild)
+      #document.body.appendChild @overlay
     else
       @overlay.style.display = "block"
 

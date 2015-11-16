@@ -102,7 +102,9 @@ Settings =
     linkHintNumbers: "0123456789"
     filterLinkHints: false
     hideHud: false
-    userDefinedVomnibarCss: ".vomnibar {}"
+    userDefinedVomnibarCss: "#vomnibar {}"
+    userDefinedVomnibarOverlayCss: ".vomnibarBackgroundOverlay {}"
+    overlayBehindVomnibar: false
     userDefinedLinkHintCss:
       """
       div > .vimiumHintMarker {

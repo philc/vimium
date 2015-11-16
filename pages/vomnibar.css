@@ -9,19 +9,19 @@
 #vomnibar {
   display: block;
   position: fixed;
-  width: calc(100% - 120px); /* adjusted to keep border radius and box-shadow visible*/
+  width: calc(100% - 20px); /* adjusted to keep border radius and box-shadow visible*/
   /*min-width: 400px;
   top: 70px;
   left: 50%;*/
-  top: 40px;
-  left: 40px;
+  top: 8px;
+  left: 8px;
   /*margin: 0 0 0 -40%;*/
   font-family: sans-serif;
 
   background: #F1F1F1;
   text-align: left;
   border-radius: 4px;
-  box-shadow: 0px 25px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
   border: 1px solid #aaa;
   /* One less than hint markers and the help dialog. */
   z-index: 2147483646;
@@ -35,10 +35,9 @@
   margin-bottom: 0;
   padding: 4px;
   background-color: white;
-  /*border-radius: 3px;*/
-  border: none;
-  border-bottom: 1px solid #ccc;
-  /*box-shadow: #444 0px 0px 1px;*/
+  border-radius: 3px;
+  border: 1px solid #E8E8E8;
+  box-shadow: #444 0px 0px 1px;
   width: 100%;
   outline: none;
   box-sizing: border-box;
@@ -47,7 +46,7 @@
 #vomnibar .vomnibarSearchArea {
   display: block;
   padding: 10px;
-  background-color: #FFFFFF;
+  background-color: #F1F1F1;
   border-radius: 4px 4px 0 0;
   border-bottom: 1px solid #C6C9CE;
 }
