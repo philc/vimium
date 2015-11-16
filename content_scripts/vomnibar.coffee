@@ -22,6 +22,7 @@ Vomnibar =
           else
               console.log "Vimium configuration error: unused flag: #{option}."
 
+      options.userDefinedStyles = Settings.get("userDefinedVomnibarCss")
       callback? options
 
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different

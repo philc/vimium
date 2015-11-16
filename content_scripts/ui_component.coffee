@@ -21,6 +21,7 @@ class UIComponent
     UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchFileContents "content_scripts/vimium.css"
     @styleSheetGetter.use (styles) -> styleSheet.innerHTML = styles
 
+
     @className = className
     @iframeElement = DomUtils.createElement "iframe"
     extend @iframeElement,
