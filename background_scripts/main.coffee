@@ -202,7 +202,7 @@ TabOperations =
         index: tab.index + 1
         selected: true
         windowId: tab.windowId
-      openerTabId: tab.id
+        openerTabId: tab.id
       callback = (->) unless typeof callback == "function"
       chrome.tabs.create tabConfig, callback
 
