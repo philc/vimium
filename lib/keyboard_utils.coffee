@@ -53,7 +53,7 @@ KeyboardUtils =
 
   isEscape: (event) ->
     # c-[ is mapped to ESC in Vim by default.
-    (event.keyCode == @keyCodes.ESC) || (event.ctrlKey && @getKeyChar(event) == '[')
+    (event.keyCode == @keyCodes.ESC) || (event.ctrlKey && @getKeyChar(event) == '[' and not event.metaKey)
 
   # TODO. This is probably a poor way of detecting printable characters.  However, it shouldn't incorrectly
   # identify any of chrome's own keyboard shortcuts as printable.
