@@ -266,6 +266,8 @@ BackgroundCommands =
       tab = tabs[0]
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
   nextTab: (count) -> selectTab "next", count
+  previouslyVisitedTab: (count) ->
+    selectTab "previouslyVisited", count
   previousTab: (count) -> selectTab "previous", count
   firstTab: (count) -> selectTab "first", count
   lastTab: (count) -> selectTab "last", count
@@ -340,6 +342,14 @@ removeTabsRelative = (direction) ->
           toRemove.push tab.id
       chrome.tabs.remove toRemove
 
+previousTabIndex = 0
+currentTabIndex = 0
+chrome.tabs.onActivated.addListener (activeInfo) ->
+  chrome.tabs.get(activeInfo.tabId, (tab) ->
+    if tab
+      previousTabIndex = currentTabIndex
+      currentTabIndex = tab.index)
+
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
 selectTab = (direction, count = 1) ->
@@ -356,6 +366,8 @@ selectTab = (direction, count = 1) ->
             Math.min tabs.length - 1, count - 1
           when "last"
             Math.max 0, tabs.length - count
+          when "previouslyVisited"
+            previousTabIndex
       chrome.tabs.update tabs[toSelect].id, selected: true
 
 updateOpenTabs = (tab, deleteFrames = false) ->

@@ -128,6 +128,7 @@ Commands =
       "previousTab",
       "firstTab",
       "lastTab",
+      "previouslyVisitedTab",
       "createTab",
       "duplicateTab",
       "removeTab",
@@ -221,6 +222,7 @@ defaultKeyMappings =
   ">>": "moveTabRight"
   "g0": "firstTab"
   "g$": "lastTab"
+  "g#": "previouslyVisitedTab"
 
   "W": "moveTabToNewWindow"
   "t": "createTab"
@@ -310,6 +312,7 @@ commandDescriptions =
   nextTab: ["Go one tab right", { background: true, passCountToFunction: true }]
   previousTab: ["Go one tab left", { background: true, passCountToFunction: true }]
   firstTab: ["Go to the first tab", { background: true, passCountToFunction: true }]
+  previouslyVisitedTab: ["Go to the previously visited tab", { background: true, passCountToFunction: true }]
   lastTab: ["Go to the last tab", { background: true, passCountToFunction: true }]
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
