@@ -380,7 +380,7 @@ context "Normal mode",
 context "Insert mode",
   setup ->
     initializeModeState()
-    @insertMode = new InsertMode global: true
+    @insertMode = new InsertMode global: {}
 
   should "not suppress mapped keys in insert mode", ->
     sendKeyboardEvent "m"
