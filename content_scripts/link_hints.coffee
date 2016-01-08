@@ -309,6 +309,9 @@ class LinkHintsMode
             if event.keyCode == keyCode
               handlerStack.remove()
               @setOpenLinkMode previousMode if @isActive
+          blur: (event) =>
+            handlerStack.remove()
+            @setOpenLinkMode previousMode if @isActive
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
