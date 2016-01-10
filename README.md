@@ -153,6 +153,11 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+Next version (not yet released)
+
+- Bug fixes:
+    - Fix endless scrolling (#1911).
+
 1.53 (2015-09-25)
 
 - Vimium now works on the new-tab page for Chrome 47.
