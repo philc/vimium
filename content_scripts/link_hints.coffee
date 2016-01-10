@@ -304,11 +304,16 @@ class LinkHintsMode
           when keyCodes.ctrlKey
             @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
-        handlerStack.push
+        handlerId = handlerStack.push
           keyup: (event) =>
             if event.keyCode == keyCode
               handlerStack.remove()
               @setOpenLinkMode previousMode if @isActive
+            true # Continue bubbling the event.
+
+        # For some (unknown) reason, we don't always receive the keyup event needed to remove this handler.
+        # Therefore, we ensure that it's always removed when hint mode exits.  See #1911 and #1926.
+        @hintMode.onExit -> handlerStack.remove handlerId
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
