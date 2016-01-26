@@ -155,6 +155,7 @@ Release Notes
 -------------
 Next version (not yet released)
 
+- Edit mode for text inputs (including GMail): `gv` (beta feature).
 - Bug fixes:
     - Fix endless scrolling (#1911).
 

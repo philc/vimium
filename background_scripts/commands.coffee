@@ -98,7 +98,7 @@ Commands =
       "enterInsertMode",
       "enterVisualMode",
       "enterVisualLineMode",
-      # "enterEditMode",
+      "enterEditMode",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
@@ -187,7 +187,7 @@ defaultKeyMappings =
   "i": "enterInsertMode"
   "v": "enterVisualMode"
   "V": "enterVisualLineMode"
-  # "gv": "enterEditMode"
+  "gv": "enterEditMode"
 
   "H": "goBack"
   "L": "goForward"
@@ -279,7 +279,7 @@ commandDescriptions =
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
-  # enterEditMode: ["Enter vim-like edit mode (not yet implemented)", { noRepeat: true }]
+  enterEditMode: ["Enter vim-like edit mode (beta feature)", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
     { passCountToFunction: true }]
