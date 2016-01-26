@@ -554,6 +554,10 @@ class VisualMode extends Movement
       if document.activeElement and DomUtils.isEditable document.activeElement
         document.activeElement.blur() unless event?.type == "click"
 
+    if @options.parentMode
+      # E.g. when exiting visual mode under edit mode, we no longer want the selection.
+      @collapseSelectionToFocus()
+
     super event, target
     if @yankedText?
       unless @options.noCopyToClipboard
