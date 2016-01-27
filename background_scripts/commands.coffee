@@ -91,6 +91,7 @@ Commands =
       "toggleViewSource",
       "copyCurrentUrl",
       "LinkHints.activateModeToCopyLinkUrl",
+      "LinkHints.activateModeToCopyLinkText",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
       "goUp",
@@ -209,6 +210,7 @@ defaultKeyMappings =
 
   "yy": "copyCurrentUrl"
   "yf": "LinkHints.activateModeToCopyLinkUrl"
+  "yl": "LinkHints.activateModeToCopyLinkText"
 
   "p": "openCopiedUrlInCurrentTab"
   "P": "openCopiedUrlInNewTab"
@@ -273,6 +275,7 @@ commandDescriptions =
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { noRepeat: true }]
+  "LinkHints.activateModeToCopyLinkText": ["Copy a link text to the clipboard", { noRepeat: true }]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 

@@ -17,6 +17,7 @@ OPEN_WITH_QUEUE = name: "queue"
 COPY_LINK_URL = name: "link"
 OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
+COPY_LINK_TEXT = name: "linktext"
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -24,6 +25,7 @@ LinkHints =
   activateModeToOpenInNewTab: -> @activateMode OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: -> @activateMode OPEN_IN_NEW_FG_TAB
   activateModeToCopyLinkUrl: -> @activateMode COPY_LINK_URL
+  activateModeToCopyLinkText: -> @activateMode COPY_LINK_TEXT
   activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
   activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
   activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
@@ -52,6 +54,9 @@ class LinkHintsMode
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
     elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
+    # For copy link mode, we filter out those elements which don't have a text or which text is emtpy after trimming whitespaces.
+    elements = (el for el in elements when el.element.text?.trim().length != 0) if mode in [ COPY_LINK_TEXT]
+
     if Settings.get "filterLinkHints"
       # When using text filtering, we sort the elements such that we visit descendants before their ancestors.
       # This allows us to exclude the text used for matching descendants from that used for matching their
@@ -110,6 +115,16 @@ class LinkHintsMode
           @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
         else
           @onExit = -> HUD.showForDuration "No link to yank.", 2000
+    else if @mode is COPY_LINK_TEXT
+      @hintMode.setIndicator "Copy link text to Clipboard."
+      @linkActivator = (link) =>
+        if link.text?.trim().length isnt 0
+          chrome.runtime.sendMessage handler: "copyToClipboard", data: link.text.trim()
+          linkText = link.text.trim()
+          linkText = linkText[0..25] + "...." if 28 < linkText.length
+          @onExit = -> HUD.showForDuration "Yanked #{linkText}", 2000
+        else
+          @onExit = -> HUD.showForDuration "No text to yank.", 2000
     else if @mode is OPEN_INCOGNITO
       @hintMode.setIndicator "Open link in incognito window."
       @linkActivator = (link) ->
