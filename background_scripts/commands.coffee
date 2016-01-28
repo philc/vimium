@@ -106,6 +106,7 @@ Commands =
       "LinkHints.activateModeWithQueue",
       "LinkHints.activateModeToDownloadLink",
       "LinkHints.activateModeToOpenIncognito",
+      "LinkHints.activateModeForMenu",
       "goPrevious",
       "goNext",
       "nextFrame",
@@ -199,6 +200,7 @@ defaultKeyMappings =
   "f":     "LinkHints.activateMode"
   "F":     "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
+  "gm": "LinkHints.activateModeForMenu"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -290,6 +292,7 @@ commandDescriptions =
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { noRepeat: true }]
   "LinkHints.activateModeToDownloadLink": ["Download link url", { noRepeat: true }]
+  "LinkHints.activateModeForMenu": ["Open a link's context menu", { noRepeat: true }]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]

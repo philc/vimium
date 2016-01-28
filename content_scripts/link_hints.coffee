@@ -17,6 +17,7 @@ OPEN_WITH_QUEUE = name: "queue"
 COPY_LINK_URL = name: "link"
 OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
+CONTEXT_MENU = name: "context"
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -27,6 +28,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
   activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
   activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+  activateModeForMenu: -> @activateMode CONTEXT_MENU
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -118,6 +120,9 @@ class LinkHintsMode
       @hintMode.setIndicator "Download link URL."
       @linkActivator = (link) ->
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
+    else if @mode is CONTEXT_MENU
+      @hintMode.setIndicator "Open context menu."
+      @linkActivator = (link) -> new ContextMenuMode link
     else # OPEN_IN_CURRENT_TAB
       @hintMode.setIndicator "Open link in current tab."
       @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
@@ -370,7 +375,8 @@ class LinkHintsMode
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
         clickEl.focus()
-      DomUtils.flashRect(matchedLink.rect)
+
+      DomUtils.flashRect(matchedLink.rect) unless @mode is CONTEXT_MENU
       @linkActivator(clickEl)
       if @mode is OPEN_WITH_QUEUE
         @deactivateMode delay, -> LinkHints.activateModeWithQueue()
@@ -677,6 +683,113 @@ class TypingProtector extends Mode
       keypress: handler
 
     @onExit callback
+
+class ContextMenuMode extends Mode
+  # TODO:
+  #   - ensure menu is wholy within viewport
+  #   - implement arrow and <Enter> to select menu item (optional)
+  #   - internationalization (key mapping)
+  constructor: (link) ->
+    super
+      name: "hint/context-menu"
+      suppressAllKeyboardEvents: true
+      suppressTrailingKeyEvents: true
+      exitOnEscape: true
+      exitOnClick: true
+      indicator: "Link context menu."
+
+    openCurrentTab = text: "Open in current tab", key: "o", handler: ->
+      DomUtils.simulateClick link
+
+    openNewTab = text: "Open in new tab", key: "n", handler: ->
+      DomUtils.simulateClick link,
+        shiftKey: true, altKey: false
+        metaKey: KeyboardUtils.platform == "Mac", ctrlKey: KeyboardUtils.platform != "Mac"
+
+    openBackground = text: "Open in background tab", key: "b", handler: ->
+      DomUtils.simulateClick link,
+        shiftKey: false, altKey: false
+        metaKey: KeyboardUtils.platform == "Mac", ctrlKey: KeyboardUtils.platform != "Mac"
+
+    openNewWindow = text: "Open in new window", key: "w", requireLink: true, handler: =>
+      # Not yet implemented.
+      chrome.runtime.sendMessage handler: 'openUrlInNewWindow', url: link.href
+
+    openIncognito = text: "Open incognito", key: "i", requireLink: true, handler: =>
+      chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
+
+    yankURL = text: "Yank URL", key: "y", requireLink: true, handler: =>
+      chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+      url = link.href
+      url = url[0..25] + "...." if 28 < url.length
+      @onExit -> Utils.nextTick -> HUD.showForDuration "Yanked #{url}", 2000
+
+    yankLinkText = text: "Yank link text", key: "t", requireLinkText: true, handler: =>
+      chrome.runtime.sendMessage handler: "copyToClipboard", data: link.text.trim()
+      linkText = link.text.trim()
+      linkText = linkText[0..25] + "...." if 28 < linkText.length
+      @onExit -> Utils.nextTick -> HUD.showForDuration "Yanked #{linkText}", 2000
+
+    downloadLink = text: "Download link", key: "d", handler: ->
+      DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
+
+    hover = text: "Hover", key: "h", handler: ->
+      hoverMode = new Mode name: "hint/hover", exitOnEscape: true, singleton: ContextMenuMode
+      hoverMode.onExit -> DomUtils.simulateUnhover link
+      DomUtils.simulateHover link
+
+    menuEntries = [
+      openCurrentTab, openNewTab, openBackground, openNewWindow, openIncognito
+      "hr"
+      yankURL, yankLinkText
+      "hr"
+      hover, downloadLink
+    ]
+
+    clientRect = DomUtils.getVisibleClientRect link
+
+    # We flash and hold the link while the menu is active.
+    flashEl = DomUtils.addFlashRect clientRect
+    @onExit -> DomUtils.removeElement flashEl
+
+    menuElement = DomUtils.createElement "div"
+    menuElement.className = "vimiumReset vimiumHintContextMenu"
+
+    htmls =
+      for entry in menuEntries
+        if entry == "hr"
+          "<hr class=\"vimiumHintContextMenuHR\"/>"
+        else if entry.requireLink and not link.href?
+          # If there's no href, then don't include menu entries which require one.
+          ""
+        else if entry.requireLinkText and not link.text?.trim().length
+          # If there's no link text, then don't include menu entries which require it.
+          ""
+        else
+          "<li><span class=\"vimiumHintContextMenuText\">#{entry.text}</span>
+           <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span></li>"
+    menuElement.innerHTML = "<ul>#{htmls.join ""}</ul>"
+
+    left = Math.min clientRect.left + window.scrollX + 50, window.innerWidth - 250
+    top = Math.min clientRect.top  + window.scrollY  + 0, window.innerHeight - 130
+
+    menuElement.style.left = left + "px"
+    menuElement.style.top = top + "px"
+
+    menuContainer = DomUtils.addElementList [menuElement], id: "vimiumContextMenu", className: "vimiumReset"
+    @onExit -> DomUtils.removeElement menuContainer
+
+    @push
+      _name: "#{@id}/keypress"
+      keypress: (event) =>
+        key = String.fromCharCode(event.charCode).toLowerCase()
+        for entry in menuEntries
+          continue if entry == "hr"
+          continue if entry.requireLink and not link.href?
+          if entry.key == key
+            entry.handler()
+            @exit()
+        DomUtils.suppressEvent event
 
 root = exports ? window
 root.LinkHints = LinkHints
