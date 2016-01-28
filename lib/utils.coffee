@@ -281,6 +281,7 @@ Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 String::startsWith = (str) -> @indexOf(str) == 0
 String::ltrim = -> @replace /^\s+/, ""
 String::rtrim = -> @replace /\s+$/, ""
+String::reverse = -> @split("").reverse().join ""
 
 globalRoot = window ? global
 globalRoot.extend = (hash1, hash2) ->

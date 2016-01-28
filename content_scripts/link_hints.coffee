@@ -444,13 +444,12 @@ class AlphabetHints
     offset = 0
     while hints.length - offset < linkCount or hints.length == 1
       hint = hints[offset++]
-      hints.push hint + ch for ch in @linkHintCharacters
+      hints.push ch + hint for ch in @linkHintCharacters
     hints = hints[offset...offset+linkCount]
 
-    # This shuffles the hints so that they're scattered; hints starting with the same character are spread
-    # evenly throughout the array.  We reverse each hint, then sort them, then reverse them again.
-    hints = (hint.split("").reverse().join "" for hint in hints).sort()
-    return (hint.split("").reverse().join "" for hint in hints)
+    # Shuffle the hints so that they're scattered; hints starting with the same character are spread evenly
+    # throughout the array.
+    return hints.sort().map (str) -> str.reverse()
 
   getMatchingHints: (hintMarkers) ->
     matchString = @hintKeystrokeQueue.join ""
