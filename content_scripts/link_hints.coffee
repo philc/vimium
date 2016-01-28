@@ -375,7 +375,6 @@ class LinkHintsMode
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
         clickEl.focus()
-
       DomUtils.flashRect(matchedLink.rect) unless @mode is CONTEXT_MENU
       @linkActivator(clickEl)
       if @mode is OPEN_WITH_QUEUE
@@ -686,9 +685,8 @@ class TypingProtector extends Mode
 
 class ContextMenuMode extends Mode
   # TODO:
-  #   - ensure menu is wholy within viewport
-  #   - implement arrow and <Enter> to select menu item (optional)
   #   - internationalization (key mapping)
+  #   - with queue?
   constructor: (link) ->
     super
       name: "hint/context-menu"
