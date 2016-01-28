@@ -440,39 +440,22 @@ class AlphabetHints
   # may be of different lengths.
   #
   hintStrings: (linkCount) ->
-    # Determine how many digits the link hints will require in the worst case. Usually we do not need
-    # all of these digits for every link single hint, so we can show shorter hints for a few of the links.
-    digitsNeeded = Math.ceil(@logXOfBase(linkCount, @linkHintCharacters.length))
-    # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
-    shortHintCount = Math.floor(
-      (Math.pow(@linkHintCharacters.length, digitsNeeded) - linkCount) /
-      @linkHintCharacters.length)
-    longHintCount = linkCount - shortHintCount
+    return [] if linkCount == 0
 
-    hintStrings = []
+    # In the following:
+    #   - at no point is any hint in hints a prefix of any other hint
+    #   - the shorter hints are always at the start of the list
+    hints = [""]
+    offset = 0
+    while hints.length - offset < linkCount or hints.length == 1
+      hint = hints[offset++]
+      hints.push hint + ch for ch in @linkHintCharacters
+    hints = hints[offset...offset+linkCount]
 
-    if (digitsNeeded > 1)
-      for i in [0...shortHintCount]
-        hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded - 1))
-
-    start = shortHintCount * @linkHintCharacters.length
-    for i in [start...(start + longHintCount)]
-      hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded))
-
-    @shuffleHints(hintStrings, @linkHintCharacters.length)
-
-  #
-  # This shuffles the given set of hints so that they're scattered -- hints starting with the same character
-  # will be spread evenly throughout the array.
-  #
-  shuffleHints: (hints, characterSetLength) ->
-    buckets = ([] for i in [0...characterSetLength] by 1)
-    for hint, i in hints
-      buckets[i % buckets.length].push(hint)
-    result = []
-    for bucket in buckets
-      result = result.concat(bucket)
-    result
+    # This shuffles the hints so that they're scattered; hints starting with the same character are spread
+    # evenly throughout the array.  We reverse each hint, then sort them then reverse again.
+    hints = (hint.split("").reverse().join "" for hint in hints).sort()
+    return (hint.split("").reverse().join "" for hint in hints[...linkCount])
 
   getMatchingHints: (hintMarkers) ->
     matchString = @hintKeystrokeQueue.join ""
