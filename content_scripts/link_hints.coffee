@@ -440,11 +440,6 @@ class AlphabetHints
   # may be of different lengths.
   #
   hintStrings: (linkCount) ->
-    return [] if linkCount == 0
-
-    # In the following:
-    #   - at no point is any hint in hints a prefix of any other hint
-    #   - the shorter hints are always at the start of the list
     hints = [""]
     offset = 0
     while hints.length - offset < linkCount or hints.length == 1
@@ -453,9 +448,9 @@ class AlphabetHints
     hints = hints[offset...offset+linkCount]
 
     # This shuffles the hints so that they're scattered; hints starting with the same character are spread
-    # evenly throughout the array.  We reverse each hint, then sort them then reverse again.
+    # evenly throughout the array.  We reverse each hint, then sort them, then reverse them again.
     hints = (hint.split("").reverse().join "" for hint in hints).sort()
-    return (hint.split("").reverse().join "" for hint in hints[...linkCount])
+    return (hint.split("").reverse().join "" for hint in hints)
 
   getMatchingHints: (hintMarkers) ->
     matchString = @hintKeystrokeQueue.join ""
