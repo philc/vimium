@@ -416,8 +416,6 @@ class LinkHintsMode
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
-  logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
-
   constructor: ->
     @linkHintCharacters = Settings.get "linkHintCharacters"
     # We use the keyChar from keydown if the link-hint characters are all "a-z0-9".  This is the default
@@ -447,8 +445,8 @@ class AlphabetHints
       hints.push ch + hint for ch in @linkHintCharacters
     hints = hints[offset...offset+linkCount]
 
-    # Shuffle the hints so that they're scattered; hints starting with the same character are spread evenly
-    # throughout the array.
+    # Shuffle the hints so that they're scattered; hints starting with the same character and short hints are
+    # spread evenly throughout the array.
     return hints.sort().map (str) -> str.reverse()
 
   getMatchingHints: (hintMarkers) ->
