@@ -17,6 +17,7 @@ OPEN_WITH_QUEUE = name: "queue"
 COPY_LINK_URL = name: "link"
 OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
+HOVER = name: "hover"
 
 LinkHints =
   activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
@@ -27,6 +28,9 @@ LinkHints =
   activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
   activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
   activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+  activateModeToHover: -> @activateMode HOVER
+
+  unhoverLast: -> LinkHintsMode::unhoverLast()
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -93,6 +97,7 @@ class LinkHintsMode
       else
         @hintMode.setIndicator "Open multiple links in new tabs."
       @linkActivator = (link) ->
+        @unhoverLast link
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
         DomUtils.simulateClick link,
@@ -117,10 +122,17 @@ class LinkHintsMode
     else if @mode is DOWNLOAD_LINK_URL
       @hintMode.setIndicator "Download link URL."
       @linkActivator = (link) ->
+        @unhoverLast link
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
+    else if @mode is HOVER
+      @linkActivator = (link) ->
+        @unhoverLast link
+        DomUtils.simulateHover link
     else # OPEN_IN_CURRENT_TAB
       @hintMode.setIndicator "Open link in current tab."
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+      @linkActivator = (link) ->
+        @unhoverLast link
+        DomUtils.simulateClick link
 
   #
   # Creates a link marker for the given link.
@@ -413,6 +425,16 @@ class LinkHintsMode
       # tested synchronously.
       deactivate()
       callback?()
+
+  #
+  # Sends a "mouseout" event to the last "mouseover"-ed element.
+  #
+  unhoverLast: do ->
+    lastHoveredElement = null
+
+    (nextHoveredElement) ->
+      DomUtils.simulateUnhover(lastHoveredElement) if lastHoveredElement?
+      lastHoveredElement = nextHoveredElement
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
