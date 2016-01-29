@@ -483,7 +483,12 @@ class FilterHints
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    numberToHintString linkHintNumber, @linkHintNumbers.toUpperCase()
+    base = @linkHintNumbers.length
+    hint = []
+    while 0 < linkHintNumber
+      hint.push @linkHintNumbers[Math.floor linkHintNumber % base]
+      linkHintNumber = Math.floor linkHintNumber / base
+    hint.reverse().join ""
 
   generateLinkText: (element) ->
     linkText = ""
@@ -614,29 +619,6 @@ spanWrap = (hintString) ->
   for char in hintString
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
-
-#
-# Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of the
-# hint text. The hint string will be "padded with zeroes" to ensure its length is >= numHintDigits.
-#
-numberToHintString = (number, characterSet, numHintDigits = 0) ->
-  base = characterSet.length
-  hintString = []
-  remainder = 0
-  loop
-    remainder = number % base
-    hintString.unshift(characterSet[remainder])
-    number -= remainder
-    number /= Math.floor(base)
-    break unless number > 0
-
-  # Pad the hint string we're returning so that it matches numHintDigits.
-  # Note: the loop body changes hintString.length, so the original length must be cached!
-  hintStringLength = hintString.length
-  for i in [0...(numHintDigits - hintStringLength)] by 1
-    hintString.unshift(characterSet[0])
-
-  hintString.join("")
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
