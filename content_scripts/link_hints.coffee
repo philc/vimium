@@ -34,8 +34,6 @@ class LinkHintsMode
   mode: undefined
   # Function that does the appropriate action on the selected link.
   linkActivator: undefined
-  # While in delayMode, all keypresses have no effect.
-  delayMode: false
   # Lock to ensure only one instance runs at a time.
   isActive: false
   # The link-hints "mode" (in the key-handler, indicator sense).
@@ -69,6 +67,7 @@ class LinkHintsMode
       indicator: false
       passInitialKeyupEvents: true
       suppressAllKeyboardEvents: true
+      suppressTrailingKeyEvents: true
       exitOnEscape: true
       exitOnClick: true
       exitOnScroll: true
@@ -126,18 +125,22 @@ class LinkHintsMode
   #
   # Creates a link marker for the given link.
   #
-  createMarkerFor: (link) ->
-    marker = DomUtils.createElement "div"
-    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-    marker.clickableItem = link.element
+  createMarkerFor: do ->
+    # This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort stable.
+    stableSortCount = 0
+    (link) ->
+      marker = DomUtils.createElement "div"
+      marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+      marker.clickableItem = link.element
+      marker.stableSortCount = ++stableSortCount
 
-    clientRect = link.rect
-    marker.style.left = clientRect.left + window.scrollX + "px"
-    marker.style.top = clientRect.top  + window.scrollY  + "px"
+      clientRect = link.rect
+      marker.style.left = clientRect.left + window.scrollX + "px"
+      marker.style.top = clientRect.top  + window.scrollY  + "px"
 
-    marker.rect = link.rect
+      marker.rect = link.rect
 
-    marker
+      marker
 
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -210,6 +213,8 @@ class LinkHintsMode
                              (element.readOnly and DomUtils.isSelectable element))
       when "button", "select"
         isClickable ||= not element.disabled
+      when "label"
+        isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
 
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
@@ -280,7 +285,7 @@ class LinkHintsMode
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (hintMarkers, event) ->
-    return if @delayMode or event.repeat
+    return if event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     previousTabCount = @tabCount
@@ -299,11 +304,16 @@ class LinkHintsMode
           when keyCodes.ctrlKey
             @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
-        handlerStack.push
+        handlerId = handlerStack.push
           keyup: (event) =>
             if event.keyCode == keyCode
               handlerStack.remove()
               @setOpenLinkMode previousMode if @isActive
+            true # Continue bubbling the event.
+
+        # For some (unknown) reason, we don't always receive the keyup event needed to remove this handler.
+        # Therefore, we ensure that it's always removed when hint mode exits.  See #1911 and #1926.
+        @hintMode.onExit -> handlerStack.remove handlerId
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
@@ -327,7 +337,7 @@ class LinkHintsMode
 
   # Handles normal input.
   onKeyPressInMode: (hintMarkers, event) ->
-    return if @delayMode or event.repeat
+    return if event.repeat
 
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
@@ -352,7 +362,6 @@ class LinkHintsMode
   # When only one link hint remains, this function activates it in the appropriate way.
   #
   activateLink: (matchedLink, delay = 0) ->
-    @delayMode = true
     clickEl = matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
@@ -394,7 +403,9 @@ class LinkHintsMode
       @tabCount = 0
 
     if delay
-      Utils.setTimeout delay, ->
+      # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
+      # user from inadvertently launching Vimium commands when typing the link text.
+      new TypingProtector delay, ->
         deactivate()
         callback?()
     else
@@ -584,11 +595,8 @@ class FilterHints
     linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
     do (scoreFunction = @scoreLinkHint linkSearchString) ->
       linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
-    # The Javascript sort() method is known not to be stable.  Nevertheless, we require (and assume, here)
-    # that it is deterministic.  So, if the user is typing hint characters, then hints will always end up in
-    # the same order and hence with the same hint strings (because hint-string filtering happens after the
-    # filtering here).
-    hintMarkers = hintMarkers[..].sort (a,b) -> b.score - a.score
+    hintMarkers = hintMarkers[..].sort (a,b) ->
+      if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
     linkHintNumber = 1
     for linkMarker in hintMarkers
@@ -653,6 +661,22 @@ numberToHintString = (number, characterSet, numHintDigits = 0) ->
 
   hintString.join("")
 
+# Suppress all keyboard events until the user stops typing for sufficiently long.
+class TypingProtector extends Mode
+  constructor: (delay, callback) ->
+    @timer = Utils.setTimeout delay, => @exit()
+
+    handler = (event) =>
+      clearTimeout @timer
+      @timer = Utils.setTimeout 150, => @exit()
+
+    super
+      name: "hint/typing-protector"
+      suppressAllKeyboardEvents: true
+      keydown: handler
+      keypress: handler
+
+    @onExit callback
 
 root = exports ? window
 root.LinkHints = LinkHints

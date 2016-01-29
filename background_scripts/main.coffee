@@ -202,7 +202,7 @@ TabOperations =
         index: tab.index + 1
         selected: true
         windowId: tab.windowId
-      openerTabId: tab.id
+        openerTabId: tab.id
       callback = (->) unless typeof callback == "function"
       chrome.tabs.create tabConfig, callback
 
@@ -239,8 +239,10 @@ moveTab = (count) ->
   chrome.tabs.getAllInWindow null, (tabs) ->
     pinnedCount = (tabs.filter (tab) -> tab.pinned).length
     chrome.tabs.getSelected null, (tab) ->
+      minIndex = if tab.pinned then 0 else pinnedCount
+      maxIndex = (if tab.pinned then pinnedCount else tabs.length) - 1
       chrome.tabs.move tab.id,
-        index: Math.max pinnedCount, Math.min tabs.length - 1, tab.index + count
+        index: Math.max minIndex, Math.min maxIndex, tab.index + count
 
 # Start action functions
 
@@ -265,8 +267,8 @@ BackgroundCommands =
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
   nextTab: (count) -> selectTab "next", count
   previousTab: (count) -> selectTab "previous", count
-  firstTab: -> selectTab "first"
-  lastTab: -> selectTab "last"
+  firstTab: (count) -> selectTab "first", count
+  lastTab: (count) -> selectTab "last", count
   removeTab: (callback) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.remove(tab.id)
@@ -347,15 +349,13 @@ selectTab = (direction, count = 1) ->
       toSelect =
         switch direction
           when "next"
-            currentTab.index + count
+            (currentTab.index + count) % tabs.length
           when "previous"
-            currentTab.index - count
+            (currentTab.index - count + count * tabs.length) % tabs.length
           when "first"
-            0
+            Math.min tabs.length - 1, count - 1
           when "last"
-            tabs.length - 1
-      # Bring toSelect into the range [0,tabs.length).
-      toSelect = (toSelect + tabs.length * Math.abs count) % tabs.length
+            Math.max 0, tabs.length - count
       chrome.tabs.update tabs[toSelect].id, selected: true
 
 updateOpenTabs = (tab, deleteFrames = false) ->
@@ -668,6 +668,7 @@ sendRequestHandlers =
   setIcon: setIcon
   sendMessageToFrames: sendMessageToFrames
   log: bgLog
+  fetchFileContents: (request, sender) -> fetchFileContents request.fileName
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

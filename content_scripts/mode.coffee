@@ -41,6 +41,7 @@ class Mode
     @handlers = []
     @exitHandlers = []
     @modeIsActive = true
+    @modeIsExiting = false
     @name = @options.name || "anonymous"
 
     @count = ++count
@@ -144,6 +145,25 @@ class Mode
         keyup: (event) =>
           if KeyboardUtils.isPrintable event then @stopBubblingAndFalse else @stopBubblingAndTrue
 
+    # if @options.suppressTrailingKeyEvents is set, then  -- on exit -- we suppress all key events until a
+    # subsquent (non-repeat) keydown or keypress.  In particular, the intention is to catch keyup events for
+    # keys which we have handled, but which otherwise might trigger page actions (if the page is listening for
+    # keyup events).
+    if @options.suppressTrailingKeyEvents
+      @onExit ->
+        handler = (event) ->
+          if event.repeat
+            false # Suppress event.
+          else
+            keyEventSuppressor.exit()
+            true # Do not suppress event.
+
+        keyEventSuppressor = new Mode
+          name: "suppress-trailing-key-events"
+          keydown: handler
+          keypress: handler
+          keyup: -> handlerStack.stopBubblingAndFalse
+
     Mode.modes.push @
     @setIndicator()
     @logModes()
@@ -170,8 +190,10 @@ class Mode
   exit: ->
     if @modeIsActive
       @log "deactivate:", @id
-      handler() for handler in @exitHandlers
-      handlerStack.remove handlerId for handlerId in @handlers
+      unless @modeIsExiting
+        @modeIsExiting = true
+        handler() for handler in @exitHandlers
+        handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
       @modeIsActive = false
       @setIndicator()

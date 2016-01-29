@@ -484,8 +484,11 @@ class VisualMode extends Movement
         @extendByOneCharacter(forward) or @extendByOneCharacter backward
       else
         if @selection.type in [ "Caret", "Range" ]
-          elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
-          if DomUtils.getVisibleClientRect elementWithFocus
+          selectionRect = @selection.getRangeAt(0).getBoundingClientRect()
+          selectionRect = Rect.intersect selectionRect, (Rect.create 0, 0, window.innerWidth,
+              window.innerHeight)
+          if selectionRect.height >= 0 and selectionRect.width >= 0
+            # The selection is visible in the current viewport.
             if @selection.type == "Caret"
               # The caret is in the viewport. Make make it visible.
               @extendByOneCharacter(forward) or @extendByOneCharacter backward
@@ -550,6 +553,10 @@ class VisualMode extends Movement
       # element.
       if document.activeElement and DomUtils.isEditable document.activeElement
         document.activeElement.blur() unless event?.type == "click"
+
+    if @options.parentMode
+      # E.g. when exiting visual mode under edit mode, we no longer want the selection.
+      @collapseSelectionToFocus()
 
     super event, target
     if @yankedText?

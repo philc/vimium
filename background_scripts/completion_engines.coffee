@@ -109,7 +109,7 @@ class Amazon extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s"
-      regexps: "^https?://www\\.amazon\\.(com|co\\.uk|ca|com\\.au)/s/"
+      regexps: "^https?://www\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"
       example:
         searchUrl: "http://www.amazon.com/s/?field-keywords=%s"
         keyword: "a"
@@ -140,6 +140,18 @@ class Webster extends BaseEngine
 
   parse: (xhr) -> JSON.parse(xhr.responseText).suggestions
 
+class Qwant extends BaseEngine
+  constructor: ->
+    super
+      engineUrl: "https://api.qwant.com/api/suggest?q=%s"
+      regexps: "^https?://www\\.qwant\\.com/"
+      example:
+        searchUrl: "https://www.qwant.com/?q=%s"
+        keyword: "qw"
+
+  parse: (xhr) ->
+    suggestion.value for suggestion in JSON.parse(xhr.responseText).data.items
+
 # A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 # allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine extends BaseEngine
@@ -158,6 +170,7 @@ CompletionEngines = [
   Bing
   Amazon
   Webster
+  Qwant
   DummyCompletionEngine
 ]
 

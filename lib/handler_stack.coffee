@@ -48,7 +48,7 @@ class HandlerStack
         result = handler[type].call @, event
         @logResult eventNumber, type, event, handler, result if @debug
         if not result
-          DomUtils.suppressEvent event  if @isChromeEvent event
+          DomUtils.suppressEvent event if @isChromeEvent event
           return false
         return true if result == @stopBubblingAndTrue
         return false if result == @stopBubblingAndFalse

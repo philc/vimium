@@ -153,6 +153,18 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
+Next version (not yet released)
+
+- Bug fixes:
+    - Fix endless scrolling (#1911).
+
+1.53 (2015-09-25)
+
+- Vimium now works on the new-tab page for Chrome 47.
+- `g0` and `g$` now accept count prefixes; so `2g0` selects the second tab, and so on.
+- Bug fixes:
+    - Fix `moveTabLeft` and `moveTabRight` for pinned tabs (#1814 and #1815).
+
 1.52 (2015-09-09)
 
 - Search completion for selected custom search engines

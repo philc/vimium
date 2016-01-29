@@ -277,8 +277,8 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
-  enterVisualMode: ["Enter visual mode (beta feature)", { noRepeat: true }]
-  enterVisualLineMode: ["Enter visual line mode (beta feature)", { noRepeat: true }]
+  enterVisualMode: ["Enter visual mode", { noRepeat: true }]
+  enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
   # enterEditMode: ["Enter vim-like edit mode (not yet implemented)", { noRepeat: true }]
 
   focusInput: ["Focus the first text box on the page. Cycle between them using tab",
@@ -309,8 +309,8 @@ commandDescriptions =
   # Manipulating tabs
   nextTab: ["Go one tab right", { background: true, passCountToFunction: true }]
   previousTab: ["Go one tab left", { background: true, passCountToFunction: true }]
-  firstTab: ["Go to the first tab", { background: true }]
-  lastTab: ["Go to the last tab", { background: true }]
+  firstTab: ["Go to the first tab", { background: true, passCountToFunction: true }]
+  lastTab: ["Go to the last tab", { background: true, passCountToFunction: true }]
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
