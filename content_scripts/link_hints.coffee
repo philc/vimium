@@ -446,7 +446,7 @@ class AlphabetHints
     # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
     shortHintCount = Math.floor(
       (Math.pow(@linkHintCharacters.length, digitsNeeded) - linkCount) /
-      @linkHintCharacters.length)
+      (@linkHintCharacters.length - 1))
     longHintCount = linkCount - shortHintCount
 
     hintStrings = []
