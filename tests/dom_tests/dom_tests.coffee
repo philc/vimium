@@ -149,10 +149,8 @@ context "Alphabetical link hints",
     document.getElementById("test-div").innerHTML = ""
 
   should "label the hints correctly", ->
-    # TODO(philc): This test verifies the current behavior, but the current behavior is incorrect.
-    # The output here should be something like aa, ab, b.
     hintMarkers = getHintMarkers()
-    expectedHints = ["aa", "ba", "ab"]
+    expectedHints = ["aa", "b", "ab"]
     for hint, i in expectedHints
       assert.equal hint, hintMarkers[i].hintString
 

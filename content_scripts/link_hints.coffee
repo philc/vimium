@@ -416,8 +416,6 @@ class LinkHintsMode
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
-  logXOfBase: (x, base) -> Math.log(x) / Math.log(base)
-
   constructor: ->
     @linkHintCharacters = Settings.get "linkHintCharacters"
     # We use the keyChar from keydown if the link-hint characters are all "a-z0-9".  This is the default
@@ -440,39 +438,16 @@ class AlphabetHints
   # may be of different lengths.
   #
   hintStrings: (linkCount) ->
-    # Determine how many digits the link hints will require in the worst case. Usually we do not need
-    # all of these digits for every link single hint, so we can show shorter hints for a few of the links.
-    digitsNeeded = Math.ceil(@logXOfBase(linkCount, @linkHintCharacters.length))
-    # Short hints are the number of hints we can possibly show which are (digitsNeeded - 1) digits in length.
-    shortHintCount = Math.floor(
-      (Math.pow(@linkHintCharacters.length, digitsNeeded) - linkCount) /
-      @linkHintCharacters.length)
-    longHintCount = linkCount - shortHintCount
+    hints = [""]
+    offset = 0
+    while hints.length - offset < linkCount or hints.length == 1
+      hint = hints[offset++]
+      hints.push ch + hint for ch in @linkHintCharacters
+    hints = hints[offset...offset+linkCount]
 
-    hintStrings = []
-
-    if (digitsNeeded > 1)
-      for i in [0...shortHintCount]
-        hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded - 1))
-
-    start = shortHintCount * @linkHintCharacters.length
-    for i in [start...(start + longHintCount)]
-      hintStrings.push(numberToHintString(i, @linkHintCharacters, digitsNeeded))
-
-    @shuffleHints(hintStrings, @linkHintCharacters.length)
-
-  #
-  # This shuffles the given set of hints so that they're scattered -- hints starting with the same character
-  # will be spread evenly throughout the array.
-  #
-  shuffleHints: (hints, characterSetLength) ->
-    buckets = ([] for i in [0...characterSetLength] by 1)
-    for hint, i in hints
-      buckets[i % buckets.length].push(hint)
-    result = []
-    for bucket in buckets
-      result = result.concat(bucket)
-    result
+    # Shuffle the hints so that they're scattered; hints starting with the same character and short hints are
+    # spread evenly throughout the array.
+    return hints.sort().map (str) -> str.reverse()
 
   getMatchingHints: (hintMarkers) ->
     matchString = @hintKeystrokeQueue.join ""
@@ -506,7 +481,12 @@ class FilterHints
         @labelMap[forElement] = labelText
 
   generateHintString: (linkHintNumber) ->
-    numberToHintString linkHintNumber, @linkHintNumbers.toUpperCase()
+    base = @linkHintNumbers.length
+    hint = []
+    while 0 < linkHintNumber
+      hint.push @linkHintNumbers[Math.floor linkHintNumber % base]
+      linkHintNumber = Math.floor linkHintNumber / base
+    hint.reverse().join ""
 
   generateLinkText: (element) ->
     linkText = ""
@@ -637,29 +617,6 @@ spanWrap = (hintString) ->
   for char in hintString
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
-
-#
-# Converts a number like "8" into a hint string like "JK". This is used to sequentially generate all of the
-# hint text. The hint string will be "padded with zeroes" to ensure its length is >= numHintDigits.
-#
-numberToHintString = (number, characterSet, numHintDigits = 0) ->
-  base = characterSet.length
-  hintString = []
-  remainder = 0
-  loop
-    remainder = number % base
-    hintString.unshift(characterSet[remainder])
-    number -= remainder
-    number /= Math.floor(base)
-    break unless number > 0
-
-  # Pad the hint string we're returning so that it matches numHintDigits.
-  # Note: the loop body changes hintString.length, so the original length must be cached!
-  hintStringLength = hintString.length
-  for i in [0...(numHintDigits - hintStringLength)] by 1
-    hintString.unshift(characterSet[0])
-
-  hintString.join("")
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
