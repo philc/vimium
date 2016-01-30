@@ -217,7 +217,6 @@ window.addEventListener "hashchange", onFocus
 initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
   chrome.runtime.connect({ name: "domReady" })
-  CursorHider.init()
   # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
   Vomnibar.init() if DomUtils.isTopFrame()
   HUD.init()
@@ -835,40 +834,6 @@ toggleHelpDialog = (html, fid) ->
     hideHelpDialog()
   else
     showHelpDialog(html, fid)
-
-CursorHider =
-  #
-  # Hide the cursor when the browser scrolls, and prevent mouse from hovering while invisible.
-  #
-  cursorHideStyle: null
-  isScrolling: false
-
-  onScroll: (event) ->
-    CursorHider.isScrolling = true
-    unless CursorHider.cursorHideStyle.parentElement
-      document.head.appendChild CursorHider.cursorHideStyle
-
-  onMouseMove: (event) ->
-    if CursorHider.cursorHideStyle.parentElement and not CursorHider.isScrolling
-      CursorHider.cursorHideStyle.remove()
-    CursorHider.isScrolling = false
-
-  init: ->
-    # Temporarily disabled pending consideration of #1359 (in particular, whether cursor hiding is too fragile
-    # as to provide a consistent UX).
-    return
-
-    # Disable cursor hiding for Chrome versions less than 39.0.2171.71 due to a suspected browser error.
-    # See #1345 and #1348.
-    return unless Utils.haveChromeVersion "39.0.2171.71"
-
-    @cursorHideStyle = DomUtils.createElement "style"
-    @cursorHideStyle.innerHTML = """
-      body * {pointer-events: none !important; cursor: none !important;}
-      body, html {cursor: none !important;}
-    """
-    window.addEventListener "mousemove", @onMouseMove
-    window.addEventListener "scroll", @onScroll
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
