@@ -96,6 +96,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   # Ensure the sendResponse callback is freed.
   return false)
 
+logMessage = (message) ->
+  for viewWindow in chrome.extension.getViews {type: "tab"}
+    if viewWindow.location.pathname == "/pages/logging.html"
+      viewWindow.document.getElementById("log-text").value += "#{(new Date()).toISOString()}: #{message}\n"
+
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
 # because window.location doesn't know anything about the Chrome-specific "view-source:".
@@ -513,12 +518,12 @@ splitKeyQueue = (queue) ->
 handleKeyDown = (request, port) ->
   key = request.keyChar
   if (key == "<ESC>")
-    console.log("clearing keyQueue")
+    logMessage "clearing keyQueue"
     keyQueue = ""
   else
-    console.log("checking keyQueue: [", keyQueue + key, "]")
+    logMessage "checking keyQueue: [#{keyQueue + key}]"
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    console.log("new KeyQueue: " + keyQueue)
+    logMessage "new KeyQueue: #{keyQueue}"
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
