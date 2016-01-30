@@ -139,7 +139,8 @@ Commands =
       "moveTabLeft",
       "moveTabRight"]
     misc:
-      ["showHelp"]
+      ["closeWindow",
+      "showHelp"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
@@ -227,6 +228,8 @@ defaultKeyMappings =
   "yt": "duplicateTab"
   "x": "removeTab"
   "X": "restoreTab"
+
+  ":q": "closeWindow"
 
   "<a-p>": "togglePinTab"
 
@@ -318,6 +321,8 @@ commandDescriptions =
     # Require confirmation to remove more tabs than we can restore.
     (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
+
+  closeWindow: ["Close the current window", { background: true, repeatLimit: 20 }]
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
