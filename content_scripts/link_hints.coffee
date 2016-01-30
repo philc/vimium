@@ -70,7 +70,6 @@ class LinkHintsMode
       suppressTrailingKeyEvents: true
       exitOnEscape: true
       exitOnClick: true
-      exitOnScroll: true
       keydown: @onKeyDownInMode.bind this, hintMarkers
       keypress: @onKeyPressInMode.bind this, hintMarkers
 
