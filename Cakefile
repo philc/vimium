@@ -55,6 +55,7 @@ task "dev-build", "compile all coffeescript files and add git information", ->
     branchDone and commitDone and appendToOptionsPage """
       branchName = #{currentBranch}
       commitData = #{commitSummary}
+      buildDate = "#{(new Date()).toISOString()}"
     """
 
   spawn = child_process.spawn "git", ["rev-parse", "--abbrev-ref", "HEAD"]
