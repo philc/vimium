@@ -18,11 +18,13 @@ Vomnibar =
       newTab: false
       selectFirst: false
       keyword: null
+      userDefinedStyles: ""
+
     extend options, userOptions
     extend options, refreshInterval: if options.completer == "omni" then 150 else 0
 
     completer = @getCompleter options.completer
-    @vomnibarUI ?= new VomnibarUI()
+    @vomnibarUI ?= new VomnibarUI(options.userDefinedStyles)
     completer.refresh @vomnibarUI
     @vomnibarUI.setInitialSelectionValue if options.selectFirst then 0 else -1
     @vomnibarUI.setCompleter completer
@@ -36,7 +38,8 @@ Vomnibar =
   onHidden: -> @vomnibarUI?.onHidden()
 
 class VomnibarUI
-  constructor: ->
+  constructor: (userDefinedStyles) ->
+    @userDefinedStyles = userDefinedStyles
     @refreshInterval = 0
     @postHideCallback = null
     @initDom()
@@ -245,6 +248,12 @@ class VomnibarUI
     @input.focus()
 
   initDom: ->
+
+    styles = DomUtils.createElement "style"
+    styles.type = "text/css"
+    styles.innerHTML = @userDefinedStyles
+    document.getElementsByTagName("head")[0].appendChild styles
+
     @box = document.getElementById("vomnibar")
 
     @input = @box.querySelector("input")

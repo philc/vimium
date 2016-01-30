@@ -3,6 +3,7 @@
 #
 Vomnibar =
   vomnibarUI: null
+  overlay: null
 
   # Parse any additional options from the command's registry entry.  Currently, this only includes a flag of
   # the form "keyword=X", for direct activation of a custom search engine.
@@ -21,6 +22,7 @@ Vomnibar =
           else
               console.log "Vimium configuration error: unused flag: #{option}."
 
+      options.userDefinedStyles = Settings.get("userDefinedVomnibarCss")
       callback? options
 
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
@@ -61,7 +63,7 @@ Vomnibar =
 
   init: ->
     unless @vomnibarUI?
-      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", (event) =>
+      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", true && Settings.get("overlayBehindVomnibar"), (event) =>
         @vomnibarUI.hide() if event.data == "hide"
       # Whenever the window receives the focus, we tell the Vomnibar UI that it has been hidden (regardless of
       # whether it was previously visible).

@@ -5,8 +5,12 @@ class UIComponent
   options: null
   shadowDOM: null
   styleSheetGetter: null
+  overlayEnabled: false
+  overlay: null
 
-  constructor: (iframeUrl, className, @handleMessage) ->
+  constructor: (iframeUrl, className, overlayEnabled, @handleMessage) ->
+    @overlayEnabled = overlayEnabled
+
     styleSheet = DomUtils.createElement "style"
     styleSheet.type = "text/css"
     # Default to everything hidden while the stylesheet loads.
@@ -17,6 +21,8 @@ class UIComponent
     UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchFileContents "content_scripts/vimium.css"
     @styleSheetGetter.use (styles) -> styleSheet.innerHTML = styles
 
+
+    @className = className
     @iframeElement = DomUtils.createElement "iframe"
     extend @iframeElement,
       className: className
@@ -68,6 +74,7 @@ class UIComponent
       @iframeElement.focus()
 
   show: (message) ->
+    @showOverlay() if @overlayEnabled
     @postMessage message, =>
       @iframeElement.classList.remove "vimiumUIComponentHidden"
       @iframeElement.classList.add "vimiumUIComponentVisible"
@@ -82,6 +89,7 @@ class UIComponent
       @showing = true
 
   hide: (focusWindow = true)->
+    @hideOverlay()
     @refocusSourceFrame @options?.sourceFrameId if focusWindow
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
@@ -90,6 +98,18 @@ class UIComponent
     @options = null
     @showing = false
 
+  showOverlay: ->
+    unless @overlay?
+      @overlay = document.createElement 'div'
+      @overlay.className = 'vomnibarBackgroundOverlay'
+      document.body.insertBefore(@overlay, document.body.firstChild)
+      #document.body.appendChild @overlay
+    else
+      @overlay.style.display = "block"
+
+  hideOverlay: ->
+    if @overlay?
+      @overlay.style.display = "none"
   # Refocus the frame from which the UI component was opened.  This may be different from the current frame.
   # After hiding the UI component, Chrome refocuses the containing frame. To avoid a race condition, we need
   # to wait until that frame first receives the focus, before then focusing the frame which should now have

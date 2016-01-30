@@ -112,7 +112,7 @@ input#scrollStepSize {
   margin-right: 3px;
   padding-left: 3px;
 }
-textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
+textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines, textarea#userDefinedVomnibarCss, textarea#userDefinedVomnibarOverlayCss {
   width: 100%;;
   min-height: 140px;
   white-space: nowrap;
