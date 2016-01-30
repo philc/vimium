@@ -58,6 +58,11 @@ class LinkHintsMode
       # ancestors.
       length = (el) -> el.element.innerHTML?.length ? 0
       elements.sort (a,b) -> length(a) - length b
+
+    if elements.length == 0
+      HUD.showForDuration "No links to select.", 2000
+      return
+
     hintMarkers = (@createMarkerFor(el) for el in elements)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
     @markerMatcher.fillInMarkers hintMarkers
