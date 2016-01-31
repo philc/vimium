@@ -21,7 +21,9 @@ DOWNLOAD_LINK_URL = name: "download"
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
     if 0 < count
-      new LinkHintsMode mode, -> LinkHints.activateMode count-1, mode
+      new LinkHintsMode mode, (event = null) ->
+        unless event?.type == "keydown" and KeyboardUtils.isEscape event
+          LinkHints.activateMode count-1, mode
 
   activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
