@@ -594,7 +594,8 @@ class FilterHints
   scoreLinkHint: (linkSearchString) ->
     searchWords = linkSearchString.trim().split /\s+/
     (linkMarker) ->
-      linkWords = linkMarker.linkWords ?= linkMarker.linkText.trim().toLowerCase().split /\s+/
+      text = linkMarker.linkText.trim()
+      linkWords = linkMarker.linkWords ?= text.toLowerCase().split /\s+/
 
       searchWordScores =
         for searchWord in searchWords
@@ -610,8 +611,14 @@ class FilterHints
                 0
           Math.max linkWordScores...
 
-      addFunc = (a,b) -> a + b
-      if 0 in searchWordScores then 0 else searchWordScores.reduce addFunc, 0
+      if 0 in searchWordScores
+        0
+      else
+        addFunc = (a,b) -> a + b
+        score = searchWordScores.reduce addFunc, 0
+        # Prefer matches in shorter texts.  To keep things balanced for links without any text, we just weight
+        # them as if their length was 50.
+        score / Math.log(text.length || 50)
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
