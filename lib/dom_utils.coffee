@@ -235,21 +235,27 @@ DomUtils =
             element.setSelectionRange element.value.length, element.value.length
 
 
+  # From @mrmr1993: https://github.com/philc/vimium/pull/1032.
+  simulateHover: (element, modifiers) ->
+    @simulateMouseEvent("mouseover", element, modifiers)
+
+  simulateUnhover: (element, modifiers) ->
+    @simulateMouseEvent("mouseout", element, modifiers)
 
   simulateClick: (element, modifiers) ->
-    modifiers ||= {}
-
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
-    for event in eventSequence
-      mouseEvent = document.createEvent("MouseEvents")
-      mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
-      modifiers.shiftKey, modifiers.metaKey, 0, null)
-      # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
-      # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
-      element.dispatchEvent(mouseEvent)
+    @simulateMouseEvent event, element, modifiers for event in eventSequence
 
-  # momentarily flash a rectangular border to give user some visual feedback
-  flashRect: (rect) ->
+  simulateMouseEvent: (event, element, modifiers) ->
+    modifiers ||= {}
+    mouseEvent = document.createEvent("MouseEvents")
+    mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
+    modifiers.shiftKey, modifiers.metaKey, 0, null)
+    # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
+    # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
+    element.dispatchEvent(mouseEvent)
+
+  addFlashRect: (rect) ->
     flashEl = @createElement "div"
     flashEl.id = "vimiumFlash"
     flashEl.className = "vimiumReset"
@@ -257,7 +263,12 @@ DomUtils =
     flashEl.style.top = rect.top  + window.scrollY  + "px"
     flashEl.style.width = rect.width + "px"
     flashEl.style.height = rect.height + "px"
-    document.documentElement.appendChild(flashEl)
+    document.documentElement.appendChild flashEl
+    flashEl
+
+  # momentarily flash a rectangular border to give user some visual feedback
+  flashRect: (rect) ->
+    flashEl = @addFlashRect rect
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 
   suppressPropagation: (event) ->

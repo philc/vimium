@@ -94,6 +94,54 @@ div > .vimiumActiveHintMarker span {
   color: #A07555 !important;
 }
 
+div.vimiumHintContextMenu {
+  position: absolute;
+  display: block;
+  top: -1px;
+  left: -1px;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 1px 3px 0px 3px;
+  background: #dcdcdc;
+  border: solid 0px #dcdcdc;
+  border-radius: 0px;
+  box-shadow: 0px 3px 7px 0px rgba(0, 0, 0, 0.3);
+  width: 200px;
+  padding-top: 10px;
+}
+
+div.vimiumHintContextMenu > ul {
+  list-style-type: none;
+  list-style: none;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 0px;
+  padding-bottom: 7px;
+}
+
+div.vimiumHintContextMenu > ul > li {
+  color: #000000;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  font-size: 14px;
+  padding-top: 7px;
+  padding-bottom: 0px;
+}
+
+.vimiumHintContextMenuKey {
+  float: right;
+  color: #888888;
+  width: 10px;
+  text-align: center;
+}
+
+.vimiumHintContextMenuHR {
+  width: 100%;
+  border-top: 1px solid #777777;
+  margin-top: 12px;
+  padding-bottom: 0px;
+}
+
 /* Input hints CSS */
 
 div.internalVimiumInputHint {
