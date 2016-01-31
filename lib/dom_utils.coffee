@@ -116,6 +116,18 @@ DomUtils =
     null
 
   #
+  # Returns the smallest rectangle which encloses element.  Assumes that there is at least one rectangle.
+  #
+  getBoundingClientRect: (element) ->
+    [clientRect, rects...] = element.getClientRects()
+    for rect in rects
+      clientRect.top = Math.min clientRect.top, rect.top
+      clientRect.bottom = Math.max clientRect.bottom, rect.bottom
+      clientRect.left = Math.min clientRect.left, rect.left
+      clientRect.right = Math.max clientRect.right, rect.right
+    extend clientRect, width: clientRect.right - clientRect.left, height: clientRect.bottom - clientRect.top
+
+  #
   # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a height or width < 3
   # then null is returned instead of a rect.
   #
