@@ -94,6 +94,10 @@ div > .vimiumActiveHintMarker span {
   color: #A07555 !important;
 }
 
+#vimiumContextMenu {
+  z-index: 2147483647;
+}
+
 div.vimiumHintContextMenu {
   position: absolute;
   display: block;

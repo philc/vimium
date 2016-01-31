@@ -768,8 +768,10 @@ class ContextMenuMode extends Mode
            <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span></li>"
     menuElement.innerHTML = "<ul>#{htmls.join ""}</ul>"
 
-    left = Math.min clientRect.left + window.scrollX + 50, window.innerWidth - 250
-    top = Math.min clientRect.top  + window.scrollY  + 0, window.innerHeight - 130
+    # FIXME(smblott) It would be better to wait until the menu has been rendered and only *then* (once we know
+    # the actual width and height) calculate the position.
+    left = Math.min clientRect.left + window.scrollX + 50, window.scrollX + window.innerWidth - 230
+    top = Math.min clientRect.top + window.scrollY, window.scrollY + window.innerHeight - 300
 
     menuElement.style.left = left + "px"
     menuElement.style.top = top + "px"
