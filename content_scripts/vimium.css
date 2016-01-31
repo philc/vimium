@@ -116,9 +116,9 @@ div.vimiumHintContextMenu {
 div.vimiumHintContextMenu > ul {
   list-style-type: none;
   list-style: none;
+  margin-bottom: 0px;
   padding-left: 5px;
   padding-right: 5px;
-  margin-bottom: 0px;
 }
 
 div.vimiumHintContextMenu > ul > li {
@@ -134,10 +134,11 @@ div.vimiumHintContextMenu > ul, div.vimiumHintContextMenu > ul > li {
 }
 
 .vimiumHintContextMenuKey {
-  float: right;
-  color: #888888;
-  width: 10px;
-  text-align: center;
+  color:#2f508e; /* Matches blue of help page. */
+  float: left;
+  width: 20px;
+  font-weight: bold;
+  font-size: 15px;
 }
 
 .vimiumHintContextMenuHR {

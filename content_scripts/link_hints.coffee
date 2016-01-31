@@ -759,11 +759,13 @@ class ContextMenuMode extends Mode
             # If there's no link text, then don't include menu entries which require it.
             ""
           else
-            "<li><span class=\"vimiumHintContextMenuText\">#{entry.text}</span>
-             <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span></li>"
+            "<li><span class=\"vimiumHintContextMenuItem\">
+              <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span>
+              <span class=\"vimiumHintContextMenuText\">#{entry.text}</span>
+             </span></li>"
 
     menuGroupHTMLs = (group.join "" for group in menuEntries)
-    menuHTML = menuGroupHTMLs.join "<hr class=\"vimiumHintContextMenuHR\"/>"
+    menuHTML = menuGroupHTMLs.join "<li><hr class=\"vimiumHintContextMenuHR\"/></li>"
     menuElement.innerHTML = "<ul>#{menuHTML}</ul>"
 
     # FIXME(smblott) It would be better to wait until the menu has been rendered and only *then* (once we know
