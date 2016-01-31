@@ -4,13 +4,12 @@
 # - VisualMode
 # - VisualLineMode
 # - CaretMode
-# - EditMode (experimental)
 #
 # SuppressPrintable and CountPrefix are shared utility base classes.
 # Movement is a shared vim-like movement base class.
 #
 # The class inheritance hierarchy is:
-# - Mode, SuppressPrintable, CountPrefix, Movement, [ VisualMode | CaretMode | EditMode ]
+# - Mode, SuppressPrintable, CountPrefix, Movement, [ VisualMode | CaretMode ]
 # - Mode, SuppressPrintable, CountPrefix, Movement, VisualMode, VisualLineMode
 #
 # The possible mode states are:
@@ -20,10 +19,6 @@
 # - ..., VisualMode, FindMode
 # - ..., VisualLineMode, FindMode
 # - ..., CaretMode, FindMode
-# - ..., EditMode
-# - ..., EditMode, InsertMode
-# - ..., EditMode, VisualMode
-# - ..., EditMode, VisualLineMode
 #
 
 # This prevents printable characters from being passed through to underlying modes or the underlying page.
@@ -44,8 +39,7 @@ class SuppressPrintable extends Mode
 class CountPrefix extends SuppressPrintable
   constructor: (options) ->
     @countPrefix = ""
-    # This is an initial multiplier for the first count.  It allows edit mode to implement both "d3w" and
-    # "3dw". Also, "3d2w" deletes six words.
+    # This is an initial multiplier for the first count.
     @countPrefixFactor = options.initialCountPrefix || 1
     super options
 
@@ -93,10 +87,9 @@ class Movement extends CountPrefix
     # disable copy so that subsequent copies do not propagate.
     @copy = (->) if isFinalUserCopy
 
-  # This s used whenever manipulating the selection may, as a side effect, change the clipboard's contents.
+  # This is used whenever manipulating the selection may, as a side effect, change the clipboard's contents.
   # We restore the original clipboard contents when we're done. May be asynchronous.  We use a lock so that
-  # calls can be nested.  We do this primarily for edit mode, where the user does not expect caret movements
-  # to change the clipboard contents.
+  # calls can be nested.
   protectClipboard: do ->
     locked = false
 
@@ -111,10 +104,7 @@ class Movement extends CountPrefix
   # mode with visual-line mode.
   changeMode: (mode, options = {}) ->
     @exit()
-    if @options.parentMode
-      @options.parentMode.launchSubMode mode, options
-    else
-      new mode options
+    new mode options
 
   # Return the character following (to the right of) the focus, and leave the selection unchanged.  Returns
   # undefined if no such character exists.
@@ -287,20 +277,6 @@ class Movement extends CountPrefix
       when "function" then @movements[keyChar].call @, count
     @scrollIntoView()
 
-  # The bahavior of Movement can be tweaked by setting the following options:
-  #   - options.parentMode (a mode)
-  #     This instance is a sub-mode of another mode (currently, only edit mode).
-  #   - options.oneMovementOnly (truthy/falsy)
-  #     This instance is created for one movement only, after which it yanks and exits.
-  #   - options.immediateMovement (a keyChar string)
-  #     This instance is created for one movement only, and this options specifies the movement (e.g. "j").
-  #   - options.deleteFromDocument (truthy/falsy)
-  #     When yanking text, also delete it from the document.
-  #   - options.onYank (a function)
-  #     When yanking text, also call this function, passing the yanked text as an argument.
-  #   - options.noCopyToClipboard (truthy/falsy)
-  #     If truthy, then do not copy the yanked text to the clipboard when yanking.
-  #
   constructor: (options) ->
     @selection = window.getSelection()
     @movements = extend {}, @movements
@@ -312,13 +288,8 @@ class Movement extends CountPrefix
     @movements.B = @movements.b
     @movements.W = @movements.w
 
-    if @options.immediateMovement
-      # This instance has been created to execute a single, given movement.
-      @runMovementKeyChar @options.immediateMovement, @getCountPrefix()
-      return
-
     # This is the main keyboard-event handler for movements and commands for all user modes (visual,
-    # visual-line, caret and edit).
+    # visual-line and caret).
     @push
       _name: "#{@id}/keypress"
       keypress: (event) =>
@@ -346,27 +317,24 @@ class Movement extends CountPrefix
 
         @continueBubbling
 
-    # Install basic bindings for find mode, "n" and "N".  We do not install these bindings if this is a
-    # sub-mode of edit mode (because we cannot guarantee that the selection will remain within the active
-    # element), or if this instance has been created to execute only a single movement.
-    unless @options.parentMode or options.oneMovementOnly
-      do =>
-        doFind = (count, backwards) =>
-          initialRange = @selection.getRangeAt(0).cloneRange()
-          for [0...count] by 1
-            unless FindMode.execute null, {colorSelection: false, backwards}
-              @setSelectionRange initialRange
-              HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
-              return
-          # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
-          # drop back into visual mode.
-          @changeMode VisualMode if @name == "caret" and 0 < @selection.toString().length
+    # Install basic bindings for find mode, "n" and "N".
+    do =>
+      doFind = (count, backwards) =>
+        initialRange = @selection.getRangeAt(0).cloneRange()
+        for [0...count] by 1
+          unless FindMode.execute null, {colorSelection: false, backwards}
+            @setSelectionRange initialRange
+            HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
+            return
+        # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
+        # drop back into visual mode.
+        @changeMode VisualMode if @name == "caret" and 0 < @selection.toString().length
 
-        @movements.n = (count) -> doFind count, false
-        @movements.N = (count) -> doFind count, true
-        @movements["/"] = ->
-          @findMode = new FindMode returnToViewport: true
-          @findMode.onExit => @changeMode VisualMode
+      @movements.n = (count) -> doFind count, false
+      @movements.N = (count) -> doFind count, true
+      @movements["/"] = ->
+        @findMode = new FindMode returnToViewport: true
+        @findMode.onExit => @changeMode VisualMode
     #
     # End of Movement constructor.
 
@@ -374,41 +342,18 @@ class Movement extends CountPrefix
   # it.
   yank: (args = {}) ->
     @yankedText = @selection.toString()
-    if @options.deleteFromDocument or args.deleteFromDocument
-      @selection.deleteFromDocument()
-    else
-      @selection.collapseToStart()
+    @selection.collapseToStart()
 
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length
     plural = if @yankedText.length == 1 then "" else "s"
 
-    @options.onYank?.call @, @yankedText
     @exit()
     HUD.showForDuration "Yanked #{@yankedText.length} character#{plural}: \"#{message}\".", 2500
     @yankedText
 
   exit: (event, target) ->
-    unless @options.parentMode or @options.oneMovementOnly
-      @selection.collapseToStart() if event?.type == "keydown" and KeyboardUtils.isEscape event
-
-      # Disabled, pending discussion of fine-tuning the UX.  Simpler alternative is implemented above.
-      # # If we're exiting on escape and there is a range selection, then we leave it in place.  However, an
-      # # immediately-following Escape clears the selection.  See #1441.
-      # if @selection.type == "Range" and event?.type == "keydown" and KeyboardUtils.isEscape event
-      #   handlerStack.push
-      #     _name: "visual/range/escape"
-      #     click: -> handlerStack.remove(); @continueBubbling
-      #     focus: -> handlerStack.remove(); @continueBubbling
-      #     keydown: (event) =>
-      #       handlerStack.remove()
-      #       if @selection.type == "Range" and event.type == "keydown" and KeyboardUtils.isEscape event
-      #         @collapseSelectionToFocus()
-      #         DomUtils.suppressKeyupAfterEscape handlerStack
-      #         @suppressEvent
-      #       else
-      #         @continueBubbling
-
+    @selection.collapseToStart() if event?.type == "keydown" and KeyboardUtils.isEscape event
     super event, target
 
   # For "daw", "das", and so on.  We select a lexical entity (a word, a sentence or a paragraph).
@@ -450,11 +395,7 @@ class Movement extends CountPrefix
       if @element and DomUtils.isEditable @element
         if @element.clientHeight < @element.scrollHeight
           if @element.isContentEditable
-            # WIP (edit mode only)...
             elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
-            # position = @element.getClientRects()[0].top - elementWithFocus.getClientRects()[0].top
-            # console.log "top", position
-            # Scroller.scrollToPosition @element, position, 0
             position = elementWithFocus.getClientRects()[0].bottom - @element.getClientRects()[0].top - @element.clientHeight + @element.scrollTop
             Scroller.scrollToPosition @element, position, 0
           else
@@ -478,29 +419,24 @@ class VisualMode extends Movement
     super extend defaults, options
 
     # Establish or use the initial selection.  If that's not possible, then enter caret mode.
-    unless @options.oneMovementOnly or options.immediateMovement
-      if @options.parentMode and @selection.type == "Caret"
-        # We're being called from edit mode, so establish an intial visible selection.
-        @extendByOneCharacter(forward) or @extendByOneCharacter backward
+    if @selection.type in [ "Caret", "Range" ]
+      selectionRect = @selection.getRangeAt(0).getBoundingClientRect()
+      selectionRect = Rect.intersect selectionRect, (Rect.create 0, 0, window.innerWidth,
+          window.innerHeight)
+      if selectionRect.height >= 0 and selectionRect.width >= 0
+        # The selection is visible in the current viewport.
+        if @selection.type == "Caret"
+          # The caret is in the viewport. Make make it visible.
+          @extendByOneCharacter(forward) or @extendByOneCharacter backward
       else
-        if @selection.type in [ "Caret", "Range" ]
-          selectionRect = @selection.getRangeAt(0).getBoundingClientRect()
-          selectionRect = Rect.intersect selectionRect, (Rect.create 0, 0, window.innerWidth,
-              window.innerHeight)
-          if selectionRect.height >= 0 and selectionRect.width >= 0
-            # The selection is visible in the current viewport.
-            if @selection.type == "Caret"
-              # The caret is in the viewport. Make make it visible.
-              @extendByOneCharacter(forward) or @extendByOneCharacter backward
-          else
-            # The selection is outside of the viewport: clear it.  We guess that the user has moved on, and is
-            # more likely to be interested in visible content.
-            @selection.removeAllRanges()
+        # The selection is outside of the viewport: clear it.  We guess that the user has moved on, and is
+        # more likely to be interested in visible content.
+        @selection.removeAllRanges()
 
-        if @selection.type != "Range"
-          @changeMode CaretMode
-          HUD.showForDuration "No usable selection, entering caret mode...", 2500
-          return
+    if @selection.type != "Range"
+      @changeMode CaretMode
+      HUD.showForDuration "No usable selection, entering caret mode...", 2500
+      return
 
     @push
       _name: "#{@id}/enter/click"
@@ -514,60 +450,29 @@ class VisualMode extends Movement
       # Click in a focusable element exits.
       click: (event) =>
         @alwaysContinueBubbling =>
-          unless @options.parentMode
-            @exit event, event.target if DomUtils.isFocusable event.target
+          @exit event, event.target if DomUtils.isFocusable event.target
 
     # Visual-mode commands.
-    unless @options.oneMovementOnly
-      @commands.y = -> @yank()
-      @commands.p = -> chrome.runtime.sendMessage handler: "openUrlInCurrentTab", url: @yank()
-      @commands.P = -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
-      @commands.V = -> @changeMode VisualLineMode
-      @commands.c = -> @collapseSelectionToFocus(); @changeMode CaretMode
-      @commands.o = -> @reverseSelection()
+    @commands.y = -> @yank()
+    @commands.p = -> chrome.runtime.sendMessage handler: "openUrlInCurrentTab", url: @yank()
+    @commands.P = -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
+    @commands.V = -> @changeMode VisualLineMode
+    @commands.c = -> @collapseSelectionToFocus(); @changeMode CaretMode
+    @commands.o = -> @reverseSelection()
 
-      # Additional commands when run under edit mode.
-      if @options.parentMode
-          @commands.x = -> @yank deleteFromDocument: true
-          @commands.d = -> @yank deleteFromDocument: true
-          @commands.c = -> @yank deleteFromDocument: true; @options.parentMode.enterInsertMode()
-
-    # For edit mode's "yy" and "dd".
-    if @options.yankLineCharacter
-      @commands[@options.yankLineCharacter] = (count) ->
-        @selectLine count; @yank()
-
-    # For edit mode's "daw", "cas", and so on.
-    if @options.oneMovementOnly
-      @commands.a = (count) ->
-        for entity in [ word, sentence, paragraph ]
-          do (entity) =>
-            @commands[entity.charAt 0] = ->
-              @selectLexicalEntity entity, count; @yank()
     #
     # End of VisualMode constructor.
 
   exit: (event, target) ->
-    unless @options.parentMode
-      # Don't leave the user in insert mode just because they happen to have selected text within an input
-      # element.
-      if document.activeElement and DomUtils.isEditable document.activeElement
-        document.activeElement.blur() unless event?.type == "click"
-
-    if @options.parentMode
-      # E.g. when exiting visual mode under edit mode, we no longer want the selection.
-      @collapseSelectionToFocus()
+    # Don't leave the user in insert mode just because they happen to have selected text within an input
+    # element.
+    if document.activeElement and DomUtils.isEditable document.activeElement
+      document.activeElement.blur() unless event?.type == "click"
 
     super event, target
     if @yankedText?
-      unless @options.noCopyToClipboard
-        console.log "yank:", @yankedText if @debug
-        @copy @yankedText, true
-
-  # Call sub-class; then yank, if we've only been created for a single movement.
-  handleMovementKeyChar: (args...) ->
-    super args...
-    @yank() if @options.oneMovementOnly or @options.immediateMovement
+      console.log "yank:", @yankedText if @debug
+      @copy @yankedText, true
 
   selectLine: (count) ->
     @reverseSelection() if @getDirection() == forward
@@ -657,160 +562,6 @@ class CaretMode extends Movement
           return true
     false
 
-class EditMode extends Movement
-  constructor: (options = {}) ->
-    @alterMethod = "move"
-    @element = document.activeElement
-    return unless @element and DomUtils.isEditable @element
-
-    options.indicator = "Edit mode"
-    defaults =
-      name: "edit"
-      exitOnEscape: true
-      exitOnBlur: @element
-    super extend defaults, options
-
-    # Edit mode commands.
-    extend @commands,
-      i: -> @enterInsertMode()
-      a: -> @enterInsertMode()
-      I: -> @runMovement backward, lineboundary; @enterInsertMode()
-      A: -> @runMovement forward, lineboundary; @enterInsertMode()
-      o: -> @openLine forward
-      O: -> @openLine backward
-      p: -> @pasteClipboard forward
-      P: -> @pasteClipboard backward
-      v: -> @launchSubMode VisualMode
-      V: -> @launchSubMode VisualLineMode
-
-      Y: (count) -> @enterVisualModeForMovement count, immediateMovement: "Y"
-      x: (count) -> @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true, noCopyToClipboard: true
-      X: (count) -> @enterVisualModeForMovement count, immediateMovement: "h", deleteFromDocument: true, noCopyToClipboard: true
-      y: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "y"
-      d: (count) -> @enterVisualModeForMovement count, yankLineCharacter: "d", deleteFromDocument: true
-      c: (count) -> @enterVisualModeForMovement count, deleteFromDocument: true, onYank: => @enterInsertMode()
-
-      D: (count) -> @enterVisualModeForMovement 1, immediateMovement: "$", deleteFromDocument: true
-      C: (count) -> @enterVisualModeForMovement 1, immediateMovement: "$", deleteFromDocument: true, onYank: => @enterInsertMode()
-
-      '~': (count) -> @swapCase count, true
-      'g~': (count) -> @swapCase count, false
-
-      # Disabled.  Doesn't work reliably.
-      # J: (count) ->
-      #   for [0...count]
-      #     @runMovement forward, lineboundary
-      #     @enterVisualModeForMovement 1, immediateMovement: "w", deleteFromDocument: true, noCopyToClipboard: true
-      #     DomUtils.simulateTextEntry @element, " "
-
-      r: (count) ->
-        handlerStack.push
-          _name: "repeat-character"
-          keydown: (event) => DomUtils.suppressPropagation event; @stopBubblingAndFalse
-          keypress: (event) =>
-            handlerStack.remove()
-            keyChar = String.fromCharCode event.charCode
-            if keyChar.length == 1
-              @enterVisualModeForMovement count, immediateMovement: "l", deleteFromDocument: true, noCopyToClipboard: true
-              DomUtils.simulateTextEntry @element, [0...count].map(-> keyChar).join ""
-            @suppressEvent
-
-    # Disabled: potentially confusing.
-    # # If the input is empty, then enter insert mode immediately.
-    # unless @element.isContentEditable
-    #   if @element.value.trim() == ""
-    #     @enterInsertMode()
-    #     HUD.showForDuration "Input empty, entered insert mode directly.", 3500
-    #
-    # End of edit-mode constructor.
-
-  # For "~", "3~", "g~3w", "g~e", and so on.
-  swapCase: (count, immediate) ->
-    @enterVisualModeForMovement count,
-      immediateMovement: if immediate then "l" else null
-      deleteFromDocument: true
-      noCopyToClipboard: true
-      onYank: (text) =>
-        chars =
-          for char in text.split ""
-            if char == char.toLowerCase() then char.toUpperCase() else char.toLowerCase()
-        DomUtils.simulateTextEntry @element, chars.join ""
-
-  # For "p" and "P".
-  pasteClipboard: (direction) ->
-    @paste (text) =>
-      if text
-        # We use the following heuristic: if the text ends with a newline character, then it's a line-oriented
-        # paste, and should be pasted in at a line break.
-        if /\n$/.test text
-          @runMovement backward, lineboundary
-          @runMovement forward, line if direction == forward
-          DomUtils.simulateTextEntry @element, text
-          @runMovement backward, line
-        else
-          DomUtils.simulateTextEntry @element, text
-
-  # For "o" and "O".
-  openLine: (direction) ->
-    @runMovement direction, lineboundary
-    DomUtils.simulateTextEntry @element, "\n"
-    @runMovement backward, character if direction == backward
-    @enterInsertMode()
-
-  # This lanches a visual-mode instance for one movement only, (usually) yanks the resulting selected text,
-  # and (possibly) deletes it.
-  enterVisualModeForMovement: (count, options = {}) ->
-    @launchSubMode VisualMode, extend options,
-      initialCountPrefix: count
-      oneMovementOnly: true
-
-  enterInsertMode: () ->
-    @launchSubMode InsertMode,
-      exitOnEscape: true
-      targetElement: @options.targetElement
-
-  launchSubMode: (mode, options = {}) ->
-    @activeSubMode?.instance.exit()
-    @activeSubMode =
-      mode: mode
-      options: options
-      instance: new mode extend options, parentMode: @
-    @activeSubMode.instance.onExit => @activeSubMode = null
-
-  exit: (event, target) ->
-    super event, target
-
-    # Deactivate any active sub-mode. Any such mode will clear @activeSubMode on exit, so we grab a copy now.
-    activeSubMode = @activeSubMode
-    activeSubMode?.instance.exit()
-
-    if event?.type == "keydown" and KeyboardUtils.isEscape event
-      if target? and DomUtils.isDOMDescendant @element, target
-        @element.blur()
-
-    if event?.type == "blur"
-      # This instance of edit mode has now been entirely removed from the handler stack.  It is inactive.
-      # However, the user hasn't asked to leave edit mode, and may return.  For example, we get a blur event
-      # when we change tab.  Or, the user may be copying text with the mouse.   When the user does return,
-      # they expect to still be in edit mode.  We leave behind a "suspended-edit" mode which watches for focus
-      # events and activates a new edit-mode instance if required.
-      #
-      # How does this get cleaned up?  It's a bit tricky.  The suspended-edit mode remains active on the
-      # current input element indefinitely.  However, the only way to enter edit mode is via focusInput.  And
-      # all modes launched by focusInput on a particular input element share a singleton (the element itself).
-      # In addition, the new mode below shares the same singleton.  So any new insert-mode or edit-mode
-      # instance on this target element (the singleton) displaces any previously-active mode (including any
-      # suspended-edit mode).  PostFindMode shares the same singleton.
-      #
-      (new Mode name: "#{@id}-suspended", singleton: @options.singleton).push
-        _name: "suspended-edit/#{@id}/focus"
-        focus: (event) =>
-          @alwaysContinueBubbling =>
-            if event?.target == @options.targetElement
-              editMode = new EditMode Utils.copyObjectOmittingProperties @options, "keydown", "keypress", "keyup"
-              editMode.launchSubMode activeSubMode.mode, activeSubMode.options if activeSubMode
-
 root = exports ? window
 root.VisualMode = VisualMode
 root.VisualLineMode = VisualLineMode
-root.EditMode = EditMode
