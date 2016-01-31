@@ -710,7 +710,6 @@ class ContextMenuMode extends Mode
         metaKey: KeyboardUtils.platform == "Mac", ctrlKey: KeyboardUtils.platform != "Mac"
 
     openNewWindow = text: "Open in new window", key: "w", requireLink: true, handler: =>
-      # Not yet implemented.
       chrome.runtime.sendMessage handler: 'openUrlInNewWindow', url: link.href
 
     openIncognito = text: "Open incognito", key: "i", requireLink: true, handler: =>
@@ -752,19 +751,21 @@ class ContextMenuMode extends Mode
     menuEntries =
       for group in [openMenuEntries, yankMenuEntries, otherMenuEntries]
         for entry in group
-          if entry.requireLink and not link.href?
-            # If there's no href, then don't include menu entries which require one.
-            ""
-          else if entry.requireLinkText and not link.text?.trim().length
-            # If there's no link text, then don't include menu entries which require it.
-            ""
-          else
+          # If there's no href, then don't include menu entries which require one.
+          continue if entry.requireLink and not link.href?
+          # If there's no link text, then don't include menu entries which require it.
+          continue if entry.requireLinkText and not link.text?.trim().length
+          entry
+
+    menuGroupHTMLs =
+      for group in menuEntries
+        for entry in group
             "<li><span class=\"vimiumHintContextMenuItem\">
               <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span>
               <span class=\"vimiumHintContextMenuText\">#{entry.text}</span>
              </span></li>"
 
-    menuGroupHTMLs = (group.join "" for group in menuEntries)
+    menuGroupHTMLs = (group.join "" for group in menuGroupHTMLs)
     menuHTML = menuGroupHTMLs.join "<li><hr class=\"vimiumHintContextMenuHR\"/></li>"
     menuElement.innerHTML = "<ul>#{menuHTML}</ul>"
 
@@ -783,12 +784,11 @@ class ContextMenuMode extends Mode
       _name: "#{@id}/keypress"
       keypress: (event) =>
         key = String.fromCharCode(event.charCode).toLowerCase()
-        for entry in menuEntries
-          continue if entry == "hr"
-          continue if entry.requireLink and not link.href?
-          if entry.key == key
-            entry.handler()
-            @exit()
+        for group in menuEntries
+          for entry in group
+            if entry.key == key
+              entry.handler()
+              @exit()
         DomUtils.suppressEvent event
 
 root = exports ? window

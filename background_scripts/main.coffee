@@ -187,7 +187,7 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
 
-openUrlInNewWindow = (request, callback = (->)) ->
+openUrlInNewWindow = (request, sender, callback = (->)) ->
   chrome.tabs.query { active: true, currentWindow: true }, (tabs) ->
     chrome.windows.create { url: request.url, incognito: tabs[0].incognito }, callback
 
