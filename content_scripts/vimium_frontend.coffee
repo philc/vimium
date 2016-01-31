@@ -308,9 +308,9 @@ extend window,
   scrollToBottom: ->
     Marks.setPreviousPosition()
     Scroller.scrollTo "y", "max"
-  scrollToTop: ->
+  scrollToTop: (count) ->
     Marks.setPreviousPosition()
-    Scroller.scrollTo "y", 0
+    Scroller.scrollTo "y", (count - 1) * Settings.get("scrollStepSize")
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
   scrollUp: -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize")
