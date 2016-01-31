@@ -146,7 +146,8 @@ Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+s
 More documentation
 ------------------
 Many of the more advanced or involved features are documented on
-[Vimium's github wiki](https://github.com/philc/vimium/wiki). Also see the [FAQ](https://github.com/philc/vimium/wiki/FAQ).
+[Vimium's github wiki](https://github.com/philc/vimium/wiki). Also
+see the [FAQ](https://github.com/philc/vimium/wiki/FAQ).
 
 Contributing
 ------------
