@@ -13,7 +13,7 @@ Commands =
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options) ->
     if command of @availableCommands
-      console.log(command, "is already defined! Check commands.coffee for duplicates.")
+      logMessage? "#{command} is already defined! Check commands.coffee for duplicates."
       return
 
     options ||= {}
@@ -26,7 +26,7 @@ Commands =
 
   mapKeyToCommand: ({ key, command, options }) ->
     unless @availableCommands[command]
-      console.log command, "doesn't exist!"
+      logMessage? "#{command} doesn't exist!"
       return
 
     options ?= []
@@ -55,13 +55,13 @@ Commands =
             [ _, key, command, options... ] = tokens
             if command? and @availableCommands[command]
               key = @normalizeKey key
-              console.log "Mapping", key, "to", command
+              logMessage? "Mapping #{key} to #{command}"
               @mapKeyToCommand { key, command, options }
 
           when "unmap"
             if tokens.length == 2
               key = @normalizeKey tokens[1]
-              console.log "Unmapping", key
+              logMessage? "Unmapping #{key}"
               delete @keyToCommandRegistry[key]
 
           when "unmapAll"

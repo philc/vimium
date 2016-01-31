@@ -17,6 +17,7 @@ global.document =
 
 exports.chrome =
   runtime:
+    getURL: ->
     getManifest: () ->
       version: "1.2.3"
     onConnect:
