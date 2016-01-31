@@ -124,7 +124,7 @@ class LinkHintsMode
         DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
       @hintMode.setIndicator "Open link in current tab."
-      @linkActivator = (link) -> DomUtils.simulateClick.bind(DomUtils, link)()
+      @linkActivator = DomUtils.simulateClick.bind DomUtils
 
   #
   # Creates a link marker for the given link.

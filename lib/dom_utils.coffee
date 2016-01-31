@@ -234,13 +234,27 @@ DomUtils =
           if element.selectionStart == 0 and element.selectionEnd == 0
             element.setSelectionRange element.value.length, element.value.length
 
-
+  simulateUnhover: (element, modifiers) -> @simulateMouseEvent "mouseout", element, modifiers
 
   simulateClick: (element, modifiers) ->
-    modifiers ||= {}
-
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
+      @simulateMouseEvent event, element, modifiers
+
+  simulateMouseEvent: do ->
+    lastHoveredElement = undefined
+    (event, element, modifiers = {}) ->
+
+      if event == "mouseout"
+        element ?= lastHoveredElement # Allow unhovering the last hovered element by passing undefined.
+        lastHoveredElement = undefined
+        return unless element?
+
+      else if event == "mouseover"
+        # Simulate moving the mouse off the previous element first, as if we were a real mouse.
+        @simulateMouseEvent "mouseout", undefined, modifiers
+        lastHoveredElement = element
+
       mouseEvent = document.createEvent("MouseEvents")
       mouseEvent.initMouseEvent(event, true, true, window, 1, 0, 0, 0, 0, modifiers.ctrlKey, modifiers.altKey,
       modifiers.shiftKey, modifiers.metaKey, 0, null)
