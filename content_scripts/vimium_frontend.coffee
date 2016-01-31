@@ -369,9 +369,6 @@ extend window,
   enterVisualLineMode: ->
     new VisualLineMode
 
-  enterEditMode: ->
-    @focusInput 1, EditMode
-
   focusInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null
