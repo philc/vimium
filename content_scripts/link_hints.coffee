@@ -736,14 +736,6 @@ class ContextMenuMode extends Mode
       hoverMode.onExit -> DomUtils.simulateUnhover link
       DomUtils.simulateHover link
 
-    menuEntries = [
-      openCurrentTab, openNewTab, openBackground, openNewWindow, openIncognito
-      "hr"
-      yankURL, yankLinkText
-      "hr"
-      hover, downloadLink
-    ]
-
     clientRect = DomUtils.getVisibleClientRect link
 
     # We flash and hold the link while the menu is active.
@@ -753,20 +745,26 @@ class ContextMenuMode extends Mode
     menuElement = DomUtils.createElement "div"
     menuElement.className = "vimiumReset vimiumHintContextMenu"
 
-    htmls =
-      for entry in menuEntries
-        if entry == "hr"
-          "<hr class=\"vimiumHintContextMenuHR\"/>"
-        else if entry.requireLink and not link.href?
-          # If there's no href, then don't include menu entries which require one.
-          ""
-        else if entry.requireLinkText and not link.text?.trim().length
-          # If there's no link text, then don't include menu entries which require it.
-          ""
-        else
-          "<li><span class=\"vimiumHintContextMenuText\">#{entry.text}</span>
-           <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span></li>"
-    menuElement.innerHTML = "<ul>#{htmls.join ""}</ul>"
+    openMenuEntries = [openCurrentTab, openNewTab, openBackground, openNewWindow, openIncognito]
+    yankMenuEntries = [yankURL, yankLinkText]
+    otherMenuEntries = [hover, downloadLink]
+
+    menuEntries =
+      for group in [openMenuEntries, yankMenuEntries, otherMenuEntries]
+        for entry in group
+          if entry.requireLink and not link.href?
+            # If there's no href, then don't include menu entries which require one.
+            ""
+          else if entry.requireLinkText and not link.text?.trim().length
+            # If there's no link text, then don't include menu entries which require it.
+            ""
+          else
+            "<li><span class=\"vimiumHintContextMenuText\">#{entry.text}</span>
+             <span class=\"vimiumHintContextMenuKey\"n>#{entry.key}</span></li>"
+
+    menuGroupHTMLs = (group.join "" for group in menuEntries)
+    menuHTML = menuGroupHTMLs.join "<hr class=\"vimiumHintContextMenuHR\"/>"
+    menuElement.innerHTML = "<ul>#{menuHTML}</ul>"
 
     # FIXME(smblott) It would be better to wait until the menu has been rendered and only *then* (once we know
     # the actual width and height) calculate the position.
