@@ -308,6 +308,7 @@ window.focusThisFrame = ->
 extend window,
   scrollToBottom: ->
     Marks.setPreviousPosition()
+    Scroller.scrollTo "y", "max"
   scrollToTop: (count) ->
     Marks.setPreviousPosition()
     Scroller.scrollTo "y", (count - 1) * Settings.get("scrollStepSize")
