@@ -72,11 +72,12 @@ completionHandlers =
   refresh: (completer, _, port) -> completer.refresh port
   cancel: (completer, _, port) -> completer.cancel port
 
-handleCompletions = (request, port) ->
+handleCompletions = (sender) -> (request, port) ->
   completionHandlers[request.handler] completers[request.name], request, port
 
 chrome.runtime.onConnect.addListener (port, name) ->
-  senderTabId = if port.sender.tab then port.sender.tab.id else null
+  sender = port.sender
+  senderTabId = sender.tab?.id
   # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
   # the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
   # the scroll position will not be possible.
@@ -88,7 +89,7 @@ chrome.runtime.onConnect.addListener (port, name) ->
       toCall.call()
 
   if (portHandlers[port.name])
-    port.onMessage.addListener(portHandlers[port.name])
+    port.onMessage.addListener portHandlers[port.name] sender
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
@@ -96,10 +97,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   # Ensure the sendResponse callback is freed.
   return false)
 
-logMessage = (message) ->
-  for viewWindow in chrome.extension.getViews {type: "tab"}
-    if viewWindow.location.pathname == "/pages/logging.html"
-      viewWindow.document.getElementById("log-text").value += "#{(new Date()).toISOString()}: #{message}\n"
+# Log messages to the extension's logging page, but only if that page is open.
+logMessage = do ->
+  loggingPageUrl = chrome.runtime.getURL "pages/logging.html"
+  console.log "Vimium logging URL:\n  #{loggingPageUrl}" if loggingPageUrl? # Do not output URL for tests.
+  (message, sender = null) ->
+    for viewWindow in chrome.extension.getViews {type: "tab"}
+      if viewWindow.location.pathname == "/pages/logging.html"
+        # Don't log messages from the logging page itself.  We do this check late because most of the time
+        # it's not needed.
+        if sender?.url != loggingPageUrl
+          viewWindow.document.getElementById("log-text").value += "#{(new Date()).toISOString()}: #{message}\n"
 
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
@@ -515,15 +523,15 @@ splitKeyQueue = (queue) ->
 
   { count: count, command: command }
 
-handleKeyDown = (request, port) ->
+handleKeyDown = (sender) -> (request, port) ->
   key = request.keyChar
   if (key == "<ESC>")
-    logMessage "clearing keyQueue"
+    logMessage "clearing keyQueue", sender
     keyQueue = ""
   else
-    logMessage "checking keyQueue: [#{keyQueue + key}]"
+    logMessage "checking keyQueue: [#{keyQueue + key}]", sender
     keyQueue = checkKeyQueue(keyQueue + key, port.sender.tab.id, request.frameId)
-    logMessage "new KeyQueue: #{keyQueue}"
+    logMessage "new KeyQueue: #{keyQueue}", sender
   # Tell the content script whether there are keys in the queue.
   # FIXME: There is a race condition here.  The behaviour in the content script depends upon whether this message gets
   # back there before or after the next keystroke.
@@ -643,9 +651,9 @@ cycleToFrame = (frames, frameId, count = 0) ->
 sendMessageToFrames = (request, sender) ->
   chrome.tabs.sendMessage sender.tab.id, request.message
 
-# For debugging only. This allows content scripts to log messages to the background page's console.
+# For debugging only. This allows content scripts to log messages to the extension's logging page.
 bgLog = (request, sender) ->
-  console.log "#{sender.tab.id}/#{request.frameId}", request.message
+  logMessage "#{sender.tab.id}/#{request.frameId} #{request.message}", sender
 
 # Port handler mapping
 portHandlers =
@@ -746,3 +754,4 @@ chrome.windows.getAll { populate: true }, (windows) ->
 showUpgradeMessage()
 
 root.TabOperations = TabOperations
+root.logMessage = logMessage
