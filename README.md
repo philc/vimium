@@ -157,8 +157,9 @@ Release Notes
 -------------
 Next version (not yet released)
 
-- Bug fixes:
-    - Fix endless scrolling (#1911).
+1.54 (2016-01-30)
+
+- Fix occasional endless scrolling (#1911).
 
 1.53 (2015-09-25)
 
