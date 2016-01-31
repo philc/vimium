@@ -111,16 +111,14 @@ div.vimiumHintContextMenu {
   border-radius: 0px;
   box-shadow: 0px 3px 7px 0px rgba(0, 0, 0, 0.3);
   width: 200px;
-  padding-top: 10px;
 }
 
 div.vimiumHintContextMenu > ul {
   list-style-type: none;
   list-style: none;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 0px;
-  padding-bottom: 7px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-bottom: 0px;
 }
 
 div.vimiumHintContextMenu > ul > li {
@@ -128,8 +126,11 @@ div.vimiumHintContextMenu > ul > li {
   font-family: Helvetica, Arial, sans-serif;
   font-weight: normal;
   font-size: 14px;
-  padding-top: 7px;
-  padding-bottom: 0px;
+}
+
+div.vimiumHintContextMenu > ul, div.vimiumHintContextMenu > ul > li {
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .vimiumHintContextMenuKey {
@@ -141,8 +142,9 @@ div.vimiumHintContextMenu > ul > li {
 
 .vimiumHintContextMenuHR {
   width: 100%;
-  border-top: 1px solid #777777;
-  margin-top: 12px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding-top: 0px;
   padding-bottom: 0px;
 }
 
