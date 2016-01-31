@@ -19,14 +19,16 @@ OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
 
 LinkHints =
-  activateMode: (mode = OPEN_IN_CURRENT_TAB) -> new LinkHintsMode mode
+  activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
+    if 0 < count
+      new LinkHintsMode mode, -> LinkHints.activateMode count-1, mode
 
-  activateModeToOpenInNewTab: -> @activateMode OPEN_IN_NEW_BG_TAB
-  activateModeToOpenInNewForegroundTab: -> @activateMode OPEN_IN_NEW_FG_TAB
-  activateModeToCopyLinkUrl: -> @activateMode COPY_LINK_URL
-  activateModeWithQueue: -> @activateMode OPEN_WITH_QUEUE
-  activateModeToOpenIncognito: -> @activateMode OPEN_INCOGNITO
-  activateModeToDownloadLink: -> @activateMode DOWNLOAD_LINK_URL
+  activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
+  activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
+  activateModeToCopyLinkUrl: (count) -> @activateMode count, COPY_LINK_URL
+  activateModeWithQueue: -> @activateMode 1, OPEN_WITH_QUEUE
+  activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
+  activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -43,7 +45,7 @@ class LinkHintsMode
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (mode = OPEN_IN_CURRENT_TAB, onExit = (->)) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
     @isActive = true
@@ -80,6 +82,7 @@ class LinkHintsMode
 
     @hintMode.onExit =>
       @deactivateMode() if @isActive
+    @hintMode.onExit onExit
 
     @setOpenLinkMode mode
 
