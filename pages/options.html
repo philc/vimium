@@ -82,7 +82,7 @@ b: http://b.com/?q=%s description
               <input id="scrollStepSize" type="number" />px
             </td>
           </tr>
-          <tr>
+          <tr id="linkHintCharactersContainer">
             <td class="caption">Characters used<br/> for link hints</td>
             <td verticalAlign="top">
                 <div class="help">
@@ -94,7 +94,7 @@ b: http://b.com/?q=%s description
                 <div class="nonEmptyTextOption">
             </td>
           </tr>
-          <tr>
+          <tr id="linkHintNumbersContainer">
             <td class="caption">Numbers used<br/> for link hints</td>
             <td verticalAlign="top">
                 <div class="help">
@@ -126,6 +126,21 @@ b: http://b.com/?q=%s description
               <label>
                 <input id="filterLinkHints" type="checkbox"/>
                 Use the link's name and numbers for link-hint filtering
+              </label>
+            </td>
+          </tr>
+          <tr id="waitForEnterForFilteredHintsContainer">
+            <td class="caption"></td>
+            <td verticalAlign="top" class="booleanOption">
+              <div class="help">
+                <div class="example">
+                  You activate the link with <tt>Enter</tt>, <em>always</em>; so you never accidentally type Vimium
+                  commands.
+                </div>
+              </div>
+              <label>
+                <input id="waitForEnterForFilteredHints" type="checkbox"/>
+                Require <tt>Enter</tt> for filtered hints
               </label>
             </td>
           </tr>
