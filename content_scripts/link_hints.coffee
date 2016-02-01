@@ -22,8 +22,11 @@ LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
     if 0 < count
       new LinkHintsMode mode, (event = null) ->
-        unless event?.type == "keydown" and KeyboardUtils.isEscape event
-          LinkHints.activateMode count-1, mode
+        # Escape and Backspace are the two ways in which hints mode can exit following which we do no restart
+        # hints mode.
+        return if event?.type == "keydown" and KeyboardUtils.isEscape event
+        return if event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+        LinkHints.activateMode count-1, mode
 
   activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
@@ -328,7 +331,9 @@ class LinkHintsMode
       if @markerMatcher.popKeyChar()
         @updateVisibleMarkers hintMarkers
       else
-        @deactivateMode()
+        # Exit via @hintMode.exit(), so that the LinkHints.activate() "onExit" callback sees the key event and
+        # knows not to restart hints mode.
+        @hintMode.exit event
 
     else if event.keyCode == keyCodes.enter
       # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
