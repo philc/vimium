@@ -385,9 +385,8 @@ extend window,
       visibleInputs =
         for i in [0...resultSet.snapshotLength] by 1
           element = resultSet.snapshotItem i
-          rect = DomUtils.getVisibleClientRect element, true
-          continue if rect == null
-          { element: element, rect: rect }
+          continue unless DomUtils.getVisibleClientRect element, true
+          { element, rect: Rect.copy element.getBoundingClientRect() }
 
       if visibleInputs.length == 0
         HUD.showForDuration("There are no inputs to focus.", 1000)
