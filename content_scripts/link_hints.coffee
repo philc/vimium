@@ -375,8 +375,8 @@ class LinkHintsMode
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (matchedLink, delay = 0, waitForEnter = false) ->
-    clickEl = matchedLink.clickableItem
+  activateLink: (@matchedLink, delay = 0, waitForEnter = false) ->
+    clickEl = @matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
       @deactivateMode delay
@@ -392,9 +392,9 @@ class LinkHintsMode
       delay = 0 if waitForEnter
       @deactivateMode delay, =>
         if waitForEnter
-          new WaitForEnter matchedLink.rect, linkActivator
+          new WaitForEnter @matchedLink.rect, linkActivator
         else
-          DomUtils.flashRect matchedLink.rect
+          DomUtils.flashRect @matchedLink.rect
           linkActivator()
 
   #
@@ -425,7 +425,7 @@ class LinkHintsMode
     if delay
       # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
       # user from inadvertently launching Vimium commands when typing the link text.
-      new TypingProtector delay, ->
+      new TypingProtector delay, @matchedLink?.rect, ->
         deactivate()
         callback?()
     else
@@ -650,12 +650,12 @@ spanWrap = (hintString) ->
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
-  constructor: (delay, callback) ->
+  constructor: (delay, rect, callback) ->
     @timer = Utils.setTimeout delay, => @exit()
 
     handler = (event) =>
       clearTimeout @timer
-      @timer = Utils.setTimeout 150, => @exit()
+      @timer = Utils.setTimeout delay, => @exit()
 
     super
       name: "hint/typing-protector"
@@ -663,7 +663,14 @@ class TypingProtector extends Mode
       keydown: handler
       keypress: handler
 
+    if rect
+      # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
+      # has been selected.
+      flashEl = DomUtils.addFlashRect rect
+      @onExit -> DomUtils.removeElement flashEl
+
     @onExit callback
+
 
 class WaitForEnter extends Mode
   constructor: (rect, callback) ->
