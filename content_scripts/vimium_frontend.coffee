@@ -322,6 +322,9 @@ extend window,
   scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
   scrollLeft: -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize")
   scrollRight: -> Scroller.scrollBy "x", Settings.get("scrollStepSize")
+  scrollToPercent: (count) ->
+    Marks.setPreviousPosition()
+    Scroller.scrollTo "y", count * (document.body.clientHeight / 100)
 
 extend window,
   reload: -> window.location.reload()

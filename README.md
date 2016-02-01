@@ -33,6 +33,7 @@ Navigating the current page:
     j       scroll down
     k       scroll up
     l       scroll right
+    %       scroll to percent
     gg      scroll to top of the page
     G       scroll to bottom of the page
     d       scroll down half a page
