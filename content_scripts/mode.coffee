@@ -187,12 +187,12 @@ class Mode
   onExit: (handler) ->
     @exitHandlers.push handler
 
-  exit: ->
+  exit: (args...) ->
     if @modeIsActive
       @log "deactivate:", @id
       unless @modeIsExiting
         @modeIsExiting = true
-        handler() for handler in @exitHandlers
+        handler args... for handler in @exitHandlers
         handlerStack.remove handlerId for handlerId in @handlers
       Mode.modes = Mode.modes.filter (mode) => mode != @
       @modeIsActive = false
