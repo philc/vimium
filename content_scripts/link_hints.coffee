@@ -22,8 +22,8 @@ LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
     if 0 < count
       new LinkHintsMode mode, (event = null) ->
-        # Escape and Backspace are the two ways in which hints mode can exit following which we do no restart
-        # hints mode.
+        # This is called which LinkHintsMode exits.  Escape and Backspace are the two ways in which hints mode
+        # can exit following which we do not restart hints mode.
         return if event?.type == "keydown" and KeyboardUtils.isEscape event
         return if event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
         LinkHints.activateMode count-1, mode
