@@ -157,6 +157,10 @@ Release Notes
 -------------
 Next version (not yet released)
 
+- Link-hints modes now accept a `count` prefix; for example, use `3F` to open
+  three new background tabs.  Use `999F` to open *many* tabs.  Exit early with
+  `Escape.
+
 1.54 (2016-01-30)
 
 - Fix occasional endless scrolling (#1911).
