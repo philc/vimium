@@ -160,6 +160,8 @@ Next version (not yet released)
 - Link-hints modes now accept a `count` prefix; for example, use `3F` to open
   three new background tabs.  Use `999F` to open *many* tabs.  Exit early with
   `Escape`.
+- `gg` now accepts a `count` prefix.  It scrolls to an absolute position
+  measured from the top of the window (and a multiple of `scrollStepSize`).
 
 1.54 (2016-01-30)
 
