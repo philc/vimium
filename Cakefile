@@ -50,27 +50,19 @@ task "dev-build", "compile all coffeescript files and add git information", ->
   invoke "build"
 
   branchDone = commitDone = false
-  currentBranch = commitSummary = ""
-  tryAppendToOptionsPage = ->
-    branchDone and commitDone and writeBuildInfo """
-      branchName = #{currentBranch}
-      commitData = #{commitSummary}
-      buildDate = "#{(new Date()).toISOString()}"
-    """
+  commitSummary = ""
 
-  spawn = child_process.spawn "git", ["rev-parse", "--abbrev-ref", "HEAD"]
-  spawn.stdout.on "data", (data) -> currentBranch += data
-  spawn.on "close", (code) ->
-    currentBranch = JSON.stringify currentBranch
-    branchDone = true
-    tryAppendToOptionsPage()
+  spawn = child_process.spawnSync "git", ["rev-parse", "--abbrev-ref", "HEAD"]
+  currentBranch = JSON.stringify spawn.stdout.toString()
 
-  spawn = child_process.spawn "git", ["show", "--quiet", "HEAD"]
-  spawn.stdout.on "data", (data) -> commitSummary += data
-  spawn.on "close", (code) ->
-    commitSummary = JSON.stringify commitSummary
-    commitDone = true
-    tryAppendToOptionsPage()
+  spawn = child_process.spawnSync "git", ["show", "--quiet", "HEAD"]
+  commitSummary = JSON.stringify spawn.stdout.toString()
+
+  writeBuildInfo """
+    branchName = #{currentBranch}
+    commitData = #{commitSummary}
+    buildDate = "#{(new Date()).toISOString()}"
+  """
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   visitDirectory __dirname, (filepath) ->
