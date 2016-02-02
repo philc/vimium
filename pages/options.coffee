@@ -260,21 +260,15 @@ initOptionsPage = ->
     new type(name,onUpdated)
 
   if branchName?
-    branchContainer = document.createElement "span"
-    branchContainer.style.fontSize = "10px"
+    branchContainer = document.getElementById "branchContainer"
+    branchContainer.style.display = "initial"
 
-    branchLink = document.createElement "a"
+    branchLink = document.getElementById "branchLink"
     branchLink.href = "data:text/plain;base64, #{btoa commitData}"
-    branchLink.target = "_blank"
     branchLink.title = commitData
-    branchLink.appendChild document.createTextNode "Branch: #{branchName}"
 
-    branchContainer.appendChild branchLink
-    branchContainer.appendChild document.createTextNode " built #{buildDate}"
-
-    header = document.querySelector "header"
-    header.appendChild document.createElement "br"
-    header.appendChild branchContainer
+    document.getElementById("branchName").appendChild document.createTextNode branchName
+    document.getElementById("buildDate").appendChild document.createTextNode buildDate
 
   maintainLinkHintsView()
 
