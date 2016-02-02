@@ -39,12 +39,12 @@ visitDirectory = (directory, visitor) ->
     return unless (fs.statSync filepath).isFile()
     visitor(filepath)
 
+writeBuildInfo = (data) -> fs.writeFile "pages/git-information.js", data
+
 task "build", "compile all coffeescript files to javascript", ->
-  fs.unlink "pages/git-information.js", (->)
+  writeBuildInfo ""
   coffee = spawn "coffee", ["-c", __dirname]
   coffee.on 'exit', (returnCode) -> process.exit returnCode
-
-appendToOptionsPage = (data) -> fs.writeFile "pages/git-information.js", data
 
 task "dev-build", "compile all coffeescript files and add git information", ->
   invoke "build"
@@ -52,7 +52,7 @@ task "dev-build", "compile all coffeescript files and add git information", ->
   branchDone = commitDone = false
   currentBranch = commitSummary = ""
   tryAppendToOptionsPage = ->
-    branchDone and commitDone and appendToOptionsPage """
+    branchDone and commitDone and writeBuildInfo """
       branchName = #{currentBranch}
       commitData = #{commitSummary}
       buildDate = "#{(new Date()).toISOString()}"
