@@ -61,7 +61,7 @@ task "dev-build", "compile all coffeescript files and add git information", ->
   writeBuildInfo """
     branchName = #{currentBranch}
     commitData = #{commitSummary}
-    buildDate = "#{(new Date()).toISOString()}"
+    buildDate = "#{(new Date()).toISOString().replace("T"," ").replace("Z","")}"
   """
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
