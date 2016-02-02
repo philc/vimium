@@ -231,3 +231,7 @@ input.pattern, input.passKeys, .exclusionHeaderText {
   white-space: nowrap;
   width: 110px;
 }
+#branchContainer {
+  display: none;
+  font-size: 10px;
+}

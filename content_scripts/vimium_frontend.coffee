@@ -791,6 +791,17 @@ window.showHelpDialog = (html, fid) ->
       this.dialogElement.style.maxHeight = window.innerHeight - 80
       this.showAdvancedCommands(this.getShowAdvancedCommands())
 
+      if branchName?
+        branchContainer = document.getElementById "branchContainer"
+        branchContainer.style.display = "initial"
+
+        branchLink = document.getElementById "branchLink"
+        branchLink.href = "data:text/plain;base64, #{btoa commitData}"
+        branchLink.title = commitData
+
+        document.getElementById("branchName").appendChild document.createTextNode branchName
+        document.getElementById("buildDate").appendChild document.createTextNode buildDate
+
     #
     # Advanced commands are hidden by default so they don't overwhelm new and casual users.
     #

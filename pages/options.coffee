@@ -1,4 +1,3 @@
-
 $ = (id) -> document.getElementById id
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
 
@@ -259,6 +258,17 @@ initOptionsPage = ->
   # Populate options. The constructor adds each new object to "Option.all".
   for name, type of Options
     new type(name,onUpdated)
+
+  if branchName?
+    branchContainer = document.getElementById "branchContainer"
+    branchContainer.style.display = "initial"
+
+    branchLink = document.getElementById "branchLink"
+    branchLink.href = "data:text/plain;base64, #{btoa commitData}"
+    branchLink.title = commitData
+
+    document.getElementById("branchName").appendChild document.createTextNode branchName
+    document.getElementById("buildDate").appendChild document.createTextNode buildDate
 
   maintainLinkHintsView()
 

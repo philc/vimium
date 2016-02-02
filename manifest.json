@@ -53,7 +53,8 @@
              "content_scripts/mode_find.js",
              "content_scripts/mode_visual_edit.js",
              "content_scripts/hud.js",
-             "content_scripts/vimium_frontend.js"
+             "content_scripts/vimium_frontend.js",
+             "pages/git-information.js"
             ],
       "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",

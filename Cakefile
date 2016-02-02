@@ -39,9 +39,30 @@ visitDirectory = (directory, visitor) ->
     return unless (fs.statSync filepath).isFile()
     visitor(filepath)
 
+writeBuildInfo = (data) -> fs.writeFile "pages/git-information.js", data
+
 task "build", "compile all coffeescript files to javascript", ->
+  writeBuildInfo ""
   coffee = spawn "coffee", ["-c", __dirname]
   coffee.on 'exit', (returnCode) -> process.exit returnCode
+
+task "dev-build", "compile all coffeescript files and add git information", ->
+  invoke "build"
+
+  branchDone = commitDone = false
+  commitSummary = ""
+
+  spawn = child_process.spawnSync "git", ["rev-parse", "--abbrev-ref", "HEAD"]
+  currentBranch = JSON.stringify spawn.stdout.toString()
+
+  spawn = child_process.spawnSync "git", ["show", "--quiet", "HEAD"]
+  commitSummary = JSON.stringify spawn.stdout.toString()
+
+  writeBuildInfo """
+    branchName = #{currentBranch}
+    commitData = #{commitSummary}
+    buildDate = "#{(new Date()).toISOString().replace("T"," ").replace("Z","")}"
+  """
 
 task "clean", "removes any js files which were compiled from coffeescript", ->
   visitDirectory __dirname, (filepath) ->
