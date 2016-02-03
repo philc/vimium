@@ -144,13 +144,18 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
     command = Commands.keyToCommandRegistry[key].command
     commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
-  dialogHtml = fetchFileContents("pages/help_dialog.html")
+  replacementStrings =
+    version: currentVersion
+    title: customTitle || "Help"
+
   for group of Commands.commandGroups
-    dialogHtml = dialogHtml.replace("{{#{group}}}",
+    replacementStrings[group] =
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
-                                      showUnboundCommands, showCommandNames))
-  dialogHtml = dialogHtml.replace("{{version}}", currentVersion)
-  dialogHtml = dialogHtml.replace("{{title}}", customTitle || "Help")
+                                      showUnboundCommands, showCommandNames)
+
+  dialogHtml = fetchFileContents("pages/help_dialog.html")
+  for placeholder, replacementString of replacementStrings
+    dialogHtml = dialogHtml.replace "{{#{placeholder}}}", replacementString
   dialogHtml
 
 #
