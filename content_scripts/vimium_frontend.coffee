@@ -796,6 +796,11 @@ VimiumHelpDialog =
     # Simulating a click on the help dialog makes it the active element for scrolling.
     DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
+  hide: ->
+    helpDialog = document.getElementById("vimiumHelpDialogContainer")
+    if (helpDialog)
+      helpDialog.parentNode.removeChild(helpDialog)
+
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
   #
@@ -821,11 +826,8 @@ window.showHelpDialog = (html, fid) ->
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
-  helpDialog = document.getElementById("vimiumHelpDialogContainer")
-  if (helpDialog)
-    helpDialog.parentNode.removeChild(helpDialog)
-  if (clickEvent)
-    clickEvent.preventDefault()
+  VimiumHelpDialog.hide()
+  clickEvent?.preventDefault()
 
 toggleHelpDialog = (html, fid) ->
   if (isShowingHelpDialog)
