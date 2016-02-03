@@ -155,7 +155,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
 
   dialogHtml = fetchFileContents("pages/help_dialog.html")
   for placeholder, replacementString of replacementStrings
-    dialogHtml = dialogHtml.replace "{{#{placeholder}}}", replacementString
+    dialogHtml = dialogHtml.replace "<span id=\"help-dialog-#{placeholder}\"></span>", replacementString
   dialogHtml
 
 #

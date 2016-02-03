@@ -9,12 +9,12 @@
   <a class="vimiumReset optionsPage" href="#">Options</a>
   <a class="vimiumReset wikiPage" href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
   <a class="vimiumReset closeButton" href="#">&times;</a>
-  <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium {{title}}</div>
+  <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium <span id="help-dialog-title"></span></div>
   <div class="vimiumReset vimiumColumn">
     <table class="vimiumReset">
       <tbody class="vimiumReset">
       <tr class="vimiumReset" ><td class="vimiumReset"></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating the page</td></tr>
-      {{pageNavigation}}
+      <span id="help-dialog-pageNavigation"></span>
       </tbody>
     </table>
   </div>
@@ -22,15 +22,15 @@
     <table class="vimiumReset" >
       <tbody class="vimiumReset">
       <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using the vomnibar</td></tr>
-      {{vomnibarCommands}}
+      <span id="help-dialog-vomnibarCommands"></span>
       <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using find</td></tr>
-      {{findCommands}}
+      <span id="help-dialog-findCommands"></span>
       <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating history</td></tr>
-      {{historyNavigation}}
+      <span id="help-dialog-historyNavigation"></span>
       <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Manipulating tabs</td></tr>
-      {{tabManipulation}}
+      <span id="help-dialog-tabManipulation"></span>
       <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Miscellaneous</td></tr>
-      {{misc}}
+      <span id="help-dialog-misc"></span>
       </tbody>
     </table>
   </div>
@@ -48,7 +48,7 @@
       Found a bug? <a class="vimiumReset" href="http://github.com/philc/vimium/issues">Report it here</a>.
     </div>
     <div class="vimiumReset vimiumColumn" style="text-align:right">
-      <span class="vimiumReset">Version {{version}}</span><br/>
+      <span class="vimiumReset">Version <span id="help-dialog-version"></span></span><br/>
       <a href="https://github.com/philc/vimium#release-notes" class="vimiumReset">What's new?</a>
     </div>
   </div>
