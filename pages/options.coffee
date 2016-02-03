@@ -231,7 +231,7 @@ initOptionsPage = ->
     event.preventDefault()
 
   activateHelpDialog = ->
-    showHelpDialog chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+    VimiumHelpDialog.show chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
     # Prevent the "show help" link from retaining the focus when clicked.
     document.activeElement.blur()
 

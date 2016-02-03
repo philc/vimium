@@ -534,7 +534,7 @@ onKeydown = (event) ->
         keyChar = "<" + keyChar + ">"
 
   if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
-    hideHelpDialog()
+    VimiumHelpDialog.hide()
     DomUtils.suppressEvent event
     KeydownEvents.push event
     return @stopBubblingAndTrue
@@ -769,7 +769,7 @@ window.enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
-VimiumHelpDialog =
+window.VimiumHelpDialog =
   container: null
   dialogElement: null
 
@@ -786,7 +786,10 @@ VimiumHelpDialog =
 
       @dialogElement = @container.querySelector "#vimiumHelpDialog"
 
-      @dialogElement.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
+      @dialogElement.getElementsByClassName("closeButton")[0].addEventListener("click", (clickEvent) =>
+          clickEvent.preventDefault()
+          @hide()
+        false)
       @dialogElement.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
           clickEvent.preventDefault()
           chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
@@ -797,6 +800,7 @@ VimiumHelpDialog =
   isReady: -> document.body? and @container?
 
   show: (html) ->
+    return if isShowingHelpDialog or !@isReady()
     isShowingHelpDialog = true
     for placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
@@ -828,20 +832,12 @@ VimiumHelpDialog =
     addOrRemove = if visible then "add" else "remove"
     VimiumHelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
 
-window.showHelpDialog = (html) ->
-  return if isShowingHelpDialog or !VimiumHelpDialog.isReady()
-  VimiumHelpDialog.show html
-
-hideHelpDialog = (clickEvent) ->
-  VimiumHelpDialog.hide()
-  clickEvent?.preventDefault()
-
 toggleHelpDialog = (html, fid) ->
   return unless fid == frameId
   if isShowingHelpDialog
-    hideHelpDialog()
+    VimiumHelpDialog.hide()
   else
-    showHelpDialog html
+    VimiumHelpDialog.show html
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
