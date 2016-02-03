@@ -772,6 +772,21 @@ VimiumHelpDialog =
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
+  init: (html) ->
+    container = DomUtils.createElement "div"
+    container.id = "vimiumHelpDialogContainer"
+    container.className = "vimiumReset"
+
+    document.body.appendChild(container)
+
+    container.innerHTML = html
+    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
+    container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
+        clickEvent.preventDefault()
+        chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
+      false)
+
+
   show: ->
     @dialogElement = document.getElementById("vimiumHelpDialog")
     @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
@@ -797,21 +812,9 @@ VimiumHelpDialog =
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
-  container = DomUtils.createElement "div"
-  container.id = "vimiumHelpDialogContainer"
-  container.className = "vimiumReset"
 
-  document.body.appendChild(container)
-
-  container.innerHTML = html
-  container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-
+  VimiumHelpDialog.init html
   VimiumHelpDialog.show()
-
-  container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
-      clickEvent.preventDefault()
-      chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
-    false)
 
   # Simulating a click on the help dialog makes it the active element for scrolling.
   DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
