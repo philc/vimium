@@ -61,6 +61,14 @@ tr.vimiumReset {
   z-index: 2147483648;
 }
 
+thead.vimiumReset, tbody.vimiumReset {
+  display: table-header-group;
+}
+
+tbody.vimiumReset {
+  display: table-row-group;
+}
+
 /* Linkhints CSS */
 
 div.internalVimiumHintMarker {

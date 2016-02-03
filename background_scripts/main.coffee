@@ -153,10 +153,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
                                       showUnboundCommands, showCommandNames)
 
-  dialogHtml = fetchFileContents("pages/help_dialog.html")
-  for placeholder, replacementString of replacementStrings
-    dialogHtml = dialogHtml.replace "<span id=\"help-dialog-#{placeholder}\"></span>", replacementString
-  dialogHtml
+  replacementStrings
 
 #
 # Generates HTML for a given set of commands. commandGroups are defined in commands.js
