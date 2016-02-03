@@ -18,8 +18,10 @@ Settings =
   onLoadedCallbacks: []
 
   init: ->
-    if Utils.isExtensionPage()
+    if Utils.isExtensionPage() and (try localStorage)
       # On extension pages, we use localStorage (or a copy of it) as the cache.
+      # For UIComponents (or other content of ours in an iframe within a regular page), we can't access
+      # localStorage, so we check for this too.
       @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
       @onLoaded()
 

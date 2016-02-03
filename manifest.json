@@ -74,6 +74,7 @@
     "pages/vomnibar.html",
     "content_scripts/vimium.css",
     "pages/hud.html",
+    "pages/help_dialog.html",
     "pages/completion_engines.html"
   ]
 }

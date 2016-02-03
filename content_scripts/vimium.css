@@ -137,6 +137,24 @@ div.vimiumHighlightedFrame {
 
 /* Help Dialog CSS */
 
+iframe.vimiumHelpDialogFrame {
+  background-color: transparent;
+  padding: 0px;
+  overflow: hidden;
+
+  display: block;
+  position: fixed;
+  width: 100%;
+  min-width: 400px;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  border: none;
+
+  /* One less than vimiumReset */
+  z-index: 2147483647;
+}
+
 div#vimiumHelpDialog {
   border:3px solid red;
   opacity:0.92;
