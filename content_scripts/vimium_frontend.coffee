@@ -220,7 +220,7 @@ initializeOnDomReady = ->
   # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
   Vomnibar.init() if DomUtils.isTopFrame()
   HUD.init()
-  VimiumHelpDialog.init()
+  HelpDialog.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -534,7 +534,7 @@ onKeydown = (event) ->
         keyChar = "<" + keyChar + ">"
 
   if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
-    VimiumHelpDialog.hide()
+    HelpDialog.hide()
     DomUtils.suppressEvent event
     KeydownEvents.push event
     return @stopBubblingAndTrue
@@ -769,7 +769,7 @@ window.enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
-window.VimiumHelpDialog =
+window.HelpDialog =
   container: null
   dialogElement: null
 
@@ -795,7 +795,7 @@ window.VimiumHelpDialog =
           chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
         false)
       @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
-        VimiumHelpDialog.toggleAdvancedCommands, false)
+        HelpDialog.toggleAdvancedCommands, false)
 
   isReady: -> document.body? and @container?
 
@@ -820,24 +820,24 @@ window.VimiumHelpDialog =
   #
   toggleAdvancedCommands: (event) ->
     event.preventDefault()
-    showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
-    VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
+    showAdvanced = HelpDialog.getShowAdvancedCommands()
+    HelpDialog.showAdvancedCommands(!showAdvanced)
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
   showAdvancedCommands: (visible) ->
-    VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+    HelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
       if visible then "Hide advanced commands" else "Show advanced commands"
 
     # Add/remove the showAdvanced class to show/hide advanced commands.
     addOrRemove = if visible then "add" else "remove"
-    VimiumHelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
+    HelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
 
 toggleHelpDialog = (html, fid) ->
   return unless fid == frameId
   if isShowingHelpDialog
-    VimiumHelpDialog.hide()
+    HelpDialog.hide()
   else
-    VimiumHelpDialog.show html
+    HelpDialog.show html
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
