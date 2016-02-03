@@ -768,6 +768,33 @@ window.enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
+VimiumHelpDialog =
+  # This setting is pulled out of local storage. It's false by default.
+  getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
+
+  init: () ->
+    this.dialogElement = document.getElementById("vimiumHelpDialog")
+    this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+      VimiumHelpDialog.toggleAdvancedCommands, false)
+    this.dialogElement.style.maxHeight = window.innerHeight - 80
+    this.showAdvancedCommands(this.getShowAdvancedCommands())
+
+  #
+  # Advanced commands are hidden by default so they don't overwhelm new and casual users.
+  #
+  toggleAdvancedCommands: (event) ->
+    event.preventDefault()
+    showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
+    VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
+    Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
+
+  showAdvancedCommands: (visible) ->
+    VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+      if visible then "Hide advanced commands" else "Show advanced commands"
+    advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
+    for el in advancedEls
+      el.style.display = if visible then "table-row" else "none"
+
 window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
@@ -779,33 +806,6 @@ window.showHelpDialog = (html, fid) ->
 
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-
-  VimiumHelpDialog =
-    # This setting is pulled out of local storage. It's false by default.
-    getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
-
-    init: () ->
-      this.dialogElement = document.getElementById("vimiumHelpDialog")
-      this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
-        VimiumHelpDialog.toggleAdvancedCommands, false)
-      this.dialogElement.style.maxHeight = window.innerHeight - 80
-      this.showAdvancedCommands(this.getShowAdvancedCommands())
-
-    #
-    # Advanced commands are hidden by default so they don't overwhelm new and casual users.
-    #
-    toggleAdvancedCommands: (event) ->
-      event.preventDefault()
-      showAdvanced = VimiumHelpDialog.getShowAdvancedCommands()
-      VimiumHelpDialog.showAdvancedCommands(!showAdvanced)
-      Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
-
-    showAdvancedCommands: (visible) ->
-      VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
-        if visible then "Hide advanced commands" else "Show advanced commands"
-      advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
-      for el in advancedEls
-        el.style.display = if visible then "table-row" else "none"
 
   VimiumHelpDialog.init()
 
