@@ -137,7 +137,7 @@ initializePreDomReady = ->
 
   requestHandlers =
     showHUDforDuration: handleShowHUDforDuration
-    toggleHelpDialog: (request) -> toggleHelpDialog(request.dialogHtml, request.frameId)
+    toggleHelpDialog: (request) -> if frameId == request.frameId then toggleHelpDialog request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
@@ -832,8 +832,7 @@ window.HelpDialog =
     addOrRemove = if visible then "add" else "remove"
     HelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
 
-toggleHelpDialog = (html, fid) ->
-  return unless fid == frameId
+toggleHelpDialog = (html) ->
   if HelpDialog.showing
     HelpDialog.hide()
   else
