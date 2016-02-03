@@ -769,26 +769,29 @@ window.enterFindMode = ->
   new FindMode()
 
 VimiumHelpDialog =
+  container: null
+  dialogElement: null
+
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
-  init: (html) ->
-    container = DomUtils.createElement "div"
-    container.id = "vimiumHelpDialogContainer"
-    container.className = "vimiumReset"
+  init: ->
+    unless @container?
+      @container = DomUtils.createElement "div"
+      @container.id = "vimiumHelpDialogContainer"
+      @container.className = "vimiumReset"
 
-    document.body.appendChild(container)
+  show: (html) ->
+    document.body.appendChild @container
 
-    container.innerHTML = html
-    container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
-    container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
+    @container.innerHTML = html
+    @container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
+    @container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
         clickEvent.preventDefault()
         chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
       false)
 
-
-  show: ->
-    @dialogElement = document.getElementById("vimiumHelpDialog")
+    @dialogElement = @container.querySelector "#VimiumHelpDialog"
     @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
       VimiumHelpDialog.toggleAdvancedCommands, false)
     @showAdvancedCommands(@getShowAdvancedCommands())
@@ -797,9 +800,7 @@ VimiumHelpDialog =
     DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
   hide: ->
-    helpDialog = document.getElementById("vimiumHelpDialogContainer")
-    if (helpDialog)
-      helpDialog.parentNode.removeChild(helpDialog)
+    @container?.parentNode?.removeChild @container
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
@@ -821,8 +822,8 @@ window.showHelpDialog = (html, fid) ->
   return if (isShowingHelpDialog || !document.body || fid != frameId)
   isShowingHelpDialog = true
 
-  VimiumHelpDialog.init html
-  VimiumHelpDialog.show()
+  VimiumHelpDialog.init()
+  VimiumHelpDialog.show html
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
