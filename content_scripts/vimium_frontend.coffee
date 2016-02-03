@@ -772,12 +772,11 @@ VimiumHelpDialog =
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
-  init: () ->
-    this.dialogElement = document.getElementById("vimiumHelpDialog")
-    this.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+  show: ->
+    @dialogElement = document.getElementById("vimiumHelpDialog")
+    @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
       VimiumHelpDialog.toggleAdvancedCommands, false)
-    this.dialogElement.style.maxHeight = window.innerHeight - 80
-    this.showAdvancedCommands(this.getShowAdvancedCommands())
+    @showAdvancedCommands(@getShowAdvancedCommands())
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
@@ -807,7 +806,7 @@ window.showHelpDialog = (html, fid) ->
   container.innerHTML = html
   container.getElementsByClassName("closeButton")[0].addEventListener("click", hideHelpDialog, false)
 
-  VimiumHelpDialog.init()
+  VimiumHelpDialog.show()
 
   container.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
       clickEvent.preventDefault()

@@ -138,7 +138,7 @@ div#vimiumHelpDialog {
   border-radius:6px;
   padding:8px 12px;
   width:640px;
-  max-height: 85%;
+  max-height: calc(100% - 80px);
   left:50%;
   /* This needs to be 1/2 width to horizontally center the help dialog */
   margin-left:-320px;
