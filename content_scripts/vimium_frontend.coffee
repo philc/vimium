@@ -793,6 +793,9 @@ VimiumHelpDialog =
       VimiumHelpDialog.toggleAdvancedCommands, false)
     @showAdvancedCommands(@getShowAdvancedCommands())
 
+    # Simulating a click on the help dialog makes it the active element for scrolling.
+    DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
+
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
   #
@@ -815,9 +818,6 @@ window.showHelpDialog = (html, fid) ->
 
   VimiumHelpDialog.init html
   VimiumHelpDialog.show()
-
-  # Simulating a click on the help dialog makes it the active element for scrolling.
-  DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
 hideHelpDialog = (clickEvent) ->
   isShowingHelpDialog = false
