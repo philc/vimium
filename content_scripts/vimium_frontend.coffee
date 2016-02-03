@@ -137,7 +137,7 @@ initializePreDomReady = ->
 
   requestHandlers =
     showHUDforDuration: handleShowHUDforDuration
-    toggleHelpDialog: (request) -> if frameId == request.frameId then toggleHelpDialog request.dialogHtml
+    toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     refreshCompletionKeys: refreshCompletionKeys
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
@@ -815,6 +815,9 @@ window.HelpDialog =
     HelpDialog.showing = false
     @container?.parentNode?.removeChild @container
 
+  toggle: (html) ->
+    if @showing then @hide() else @show html
+
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
   #
@@ -831,12 +834,6 @@ window.HelpDialog =
     # Add/remove the showAdvanced class to show/hide advanced commands.
     addOrRemove = if visible then "add" else "remove"
     HelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
-
-toggleHelpDialog = (html) ->
-  if HelpDialog.showing
-    HelpDialog.hide()
-  else
-    HelpDialog.show html
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
