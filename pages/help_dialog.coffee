@@ -20,6 +20,10 @@ HelpDialog =
     @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
       HelpDialog.toggleAdvancedCommands, false)
 
+    document.documentElement.addEventListener "click", (event) =>
+      @hide() unless @dialogElement.contains event.target
+    , false
+
   isReady: -> true
 
   show: (html) ->
