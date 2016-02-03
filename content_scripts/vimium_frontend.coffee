@@ -5,7 +5,6 @@
 # "domReady".
 #
 
-isShowingHelpDialog = false
 keyPort = null
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
@@ -533,7 +532,7 @@ onKeydown = (event) ->
       if (modifiers.length > 0 || keyChar.length > 1)
         keyChar = "<" + keyChar + ">"
 
-  if (isShowingHelpDialog && KeyboardUtils.isEscape(event))
+  if (HelpDialog.showing && KeyboardUtils.isEscape(event))
     HelpDialog.hide()
     DomUtils.suppressEvent event
     KeydownEvents.push event
@@ -772,6 +771,7 @@ window.enterFindMode = ->
 window.HelpDialog =
   container: null
   dialogElement: null
+  showing: false
 
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
@@ -800,8 +800,8 @@ window.HelpDialog =
   isReady: -> document.body? and @container?
 
   show: (html) ->
-    return if isShowingHelpDialog or !@isReady()
-    isShowingHelpDialog = true
+    return if HelpDialog.showing or !@isReady()
+    HelpDialog.showing = true
     for placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
 
@@ -812,7 +812,7 @@ window.HelpDialog =
     DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
   hide: ->
-    isShowingHelpDialog = false
+    HelpDialog.showing = false
     @container?.parentNode?.removeChild @container
 
   #
@@ -834,7 +834,7 @@ window.HelpDialog =
 
 toggleHelpDialog = (html, fid) ->
   return unless fid == frameId
-  if isShowingHelpDialog
+  if HelpDialog.showing
     HelpDialog.hide()
   else
     HelpDialog.show html
