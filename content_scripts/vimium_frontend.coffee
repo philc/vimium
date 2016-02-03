@@ -794,7 +794,10 @@ VimiumHelpDialog =
       @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
         VimiumHelpDialog.toggleAdvancedCommands, false)
 
+  isReady: -> document.body? and @container?
+
   show: (html) ->
+    isShowingHelpDialog = true
     for placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
 
@@ -805,6 +808,7 @@ VimiumHelpDialog =
     DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
   hide: ->
+    isShowingHelpDialog = false
     @container?.parentNode?.removeChild @container
 
   #
@@ -819,26 +823,25 @@ VimiumHelpDialog =
   showAdvancedCommands: (visible) ->
     VimiumHelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
       if visible then "Hide advanced commands" else "Show advanced commands"
-    advancedEls = VimiumHelpDialog.dialogElement.getElementsByClassName("advanced")
-    for el in advancedEls
-      el.style.display = if visible then "table-row" else "none"
 
-window.showHelpDialog = (html, fid) ->
-  return if (isShowingHelpDialog || !document.body || fid != frameId)
-  isShowingHelpDialog = true
+    # Add/remove the showAdvanced class to show/hide advanced commands.
+    addOrRemove = if visible then "add" else "remove"
+    VimiumHelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
 
+window.showHelpDialog = (html) ->
+  return if isShowingHelpDialog or !VimiumHelpDialog.isReady()
   VimiumHelpDialog.show html
 
 hideHelpDialog = (clickEvent) ->
-  isShowingHelpDialog = false
   VimiumHelpDialog.hide()
   clickEvent?.preventDefault()
 
 toggleHelpDialog = (html, fid) ->
-  if (isShowingHelpDialog)
+  return unless fid == frameId
+  if isShowingHelpDialog
     hideHelpDialog()
   else
-    showHelpDialog(html, fid)
+    showHelpDialog html
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
