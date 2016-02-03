@@ -768,19 +768,17 @@ window.enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
-window.HelpDialog =
+# If we are in the help dialog iframe, HelpDialog is already defined with the necessary functions.
+window.HelpDialog ?=
   helpUI: null
   container: null
   showing: false
-
-  # This setting is pulled out of local storage. It's false by default.
-  getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
 
   init: ->
     return if @helpUI?
 
     @helpUI = new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", (event) =>
-      @helpUI.hide() if event.data == "hide"
+      @hide() if event.data == "hide"
 
   isReady: -> @helpUI?
 

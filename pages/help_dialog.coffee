@@ -1,5 +1,6 @@
 HelpDialog =
   dialogElement: null
+  showing: true
 
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
@@ -19,6 +20,8 @@ HelpDialog =
     @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
       HelpDialog.toggleAdvancedCommands, false)
 
+  isReady: -> true
+
   show: (html) ->
     for placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
@@ -29,6 +32,9 @@ HelpDialog =
     DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
   hide: -> UIComponentServer.postMessage "hide"
+
+  toggle: (html) ->
+    if @showing then @hide() else @show html
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
