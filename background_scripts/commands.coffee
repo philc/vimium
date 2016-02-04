@@ -87,6 +87,7 @@ Commands =
       "scrollPageUp",
       "scrollFullPageUp",
       "scrollFullPageDown",
+      "scrollToPercent",
       "reload",
       "toggleViewSource",
       "copyCurrentUrl",
@@ -146,6 +147,7 @@ Commands =
   advancedCommands: [
     "scrollToLeft",
     "scrollToRight",
+    "scrollPercent",
     "moveTabToNewWindow",
     "goUp",
     "goToRoot",
@@ -177,6 +179,7 @@ defaultKeyMappings =
   "zL": "scrollToRight"
   "<c-e>": "scrollDown"
   "<c-y>": "scrollUp"
+  "%": "scrollToPercent"
 
   "d": "scrollPageDown"
   "u": "scrollPageUp"
@@ -265,6 +268,8 @@ commandDescriptions =
   scrollPageUp: ["Scroll a page up"]
   scrollFullPageDown: ["Scroll a full page down"]
   scrollFullPageUp: ["Scroll a full page up"]
+
+  scrollToPercent: ["Scroll to percentage.", { passCountToFunction: true }]
 
   reload: ["Reload the page", { noRepeat: true }]
   toggleViewSource: ["View page source", { noRepeat: true }]
