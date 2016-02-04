@@ -774,7 +774,7 @@ window.HelpDialog =
   showing: false
 
   # This setting is pulled out of local storage. It's false by default.
-  getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
+  getShowAdvancedCommands: -> Settings.get "helpDialog_showAdvancedCommands"
 
   init: ->
     return if @container?
@@ -792,7 +792,7 @@ window.HelpDialog =
         false)
       @dialogElement.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
           clickEvent.preventDefault()
-          chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
+          chrome.runtime.sendMessage {handler: "openOptionsPageInNewTab"}
         false)
       @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
         HelpDialog.toggleAdvancedCommands, false)
@@ -800,19 +800,19 @@ window.HelpDialog =
   isReady: -> document.body? and @container?
 
   show: (html) ->
-    return if HelpDialog.showing or !@isReady()
-    HelpDialog.showing = true
+    return if @showing or !@isReady()
+    @showing = true
     for placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
 
     document.body.appendChild @container
-    @showAdvancedCommands(@getShowAdvancedCommands())
+    @showAdvancedCommands @getShowAdvancedCommands()
 
     # Simulating a click on the help dialog makes it the active element for scrolling.
     DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
 
   hide: ->
-    HelpDialog.showing = false
+    @showing = false
     @container?.parentNode?.removeChild @container
 
   toggle: (html) ->
@@ -824,16 +824,16 @@ window.HelpDialog =
   toggleAdvancedCommands: (event) ->
     event.preventDefault()
     showAdvanced = HelpDialog.getShowAdvancedCommands()
-    HelpDialog.showAdvancedCommands(!showAdvanced)
+    HelpDialog.showAdvancedCommands !showAdvanced
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
   showAdvancedCommands: (visible) ->
-    HelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+    @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
       if visible then "Hide advanced commands" else "Show advanced commands"
 
     # Add/remove the showAdvanced class to show/hide advanced commands.
     addOrRemove = if visible then "add" else "remove"
-    HelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
+    @dialogElement.classList[addOrRemove] "showAdvanced"
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
