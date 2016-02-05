@@ -311,6 +311,8 @@ BackgroundCommands =
               scrollX: tabQueueEntry.scrollX,
               scrollY: tabQueueEntry.scrollY)
           callback()))
+  closeWindow: (callback) -> chrome.windows.getCurrent((window) ->
+    chrome.windows.remove(window.id, callback))
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab({ url: Clipboard.paste() })
   openCopiedUrlInNewTab: (request) -> TabOperations.openUrlInNewTab({ url: Clipboard.paste() })
   togglePinTab: (request) ->
