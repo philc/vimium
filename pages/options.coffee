@@ -232,8 +232,6 @@ initOptionsPage = ->
 
   activateHelpDialog = ->
     HelpDialog.show chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
-    # Prevent the "show help" link from retaining the focus when clicked.
-    document.activeElement.blur()
 
   saveOptions = ->
     Option.saveOptions()
