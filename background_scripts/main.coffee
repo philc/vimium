@@ -335,6 +335,8 @@ BackgroundCommands =
   closeTabsOnRight: -> removeTabsRelative "after"
   closeOtherTabs: -> removeTabsRelative "both"
 
+  externalCommand: (count, frameId, registryEntry) -> executeExternalCommand count, frameId, registryEntry
+
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
@@ -386,6 +388,26 @@ updateOpenTabs = (tab, deleteFrames = false) ->
     deletor: null
   # Frames are recreated on refresh
   delete frameIdsForTab[tab.id] if deleteFrames
+
+executeExternalCommand = (count, frameId, registryEntry) ->
+  try
+    [ extensionId, command ] = registryEntry.options[0].split "."
+  catch
+    logMessage "incorrectly defined external command: #{registryEntry.command}"
+    return
+
+  # We first require a "prepare"/"ready" message exchange.  This ensures (dynamically) that the required
+  # extension is in fact available, and allows that extension to tell use whether we need to block keyboard
+  # activity pending completion.
+  chrome.runtime.sendMessage extensionId, {name: "prepare", command}, (response) ->
+    if response?.name == "ready"
+      if response.blockKeyboardActivity
+        # If synchronous, then block keyboard activity in the current frame here.
+        true # Not yet implemented.
+      chrome.runtime.sendMessage extensionId, {name: "execute", command, count}, ->
+        if response.blockKeyboardActivity
+          # If synchronous, then unblock keyboard activity in the current frame here.
+          true # Not yet implemented.
 
 # Here's how we set the page icon.  The default is "disabled", so if we do nothing else, then we get the
 # grey-out disabled icon.  Thereafter, we only set tab-specific icons, so there's no need to update the icon
@@ -578,7 +600,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
         refreshedCompletionKeys = true
       else
         if registryEntry.passCountToFunction
-          BackgroundCommands[registryEntry.command](count, frameId)
+          BackgroundCommands[registryEntry.command] count, frameId, registryEntry
         else if registryEntry.noRepeat
           BackgroundCommands[registryEntry.command](frameId)
         else

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Vimium API Example",
+  "version": "0.1",
+  "description": "This demonstrates the Vimium external extension API.",
+  "background": {
+    "scripts": ["external-commands.js", "vimium-api.js"]
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "tabs",
+    "storage",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["foreground.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }]
+}
