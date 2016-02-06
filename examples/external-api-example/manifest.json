@@ -1,10 +1,10 @@
 {
   "manifest_version": 2,
   "name": "Vimium API Example",
-  "version": "1.54",
+  "version": "0.1",
   "description": "This demonstrates the Vimium external extension API.",
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["external-commands.js", "vimium-api.js"]
   },
   "permissions": [
     "tabs",
