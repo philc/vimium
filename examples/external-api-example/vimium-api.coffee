@@ -24,3 +24,4 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
 
     else
       false
+

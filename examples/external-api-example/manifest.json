@@ -6,6 +6,7 @@
   "background": {
     "scripts": ["external-commands.js", "vimium-api.js"]
   },
+  "options_page": "options.html",
   "permissions": [
     "tabs",
     "storage",
