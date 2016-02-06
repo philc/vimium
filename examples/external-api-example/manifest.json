@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "Vimium API Example",
+  "version": "1.54",
+  "description": "This demonstrates the Vimium external extension API.",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["foreground.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }]
+}

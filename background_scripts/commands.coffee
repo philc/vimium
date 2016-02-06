@@ -138,7 +138,8 @@ Commands =
       "moveTabLeft",
       "moveTabRight"]
     misc:
-      ["showHelp"]
+      ["showHelp",
+       "externalCommand"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
@@ -163,7 +164,8 @@ Commands =
     "moveTabRight",
     "closeTabsOnLeft",
     "closeTabsOnRight",
-    "closeOtherTabs"]
+    "closeOtherTabs",
+    "externalCommand"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -339,6 +341,8 @@ commandDescriptions =
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+
+  externalCommand: ["Execute an external command", { background: true, passCountToFunction: true }]
 
 Commands.init()
 
