@@ -17,7 +17,7 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
 
       else if Commands.asyncCommands[command]?
         Commands.asyncCommands[command] count
-        false # We not will be calling sendResponse().
+        false # We will not be calling sendResponse().
 
       else
         false
