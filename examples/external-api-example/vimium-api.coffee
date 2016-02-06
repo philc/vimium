@@ -9,7 +9,7 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
       if Commands.syncCommands[command]? or Commands.asyncCommands[command]?
         sendResponse name: "ready", blockKeyboardActivity: Commands.syncCommands[command]?
 
-    when "command"
+    when "execute"
       {count} = request
       if Commands.syncCommands[command]?
         Commands.syncCommands[command] count, sendResponse

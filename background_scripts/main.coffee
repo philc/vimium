@@ -394,6 +394,7 @@ executeExternalCommand = (count, frameId, registryEntry) ->
     [ extensionId, command ] = registryEntry.options[0].split "."
   catch
     logMessage "incorrectly defined external command: #{registryEntry.command}"
+    return
 
   # We first require a "prepare"/"ready" message exchange.  This ensures (dynamically) that the required
   # extension is in fact available, and allows that extension to tell use whether we need to block keyboard
@@ -403,7 +404,7 @@ executeExternalCommand = (count, frameId, registryEntry) ->
       if response.blockKeyboardActivity
         # If synchronous, then block keyboard activity in the current frame here.
         true # Not yet implemented.
-      chrome.runtime.sendMessage extensionId, {name: "command", command, count}, ->
+      chrome.runtime.sendMessage extensionId, {name: "execute", command, count}, ->
         if response.blockKeyboardActivity
           # If synchronous, then unblock keyboard activity in the current frame here.
           true # Not yet implemented.
