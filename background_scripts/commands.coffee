@@ -96,6 +96,7 @@ Commands =
       "goUp",
       "goToRoot",
       "enterInsertMode",
+      "passNextKey",
       "enterVisualMode",
       "enterVisualLineMode",
       "focusInput",
@@ -164,7 +165,8 @@ Commands =
     "moveTabRight",
     "closeTabsOnLeft",
     "closeTabsOnRight",
-    "closeOtherTabs"]
+    "closeOtherTabs",
+    "passNextKey"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -277,6 +279,7 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+  passNextKey: ["Pass the next key to Chrome", { passCountToFunction: true }]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 

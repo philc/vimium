@@ -98,5 +98,32 @@ class InsertMode extends Mode
   @suppressedEvent: null
   @suppressEvent: (event) -> @suppressedEvent = event
 
+# This implements the pasNexKey command.
+class PassNextKeyMode extends Mode
+  constructor: (count = 1) ->
+    seenKeyDown = false
+    keyDownCount = 0
+
+    super
+      name: "pass-next-key"
+      indicator: "Pass next key."
+      # We exit on blur because, once we lose the focus, we can no longer track key events.
+      exitOnBlur: window
+      keypress: =>
+        @stopBubblingAndTrue
+
+      keydown: =>
+        seenKeyDown = true
+        keyDownCount += 1
+        @stopBubblingAndTrue
+
+      keyup: =>
+        if seenKeyDown
+          unless 0 < --keyDownCount
+            unless 0 < --count
+              @exit()
+        @stopBubblingAndTrue
+
 root = exports ? window
 root.InsertMode = InsertMode
+root.PassNextKeyMode = PassNextKeyMode

@@ -368,6 +368,9 @@ extend window,
   enterVisualLineMode: ->
     new VisualLineMode
 
+  passNextKey: (count) ->
+    new PassNextKeyMode count
+
   focusInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null
