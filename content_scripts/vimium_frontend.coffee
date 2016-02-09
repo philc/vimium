@@ -250,7 +250,9 @@ executePageCommand = (request) ->
   # All other commands are handled in their frame (but only if Vimium is enabled).
   return unless frameId == request.frameId and isEnabledForUrl
 
-  if request.registryEntry.passCountToFunction
+  if commandType == "enterInsertMode"
+    enterInsertMode 1, request.registryEntry
+  else if request.registryEntry.passCountToFunction
     Utils.invokeCommandString(request.command, [request.count])
   else
     Utils.invokeCommandString(request.command) for i in [0...request.count]
@@ -358,10 +360,19 @@ extend window,
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration("Yanked #{url}", 2000)
 
-  enterInsertMode: ->
+  enterInsertMode: (_0, registryEntry) ->
+    keyCode = 0
+    modifiers = 0
+    for option in registryEntry.options
+      [ key, value ] = option.split "=" 
+      switch key
+        when "keyCode"
+          keyCode = value | 0
+        when "modifiers"
+          modifiers = value | 0
     # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
     # instance to take over.
-    new InsertMode global: true, exitOnFocus: true
+    new InsertMode global: { keyCode, modifiers }, exitOnFocus: false
 
   enterVisualMode: ->
     new VisualMode()

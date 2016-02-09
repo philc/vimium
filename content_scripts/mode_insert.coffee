@@ -6,11 +6,20 @@ class InsertMode extends Mode
     @permanent = options.permanent
 
     # If truthy, then we were activated by the user (with "i").
-    @global = options.global
+    if options.global
+      @global =
+        keyCode: options.global.keyCode || 27
+        modifiers: options.global.modifiers || 0
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
-      return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
+      return @stopBubblingAndTrue unless event.type == 'keydown'
+      if @global
+        if @global.keyCode != event.keyCode or (event.altKey | (event.ctrlKey << 1) \
+            | (event.metaKey << 2) | (event.shiftKey << 3)) != @global.modifiers
+          return @stopBubblingAndTrue
+      else if not KeyboardUtils.isEscape event
+        return @stopBubblingAndTrue
       DomUtils.suppressKeyupAfterEscape handlerStack
       target = event.srcElement
       if target and DomUtils.isFocusable target
