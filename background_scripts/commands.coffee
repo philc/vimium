@@ -125,6 +125,7 @@ Commands =
     tabManipulation:
       ["nextTab",
       "previousTab",
+      "visitPreviousTab",
       "firstTab",
       "lastTab",
       "createTab",
@@ -215,6 +216,7 @@ defaultKeyMappings =
   "J": "previousTab"
   "gt": "nextTab"
   "gT": "previousTab"
+  "^": "visitPreviousTab"
   "<<": "moveTabLeft"
   ">>": "moveTabRight"
   "g0": "firstTab"
@@ -306,6 +308,7 @@ commandDescriptions =
   # Manipulating tabs
   nextTab: ["Go one tab right", { background: true, passCountToFunction: true }]
   previousTab: ["Go one tab left", { background: true, passCountToFunction: true }]
+  visitPreviousTab: ["Go to previously-visited tab", { background: true, passCountToFunction: true }]
   firstTab: ["Go to the first tab", { background: true, passCountToFunction: true }]
   lastTab: ["Go to the last tab", { background: true, passCountToFunction: true }]
 

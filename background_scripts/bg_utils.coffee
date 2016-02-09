@@ -39,6 +39,13 @@ class TabRecency
     @cache[tabId] ||= 1
     if tabId == @current then 0.0 else @cache[tabId] / @timestamp
 
+  # Get the tab Id of the count-th most recently visited tab (excluding tabId, which is the current tab).
+  getRecentTab: (tabId, count) ->
+    tabId = tabId.toString()
+    tabIds = (tId for own tId of @cache when tId != tabId)
+    tabIds.sort (a,b) => @cache[b] - @cache[a]
+    parseInt tabIds[(count-1)%tabIds.length]
+
 BgUtils =
   tabRecency: new TabRecency()
 
