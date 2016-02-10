@@ -11,9 +11,8 @@ class InsertMode extends Mode
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
 
-      # Check for the pass-next-key key.
-      keyChar = KeyboardUtils.getKeyCharString event
-      if keyChar and keyChar == Settings.get "passNextKeyKey"
+      # Check for a pass-next-key key.
+      if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
         new PassNextKeyMode
         return false
 

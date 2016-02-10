@@ -67,16 +67,10 @@ Commands =
           when "unmapAll"
             @keyToCommandRegistry = {}
 
-    # Push the mapping for passNextKey into Settings so that it's available in the front end for insert mode.
-    passNextKeyKey = null
-    for own key of @keyToCommandRegistry
-      if @keyToCommandRegistry[key].command == "passNextKey"
-        passNextKeyKey = key
-        break
-    if passNextKeyKey
-      Settings.set "passNextKeyKey", passNextKeyKey
-    else
-      Settings.clear "passNextKeyKey"
+    # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
+    # mode.
+    Settings.set "passNextKeyKeys",
+      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey")
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
