@@ -530,7 +530,7 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if keyChar == "" &&
+  if not keyChar &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event)))
     DomUtils.suppressPropagation(event)
