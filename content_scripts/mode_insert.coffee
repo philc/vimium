@@ -10,6 +10,13 @@ class InsertMode extends Mode
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
+
+      # Check for the pass-next-key key.
+      keyChar = KeyboardUtils.getKeyCharString event
+      if keyChar and keyChar == Settings.get "passNextKeyKey"
+        new PassNextKeyMode
+        return false
+
       return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
       DomUtils.suppressKeyupAfterEscape handlerStack
       target = event.srcElement
