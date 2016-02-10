@@ -337,8 +337,9 @@ BackgroundCommands =
 
   visitPreviousTab: (count) ->
     chrome.tabs.getSelected null, (tab) ->
-      newTabId = BgUtils.tabRecency.getRecentTab tab.id, count
-      chrome.tabs.update newTabId, selected: true
+      tabIds = BgUtils.tabRecency.getTabsByRecency().filter (tabId) -> tabId != tab.id
+      if 0 < tabIds.length
+        selectSpecificTab id: tabIds[(count-1) % tabIds.length]
 
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction) ->
