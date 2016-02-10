@@ -92,8 +92,7 @@ KeyboardUtils =
             modifiers.push "a" if event.altKey
 
             keyChar = [modifiers..., keyChar].join "-"
-            keyChar = "<#{keyChar}>" if 1 < keyChar.length
-            keyChar
+            if 1 < keyChar.length then "<#{keyChar}>" else keyChar
 
 KeyboardUtils.init()
 
