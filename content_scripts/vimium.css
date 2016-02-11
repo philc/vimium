@@ -151,8 +151,8 @@ iframe.vimiumHelpDialogFrame {
   left: 0px;
   border: none;
 
-  /* One less than vimiumReset */
-  z-index: 2147483647;
+  /* One less than hint markers and the vomnibar. */
+  z-index: 2147483645;
 }
 
 div#vimiumHelpDialog {
@@ -171,8 +171,6 @@ div#vimiumHelpDialog {
   top:50px;
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
   overflow-y: auto;
-  /* One less than vimiumReset */
-  z-index: 2147483647;
 }
 
 div#vimiumHelpDialog a { color:blue; }
@@ -349,8 +347,8 @@ iframe.vomnibarFrame {
   border: none;
   font-family: sans-serif;
 
-  /* One less than hint markers and the help dialog. */
-  z-index: 2147483645;
+  /* One less than hint markers. */
+  z-index: 2147483646;
 }
 
 div#vimiumFlash {
