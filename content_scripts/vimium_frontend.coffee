@@ -219,7 +219,6 @@ initializeOnDomReady = ->
   # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
   Vomnibar.init() if DomUtils.isTopFrame()
   HUD.init()
-  HelpDialog.init() unless document.location.toString() == chrome.extension.getURL "pages/help_dialog.html"
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -783,6 +782,7 @@ window.HelpDialog ?=
   isReady: -> @helpUI?
 
   show: (html) ->
+    @init()
     return if HelpDialog.showing or !@isReady()
     HelpDialog.showing = true
     @helpUI.activate html
