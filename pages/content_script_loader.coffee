@@ -4,7 +4,9 @@ injectContentScripts = ->
 
   insertLocation = document.head.firstChild
 
-  for scriptInfo in content_scripts
+  # We *always* load "context/extension_page.js" first in extension pages.  This ensures that we can correctly
+  # detect when we're running in the background page, and when in an extension page.
+  for scriptInfo in [ {matches: "context/extension_page.js"}, content_scripts...]
     continue if scriptInfo.matches.indexOf("<all_urls>") == -1
 
     if scriptInfo.js
