@@ -783,12 +783,12 @@ window.HelpDialog ?=
 
   show: (html) ->
     @init()
-    return if HelpDialog.showing or !@isReady()
-    HelpDialog.showing = true
+    return if @showing or !@isReady()
+    @showing = true
     @helpUI.activate html
 
   hide: ->
-    HelpDialog.showing = false
+    @showing = false
     @helpUI.hide()
 
   toggle: (html) ->
