@@ -1,3 +1,9 @@
+# This overrides the HelpDialog implementation in vimium_frontend.coffee, which prevents us from being able
+# to spawn a help dialog within the help dialog UIComponent. As such, we need to provide all the properties
+# that we expect on the normal HelpDialog implementation.
+#
+# NOTE(mrmr1993): In the future, we can move to a single help dialog UIComponent per tab (ie. in the
+#   top-level frame), and then we don't need to be concerned about nested help dialog frames.
 HelpDialog =
   dialogElement: null
   showing: true
