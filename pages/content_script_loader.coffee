@@ -1,19 +1,17 @@
+# This is a Vimium extension page.
+window.isVimiumExtensionPage = true
+
 injectContentScripts = ->
   manifest = chrome.runtime.getManifest()
   content_scripts = manifest.content_scripts
 
   insertLocation = document.head.firstChild
 
-  window.isVimiumBackgroundPage = false
-  window.isVimiumExtensionPage = true
-
   for scriptInfo in content_scripts
     continue if scriptInfo.matches.indexOf("<all_urls>") == -1
 
     if scriptInfo.js
       for script in scriptInfo.js
-        # We don't load the background-page context in other extension pages.
-        continue if script == "context/background_page.js"
         scriptElement = document.createElement "script"
         scriptElement.type = "text/javascript"
         scriptElement.async = false # Don't load out of order!
