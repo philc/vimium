@@ -157,6 +157,8 @@ Release Notes
 -------------
 Next version (not yet released)
 
+- New command, `visitPreviousTab`, visits the previously-visited tabs by recency.
+  Visit the previous tab with `^`, or the tab visited before that with `2^`.
 - Link-hints modes now accept a `count` prefix; for example, use `3F` to open
   three new background tabs.  Use `999F` to open *many* tabs.  Exit early with
   `Escape`.
