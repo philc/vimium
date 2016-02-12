@@ -48,32 +48,6 @@ root.Exclusions = Exclusions =
   postUpdateHook: (@rules) ->
     RegexpCache.clear()
 
-# Development and debug only.
-# Enable this (temporarily) to restore legacy exclusion rules from backup.
-if false and Settings.has("excludedUrlsBackup")
-  Settings.clear("exclusionRules")
-  Settings.set("excludedUrls", Settings.get("excludedUrlsBackup"))
-
-if not Settings.has("exclusionRules") and Settings.has("excludedUrls")
-  # Migration from the legacy representation of exclusion rules.
-  #
-  # In Vimium 1.45 and in github/master on 27 August, 2014, exclusion rules are represented by the setting:
-  #   excludedUrls: "http*://www.google.com/reader/*\nhttp*://mail.google.com/* jk"
-  #
-  # The new (equivalent) settings is:
-  #   exclusionRules: [ { pattern: "http*://www.google.com/reader/*", passKeys: "" }, { pattern: "http*://mail.google.com/*", passKeys: "jk" } ]
-
-  parseLegacyRules = (lines) ->
-    for line in lines.trim().split("\n").map((line) -> line.trim())
-      if line.length and line.indexOf("#") != 0 and line.indexOf('"') != 0
-        parse = line.split(/\s+/)
-        { pattern: parse[0], passKeys: parse[1..].join("") }
-
-  Exclusions.setRules(parseLegacyRules(Settings.get("excludedUrls")))
-  # We'll keep a backup of the "excludedUrls" setting, just in case.
-  Settings.set("excludedUrlsBackup", Settings.get("excludedUrls")) if not Settings.has("excludedUrlsBackup")
-  Settings.clear("excludedUrls")
-
 # Register postUpdateHook for exclusionRules setting.
 Settings.postUpdateHooks["exclusionRules"] = (value) ->
   Exclusions.postUpdateHook value

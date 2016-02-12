@@ -91,6 +91,13 @@ Settings =
   postUpdateHooks: {}
   performPostUpdateHook: (key, value) -> @postUpdateHooks[key]? value
 
+  # Completely remove a settings value, e.g. after migration to a new setting.  This should probably only be
+  # called from the background page.
+  nuke: (key) ->
+    delete localStorage[key]
+    chrome.storage.local.remove key
+    chrome.storage.sync.remove key
+
   # For development only.
   log: (args...) ->
     console.log "settings:", args... if @debug
@@ -174,17 +181,16 @@ Settings.init()
 if Utils.isBackgroundPage()
 
   # We use settingsVersion to coordinate any necessary schema changes.
-  if Utils.compareVersions("1.42", Settings.get("settingsVersion")) != -1
-    Settings.set("scrollStepSize", parseFloat Settings.get("scrollStepSize"))
   Settings.set("settingsVersion", Utils.getCurrentVersion())
 
-  # Migration (after 1.49, 2015/2/1).
-  # Legacy setting: findModeRawQuery (a string).
-  # New setting: findModeRawQueryList (a list of strings), now stored in chrome.storage.local (not localStorage).
-  chrome.storage.local.get "findModeRawQueryList", (items) ->
-    unless chrome.runtime.lastError or items.findModeRawQueryList
-      rawQuery = Settings.get "findModeRawQuery"
-      chrome.storage.local.set findModeRawQueryList: (if rawQuery then [ rawQuery ] else [])
+  # In 1.46 we migrated the old "excludedUrls" setting to the new "exclusionRules" setting.  And we kept a
+  # backup in "excludedUrlsBackup".  Now (post 1.54, post 2016-02-12) we can clear up that backup (and any
+  # extraordinalrily old "excludedUrls" setting).
+  Settings.nuke "excludedUrlsBackup"
+  Settings.nuke "excludedUrls"
+
+  # Migration (post 1.54, post 2016-2-12).  Nuke legacy "findModeRawQuery" setting.
+  Settings.nuke "findModeRawQuery"
 
   # Migration (after 1.51, 2015/6/17).
   # Copy options with non-default values (and which are not in synced storage) to chrome.storage.local;
