@@ -68,9 +68,11 @@ Commands =
             @keyToCommandRegistry = {}
 
     # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
+    # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
+    # in insert mode they expect the character to be input, not to be droppped into some special Vimium
     # mode.
     Settings.set "passNextKeyKeys",
-      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey")
+      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
