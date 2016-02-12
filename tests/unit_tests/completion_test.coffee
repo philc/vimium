@@ -1,5 +1,6 @@
 require "./test_helper.js"
 extend(global, require "../../lib/utils.js")
+extend(global, require "../../background_scripts/bg_utils.js")
 extend(global, require "../../background_scripts/completion_engines.js")
 extend(global, require "../../background_scripts/completion.js")
 extend global, require "./test_chrome_stubs.js"
@@ -411,7 +412,7 @@ fakeTimeDeltaElapsing = ->
 
 context "TabRecency",
   setup ->
-    @tabRecency = new TabRecency()
+    @tabRecency = BgUtils.tabRecency
 
     fakeTimeDeltaElapsing = =>
       if @tabRecency.lastVisitedTime?
