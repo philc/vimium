@@ -170,7 +170,7 @@ Settings =
     newTabUrl: "chrome://newtab"
     grabBackFocus: false
     regexFindMode: false
-    waitForEnterForFilteredHints: false
+    waitForEnterForFilteredHints: false # Note: this defaults to true for new users; see below.
 
     settingsVersion: Utils.getCurrentVersion()
     helpDialog_showAdvancedCommands: false
@@ -181,6 +181,15 @@ Settings.init()
 
 # Perform migration from old settings versions, if this is the background page.
 if Utils.isBackgroundPage()
+
+  if not Settings.get "settingsVersion"
+    # This is a new install.  For some settings, we retain a legacy default behaviour for existing users but
+    # use a non-default behaviour for new users.
+
+    # For waitForEnterForFilteredHints, we (smblott) think that "true" gives a better UX; see #1950.  However,
+    # forcing the change on existing users would be unnecessarily disruptive.  So, only new users default to
+    # "true".
+    Settings.set "waitForEnterForFilteredHints", true
 
   # We use settingsVersion to coordinate any necessary schema changes.
   Settings.set("settingsVersion", Utils.getCurrentVersion())
