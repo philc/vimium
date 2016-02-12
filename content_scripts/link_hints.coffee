@@ -13,7 +13,6 @@
 OPEN_IN_CURRENT_TAB = name: "curr-tab"
 OPEN_IN_NEW_BG_TAB = name: "bg-tab"
 OPEN_IN_NEW_FG_TAB = name: "fg-tab"
-OPEN_WITH_QUEUE = name: "queue"
 COPY_LINK_URL = name: "link"
 OPEN_INCOGNITO = name: "incognito"
 DOWNLOAD_LINK_URL = name: "download"
@@ -31,7 +30,7 @@ LinkHints =
   activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
   activateModeToCopyLinkUrl: (count) -> @activateMode count, COPY_LINK_URL
-  activateModeWithQueue: -> @activateMode 1, OPEN_WITH_QUEUE
+  activateModeWithQueue: -> @activateMode 2000000000, OPEN_IN_NEW_BG_TAB
   activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
 
@@ -97,13 +96,11 @@ class LinkHintsMode
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
-    if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
+    if @mode in [ OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
       if @mode is OPEN_IN_NEW_BG_TAB
         @hintMode.setIndicator "Open link in new tab."
-      else if @mode is OPEN_IN_NEW_FG_TAB
-        @hintMode.setIndicator "Open link in new tab and switch to it."
       else
-        @hintMode.setIndicator "Open multiple links in new tabs."
+        @hintMode.setIndicator "Open link in new tab and switch to it."
       @linkActivator = (link) ->
         # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
         # windows) to open it in a new tab if necessary.
@@ -304,7 +301,7 @@ class LinkHintsMode
     @tabCount = 0
 
     if event.keyCode in [ keyCodes.shiftKey, keyCodes.ctrlKey ] and
-      @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
+      @mode in [ OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
         @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
         previousMode = @mode
@@ -386,10 +383,7 @@ class LinkHintsMode
         clickEl.focus()
       DomUtils.flashRect(matchedLink.rect)
       @linkActivator(clickEl)
-      if @mode is OPEN_WITH_QUEUE
-        @deactivateMode delay, -> LinkHints.activateModeWithQueue()
-      else
-        @deactivateMode delay
+      @deactivateMode delay
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
