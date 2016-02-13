@@ -5,8 +5,9 @@ Utils =
     chrome.runtime.getManifest().version
 
   # Returns true whenever the current page is from the extension's origin (and thus can access the
-  # extension's localStorage).
-  isExtensionPage: -> root.isVimiumExtensionPage? and root.isVimiumExtensionPage
+  # extension's localStorage).  We use "try" because, if "block third-party cookies and data" is enabled, then
+  # accessing localStorage raises an exception, so we do not use localStorage in that case.
+  isExtensionPage: (win = root) -> try win.isVimiumExtensionPage? and win.isVimiumExtensionPage
 
   # Returns true whenever the current page is the extension's background page.
   isBackgroundPage: -> root.isVimiumBackgroundPage? and root.isVimiumBackgroundPage
