@@ -27,6 +27,7 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
 # changed.
 
 localStorage.commands ||= JSON.stringify []
+localStorage.commands = JSON.stringify []
 commands = JSON.stringify (key for own key of Commands)
 
 unless commands == localStorage.commands

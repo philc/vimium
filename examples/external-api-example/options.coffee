@@ -11,8 +11,8 @@ documentReady = (func) ->
 documentReady ->
   html = []
 
-  for own command of Commands
-    html.push "<p>#{Commands[command].description}:</br>"
-    html.push "map XX externalCommand #{chrome.runtime.id}.#{command}</p>"
+  for own command, registry of Commands
+    html.push "<p><i># #{registry.description}</i>:</br>"
+    html.push "<tt><font size=3>map #{registry.key || 'XX'} externalCommand #{chrome.runtime.id}.#{command}</font></tt></p>"
 
   $("exampleContainer").innerHTML = html.join ""

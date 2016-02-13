@@ -5,8 +5,9 @@ root = exports ? window
 root.Commands =
   # Open the Vimium Issues page.
   openVimiumIssues:
-    blocking: false
+    key: "qv"
     description: "Open the Vimium issues page"
+    blocking: false
     run: (count) ->
       chrome.tabs.getSelected null, (tab) ->
         while count--
@@ -19,8 +20,9 @@ root.Commands =
 
   # Focus the first tab encountered which is playing audio.
   goToAudible:
-    blocking: false
+    key: "qa"
     description: "Focus the current audio tab"
+    blocking: false
     run: (count) ->
       chrome.windows.getAll {populate: true}, (windows) ->
         for window in windows
@@ -31,8 +33,9 @@ root.Commands =
 
   # Open a "Hello" popup.
   sayHello:
-    blocking: true
+    key: "qh"
     description: "Open a \"Hello\" popup"
+    blocking: true
     run: (count, sendResponse) ->
       chrome.tabs.getSelected null, (tab) ->
         chrome.tabs.sendMessage tab.id, {name: "sayHello"}, sendResponse
