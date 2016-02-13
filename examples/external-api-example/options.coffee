@@ -11,8 +11,8 @@ documentReady = (func) ->
 documentReady ->
   html = []
 
-  for own group of Commands
-    for own command of Commands[group]
-      html.push "map XX externalCommand #{chrome.runtime.id}.#{command}<br/>"
+  for own command of Commands
+    html.push "<p>#{Commands[command].description}:</br>"
+    html.push "map XX externalCommand #{chrome.runtime.id}.#{command}</p>"
 
   $("exampleContainer").innerHTML = html.join ""

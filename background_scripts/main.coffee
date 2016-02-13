@@ -391,22 +391,25 @@ updateOpenTabs = (tab, deleteFrames = false) ->
 
 executeExternalCommand = (count, frameId, registryEntry) ->
   try
-    [ extensionId, command ] = registryEntry.options[0].split "."
+    [ extensionId, command ] = registryEntry.options[0]?.split "."
+    unless extensionId and command
+      logMessage "incorrectly defined external command: #{registryEntry.command}"
+      return
   catch
     logMessage "incorrectly defined external command: #{registryEntry.command}"
     return
 
   # We first require a "prepare"/"ready" message exchange.  This ensures (dynamically) that the required
-  # extension is in fact available, and allows that extension to tell use whether we need to block keyboard
-  # activity pending completion.
+  # extension is in fact available, and allows that extension to tell use whether it's a blocking command or
+  # not.
   chrome.runtime.sendMessage extensionId, {name: "prepare", command}, (response) ->
     if response?.name == "ready"
-      if response.blockKeyboardActivity
-        # If synchronous, then block keyboard activity in the current frame here.
-        true # Not yet implemented.
-      chrome.runtime.sendMessage extensionId, {name: "execute", command, count}, ->
-        if response.blockKeyboardActivity
-          # If synchronous, then unblock keyboard activity in the current frame here.
+      if response.blocking
+        # Block keyboard activity in the current frame here.
+        true # Not yet implemented.  We would install a mode which passes all keyboard events.
+      chrome.runtime.sendMessage extensionId, {name: "run", command, count}, ->
+        if response.blocking
+          # Unblock keyboard activity in the current frame here.
           true # Not yet implemented.
 
 # Here's how we set the page icon.  The default is "disabled", so if we do nothing else, then we get the
