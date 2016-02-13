@@ -8,7 +8,7 @@
              "128": "icons/icon128.png" },
   "background": {
     "scripts": [
-      "context/background_page.js",
+      "background_scripts/background_context.js",
       "lib/utils.js",
       "lib/settings.js",
       "background_scripts/commands.js",

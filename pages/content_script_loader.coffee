@@ -1,5 +1,6 @@
-# This is a Vimium extension page.
+# This is a Vimium extension page, but not the background page.
 window.isVimiumExtensionPage = true
+window.isVimiumBackgroundPage = false
 
 injectContentScripts = ->
   manifest = chrome.runtime.getManifest()
