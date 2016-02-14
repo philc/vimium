@@ -479,6 +479,9 @@ class FilterHints
     @linkTextKeystrokeQueue = []
     @labelMap = {}
     @activeHintMarker = null
+    # The regexp for splitting typed text and link texts.  We split on sequences of non-word characters and
+    # link-hint numbers.
+    @splitRegexp = new RegExp "[\\W#{Utils.escapeRegexSpecialCharacters @linkHintNumbers}]+"
 
   #
   # Generate a map of input element => label
@@ -602,10 +605,10 @@ class FilterHints
   # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
   # a word, and a considerably higher score still for matches which are whole words.
   scoreLinkHint: (linkSearchString) ->
-    searchWords = linkSearchString.trim().split /\s+/
-    (linkMarker) ->
+    searchWords = linkSearchString.trim().split @splitRegexp
+    (linkMarker) =>
       text = linkMarker.linkText.trim()
-      linkWords = linkMarker.linkWords ?= text.toLowerCase().split /\s+/
+      linkWords = linkMarker.linkWords ?= text.toLowerCase().split @splitRegexp
 
       searchWordScores =
         for searchWord in searchWords
