@@ -22,7 +22,7 @@ spawn = (procName, optArray, silent = false, sync = false) ->
 
 optArrayFromDict = (opts) ->
   result = []
-  for key, value of opts
+  for own key, value of opts
     if value instanceof Array
       result.push "--#{key}=#{v}" for v in value
     else
@@ -147,7 +147,7 @@ task "coverage", "generate coverage report", ->
 
       # marshal the counts into a form that the JSCoverage front-end expects
       result = {}
-      for fname, coverage of _$jscoverage
+      for own fname, coverage of _$jscoverage
         result[fname] =
           coverage: coverage
           source: (Utils.escapeHtml fs.readFileSync fname, 'utf-8').split '\n'

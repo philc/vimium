@@ -255,7 +255,7 @@ initOptionsPage = ->
       saveOptions()
 
   # Populate options. The constructor adds each new object to "Option.all".
-  for name, type of Options
+  for own name, type of Options
     new type(name,onUpdated)
 
   maintainLinkHintsView()
