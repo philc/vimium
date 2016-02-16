@@ -68,7 +68,7 @@ class InsertMode extends Mode
             blur: (event) ->
               if event.target.shadowRoot == shadowRoot
                 handlerStack.remove()
-                for type, listener of eventListeners
+                for own type, listener of eventListeners
                   shadowRoot.removeEventListener type, listener, true
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.

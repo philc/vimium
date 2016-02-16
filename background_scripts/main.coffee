@@ -140,7 +140,7 @@ chrome.webNavigation.onReferenceFragmentUpdated.addListener onURLChange # Hash c
 # This is called by options.coffee.
 root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
   commandsToKey = {}
-  for key of Commands.keyToCommandRegistry
+  for own key of Commands.keyToCommandRegistry
     command = Commands.keyToCommandRegistry[key].command
     commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
@@ -148,7 +148,7 @@ root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
     version: currentVersion
     title: customTitle || "Help"
 
-  for group of Commands.commandGroups
+  for own group of Commands.commandGroups
     replacementStrings[group] =
         helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
                                       showUnboundCommands, showCommandNames)
@@ -446,7 +446,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   # a blacklist in the future.
   unless chrome.sessions
     if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
-      for i of tabQueue[openTabInfo.windowId]
+      for own i of tabQueue[openTabInfo.windowId]
         if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
           tabQueue[openTabInfo.windowId][i].positionIndex--
       return
@@ -489,12 +489,12 @@ getActualKeyStrokeLength = (key) ->
     key.length
 
 populateValidFirstKeys = ->
-  for key of Commands.keyToCommandRegistry
+  for own key of Commands.keyToCommandRegistry
     if (getActualKeyStrokeLength(key) == 2)
       validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
 
 populateSingleKeyCommands = ->
-  for key of Commands.keyToCommandRegistry
+  for own key of Commands.keyToCommandRegistry
     if (getActualKeyStrokeLength(key) == 1)
       singleKeyCommands.push(key)
 
@@ -517,7 +517,7 @@ generateCompletionKeys = (keysToCheck) ->
   completionKeys = singleKeyCommands.slice(0)
 
   if (getActualKeyStrokeLength(command) == 1)
-    for key of Commands.keyToCommandRegistry
+    for own key of Commands.keyToCommandRegistry
       splitKey = splitKeyIntoFirstAndSecond(key)
       if (splitKey.first == command)
         completionKeys.push(splitKey.second)

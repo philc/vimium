@@ -525,7 +525,7 @@ onKeydown = (event) ->
       if (event.altKey)
         modifiers.push("a")
 
-      for i of modifiers
+      for own i of modifiers
         keyChar = modifiers[i] + "-" + keyChar
 
       if (modifiers.length > 0 || keyChar.length > 1)

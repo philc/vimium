@@ -301,7 +301,7 @@ class DomainCompleter
 
   performSearch: (queryTerms, onComplete) ->
     query = queryTerms[0]
-    domains = (domain for domain of @domains when 0 <= domain.indexOf query)
+    domains = (domain for own domain of @domains when 0 <= domain.indexOf query)
     domains = @sortDomainsByRelevancy queryTerms, domains
     onComplete [
       new Suggestion
@@ -439,7 +439,7 @@ class SearchEngineCompleter
       if queryTerms.length == 0
         []
       else
-        for _, suggestion of @previousSuggestions[searchUrl]
+        for own _, suggestion of @previousSuggestions[searchUrl]
           continue unless RankingUtils.matches queryTerms, suggestion.title
           # Reset various fields, they may not be correct wrt. the current query.
           extend suggestion, relevancy: null, html: null, queryTerms: queryTerms
@@ -507,7 +507,7 @@ class SearchEngineCompleter
 
   postProcessSuggestions: (request, suggestions) ->
     return unless request.searchEngines
-    engines = (engine for _, engine of request.searchEngines)
+    engines = (engine for own _, engine of request.searchEngines)
     engines.sort (a,b) -> b.searchUrl.length - a.searchUrl.length
     engines.push keyword: null, description: "search history", searchUrl: Settings.get "searchUrl"
     for suggestion in suggestions

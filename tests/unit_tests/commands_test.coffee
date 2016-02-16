@@ -15,15 +15,15 @@ context "Validate commands and options",
   should "have either noRepeat or repeatLimit, but not both", ->
     # TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
     # of the offending command appears in the output, if the test fails?
-    for command, options of Commands.availableCommands
+    for own command, options of Commands.availableCommands
       assert.isTrue not (options.noRepeat and options.repeatLimit)
 
   should "describe each command", ->
-    for command, options of Commands.availableCommands
+    for own command, options of Commands.availableCommands
       assert.equal 'string', typeof options.description
 
   should "define each command in each command group", ->
-    for group, commands of Commands.commandGroups
+    for own group, commands of Commands.commandGroups
       for command in commands
         assert.equal 'string', typeof command
         assert.isTrue Commands.availableCommands[command]
@@ -36,13 +36,13 @@ context "Validate commands and options",
   should "have valid commands for each default key mapping", ->
     count = Object.keys(Commands.keyToCommandRegistry).length
     assert.isTrue (0 < count)
-    for key, command of Commands.keyToCommandRegistry
+    for own key, command of Commands.keyToCommandRegistry
       assert.equal 'object', typeof command
       assert.isTrue Commands.availableCommands[command.command]
 
 context "Validate advanced commands",
   setup ->
-    @allCommands = [].concat.apply [], (commands for group, commands of Commands.commandGroups)
+    @allCommands = [].concat.apply [], (commands for own group, commands of Commands.commandGroups)
 
   should "include each advanced command in a command group", ->
     for command in Commands.advancedCommands

@@ -33,7 +33,7 @@ HelpDialog =
   isReady: -> true
 
   show: (html) ->
-    for placeholder, htmlString of html
+    for own placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
 
     @showAdvancedCommands(@getShowAdvancedCommands())
