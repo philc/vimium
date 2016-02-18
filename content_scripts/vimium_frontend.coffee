@@ -491,7 +491,7 @@ handlerStack.push
 onKeypress = (event) ->
   keyChar = KeyboardUtils.getKeyCharString event
   if keyChar
-    if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey keyChar
+    if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey keyChar, event
       DomUtils.suppressEvent(event)
       keyPort.postMessage keyChar:keyChar, frameId:frameId
       return @stopBubblingAndTrue
@@ -512,7 +512,7 @@ onKeydown = (event) ->
 
   else
     if (keyChar)
-      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar))
+      if (currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey keyChar, event)
         DomUtils.suppressEvent event
         KeydownEvents.push event
         keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
@@ -532,7 +532,7 @@ onKeydown = (event) ->
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
   if not keyChar &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
-      isValidFirstKey(KeyboardUtils.getKeyChar(event)))
+      isValidFirstKey KeyboardUtils.getKeyChar(event), event)
     DomUtils.suppressPropagation(event)
     KeydownEvents.push event
     return @stopBubblingAndTrue
@@ -583,8 +583,9 @@ window.refreshCompletionKeys = (response) ->
   else
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
-isValidFirstKey = (keyChar) ->
-  validFirstKeys[keyChar] || /^[1-9]/.test(keyChar)
+isValidFirstKey = (keyChar, event) ->
+  # Digits are valid first keys only if Shift is not depressed; see #1996 and #1757.
+  validFirstKeys[keyChar] || (KeyboardUtils.hasNoModifiers(event) and /^[1-9]/.test keyChar)
 
 window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")

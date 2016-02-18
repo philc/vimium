@@ -94,6 +94,9 @@ KeyboardUtils =
             keyChar = [modifiers..., keyChar].join "-"
             if 1 < keyChar.length then "<#{keyChar}>" else keyChar
 
+  hasNoModifiers: (event) ->
+    not (event.shiftKey or event.metaKey or event.ctrlKey or event.metaKey)
+
 KeyboardUtils.init()
 
 root = exports ? window
