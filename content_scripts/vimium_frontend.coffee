@@ -585,7 +585,7 @@ window.refreshCompletionKeys = (response) ->
 
 isValidFirstKey = (keyChar, event) ->
   # Digits are valid first keys only if Shift is not depressed; see #1996 and #1757.
-  validFirstKeys[keyChar] || (not event.shiftKey and /^[1-9]/.test keyChar)
+  validFirstKeys[keyChar] || (KeyboardUtils.hasNoModifiers(event) and /^[1-9]/.test keyChar)
 
 window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
