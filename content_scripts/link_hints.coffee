@@ -367,7 +367,7 @@ class LinkHintsMode
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
-      @activateLink linksMatched[0], keyResult.delay ? 0
+      @activateLink linksMatched[0], keyResult.delay ? 0, keyResult.waitForEnter and Settings.get "waitForEnterForFilteredHints"
     else
       @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
@@ -375,8 +375,8 @@ class LinkHintsMode
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (matchedLink, delay = 0) ->
-    clickEl = matchedLink.clickableItem
+  activateLink: (@matchedLink, delay = 0, waitForEnter = false) ->
+    clickEl = @matchedLink.clickableItem
     if (DomUtils.isSelectable(clickEl))
       DomUtils.simulateSelect(clickEl)
       @deactivateMode delay
@@ -384,12 +384,18 @@ class LinkHintsMode
       # TODO figure out which other input elements should not receive focus
       if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
         clickEl.focus()
-      DomUtils.flashRect(matchedLink.rect)
-      @linkActivator(clickEl)
-      if @mode is OPEN_WITH_QUEUE
-        @deactivateMode delay, -> LinkHints.activateModeWithQueue()
-      else
-        @deactivateMode delay
+
+      linkActivator = =>
+        @linkActivator(clickEl)
+        LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
+
+      delay = 0 if waitForEnter
+      @deactivateMode delay, =>
+        if waitForEnter
+          new WaitForEnter @matchedLink.rect, linkActivator
+        else
+          DomUtils.flashRect @matchedLink.rect
+          linkActivator()
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -419,7 +425,7 @@ class LinkHintsMode
     if delay
       # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
       # user from inadvertently launching Vimium commands when typing the link text.
-      new TypingProtector delay, ->
+      new TypingProtector delay, @matchedLink?.rect, ->
         deactivate()
         callback?()
     else
@@ -571,7 +577,7 @@ class FilterHints
     @activeHintMarker = linksMatched[tabCount]
     @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
-    { linksMatched: linksMatched, delay: delay }
+    { linksMatched: linksMatched, delay: delay, waitForEnter: 0 < delay }
 
   pushKeyChar: (keyChar, keydownKeyChar) ->
     # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
@@ -644,12 +650,12 @@ spanWrap = (hintString) ->
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
-  constructor: (delay, callback) ->
+  constructor: (delay, rect, callback) ->
     @timer = Utils.setTimeout delay, => @exit()
 
     handler = (event) =>
       clearTimeout @timer
-      @timer = Utils.setTimeout 150, => @exit()
+      @timer = Utils.setTimeout delay, => @exit()
 
     super
       name: "hint/typing-protector"
@@ -657,7 +663,34 @@ class TypingProtector extends Mode
       keydown: handler
       keypress: handler
 
+    if rect
+      # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
+      # has been selected.
+      flashEl = DomUtils.addFlashRect rect
+      @onExit -> DomUtils.removeElement flashEl
+
     @onExit callback
+
+
+class WaitForEnter extends Mode
+  constructor: (rect, callback) ->
+    super
+      name: "hint/wait-for-enter"
+      suppressAllKeyboardEvents: true
+      exitOnEscape: true
+      indicator: "Hit <Enter> to proceed..."
+
+    @push
+      keydown: (event) =>
+        if event.keyCode == keyCodes.enter
+          @exit()
+          callback()
+          DomUtils.suppressEvent event
+        else
+          true
+
+    flashEl = DomUtils.addFlashRect rect
+    @onExit -> DomUtils.removeElement flashEl
 
 root = exports ? window
 root.LinkHints = LinkHints

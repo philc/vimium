@@ -262,8 +262,7 @@ DomUtils =
       # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
       element.dispatchEvent(mouseEvent)
 
-  # momentarily flash a rectangular border to give user some visual feedback
-  flashRect: (rect) ->
+  addFlashRect: (rect) ->
     flashEl = @createElement "div"
     flashEl.id = "vimiumFlash"
     flashEl.className = "vimiumReset"
@@ -271,7 +270,12 @@ DomUtils =
     flashEl.style.top = rect.top  + window.scrollY  + "px"
     flashEl.style.width = rect.width + "px"
     flashEl.style.height = rect.height + "px"
-    document.documentElement.appendChild(flashEl)
+    document.documentElement.appendChild flashEl
+    flashEl
+
+  # momentarily flash a rectangular border to give user some visual feedback
+  flashRect: (rect) ->
+    flashEl = @addFlashRect rect
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 
   suppressPropagation: (event) ->

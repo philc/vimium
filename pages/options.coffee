@@ -184,6 +184,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
 Options =
   exclusionRules: ExclusionRulesOption
   filterLinkHints: CheckBoxOption
+  waitForEnterForFilteredHints: CheckBoxOption
   hideHud: CheckBoxOption
   keyMappings: TextOption
   linkHintCharacters: NonEmptyTextOption
@@ -206,14 +207,16 @@ initOptionsPage = ->
 
   # Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
   maintainLinkHintsView = ->
-    hide = (el) -> el.parentNode.parentNode.style.display = "none"
-    show = (el) -> el.parentNode.parentNode.style.display = "table-row"
+    hide = (el) -> el.style.display = "none"
+    show = (el) -> el.style.display = "table-row"
     if $("filterLinkHints").checked
-      hide $("linkHintCharacters")
-      show $("linkHintNumbers")
+      hide $("linkHintCharactersContainer")
+      show $("linkHintNumbersContainer")
+      show $("waitForEnterForFilteredHintsContainer")
     else
-      show $("linkHintCharacters")
-      hide $("linkHintNumbers")
+      show $("linkHintCharactersContainer")
+      hide $("linkHintNumbersContainer")
+      hide $("waitForEnterForFilteredHintsContainer")
 
   maintainAdvancedOptions = ->
     if bgSettings.get "optionsPage_showAdvancedOptions"
