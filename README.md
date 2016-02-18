@@ -168,7 +168,7 @@ Next version (not yet released)
 - `gg` now accepts a `count` prefix.  It scrolls to an absolute position
   measured from the top of the window (and a multiple of `scrollStepSize`).
 - Bug fixes:
-    - `<c-a-[` is not longer treated as escape.
+    - `<c-a-[>` is not longer treated as escape.
 
 1.54 (2016-01-30)
 
