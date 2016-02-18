@@ -67,6 +67,13 @@ Commands =
           when "unmapAll"
             @keyToCommandRegistry = {}
 
+    # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
+    # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
+    # in insert mode they expect the character to be input, not to be droppped into some special Vimium
+    # mode.
+    Settings.set "passNextKeyKeys",
+      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
+
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
     @mapKeyToCommand { key, command } for own key, command of defaultKeyMappings
@@ -96,6 +103,7 @@ Commands =
       "goUp",
       "goToRoot",
       "enterInsertMode",
+      "passNextKey",
       "enterVisualMode",
       "enterVisualLineMode",
       "focusInput",
@@ -164,7 +172,8 @@ Commands =
     "moveTabRight",
     "closeTabsOnLeft",
     "closeTabsOnRight",
-    "closeOtherTabs"]
+    "closeOtherTabs",
+    "passNextKey"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -277,6 +286,7 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
+  passNextKey: ["Pass the next key to Chrome", { passCountToFunction: true }]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 

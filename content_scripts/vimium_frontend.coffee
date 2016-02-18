@@ -368,6 +368,9 @@ extend window,
   enterVisualLineMode: ->
     new VisualLineMode
 
+  passNextKey: (count) ->
+    new PassNextKeyMode count
+
   focusInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null
@@ -486,50 +489,20 @@ handlerStack.push
 #
 # @/this, here, is the the normal-mode Mode object.
 onKeypress = (event) ->
-  keyChar = ""
+  keyChar = KeyboardUtils.getKeyCharString event
+  if keyChar
+    if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey keyChar
+      DomUtils.suppressEvent(event)
+      keyPort.postMessage keyChar:keyChar, frameId:frameId
+      return @stopBubblingAndTrue
 
-  # Ignore modifier keys by themselves.
-  if (event.keyCode > 31)
-    keyChar = String.fromCharCode(event.charCode)
-
-    if (keyChar)
-      if currentCompletionKeys.indexOf(keyChar) != -1 or isValidFirstKey(keyChar)
-        DomUtils.suppressEvent(event)
-        keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
-        return @stopBubblingAndTrue
-
-      keyPort.postMessage({ keyChar:keyChar, frameId:frameId })
+    keyPort.postMessage keyChar:keyChar, frameId:frameId
 
   return @continueBubbling
 
 # @/this, here, is the the normal-mode Mode object.
 onKeydown = (event) ->
-  keyChar = ""
-
-  # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
-  # avoid / being interpreted as ?
-  if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31) || (
-      # TODO(philc): some events don't have a keyidentifier. How is that possible?
-      event.keyIdentifier && event.keyIdentifier.slice(0, 2) != "U+"))
-    keyChar = KeyboardUtils.getKeyChar(event)
-    # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
-    if (keyChar != "")
-      modifiers = []
-
-      if (event.shiftKey)
-        keyChar = keyChar.toUpperCase()
-      if (event.metaKey)
-        modifiers.push("m")
-      if (event.ctrlKey)
-        modifiers.push("c")
-      if (event.altKey)
-        modifiers.push("a")
-
-      for own i of modifiers
-        keyChar = modifiers[i] + "-" + keyChar
-
-      if (modifiers.length > 0 || keyChar.length > 1)
-        keyChar = "<" + keyChar + ">"
+  keyChar = KeyboardUtils.getKeyCharString event
 
   if (HelpDialog.showing && KeyboardUtils.isEscape(event))
     HelpDialog.hide()
@@ -557,7 +530,7 @@ onKeydown = (event) ->
   # Subject to internationalization issues since we're using keyIdentifier instead of charCode (in keypress).
   #
   # TOOD(ilya): Revisit this. Not sure it's the absolute best approach.
-  if keyChar == "" &&
+  if not keyChar &&
      (currentCompletionKeys.indexOf(KeyboardUtils.getKeyChar(event)) != -1 ||
       isValidFirstKey(KeyboardUtils.getKeyChar(event)))
     DomUtils.suppressPropagation(event)
