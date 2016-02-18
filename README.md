@@ -159,12 +159,15 @@ Next version (not yet released)
 
 - New command, `visitPreviousTab`, visits the previously-visited tabs by recency.
   Visit the previous tab with `^`, or the tab visited before that with `2^`.
-- New command, `passNextKey`, passes the next key directly to the page.  For
+- New command, `passNextKey`, passes the next key directly to the page;  for
   example, with `map <c-]> passNextKey`, you can close messenger popups on
   Facebook with `<c-]><Esc>`.
 - Link-hints modes now accept a `count` prefix; for example, use `3F` to open
   three new background tabs.  Use `999F` to open *many* tabs.  Exit early with
   `Escape`.
+- For filtered link hints, there is a new option which - when you're typing a
+  link's text - requires you to press `Enter` before activating the link; this
+  prevents unintentionally triggering Vimium commands with trailing keystrokes.
 - `gg` now accepts a `count` prefix.  It scrolls to an absolute position
   measured from the top of the window (and a multiple of `scrollStepSize`).
 - Bug fixes:
