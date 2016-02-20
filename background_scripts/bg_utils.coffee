@@ -18,12 +18,10 @@ class TabRecency
       @deregister removedTabId
       @register addedTabId
 
-    self = @
-    chrome.windows.onFocusChanged.addListener (wnd) ->
-      return if wnd == chrome.windows.WINDOW_ID_NONE
-      chrome.tabs.query {windowId: wnd, active: true}, (tabs) ->
-        self.register tabs[0].id if tabs[0]
-        chrome.runtime.lastError
+    chrome.windows.onFocusChanged.addListener (wnd) =>
+      if wnd != chrome.windows.WINDOW_ID_NONE
+        chrome.tabs.query {windowId: wnd, active: true}, (tabs) =>
+          @register tabs[0].id if tabs[0]
 
   register: (tabId) ->
     currentTime = new Date()
