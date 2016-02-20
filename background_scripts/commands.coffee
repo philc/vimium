@@ -344,7 +344,7 @@ commandDescriptions =
     (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
 
-  moveTabToNewWindow: ["Move tab to new window", { background: true }]
+  moveTabToNewWindow: ["Move tab to new window", { background: true, passCountToFunction: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true }]
 
   closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
