@@ -52,11 +52,11 @@ Commands =
         tokens = line.replace(/\s+$/, "").split /\s+/
         switch tokens[0]
           when "map"
-            [ _, key, command, options... ] = tokens
+            [ _, key, command, optionList... ] = tokens
             if command? and @availableCommands[command]
               key = @normalizeKey key
               logMessage? "Mapping #{key} to #{command}"
-              @mapKeyToCommand { key, command, options }
+              @mapKeyToCommand { key, command, options: @parseCommandOptions optionList }
 
           when "unmap"
             if tokens.length == 2
@@ -73,6 +73,22 @@ Commands =
     # mode.
     Settings.set "passNextKeyKeys",
       (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
+
+  # Command options follow command mappings, and are of one of two forms:
+  #   key=value     - a value
+  #   key           - a flag
+  parseCommandOptions: (optionList) ->
+    options = {}
+    for option in optionList
+      parse = option.split "="
+      switch parse.length
+        when 1
+          options[parse[0]] = true
+        when 2
+          options[parse[0]] = parse[1]
+        else
+          console.log "Vimium configuration error: invalid option: #{option}."
+    options
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}

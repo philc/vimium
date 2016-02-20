@@ -10,18 +10,7 @@ Vomnibar =
     options = {}
     searchEngines = Settings.get("searchEngines") ? ""
     SearchEngines.refreshAndUse searchEngines, (engines) ->
-      for option in registryEntry.options
-        [ key, value ] = option.split "="
-        switch key
-          when "keyword"
-            if value? and engines[value]?
-              options.keyword = value
-            else
-              console.log "Vimium configuration error: no such custom search engine: #{option}."
-          else
-              console.log "Vimium configuration error: unused flag: #{option}."
-
-      callback? options
+      callback? registryEntry.options
 
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
   # from the current frame.
