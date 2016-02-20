@@ -275,10 +275,14 @@ BackgroundCommands =
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.duplicate(tab.id)
       selectionChangedHandlers.push(callback))
-  moveTabToNewWindow: (callback) ->
-    chrome.tabs.query {active: true, currentWindow: true}, (tabs) ->
-      tab = tabs[0]
-      chrome.windows.create {tabId: tab.id, incognito: tab.incognito}
+  moveTabToNewWindow: (count) ->
+    chrome.tabs.query {currentWindow: true}, (tabs) ->
+      chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
+        activeTabIndex = activeTabs[0].index
+        startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
+        [ tab, tabs... ] = tabs[startTabIndex...startTabIndex + count]
+        chrome.windows.create {tabId: tab.id, incognito: tab.incognito}, (window) ->
+          chrome.tabs.move (tab.id for tab in tabs), {windowId: window.id, index: -1}
   nextTab: (count) -> selectTab "next", count
   previousTab: (count) -> selectTab "previous", count
   firstTab: (count) -> selectTab "first", count
