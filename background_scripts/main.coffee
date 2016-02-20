@@ -286,10 +286,12 @@ BackgroundCommands =
   previousTab: (count) -> selectTab "previous", count
   firstTab: (count) -> selectTab "first", count
   lastTab: (count) -> selectTab "last", count
-  removeTab: (callback) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.remove(tab.id)
-      selectionChangedHandlers.push(callback))
+  removeTab: (count) ->
+    chrome.tabs.query {currentWindow: true}, (tabs) ->
+      chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
+        activeTabIndex = activeTabs[0].index
+        startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
+        chrome.tabs.remove (tab.id for tab in tabs[startTabIndex...startTabIndex + count])
   restoreTab: (callback) ->
     chrome.sessions.restore null, ->
         callback() unless chrome.runtime.lastError

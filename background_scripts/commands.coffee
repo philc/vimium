@@ -339,7 +339,7 @@ commandDescriptions =
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
-  removeTab: ["Close current tab", { background: true, repeatLimit:
+  removeTab: ["Close current tab", { background: true, passCountToFunction: true, repeatLimit:
     # Require confirmation to remove more tabs than we can restore.
     (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
