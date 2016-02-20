@@ -56,7 +56,7 @@ Commands =
             if command? and @availableCommands[command]
               key = @normalizeKey key
               logMessage? "Mapping #{key} to #{command}"
-              @mapKeyToCommand { key, command, options: @parseCommandOptions optionList }
+              @mapKeyToCommand { key, command, options: @parseCommandOptions command, optionList }
 
           when "unmap"
             if tokens.length == 2
@@ -77,7 +77,7 @@ Commands =
   # Command options follow command mappings, and are of one of two forms:
   #   key=value     - a value
   #   key           - a flag
-  parseCommandOptions: (optionList) ->
+  parseCommandOptions: (command, optionList) ->
     options = {}
     for option in optionList
       parse = option.split "="
@@ -88,6 +88,11 @@ Commands =
           options[parse[0]] = parse[1]
         else
           console.log "Vimium configuration error: invalid option: #{option}."
+
+    # We parse any `count` option immediately (to avoid having to parse it repeatedly later).
+    unless @availableCommands[command].noRepeat
+      options.count = try Math.max 1, parseInt options.count
+
     options
 
   clearKeyMappingsAndSetDefaults: ->
