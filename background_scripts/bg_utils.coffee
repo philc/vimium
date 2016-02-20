@@ -18,6 +18,11 @@ class TabRecency
       @deregister removedTabId
       @register addedTabId
 
+    chrome.windows.onFocusChanged.addListener (wnd) =>
+      if wnd != chrome.windows.WINDOW_ID_NONE
+        chrome.tabs.query {windowId: wnd, active: true}, (tabs) =>
+          @register tabs[0].id if tabs[0]
+
   register: (tabId) ->
     currentTime = new Date()
     # Register tabId if it has been visited for at least @timeDelta ms.  Tabs which are visited only for a

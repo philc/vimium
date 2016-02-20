@@ -60,6 +60,8 @@ exports.chrome =
     onRemoved:
       addListener: () -> true
     getAll: () -> true
+    onFocusChanged:
+      addListener: () -> true
 
   browserAction:
     setBadgeBackgroundColor: ->
