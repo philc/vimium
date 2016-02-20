@@ -16,7 +16,8 @@ document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
   transferrableEvent = {}
-  for own key, value of event
+  # NOTE(mrmr1993): We use for, not for own, here, since we want to access members from the Event prototype.
+  for key, value of event
     transferrableEvent[key] = value if typeof value in ["number", "string"]
 
   if (event.keyCode in [keyCodes.backspace, keyCodes.deleteKey] and inputElement.textContent.length == 0) or
