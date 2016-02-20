@@ -170,6 +170,9 @@ Next version (not yet released)
   prevents unintentionally triggering Vimium commands with trailing keystrokes.
 - `gg` now accepts a `count` prefix.  It scrolls to an absolute position
   measured from the top of the window (and a multiple of `scrollStepSize`).
+- You can now bind keys to a command with a defined count prefix; see
+  [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes)
+  for details.
 - Bug fixes:
     - `<c-a-[>` is not longer treated as escape.
 
