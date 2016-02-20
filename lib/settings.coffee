@@ -172,7 +172,7 @@ Settings =
     regexFindMode: false
     waitForEnterForFilteredHints: false # Note: this defaults to true for new users; see below.
 
-    settingsVersion: Utils.getCurrentVersion()
+    settingsVersion: ""
     helpDialog_showAdvancedCommands: false
     optionsPage_showAdvancedOptions: false
     passNextKeyKeys: []
