@@ -87,8 +87,7 @@ HUD =
     DomUtils.documentReady -> ready = true
     -> ready and document.body != null
 
-  # A preference which can be toggled in the Options page. */
-  enabled: -> !Settings.get("hideHud")
+  enabled: -> true
 
 class Tween
   opacity: 0
