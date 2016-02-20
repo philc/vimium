@@ -19,7 +19,6 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
           func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
 
 currentVersion = Utils.getCurrentVersion()
-tabQueue = {} # windowId -> Array
 tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
@@ -35,7 +34,7 @@ namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
 # Event handlers
 selectionChangedHandlers = []
-# Note. tabLoadedHandlers handlers is exported for use also by "marks.coffee".
+# This is exported for use by "marks.coffee".
 root.tabLoadedHandlers = {} # tabId -> function()
 
 # A secret, available only within the current instantiation of Vimium.  The secret is big, likely unguessable
@@ -289,28 +288,8 @@ BackgroundCommands =
       chrome.tabs.remove(tab.id)
       selectionChangedHandlers.push(callback))
   restoreTab: (callback) ->
-    # TODO: remove if-else -block when adopted into stable
-    if chrome.sessions
-      chrome.sessions.restore(null, (restoredSession) ->
-          callback() unless chrome.runtime.lastError)
-    else
-      # TODO(ilya): Should this be getLastFocused instead?
-      chrome.windows.getCurrent((window) ->
-        return unless (tabQueue[window.id] && tabQueue[window.id].length > 0)
-        tabQueueEntry = tabQueue[window.id].pop()
-        # Clean out the tabQueue so we don't have unused windows laying about.
-        delete tabQueue[window.id] if (tabQueue[window.id].length == 0)
-
-        # We have to chain a few callbacks to set the appropriate scroll position. We can't just wait until the
-        # tab is created because the content script is not available during the "loading" state. We need to
-        # wait until that's over before we can call setScrollPosition.
-        chrome.tabs.create({ url: tabQueueEntry.url, index: tabQueueEntry.positionIndex }, (tab) ->
-          tabLoadedHandlers[tab.id] = ->
-            chrome.tabs.sendRequest(tab.id,
-              name: "setScrollPosition",
-              scrollX: tabQueueEntry.scrollX,
-              scrollY: tabQueueEntry.scrollY)
-          callback()))
+    chrome.sessions.restore null, ->
+        callback() unless chrome.runtime.lastError
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab({ url: Clipboard.paste() })
   openCopiedUrlInNewTab: (request) -> TabOperations.openUrlInNewTab({ url: Clipboard.paste() })
   togglePinTab: (request) ->
@@ -441,30 +420,12 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   openTabInfo = tabInfoMap[tabId]
   updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId)
 
-  # If we restore pages that content scripts can't run on, they'll ignore Vimium keystrokes when they
-  # reappear. Pretend they never existed and adjust tab indices accordingly. Could possibly expand this into
-  # a blacklist in the future.
-  unless chrome.sessions
-    if (/^(chrome|view-source:)[^:]*:\/\/.*/.test(openTabInfo.url))
-      for own i of tabQueue[openTabInfo.windowId]
-        if (tabQueue[openTabInfo.windowId][i].positionIndex > openTabInfo.positionIndex)
-          tabQueue[openTabInfo.windowId][i].positionIndex--
-      return
-
-    if (tabQueue[openTabInfo.windowId])
-      tabQueue[openTabInfo.windowId].push(openTabInfo)
-    else
-      tabQueue[openTabInfo.windowId] = [openTabInfo]
-
   # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
   # scroll position)
   tabInfoMap.deletor = -> delete tabInfoMap[tabId]
   setTimeout tabInfoMap.deletor, 1000
   delete frameIdsForTab[tabId]
   delete urlForTab[tabId]
-
-unless chrome.sessions
-  chrome.windows.onRemoved.addListener (windowId) -> delete tabQueue[windowId]
 
 # End action functions
 
@@ -707,8 +668,6 @@ chrome.tabs.onRemoved.addListener (tabId) ->
 
 # Tidy up tab caches when tabs are removed.  We cannot rely on unregisterFrame because Chrome does not always
 # provide sender.tab there.
-# NOTE(smblott) (2015-05-05) This may break restoreTab on legacy Chrome versions, but we'll be moving to
-# chrome.sessions support only soon anyway.
 chrome.tabs.onRemoved.addListener (tabId) ->
   delete cache[tabId] for cache in [ frameIdsForTab, urlForTab, tabInfoMap ]
 
