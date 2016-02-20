@@ -23,7 +23,6 @@ tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
 singleKeyCommands = []
-focusedFrame = null
 frameIdsForTab = {}
 root.urlForTab = {}
 
