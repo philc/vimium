@@ -170,6 +170,8 @@ Next version (not yet released)
   prevents unintentionally triggering Vimium commands with trailing keystrokes.
 - `gg` now accepts a `count` prefix.  It scrolls to an absolute position
   measured from the top of the window (and a multiple of `scrollStepSize`).
+- `moveTabToNewWindow` now accepts a count prefix; so, `3W` moves three tabs to
+  (the same) new window.
 - You can now bind keys to a command with a defined count prefix; see
   [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes)
   for details.
