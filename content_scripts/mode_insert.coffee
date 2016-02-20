@@ -30,7 +30,7 @@ class InsertMode extends Mode
 
     defaults =
       name: "insert"
-      indicator: if @permanent then null else "Insert mode"
+      indicator: if not @permanent and not Settings.get "hideHud"  then "Insert mode"
       keypress: handleKeyEvent
       keyup: handleKeyEvent
       keydown: handleKeyEvent
