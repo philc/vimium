@@ -85,7 +85,8 @@ Commands =
 
     # We parse any `count` option immediately (to avoid having to parse it repeatedly later).
     unless @availableCommands[command].noRepeat
-      options.count = try Math.max 1, parseInt options.count
+      if /^[1-9]/.test options.count
+        options.count = parseInt options.count
 
     options
 
