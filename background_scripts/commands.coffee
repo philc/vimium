@@ -80,14 +80,8 @@ Commands =
   parseCommandOptions: (command, optionList) ->
     options = {}
     for option in optionList
-      parse = option.split "="
-      switch parse.length
-        when 1
-          options[parse[0]] = true
-        when 2
-          options[parse[0]] = parse[1]
-        else
-          console.log "Vimium configuration error: invalid option: #{option}."
+      parse = option.split "=", 2
+      options[parse[0]] = if parse.length == 1 then true else parse[1]
 
     # We parse any `count` option immediately (to avoid having to parse it repeatedly later).
     unless @availableCommands[command].noRepeat
