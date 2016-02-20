@@ -19,7 +19,6 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
           func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
 
 currentVersion = Utils.getCurrentVersion()
-tabInfoMap = {} # tabId -> object with various tab properties
 keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
 singleKeyCommands = []
@@ -362,20 +361,6 @@ selectTab = (direction, count = 1) ->
             Math.max 0, tabs.length - count
       chrome.tabs.update tabs[toSelect].id, selected: true
 
-updateOpenTabs = (tab, deleteFrames = false) ->
-  # Chrome might reuse the tab ID of a recently removed tab.
-  if tabInfoMap[tab.id]?.deletor
-    clearTimeout tabInfoMap[tab.id].deletor
-  tabInfoMap[tab.id] =
-    url: tab.url
-    positionIndex: tab.index
-    windowId: tab.windowId
-    scrollX: null
-    scrollY: null
-    deletor: null
-  # Frames are recreated on refresh
-  delete frameIdsForTab[tab.id] if deleteFrames
-
 # Here's how we set the page icon.  The default is "disabled", so if we do nothing else, then we get the
 # grey-out disabled icon.  Thereafter, we only set tab-specific icons, so there's no need to update the icon
 # when we visit a tab on which Vimium isn't running.
@@ -394,14 +379,6 @@ setIcon = (request, sender) ->
     when "disabled" then "icons/browser_action_disabled.png"
   chrome.browserAction.setIcon tabId: sender.tab.id, path: path
 
-handleUpdateScrollPosition = (request, sender) ->
-  # See note regarding sender.tab at unregisterFrame.
-  updateScrollPosition sender.tab, request.scrollX, request.scrollY if sender.tab?
-
-updateScrollPosition = (tab, scrollX, scrollY) ->
-  tabInfoMap[tab.id].scrollX = scrollX
-  tabInfoMap[tab.id].scrollY = scrollY
-
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # only do this once per URL change
   cssConf =
@@ -409,37 +386,8 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
-  updateOpenTabs(tab) if changeInfo.url?
-
-chrome.tabs.onAttached.addListener (tabId, attachedInfo) ->
-  # We should update all the tabs in the old window and the new window.
-  if tabInfoMap[tabId]
-    updatePositionsAndWindowsForAllTabsInWindow(tabInfoMap[tabId].windowId)
-  updatePositionsAndWindowsForAllTabsInWindow(attachedInfo.newWindowId)
-
-chrome.tabs.onMoved.addListener (tabId, moveInfo) ->
-  updatePositionsAndWindowsForAllTabsInWindow(moveInfo.windowId)
-
-chrome.tabs.onRemoved.addListener (tabId) ->
-  openTabInfo = tabInfoMap[tabId]
-  updatePositionsAndWindowsForAllTabsInWindow(openTabInfo.windowId)
-
-  # keep the reference around for a while to wait for the last messages from the closed tab (e.g. for updating
-  # scroll position)
-  tabInfoMap.deletor = -> delete tabInfoMap[tabId]
-  setTimeout tabInfoMap.deletor, 1000
-  delete frameIdsForTab[tabId]
-  delete urlForTab[tabId]
 
 # End action functions
-
-updatePositionsAndWindowsForAllTabsInWindow = (windowId) ->
-  chrome.tabs.getAllInWindow(windowId, (tabs) ->
-    for tab in tabs
-      openTabInfo = tabInfoMap[tab.id]
-      if (openTabInfo)
-        openTabInfo.positionIndex = tab.index
-        openTabInfo.windowId = tab.windowId)
 
 splitKeyIntoFirstAndSecond = (key) ->
   if (key.search(namedKeyRegex) == 0)
@@ -596,10 +544,9 @@ unregisterFrame = (request, sender) ->
   # When a tab is closing, Chrome sometimes passes messages without sender.tab.  Therefore, we guard against
   # this.
   tabId = sender.tab?.id
-  return unless tabId?
-  if frameIdsForTab[tabId]?
+  if tabId? and frameIdsForTab[tabId]?
     if request.tab_is_closing
-      updateOpenTabs sender.tab, true
+      delete frameIdsForTab[tabId]
     else
       frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
 
@@ -646,7 +593,6 @@ sendRequestHandlers =
   unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
-  updateScrollPosition: handleUpdateScrollPosition
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
   isEnabledForUrl: isEnabledForUrl
@@ -675,7 +621,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
 # Tidy up tab caches when tabs are removed.  We cannot rely on unregisterFrame because Chrome does not always
 # provide sender.tab there.
 chrome.tabs.onRemoved.addListener (tabId) ->
-  delete cache[tabId] for cache in [ frameIdsForTab, urlForTab, tabInfoMap ]
+  delete cache[tabId] for cache in [ frameIdsForTab, urlForTab ]
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
@@ -714,15 +660,6 @@ showUpgradeMessage = ->
     else
       # We need to wait for the user to accept the "notifications" permission.
       chrome.permissions.onAdded.addListener showUpgradeMessage
-
-# Ensure that tabInfoMap is populated when Vimium is installed.
-chrome.windows.getAll { populate: true }, (windows) ->
-  for window in windows
-    for tab in window.tabs
-      updateOpenTabs(tab)
-      createScrollPositionHandler = ->
-        (response) -> updateScrollPosition(tab, response.scrollX, response.scrollY) if response?
-      chrome.tabs.sendMessage(tab.id, { name: "getScrollPosition" }, createScrollPositionHandler())
 
 showUpgradeMessage()
 
