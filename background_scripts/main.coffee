@@ -270,10 +270,11 @@ BackgroundCommands =
         # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
         url = if tab.incognito then "chrome://newtab" else chrome.runtime.getURL url
       TabOperations.openUrlInNewTab { url }, callback
-  duplicateTab: (callback) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.duplicate(tab.id)
-      selectionChangedHandlers.push(callback))
+  duplicateTab: (count) ->
+    chrome.tabs.getSelected null, (tab) ->
+      createTab = (tab) ->
+        chrome.tabs.duplicate tab.id, createTab if 0 < count--
+      createTab tab
   moveTabToNewWindow: (count) ->
     chrome.tabs.query {currentWindow: true}, (tabs) ->
       chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
