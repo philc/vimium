@@ -637,7 +637,7 @@ class FilterHints
         score = searchWordScores.reduce addFunc, 0
         # Prefer matches in shorter texts.  To keep things balanced for links without any text, we just weight
         # them as if their length was 50.
-        score / Math.log(text.length || 50)
+        score / Math.log 1 + (text.length || 50)
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
