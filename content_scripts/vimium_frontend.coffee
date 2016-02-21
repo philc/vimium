@@ -772,12 +772,6 @@ DomUtils.documentReady initializeOnDomReady
 DomUtils.documentReady registerFrame
 window.addEventListener "unload", unregisterFrame
 
-window.onbeforeunload = ->
-  chrome.runtime.sendMessage(
-    handler: "updateScrollPosition"
-    scrollX: window.scrollX
-    scrollY: window.scrollY)
-
 root = exports ? window
 root.handlerStack = handlerStack
 root.frameId = frameId
