@@ -30,8 +30,6 @@ root.urlForTab = {}
 # the string.
 namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
-# Event handlers
-selectionChangedHandlers = []
 # This is exported for use by "marks.coffee".
 root.tabLoadedHandlers = {} # tabId -> function()
 
@@ -236,10 +234,6 @@ selectSpecificTab = (request) ->
   chrome.tabs.get(request.id, (tab) ->
     chrome.windows.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { selected: true }))
-
-chrome.tabs.onSelectionChanged.addListener (tabId, selectionInfo) ->
-  if (selectionChangedHandlers.length > 0)
-    selectionChangedHandlers.pop().call()
 
 repeatFunction = (func, totalCount, currentCount, frameId) ->
   if (currentCount < totalCount)
