@@ -470,6 +470,7 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
   if (Commands.keyToCommandRegistry[command])
     registryEntry = Commands.keyToCommandRegistry[command]
     runCommand = true
+    count *= registryEntry.options.count ? 1
 
     if registryEntry.noRepeat
       count = 1
@@ -482,8 +483,6 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
       """
 
     if runCommand
-      # Account for any command-option "count".
-      count *= registryEntry.options.count ? 1
       if not registryEntry.isBackgroundCommand
         chrome.tabs.sendMessage tabId,
           name: "executePageCommand"
