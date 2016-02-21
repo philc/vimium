@@ -84,9 +84,8 @@ Commands =
       options[parse[0]] = if parse.length == 1 then true else parse[1]
 
     # We parse any `count` option immediately (to avoid having to parse it repeatedly later).
-    unless @availableCommands[command].noRepeat
-      if /^[1-9]/.test options.count
-        options.count = parseInt options.count
+    if "count" of options and not @availableCommands[command].noRepeat
+      options.count = if /^[1-9]/.test options.count then parseInt options.count else 1
 
     options
 
