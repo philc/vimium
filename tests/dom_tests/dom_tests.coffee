@@ -104,7 +104,10 @@ context "Test link hints for focusing input elements correctly",
     stubSettings "linkHintCharacters", "ab"
 
     # Every HTML5 input type except for hidden. We should be able to activate all of them with link hints.
-    inputTypes = ["button", "checkbox", "color", "date", "datetime", "datetime-local", "email", "file",
+    #
+    # TODO: Re-insert "color" into the inputTypes list when PhantomJS issue #13979 is fixed and integrated.
+    # Ref: https://github.com/ariya/phantomjs/issues/13979
+    inputTypes = ["button", "checkbox", "date", "datetime", "datetime-local", "email", "file",
       "image", "month", "number", "password", "radio", "range", "reset", "search", "submit", "tel", "text",
       "time", "url", "week"]
 
