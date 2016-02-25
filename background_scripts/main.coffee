@@ -197,7 +197,6 @@ getCompletionKeysRequest = (request, keysToCheck = "") ->
   name: "refreshCompletionKeys"
   completionKeys: generateCompletionKeys(keysToCheck)
   validFirstKeys: validFirstKeys
-  commandKeys: commandKeys
 
 TabOperations =
   # Opens the url in the current tab.

@@ -13,7 +13,6 @@ keyQueue = null
 # The user's operating system.
 currentCompletionKeys = ""
 validFirstKeys = ""
-commandKeys = []
 
 # We track whther the current window has the focus or not.
 windowIsFocused = do ->
@@ -581,8 +580,6 @@ window.refreshCompletionKeys = (response) ->
 
     if (response.validFirstKeys)
       validFirstKeys = response.validFirstKeys
-    if (response.commandKeys)
-      commandKeys = response.commandKeys
   else
     chrome.runtime.sendMessage({ handler: "getCompletionKeys" }, refreshCompletionKeys)
 
