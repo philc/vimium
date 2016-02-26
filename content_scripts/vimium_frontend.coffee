@@ -112,7 +112,8 @@ window.initializeModes = ->
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
-  new NormalMode
+  # new NormalMode
+  new KeyHandlerMode commandHandler: demoCommandHandler, keyMapping: demoKeyMapping, indicator: "Demo mode."
   new PassKeysMode
   new InsertMode permanent: true
   Scroller.init()
