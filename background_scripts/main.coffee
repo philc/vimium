@@ -377,15 +377,6 @@ runBackgroundCommand = ({frameId, registryEntry, count}) ->
   else
     repeatFunction BackgroundCommands[registryEntry.command], count, 0, frameId
 
-#
-# Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
-#
-sendRequestToAllTabs = (args) ->
-  chrome.windows.getAll({ populate: true }, (windows) ->
-    for window in windows
-      for tab in window.tabs
-        chrome.tabs.sendMessage(tab.id, args, null))
-
 openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
