@@ -38,9 +38,6 @@ HelpDialog =
 
     @showAdvancedCommands(@getShowAdvancedCommands())
 
-    # Simulating a click on the help dialog makes it the active element for scrolling.
-    DomUtils.simulateClick document.getElementById "vimiumHelpDialog"
-
   hide: -> UIComponentServer.postMessage "hide"
 
   toggle: (html) ->
