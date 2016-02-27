@@ -379,7 +379,7 @@ openVomnibar = (tabId, frameId, registryEntry) ->
 runBackgroundCommand = ({frameId, registryEntry, count}, sender) ->
   if registryEntry.command.split(".")[0] == "Vomnibar"
     openVomnibar sender.tab.id, frameId, registryEntry
-  if registryEntry.passCountToFunction
+  else if registryEntry.passCountToFunction
     BackgroundCommands[registryEntry.command] count, frameId
   else if registryEntry.noRepeat
     BackgroundCommands[registryEntry.command] frameId

@@ -374,6 +374,7 @@ commandDescriptions =
   moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
   moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
 
+  # These are background-page commands because all requests go via the background page.
   "Vomnibar.activate": ["Open URL, bookmark, or history entry", { background: true, noRepeat: true }]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { background: true, noRepeat: true }]
   "Vomnibar.activateTabSelection": ["Search through your open tabs", { background: true, noRepeat: true }]
