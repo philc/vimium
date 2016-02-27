@@ -171,6 +171,7 @@ DomUtils =
   # An unknown type will be treated the same as "text", in the same way that the browser does.
   #
   isSelectable: (element) ->
+    return false unless element instanceof Element
     unselectableTypes = ["button", "checkbox", "color", "file", "hidden", "image", "radio", "reset", "submit"]
     (element.nodeName.toLowerCase() == "input" && unselectableTypes.indexOf(element.type) == -1) ||
         element.nodeName.toLowerCase() == "textarea" || element.isContentEditable
@@ -179,12 +180,7 @@ DomUtils =
   # enter insert mode if focused. Also note that the "contentEditable" attribute can be set on any element
   # which makes it a rich text editor, like the notes on jjot.com.
   isEditable: (element) ->
-    return true if element.isContentEditable
-    nodeName = element.nodeName?.toLowerCase()
-    # Use a blacklist instead of a whitelist because new form controls are still being implemented for html5.
-    if nodeName == "input" and element.type not in ["radio", "checkbox"]
-      return true
-    nodeName in ["textarea", "select"]
+    (@isSelectable element) or element.nodeName?.toLowerCase() == "select"
 
   # Embedded elements like Flash and quicktime players can obtain focus.
   isEmbed: (element) ->
