@@ -94,6 +94,25 @@ Commands =
     @keyToCommandRegistry = {}
     @mapKeyToCommand { key, command } for own key, command of defaultKeyMappings
 
+  # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
+  # This regular expression captures two groups: the first is a named key, the second is the remainder of the
+  # string.
+  namedKeyRegex: /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
+
+  generateKeyStateStructure: ->
+    keyMapping = {}
+    for own keys, registryEntry of @keyToCommandRegistry
+      currentMapping = keyMapping
+      while 0 < keys.length
+        [key, rest] = if 0 == keys.search @namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys.slice(1)]
+        if 0 < rest.length
+          currentMapping[key] ?= {}
+          currentMapping = currentMapping[key]
+        else
+          currentMapping[key] = registryEntry
+        keys = rest
+    chrome.storage.local.set normalModeKeyStateMapping: keyMapping
+
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
   commandGroups:
@@ -375,6 +394,7 @@ Commands.init()
 Settings.postUpdateHooks["keyMappings"] = (value) ->
   Commands.clearKeyMappingsAndSetDefaults()
   Commands.parseCustomKeyMappings value
+  Commands.generateKeyStateStructure()
   refreshCompletionKeysAfterMappingSave()
 
 root = exports ? window

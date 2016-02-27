@@ -1,11 +1,4 @@
 
-# The important data structure here is the "keyState".  The key state is a non-empty list of objects, the keys
-# of which are key names, and the values are other key-mapping objects or commands (strings).  Key-mapping
-# objects can be arbitrarily nested; so we support any length of multi-key mapping.
-#
-# Whenever we consume a key, we append a new copy of the global key mapping to the key state (hence, the
-# global mappings are always available, and the key state is always non-empty).
-
 class KeyHandlerMode extends Mode
   useCount: true
   countPrefix: 0
@@ -15,8 +8,6 @@ class KeyHandlerMode extends Mode
   constructor: (options) ->
     # A function accepting a command name and a count; required.
     @commandHandler = options.commandHandler ? (->)
-    # A Key mapping structure; required.
-    @keyMapping = options.keyMapping ? {}
     @useCount = false if options.noCount
     @reset()
 
@@ -30,6 +21,8 @@ class KeyHandlerMode extends Mode
       # We cannot track matching keydown/keyup events if we lose the focus.
       blur: (event) => @alwaysContinueBubbling =>
         @keydownEvents = {} if event.target == window
+
+  setKeyMapping: (@keyMapping) -> @reset()
 
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
@@ -65,7 +58,7 @@ class KeyHandlerMode extends Mode
     keyChar = KeyboardUtils.getKeyCharString event
     if keyChar and @keyCharIsKeyStatePrefix keyChar
       @advanceKeyState keyChar
-      commands = @keyState.filter (entry) -> "string" == typeof entry
+      commands = @keyState.filter (entry) -> entry.command
       @invokeCommand commands[0] if 0 < commands.length
       false # Suppress event.
     else if keyChar and @isCountKey keyChar
@@ -124,35 +117,5 @@ class KeyHandlerMode extends Mode
 
   getEventCode: (event) -> event.keyCode
 
-# Demo/test code.
-# A (very) poor-man's normal mode.
-
-demoKeyMapping =
-  j: "scrollDown"
-  k: "scrollUp"
-  i: "enterInsertMode"
-  g:
-    g: "scrollToTop"
-    a: "scrollToTop"
-    z: "scrollToBottom"
-    i: "focusInput"
-  # A three-key binding.
-  a:
-    b:
-      c: "enterInsertMode"
-      # And this should override "j" on its own.
-      j: "enterInsertMode"
-
-demoCommandHandler = (command, count) ->
-  switch command
-    when "scrollDown" then scrollDown()
-    when "scrollUp" then scrollUp()
-    when "scrollToTop" then scrollToTop count
-    when "scrollToBottom" then scrollToBottom()
-    when "enterInsertMode" then enterInsertMode()
-    when "focusInput" then focusInput count
-
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode
-root.demoKeyMapping = demoKeyMapping
-root.demoCommandHandler = demoCommandHandler

@@ -629,6 +629,7 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
+Commands.generateKeyStateStructure()
 populateValidFirstKeys()
 populateSingleKeyCommands()
 

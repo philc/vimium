@@ -101,19 +101,35 @@ handlerStack.push
 
 # Only exported for tests.
 window.initializeModes = ->
-  class NormalMode extends Mode
+  class NormalMode extends KeyHandlerMode
     constructor: ->
       super
         name: "normal"
         indicator: false # There is no mode indicator in normal mode.
-        keydown: (event) => onKeydown.call @, event
-        keypress: (event) => onKeypress.call @, event
-        keyup: (event) => onKeyup.call @, event
+        commandHandler: @commandHandler.bind this
+        keyMapping: {}
+
+      chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
+        @setKeyMapping items.normalModeKeyStateMapping
+
+      chrome.storage.onChanged.addListener (changes, area) =>
+        if area == "local" and changes.normalModeKeyStateMapping?.newValue
+          @setKeyMapping changes.normalModeKeyStateMapping.newValue
+
+    commandHandler: (registryEntry, count) ->
+      # TODO: Special handling of Vomnibar.
+      if registryEntry.isBackgroundCommand
+        true # Not yet implemnted.
+      else
+        count = 1 if registryEntry.noRepeat
+        if registryEntry.passCountToFunction
+          Utils.invokeCommandString registryEntry.command, [count]
+        else
+          Utils.invokeCommandString registryEntry.command for i in [0...count]
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
-  # new NormalMode
-  new KeyHandlerMode commandHandler: demoCommandHandler, keyMapping: demoKeyMapping, indicator: "Demo mode."
+  new NormalMode
   new PassKeysMode
   new InsertMode permanent: true
   Scroller.init()
