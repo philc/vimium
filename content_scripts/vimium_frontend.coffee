@@ -649,7 +649,6 @@ followLink = (linkElement) ->
     # if we can click on it, don't simply set location.href: some next/prev links are meant to trigger AJAX
     # calls, like the 'more' button on GitHub's newsfeed.
     linkElement.scrollIntoView()
-    linkElement.focus()
     DomUtils.simulateClick(linkElement)
 
 #
