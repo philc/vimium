@@ -120,7 +120,6 @@ window.initializeModes = ->
           You have asked Vimium to perform #{count} repeats of the command: #{registryEntry.description}.\n
           Are you sure you want to continue? """
 
-      # TODO: Special handling of Vomnibar.
       if registryEntry.isBackgroundCommand
         chrome.runtime.sendMessage { handler: "runBackgroundCommand", frameId, registryEntry, count}
       else
@@ -135,6 +134,9 @@ window.initializeModes = ->
   new PassKeysMode normalMode
   new InsertMode permanent: true
   Scroller.init()
+
+openVomnibar = ({sourceFrameId, registryEntry}) ->
+  Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
@@ -151,6 +153,7 @@ initializePreDomReady = ->
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
+    openVomnibar: openVomnibar
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
@@ -162,11 +165,6 @@ initializePreDomReady = ->
     shouldHandleRequest = isEnabledForUrl
     # We always handle the message if it's one of these listed message types.
     shouldHandleRequest ||= request.name in [ "checkEnabledAfterURLChange" ]
-    # Requests with a frameId of zero should always and only be handled in the main/top frame (regardless of
-    # whether Vimium is enabled there).
-    if request.frameId == 0 and DomUtils.isTopFrame()
-      request.frameId = frameId
-      shouldHandleRequest = true
     sendResponse requestHandlers[request.name](request, sender) if shouldHandleRequest
     # Ensure the sendResponse callback is freed.
     false
