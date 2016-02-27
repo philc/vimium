@@ -36,10 +36,7 @@ class KeyHandlerMode extends Mode
         false # Suppress event.
 
     else if keyChar and @mappingForKeyChar keyChar
-        @advanceKeyState keyChar
-        commands = @keyState.filter (entry) -> "string" == typeof entry
-        @invokeCommand commands[0] if 0 < commands.length
-        false # Suppress event.
+      @handleKeyChar event, keyChar
 
     else
       # We did not handle the event, but we might handle the subsequent keypress event.  If we *will* be
@@ -57,12 +54,9 @@ class KeyHandlerMode extends Mode
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
     if keyChar and @mappingForKeyChar keyChar
-      @advanceKeyState keyChar
-      commands = @keyState.filter (entry) -> entry.command
-      @invokeCommand commands[0] if 0 < commands.length
-      false # Suppress event.
+      @handleKeyChar event, keyChar
     else if keyChar and @isCountKey keyChar
-      @countPrefix = @countPrefix * 10 + parseInt keyChar
+      @reset @countPrefix * 10 + parseInt keyChar
       false # Suppress event.
     else
       @continueBubbling
@@ -75,6 +69,12 @@ class KeyHandlerMode extends Mode
       @stopBubblingAndTrue
     else
       @continueBubbling
+
+  handleKeyChar: (event, keyChar) ->
+    @advanceKeyState keyChar
+    commands = @keyState.filter (entry) -> entry.command
+    @invokeCommand commands[0] if 0 < commands.length
+    false # Suppress event.
 
   # This returns the first mapping for which keyChar is mapped. The return value is truthy if a match is found
   # and falsy otherwise.
@@ -98,9 +98,9 @@ class KeyHandlerMode extends Mode
     @reset()
     @commandHandler command, countPrefix
 
-  # Reset the state (as if no keys had been handled).
-  reset: ->
-    @countPrefix = 0
+  # Reset the state (as if no keys had been handled), but retaining the count - if one is provided.
+  reset: (count = 0) ->
+    @countPrefix = count
     @keyState = [@keyMapping]
 
   # This tests whether we are in the reset state.  It is used to check whether we should be using escape to

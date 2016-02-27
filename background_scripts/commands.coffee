@@ -104,10 +104,9 @@ Commands =
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyMapping
       while 0 < keys.length
-        [key, rest] = if 0 == keys.search @namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys.slice(1)]
+        [key, rest] = if 0 == keys.search @namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys[1..]]
         if 0 < rest.length
-          currentMapping[key] ?= {}
-          currentMapping = currentMapping[key]
+          currentMapping = currentMapping[key] ?= {}
         else
           currentMapping[key] = registryEntry
         keys = rest
