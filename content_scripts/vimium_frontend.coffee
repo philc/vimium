@@ -117,11 +117,14 @@ window.initializeModes = ->
           @setKeyMapping changes.normalModeKeyStateMapping.newValue
 
     commandHandler: (registryEntry, count) ->
+      count *= registryEntry.options.count ? 1
+      count = 1 if registryEntry.noRepeat
+      # TODO: Repeat limit.
       # TODO: Special handling of Vomnibar.
+      # TODO: Fix passKeys.
       if registryEntry.isBackgroundCommand
-        true # Not yet implemnted.
+        chrome.runtime.sendMessage { handler: "runBackgroundCommand", frameId, registryEntry, count}
       else
-        count = 1 if registryEntry.noRepeat
         if registryEntry.passCountToFunction
           Utils.invokeCommandString registryEntry.command, [count]
         else

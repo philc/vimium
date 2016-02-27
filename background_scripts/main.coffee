@@ -519,6 +519,14 @@ checkKeyQueue = (keysToCheck, tabId, frameId) ->
 
   newKeyQueue
 
+runBackgroundCommand = ({frameId, registryEntry, count}) ->
+  if registryEntry.passCountToFunction
+    BackgroundCommands[registryEntry.command] count, frameId
+  else if registryEntry.noRepeat
+    BackgroundCommands[registryEntry.command] frameId
+  else
+    repeatFunction BackgroundCommands[registryEntry.command], count, 0, frameId
+
 #
 # Message all tabs. Args should be the arguments hash used by the Chrome sendRequest API.
 #
@@ -578,6 +586,7 @@ portHandlers =
   completions: handleCompletions
 
 sendRequestHandlers =
+  runBackgroundCommand: runBackgroundCommand
   getCompletionKeys: getCompletionKeysRequest
   getCurrentTabUrl: getCurrentTabUrl
   openUrlInNewTab: TabOperations.openUrlInNewTab
