@@ -35,7 +35,7 @@ class KeyHandlerMode extends Mode
         DomUtils.suppressKeyupAfterEscape handlerStack
         false # Suppress event.
 
-    else if keyChar and @keyCharIsKeyStatePrefix keyChar
+    else if keyChar and @mappingForKeyChar keyChar
         @advanceKeyState keyChar
         commands = @keyState.filter (entry) -> "string" == typeof entry
         @invokeCommand commands[0] if 0 < commands.length
@@ -46,7 +46,7 @@ class KeyHandlerMode extends Mode
       # handling that event, then we need to suppress propagation of this keydown event to prevent triggering
       # page features like Google instant search.
       keyChar = KeyboardUtils.getKeyChar event
-      if keyChar and (@keyCharIsKeyStatePrefix(keyChar) or @isCountKey keyChar)
+      if keyChar and (@mappingForKeyChar(keyChar) or @isCountKey keyChar)
         DomUtils.suppressPropagation event
         @keydownEvents[@getEventCode event] = true
         @stopBubblingAndTrue
@@ -56,7 +56,7 @@ class KeyHandlerMode extends Mode
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
-    if keyChar and @keyCharIsKeyStatePrefix keyChar
+    if keyChar and @mappingForKeyChar keyChar
       @advanceKeyState keyChar
       commands = @keyState.filter (entry) -> entry.command
       @invokeCommand commands[0] if 0 < commands.length
@@ -76,11 +76,12 @@ class KeyHandlerMode extends Mode
     else
       @continueBubbling
 
-  # This tests whether keyChar is a prefix of any current mapping in the key state.
-  keyCharIsKeyStatePrefix: (keyChar) ->
+  # This returns the first mapping for which keyChar is mapped. The return value is truthy if a match is found
+  # and falsy otherwise.
+  mappingForKeyChar: (keyChar) ->
     for mapping in @keyState
-      return true if keyChar of mapping
-    false
+      return mapping if keyChar of mapping
+    null
 
   # This is called whenever a keyChar is matched.  We keep any existing entries matching keyChar, and append a
   # new copy of the global key mappings.
@@ -114,6 +115,11 @@ class KeyHandlerMode extends Mode
       '0' <= keyChar <= '9'
     else
       '1' <= keyChar <= '9'
+
+  # True if keyChar would be the first character of a command mapping.  This is used by passKeys to decide
+  # whether keyChar is a continuation of a command which the user has already begin entering.
+  isFirstKeyChar: (keyChar) ->
+    @countPrefix == 0 and @keyMapping == @mappingForKeyChar keyChar
 
   getEventCode: (event) -> event.keyCode
 
