@@ -135,9 +135,6 @@ window.initializeModes = ->
   new InsertMode permanent: true
   Scroller.init()
 
-openVomnibar = ({sourceFrameId, registryEntry}) ->
-  Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
-
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
@@ -153,7 +150,8 @@ initializePreDomReady = ->
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
-    openVomnibar: openVomnibar
+    openVomnibar: ({sourceFrameId, registryEntry}) ->
+      Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # In the options page, we will receive requests from both content and background scripts. ignore those
