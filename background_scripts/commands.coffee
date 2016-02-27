@@ -395,7 +395,6 @@ Settings.postUpdateHooks["keyMappings"] = (value) ->
   Commands.clearKeyMappingsAndSetDefaults()
   Commands.parseCustomKeyMappings value
   Commands.generateKeyStateStructure()
-  refreshCompletionKeysAfterMappingSave()
 
 root = exports ? window
 root.Commands = Commands
