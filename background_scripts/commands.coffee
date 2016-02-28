@@ -278,20 +278,20 @@ defaultKeyMappings =
 commandDescriptions =
   # Navigating the current page
   showHelp: ["Show help", { background: true }]
-  scrollDown: ["Scroll down"]
-  scrollUp: ["Scroll up"]
-  scrollLeft: ["Scroll left"]
-  scrollRight: ["Scroll right"]
+  scrollDown: ["Scroll down", { passCountToFunction: true }]
+  scrollUp: ["Scroll up", { passCountToFunction: true }]
+  scrollLeft: ["Scroll left", { passCountToFunction: true }]
+  scrollRight: ["Scroll right", { passCountToFunction: true }]
 
   scrollToTop: ["Scroll to the top of the page", { passCountToFunction: true }]
   scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
   scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
   scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
 
-  scrollPageDown: ["Scroll a page down"]
-  scrollPageUp: ["Scroll a page up"]
-  scrollFullPageDown: ["Scroll a full page down"]
-  scrollFullPageUp: ["Scroll a full page up"]
+  scrollPageDown: ["Scroll a page down", { passCountToFunction: true }]
+  scrollPageUp: ["Scroll a page up", { passCountToFunction: true }]
+  scrollFullPageDown: ["Scroll a full page down", { passCountToFunction: true }]
+  scrollFullPageUp: ["Scroll a full page up", { passCountToFunction: true }]
 
   reload: ["Reload the page", { noRepeat: true }]
   toggleViewSource: ["View page source", { noRepeat: true }]
