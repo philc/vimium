@@ -32,16 +32,14 @@ class KeyHandlerMode extends Mode
       @handleKeyChar event, keyChar
     else if keyChar
       @continueBubbling
-    else
+    else if (keyChar = KeyboardUtils.getKeyChar event) and (@mappingForKeyChar(keyChar) or @isCountKey keyChar)
       # We did not handle the event, but we might handle a subsequent keypress.  If we will be handling that
       # event, then we suppress propagation of this keydown to prevent triggering page events.
-      keyChar = KeyboardUtils.getKeyChar event
-      if keyChar and (@mappingForKeyChar(keyChar) or @isCountKey keyChar)
-        DomUtils.suppressPropagation event
-        @keydownEvents[event.keyCode] = true
-        @stopBubblingAndTrue
-      else
-        @continueBubbling
+      DomUtils.suppressPropagation event
+      @keydownEvents[event.keyCode] = true
+      @stopBubblingAndTrue
+    else
+      @continueBubbling
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
