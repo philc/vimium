@@ -24,15 +24,10 @@ for type in [ "keydown", "keypress", "keyup" ]
 initializeModeState = ->
   Mode.reset()
   handlerStack.reset()
-  initializeModes()
-  # We use "m" as the only mapped key, "p" as a passkey, and "u" as an unmapped key.
-  refreshCompletionKeys
-    completionKeys: "mp"
+  initializeModes keyMapping: {m: {}, p: {}, z: {p: {}}}
   handlerStack.bubbleEvent "registerStateChange",
     enabled: true
     passKeys: "p"
-  handlerStack.bubbleEvent "registerKeyQueue",
-    keyQueue: ""
 
 # Tell Settings that it's been loaded.
 Settings.isLoaded = true
@@ -375,10 +370,14 @@ context "Normal mode",
     sendKeyboardEvent "p"
     assert.equal pageKeyboardEventCount, 3
 
-  should "suppress passKeys with a non-empty keyQueue", ->
-    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "p"
+  should "suppress passKeys with a non-empty key state (a count)", ->
+    sendKeyboardEvent "5"
+    assert.equal 0, pageKeyboardEventCount
+
+  should "suppress passKeys with a non-empty key state (a key)", ->
+    sendKeyboardEvent "z"
     sendKeyboardEvent "p"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
 
 context "Insert mode",
   setup ->
@@ -397,7 +396,7 @@ context "Insert mode",
   should "resume normal mode after leaving insert mode", ->
     @insertMode.exit()
     sendKeyboardEvent "m"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
 
 context "Triggering insert mode",
   setup ->
@@ -501,12 +500,6 @@ context "Mode utilities",
 
     assert.isTrue test.enabled == "one"
     assert.isTrue test.passKeys == "two"
-
-  should "register the keyQueue", ->
-    test = new Mode trackState: true
-    handlerStack.bubbleEvent "registerKeyQueue", keyQueue: "hello"
-
-    assert.isTrue test.keyQueue == "hello"
 
 context "PostFindMode",
   setup ->

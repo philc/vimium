@@ -6,7 +6,7 @@ class KeyHandlerMode extends Mode
 
   constructor: (options) ->
     @commandHandler = options.commandHandler ? (->)
-    @setKeyMapping options.commandHandler ? {}
+    @setKeyMapping options.keyMapping ? {}
 
     delete options[option] for option in ["commandHandler", "keyMapping"]
     super extend options,
@@ -28,7 +28,10 @@ class KeyHandlerMode extends Mode
         DomUtils.suppressKeyupAfterEscape handlerStack
         false # Suppress event.
     else if keyChar and @mappingForKeyChar keyChar
+      @keydownEvents[event.keyCode] = true
       @handleKeyChar event, keyChar
+    else if keyChar
+      @continueBubbling
     else
       # We did not handle the event, but we might handle a subsequent keypress.  If we will be handling that
       # event, then we suppress propagation of this keydown to prevent triggering page events.

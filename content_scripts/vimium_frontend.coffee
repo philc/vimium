@@ -93,42 +93,41 @@ handlerStack.push
         target = target.parentElement
     true
 
-# Only exported for tests.
-window.initializeModes = ->
-  class NormalMode extends KeyHandlerMode
-    constructor: ->
-      super
-        name: "normal"
-        indicator: false # There is no mode indicator in normal mode.
-        commandHandler: @commandHandler.bind this
-        keyMapping: {}
+class NormalMode extends KeyHandlerMode
+  constructor: (options = {}) ->
+    super extend options,
+      name: "normal"
+      indicator: false # There is no mode indicator in normal mode.
+      commandHandler: @commandHandler.bind this
 
-      chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
-        @setKeyMapping items.normalModeKeyStateMapping
+    chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
+      @setKeyMapping items.normalModeKeyStateMapping
 
-      chrome.storage.onChanged.addListener (changes, area) =>
-        if area == "local" and changes.normalModeKeyStateMapping?.newValue
-          @setKeyMapping changes.normalModeKeyStateMapping.newValue
+    chrome.storage.onChanged.addListener (changes, area) =>
+      if area == "local" and changes.normalModeKeyStateMapping?.newValue
+        @setKeyMapping changes.normalModeKeyStateMapping.newValue
 
-    commandHandler: (registryEntry, count) ->
-      count *= registryEntry.options.count ? 1
-      count = 1 if registryEntry.noRepeat
+  commandHandler: (registryEntry, count) ->
+    count *= registryEntry.options.count ? 1
+    count = 1 if registryEntry.noRepeat
 
-      if registryEntry.repeatLimit? and registryEntry.repeatLimit < count
-        return unless confirm """
-          You have asked Vimium to perform #{count} repeats of the command: #{registryEntry.description}.\n
-          Are you sure you want to continue?"""
+    if registryEntry.repeatLimit? and registryEntry.repeatLimit < count
+      return unless confirm """
+        You have asked Vimium to perform #{count} repeats of the command: #{registryEntry.description}.\n
+        Are you sure you want to continue?"""
 
-      if registryEntry.isBackgroundCommand
-        chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
-      else if registryEntry.passCountToFunction
-        Utils.invokeCommandString registryEntry.command, [count]
-      else
-        Utils.invokeCommandString registryEntry.command for i in [0...count]
+    if registryEntry.isBackgroundCommand
+      chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
+    else if registryEntry.passCountToFunction
+      Utils.invokeCommandString registryEntry.command, [count]
+    else
+      Utils.invokeCommandString registryEntry.command for i in [0...count]
 
+# Only exported for tests; also, "args..." is only for the tests.
+window.initializeModes = (args...) ->
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
-  normalMode = new NormalMode
+  normalMode = new NormalMode args...
   new PassKeysMode normalMode
   new InsertMode permanent: true
   Scroller.init()
