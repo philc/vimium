@@ -300,9 +300,7 @@ focusThisFrame = (request) ->
     chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
     return
   window.focus()
-  shouldHighlight = request.highlight
-  shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
-  flashFrame() if shouldHighlight
+  flashFrame() if request.highlight
 
 extend window,
   scrollToBottom: ->

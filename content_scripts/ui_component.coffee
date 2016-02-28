@@ -102,11 +102,6 @@ class UIComponent
           message:
             name: "focusFrame"
             frameId: sourceFrameId
-            highlight: false
-            # Note(smblott) Disabled prior to 1.50 (or post 1.49) release.
-            # The UX around flashing the frame isn't quite right yet.  We want the frame to flash only if the
-            # user exits the Vomnibar with Escape.
-            highlightOnlyIfNotTop: false # true
 
       if windowIsFocused()
         # We already have the focus.
