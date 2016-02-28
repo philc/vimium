@@ -117,15 +117,14 @@ window.initializeModes = ->
       if registryEntry.repeatLimit? and registryEntry.repeatLimit < count
         return unless confirm """
           You have asked Vimium to perform #{count} repeats of the command: #{registryEntry.description}.\n
-          Are you sure you want to continue? """
+          Are you sure you want to continue?"""
 
       if registryEntry.isBackgroundCommand
-        chrome.runtime.sendMessage { handler: "runBackgroundCommand", frameId, registryEntry, count}
+        chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
+      else if registryEntry.passCountToFunction
+        Utils.invokeCommandString registryEntry.command, [count]
       else
-        if registryEntry.passCountToFunction
-          Utils.invokeCommandString registryEntry.command, [count]
-        else
-          Utils.invokeCommandString registryEntry.command for i in [0...count]
+        Utils.invokeCommandString registryEntry.command for i in [0...count]
 
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
