@@ -48,9 +48,9 @@ HelpDialog =
           chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
-    @exitOnEscape = new Mode exitOnEscape: true
+    @exitOnEscape = new Mode name: "help-page-escape", exitOnEscape: true
     @exitOnEscape.onExit (event) =>
-      HelpDialog.hide() if event?.type == "keydown" and KeyboardUtils.isEscape event
+      HelpDialog.hide() if event?.type == "keydown"
 
   hide: ->
     @exitOnEscape.exit()

@@ -93,7 +93,7 @@ class KeyHandlerMode extends Mode
 
   # This tests whether keyChar would be the very first character of a command mapping.
   isFirstKeyChar: (keyChar) ->
-    keyChar and @countPrefix == 0 and (@mappingForKeyChar(keyChar) == @keyMapping or @isCountKey keyChar)
+    @countPrefix == 0 and (@mappingForKeyChar(keyChar) == @keyMapping or @isCountKey keyChar)
 
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode
