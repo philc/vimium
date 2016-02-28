@@ -29,7 +29,7 @@ Commands =
       logMessage? "#{command} doesn't exist!"
       return
 
-    options ?= []
+    options ?= {}
     @keyToCommandRegistry[key] = extend { command, options }, @availableCommands[command]
 
   # Lower-case the appropriate portions of named keys.
