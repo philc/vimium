@@ -21,16 +21,14 @@ class KeyHandlerMode extends Mode
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
     if KeyboardUtils.isEscape event
-      if @isInResetState()
+      if @countPrefix == 0 and @keyState.length == 1
         @continueBubbling
       else
         @reset()
         DomUtils.suppressKeyupAfterEscape handlerStack
         false # Suppress event.
-
     else if keyChar and @mappingForKeyChar keyChar
       @handleKeyChar event, keyChar
-
     else
       # We did not handle the event, but we might handle a subsequent keypress.  If we will be handling that
       # event, then we suppress propagation of this keydown to prevent triggering page events.
@@ -84,26 +82,15 @@ class KeyHandlerMode extends Mode
     newMappings = (mapping[keyChar] for mapping in @keyState when keyChar of mapping)
     @keyState = [newMappings..., @keyMapping]
 
-  # Reset the state (as if no keys had been handled), but retaining the count - if one is provided.
-  reset: (count = 0) ->
-    bgLog "Clearing key queue, set count=#{count}."
-    @countPrefix = count
+  # Reset the state (as if no keys had been handled), but optionally retaining the count provided.
+  reset: (@countPrefix = 0) ->
+    bgLog "Clearing key queue, set count=#{@countPrefix}."
     @keyState = [@keyMapping]
 
-  # This tests whether we are in the reset state.  It is used to check whether we should be using escape to
-  # reset the key state, or passing it to the page.
-  isInResetState: ->
-    @countPrefix == 0 and @keyState.length == 1
-
-  # This tests whether keyChar should be treated as a count key.
   isCountKey: (keyChar) ->
-    return false unless keyChar.length == 1
-    if 0 < @countPrefix
-      '0' <= keyChar <= '9'
-    else
-      '1' <= keyChar <= '9'
+    keyChar.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9'
 
-  # Test whether keyChar would be the very first character of a command mapping.
+  # This tests whether keyChar would be the very first character of a command mapping.
   isFirstKeyChar: (keyChar) ->
     keyChar and @countPrefix == 0 and (@mappingForKeyChar(keyChar) == @keyMapping or @isCountKey keyChar)
 

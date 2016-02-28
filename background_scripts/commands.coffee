@@ -8,7 +8,7 @@ Commands =
   loadKeyMappings: (value) ->
     @clearKeyMappingsAndSetDefaults()
     @parseCustomKeyMappings value
-    @generateKeyStateStructure()
+    @generateKeyStateMapping()
 
   availableCommands: {}
   keyToCommandRegistry: {}
@@ -106,7 +106,7 @@ Commands =
   # string.
   namedKeyRegex: /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
 
-  generateKeyStateStructure: ->
+  generateKeyStateMapping: ->
     keyMapping = {}
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyMapping

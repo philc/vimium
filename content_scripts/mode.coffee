@@ -119,8 +119,7 @@ class Mode
         @deactivateSingleton @options.singleton
         singletons[key] = this
 
-    # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
-    # and calls @registerStateChange() (if defined) whenever the state changes.
+    # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys.
     if @options.trackState
       @enabled = false
       @passKeys = ""
