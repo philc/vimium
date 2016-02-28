@@ -312,14 +312,14 @@ extend window,
     Scroller.scrollTo "y", (count - 1) * Settings.get("scrollStepSize")
   scrollToLeft: -> Scroller.scrollTo "x", 0
   scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize")
-  scrollDown: -> Scroller.scrollBy "y", Settings.get("scrollStepSize")
-  scrollPageUp: -> Scroller.scrollBy "y", "viewSize", -1/2
-  scrollPageDown: -> Scroller.scrollBy "y", "viewSize", 1/2
-  scrollFullPageUp: -> Scroller.scrollBy "y", "viewSize", -1
-  scrollFullPageDown: -> Scroller.scrollBy "y", "viewSize"
-  scrollLeft: -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize")
-  scrollRight: -> Scroller.scrollBy "x", Settings.get("scrollStepSize")
+  scrollUp: (count) -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize") * count
+  scrollDown: (count) -> Scroller.scrollBy "y", Settings.get("scrollStepSize") * count
+  scrollPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1/2 * count
+  scrollPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1/2 * count
+  scrollFullPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1 * count
+  scrollFullPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1 * count
+  scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count
+  scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
 
 extend window,
   reload: -> window.location.reload()
