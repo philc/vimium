@@ -1,7 +1,14 @@
 Commands =
-  init: ->
+  init: (customKeyMappings) ->
     for own command, description of commandDescriptions
       @addCommand(command, description[0], description[1])
+    @loadKeyMappings customKeyMappings
+    Settings.postUpdateHooks["keyMappings"] = @loadKeyMappings.bind this
+
+  loadKeyMappings: (value) ->
+    @clearKeyMappingsAndSetDefaults()
+    @parseCustomKeyMappings value
+    @generateKeyStateStructure()
 
   availableCommands: {}
   keyToCommandRegistry: {}
@@ -391,13 +398,7 @@ commandDescriptions =
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
-Commands.init()
-
-# Register postUpdateHook for keyMappings setting.
-Settings.postUpdateHooks["keyMappings"] = (value) ->
-  Commands.clearKeyMappingsAndSetDefaults()
-  Commands.parseCustomKeyMappings value
-  Commands.generateKeyStateStructure()
+Commands.init Settings.get "keyMappings"
 
 root = exports ? window
 root.Commands = Commands

@@ -481,7 +481,6 @@ window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'
 #
 # Begin initialization.
 #
-Settings.postUpdateHooks["keyMappings"] Settings.get "keyMappings"
 
 # Show notification on upgrade.
 showUpgradeMessage = ->
