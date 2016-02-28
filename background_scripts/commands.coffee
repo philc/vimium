@@ -106,7 +106,9 @@ Commands =
       while 0 < keys.length
         [key, rest] = if 0 == keys.search @namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys[1..]]
         if 0 < rest.length
-          currentMapping = currentMapping[key] ?= {}
+          # Do not overwrite existing command bindings, they take priority.
+          break if (currentMapping[key] ?= {}).command
+          currentMapping = currentMapping[key]
         else
           currentMapping[key] = registryEntry
         keys = rest
