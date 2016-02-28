@@ -269,9 +269,7 @@ setScrollPosition = ({ scrollX, scrollY }) ->
         Marks.setPreviousPosition()
         window.scrollTo scrollX, scrollY
 
-#
-# Called from the backend in order to change frame focus.
-#
+flashFrame = ->
 DomUtils.documentReady ->
   # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
   highlightedFrameElement = DomUtils.createElement "div"
@@ -287,21 +285,24 @@ DomUtils.documentReady ->
   _frameEl.className = "vimiumReset vimiumHighlightedFrame"
   _shadowDOM.appendChild _frameEl
 
-  window.focusThisFrame = (request) ->
-    if window.innerWidth < 3 or window.innerHeight < 3
-      # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
-      # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
-      # Here we're assuming that there is at least one frame large enough to focus.
-      chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
-      return
-    window.focus()
-    shouldHighlight = request.highlight
-    shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
-    if shouldHighlight
-      document.documentElement.appendChild highlightedFrameElement
-      setTimeout (-> highlightedFrameElement.remove()), 200
+  flashFrame = ->
+    document.documentElement.appendChild highlightedFrameElement
+    setTimeout (-> highlightedFrameElement.remove()), 200
 
-window.focusThisFrame = ->
+#
+# Called from the backend in order to change frame focus.
+#
+focusThisFrame = (request) ->
+  if window.innerWidth < 3 or window.innerHeight < 3
+    # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
+    # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
+    # Here we're assuming that there is at least one frame large enough to focus.
+    chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
+    return
+  window.focus()
+  shouldHighlight = request.highlight
+  shouldHighlight ||= request.highlightOnlyIfNotTop and not DomUtils.isTopFrame()
+  flashFrame() if shouldHighlight
 
 extend window,
   scrollToBottom: ->
