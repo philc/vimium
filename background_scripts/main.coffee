@@ -658,5 +658,10 @@ showUpgradeMessage = ->
 
 showUpgradeMessage()
 
+# The install date is shown on the logging page.
+chrome.runtime.onInstalled.addListener ({reason}) ->
+  unless reason in ["chrome_update", "shared_module_update"]
+    chrome.storage.local.set installDate: new Date().toString()
+
 root.TabOperations = TabOperations
 root.logMessage = logMessage

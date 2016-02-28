@@ -2,6 +2,7 @@
   <head>
     <title>Vimium Logging</title>
     <script src="content_script_loader.js"></script>
+    <script src="logging.js"></script>
     <style type="text/css">
       body {
         font: 14px "DejaVu Sans", "Arial", sans-serif;
@@ -23,6 +24,12 @@
         width: 100%;
         height: 80%;
       }
+      #branchRef-wrapper {
+        display: none;
+      }
+      #branchRef-wrapper.no-hide {
+        display: block;
+      }
     </style>
   </head>
 
@@ -32,6 +39,9 @@
       <br />
       <textarea id="log-text" readonly></textarea>
       <br />
+      Version: <span id="vimiumVersion"></span><br />
+      Installed: <span id="installDate"></span>
+      <div id="branchRef-wrapper">Branch: <span id="branchRef"></span></div>
     </div>
   </body>
 </html>
