@@ -107,13 +107,13 @@ class NormalMode extends KeyHandlerMode
       if area == "local" and changes.normalModeKeyStateMapping?.newValue
         @setKeyMapping changes.normalModeKeyStateMapping.newValue
 
-  commandHandler: (registryEntry, count) ->
+  commandHandler: ({command: registryEntry, count, event}) ->
     count *= registryEntry.options.count ? 1
     count = 1 if registryEntry.noRepeat
 
     if registryEntry.repeatLimit? and registryEntry.repeatLimit < count
       return unless confirm """
-        You have asked Vimium to perform #{count} repeats of the command: #{registryEntry.description}.\n
+        You have asked Vimium to perform #{count} repetitions of the command: #{registryEntry.description}.\n
         Are you sure you want to continue?"""
 
     if registryEntry.isBackgroundCommand

@@ -125,7 +125,7 @@ class Mode
       @passKeys = ""
       @push
         _name: "mode-#{@id}/registerStateChange"
-        registerStateChange: ({ enabled: @enabled, passKeys: @passKeys }) => @alwaysContinueBubbling =>
+        registerStateChange: ({ enabled: @enabled, passKeys: @passKeys }) => @continueBubbling
 
     # If @options.passInitialKeyupEvents is set, then we pass initial non-printable keyup events to the page
     # or to other extensions (because the corresponding keydown events were passed).  This is used when

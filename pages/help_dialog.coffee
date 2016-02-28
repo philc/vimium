@@ -53,7 +53,7 @@ HelpDialog =
       HelpDialog.hide() if event?.type == "keydown"
 
   hide: ->
-    @exitOnEscape.exit()
+    @exitOnEscape?.exit()
     UIComponentServer.postMessage "hide"
 
   toggle: (html) ->

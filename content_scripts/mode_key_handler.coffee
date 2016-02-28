@@ -1,22 +1,18 @@
 
 class KeyHandlerMode extends Mode
-  countPrefix: 0
   keydownEvents: {}
-  keyState: []
+  setKeyMapping: (@keyMapping) -> @reset()
 
   constructor: (options) ->
     @commandHandler = options.commandHandler ? (->)
     @setKeyMapping options.keyMapping ? {}
 
-    delete options[option] for option in ["commandHandler", "keyMapping"]
     super extend options,
       keydown: @onKeydown.bind this
       keypress: @onKeypress.bind this
       keyup: @onKeyup.bind this
-      # We cannot track matching keydown/keyup events if we lose the focus.
+      # We cannot track keyup events if we lose the focus.
       blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
-
-  setKeyMapping: (@keyMapping) -> @reset()
 
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
@@ -24,8 +20,8 @@ class KeyHandlerMode extends Mode
       if @countPrefix == 0 and @keyState.length == 1
         @continueBubbling
       else
+        @keydownEvents[event.keyCode] = true
         @reset()
-        DomUtils.suppressKeyupAfterEscape handlerStack
         false # Suppress event.
     else if keyChar and @mappingForKeyChar keyChar
       @keydownEvents[event.keyCode] = true
@@ -33,10 +29,10 @@ class KeyHandlerMode extends Mode
     else if keyChar
       @continueBubbling
     else if (keyChar = KeyboardUtils.getKeyChar event) and (@mappingForKeyChar(keyChar) or @isCountKey keyChar)
-      # We did not handle the event, but we might handle a subsequent keypress.  If we will be handling that
-      # event, then we suppress propagation of this keydown to prevent triggering page events.
-      DomUtils.suppressPropagation event
+      # We will probably be handling a subsequent keypress event, so suppress propagation of this event to
+      # prevent triggering page event listeners (e.g. Google instant Search).
       @keydownEvents[event.keyCode] = true
+      DomUtils.suppressPropagation event
       @stopBubblingAndTrue
     else
       @continueBubbling
@@ -69,7 +65,7 @@ class KeyHandlerMode extends Mode
       countPrefix = if 0 < @countPrefix then @countPrefix else 1
       @reset()
       bgLog "Calling mode=#{@name}, command=#{commands[0].command}, count=#{countPrefix}."
-      @commandHandler commands[0], countPrefix
+      @commandHandler command: commands[0], count: countPrefix, event: event
     false # Suppress event.
 
   # This returns the first key-state entry for which keyChar is mapped. The return value is truthy if a match

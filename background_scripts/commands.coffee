@@ -1,5 +1,5 @@
 Commands =
-  init: () ->
+  init: ->
     for own command, description of commandDescriptions
       @addCommand(command, description[0], description[1])
     @loadKeyMappings Settings.get "keyMappings"
@@ -115,7 +115,7 @@ Commands =
         if currentMapping[key]?.command
           break # Do not overwrite existing command bindings, they take priority.
         else if 0 < keys.length
-          currentMapping = (currentMapping[key] ?= {})
+          currentMapping = currentMapping[key] ?= {}
         else
           currentMapping[key] = registryEntry
     chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
