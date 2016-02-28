@@ -113,6 +113,7 @@ Commands =
           currentMapping[key] = registryEntry
         keys = rest
     chrome.storage.local.set normalModeKeyStateMapping: keyMapping
+    @keyToCommandRegistry = {} # We don't need this any more, so free up the memory.
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
