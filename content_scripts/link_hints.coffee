@@ -26,7 +26,9 @@ LinkHints =
         # can exit following which we do not restart hints mode.
         return if event?.type == "keydown" and KeyboardUtils.isEscape event
         return if event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
-        LinkHints.activateMode count-1, mode
+        # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
+        # which would cause our new mode to exit immediately.
+        Utils.nextTick -> LinkHints.activateMode count-1, mode
 
   activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
@@ -389,11 +391,10 @@ class LinkHintsMode
         @linkActivator(clickEl)
         LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
 
-      delay = 0 if waitForEnter
-      @deactivateMode delay, =>
-        if waitForEnter
-          new WaitForEnter @matchedLink.rect, linkActivator
-        else
+      if waitForEnter
+        new WaitForEnter @matchedLink.rect, => @deactivateMode 0, linkActivator
+      else
+        @deactivateMode delay, =>
           DomUtils.flashRect @matchedLink.rect
           linkActivator()
 
@@ -421,18 +422,16 @@ class LinkHintsMode
       @onExit?()
       @onExit = null
       @tabCount = 0
+      callback?()
 
     if delay
       # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
       # user from inadvertently launching Vimium commands when typing the link text.
-      new TypingProtector delay, @matchedLink?.rect, ->
-        deactivate()
-        callback?()
+      new TypingProtector delay, @matchedLink?.rect, deactivate
     else
       # We invoke deactivate() directly (instead of setting a timeout of 0) so that deactivateMode() can be
       # tested synchronously.
       deactivate()
-      callback?()
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
