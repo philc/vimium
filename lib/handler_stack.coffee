@@ -84,8 +84,6 @@ class HandlerStack
 
   # Debugging.
   logResult: (eventNumber, type, event, handler, result) ->
-    # Key queue events aren't usually useful for debugging, so we filter them out.
-    return if type in [ "registerKeyQueue" ]
     label =
       switch result
         when @stopBubblingAndTrue then "stop/true"

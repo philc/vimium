@@ -7,7 +7,6 @@
 
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
-passKeys = null
 
 # We track whther the current window has the focus or not.
 windowIsFocused = do ->
@@ -162,7 +161,7 @@ initializePreDomReady = ->
     return if request.handler and not request.name
     shouldHandleRequest = isEnabledForUrl
     # We always handle the message if it's one of these listed message types.
-    shouldHandleRequest ||= request.name in [ "checkEnabledAfterURLChange" ]
+    shouldHandleRequest ||= request.name in ["checkEnabledAfterURLChange", "openVomnibar"]
     sendResponse requestHandlers[request.name](request, sender) if shouldHandleRequest
     # Ensure the sendResponse callback is freed.
     false
