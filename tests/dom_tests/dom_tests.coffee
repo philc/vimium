@@ -370,6 +370,7 @@ context "Normal mode",
 
   should "suppress passKeys with a non-empty key state (a count)", ->
     sendKeyboardEvent "5"
+    sendKeyboardEvent "p"
     assert.equal 0, pageKeyboardEventCount
 
   should "suppress passKeys with a non-empty key state (a key)", ->
