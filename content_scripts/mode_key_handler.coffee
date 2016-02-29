@@ -2,7 +2,7 @@
 class KeyHandlerMode extends Mode
   keydownEvents: {}
   setKeyMapping: (@keyMapping) -> @reset()
-  setPassKeys: (@passKeys) ->
+  setPassKeys: (@passKeys) -> @reset()
 
   constructor: (options) ->
     @commandHandler = options.commandHandler ? (->)
@@ -91,8 +91,7 @@ class KeyHandlerMode extends Mode
   # Keystrokes are *never* considered passKeys if the user has begun entering a command.  So, for example, if
   # 't' is a passKey, then 'gt' and '99t' are neverthless handled as regular keys.
   unlessKeyCharIsPassKey: (keyChar, nonPassKeyCallback) ->
-    if @passKeys and @countPrefix == 0 and @keyState.length == 1 and
-        keyChar?.length == 1 and 0 <= @passKeys.indexOf keyChar
+    if @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
       @stopBubblingAndTrue
     else
       nonPassKeyCallback()

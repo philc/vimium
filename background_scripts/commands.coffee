@@ -101,17 +101,16 @@ Commands =
     @keyToCommandRegistry = {}
     @mapKeyToCommand { key, command } for own key, command of defaultKeyMappings
 
-  # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
-  # This regular expression captures two groups: the first is a named key, the second is the remainder of the
-  # string.
-  namedKeyRegex: /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
-
   generateKeyStateMapping: ->
+    # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
+    # This regular expression captures two groups: the first is a named key, the second is the remainder of
+    # the string.
+    namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
     keyStateMapping = {}
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyStateMapping
       while 0 < keys.length
-        [key, keys] = if 0 == keys.search @namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys[1..]]
+        [key, keys] = if 0 == keys.search namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys[1..]]
         if currentMapping[key]?.command
           break # Do not overwrite existing command bindings, they take priority.
         else if 0 < keys.length
