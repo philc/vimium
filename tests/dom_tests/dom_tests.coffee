@@ -377,7 +377,7 @@ context "Normal mode",
   should "suppress passKeys with a non-empty key state (a key)", ->
     sendKeyboardEvent "z"
     sendKeyboardEvent "p"
-    assert.equal 0, pageKeyboardEventCount
+    assert.equal pageKeyboardEventCount, 0
 
 context "Insert mode",
   setup ->
@@ -396,7 +396,7 @@ context "Insert mode",
   should "resume normal mode after leaving insert mode", ->
     @insertMode.exit()
     sendKeyboardEvent "m"
-    assert.equal 0, pageKeyboardEventCount
+    assert.equal pageKeyboardEventCount, 0
 
 context "Triggering insert mode",
   setup ->

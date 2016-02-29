@@ -63,12 +63,12 @@ class KeyHandlerMode extends Mode
   handleKeyChar: (event, keyChar) ->
     bgLog "Handling key #{keyChar}, mode=#{@name}."
     @advanceKeyState keyChar
-    commands = @keyState.filter (entry) -> entry.command
-    if 0 < commands.length
-      countPrefix = if 0 < @countPrefix then @countPrefix else 1
+    command = (@keyState.filter (entry) -> entry.command)[0]
+    if command?
+      count = if 0 < @countPrefix then @countPrefix else 1
       @reset()
-      bgLog "Calling mode=#{@name}, command=#{commands[0].command}, count=#{countPrefix}."
-      @commandHandler command: commands[0], count: countPrefix, event: event
+      bgLog "Calling mode=#{@name}, command=#{command.command}, count=#{count}."
+      @commandHandler {command, count}
     false # Suppress event.
 
   # This returns the first key-state entry for which keyChar is mapped. The return value is truthy if a match

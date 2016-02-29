@@ -108,7 +108,7 @@ class NormalMode extends KeyHandlerMode
       if area == "local" and changes.normalModeKeyStateMapping?.newValue
         @setKeyMapping changes.normalModeKeyStateMapping.newValue
 
-  commandHandler: ({command: registryEntry, count, event}) ->
+  commandHandler: ({command: registryEntry, count}) ->
     count *= registryEntry.options.count ? 1
     count = 1 if registryEntry.noRepeat
 
