@@ -94,8 +94,6 @@ handlerStack.push
     true
 
 class NormalMode extends KeyHandlerMode
-  setPassKeys: (@passKeys) ->
-
   constructor: (options = {}) ->
     super extend options,
       name: "normal"

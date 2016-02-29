@@ -2,6 +2,7 @@
 class KeyHandlerMode extends Mode
   keydownEvents: {}
   setKeyMapping: (@keyMapping) -> @reset()
+  setPassKeys: (@passKeys) ->
 
   constructor: (options) ->
     @commandHandler = options.commandHandler ? (->)
@@ -23,15 +24,15 @@ class KeyHandlerMode extends Mode
         @keydownEvents[event.keyCode] = true
         @reset()
         false # Suppress event.
-    else if keyChar and @mappingForKeyChar keyChar
+    else if keyChar and @keyCharIsMapped keyChar
       @unlessKeyCharIsPassKey keyChar, =>
         @keydownEvents[event.keyCode] = true
         @handleKeyChar event, keyChar
     else if keyChar
       @continueBubbling
-    else if (keyChar = KeyboardUtils.getKeyChar event) and (@mappingForKeyChar(keyChar) or @isCountKey keyChar)
-      # We will probably be handling a subsequent keypress event, so suppress propagation of this event to
-      # prevent triggering page event listeners (e.g. Google instant Search).
+    else if (keyChar = KeyboardUtils.getKeyChar event) and (@keyCharIsMapped(keyChar) or @isCountKey keyChar)
+      # It looks like we will be handling a subsequent keypress event, so suppress propagation of this event
+      # to prevent triggering page event listeners (e.g. Google instant Search).
       @unlessKeyCharIsPassKey keyChar, =>
         @keydownEvents[event.keyCode] = true
         DomUtils.suppressPropagation event
@@ -42,9 +43,9 @@ class KeyHandlerMode extends Mode
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
     @unlessKeyCharIsPassKey keyChar, =>
-      if keyChar and @mappingForKeyChar keyChar
+      if keyChar and @keyCharIsMapped keyChar
         @handleKeyChar event, keyChar
-      else if keyChar and @isCountKey keyChar
+      else if @isCountKey keyChar
         digit = parseInt keyChar
         @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
         false # Suppress event.
@@ -71,13 +72,10 @@ class KeyHandlerMode extends Mode
       @commandHandler {command, count}
     false # Suppress event.
 
-  # This returns the first key-state entry for which keyChar is mapped. The return value is truthy if a match
-  # is found and falsy otherwise.
-  mappingForKeyChar: (keyChar) ->
-    (mapping for mapping in @keyState when keyChar of mapping)[0]
+  keyCharIsMapped: (keyChar) ->
+    (mapping for mapping in @keyState when keyChar of mapping)[0]?
 
-  # This is called whenever a keyChar is matched.  We keep any existing mappings matching keyChar, and append
-  # a new copy of the mode's global key mappings.
+  # The next key state is the current mappings matching keyChar plus @keyMapping.
   advanceKeyState: (keyChar) ->
     newMappings = (mapping[keyChar] for mapping in @keyState when keyChar of mapping)
     @keyState = [newMappings..., @keyMapping]
@@ -88,13 +86,13 @@ class KeyHandlerMode extends Mode
     @keyState = [@keyMapping]
 
   isCountKey: (keyChar) ->
-    keyChar.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9'
+    keyChar?.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9'
 
   # Keystrokes are *never* considered passKeys if the user has begun entering a command.  So, for example, if
   # 't' is a passKey, then 'gt' and '99t' are neverthless handled as regular keys.
   unlessKeyCharIsPassKey: (keyChar, nonPassKeyCallback) ->
-    if (@passKeys? and keyChar?.length == 1 and 0 <= @passKeys.indexOf(keyChar) and
-        @countPrefix == 0 and @keyState.length == 1)
+    if @passKeys and @countPrefix == 0 and @keyState.length == 1 and
+        keyChar?.length == 1 and 0 <= @passKeys.indexOf keyChar
       @stopBubblingAndTrue
     else
       nonPassKeyCallback()
