@@ -25,9 +25,7 @@ initializeModeState = ->
   Mode.reset()
   handlerStack.reset()
   initializeModes keyMapping: {m: {}, p: {}, z: {p: {}}}
-  handlerStack.bubbleEvent "registerStateChange",
-    enabled: true
-    passKeys: "p"
+  normalMode.setPassKeys "p"
 
 # Tell Settings that it's been loaded.
 Settings.isLoaded = true
@@ -493,13 +491,6 @@ context "Mode utilities",
     assert.isTrue test.modeIsActive
     element.blur()
     assert.isTrue test.modeIsActive
-
-  should "register state change", ->
-    test = new Mode trackState: true
-    handlerStack.bubbleEvent "registerStateChange", { enabled: "one", passKeys: "two" }
-
-    assert.isTrue test.enabled == "one"
-    assert.isTrue test.passKeys == "two"
 
 context "PostFindMode",
   setup ->

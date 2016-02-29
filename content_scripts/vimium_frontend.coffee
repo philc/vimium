@@ -94,11 +94,12 @@ handlerStack.push
     true
 
 class NormalMode extends KeyHandlerMode
+  setPassKeys: (@passKeys) ->
+
   constructor: (options = {}) ->
     super extend options,
       name: "normal"
       indicator: false # There is no mode indicator in normal mode.
-      trackState: true # Maintain @passKeys.
       commandHandler: @commandHandler.bind this
 
     chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
@@ -127,8 +128,8 @@ class NormalMode extends KeyHandlerMode
 # Only exported for tests; also, "args..." is only for the tests.
 window.initializeModes = (args...) ->
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
-  # activates/deactivates itself accordingly.
-  new NormalMode args...
+  # activates/deactivates itself accordingly.  normalMode is exported only for the tests.
+  window.normalMode = new NormalMode args...
   new InsertMode permanent: true
   Scroller.init()
 
@@ -440,9 +441,7 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
     if HUD.isReady() and not isEnabledForUrl
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
-    handlerStack.bubbleEvent "registerStateChange",
-      enabled: isEnabledForUrl
-      passKeys: passKeys
+    normalMode?.setPassKeys passKeys
     # Update the page icon, if necessary.
     if windowIsFocused()
       chrome.runtime.sendMessage
