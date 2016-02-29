@@ -24,30 +24,33 @@ class KeyHandlerMode extends Mode
         @reset()
         false # Suppress event.
     else if keyChar and @mappingForKeyChar keyChar
-      @keydownEvents[event.keyCode] = true
-      @handleKeyChar event, keyChar
+      @unlessKeyCharIsPassKey keyChar, =>
+        @keydownEvents[event.keyCode] = true
+        @handleKeyChar event, keyChar
     else if keyChar
       @continueBubbling
     else if (keyChar = KeyboardUtils.getKeyChar event) and (@mappingForKeyChar(keyChar) or @isCountKey keyChar)
       # We will probably be handling a subsequent keypress event, so suppress propagation of this event to
       # prevent triggering page event listeners (e.g. Google instant Search).
-      @keydownEvents[event.keyCode] = true
-      DomUtils.suppressPropagation event
-      @stopBubblingAndTrue
+      @unlessKeyCharIsPassKey keyChar, =>
+        @keydownEvents[event.keyCode] = true
+        DomUtils.suppressPropagation event
+        @stopBubblingAndTrue
     else
       @continueBubbling
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
-    if keyChar and @mappingForKeyChar keyChar
-      @handleKeyChar event, keyChar
-    else if keyChar and @isCountKey keyChar
-      digit = parseInt keyChar
-      @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
-      false # Suppress event.
-    else
-      @reset()
-      @continueBubbling
+    @unlessKeyCharIsPassKey keyChar, =>
+      if keyChar and @mappingForKeyChar keyChar
+        @handleKeyChar event, keyChar
+      else if keyChar and @isCountKey keyChar
+        digit = parseInt keyChar
+        @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
+        false # Suppress event.
+      else
+        @reset()
+        @continueBubbling
 
   onKeyup: (event) ->
     if event.keyCode of @keydownEvents
@@ -87,9 +90,14 @@ class KeyHandlerMode extends Mode
   isCountKey: (keyChar) ->
     keyChar.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9'
 
-  # This tests whether keyChar would be the very first character of a command mapping.
-  isFirstKeyChar: (keyChar) ->
-    @countPrefix == 0 and (@mappingForKeyChar(keyChar) == @keyMapping or @isCountKey keyChar)
+  # Keystrokes are *never* considered passKeys if the user has begun entering a command.  So, for example, if
+  # 't' is a passKey, then 'gt' and '99t' are neverthless handled as regular keys.
+  unlessKeyCharIsPassKey: (keyChar, nonPassKeyCallback) ->
+    if (@passKeys? and keyChar?.length == 1 and 0 <= @passKeys.indexOf(keyChar) and
+        @countPrefix == 0 and @keyState.length == 1)
+      @stopBubblingAndTrue
+    else
+      nonPassKeyCallback()
 
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode

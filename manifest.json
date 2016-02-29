@@ -50,7 +50,6 @@
              "content_scripts/scroller.js",
              "content_scripts/marks.js",
              "content_scripts/mode_insert.js",
-             "content_scripts/mode_passkeys.js",
              "content_scripts/mode_find.js",
              "content_scripts/mode_visual_edit.js",
              "content_scripts/mode_key_handler.js",

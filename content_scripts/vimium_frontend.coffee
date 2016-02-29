@@ -98,6 +98,7 @@ class NormalMode extends KeyHandlerMode
     super extend options,
       name: "normal"
       indicator: false # There is no mode indicator in normal mode.
+      trackState: true # Maintain @passKeys.
       commandHandler: @commandHandler.bind this
 
     chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
@@ -127,8 +128,7 @@ class NormalMode extends KeyHandlerMode
 window.initializeModes = (args...) ->
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
-  normalMode = new NormalMode args...
-  new PassKeysMode normalMode
+  new NormalMode args...
   new InsertMode permanent: true
   Scroller.init()
 
