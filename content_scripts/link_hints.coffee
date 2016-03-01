@@ -680,7 +680,7 @@ class WaitForEnter extends Mode
           callback()
           DomUtils.suppressEvent event
         else
-          true 
+          true
 
     flashEl = DomUtils.addFlashRect rect
     @onExit -> DomUtils.removeElement flashEl
