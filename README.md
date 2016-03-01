@@ -172,6 +172,7 @@ Next version (not yet released)
   measured from the top of the window (and a multiple of `scrollStepSize`).
 - `moveTabToNewWindow` now accepts a count prefix; so, `3W` moves three tabs to
   (the same) new window.
+- With smooth scrolling, `2j`-and-hold now gives a faster scroll than `j`-and-hold.
 - You can now bind keys to a command with a defined count prefix; see
   [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes)
   for details.
