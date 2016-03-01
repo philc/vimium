@@ -369,7 +369,9 @@ class LinkHintsMode
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
-      @activateLink linksMatched[0], keyResult.delay ? 0, keyResult.waitForEnter and Settings.get "waitForEnterForFilteredHints"
+      keyResult.delay ?= 0
+      keyResult.waitForEnter ?= false
+      @activateLink linksMatched[0], keyResult
     else
       @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
@@ -377,26 +379,30 @@ class LinkHintsMode
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (@matchedLink, delay = 0, waitForEnter = false) ->
+  activateLink: (@matchedLink, {delay, waitForEnter} = {}) ->
+    @removeHintMarkers()
     clickEl = @matchedLink.clickableItem
-    if (DomUtils.isSelectable(clickEl))
-      DomUtils.simulateSelect(clickEl)
-      @deactivateMode delay
-    else
-      # TODO figure out which other input elements should not receive focus
-      if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
-        clickEl.focus()
 
-      linkActivator = =>
-        @linkActivator(clickEl)
+    linkActivator = =>
+      @deactivateMode()
+      if DomUtils.isSelectable clickEl
+        DomUtils.simulateSelect clickEl
+      else
+        # TODO: Are there any other input elements which should not receive focus?
+        if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
+          clickEl.focus()
+        @linkActivator clickEl
         LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
 
-      if waitForEnter
-        new WaitForEnter @matchedLink.rect, => @deactivateMode 0, linkActivator
-      else
-        @deactivateMode delay, =>
-          DomUtils.flashRect @matchedLink.rect
-          linkActivator()
+    if waitForEnter? and waitForEnter
+      new WaitForEnter @matchedLink.rect, linkActivator
+    else if delay? and 0 < delay
+      # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
+      # user from inadvertently launching Vimium commands when typing the link text.
+      new TypingProtector delay, @matchedLink?.rect, linkActivator
+    else
+      DomUtils.flashRect @matchedLink.rect
+      linkActivator()
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -411,27 +417,19 @@ class LinkHintsMode
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
-  deactivateMode: (delay = 0, callback = null) ->
-    deactivate = =>
-      DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
-      @hintMarkerContainingDiv = null
-      @markerMatcher = null
-      @isActive = false
-      @hintMode?.exit()
-      @hintMode = null
-      @onExit?()
-      @onExit = null
-      @tabCount = 0
-      callback?()
+  deactivateMode: ->
+    @removeHintMarkers()
+    @markerMatcher = null
+    @isActive = false
+    @hintMode?.exit()
+    @hintMode = null
+    @onExit?()
+    @onExit = null
+    @tabCount = 0
 
-    if delay
-      # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
-      # user from inadvertently launching Vimium commands when typing the link text.
-      new TypingProtector delay, @matchedLink?.rect, deactivate
-    else
-      # We invoke deactivate() directly (instead of setting a timeout of 0) so that deactivateMode() can be
-      # tested synchronously.
-      deactivate()
+  removeHintMarkers: ->
+    DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
+    @hintMarkerContainingDiv = null
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
@@ -576,7 +574,11 @@ class FilterHints
     @activeHintMarker = linksMatched[tabCount]
     @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
-    { linksMatched: linksMatched, delay: delay, waitForEnter: 0 < delay }
+    {
+      linksMatched: linksMatched
+      delay: delay
+      waitForEnter: 0 < delay and Settings.get "waitForEnterForFilteredHints"
+    }
 
   pushKeyChar: (keyChar, keydownKeyChar) ->
     # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
@@ -686,7 +688,7 @@ class WaitForEnter extends Mode
           callback()
           DomUtils.suppressEvent event
         else
-          true
+          true 
 
     flashEl = DomUtils.addFlashRect rect
     @onExit -> DomUtils.removeElement flashEl
