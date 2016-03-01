@@ -49,8 +49,7 @@ HelpDialog =
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
     @exitOnEscape = new Mode name: "help-page-escape", exitOnEscape: true
-    @exitOnEscape.onExit (event) =>
-      HelpDialog.hide() if event?.type == "keydown"
+    @exitOnEscape.onExit (event) => @hide() if event?.type == "keydown"
 
   hide: ->
     @exitOnEscape?.exit()

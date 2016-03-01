@@ -45,11 +45,10 @@ class KeyHandlerMode extends Mode
       @unlessKeyCharIsPassKey keyChar, =>
         @keydownEvents[event.keyCode] = true
         @handleKeyChar event, keyChar
-    else if keyChar
-      @continueBubbling
-    else if (keyChar = KeyboardUtils.getKeyChar event) and (@keyCharIsMapped(keyChar) or @isCountKey keyChar)
-      # It looks like we will possibly be handling a subsequent keypress event, so suppress propagation of
-      # this event to prevent triggering page event listeners (e.g. Google instant Search).
+    else if not keyChar and (keyChar = KeyboardUtils.getKeyChar event) and
+        (@keyCharIsMapped(keyChar) or @isCountKey keyChar)
+      # We will possibly be handling a subsequent keypress event, so suppress propagation of this event to
+      # prevent triggering page event listeners (e.g. Google instant Search).
       @unlessKeyCharIsPassKey keyChar, =>
         @keydownEvents[event.keyCode] = true
         DomUtils.suppressPropagation event
@@ -71,12 +70,10 @@ class KeyHandlerMode extends Mode
         @continueBubbling
 
   onKeyup: (event) ->
-    if event.keyCode of @keydownEvents
-      delete @keydownEvents[event.keyCode]
-      DomUtils.suppressPropagation event
-      @stopBubblingAndTrue
-    else
-      @continueBubbling
+    return @continueBubbling unless event.keyCode of @keydownEvents
+    delete @keydownEvents[event.keyCode]
+    DomUtils.suppressPropagation event
+    @stopBubblingAndTrue
 
   # This tests whether there is a mapping of keyChar in the current key state.
   keyCharIsMapped: (keyChar) ->
