@@ -376,9 +376,9 @@ class LinkHintsMode
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (@matchedLink, {delay, waitForEnter} = {}) ->
+  activateLink: (linkMatched, {delay, waitForEnter} = {}) ->
     @removeHintMarkers()
-    clickEl = @matchedLink.clickableItem
+    clickEl = linkMatched.clickableItem
 
     linkActivator = =>
       @deactivateMode()
@@ -392,13 +392,13 @@ class LinkHintsMode
         LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
 
     if waitForEnter? and waitForEnter
-      new WaitForEnter @matchedLink.rect, linkActivator
+      new WaitForEnter linkMatched.rect, linkActivator
     else if delay? and 0 < delay
       # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
       # user from inadvertently launching Vimium commands when typing the link text.
-      new TypingProtector delay, @matchedLink?.rect, linkActivator
+      new TypingProtector delay, linkMatched?.rect, linkActivator
     else
-      DomUtils.flashRect @matchedLink.rect
+      DomUtils.flashRect linkMatched.rect
       linkActivator()
 
   #
