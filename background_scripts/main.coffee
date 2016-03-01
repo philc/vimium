@@ -370,10 +370,7 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
 # End action functions
 
 runBackgroundCommand = ({frameId, registryEntry, count}, sender) ->
-  if registryEntry.command.startsWith "Vomnibar."
-    chrome.tabs.sendMessage sender.tab.id,
-      name: "openVomnibar", sourceFrameId: frameId, registryEntry: registryEntry
-  else if registryEntry.passCountToFunction
+  if registryEntry.passCountToFunction
     BackgroundCommands[registryEntry.command] count, frameId
   else if registryEntry.noRepeat
     BackgroundCommands[registryEntry.command] frameId

@@ -116,7 +116,11 @@ class NormalMode extends KeyHandlerMode
         You have asked Vimium to perform #{count} repetitions of the command: #{registryEntry.description}.\n
         Are you sure you want to continue?"""
 
-    if registryEntry.isBackgroundCommand
+    # The Vomnibar needs special handling because it is always activated in the tab's main frame.
+    if registryEntry.command.startsWith "Vomnibar."
+      chrome.runtime.sendMessage
+        handler: "sendMessageToFrames", message: {name: "openVomnibar", sourceFrameId: frameId, registryEntry}
+    else if registryEntry.isBackgroundCommand
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
     else if registryEntry.passCountToFunction
       Utils.invokeCommandString registryEntry.command, [count]

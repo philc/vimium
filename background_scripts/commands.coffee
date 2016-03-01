@@ -381,13 +381,13 @@ commandDescriptions =
   moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
 
   # These are background-page commands because all requests go via the background page.
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry", { background: true, noRepeat: true }]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { background: true, noRepeat: true }]
-  "Vomnibar.activateTabSelection": ["Search through your open tabs", { background: true, noRepeat: true }]
-  "Vomnibar.activateBookmarks": ["Open a bookmark", { background: true, noRepeat: true }]
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { background: true, noRepeat: true }]
-  "Vomnibar.activateEditUrl": ["Edit the current URL", { background: true, noRepeat: true }]
-  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { background: true, noRepeat: true }]
+  "Vomnibar.activate": ["Open URL, bookmark, or history entry", { noRepeat: true }]
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { noRepeat: true }]
+  "Vomnibar.activateTabSelection": ["Search through your open tabs", { noRepeat: true }]
+  "Vomnibar.activateBookmarks": ["Open a bookmark", { noRepeat: true }]
+  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { noRepeat: true }]
+  "Vomnibar.activateEditUrl": ["Edit the current URL", { noRepeat: true }]
+  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { noRepeat: true }]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
   mainFrame: ["Select the tab's main/top frame", { background: true, noRepeat: true }]
