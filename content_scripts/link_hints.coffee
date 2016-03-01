@@ -43,8 +43,6 @@ class LinkHintsMode
   mode: undefined
   # Function that does the appropriate action on the selected link.
   linkActivator: undefined
-  # Lock to ensure only one instance runs at a time.
-  isActive: false
   # The link-hints "mode" (in the key-handler, indicator sense).
   hintMode: null
   # Call this function on exit (if defined).
@@ -55,7 +53,6 @@ class LinkHintsMode
   constructor: (mode = OPEN_IN_CURRENT_TAB, onExit = (->)) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
-    @isActive = true
 
     elements = @getVisibleClickableElements()
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
@@ -88,7 +85,7 @@ class LinkHintsMode
       keypress: @onKeyPressInMode.bind this, hintMarkers
 
     @hintMode.onExit =>
-      @deactivateMode() if @isActive
+      @deactivateMode()
     @hintMode.onExit onExit
 
     @setOpenLinkMode mode
@@ -322,7 +319,7 @@ class LinkHintsMode
           keyup: (event) =>
             if event.keyCode == keyCode
               handlerStack.remove()
-              @setOpenLinkMode previousMode if @isActive
+              @setOpenLinkMode previousMode
             true # Continue bubbling the event.
 
         # For some (unknown) reason, we don't always receive the keyup event needed to remove this handler.
@@ -419,13 +416,8 @@ class LinkHintsMode
 
   deactivateMode: ->
     @removeHintMarkers()
-    @markerMatcher = null
-    @isActive = false
     @hintMode?.exit()
-    @hintMode = null
     @onExit?()
-    @onExit = null
-    @tabCount = 0
 
   removeHintMarkers: ->
     DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
