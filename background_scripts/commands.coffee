@@ -101,6 +101,7 @@ Commands =
     @keyToCommandRegistry = {}
     @mapKeyToCommand { key, command } for own key, command of defaultKeyMappings
 
+  # This generates a nested key-to-command mapping structure. There is an example in mode_key_handler.coffee.
   generateKeyStateMapping: ->
     # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
     # This regular expression captures two groups: the first is a named key, the second is the remainder of
