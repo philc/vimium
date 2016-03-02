@@ -41,11 +41,11 @@ class KeyHandlerMode extends Mode
       @keydownEvents[event.keyCode] = true
       @reset()
       false # Suppress event.
-    else if @keyCharIsMapped keyChar
+    else if @isMappedKey keyChar
       @keydownEvents[event.keyCode] = true
-      @handleKeyChar event, keyChar
+      @handleKeyChar keyChar
     else if not keyChar and (keyChar = KeyboardUtils.getKeyChar event) and
-        (@keyCharIsMapped(keyChar) or @isCountKey keyChar)
+        (@isMappedKey(keyChar) or @isCountKey keyChar)
       # We will possibly be handling a subsequent keypress event, so suppress propagation of this event to
       # prevent triggering page event listeners (e.g. Google instant Search).
       @keydownEvents[event.keyCode] = true
@@ -56,8 +56,8 @@ class KeyHandlerMode extends Mode
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
-    if @keyCharIsMapped keyChar
-      @handleKeyChar event, keyChar
+    if @isMappedKey keyChar
+      @handleKeyChar keyChar
     else if @isCountKey keyChar
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
@@ -73,30 +73,29 @@ class KeyHandlerMode extends Mode
     @stopBubblingAndTrue
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
-  keyCharIsMapped: (keyChar) ->
+  isMappedKey: (keyChar) ->
     (mapping for mapping in @keyState when keyChar of mapping)[0]? and not @isPassKey keyChar
 
-  handleKeyChar: (event, keyChar) ->
+  # This tests whether keyChar is a digit (and accounts for pass keys).
+  isCountKey: (keyChar) ->
+    keyChar and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9' and not @isPassKey keyChar
+
+  # Keystrokes are *never* considered pass keys if the user has begun entering a command.  So, for example, if
+  # 't' is a passKey, then the "t"-s of 'gt' and '99t' are neverthless handled as regular keys.
+  isPassKey: (keyChar) ->
+    @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
+
+  handleKeyChar: (keyChar) ->
     bgLog "Handling key #{keyChar}, mode=#{@name}."
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
-    @keyState = (mapping[keyChar] for mapping in @keyState when keyChar of mapping)
-    @keyState.push @keyMapping
-    command = (mapping for mapping in @keyState when mapping.command)[0]
-    if command?
+    @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
+    command = (mapping for mapping in @keyState when "command" of mapping)[0]
+    if command
       count = if 0 < @countPrefix then @countPrefix else 1
       bgLog "Calling mode=#{@name}, command=#{command.command}, count=#{count}."
       @reset()
       @commandHandler {command, count}
     false # Suppress event.
-
-  isCountKey: (keyChar) ->
-    keyChar?.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9' and
-      not @isPassKey keyChar
-
-  # Keystrokes are *never* considered passKeys if the user has begun entering a command.  So, for example, if
-  # 't' is a passKey, then the "t"-s of 'gt' and '99t' are neverthless handled as regular keys.
-  isPassKey: (keyChar) ->
-    @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
 
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode
