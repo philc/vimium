@@ -42,32 +42,29 @@ class KeyHandlerMode extends Mode
       @reset()
       false # Suppress event.
     else if @keyCharIsMapped keyChar
-      @unlessKeyCharIsPassKey keyChar, =>
-        @keydownEvents[event.keyCode] = true
-        @handleKeyChar event, keyChar
+      @keydownEvents[event.keyCode] = true
+      @handleKeyChar event, keyChar
     else if not keyChar and (keyChar = KeyboardUtils.getKeyChar event) and
         (@keyCharIsMapped(keyChar) or @isCountKey keyChar)
       # We will possibly be handling a subsequent keypress event, so suppress propagation of this event to
       # prevent triggering page event listeners (e.g. Google instant Search).
-      @unlessKeyCharIsPassKey keyChar, =>
-        @keydownEvents[event.keyCode] = true
-        DomUtils.suppressPropagation event
-        @stopBubblingAndTrue
+      @keydownEvents[event.keyCode] = true
+      DomUtils.suppressPropagation event
+      @stopBubblingAndTrue
     else
       @continueBubbling
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
-    @unlessKeyCharIsPassKey keyChar, =>
-      if @keyCharIsMapped keyChar
-        @handleKeyChar event, keyChar
-      else if @isCountKey keyChar
-        digit = parseInt keyChar
-        @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
-        false # Suppress event.
-      else
-        @reset()
-        @continueBubbling
+    if @keyCharIsMapped keyChar
+      @handleKeyChar event, keyChar
+    else if @isCountKey keyChar
+      digit = parseInt keyChar
+      @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
+      false # Suppress event.
+    else
+      @reset()
+      @continueBubbling
 
   onKeyup: (event) ->
     return @continueBubbling unless event.keyCode of @keydownEvents
@@ -75,9 +72,9 @@ class KeyHandlerMode extends Mode
     DomUtils.suppressPropagation event
     @stopBubblingAndTrue
 
-  # This tests whether there is a mapping of keyChar in the current key state.
+  # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
   keyCharIsMapped: (keyChar) ->
-    (mapping for mapping in @keyState when keyChar of mapping)[0]?
+    (mapping for mapping in @keyState when keyChar of mapping)[0]? and not @isPassKey keyChar
 
   handleKeyChar: (event, keyChar) ->
     bgLog "Handling key #{keyChar}, mode=#{@name}."
@@ -93,15 +90,13 @@ class KeyHandlerMode extends Mode
     false # Suppress event.
 
   isCountKey: (keyChar) ->
-    keyChar?.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9'
+    keyChar?.length == 1 and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9' and
+      not @isPassKey keyChar
 
   # Keystrokes are *never* considered passKeys if the user has begun entering a command.  So, for example, if
   # 't' is a passKey, then the "t"-s of 'gt' and '99t' are neverthless handled as regular keys.
-  unlessKeyCharIsPassKey: (keyChar, nonPassKeyCallback) ->
-    if @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
-      @stopBubblingAndTrue
-    else
-      nonPassKeyCallback()
+  isPassKey: (keyChar) ->
+    @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
 
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode
