@@ -290,11 +290,6 @@ DomUtils =
         @remove()
         false
 
-  simulateTextEntry: (element, text) ->
-    event = document.createEvent "TextEvent"
-    event.initTextEvent "textInput", true, true, null, text
-    element.dispatchEvent event
-
   # Adapted from: http://roysharon.com/blog/37.
   # This finds the element containing the selection focus.
   getElementWithFocus: (selection, backwards) ->

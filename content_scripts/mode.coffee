@@ -213,12 +213,6 @@ class Mode
       DomUtils.suppressPropagation event
       @stopBubblingAndFalse
 
-  # Activate a new instance of this mode, together with all of its original options (except its main
-  # keybaord-event handlers; these will be recreated).
-  cloneMode: ->
-    delete @options[key] for key in [ "keydown", "keypress", "keyup" ]
-    new @constructor @options
-
   # Debugging routines.
   logModes: ->
     if @debug
