@@ -21,6 +21,7 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
 currentVersion = Utils.getCurrentVersion()
 keyQueue = "" # Queue of keys typed
 validFirstKeys = {}
+commandKeys = []
 singleKeyCommands = []
 frameIdsForTab = {}
 root.urlForTab = {}
@@ -398,20 +399,29 @@ getActualKeyStrokeLength = (key) ->
     key.length
 
 populateValidFirstKeys = ->
-  for own key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 2)
-      validFirstKeys[splitKeyIntoFirstAndSecond(key).first] = true
+  validFirstKeys = {}
+  for keys in commandKeys
+    if (keys.length > 1)
+      validFirstKeys[keys[0]] = true
 
 populateSingleKeyCommands = ->
-  for own key of Commands.keyToCommandRegistry
-    if (getActualKeyStrokeLength(key) == 1)
-      singleKeyCommands.push(key)
+  singleKeyCommands = []
+  for keys in commandKeys
+    if (keys.length == 1)
+      singleKeyCommands.push(keys[0])
+
+populateCommandKeys = ->
+  commandKeys = []
+  for key of Commands.keyToCommandRegistry
+    splitKey = splitKeyIntoFirstAndSecond(key)
+    if splitKey.second
+      commandKeys.push [splitKey.first, splitKey.second]
+    else
+      commandKeys.push [splitKey.first]
 
 # Invoked by options.coffee.
 root.refreshCompletionKeysAfterMappingSave = ->
-  validFirstKeys = {}
-  singleKeyCommands = []
-
+  populateCommandKeys()
   populateValidFirstKeys()
   populateSingleKeyCommands()
 
@@ -426,10 +436,8 @@ generateCompletionKeys = (keysToCheck) ->
   completionKeys = singleKeyCommands.slice(0)
 
   if (getActualKeyStrokeLength(command) == 1)
-    for own key of Commands.keyToCommandRegistry
-      splitKey = splitKeyIntoFirstAndSecond(key)
-      if (splitKey.first == command)
-        completionKeys.push(splitKey.second)
+    for keys in commandKeys
+      completionKeys.push keys[1] if keys[0] == command
 
   completionKeys
 
@@ -629,6 +637,7 @@ Commands.clearKeyMappingsAndSetDefaults()
 if Settings.has("keyMappings")
   Commands.parseCustomKeyMappings(Settings.get("keyMappings"))
 
+populateCommandKeys()
 populateValidFirstKeys()
 populateSingleKeyCommands()
 
