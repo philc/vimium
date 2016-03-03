@@ -163,12 +163,14 @@ div#vimiumHelpDialog {
   border:2px solid #b3b3b3;
   border-radius:6px;
   padding:8px 12px;
-  width:640px;
+  width: 45%;
+  max-width:640px; 
   max-height: calc(100% - 80px);
-  left:50%;
+  /* left:50%; */
   /* This needs to be 1/2 width to horizontally center the help dialog */
-  margin-left:-320px;
-  top:50px;
+  /* margin-left:-320px; */
+  top: 2%;
+  right: 1%;
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
   overflow-y: auto;
 }
