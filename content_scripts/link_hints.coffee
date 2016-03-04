@@ -43,8 +43,6 @@ class LinkHintsMode
   mode: undefined
   # Function that does the appropriate action on the selected link.
   linkActivator: undefined
-  # Lock to ensure only one instance runs at a time.
-  isActive: false
   # The link-hints "mode" (in the key-handler, indicator sense).
   hintMode: null
   # Call this function on exit (if defined).
@@ -55,7 +53,6 @@ class LinkHintsMode
   constructor: (mode = OPEN_IN_CURRENT_TAB, onExit = (->)) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
-    @isActive = true
 
     elements = @getVisibleClickableElements()
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
@@ -88,7 +85,7 @@ class LinkHintsMode
       keypress: @onKeyPressInMode.bind this, hintMarkers
 
     @hintMode.onExit =>
-      @deactivateMode() if @isActive
+      @deactivateMode()
     @hintMode.onExit onExit
 
     @setOpenLinkMode mode
@@ -322,7 +319,7 @@ class LinkHintsMode
           keyup: (event) =>
             if event.keyCode == keyCode
               handlerStack.remove()
-              @setOpenLinkMode previousMode if @isActive
+              @setOpenLinkMode previousMode
             true # Continue bubbling the event.
 
         # For some (unknown) reason, we don't always receive the keyup event needed to remove this handler.
@@ -364,12 +361,11 @@ class LinkHintsMode
     DomUtils.suppressEvent event
 
   updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
-    keyResult = @markerMatcher.getMatchingHints hintMarkers, tabCount
-    linksMatched = keyResult.linksMatched
+    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints hintMarkers, tabCount
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
-      @activateLink linksMatched[0], keyResult.delay ? 0, keyResult.waitForEnter and Settings.get "waitForEnterForFilteredHints"
+      @activateLink linksMatched[0], userMightOverType ? false
     else
       @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
@@ -377,26 +373,30 @@ class LinkHintsMode
   #
   # When only one link hint remains, this function activates it in the appropriate way.
   #
-  activateLink: (@matchedLink, delay = 0, waitForEnter = false) ->
-    clickEl = @matchedLink.clickableItem
-    if (DomUtils.isSelectable(clickEl))
-      DomUtils.simulateSelect(clickEl)
-      @deactivateMode delay
-    else
-      # TODO figure out which other input elements should not receive focus
-      if (clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"])
-        clickEl.focus()
+  activateLink: (linkMatched, userMightOverType=false) ->
+    @removeHintMarkers()
+    clickEl = linkMatched.clickableItem
 
-      linkActivator = =>
-        @linkActivator(clickEl)
+    linkActivator = =>
+      @deactivateMode()
+      if DomUtils.isSelectable clickEl
+        DomUtils.simulateSelect clickEl
+      else
+        # TODO: Are there any other input elements which should not receive focus?
+        if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
+          clickEl.focus()
+        @linkActivator clickEl
         LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
 
-      if waitForEnter
-        new WaitForEnter @matchedLink.rect, => @deactivateMode 0, linkActivator
-      else
-        @deactivateMode delay, =>
-          DomUtils.flashRect @matchedLink.rect
-          linkActivator()
+    if userMightOverType and Settings.get "waitForEnterForFilteredHints"
+      new WaitForEnter linkMatched.rect, linkActivator
+    else if userMightOverType
+      # Block keyboard events while the user is still typing.  The intention is to prevent the user from
+      # inadvertently launching Vimium commands when (over-)typing the link text.
+      new TypingProtector 200, linkMatched.rect, linkActivator
+    else
+      DomUtils.flashRect linkMatched.rect
+      linkActivator()
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -411,27 +411,14 @@ class LinkHintsMode
 
   hideMarker: (linkMarker) -> linkMarker.style.display = "none"
 
-  deactivateMode: (delay = 0, callback = null) ->
-    deactivate = =>
-      DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
-      @hintMarkerContainingDiv = null
-      @markerMatcher = null
-      @isActive = false
-      @hintMode?.exit()
-      @hintMode = null
-      @onExit?()
-      @onExit = null
-      @tabCount = 0
-      callback?()
+  deactivateMode: ->
+    @removeHintMarkers()
+    @hintMode?.exit()
+    @onExit?()
 
-    if delay
-      # Install a mode to block keyboard events if the user is still typing.  The intention is to prevent the
-      # user from inadvertently launching Vimium commands when typing the link text.
-      new TypingProtector delay, @matchedLink?.rect, deactivate
-    else
-      # We invoke deactivate() directly (instead of setting a timeout of 0) so that deactivateMode() can be
-      # tested synchronously.
-      deactivate()
+  removeHintMarkers: ->
+    DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
+    @hintMarkerContainingDiv = null
 
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
@@ -556,18 +543,11 @@ class FilterHints
     @filterLinkHints hintMarkers
 
   getMatchingHints: (hintMarkers, tabCount = 0) ->
-    delay = 0
-
     # At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
     # input. use them to filter the link hints accordingly.
     matchString = @hintKeystrokeQueue.join ""
     linksMatched = @filterLinkHints hintMarkers
     linksMatched = linksMatched.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
-
-    if linksMatched.length == 1 && @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
-      # In filter mode, people tend to type out words past the point needed for a unique match. Hence we
-      # should avoid passing control back to command mode immediately after a match is found.
-      delay = 200
 
     # Visually highlight of the active hint (that is, the one that will be activated if the user
     # types <Enter>).
@@ -576,7 +556,8 @@ class FilterHints
     @activeHintMarker = linksMatched[tabCount]
     @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
-    { linksMatched: linksMatched, delay: delay, waitForEnter: 0 < delay }
+    linksMatched: linksMatched
+    userMightOverType: @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
 
   pushKeyChar: (keyChar, keydownKeyChar) ->
     # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
@@ -652,24 +633,22 @@ class TypingProtector extends Mode
   constructor: (delay, rect, callback) ->
     @timer = Utils.setTimeout delay, => @exit()
 
-    handler = (event) =>
+    resetExitTimer = (event) =>
       clearTimeout @timer
       @timer = Utils.setTimeout delay, => @exit()
 
     super
       name: "hint/typing-protector"
       suppressAllKeyboardEvents: true
-      keydown: handler
-      keypress: handler
-
-    if rect
-      # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
-      # has been selected.
-      flashEl = DomUtils.addFlashRect rect
-      @onExit -> DomUtils.removeElement flashEl
+      keydown: resetExitTimer
+      keypress: resetExitTimer
 
     @onExit callback
 
+    # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
+    # has been selected.
+    flashEl = DomUtils.addFlashRect rect
+    @onExit -> DomUtils.removeElement flashEl
 
 class WaitForEnter extends Mode
   constructor: (rect, callback) ->
