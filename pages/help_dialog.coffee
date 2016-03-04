@@ -38,6 +38,16 @@ HelpDialog =
 
     @showAdvancedCommands(@getShowAdvancedCommands())
 
+    # When command names are shown, clicking on them copies their text to the clipboard (and they can be
+    # clicked with link hints).
+    for element in @dialogElement.getElementsByClassName "commandName"
+      do (element) ->
+        element.setAttribute "role", "link"
+        element.addEventListener "click", ->
+          commandName = element.textContent.replace("(","").replace ")", ""
+          chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
+          HUD.showForDuration("Yanked #{commandName}.", 2000)
+
   hide: -> UIComponentServer.postMessage "hide"
 
   toggle: (html) ->
