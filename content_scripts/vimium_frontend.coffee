@@ -214,7 +214,11 @@ window.addEventListener "hashchange", onFocus
 #
 initializeOnDomReady = ->
   # Tell the background page we're in the dom ready state.
-  chrome.runtime.connect({ name: "domReady" })
+  chrome.runtime.connect(name: "domReady").onDisconnect.addListener ->
+    # We disable content scripts when we lose contact with the background page.
+    isEnabledForUrl = false
+    chrome.runtime.sendMessage = ->
+    window.removeEventListener "focus", onFocus
   # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
   Vomnibar.init() if DomUtils.isTopFrame()
   HUD.init()
