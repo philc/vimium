@@ -393,7 +393,7 @@ class LinkHintsMode
     else if userMightOverType
       # Block keyboard events while the user is still typing.  The intention is to prevent the user from
       # inadvertently launching Vimium commands when (over-)typing the link text.
-      new TypingProtector 200, linkMatched?.rect, linkActivator
+      new TypingProtector 200, linkMatched.rect, linkActivator
     else
       DomUtils.flashRect linkMatched.rect
       linkActivator()
@@ -633,24 +633,22 @@ class TypingProtector extends Mode
   constructor: (delay, rect, callback) ->
     @timer = Utils.setTimeout delay, => @exit()
 
-    handler = (event) =>
+    resetExitTimer = (event) =>
       clearTimeout @timer
       @timer = Utils.setTimeout delay, => @exit()
 
     super
       name: "hint/typing-protector"
       suppressAllKeyboardEvents: true
-      keydown: handler
-      keypress: handler
-
-    if rect
-      # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
-      # has been selected.
-      flashEl = DomUtils.addFlashRect rect
-      @onExit -> DomUtils.removeElement flashEl
+      keydown: resetExitTimer
+      keypress: resetExitTimer
 
     @onExit callback
 
+    # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
+    # has been selected.
+    flashEl = DomUtils.addFlashRect rect
+    @onExit -> DomUtils.removeElement flashEl
 
 class WaitForEnter extends Mode
   constructor: (rect, callback) ->
