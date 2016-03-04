@@ -63,7 +63,7 @@ context "handlerStack",
     assert.isFalse @handler1Called
 
   should "handle self-removing handlers correctly", ->
-    ctx = @
+    ctx = this
     @handlerStack.push { keydown: => @handler1Called = true }
     @handlerStack.push { keydown: ->
       ctx.handler2Called = true

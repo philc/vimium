@@ -45,7 +45,7 @@ class HandlerStack
       # A handler may have been removed (handler.id == null), so check.
       if handler?.id and handler[type]
         @currentId = handler.id
-        result = handler[type].call @, event
+        result = handler[type].call this, event
         @logResult eventNumber, type, event, handler, result if @debug
         if not result
           DomUtils.suppressEvent event if @isChromeEvent event

@@ -21,7 +21,7 @@ class Option
     @element = $(@field)
     @element.addEventListener "change", @onUpdated
     @fetch()
-    Option.all.push @
+    Option.all.push this
 
   # Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
   # Return the fetched value.

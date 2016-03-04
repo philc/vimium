@@ -77,7 +77,7 @@ class InsertMode extends Mode
                   shadowRoot.removeEventListener type, listener, true
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
-    InsertMode.permanentInstance = @ if @permanent
+    InsertMode.permanentInstance = this if @permanent
 
   isActive: (event) ->
     return false if event == InsertMode.suppressedEvent

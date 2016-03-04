@@ -274,7 +274,7 @@ class Movement extends CountPrefix
   handleMovementKeyChar: (keyChar, count = 1) ->
     switch typeof @movements[keyChar]
       when "string" then @runMovement @movements[keyChar] for [0...count]
-      when "function" then @movements[keyChar].call @, count
+      when "function" then @movements[keyChar].call this, count
     @scrollIntoView()
 
   constructor: (options) ->
@@ -307,7 +307,7 @@ class Movement extends CountPrefix
               return @continueBubbling if command == "0" and 0 < @countPrefix.length
 
               if @commands[command]
-                @commands[command].call @, @getCountPrefix()
+                @commands[command].call this, @getCountPrefix()
                 @scrollIntoView()
                 return @suppressEvent
 

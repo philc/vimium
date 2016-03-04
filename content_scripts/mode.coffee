@@ -117,7 +117,7 @@ class Mode
         key = Utils.getIdentity @options.singleton
         @onExit -> delete singletons[key]
         @deactivateSingleton @options.singleton
-        singletons[key] = @
+        singletons[key] = this
 
     # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
     # and calls @registerStateChange() (if defined) whenever the state changes. The mode also tracks the
@@ -164,7 +164,7 @@ class Mode
           keypress: handler
           keyup: -> handlerStack.stopBubblingAndFalse
 
-    Mode.modes.push @
+    Mode.modes.push this
     @setIndicator()
     @logModes()
     # End of Mode constructor.
@@ -194,7 +194,7 @@ class Mode
         @modeIsExiting = true
         handler args... for handler in @exitHandlers
         handlerStack.remove handlerId for handlerId in @handlers
-      Mode.modes = Mode.modes.filter (mode) => mode != @
+      Mode.modes = Mode.modes.filter (mode) => mode != this
       @modeIsActive = false
       @setIndicator()
 
