@@ -205,7 +205,6 @@ class LinkHintsMode
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
         element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
-        element.getAttribute("class")?.indexOf("vimiumClickable") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
       isClickable = true
 

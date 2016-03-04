@@ -42,7 +42,7 @@ HelpDialog =
     # clicked with link hints).
     for element in @dialogElement.getElementsByClassName "commandName"
       do (element) ->
-        element.classList.add "vimiumClickable"
+        element.setAttribute "role", "link"
         element.addEventListener "click", ->
           commandName = element.textContent.replace("(","").replace ")", ""
           chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
