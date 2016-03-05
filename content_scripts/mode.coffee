@@ -119,22 +119,6 @@ class Mode
         @deactivateSingleton @options.singleton
         singletons[key] = this
 
-    # If @options.trackState is truthy, then the mode mainatins the current state in @enabled and @passKeys,
-    # and calls @registerStateChange() (if defined) whenever the state changes. The mode also tracks the
-    # current keyQueue in @keyQueue.
-    if @options.trackState
-      @enabled = false
-      @passKeys = ""
-      @keyQueue = ""
-      @push
-        _name: "mode-#{@id}/registerStateChange"
-        registerStateChange: ({ enabled: enabled, passKeys: passKeys }) => @alwaysContinueBubbling =>
-          if enabled != @enabled or passKeys != @passKeys
-            @enabled = enabled
-            @passKeys = passKeys
-            @registerStateChange?()
-        registerKeyQueue: ({ keyQueue: keyQueue }) => @alwaysContinueBubbling => @keyQueue = keyQueue
-
     # If @options.passInitialKeyupEvents is set, then we pass initial non-printable keyup events to the page
     # or to other extensions (because the corresponding keydown events were passed).  This is used when
     # activating link hints, see #1522.

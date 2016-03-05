@@ -2,6 +2,13 @@ Commands =
   init: ->
     for own command, description of commandDescriptions
       @addCommand(command, description[0], description[1])
+    @loadKeyMappings Settings.get "keyMappings"
+    Settings.postUpdateHooks["keyMappings"] = @loadKeyMappings.bind this
+
+  loadKeyMappings: (customKeyMappings) ->
+    @clearKeyMappingsAndSetDefaults()
+    @parseCustomKeyMappings customKeyMappings
+    @generateKeyStateMapping()
 
   availableCommands: {}
   keyToCommandRegistry: {}
@@ -93,6 +100,25 @@ Commands =
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
     @mapKeyToCommand { key, command } for own key, command of defaultKeyMappings
+
+  # This generates a nested key-to-command mapping structure. There is an example in mode_key_handler.coffee.
+  generateKeyStateMapping: ->
+    # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
+    # This regular expression captures two groups: the first is a named key, the second is the remainder of
+    # the string.
+    namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
+    keyStateMapping = {}
+    for own keys, registryEntry of @keyToCommandRegistry
+      currentMapping = keyStateMapping
+      while 0 < keys.length
+        [key, keys] = if 0 == keys.search namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys[1..]]
+        if currentMapping[key]?.command
+          break # Do not overwrite existing command bindings, they take priority.
+        else if 0 < keys.length
+          currentMapping = currentMapping[key] ?= {}
+        else
+          currentMapping[key] = registryEntry
+    chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
@@ -370,12 +396,6 @@ commandDescriptions =
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
 Commands.init()
-
-# Register postUpdateHook for keyMappings setting.
-Settings.postUpdateHooks["keyMappings"] = (value) ->
-  Commands.clearKeyMappingsAndSetDefaults()
-  Commands.parseCustomKeyMappings value
-  refreshCompletionKeysAfterMappingSave()
 
 root = exports ? window
 root.Commands = Commands

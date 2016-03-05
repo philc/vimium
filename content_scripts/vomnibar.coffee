@@ -7,7 +7,6 @@ Vomnibar =
   # Parse any additional options from the command's registry entry.  Currently, this only includes a flag of
   # the form "keyword=X", for direct activation of a custom search engine.
   parseRegistryEntry: (registryEntry = { options: [] }, callback = null) ->
-    options = {}
     searchEngines = Settings.get("searchEngines") ? ""
     SearchEngines.refreshAndUse searchEngines, (engines) ->
       callback? registryEntry.options

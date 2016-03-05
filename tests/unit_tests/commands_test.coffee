@@ -1,6 +1,6 @@
 require "./test_helper.js"
 extend global, require "./test_chrome_stubs.js"
-global.Settings = {postUpdateHooks: {}}
+global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
 
 context "Key mappings",
