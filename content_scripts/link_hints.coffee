@@ -10,13 +10,20 @@
 #
 # The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
-OPEN_IN_CURRENT_TAB = name: "curr-tab"
-OPEN_IN_NEW_BG_TAB = name: "bg-tab"
-OPEN_IN_NEW_FG_TAB = name: "fg-tab"
-OPEN_WITH_QUEUE = name: "queue"
-COPY_LINK_URL = name: "link"
-OPEN_INCOGNITO = name: "incognito"
-DOWNLOAD_LINK_URL = name: "download"
+OPEN_IN_CURRENT_TAB =
+  name: "curr-tab"
+OPEN_IN_NEW_BG_TAB =
+  name: "bg-tab"
+OPEN_IN_NEW_FG_TAB =
+  name: "fg-tab"
+OPEN_WITH_QUEUE =
+  name: "queue"
+COPY_LINK_URL =
+  name: "link"
+OPEN_INCOGNITO =
+  name: "incognito"
+DOWNLOAD_LINK_URL =
+  name: "download"
 
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
