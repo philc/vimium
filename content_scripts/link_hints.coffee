@@ -29,9 +29,9 @@ COPY_LINK_URL =
       chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
       url = link.href
       url = url[0..25] + "...." if 28 < url.length
-      @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+      HUD.showForDuration "Yanked #{url}", 2000
     else
-      @onExit = -> HUD.showForDuration "No link to yank.", 2000
+      HUD.showForDuration "No link to yank.", 2000
 OPEN_INCOGNITO =
   name: "incognito"
   linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
@@ -66,8 +66,6 @@ class LinkHintsMode
   linkActivator: undefined
   # The link-hints "mode" (in the key-handler, indicator sense).
   hintMode: null
-  # Call this function on exit (if defined).
-  onExit: null
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
@@ -417,7 +415,6 @@ class LinkHintsMode
   deactivateMode: ->
     @removeHintMarkers()
     @hintMode?.exit()
-    @onExit?()
 
   removeHintMarkers: ->
     DomUtils.removeElement @hintMarkerContainingDiv if @hintMarkerContainingDiv
