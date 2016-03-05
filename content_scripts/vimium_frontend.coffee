@@ -116,10 +116,9 @@ class NormalMode extends KeyHandlerMode
         You have asked Vimium to perform #{count} repetitions of the command: #{registryEntry.description}.\n
         Are you sure you want to continue?"""
 
-    # The Vomnibar needs special handling because it is always activated in the tab's main frame.
-    if registryEntry.command.startsWith "Vomnibar."
+    if registryEntry.topFrame
       chrome.runtime.sendMessage
-        handler: "sendMessageToFrames", message: {name: "openVomnibar", sourceFrameId: frameId, registryEntry}
+        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
     else if registryEntry.passCountToFunction
@@ -150,7 +149,7 @@ initializePreDomReady = ->
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
-    openVomnibar: ({sourceFrameId, registryEntry}) ->
+    runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
