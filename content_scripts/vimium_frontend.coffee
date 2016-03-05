@@ -438,7 +438,7 @@ initializeTopFrame = (request = null) ->
   initializeTopFrame = -> # Only do this initialization once.
   # We only initialize the vomnibar in the tab's top/main frame, because it's only ever opened there.
   if DomUtils.isTopFrame()
-    DomUtils.documentReady -> Vomnibar.init()
+    DomUtils.documentReady Vomnibar.init.bind Vomnibar
   else
     # Ignore requests from other frames (we're not the top frame).
     unless request?
