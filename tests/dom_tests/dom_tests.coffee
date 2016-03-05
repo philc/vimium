@@ -1,6 +1,7 @@
 
 # Install frontend event handlers.
 installListeners()
+HUD.init()
 
 installListener = (element, event, callback) ->
   element.addEventListener event, (-> callback.apply(this, arguments)), true

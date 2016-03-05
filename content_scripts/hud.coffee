@@ -86,7 +86,7 @@ HUD =
   isReady: do ->
     ready = false
     DomUtils.documentReady -> ready = true
-    -> ready and document.body != null
+    -> ready and document.body != null and @hudUI?
 
   enabled: -> true
 
