@@ -142,7 +142,6 @@ initializePreDomReady = ->
 
   requestHandlers =
     showHUDforDuration: handleShowHUDforDuration
-    toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: setScrollPosition
@@ -301,6 +300,11 @@ extend window,
   scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
 
 extend window,
+  showHelp: (sourceFrameId) ->
+    if DomUtils.isTopFrame()
+      chrome.runtime.sendMessage {handler: "getHelpPageHTML"}, (html) ->
+        HelpDialog.toggle {html,sourceFrameId}
+
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
@@ -630,18 +634,18 @@ window.HelpDialog ?=
 
   isReady: -> @helpUI?
 
-  show: (html) ->
+  show: (options) ->
     @init()
     return if @showing or !@isReady()
     @showing = true
-    @helpUI.activate html
+    @helpUI.activate options
 
   hide: ->
     @showing = false
     @helpUI.hide()
 
-  toggle: (html) ->
-    if @showing then @hide() else @show html
+  toggle: (options) ->
+    if @showing then @hide() else @show options
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady

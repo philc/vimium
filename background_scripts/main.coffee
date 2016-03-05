@@ -124,8 +124,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener onURLChange # history.pus
 chrome.webNavigation.onReferenceFragmentUpdated.addListener onURLChange # Hash changed.
 
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-# This is called by options.coffee.
-root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
+helpDialogHtml = ({showUnboundCommands, showCommandNames, customTitle}) ->
   commandsToKey = {}
   for own key of Commands.keyToCommandRegistry
     command = Commands.keyToCommandRegistry[key].command
@@ -278,10 +277,6 @@ BackgroundCommands =
   togglePinTab: (request) ->
     chrome.tabs.getSelected(null, (tab) ->
       chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
-  showHelp: (callback, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
   moveTabLeft: (count) -> moveTab -count
   moveTabRight: (count) -> moveTab count
   nextFrame: (count,frameId) ->
@@ -446,6 +441,7 @@ sendRequestHandlers =
   sendMessageToFrames: sendMessageToFrames
   log: bgLog
   fetchFileContents: (request, sender) -> fetchFileContents request.fileName
+  getHelpPageHTML: helpDialogHtml
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

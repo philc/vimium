@@ -82,36 +82,20 @@ class UIComponent
       @showing = true
 
   hide: (focusWindow = true)->
-    @refocusSourceFrame @options?.sourceFrameId if focusWindow
+    if focusWindow and sourceFrameId = @options?.sourceFrameId
+      # FIXME(smblott)  This is an unacceptable hack -- and must be fixed.  When closing a UI component, we
+      # cannot predict which frame Chrome focus; moreover, we cannot know exactly *when* that frame will be
+      # focused.  As a temporary fix, we wait a bit here, then focus the frame that we we really want focused.
+      Utils.setTimeout 150, ->
+        chrome.runtime.sendMessage
+          handler: "sendMessageToFrames"
+          message: name: "focusFrame", frameId: sourceFrameId
     window.removeEventListener "focus", @onFocus if @onFocus
     @onFocus = null
     @iframeElement.classList.remove "vimiumUIComponentVisible"
     @iframeElement.classList.add "vimiumUIComponentHidden"
     @options = null
     @showing = false
-
-  # Refocus the frame from which the UI component was opened.  This may be different from the current frame.
-  # After hiding the UI component, Chrome refocuses the containing frame. To avoid a race condition, we need
-  # to wait until that frame first receives the focus, before then focusing the frame which should now have
-  # the focus.
-  refocusSourceFrame: (sourceFrameId) ->
-    if @showing and sourceFrameId? and sourceFrameId != frameId
-      refocusSourceFrame = ->
-        chrome.runtime.sendMessage
-          handler: "sendMessageToFrames"
-          message:
-            name: "focusFrame"
-            frameId: sourceFrameId
-
-      if windowIsFocused()
-        # We already have the focus.
-        refocusSourceFrame()
-      else
-        # We don't yet have the focus (but we'll be getting it soon).
-        window.addEventListener "focus", handler = (event) ->
-          if event.target == window
-            window.removeEventListener "focus", handler
-            refocusSourceFrame()
 
   # Fetch a Vimium file/resource (such as "content_scripts/vimium.css").
   # We try making an XMLHttpRequest request.  That can fail (see #1817), in which case we fetch the
