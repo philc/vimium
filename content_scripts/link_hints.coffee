@@ -10,14 +10,18 @@
 #
 # The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
+isMac = KeyboardUtils.platform == "Mac"
 OPEN_IN_CURRENT_TAB =
   name: "curr-tab"
 OPEN_IN_NEW_BG_TAB =
   name: "bg-tab"
+  clickModifiers: metaKey: isMac, ctrlKey: not isMac
 OPEN_IN_NEW_FG_TAB =
   name: "fg-tab"
+  clickModifiers: shiftKey: true, metaKey: isMac, ctrlKey: not isMac
 OPEN_WITH_QUEUE =
   name: "queue"
+  clickModifiers: metaKey: isMac, ctrlKey: not isMac
 COPY_LINK_URL =
   name: "link"
   linkActivator: (link) ->
@@ -33,6 +37,7 @@ OPEN_INCOGNITO =
   linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
 DOWNLOAD_LINK_URL =
   name: "download"
+  clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
@@ -113,7 +118,7 @@ class LinkHintsMode
 
   setOpenLinkMode: (@mode) ->
     clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
-    @linkActivator = @mode.linkActivator if @mode.linkActivator?
+    @linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
 
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
@@ -122,24 +127,14 @@ class LinkHintsMode
         @hintMode.setIndicator "Open link in new tab and switch to it."
       else
         @hintMode.setIndicator "Open multiple links in new tabs."
-      # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
-      # windows) to open it in a new tab if necessary.
-      @linkActivator = clickActivator {
-        shiftKey: @mode is OPEN_IN_NEW_FG_TAB
-        metaKey: KeyboardUtils.platform == "Mac"
-        ctrlKey: KeyboardUtils.platform != "Mac"
-        altKey: false
-      }
     else if @mode is COPY_LINK_URL
       @hintMode.setIndicator "Copy link URL to Clipboard."
     else if @mode is OPEN_INCOGNITO
       @hintMode.setIndicator "Open link in incognito window."
     else if @mode is DOWNLOAD_LINK_URL
       @hintMode.setIndicator "Download link URL."
-      @linkActivator = clickActivator altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
       @hintMode.setIndicator "Open link in current tab."
-      @linkActivator = clickActivator
 
   #
   # Creates a link marker for the given link.
