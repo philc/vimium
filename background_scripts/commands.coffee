@@ -24,12 +24,7 @@ Commands =
       return
 
     options ||= {}
-    @availableCommands[command] =
-      description: description
-      isBackgroundCommand: options.background
-      passCountToFunction: options.passCountToFunction
-      noRepeat: options.noRepeat
-      repeatLimit: options.repeatLimit
+    @availableCommands[command] = extend options, description: description
 
   mapKeyToCommand: ({ key, command, options }) ->
     unless @availableCommands[command]

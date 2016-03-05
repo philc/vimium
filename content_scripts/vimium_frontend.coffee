@@ -120,7 +120,7 @@ class NormalMode extends KeyHandlerMode
     if registryEntry.command.startsWith "Vomnibar."
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames", message: {name: "openVomnibar", sourceFrameId: frameId, registryEntry}
-    else if registryEntry.isBackgroundCommand
+    else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
     else if registryEntry.passCountToFunction
       Utils.invokeCommandString registryEntry.command, [count]
