@@ -103,6 +103,8 @@ class LinkHintsMode
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
+    clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
+
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
         @hintMode.setIndicator "Open link in new tab."
@@ -110,14 +112,14 @@ class LinkHintsMode
         @hintMode.setIndicator "Open link in new tab and switch to it."
       else
         @hintMode.setIndicator "Open multiple links in new tabs."
-      @linkActivator = (link) ->
-        # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
-        # windows) to open it in a new tab if necessary.
-        DomUtils.simulateClick link,
-          shiftKey: @mode is OPEN_IN_NEW_FG_TAB
-          metaKey: KeyboardUtils.platform == "Mac"
-          ctrlKey: KeyboardUtils.platform != "Mac"
-          altKey: false
+      # When "clicking" on a link, dispatch the event with the appropriate meta key (CMD on Mac, CTRL on
+      # windows) to open it in a new tab if necessary.
+      @linkActivator = clickActivator {
+        shiftKey: @mode is OPEN_IN_NEW_FG_TAB
+        metaKey: KeyboardUtils.platform == "Mac"
+        ctrlKey: KeyboardUtils.platform != "Mac"
+        altKey: false
+      }
     else if @mode is COPY_LINK_URL
       @hintMode.setIndicator "Copy link URL to Clipboard."
       @linkActivator = (link) =>
@@ -134,11 +136,10 @@ class LinkHintsMode
         chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
       @hintMode.setIndicator "Download link URL."
-      @linkActivator = (link) ->
-        DomUtils.simulateClick link, altKey: true, ctrlKey: false, metaKey: false
+      @linkActivator = clickActivator altKey: true, ctrlKey: false, metaKey: false
     else # OPEN_IN_CURRENT_TAB
       @hintMode.setIndicator "Open link in current tab."
-      @linkActivator = DomUtils.simulateClick.bind DomUtils
+      @linkActivator = clickActivator
 
   #
   # Creates a link marker for the given link.
