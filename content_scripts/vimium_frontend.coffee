@@ -440,10 +440,12 @@ initializeTopFrame = (request = null) ->
   if DomUtils.isTopFrame()
     Vomnibar.init()
   else
-    # Ignore requests from other frames (if we're not the top frame).
+    # Ignore requests from other frames (we're not the top frame).
     unless request?
-      # Tell the top frame to initialize the Vomnibar.
-      chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrame"
+      # Tell the top frame to initialize the Vomnibar.  We wait until "DOMContentLoaded" to ensure that the
+      # listener in the main/top frame (which are installed pre-DomReady) is already installed.
+      DomUtils.documentReady ->
+        chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrame"
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL.
