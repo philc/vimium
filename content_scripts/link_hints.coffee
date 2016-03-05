@@ -20,8 +20,17 @@ OPEN_WITH_QUEUE =
   name: "queue"
 COPY_LINK_URL =
   name: "link"
+  linkActivator: (link) ->
+    if link.href?
+      chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+      url = link.href
+      url = url[0..25] + "...." if 28 < url.length
+      @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
+    else
+      @onExit = -> HUD.showForDuration "No link to yank.", 2000
 OPEN_INCOGNITO =
   name: "incognito"
+  linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
 DOWNLOAD_LINK_URL =
   name: "download"
 
@@ -104,6 +113,7 @@ class LinkHintsMode
 
   setOpenLinkMode: (@mode) ->
     clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
+    @linkActivator = @mode.linkActivator if @mode.linkActivator?
 
     if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
       if @mode is OPEN_IN_NEW_BG_TAB
@@ -122,18 +132,8 @@ class LinkHintsMode
       }
     else if @mode is COPY_LINK_URL
       @hintMode.setIndicator "Copy link URL to Clipboard."
-      @linkActivator = (link) =>
-        if link.href?
-          chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
-          url = link.href
-          url = url[0..25] + "...." if 28 < url.length
-          @onExit = -> HUD.showForDuration "Yanked #{url}", 2000
-        else
-          @onExit = -> HUD.showForDuration "No link to yank.", 2000
     else if @mode is OPEN_INCOGNITO
       @hintMode.setIndicator "Open link in incognito window."
-      @linkActivator = (link) ->
-        chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
     else if @mode is DOWNLOAD_LINK_URL
       @hintMode.setIndicator "Download link URL."
       @linkActivator = clickActivator altKey: true, ctrlKey: false, metaKey: false
