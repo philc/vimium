@@ -13,17 +13,22 @@
 isMac = KeyboardUtils.platform == "Mac"
 OPEN_IN_CURRENT_TAB =
   name: "curr-tab"
+  indicator: "Open link in current tab."
 OPEN_IN_NEW_BG_TAB =
   name: "bg-tab"
+  indicator: "Open link in new tab."
   clickModifiers: metaKey: isMac, ctrlKey: not isMac
 OPEN_IN_NEW_FG_TAB =
   name: "fg-tab"
+  indicator: "Open link in new tab and switch to it."
   clickModifiers: shiftKey: true, metaKey: isMac, ctrlKey: not isMac
 OPEN_WITH_QUEUE =
   name: "queue"
+  indicator: "Open multiple links in new tabs."
   clickModifiers: metaKey: isMac, ctrlKey: not isMac
 COPY_LINK_URL =
   name: "link"
+  indicator: "Copy link URL to Clipboard."
   linkActivator: (link) ->
     if link.href?
       chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -34,9 +39,11 @@ COPY_LINK_URL =
       HUD.showForDuration "No link to yank.", 2000
 OPEN_INCOGNITO =
   name: "incognito"
+  indicator: "Open link in incognito window."
   linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
 DOWNLOAD_LINK_URL =
   name: "download"
+  indicator: "Download link URL."
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
 LinkHints =
@@ -117,22 +124,7 @@ class LinkHintsMode
   setOpenLinkMode: (@mode) ->
     clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
     @linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
-
-    if @mode is OPEN_IN_NEW_BG_TAB or @mode is OPEN_IN_NEW_FG_TAB or @mode is OPEN_WITH_QUEUE
-      if @mode is OPEN_IN_NEW_BG_TAB
-        @hintMode.setIndicator "Open link in new tab."
-      else if @mode is OPEN_IN_NEW_FG_TAB
-        @hintMode.setIndicator "Open link in new tab and switch to it."
-      else
-        @hintMode.setIndicator "Open multiple links in new tabs."
-    else if @mode is COPY_LINK_URL
-      @hintMode.setIndicator "Copy link URL to Clipboard."
-    else if @mode is OPEN_INCOGNITO
-      @hintMode.setIndicator "Open link in incognito window."
-    else if @mode is DOWNLOAD_LINK_URL
-      @hintMode.setIndicator "Download link URL."
-    else # OPEN_IN_CURRENT_TAB
-      @hintMode.setIndicator "Open link in current tab."
+    @hintMode.setIndicator @mode.indicator
 
   #
   # Creates a link marker for the given link.
