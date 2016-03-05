@@ -301,9 +301,8 @@ extend window,
 
 extend window,
   showHelp: (sourceFrameId) ->
-    if DomUtils.isTopFrame()
-      chrome.runtime.sendMessage {handler: "getHelpPageHTML"}, (html) ->
-        HelpDialog.toggle {html,sourceFrameId}
+    chrome.runtime.sendMessage {handler: "getHelpPageHTML"}, (html) ->
+      HelpDialog.toggle {html,sourceFrameId}
 
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
