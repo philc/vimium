@@ -13,9 +13,10 @@ HUD =
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   init: ->
-    @hudUI = new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) =>
-      this[data.name]? data
-    @tween = new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
+    unless @hudUI?
+      @hudUI = new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) =>
+        this[data.name]? data
+      @tween = new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
 
   showForDuration: (text, duration) ->
     @show(text)
@@ -85,7 +86,7 @@ HUD =
   isReady: do ->
     ready = false
     DomUtils.documentReady -> ready = true
-    -> ready and document.body != null
+    -> ready and document.body != null and @hudUI?
 
   enabled: -> true
 

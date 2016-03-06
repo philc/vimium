@@ -149,6 +149,7 @@ initializePreDomReady = ->
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
+    initializeTopFrame: initializeTopFrame
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
@@ -218,9 +219,6 @@ initializeOnDomReady = ->
     isEnabledForUrl = false
     chrome.runtime.sendMessage = ->
     window.removeEventListener "focus", onFocus
-  # We only initialize the vomnibar in the tab's main frame, because it's only ever opened there.
-  Vomnibar.init() if DomUtils.isTopFrame()
-  HUD.init()
 
 registerFrame = ->
   # Don't register frameset containers; focusing them is no use.
@@ -436,6 +434,19 @@ extend window,
               indicator: false
 
 
+initializeTopFrame = (request = null) ->
+  initializeTopFrame = -> # Only do this initialization once.
+  # We only initialize the vomnibar in the tab's top/main frame, because it's only ever opened there.
+  if DomUtils.isTopFrame()
+    DomUtils.documentReady Vomnibar.init.bind Vomnibar
+  else
+    # Ignore requests from other frames (we're not the top frame).
+    unless request?
+      # Tell the top frame to initialize the Vomnibar.  We wait until "DOMContentLoaded" to ensure that the
+      # listener in the main/top frame (which are installed pre-DomReady) is already installed.
+      DomUtils.documentReady ->
+        chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrame"
+
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL.
 checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
@@ -443,7 +454,11 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
   chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url, frameIsFocused: frameIsFocused }, (response) ->
     { isEnabledForUrl, passKeys } = response
     installListeners() # But only if they have not been installed already.
-    if HUD.isReady() and not isEnabledForUrl
+    # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
+    if isEnabledForUrl
+      initializeTopFrame()
+      DomUtils.documentReady HUD.init.bind HUD if frameIsFocused
+    else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
     normalMode?.setPassKeys passKeys
