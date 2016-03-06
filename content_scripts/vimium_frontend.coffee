@@ -620,7 +620,6 @@ findAndFollowRel = (value) ->
 # If count is 1, then navigate from http://example.com/issue/4/x to http://example.com/issue/5/x.
 changeUrlDigits = (count) ->
   chrome.runtime.sendMessage {handler: "getCurrentTabUrl"}, (url) ->
-    regexp = /(.*)([0-9]+)([^0-9]*)/
     if 0 == url.search /(.*[^0-9])([0-9]+)([^0-9]*)/
       [prefix, digits, suffix ] = [RegExp.$1, RegExp.$2, RegExp.$3]
       chrome.runtime.sendMessage
