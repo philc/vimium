@@ -65,6 +65,14 @@ BgUtils =
           # Don't log messages from the logging page itself.  We do this check late because most of the time
           # it's not needed.
           if sender?.url != loggingPageUrl
-            viewWindow.document.getElementById("log-text").value += "#{(new Date()).toISOString()}: #{message}\n"
+            date = new Date
+            [hours, minutes, seconds, milliseconds] =
+              [date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()]
+            minutes = "0" + minutes if minutes < 10
+            seconds = "0" + seconds if seconds < 10
+            milliseconds = "00" + milliseconds if milliseconds < 10
+            milliseconds = "0" + milliseconds if milliseconds < 100
+            dateString = "#{hours}:#{minutes}:#{seconds}.#{milliseconds}"
+            viewWindow.document.getElementById("log-text").value += "#{dateString}: #{message}\n"
 
 root.BgUtils = BgUtils
