@@ -73,6 +73,8 @@ BgUtils =
             milliseconds = "00" + milliseconds if milliseconds < 10
             milliseconds = "0" + milliseconds if milliseconds < 100
             dateString = "#{hours}:#{minutes}:#{seconds}.#{milliseconds}"
-            viewWindow.document.getElementById("log-text").value += "#{dateString}: #{message}\n"
+            logElement = viewWindow.document.getElementById "log-text"
+            logElement.value += "#{dateString}: #{message}\n"
+            logElement.scrollTop = 2000000000
 
 root.BgUtils = BgUtils
