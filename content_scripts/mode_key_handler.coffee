@@ -89,6 +89,8 @@ class KeyHandlerMode extends Mode
 
   handleKeyChar: (keyChar) ->
     bgLog "Handling key #{keyChar}, mode=#{@name}."
+    # A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
+    @countPrefix = 0 unless keyChar of @keyState[0]
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
     @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
     command = (mapping for mapping in @keyState when "command" of mapping)[0]

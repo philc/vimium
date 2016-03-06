@@ -452,7 +452,7 @@ context "Normal mode",
     sendKeyboardEvent "z"
     sendKeyboardEvent "z"
     sendKeyboardEvent "p"
-    assert.equal 2, commandCount
+    assert.equal 1, commandCount
 
   should "get the correct count for mixed inputs (with leading mapped keys)", ->
     sendKeyboardEvent "z"
