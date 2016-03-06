@@ -20,7 +20,7 @@ class KeyHandlerMode extends Mode
 
   # Reset the key state, optionally retaining the count provided.
   reset: (@countPrefix = 0) ->
-    bgLog "Clearing key state, set count=#{@countPrefix}."
+    bgLog "Clearing key state: #{@countPrefix} (#{@name})"
     @keyState = [@keyMapping]
 
   constructor: (options) ->
@@ -88,7 +88,7 @@ class KeyHandlerMode extends Mode
     @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
 
   handleKeyChar: (keyChar) ->
-    bgLog "Handling key #{keyChar}, mode=#{@name}."
+    bgLog "Handle key #{keyChar} (#{@name})"
     # A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     @countPrefix = 0 unless keyChar of @keyState[0]
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
@@ -96,7 +96,7 @@ class KeyHandlerMode extends Mode
     command = (mapping for mapping in @keyState when "command" of mapping)[0]
     if command
       count = if 0 < @countPrefix then @countPrefix else 1
-      bgLog "Calling mode=#{@name}, command=#{command.command}, count=#{count}."
+      bgLog "Call #{command.command}[#{count}] (#{@mode})"
       @reset()
       @commandHandler {command, count}
     false # Suppress event.
