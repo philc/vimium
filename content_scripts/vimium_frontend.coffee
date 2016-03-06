@@ -457,7 +457,7 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
     # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
     if isEnabledForUrl
       initializeTopFrame()
-      HUD.init() if frameIsFocused
+      DomUtils.documentReady HUD.init.bind HUD if frameIsFocused
     else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
