@@ -89,18 +89,14 @@ class KeyHandlerMode extends Mode
 
   handleKeyChar: (keyChar) ->
     bgLog "Handling key #{keyChar}, mode=#{@name}."
-    nextKeyState = (mapping[keyChar] for mapping in @keyState when keyChar of mapping)
-    command = (mapping for mapping in nextKeyState when "command" of mapping)[0]
+    # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
+    @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
+    command = (mapping for mapping in @keyState when "command" of mapping)[0]
     if command
-      # Any count prefix applies only to the leading @keyState mapping; e.g., `7gj` should be `1j`.
-      @countPrefix = 0 unless command == @keyState[0][keyChar]
       count = if 0 < @countPrefix then @countPrefix else 1
       bgLog "Calling mode=#{@name}, command=#{command.command}, count=#{count}."
       @reset()
       @commandHandler {command, count}
-    else
-      # Advance the key state.
-      @keyState = [nextKeyState..., @keyMapping]
     false # Suppress event.
 
 root = exports ? window
