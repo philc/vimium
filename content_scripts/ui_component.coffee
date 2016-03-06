@@ -87,6 +87,7 @@ class UIComponent
     @onFocus = null
     @iframeElement.classList.remove "vimiumUIComponentVisible"
     @iframeElement.classList.add "vimiumUIComponentHidden"
+    @iframeElement.blur()
     @options = null
     @showing = false
 
