@@ -96,7 +96,7 @@ class UIComponent
   # to wait until that frame first receives the focus, before then focusing the frame which should now have
   # the focus.
   refocusSourceFrame: (sourceFrameId) ->
-    if @showing and sourceFrameId?
+    if @showing and sourceFrameId? and sourceFrameId != frameId
       refocusSourceFrame = ->
         chrome.runtime.sendMessage
           handler: "sendMessageToFrames"
@@ -109,11 +109,8 @@ class UIComponent
         refocusSourceFrame()
       else
         # We don't yet have the focus (but we'll be getting it soon).
-        console.log "000"
         window.addEventListener "focus", handler = (event) ->
-          console.log "aaa"
           if event.target == window
-            console.log "bbb"
             window.removeEventListener "focus", handler
             refocusSourceFrame()
 
