@@ -170,9 +170,9 @@ Next version (not yet released)
   (and a multiple of `scrollStepSize`).
 - `moveTabToNewWindow` now accepts a count prefix; so, `3W` moves three tabs to (the same) new window.
 - With smooth scrolling, `2j`-and-hold now gives a faster scroll than `j`-and-hold.
-- You can now bind three-key sequences;; for example, `map abc enterInsertMode`.
-- You can now bind keys to a command with a defined count prefix; see
-  [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes) for details.
+- You can now bind three-key (or longer) sequences; for example, `map abc enterInsertMode`.
+- You can now bind keys to a command with a defined count prefix; for example, `map d scrollDown count=4` (see
+  [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes) for details).
 - Web-devs only: when disabled on a tab, Vimium no longer pollutes the dev console with network requests.
 - Bug fixes:
     - `<c-a-[>` is not longer treated as escape.
