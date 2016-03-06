@@ -157,25 +157,23 @@ Release Notes
 -------------
 Next version (not yet released)
 
-- New command, `visitPreviousTab`, visits a previously-visited tab by recency.
-  Visit the previous tab with `^`, or the tab before that with `2^`.
-- New command, `passNextKey`, passes the next key directly to the page;  for
-  example, with `map <c-]> passNextKey`, you can close messenger popups on
-  Facebook with `<c-]><Esc>`.
-- Link-hints modes now accept a `count` prefix; for example, use `3F` to open
-  three new background tabs,  or `999F` to open *many* tabs.  Exit early with
-  `<Esc>`.
-- For filtered link hints, there is a new option which - when you're typing a
-  link's text - requires you to press `Enter` to activate the link; this
-  prevents unintentionally triggering Vimium commands with trailing keystrokes.
-- `gg` now accepts a `count` prefix.  It scrolls to an absolute position
-  measured from the top of the window (and a multiple of `scrollStepSize`).
-- `moveTabToNewWindow` now accepts a count prefix; so, `3W` moves three tabs to
-  (the same) new window.
+- New command, `visitPreviousTab`, visits a previously-visited tab by recency.  Visit the previous tab with
+  `^`, or the tab before that with `2^`.
+- New command, `passNextKey`, passes the next key directly to the page;  for example, with `map <c-]>
+  passNextKey`, you can close messenger popups on Facebook with `<c-]><Esc>`.
+- Link-hints modes now accept a `count` prefix; for example, use `3F` to open three new background tabs,  or
+  `999F` to open *many* tabs.  Exit early with `<Esc>`.
+- For filtered link hints, there is a new option which - when you're typing a link's text - requires you to
+  press `Enter` to activate the link; this prevents unintentionally triggering Vimium commands with trailing
+  keystrokes.
+- `gg` now accepts a `count` prefix.  It scrolls to an absolute position measured from the top of the window
+  (and a multiple of `scrollStepSize`).
+- `moveTabToNewWindow` now accepts a count prefix; so, `3W` moves three tabs to (the same) new window.
 - With smooth scrolling, `2j`-and-hold now gives a faster scroll than `j`-and-hold.
+- You can now bind three-key sequences;; for example, `map abc enterInsertMode`.
 - You can now bind keys to a command with a defined count prefix; see
-  [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes)
-  for details.
+  [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes) for details.
+- Web-devs only: when disabled on a tab, Vimium no longer pollutes the dev console with network requests.
 - Bug fixes:
     - `<c-a-[>` is not longer treated as escape.
 
