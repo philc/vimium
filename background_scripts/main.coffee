@@ -72,18 +72,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   # Ensure the sendResponse callback is freed.
   return false)
 
-# Log messages to the extension's logging page, but only if that page is open.
-logMessage = do ->
-  loggingPageUrl = chrome.runtime.getURL "pages/logging.html"
-  console.log "Vimium logging URL:\n  #{loggingPageUrl}" if loggingPageUrl? # Do not output URL for tests.
-  (message, sender = null) ->
-    for viewWindow in chrome.extension.getViews {type: "tab"}
-      if viewWindow.location.pathname == "/pages/logging.html"
-        # Don't log messages from the logging page itself.  We do this check late because most of the time
-        # it's not needed.
-        if sender?.url != loggingPageUrl
-          viewWindow.document.getElementById("log-text").value += "#{(new Date()).toISOString()}: #{message}\n"
-
 #
 # Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
 # because window.location doesn't know anything about the Chrome-specific "view-source:".
@@ -396,7 +384,7 @@ sendMessageToFrames = (request, sender) ->
 
 # For debugging only. This allows content scripts to log messages to the extension's logging page.
 bgLog = (request, sender) ->
-  logMessage "#{sender.tab.id}/#{request.frameId} #{request.message}", sender
+  BgUtils.log "#{sender.tab.id}/#{request.frameId} #{request.message}", sender
 
 # Port handler mapping
 portHandlers =
@@ -476,5 +464,4 @@ chrome.runtime.onInstalled.addListener ({reason}) ->
     chrome.storage.local.set installDate: new Date().toString()
 
 root.TabOperations = TabOperations
-root.logMessage = logMessage
 root.Frames = Frames

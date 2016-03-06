@@ -20,7 +20,7 @@ Commands =
   #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options) ->
     if command of @availableCommands
-      logMessage? "#{command} is already defined! Check commands.coffee for duplicates."
+      BgUtils.log "#{command} is already defined! Check commands.coffee for duplicates."
       return
 
     options ||= {}
@@ -28,7 +28,7 @@ Commands =
 
   mapKeyToCommand: ({ key, command, options }) ->
     unless @availableCommands[command]
-      logMessage? "#{command} doesn't exist!"
+      BgUtils.log "#{command} doesn't exist!"
       return
 
     options ?= {}
@@ -57,13 +57,13 @@ Commands =
             [ _, key, command, optionList... ] = tokens
             if command? and @availableCommands[command]
               key = @normalizeKey key
-              logMessage? "Mapping #{key} to #{command}"
+              BgUtils.log "Mapping #{key} to #{command}"
               @mapKeyToCommand { key, command, options: @parseCommandOptions command, optionList }
 
           when "unmap"
             if tokens.length == 2
               key = @normalizeKey tokens[1]
-              logMessage? "Unmapping #{key}"
+              BgUtils.log "Unmapping #{key}"
               delete @keyToCommandRegistry[key]
 
           when "unmapAll"

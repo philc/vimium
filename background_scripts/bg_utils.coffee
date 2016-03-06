@@ -53,4 +53,16 @@ class TabRecency
 BgUtils =
   tabRecency: new TabRecency()
 
+  # Log messages to the extension's logging page, but only if that page is open.
+  log: do ->
+    loggingPageUrl = chrome.runtime.getURL "pages/logging.html"
+    console.log "Vimium logging URL:\n  #{loggingPageUrl}" if loggingPageUrl? # Do not output URL for tests.
+    (message, sender = null) ->
+      for viewWindow in chrome.extension.getViews {type: "tab"}
+        if viewWindow.location.pathname == "/pages/logging.html"
+          # Don't log messages from the logging page itself.  We do this check late because most of the time
+          # it's not needed.
+          if sender?.url != loggingPageUrl
+            viewWindow.document.getElementById("log-text").value += "#{(new Date()).toISOString()}: #{message}\n"
+
 root.BgUtils = BgUtils
