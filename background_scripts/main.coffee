@@ -384,7 +384,7 @@ sendMessageToFrames = (request, sender) ->
 
 # For debugging only. This allows content scripts to log messages to the extension's logging page.
 bgLog = (request, sender) ->
-  BgUtils.log "#{sender.tab.id}/#{request.frameId} #{request.message}", sender
+  BgUtils.log "#{request.frameId} #{request.message}", sender
 
 # Port handler mapping
 portHandlers =
