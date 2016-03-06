@@ -15,6 +15,8 @@ class KeyHandlerMode extends Mode
   keydownEvents: {}
   setKeyMapping: (@keyMapping) -> @reset()
   setPassKeys: (@passKeys) -> @reset()
+  # Only for tests.
+  setCommandHandler: (@commandHandler) ->
 
   # Reset the key state, optionally retaining the count provided.
   reset: (@countPrefix = 0) ->

@@ -126,11 +126,11 @@ class NormalMode extends KeyHandlerMode
     else
       Utils.invokeCommandString registryEntry.command for i in [0...count]
 
-# Only exported for tests; also, "args..." is only for the tests.
-window.initializeModes = (args...) ->
+# Only exported for tests.
+window.initializeModes = ->
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.  normalMode is exported only for the tests.
-  window.normalMode = new NormalMode args...
+  window.normalMode = new NormalMode
   new InsertMode permanent: true
   Scroller.init()
 

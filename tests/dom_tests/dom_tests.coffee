@@ -20,12 +20,22 @@ for type in [ "keydown", "keypress", "keyup" ]
   installListener window, type, (event) ->
     pageKeyboardEventCount += 1
 
+commandName = commandCount = null
+
 # Some tests have side effects on the handler stack and the active mode, so these are reset on setup.
 initializeModeState = ->
   Mode.reset()
   handlerStack.reset()
-  initializeModes keyMapping: {m: {}, p: {}, z: {p: {}}}
+  initializeModes()
   normalMode.setPassKeys "p"
+  normalMode.setKeyMapping
+    m: options: {}, command: "m" # A mapped key.
+    p: options: {}, command: "p" # A pass key.
+    z:
+      p: options: {}, command: "zp" # Not a pass key.
+  normalMode.setCommandHandler ({command, count}) ->
+    [commandName, commandCount] = [command.command, count]
+  commandName = commandCount = null
 
 # Tell Settings that it's been loaded.
 Settings.isLoaded = true
@@ -377,6 +387,101 @@ context "Normal mode",
     sendKeyboardEvent "z"
     sendKeyboardEvent "p"
     assert.equal pageKeyboardEventCount, 0
+
+  should "invoke commands for mapped keys", ->
+    sendKeyboardEvent "m"
+    assert.equal "m", commandName
+
+  should "invoke commands for mapped keys with a mapped prefix", ->
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "m"
+    assert.equal "m", commandName
+
+  should "invoke commands for mapped keys with an unmapped prefix", ->
+    sendKeyboardEvent "a"
+    sendKeyboardEvent "m"
+    assert.equal "m", commandName
+
+  should "not invoke commands for pass keys", ->
+    sendKeyboardEvent "p"
+    assert.equal null, commandName
+
+  should "not invoke commands for pass keys with an unmapped prefix", ->
+    sendKeyboardEvent "a"
+    sendKeyboardEvent "p"
+    assert.equal null, commandName
+
+  should "invoke commands for pass keys with a count", ->
+    sendKeyboardEvent "1"
+    sendKeyboardEvent "p"
+    assert.equal "p", commandName
+
+  should "invoke commands for pass keys with a key queue", ->
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "p"
+    assert.equal "zp", commandName
+
+  should "default to a count of 1", ->
+    sendKeyboardEvent "m"
+    assert.equal 1, commandCount
+
+  should "accept count prefixes of length 1", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "m"
+    assert.equal 2, commandCount
+
+  should "accept count prefixes of length 2", ->
+    sendKeyboardEvent "12"
+    sendKeyboardEvent "m"
+    assert.equal 12, commandCount
+
+  should "get the correct count for mixed inputs (single key)", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "m"
+    assert.equal 1, commandCount
+
+  should "get the correct count for mixed inputs (multi key)", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "p"
+    assert.equal 2, commandCount
+
+  should "get the correct count for mixed inputs (multi key, duplicates)", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "p"
+    assert.equal 2, commandCount
+
+  should "get the correct count for mixed inputs (with leading mapped keys)", ->
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "m"
+    assert.equal 2, commandCount
+
+  should "get the correct count for mixed inputs (with leading unmapped keys)", ->
+    sendKeyboardEvent "a"
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "m"
+    assert.equal 2, commandCount
+
+  should "not get a count after unmapped keys", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "a"
+    sendKeyboardEvent "m"
+    assert.equal 1, commandCount
+
+  should "get the correct count after unmapped keys", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "a"
+    sendKeyboardEvent "3"
+    sendKeyboardEvent "m"
+    assert.equal 3, commandCount
+
+  should "not handle unmapped keys", ->
+    sendKeyboardEvent "u"
+    assert.equal null, commandCount
 
 context "Insert mode",
   setup ->
