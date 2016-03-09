@@ -314,8 +314,10 @@ extend window,
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
       window.location.href = urlsplit.join('/')
 
-  goToRoot: () ->
+  goToRoot: ->
     window.location.href = window.location.origin
+
+  mainFrame: -> focusThisFrame highlight: true
 
   toggleViewSource: ->
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->

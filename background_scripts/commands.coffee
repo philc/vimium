@@ -385,7 +385,7 @@ commandDescriptions =
   "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { topFrame: true }]
 
   nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
-  mainFrame: ["Select the tab's main/top frame", { background: true, noRepeat: true }]
+  mainFrame: ["Select the tab's main/top frame", { topFrame: true, noRepeat: true }]
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
