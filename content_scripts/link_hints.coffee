@@ -664,3 +664,5 @@ class WaitForEnter extends Mode
 
 root = exports ? window
 root.LinkHints = LinkHints
+# For tests:
+root.AlphabetHints = AlphabetHints
