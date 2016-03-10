@@ -46,17 +46,25 @@ DOWNLOAD_LINK_URL =
   indicator: "Download link URL."
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
+HintCoordinator =
+  availableModes: [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE,
+                   COPY_LINK_URL, OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+
+  activateMode: (activateModeCallback) ->
+    activateModeCallback ClickableElements.getVisibleClickableElements()
+
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
     if 0 < count
-      new LinkHintsMode mode, (event = null) ->
-        # This is called which LinkHintsMode exits.  Escape and Backspace are the two ways in which hints mode
-        # can exit following which we do not restart hints mode.
-        return if event?.type == "keydown" and KeyboardUtils.isEscape event
-        return if event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
-        # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
-        # which would cause our new mode to exit immediately.
-        Utils.nextTick -> LinkHints.activateMode count-1, mode
+      HintCoordinator.activateMode (elements) ->
+        new LinkHintsMode mode, elements, (event = null) ->
+          # This is called which LinkHintsMode exits.  Escape and Backspace are the two ways in which hints mode
+          # can exit following which we do not restart hints mode.
+          return if event?.type == "keydown" and KeyboardUtils.isEscape event
+          return if event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+          # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
+          # which would cause our new mode to exit immediately.
+          Utils.nextTick -> LinkHints.activateMode count-1, mode
 
   activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
@@ -76,11 +84,10 @@ class LinkHintsModeBase
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (mode = OPEN_IN_CURRENT_TAB, onExit = (->)) ->
+  constructor: (mode = OPEN_IN_CURRENT_TAB, elements, onExit = (->)) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
-    elements = ClickableElements.getVisibleClickableElements()
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
     elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
