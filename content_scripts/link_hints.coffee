@@ -65,7 +65,7 @@ LinkHints =
   activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
 
-class LinkHintsMode
+class LinkHintsModeBase
   hintMarkerContainingDiv: null
   # One of the enums listed at the top of this file.
   mode: undefined
@@ -80,7 +80,7 @@ class LinkHintsMode
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
-    elements = @getVisibleClickableElements()
+    elements = ClickableElements.getVisibleClickableElements()
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
     elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
@@ -146,6 +146,9 @@ class LinkHintsMode
 
       marker
 
+# TODO(smblott) It is not intended that the code remain structured this way.  This a temporary in order to
+# keep the diff smaller and clearer.  Basically, we need to move a lot of lines around.
+ClickableElements =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
@@ -286,6 +289,11 @@ class LinkHintsMode
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
     nonOverlappingElements
+
+# TODO(smblott) It is not intended that the code remain structured this way.  This a temporary in order to
+# keep the diff smaller and clearer.  Basically, we need to move a lot of lines around.
+class LinkHintsMode extends LinkHintsModeBase
+  constructor: (args...) -> super args...
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (hintMarkers, event) ->
