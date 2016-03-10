@@ -53,6 +53,21 @@ HintCoordinator =
   activateMode: (activateModeCallback) ->
     activateModeCallback ClickableElements.getVisibleClickableElements()
 
+  activateLink: (mode, linkMatched) ->
+    clickEl = linkMatched.clickableItem
+
+    clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
+    linkActivator = mode.linkActivator ? clickActivator mode.clickModifiers
+
+    if DomUtils.isSelectable clickEl
+      DomUtils.simulateSelect clickEl
+    else
+      # TODO: Are there any other input elements which should not receive focus?
+      if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
+        clickEl.focus()
+      linkActivator clickEl
+      LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
+
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
     if 0 < count
@@ -129,8 +144,6 @@ class LinkHintsModeBase
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode) ->
-    clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
-    @linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
     @hintMode.setIndicator @mode.indicator
 
   #
@@ -383,18 +396,11 @@ class LinkHintsMode extends LinkHintsModeBase
   #
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
-    clickEl = linkMatched.clickableItem
 
+    mode = @mode
     linkActivator = =>
       @deactivateMode()
-      if DomUtils.isSelectable clickEl
-        DomUtils.simulateSelect clickEl
-      else
-        # TODO: Are there any other input elements which should not receive focus?
-        if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
-          clickEl.focus()
-        @linkActivator clickEl
-        LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
+      HintCoordinator.activateLink mode, linkMatched
 
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
       new WaitForEnter linkMatched.rect, linkActivator
