@@ -46,40 +46,55 @@ DOWNLOAD_LINK_URL =
   indicator: "Download link URL."
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
+availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+
 HintCoordinator =
-  availableModes: [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE,
-                   COPY_LINK_URL, OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+  onExit: []
 
-  activateMode: (activateModeCallback) ->
-    activateModeCallback ClickableElements.getVisibleClickableElements()
+  sendMessage: (name, request = {}) ->
+    request = extend request, {handler: "linkHintsMessage", name, frameId}
+    chrome.runtime.sendMessage request
 
-  activateLink: (mode, linkMatched) ->
-    clickEl = linkMatched.clickableItem
+  activateMode: (@mode, onExit) ->
+    @onExit = [onExit]
+    @sendMessage "activateMode", modeIndex: availableModes.indexOf @mode
 
-    clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
-    linkActivator = mode.linkActivator ? clickActivator mode.clickModifiers
+  getHints: ->
+    @localHints = ClickableElements.getVisibleClickableElements()
+    @sendMessage "postHints", hints: for hint, localIndex in @localHints
+      {rect: hint.rect, linkText: hint.linkText, showLinkText: hint.showLinkText, localIndex, frameId}
 
-    if DomUtils.isSelectable clickEl
-      DomUtils.simulateSelect clickEl
-    else
-      # TODO: Are there any other input elements which should not receive focus?
-      if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
-        clickEl.focus()
-      linkActivator clickEl
-      LinkHints.activateModeWithQueue() if @mode is OPEN_WITH_QUEUE
+  activateLinkHintsMode: ({hints, modeIndex, frameId: activateModeFrameId}) ->
+    @onExit = [] unless frameId == activateModeFrameId
+    mode = availableModes[modeIndex]
+    @linkHintsMode = new LinkHintsMode hints, mode
+
+  postKeyState: (request) ->
+    @linkHintsMode.updateVisibleMarkersFromCoordinator request
+
+  activateActiveHintMarker: ->
+    @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
+
+  exit: ->
+    @onExit.pop()() while 0 < @onExit.length
+    @linkHintsMode = null
+    @localHints = null
+
+  exitFailure: ->
+    @onExit = [=> @linkHintsMode.deactivateMode()]
+    @exit()
+
+  getLocalHintMarker: (hint) ->
+    if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
-    if 0 < count
-      HintCoordinator.activateMode (elements) ->
-        new LinkHintsMode mode, elements, (event = null) ->
-          # This is called which LinkHintsMode exits.  Escape and Backspace are the two ways in which hints mode
-          # can exit following which we do not restart hints mode.
-          return if event?.type == "keydown" and KeyboardUtils.isEscape event
-          return if event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
-          # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
-          # which would cause our new mode to exit immediately.
-          Utils.nextTick -> LinkHints.activateMode count-1, mode
+    if 0 < count or mode is OPEN_WITH_QUEUE
+      HintCoordinator.activateMode mode, ->
+        # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
+        # which would cause our new mode to exit immediately.
+        Utils.nextTick -> LinkHints.activateMode count-1, mode
 
   activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
@@ -99,27 +114,21 @@ class LinkHintsModeBase
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (mode = OPEN_IN_CURRENT_TAB, elements, onExit = (->)) ->
+  constructor: (elements, mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
     elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
-    if Settings.get "filterLinkHints"
-      # When using text filtering, we sort the elements such that we visit descendants before their ancestors.
-      # This allows us to exclude the text used for matching descendants from that used for matching their
-      # ancestors.
-      length = (el) -> el.element.innerHTML?.length ? 0
-      elements.sort (a,b) -> length(a) - length b
 
     if elements.length == 0
       HUD.showForDuration "No links to select.", 2000
       return
 
-    hintMarkers = (@createMarkerFor(el) for el in elements)
+    @hintMarkers = (@createMarkerFor(el) for el in elements)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
-    @markerMatcher.fillInMarkers hintMarkers
+    @markerMatcher.fillInMarkers @hintMarkers
 
     @hintMode = new Mode
       name: "hint/#{mode.name}"
@@ -129,22 +138,27 @@ class LinkHintsModeBase
       suppressTrailingKeyEvents: true
       exitOnEscape: true
       exitOnClick: true
-      keydown: @onKeyDownInMode.bind this, hintMarkers
-      keypress: @onKeyPressInMode.bind this, hintMarkers
-
-    @hintMode.onExit =>
-      @deactivateMode()
-    @hintMode.onExit onExit
+      keydown: @onKeyDownInMode.bind this, @hintMarkers
+      keypress: @onKeyPressInMode.bind this, @hintMarkers
 
     @setOpenLinkMode mode
+    @hintMode.onExit (event) =>
+      HintCoordinator.sendMessage "exitFailure" if @isExitFailureEvent event
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
-    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
+    @hintMarkerContainingDiv = DomUtils.addElementList @hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
+    # Hide markers from other frames.
+    @hideMarker marker for marker in @hintMarkers when marker.hint.frameId != frameId
 
   setOpenLinkMode: (@mode) ->
-    @hintMode.setIndicator @mode.indicator
+    @hintMode.setIndicator @mode.indicator if DomUtils.isTopFrame()
+
+  # This tests whether this event is an event which indicates that we're exiting wthout selecting a link.
+  isExitFailureEvent: (event) ->
+    (event?.type == "keydown" and KeyboardUtils.isEscape event) or
+      (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
 
   #
   # Creates a link marker for the given link.
@@ -157,6 +171,11 @@ class LinkHintsModeBase
       marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
       marker.clickableItem = link.element
       marker.stableSortCount = ++stableSortCount
+      # Keep track of the original hint.  We'll need this to decide which markers to display, and to activate
+      # hints in other frames.
+      marker.hint = link
+      marker.linkText = link.linkText
+      marker.showLinkText = link.showLinkText
 
       clientRect = link.rect
       marker.style.left = clientRect.left + window.scrollX + "px"
@@ -166,8 +185,9 @@ class LinkHintsModeBase
 
       marker
 
-# TODO(smblott) It is not intended that the code remain structured this way.  This a temporary in order to
-# keep the diff smaller and clearer.  Basically, we need to move a lot of lines around.
+# TODO(smblott) It is not intended that the code remain structured this way.  This temporary in order to keep
+# the diff smaller and clearer.  Basically, we need to move the whole of ClickableElements, here, out of the
+# LinkHintsMode class.
 ClickableElements =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -308,7 +328,49 @@ ClickableElements =
         # click some elements that we could click before.
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
+    if Settings.get "filterLinkHints"
+      @generateLabelMap()
+      DomUtils.textContent.reset()
+      extend hint, @generateLinkText hint.element for hint in nonOverlappingElements
+
     nonOverlappingElements
+
+  # Generate a map of input element => label
+  generateLabelMap: ->
+    labels = document.querySelectorAll("label")
+    for label in labels
+      forElement = label.getAttribute("for")
+      if (forElement)
+        labelText = label.textContent.trim()
+        # remove trailing : commonly found in labels
+        if (labelText[labelText.length-1] == ":")
+          labelText = labelText.substr(0, labelText.length-1)
+        @labelMap[forElement] = labelText
+
+  generateLinkText: (element) ->
+    linkText = ""
+    showLinkText = false
+    # toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
+    nodeName = element.nodeName.toLowerCase()
+
+    if (nodeName == "input")
+      if (@labelMap[element.id])
+        linkText = @labelMap[element.id]
+        showLinkText = true
+      else if (element.type != "password")
+        linkText = element.value
+        if not linkText and 'placeholder' of element
+          linkText = element.placeholder
+      # check if there is an image embedded in the <a> tag
+    else if (nodeName == "a" && !element.textContent.trim() &&
+        element.firstElementChild &&
+        element.firstElementChild.nodeName.toLowerCase() == "img")
+      linkText = element.firstElementChild.alt || element.firstElementChild.title
+      showLinkText = true if (linkText)
+    else
+      linkText = DomUtils.textContent.get element
+
+    {linkText, showLinkText}
 
 # TODO(smblott) It is not intended that the code remain structured this way.  This a temporary in order to
 # keep the diff smaller and clearer.  Basically, we need to move a lot of lines around.
@@ -349,7 +411,7 @@ class LinkHintsMode extends LinkHintsModeBase
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
-        @updateVisibleMarkers hintMarkers
+        @updateVisibleMarkers()
       else
         # Exit via @hintMode.exit(), so that the LinkHints.activate() "onExit" callback sees the key event and
         # knows not to restart hints mode.
@@ -357,11 +419,11 @@ class LinkHintsMode extends LinkHintsModeBase
 
     else if event.keyCode == keyCodes.enter
       # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
-      @activateLink @markerMatcher.activeHintMarker if @markerMatcher.activeHintMarker
+      HintCoordinator.sendMessage "activateActiveHintMarker" if @markerMatcher.activeHintMarker
 
     else if event.keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
-      @updateVisibleMarkers hintMarkers, @tabCount
+      @updateVisibleMarkers @tabCount
 
     else
       return
@@ -376,19 +438,25 @@ class LinkHintsMode extends LinkHintsModeBase
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
       @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers hintMarkers
+      @updateVisibleMarkers()
 
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
 
-  updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
-    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints hintMarkers, tabCount
+  updateVisibleMarkers: (tabCount = 0) ->
+    {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
+    HintCoordinator.sendMessage "postKeyState", {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}
+
+  updateVisibleMarkersFromCoordinator: ({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
+    extend @markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue}
+
+    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints @hintMarkers, tabCount
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
       @activateLink linksMatched[0], userMightOverType ? false
     else
-      @hideMarker marker for marker in hintMarkers
+      @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
   #
@@ -396,26 +464,45 @@ class LinkHintsMode extends LinkHintsModeBase
   #
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
+    HintCoordinator.onExit.push => @deactivateMode()
+    clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hint)?.element
 
-    mode = @mode
-    linkActivator = =>
-      @deactivateMode()
-      HintCoordinator.activateLink mode, linkMatched
+    if clickEl?
+      HintCoordinator.onExit.push =>
+        if DomUtils.isSelectable clickEl
+          DomUtils.simulateSelect clickEl
+        else
+          clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
+          linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
+          # TODO: Are there any other input elements which should not receive focus?
+          if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
+            clickEl.focus()
+          linkActivator clickEl
+
+    installKeyBoardBlocker = (startKeyboardBlocker) ->
+      if linkMatched.hint.frameId == frameId
+        flashEl = DomUtils.addFlashRect linkMatched.hint.rect
+        HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
+
+      if document.hasFocus()
+        startKeyboardBlocker -> HintCoordinator.sendMessage "exit"
 
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
-      new WaitForEnter linkMatched.rect, linkActivator
+      installKeyBoardBlocker (callback) -> new WaitForEnter callback
     else if userMightOverType
       # Block keyboard events while the user is still typing.  The intention is to prevent the user from
       # inadvertently launching Vimium commands when (over-)typing the link text.
-      new TypingProtector 200, linkMatched.rect, linkActivator
+      installKeyBoardBlocker (callback) -> new TypingProtector 200, callback
     else
-      DomUtils.flashRect linkMatched.rect
-      linkActivator()
+      DomUtils.flashRect linkMatched.rect if linkMatched.hint.frameId == frameId
+      HintCoordinator.sendMessage "exit"
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
   #
   showMarker: (linkMarker, matchingCharCount) ->
+    # Never show markers from other frames
+    return unless linkMarker.hint.frameId == frameId
     linkMarker.style.display = ""
     for j in [0...linkMarker.childNodes.length]
       if (j < matchingCharCount)
@@ -488,20 +575,6 @@ class FilterHints
     # link-hint numbers.
     @splitRegexp = new RegExp "[\\W#{Utils.escapeRegexSpecialCharacters @linkHintNumbers}]+"
 
-  #
-  # Generate a map of input element => label
-  #
-  generateLabelMap: ->
-    labels = document.querySelectorAll("label")
-    for label in labels
-      forElement = label.getAttribute("for")
-      if (forElement)
-        labelText = label.textContent.trim()
-        # remove trailing : commonly found in labels
-        if (labelText[labelText.length-1] == ":")
-          labelText = labelText.substr(0, labelText.length-1)
-        @labelMap[forElement] = labelText
-
   generateHintString: (linkHintNumber) ->
     base = @linkHintNumbers.length
     hint = []
@@ -510,43 +583,12 @@ class FilterHints
       linkHintNumber = Math.floor linkHintNumber / base
     hint.reverse().join ""
 
-  generateLinkText: (element) ->
-    linkText = ""
-    showLinkText = false
-    # toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
-    nodeName = element.nodeName.toLowerCase()
-
-    if (nodeName == "input")
-      if (@labelMap[element.id])
-        linkText = @labelMap[element.id]
-        showLinkText = true
-      else if (element.type != "password")
-        linkText = element.value
-        if not linkText and 'placeholder' of element
-          linkText = element.placeholder
-      # check if there is an image embedded in the <a> tag
-    else if (nodeName == "a" && !element.textContent.trim() &&
-        element.firstElementChild &&
-        element.firstElementChild.nodeName.toLowerCase() == "img")
-      linkText = element.firstElementChild.alt || element.firstElementChild.title
-      showLinkText = true if (linkText)
-    else
-      linkText = DomUtils.textContent.get element
-
-    { text: linkText, show: showLinkText }
-
   renderMarker: (marker) ->
     marker.innerHTML = spanWrap(marker.hintString +
         (if marker.showLinkText then ": " + marker.linkText else ""))
 
   fillInMarkers: (hintMarkers) ->
-    @generateLabelMap()
-    DomUtils.textContent.reset()
-    for marker in hintMarkers
-      linkTextObject = @generateLinkText(marker.clickableItem)
-      marker.linkText = linkTextObject.text
-      marker.showLinkText = linkTextObject.show
-      @renderMarker(marker)
+    @renderMarker marker for marker in hintMarkers
 
     @activeHintMarker = hintMarkers[0]
     @activeHintMarker?.classList.add "vimiumActiveHintMarker"
@@ -643,7 +685,7 @@ spanWrap = (hintString) ->
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
-  constructor: (delay, rect, callback) ->
+  constructor: (delay, callback) ->
     @timer = Utils.setTimeout delay, => @exit()
 
     resetExitTimer = (event) =>
@@ -658,13 +700,8 @@ class TypingProtector extends Mode
 
     @onExit callback
 
-    # We keep a "flash" overlay active while the user is typing; this provides visual feeback that something
-    # has been selected.
-    flashEl = DomUtils.addFlashRect rect
-    @onExit -> DomUtils.removeElement flashEl
-
 class WaitForEnter extends Mode
-  constructor: (rect, callback) ->
+  constructor: (callback) ->
     super
       name: "hint/wait-for-enter"
       suppressAllKeyboardEvents: true
@@ -680,10 +717,8 @@ class WaitForEnter extends Mode
         else
           true
 
-    flashEl = DomUtils.addFlashRect rect
-    @onExit -> DomUtils.removeElement flashEl
-
 root = exports ? window
 root.LinkHints = LinkHints
+root.HintCoordinator = HintCoordinator
 # For tests:
 root.AlphabetHints = AlphabetHints

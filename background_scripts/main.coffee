@@ -319,6 +319,30 @@ cycleToFrame = (frames, frameId, count = 0) ->
   count = (count + Math.max 0, frames.indexOf frameId) % frames.length
   [frames[count..]..., frames[0...count]...]
 
+HintCoordinator =
+  tabState: {}
+
+  onMessage: (request, sender) ->
+    if request.name of this
+      this[request.name] extend request, tabId: sender.tab.id
+    else
+      # The message is not for us.  It's for all frames, so we bounce it there.
+      @sendMessage request.name, sender.tab.id, request
+
+  sendMessage: (handler, tabId, request = {}) ->
+    chrome.tabs.sendMessage tabId, extend request, {name: "linkHintsMessage", handler}
+
+  activateMode: ({tabId, frameId, modeIndex}) ->
+    @tabState[tabId] = {frameIds: frameIdsForTab[tabId], hints: [], modeIndex, frameId}
+    @sendMessage "getHints", tabId
+
+  postHints: ({tabId, frameId, hints}) ->
+    @tabState[tabId].hints.push hints...
+    @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
+    if @tabState[tabId].frameIds.length == 0
+      @sendMessage "activateLinkHintsMode", tabId, @tabState[tabId]
+      delete @tabState[tabId] # We won't be needing this any more.
+
 # Port handler mapping
 portHandlers =
   completions: handleCompletions
@@ -344,6 +368,7 @@ sendRequestHandlers =
   # Send a message to all frames in the current tab.
   sendMessageToFrames: (request, sender) -> chrome.tabs.sendMessage sender.tab.id, request.message
   fetchFileContents: (request, sender) -> fetchFileContents request.fileName
+  linkHintsMessage: HintCoordinator.onMessage.bind HintCoordinator
   # For debugging only. This allows content scripts to log messages to the extension's logging page.
   log: ({frameId, message}, sender) -> BgUtils.log "#{frameId} #{message}", sender
 
