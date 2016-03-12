@@ -323,14 +323,14 @@ HintCoordinator =
   tabState: {}
 
   onMessage: (request, sender) ->
-    if request.name of this
-      this[request.name] extend request, tabId: sender.tab.id
+    if request.messageType of this
+      this[request.messageType] extend request, tabId: sender.tab.id
     else
       # The message is not for us.  It's for all frames, so we bounce it there.
-      @sendMessage request.name, sender.tab.id, request
+      @sendMessage request.messageType, sender.tab.id, request
 
-  sendMessage: (handler, tabId, request = {}) ->
-    chrome.tabs.sendMessage tabId, extend request, {name: "linkHintsMessage", handler}
+  sendMessage: (messageType, tabId, request = {}) ->
+    chrome.tabs.sendMessage tabId, extend request, {name: "linkHintsMessage", messageType}
 
   activateMode: ({tabId, frameId, modeIndex}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId], hints: [], modeIndex, frameId}

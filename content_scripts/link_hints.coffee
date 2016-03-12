@@ -52,8 +52,8 @@ availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, O
 HintCoordinator =
   onExit: []
 
-  sendMessage: (name, request = {}) ->
-    chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", name, frameId}
+  sendMessage: (messageType, request = {}) ->
+    chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", messageType, frameId}
 
   activateMode: (mode, onExit) ->
     @onExit = [onExit]
