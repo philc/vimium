@@ -53,17 +53,17 @@ HintCoordinator =
   onExit: []
 
   sendMessage: (name, request = {}) ->
-    request = extend request, {handler: "linkHintsMessage", name, frameId}
-    chrome.runtime.sendMessage request
+    chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", name, frameId}
 
-  activateMode: (@mode, onExit) ->
+  activateMode: (mode, onExit) ->
     @onExit = [onExit]
-    @sendMessage "activateMode", modeIndex: availableModes.indexOf @mode
+    @sendMessage "activateMode", modeIndex: availableModes.indexOf mode
 
   getHints: ->
     @localHints = ClickableElements.getVisibleClickableElements()
     @sendMessage "postHints", hints: for hint, localIndex in @localHints
-      {rect: hint.rect, linkText: hint.linkText, showLinkText: hint.showLinkText, localIndex, frameId}
+      {rect: hint.rect, linkText: hint.linkText, showLinkText: hint.showLinkText, hasHref: hint.hasHref,
+        localIndex, frameId}
 
   activateLinkHintsMode: ({hints, modeIndex, frameId: activateModeFrameId}) ->
     @onExit = [] unless frameId == activateModeFrameId
@@ -118,7 +118,7 @@ class LinkHintsModeBase
 
     # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
     # with them).
-    elements = (el for el in elements when el.element.href?) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
+    elements = (el for el in elements when el.hasHref) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
 
     if elements.length == 0
       HUD.showForDuration "No links to select.", 2000
@@ -328,6 +328,7 @@ ClickableElements =
       DomUtils.textContent.reset()
       extend hint, @generateLinkText hint.element for hint in nonOverlappingElements
 
+    hint.hasHref = hint.element.href? for hint in nonOverlappingElements
     nonOverlappingElements
 
   # Generate a map of input element => label
