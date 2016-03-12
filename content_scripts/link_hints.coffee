@@ -71,7 +71,7 @@ HintCoordinator =
 
   postKeyState: (request) -> @linkHintsMode.postKeyState request
   activateActiveHintMarker: -> @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
-  setMode: ({modeIndex}) -> @linkHintsMode.setOpenLinkMode availableModes[modeIndex], true
+  setMode: ({modeIndex}) -> @linkHintsMode.setOpenLinkMode availableModes[modeIndex], false
   getLocalHintMarker: (hint) -> if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
   exit: ->
@@ -140,7 +140,7 @@ class LinkHintsModeBase
           (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
         HintCoordinator.sendMessage "exitFailure"
 
-    @setOpenLinkMode mode, true
+    @setOpenLinkMode mode, false
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
@@ -150,9 +150,9 @@ class LinkHintsModeBase
     @hideMarker marker for marker in hintMarkers when marker.hint.frameId != frameId
     @postKeyState = @postKeyState.bind this, hintMarkers
 
-  setOpenLinkMode: (@mode, doNotPropagate = false) ->
-    @hintMode.setIndicator @mode.indicator if DomUtils.isTopFrame()
-    unless doNotPropagate
+  setOpenLinkMode: (@mode, shouldPropagtetoOtherFrames = true) ->
+    @hintMode.setIndicator @mode.indicator if windowIsFocused()
+    if shouldPropagtetoOtherFrames
       HintCoordinator.sendMessage "setMode", modeIndex: availableModes.indexOf @mode
 
   #
