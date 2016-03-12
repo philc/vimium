@@ -69,11 +69,10 @@ HintCoordinator =
     @onExit = [] unless frameId == activateModeFrameId
     @linkHintsMode = new LinkHintsMode hints, availableModes[modeIndex]
 
-  postKeyState: (request) ->
-    @linkHintsMode.postKeyState request
-
-  activateActiveHintMarker: ->
-    @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
+  postKeyState: (request) -> @linkHintsMode.postKeyState request
+  activateActiveHintMarker: -> @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
+  setMode: ({modeIndex}) -> @linkHintsMode.setOpenLinkMode availableModes[modeIndex], true
+  getLocalHintMarker: (hint) -> if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
   exit: ->
     @onExit.pop()() while 0 < @onExit.length
@@ -82,9 +81,6 @@ HintCoordinator =
   exitFailure: ->
     @onExit = [=> @linkHintsMode.deactivateMode()]
     @exit()
-
-  getLocalHintMarker: (hint) ->
-    if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
@@ -144,7 +140,7 @@ class LinkHintsModeBase
           (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
         HintCoordinator.sendMessage "exitFailure"
 
-    @setOpenLinkMode mode
+    @setOpenLinkMode mode, true
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
@@ -154,8 +150,10 @@ class LinkHintsModeBase
     @hideMarker marker for marker in hintMarkers when marker.hint.frameId != frameId
     @postKeyState = @postKeyState.bind this, hintMarkers
 
-  setOpenLinkMode: (@mode) ->
+  setOpenLinkMode: (@mode, doNotPropagate = false) ->
     @hintMode.setIndicator @mode.indicator if DomUtils.isTopFrame()
+    unless doNotPropagate
+      HintCoordinator.sendMessage "setMode", modeIndex: availableModes.indexOf @mode
 
   #
   # Creates a link marker for the given link.
