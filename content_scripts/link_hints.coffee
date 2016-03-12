@@ -67,8 +67,7 @@ HintCoordinator =
 
   activateLinkHintsMode: ({hints, modeIndex, frameId: activateModeFrameId}) ->
     @onExit = [] unless frameId == activateModeFrameId
-    mode = availableModes[modeIndex]
-    @linkHintsMode = new LinkHintsMode hints, mode
+    @linkHintsMode = new LinkHintsMode hints, availableModes[modeIndex]
 
   postKeyState: (request) ->
     @linkHintsMode.postKeyState request
@@ -78,8 +77,7 @@ HintCoordinator =
 
   exit: ->
     @onExit.pop()() while 0 < @onExit.length
-    @linkHintsMode = null
-    @localHints = null
+    @linkHintsMode = @localHints = null
 
   exitFailure: ->
     @onExit = [=> @linkHintsMode.deactivateMode()]
@@ -170,7 +168,7 @@ class LinkHintsModeBase
       marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
       marker.clickableItem = link.element
       marker.stableSortCount = ++stableSortCount
-      # Keep track of the original hint descriptor.  We'll need this to decide which markers to display.
+      # Keep track of the original hint descriptor, we'll need it to decide which markers to display.
       marker.hint = link
       marker.linkText = link.linkText
       marker.showLinkText = link.showLinkText
