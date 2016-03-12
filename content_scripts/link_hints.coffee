@@ -65,6 +65,9 @@ HintCoordinator =
       {rect: hint.rect, linkText: hint.linkText, showLinkText: hint.showLinkText, hasHref: hint.hasHref,
         localIndex, frameId}
 
+  # We activate LinkHintsMode() in every frame, and provide every frame with exactly the same hints.  We also
+  # propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock step in
+  # every frame, the linkHintsMode arrives in the samme state in every frame.
   activateLinkHintsMode: ({hints, modeIndex, frameId: activateModeFrameId}) ->
     @onExit = [] unless frameId == activateModeFrameId
     @linkHintsMode = new LinkHintsMode hints, availableModes[modeIndex]
@@ -454,9 +457,10 @@ class LinkHintsMode extends LinkHintsModeBase
       @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
-  #
-  # When only one link hint remains, this function activates it in the appropriate way.
-  #
+  # When only one link hint remains, this function activates it in the appropriate way.  The current frame may
+  # or may not contain the matched link, and it may or may not have the focus.  These two things are
+  # independent, so there are four possible cases.  All four cases are accounted for here by selectively
+  # pushing the appropriate onExit() handlers.
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
     clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hint)?.element
@@ -482,6 +486,8 @@ class LinkHintsMode extends LinkHintsModeBase
       if document.hasFocus()
         startKeyboardBlocker -> HintCoordinator.sendMessage "exit"
 
+    # If we're using a keyboard blocker, then the frame with the focus invokes "exit", otherwise the frame
+    # containing the selected link invokes "exit".
     HintCoordinator.onExit.push => @deactivateMode()
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
       installKeyBoardBlocker (callback) -> new WaitForEnter callback
@@ -489,8 +495,8 @@ class LinkHintsMode extends LinkHintsModeBase
       # Block keyboard events while the user is still typing.  The intention is to prevent the user from
       # inadvertently launching Vimium commands when (over-)typing the link text.
       installKeyBoardBlocker (callback) -> new TypingProtector 200, callback
-    else
-      DomUtils.flashRect linkMatched.rect if linkMatched.hint.frameId == frameId
+    else if linkMatched.hint.frameId == frameId
+      DomUtils.flashRect linkMatched.rect
       HintCoordinator.sendMessage "exit"
 
   #
