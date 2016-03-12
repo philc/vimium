@@ -699,7 +699,6 @@ class WaitForEnter extends Mode
     super
       name: "hint/wait-for-enter"
       suppressAllKeyboardEvents: true
-      exitOnEscape: true
       indicator: "Hit <Enter> to proceed..."
 
     @push
