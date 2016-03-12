@@ -464,6 +464,7 @@ class LinkHintsMode extends LinkHintsModeBase
     if clickEl?
       HintCoordinator.onExit.push =>
         if DomUtils.isSelectable clickEl
+          window.focus()
           DomUtils.simulateSelect clickEl
         else
           clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
