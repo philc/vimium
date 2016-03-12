@@ -61,6 +61,9 @@ getHintMarkers = ->
 
 stubSettings = (key, value) -> stub Settings.cache, key, JSON.stringify value
 
+HintCoordinator.sendMessage = (name, request = {}) -> HintCoordinator[name]? request; request
+activateLinkHintsMode = -> HintCoordinator.activateLinkHintsMode HintCoordinator.getHints()
+
 #
 # Generate tests that are common to both default and filtered
 # link hinting modes.
@@ -81,7 +84,7 @@ createGeneralHintTests = (isFilteredMode) ->
       document.getElementById("test-div").innerHTML = ""
 
     should "create hints when activated, discard them when deactivated", ->
-      linkHints = LinkHints.activateMode()
+      linkHints = activateLinkHintsMode()
       assert.isFalse not linkHints.hintMarkerContainingDiv?
       linkHints.deactivateMode()
       assert.isTrue not linkHints.hintMarkerContainingDiv?
@@ -91,13 +94,13 @@ createGeneralHintTests = (isFilteredMode) ->
         assert.equal element1.getClientRects()[0].left, element2.getClientRects()[0].left
         assert.equal element1.getClientRects()[0].top, element2.getClientRects()[0].top
       stub document.body, "style", "static"
-      linkHints = LinkHints.activateMode()
+      linkHints = activateLinkHintsMode()
       hintMarkers = getHintMarkers()
       assertStartPosition document.getElementsByTagName("a")[0], hintMarkers[0]
       assertStartPosition document.getElementsByTagName("a")[1], hintMarkers[1]
       linkHints.deactivateMode()
       stub document.body.style, "position", "relative"
-      linkHints = LinkHints.activateMode()
+      linkHints = activateLinkHintsMode()
       hintMarkers = getHintMarkers()
       assertStartPosition document.getElementsByTagName("a")[0], hintMarkers[0]
       assertStartPosition document.getElementsByTagName("a")[1], hintMarkers[1]
@@ -143,8 +146,9 @@ context "Test link hints for focusing input elements correctly",
       input.addEventListener "focus", activeListener, false
       input.addEventListener "click", activeListener, false
 
-      LinkHints.activateMode()
-      [hint] = getHintMarkers().filter (hint) -> input == hint.clickableItem
+      activateLinkHintsMode()
+      [hint] = getHintMarkers().filter (hint) ->
+        input == HintCoordinator.getLocalHintMarker(hint.hint).element
       sendKeyboardEvent char for char in hint.hintString
 
       input.removeEventListener "focus", activeListener, false
@@ -185,7 +189,7 @@ context "Alphabetical link hints",
 
     # Three hints will trigger double hint chars.
     createLinks 3
-    @linkHints = LinkHints.activateMode()
+    @linkHints = activateLinkHintsMode()
 
   tearDown ->
     @linkHints.deactivateMode()
@@ -233,7 +237,7 @@ context "Filtered link hints",
       initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>" + "<a>trait</a>" + "<a>track<img alt='alt text'/></a>"
       document.getElementById("test-div").innerHTML = testContent
-      @linkHints = LinkHints.activateMode()
+      @linkHints = activateLinkHintsMode()
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
@@ -264,7 +268,7 @@ context "Filtered link hints",
       testContent = "<a><img alt='alt text'/></a><a><img alt='alt text' title='some title'/></a>
         <a><img title='some title'/></a>" + "<a><img src='' width='320px' height='100px'/></a>"
       document.getElementById("test-div").innerHTML = testContent
-      @linkHints = LinkHints.activateMode()
+      @linkHints = activateLinkHintsMode()
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
@@ -289,7 +293,7 @@ context "Filtered link hints",
         <input type='text' id='test-input' value='some value'/>
         <label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>"
       document.getElementById("test-div").innerHTML = testContent
-      @linkHints = LinkHints.activateMode()
+      @linkHints = activateLinkHintsMode()
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""

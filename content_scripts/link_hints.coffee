@@ -332,6 +332,7 @@ ClickableElements =
 
   # Generate a map of input element => label
   generateLabelMap: ->
+    @labelMap = {}
     labels = document.querySelectorAll("label")
     for label in labels
       forElement = label.getAttribute("for")
@@ -564,7 +565,6 @@ class FilterHints
     @linkHintNumbers = Settings.get "linkHintNumbers"
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
-    @labelMap = {}
     @activeHintMarker = null
     # The regexp for splitting typed text and link texts.  We split on sequences of non-word characters and
     # link-hint numbers.
@@ -716,4 +716,4 @@ root = exports ? window
 root.LinkHints = LinkHints
 root.HintCoordinator = HintCoordinator
 # For tests:
-root.AlphabetHints = AlphabetHints
+extend root, {LinkHintsMode, ClickableElements, AlphabetHints}
