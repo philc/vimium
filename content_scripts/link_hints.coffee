@@ -71,7 +71,7 @@ HintCoordinator =
     @linkHintsMode = new LinkHintsMode hints, mode
 
   postKeyState: (request) ->
-    @linkHintsMode.updateVisibleMarkersFromCoordinator request
+    @linkHintsMode.postKeyState request
 
   activateActiveHintMarker: ->
     @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
@@ -126,9 +126,9 @@ class LinkHintsModeBase
       HUD.showForDuration "No links to select.", 2000
       return
 
-    @hintMarkers = (@createMarkerFor(el) for el in elements)
+    hintMarkers = (@createMarkerFor(el) for el in elements)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
-    @markerMatcher.fillInMarkers @hintMarkers
+    @markerMatcher.fillInMarkers hintMarkers
 
     @hintMode = new Mode
       name: "hint/#{mode.name}"
@@ -138,27 +138,26 @@ class LinkHintsModeBase
       suppressTrailingKeyEvents: true
       exitOnEscape: true
       exitOnClick: true
-      keydown: @onKeyDownInMode.bind this, @hintMarkers
-      keypress: @onKeyPressInMode.bind this, @hintMarkers
+      keydown: @onKeyDownInMode.bind this, hintMarkers
+      keypress: @onKeyPressInMode.bind this, hintMarkers
+
+    @hintMode.onExit (event) =>
+      if event?.type == "click" or (event?.type == "keydown" and KeyboardUtils.isEscape event) or
+          (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
+        HintCoordinator.sendMessage "exitFailure"
 
     @setOpenLinkMode mode
-    @hintMode.onExit (event) =>
-      HintCoordinator.sendMessage "exitFailure" if @isExitFailureEvent event
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
-    @hintMarkerContainingDiv = DomUtils.addElementList @hintMarkers,
+    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
     # Hide markers from other frames.
-    @hideMarker marker for marker in @hintMarkers when marker.hint.frameId != frameId
+    @hideMarker marker for marker in hintMarkers when marker.hint.frameId != frameId
+    @postKeyState = @postKeyState.bind this, hintMarkers
 
   setOpenLinkMode: (@mode) ->
     @hintMode.setIndicator @mode.indicator if DomUtils.isTopFrame()
-
-  # This tests whether this event is an event which indicates that we're exiting wthout selecting a link.
-  isExitFailureEvent: (event) ->
-    (event?.type == "keydown" and KeyboardUtils.isEscape event) or
-      (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
 
   #
   # Creates a link marker for the given link.
@@ -171,8 +170,7 @@ class LinkHintsModeBase
       marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
       marker.clickableItem = link.element
       marker.stableSortCount = ++stableSortCount
-      # Keep track of the original hint.  We'll need this to decide which markers to display, and to activate
-      # hints in other frames.
+      # Keep track of the original hint descriptor.  We'll need this to decide which markers to display.
       marker.hint = link
       marker.linkText = link.linkText
       marker.showLinkText = link.showLinkText
@@ -185,9 +183,8 @@ class LinkHintsModeBase
 
       marker
 
-# TODO(smblott) It is not intended that the code remain structured this way.  This temporary in order to keep
-# the diff smaller and clearer.  Basically, we need to move the whole of ClickableElements, here, out of the
-# LinkHintsMode class.
+# TODO(smblott) It is not intended that this remain structured this way.  This is temporary, just to keep the
+# diff smaller and clearer.  We need to move the whole of ClickableElements out of the LinkHintsMode class.
 ClickableElements =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -372,8 +369,8 @@ ClickableElements =
 
     {linkText, showLinkText}
 
-# TODO(smblott) It is not intended that the code remain structured this way.  This a temporary in order to
-# keep the diff smaller and clearer.  Basically, we need to move a lot of lines around.
+# TODO(smblott) It is not intended that this remain structured this way.  This is temporary, just to keep the
+# diff smaller and clearer.  We need to move the whole of ClickableElements out of the LinkHintsMode class.
 class LinkHintsMode extends LinkHintsModeBase
   constructor: (args...) -> super args...
 
@@ -411,7 +408,7 @@ class LinkHintsMode extends LinkHintsModeBase
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
-        @updateVisibleMarkers()
+        @updateVisibleMarkers hintMarkers
       else
         # Exit via @hintMode.exit(), so that the LinkHints.activate() "onExit" callback sees the key event and
         # knows not to restart hints mode.
@@ -423,7 +420,7 @@ class LinkHintsMode extends LinkHintsModeBase
 
     else if event.keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
-      @updateVisibleMarkers @tabCount
+      @updateVisibleMarkers hintMarkers, @tabCount
 
     else
       return
@@ -438,25 +435,25 @@ class LinkHintsMode extends LinkHintsModeBase
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
       @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers()
+      @updateVisibleMarkers hintMarkers
 
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
 
-  updateVisibleMarkers: (tabCount = 0) ->
+  updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
     HintCoordinator.sendMessage "postKeyState", {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}
 
-  updateVisibleMarkersFromCoordinator: ({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
+  postKeyState: (hintMarkers, {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
     extend @markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue}
 
-    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints @hintMarkers, tabCount
+    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints hintMarkers, tabCount
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
       @activateLink linksMatched[0], userMightOverType ? false
     else
-      @hideMarker marker for marker in @hintMarkers
+      @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
   #
@@ -464,7 +461,6 @@ class LinkHintsMode extends LinkHintsModeBase
   #
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
-    HintCoordinator.onExit.push => @deactivateMode()
     clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hint)?.element
 
     if clickEl?
@@ -487,6 +483,7 @@ class LinkHintsMode extends LinkHintsModeBase
       if document.hasFocus()
         startKeyboardBlocker -> HintCoordinator.sendMessage "exit"
 
+    HintCoordinator.onExit.push => @deactivateMode()
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
       installKeyBoardBlocker (callback) -> new WaitForEnter callback
     else if userMightOverType
