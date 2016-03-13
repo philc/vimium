@@ -125,7 +125,7 @@ class ExclusionRulesOption extends Option
   # Accessors for the three main sub-elements of an "exclusionRuleTemplateInstance".
   getPattern: (element) -> element.querySelector(".pattern")
   getPassKeys: (element) -> element.querySelector(".passKeys")
-  getRemoveButton: (element) -> element.querySelector(".exclusionRemoveButtonButton")
+  getRemoveButton: (element) -> element.querySelector(".exclusionRemoveButton")
 
 # ExclusionRulesOnPopupOption is ExclusionRulesOption, extended with some UI tweeks suitable for use in the
 # page popup.  This also differs from ExclusionRulesOption in that, on the page popup, there is always a URL

@@ -181,15 +181,15 @@ td.booleanOption { font-size: 12px; }
 .exclusionRulePassKeys {
   width: 33%;
 }
-.exclusionRemoveButton {
+.exclusionRemove {
   width: 1px; /* 1px; smaller than the button itself. */
 }
-.exclusionRemoveButtonButton {
+.exclusionRemoveButton {
   border: none;
   background-color: #fff;
   color: #979ca0;
 }
-.exclusionRemoveButtonButton:hover {
+.exclusionRemoveButton:hover {
   color: #444;
 }
 input.pattern, input.passKeys, .exclusionHeaderText {
