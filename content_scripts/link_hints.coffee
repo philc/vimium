@@ -321,7 +321,6 @@ LocalHints =
 
     hint.hasHref = hint.element.href? for hint in localHints
     if Settings.get "filterLinkHints"
-      DomUtils.textContent.reset()
       @generateLabelMap()
       extend hint, @generateLinkText hint.element for hint in localHints
 
@@ -354,14 +353,14 @@ LocalHints =
         linkText = element.value
         if not linkText and 'placeholder' of element
           linkText = element.placeholder
-      # check if there is an image embedded in the <a> tag
+    # Check if there is an image embedded in the <a> tag.
     else if (nodeName == "a" && !element.textContent.trim() &&
         element.firstElementChild &&
         element.firstElementChild.nodeName.toLowerCase() == "img")
       linkText = element.firstElementChild.alt || element.firstElementChild.title
       showLinkText = true if (linkText)
     else
-      linkText = DomUtils.textContent.get element
+      linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
 
     {linkText, showLinkText}
 

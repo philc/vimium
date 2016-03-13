@@ -316,25 +316,6 @@ DomUtils =
     else
       sel.focusNode
 
-  # Get the text content of an element (and its descendents), but omit the text content of previously-visited
-  # nodes.  See #1514.
-  # NOTE(smblott).  This is currently O(N^2) (when called on N elements).  An alternative would be to mark
-  # each node visited, and then clear the marks when we're done.
-  textContent: do ->
-    visitedNodes = null
-    reset: -> visitedNodes = []
-    get: (element) ->
-      nodes = document.createTreeWalker element, NodeFilter.SHOW_TEXT
-      texts =
-        while node = nodes.nextNode()
-          continue unless node.nodeType == 3
-          continue if node in visitedNodes
-          text = node.data.trim()
-          continue unless 0 < text.length
-          visitedNodes.push node
-          text
-      texts.join " "
-
   # Get the element in the DOM hierachy that contains `element`.
   # If the element is rendered in a shadow DOM via a <content> element, the <content> element will be
   # returned, so the shadow DOM is traversed rather than passed over.
