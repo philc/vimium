@@ -321,50 +321,50 @@ LocalHints =
 
     hint.hasHref = hint.element.href? for hint in localHints
     if Settings.get "filterLinkHints"
-      @generateLabelMap()
-      extend hint, @generateLinkText hint.element for hint in localHints
-
+      @withLabelMap (labelMap) =>
+        extend hint, @generateLinkText labelMap, hint.element for hint in localHints
     localHints
 
-  # Generate a map of input element => label
-  generateLabelMap: ->
-    @labelMap = {}
-    labels = document.querySelectorAll("label")
+  # Generate a map of input element => label text, call a callback with it.
+  withLabelMap: (callback) ->
+    labelMap = {}
+    labels = document.querySelectorAll "label"
     for label in labels
-      forElement = label.getAttribute("for")
-      if (forElement)
+      forElement = label.getAttribute "for"
+      if forElement
         labelText = label.textContent.trim()
-        # remove trailing : commonly found in labels
-        if (labelText[labelText.length-1] == ":")
-          labelText = labelText.substr(0, labelText.length-1)
-        @labelMap[forElement] = labelText
+        # Remove trailing ":" commonly found in labels.
+        if labelText[labelText.length-1] == ":"
+          labelText = labelText.substr 0, labelText.length-1
+        labelMap[forElement] = labelText
+    callback labelMap
 
-  generateLinkText: (element) ->
+  generateLinkText: (labelMap, element) ->
     linkText = ""
     showLinkText = false
     # toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
     nodeName = element.nodeName.toLowerCase()
 
-    if (nodeName == "input")
-      if (@labelMap[element.id])
-        linkText = @labelMap[element.id]
+    if nodeName == "input"
+      if labelMap[element.id]
+        linkText = labelMap[element.id]
         showLinkText = true
-      else if (element.type != "password")
+      else if element.type != "password"
         linkText = element.value
         if not linkText and 'placeholder' of element
           linkText = element.placeholder
     # Check if there is an image embedded in the <a> tag.
-    else if (nodeName == "a" && !element.textContent.trim() &&
-        element.firstElementChild &&
-        element.firstElementChild.nodeName.toLowerCase() == "img")
+    else if nodeName == "a" and not element.textContent.trim() and
+        element.firstElementChild and
+        element.firstElementChild.nodeName.toLowerCase() == "img"
       linkText = element.firstElementChild.alt || element.firstElementChild.title
-      showLinkText = true if (linkText)
+      showLinkText = true if linkText
     else
       linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
 
     {linkText, showLinkText}
 
-# TODO(smblott) Again, this is temporary.  We need to move the code above out of the "old" link-hints class,
+# TODO(smblott) Again, this is temporary.  We need to move the code above out of the "old" link-hints class.
 class LinkHintsMode extends LinkHintsModeBase
   constructor: (args...) -> super args...
 
@@ -479,8 +479,8 @@ class LinkHintsMode extends LinkHintsModeBase
         startKeyboardBlocker -> HintCoordinator.sendMessage "exit"
 
     HintCoordinator.onExit.push => @deactivateMode()
-    # If we're using a keyboard blocker, then the frame with the focus invokes "exit", otherwise the frame
-    # containing the matched link invokes "exit".
+    # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
+    # frame containing the matched link does.
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
       installKeyBoardBlocker (callback) -> new WaitForEnter callback
     else if userMightOverType
@@ -579,9 +579,6 @@ class FilterHints
 
   fillInMarkers: (hintMarkers) ->
     @renderMarker marker for marker in hintMarkers
-
-    @activeHintMarker = hintMarkers[0]
-    @activeHintMarker?.classList.add "vimiumActiveHintMarker"
 
     # We use @filterLinkHints() here (although we know that all of the hints will match) to fill in the hint
     # strings.  This ensures that we always get hint strings in the same order.
