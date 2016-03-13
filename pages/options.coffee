@@ -133,8 +133,8 @@ class ExclusionRulesOption extends Option
     rules = @readValueFromElement()
     for rule in rules
       key = rule.pattern
-      key = RegExp.$1 if 0 == key.search /[a-z?*]+:\/\/(.*)/
-      key = RegExp.$1 if 0 == key.search /www\.(.*)/
+      key = RegExp.$1 if 0 == key.search /^[a-z?*]+:\/\/(.*)/
+      key = RegExp.$1 if 0 == key.search /^www\.(.*)/
       rule.key = key
 
     rules.sort (a,b) -> if a.key < b.key then -1 else if b.key < a.key then 1 else 0
