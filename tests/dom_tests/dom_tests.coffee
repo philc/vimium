@@ -37,6 +37,7 @@ initializeModeState = ->
   normalMode.setCommandHandler ({command, count}) ->
     [commandName, commandCount] = [command.command, count]
   commandName = commandCount = null
+  normalMode # Return this.
 
 # Tell Settings that it's been loaded.
 Settings.isLoaded = true
@@ -155,6 +156,32 @@ context "Test link hints for focusing input elements correctly",
       input.removeEventListener "focus", activeListener, false
       input.removeEventListener "click", activeListener, false
 
+context "Test link hints for changing mode",
+
+  setup ->
+    initializeModeState()
+    testDiv = document.getElementById("test-div")
+    testDiv.innerHTML = "<a>link</a>"
+    @linkHints = LinkHints.activateMode()
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+    @linkHints.deactivateMode()
+
+  should "change mode on shift", ->
+    assert.equal "curr-tab", @linkHints.mode.name
+    sendKeyboardEvent "shift-down"
+    assert.equal "bg-tab", @linkHints.mode.name
+    sendKeyboardEvent "shift-up"
+    assert.equal "curr-tab", @linkHints.mode.name
+
+  should "change mode on ctrl", ->
+    assert.equal "curr-tab", @linkHints.mode.name
+    sendKeyboardEvent "ctrl-down"
+    assert.equal "fg-tab", @linkHints.mode.name
+    sendKeyboardEvent "ctrl-up"
+    assert.equal "curr-tab", @linkHints.mode.name
+
 context "Alphabetical link hints",
 
   setup ->
@@ -271,6 +298,55 @@ context "Filtered link hints",
       assert.isTrue "N: a label" in hintMarkers
       assert.isTrue "N" in hintMarkers
 
+  context "Text hint scoring",
+
+    setup ->
+      initializeModeState()
+      testContent = [
+        {id: 0, text: "the xboy stood on the xburning deck"} # Noise.
+        {id: 1, text: "the boy stood on the xburning deck"}  # Whole word (boy).
+        {id: 2, text: "on the xboy stood the xburning deck"} # Start of text (on).
+        {id: 3, text: "the xboy stood on the xburning deck"} # Noise.
+        {id: 4, text: "the xboy stood on the xburning deck"} # Noise.
+        {id: 5, text: "the xboy stood on the xburning"}      # Shortest text..
+        {id: 6, text: "the xboy stood on the burning xdeck"} # Start of word (bu)
+        {id: 7, text: "test abc one - longer"}               # For tab test - 2.
+        {id: 8, text: "test abc one"}                        # For tab test - 1.
+        {id: 9, text: "test abc one - longer still"}         # For tab test - 3.
+      ].map(({id,text}) -> "<a id=\"#{id}\">#{text}</a>").join " "
+      document.getElementById("test-div").innerHTML = testContent
+      @linkHints = LinkHints.activateMode()
+      @getActiveHintMarker = ->
+        @linkHints.markerMatcher.activeHintMarker.clickableItem.id
+
+    tearDown ->
+      document.getElementById("test-div").innerHTML = ""
+      @linkHints.deactivateMode()
+
+    should "score start-of-word matches highly", ->
+      sendKeyboardEvent ch for ch in "bu".split()
+      assert.equal "6", @getActiveHintMarker()
+
+    should "score start-of-text matches highly (br)", ->
+      sendKeyboardEvent ch for ch in "on".split()
+      assert.equal "2", @getActiveHintMarker()
+
+    should "score whole-word matches highly", ->
+      sendKeyboardEvent ch for ch in "boy".split()
+      assert.equal "1", @getActiveHintMarker()
+
+    should "score shorter texts more highly", ->
+      sendKeyboardEvent ch for ch in "stood".split()
+      assert.equal "5", @getActiveHintMarker()
+
+    should "use tab to select the active hint", ->
+      sendKeyboardEvent ch for ch in "abc".split()
+      assert.equal "8", @getActiveHintMarker()
+      sendKeyboardEvent "tab"
+      assert.equal "7", @getActiveHintMarker()
+      sendKeyboardEvent "tab"
+      assert.equal "9", @getActiveHintMarker()
+
 context "Input focus",
 
   setup ->
@@ -374,25 +450,122 @@ createLinks = (n) ->
     link.textContent = "test"
     document.getElementById("test-div").appendChild link
 
+context "Key mapping",
+  setup ->
+    @normalMode = initializeModeState()
+    @handlerCalled = false
+    @handlerCalledCount = 0
+    @normalMode.setCommandHandler ({count}) =>
+      @handlerCalled = true
+      @handlerCalledCount = count
+
+  should "recognize first mapped key", ->
+    assert.isTrue @normalMode.isMappedKey "m"
+
+  should "recognize second mapped key", ->
+    assert.isFalse @normalMode.isMappedKey "p"
+    sendKeyboardEvent "z"
+    assert.isTrue @normalMode.isMappedKey "p"
+
+  should "recognize pass keys", ->
+    assert.isTrue @normalMode.isPassKey "p"
+
+  should "not mis-recognize pass keys", ->
+    assert.isFalse @normalMode.isMappedKey "p"
+    sendKeyboardEvent "z"
+    assert.isTrue @normalMode.isMappedKey "p"
+
+  should "recognize initial count keys", ->
+    assert.isTrue @normalMode.isCountKey "1"
+    assert.isTrue @normalMode.isCountKey "9"
+
+  should "not recognize '0' as initial count key", ->
+    assert.isFalse @normalMode.isCountKey "0"
+
+  should "recognize subsequent count keys", ->
+    sendKeyboardEvent "1"
+    assert.isTrue @normalMode.isCountKey "0"
+    assert.isTrue @normalMode.isCountKey "9"
+
+  should "set and call command handler", ->
+    sendKeyboardEvent "m"
+    assert.isTrue @handlerCalled
+    assert.equal 0, pageKeyboardEventCount
+
+  should "not call command handler for pass keys", ->
+    sendKeyboardEvent "p"
+    assert.isFalse @handlerCalled
+    assert.equal 3, pageKeyboardEventCount
+
+  should "accept a count prefix with a single digit", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "m"
+    assert.equal 2, @handlerCalledCount
+    assert.equal 0, pageKeyboardEventCount
+
+  should "accept a count prefix with multiple digits", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "0"
+    sendKeyboardEvent "m"
+    assert.equal 20, @handlerCalledCount
+    assert.equal 0, pageKeyboardEventCount
+
+  should "cancel a count prefix", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "m"
+    assert.equal 1, @handlerCalledCount
+    assert.equal 0, pageKeyboardEventCount
+
+  should "accept a count prefix for multi-key command mappings", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "p"
+    assert.equal 2, @handlerCalledCount
+    assert.equal 0, pageKeyboardEventCount
+
+  should "cancel a key prefix", ->
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "m"
+    assert.equal 1, @handlerCalledCount
+    assert.equal 0, pageKeyboardEventCount
+
+  should "cancel a count prefix after a prefix key", ->
+    sendKeyboardEvent "2"
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "m"
+    assert.equal 1, @handlerCalledCount
+    assert.equal 0, pageKeyboardEventCount
+
+  should "cancel a prefix key on escape", ->
+    sendKeyboardEvent "z"
+    sendKeyboardEvent "escape"
+    sendKeyboardEvent "p"
+    assert.equal 0, @handlerCalledCount
+
+  should "not handle escape on its own", ->
+    sendKeyboardEvent "escape"
+    assert.equal 2, pageKeyboardEventCount
+
 context "Normal mode",
   setup ->
     initializeModeState()
 
   should "suppress mapped keys", ->
     sendKeyboardEvent "m"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
 
   should "not suppress unmapped keys", ->
     sendKeyboardEvent "u"
-    assert.equal pageKeyboardEventCount, 3
+    assert.equal 3, pageKeyboardEventCount
 
   should "not suppress escape", ->
     sendKeyboardEvent "escape"
-    assert.equal pageKeyboardEventCount, 2
+    assert.equal 2, pageKeyboardEventCount
 
   should "not suppress passKeys", ->
     sendKeyboardEvent "p"
-    assert.equal pageKeyboardEventCount, 3
+    assert.equal 3, pageKeyboardEventCount
 
   should "suppress passKeys with a non-empty key state (a count)", ->
     sendKeyboardEvent "5"
@@ -402,7 +575,7 @@ context "Normal mode",
   should "suppress passKeys with a non-empty key state (a key)", ->
     sendKeyboardEvent "z"
     sendKeyboardEvent "p"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
 
   should "invoke commands for mapped keys", ->
     sendKeyboardEvent "m"
@@ -506,7 +679,7 @@ context "Insert mode",
 
   should "not suppress mapped keys in insert mode", ->
     sendKeyboardEvent "m"
-    assert.equal pageKeyboardEventCount, 3
+    assert.equal 3, pageKeyboardEventCount
 
   should "exit on escape", ->
     assert.isTrue @insertMode.modeIsActive
@@ -516,7 +689,7 @@ context "Insert mode",
   should "resume normal mode after leaving insert mode", ->
     @insertMode.exit()
     sendKeyboardEvent "m"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
 
 context "Triggering insert mode",
   setup ->
@@ -585,7 +758,7 @@ context "Mode utilities",
 
     assert.isTrue test.modeIsActive
     sendKeyboardEvent "escape"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
     assert.isFalse test.modeIsActive
 
   should "not exit on escape if not enabled", ->
@@ -593,7 +766,7 @@ context "Mode utilities",
 
     assert.isTrue test.modeIsActive
     sendKeyboardEvent "escape"
-    assert.equal pageKeyboardEventCount, 2
+    assert.equal 2, pageKeyboardEventCount
     assert.isTrue test.modeIsActive
 
   should "exit on blur", ->
@@ -641,7 +814,7 @@ context "PostFindMode",
 
   should "enter insert mode on immediate escape", ->
     sendKeyboardEvent "escape"
-    assert.equal pageKeyboardEventCount, 0
+    assert.equal 0, pageKeyboardEventCount
     assert.isFalse @postFindMode.modeIsActive
 
   should "not enter insert mode on subsequent escapes", ->
