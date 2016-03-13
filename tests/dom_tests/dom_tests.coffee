@@ -62,7 +62,7 @@ getHintMarkers = ->
 stubSettings = (key, value) -> stub Settings.cache, key, JSON.stringify value
 
 HintCoordinator.sendMessage = (name, request = {}) -> HintCoordinator[name]? request; request
-activateLinkHintsMode = -> HintCoordinator.activateLinkHintsMode HintCoordinator.getHints()
+activateLinkHintsMode = -> HintCoordinator.activateMode HintCoordinator.getHintDescriptors()
 
 #
 # Generate tests that are common to both default and filtered
@@ -148,7 +148,7 @@ context "Test link hints for focusing input elements correctly",
 
       activateLinkHintsMode()
       [hint] = getHintMarkers().filter (hint) ->
-        input == HintCoordinator.getLocalHintMarker(hint.hint).element
+        input == HintCoordinator.getLocalHintMarker(hint.hintDescriptor).element
       sendKeyboardEvent char for char in hint.hintString
 
       input.removeEventListener "focus", activeListener, false

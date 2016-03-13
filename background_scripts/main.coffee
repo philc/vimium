@@ -322,25 +322,26 @@ cycleToFrame = (frames, frameId, count = 0) ->
 HintCoordinator =
   tabState: {}
 
-  onMessage: (request, sender) ->
+  onMessage: (request, {tab: {id: tabId}}) ->
     if request.messageType of this
-      this[request.messageType] extend request, tabId: sender.tab.id
+      this[request.messageType] tabId, request
     else
-      # The message is not for us.  It's for all frames, so we bounce it there.
-      @sendMessage request.messageType, sender.tab.id, request
+      # If there's no handler here, then the message is bounced to all frames in the sender's tab.
+      @sendMessage request.messageType, tabId, request
 
   sendMessage: (messageType, tabId, request = {}) ->
     chrome.tabs.sendMessage tabId, extend request, {name: "linkHintsMessage", messageType}
 
-  activateMode: ({tabId, frameId, modeIndex}) ->
-    @tabState[tabId] = {frameIds: frameIdsForTab[tabId], hints: [], modeIndex, frameId}
-    @sendMessage "getHints", tabId
+  prepareToActivateMode: (tabId, {frameId: originatingFrameId, modeIndex}) ->
+    @tabState[tabId] = {frameIds: frameIdsForTab[tabId], hintDescriptors: [], originatingFrameId, modeIndex}
+    @sendMessage "getHintDescriptors", tabId
 
-  postHints: ({tabId, frameId, hints}) ->
-    @tabState[tabId].hints.push hints...
+  # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
+  postHintDescriptors: (tabId, {frameId, hintDescriptors}) ->
+    @tabState[tabId].hintDescriptors.push hintDescriptors...
     @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
     if @tabState[tabId].frameIds.length == 0
-      @sendMessage "activateLinkHintsMode", tabId, @tabState[tabId]
+      @sendMessage "activateMode", tabId, @tabState[tabId]
       delete @tabState[tabId] # We won't be needing this any more.
 
 # Port handler mapping

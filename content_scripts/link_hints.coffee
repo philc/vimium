@@ -55,40 +55,41 @@ HintCoordinator =
   sendMessage: (messageType, request = {}) ->
     chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", messageType, frameId}
 
-  activateMode: (mode, onExit) ->
+  prepareToActivateMode: (mode, onExit) ->
     @onExit = [onExit]
-    @sendMessage "activateMode", modeIndex: availableModes.indexOf mode
+    @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
-  getHints: ->
-    @localHints = ClickableElements.getVisibleClickableElements()
-    @sendMessage "postHints", hints: for hint, localIndex in @localHints
-      {rect: hint.rect, linkText: hint.linkText, showLinkText: hint.showLinkText, hasHref: hint.hasHref,
-        localIndex, frameId}
+  getHintDescriptors: ->
+    @localHints = LocalHints.getLocalHints()
+    @sendMessage "postHintDescriptors", hintDescriptors:
+      @localHints.map ({rect, linkText, showLinkText, hasHref}, localIndex) ->
+        {rect, linkText, showLinkText, hasHref, frameId, localIndex}
 
-  # We activate LinkHintsMode() in every frame, and provide every frame with exactly the same hints.  We also
-  # propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock step in
-  # every frame, the linkHintsMode arrives in the samme state in every frame.
-  activateLinkHintsMode: ({hints, modeIndex, frameId: activateModeFrameId}) ->
-    @onExit = [] unless frameId == activateModeFrameId
-    @linkHintsMode = new LinkHintsMode hints, availableModes[modeIndex]
+  # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
+  # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
+  # step in every frame, and @linkHintsMode is in the same state in every frame.
+  activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
+    @onExit = [] unless frameId == originatingFrameId
+    @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex]
 
-  postKeyState: (request) -> @linkHintsMode.postKeyState request
+  # The following messages are exchanged between frames while link-hints mode is active.
+  updateKeyState: (request) -> @linkHintsMode.updateKeyState request
+  setOpenLinkMode: ({modeIndex}) -> @linkHintsMode.setOpenLinkMode availableModes[modeIndex], false
   activateActiveHintMarker: -> @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
-  setMode: ({modeIndex}) -> @linkHintsMode.setOpenLinkMode availableModes[modeIndex], false
   getLocalHintMarker: (hint) -> if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
   exit: ->
     @onExit.pop()() while 0 < @onExit.length
     @linkHintsMode = @localHints = null
 
-  exitFailure: ->
+  deactivate: ->
     @onExit = [=> @linkHintsMode.deactivateMode()]
     @exit()
 
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
     if 0 < count or mode is OPEN_WITH_QUEUE
-      HintCoordinator.activateMode mode, ->
+      HintCoordinator.prepareToActivateMode mode, ->
         # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
         # which would cause our new mode to exit immediately.
         Utils.nextTick -> LinkHints.activateMode count-1, mode
@@ -100,7 +101,7 @@ LinkHints =
   activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
 
-class LinkHintsModeBase
+class LinkHintsModeBase # This is temporary, because the "visible hints" code is embedded in the hints class.
   hintMarkerContainingDiv: null
   # One of the enums listed at the top of this file.
   mode: undefined
@@ -141,7 +142,7 @@ class LinkHintsModeBase
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and KeyboardUtils.isEscape event) or
           (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
-        HintCoordinator.sendMessage "exitFailure"
+        HintCoordinator.sendMessage "deactivate"
 
     @setOpenLinkMode mode, false
 
@@ -150,13 +151,13 @@ class LinkHintsModeBase
     @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
     # Hide markers from other frames.
-    @hideMarker marker for marker in hintMarkers when marker.hint.frameId != frameId
-    @postKeyState = @postKeyState.bind this, hintMarkers
+    @hideMarker marker for marker in hintMarkers when marker.hintDescriptor.frameId != frameId
+    @updateKeyState = @updateKeyState.bind this, hintMarkers # TODO(smblott): This can be refactored out.
 
-  setOpenLinkMode: (@mode, shouldPropagtetoOtherFrames = true) ->
+  setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
     @hintMode.setIndicator @mode.indicator if windowIsFocused()
-    if shouldPropagtetoOtherFrames
-      HintCoordinator.sendMessage "setMode", modeIndex: availableModes.indexOf @mode
+    if shouldPropagateToOtherFrames
+      HintCoordinator.sendMessage "setOpenLinkMode", modeIndex: availableModes.indexOf @mode
 
   #
   # Creates a link marker for the given link.
@@ -167,24 +168,20 @@ class LinkHintsModeBase
     (link) ->
       marker = DomUtils.createElement "div"
       marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-      marker.clickableItem = link.element
       marker.stableSortCount = ++stableSortCount
-      # Keep track of the original hint descriptor, we'll need it to decide which markers to display.
-      marker.hint = link
-      marker.linkText = link.linkText
-      marker.showLinkText = link.showLinkText
+      # Extract other relevant fields from the hint descriptor. TODO(smblott) The name "link" here is misleading.
+      extend marker,
+        {hintDescriptor: link, linkText: link.linkText, showLinkText: link.showLinkText, rect: link.rect}
 
       clientRect = link.rect
       marker.style.left = clientRect.left + window.scrollX + "px"
       marker.style.top = clientRect.top  + window.scrollY  + "px"
 
-      marker.rect = link.rect
-
       marker
 
-# TODO(smblott) It is not intended that this remain structured this way.  This is temporary, just to keep the
-# diff smaller and clearer.  We need to move the whole of ClickableElements out of the LinkHintsMode class.
-ClickableElements =
+# TODO(smblott)  This is temporary.  Unfortunately, this code is embedded in the "old" link-hints mode class.
+# It should be moved, but it's left here for the moment to help make the diff clearer.
+LocalHints =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
@@ -280,7 +277,7 @@ ClickableElements =
   # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
   # element.
   #
-  getVisibleClickableElements: ->
+  getLocalHints: ->
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
@@ -306,7 +303,7 @@ ClickableElements =
     #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
     #
     # Remove rects from elements where another clickable element lies above it.
-    nonOverlappingElements = []
+    localHints = nonOverlappingElements = []
     # Traverse the DOM from first to last, since later elements show above earlier elements.
     visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
@@ -325,12 +322,12 @@ ClickableElements =
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
     if Settings.get "filterLinkHints"
-      @generateLabelMap()
       DomUtils.textContent.reset()
-      extend hint, @generateLinkText hint.element for hint in nonOverlappingElements
+      @generateLabelMap()
+      extend hint, @generateLinkText hint.element for hint in localHints
 
-    hint.hasHref = hint.element.href? for hint in nonOverlappingElements
-    nonOverlappingElements
+    hint.hasHref = hint.element.href? for hint in localHints
+    localHints
 
   # Generate a map of input element => label
   generateLabelMap: ->
@@ -370,8 +367,7 @@ ClickableElements =
 
     {linkText, showLinkText}
 
-# TODO(smblott) It is not intended that this remain structured this way.  This is temporary, just to keep the
-# diff smaller and clearer.  We need to move the whole of ClickableElements out of the LinkHintsMode class.
+# TODO(smblott) Again, this is temporary.  We need to move the code above out of the "old" link-hints class,
 class LinkHintsMode extends LinkHintsModeBase
   constructor: (args...) -> super args...
 
@@ -443,9 +439,9 @@ class LinkHintsMode extends LinkHintsModeBase
 
   updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
-    HintCoordinator.sendMessage "postKeyState", {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}
+    HintCoordinator.sendMessage "updateKeyState", {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}
 
-  postKeyState: (hintMarkers, {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
+  updateKeyState: (hintMarkers, {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
     extend @markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue}
 
     {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints hintMarkers, tabCount
@@ -457,13 +453,12 @@ class LinkHintsMode extends LinkHintsModeBase
       @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
-  # When only one link hint remains, this function activates it in the appropriate way.  The current frame may
-  # or may not contain the matched link, and it may or may not have the focus.  These two things are
-  # independent, so there are four possible cases.  All four cases are accounted for here by selectively
-  # pushing the appropriate onExit() handlers.
+  # When only one link hint remains, activate it in the appropriate way.  The current frame may
+  # or may not contain the matched link, and may or may not have the focus.  The resulting four cases are
+  # accounted for here by selectively pushing the appropriate HintCoordinator.onExit handlers.
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
-    clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hint)?.element
+    clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hintDescriptor)?.element
 
     if clickEl?
       HintCoordinator.onExit.push =>
@@ -479,32 +474,29 @@ class LinkHintsMode extends LinkHintsModeBase
           linkActivator clickEl
 
     installKeyBoardBlocker = (startKeyboardBlocker) ->
-      if linkMatched.hint.frameId == frameId
-        flashEl = DomUtils.addFlashRect linkMatched.hint.rect
+      if linkMatched.hintDescriptor.frameId == frameId
+        flashEl = DomUtils.addFlashRect linkMatched.hintDescriptor.rect
         HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
       if document.hasFocus()
         startKeyboardBlocker -> HintCoordinator.sendMessage "exit"
 
-    # If we're using a keyboard blocker, then the frame with the focus invokes "exit", otherwise the frame
-    # containing the selected link invokes "exit".
     HintCoordinator.onExit.push => @deactivateMode()
+    # If we're using a keyboard blocker, then the frame with the focus invokes "exit", otherwise the frame
+    # containing the matched link invokes "exit".
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
       installKeyBoardBlocker (callback) -> new WaitForEnter callback
     else if userMightOverType
-      # Block keyboard events while the user is still typing.  The intention is to prevent the user from
-      # inadvertently launching Vimium commands when (over-)typing the link text.
       installKeyBoardBlocker (callback) -> new TypingProtector 200, callback
-    else if linkMatched.hint.frameId == frameId
-      DomUtils.flashRect linkMatched.rect
+    else if linkMatched.hintDescriptor.frameId == frameId
+      DomUtils.flashRect linkMatched.hintDescriptor.rect
       HintCoordinator.sendMessage "exit"
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
   #
   showMarker: (linkMarker, matchingCharCount) ->
-    # Never show markers from other frames
-    return unless linkMarker.hint.frameId == frameId
+    return unless linkMarker.hintDescriptor.frameId == frameId
     linkMarker.style.display = ""
     for j in [0...linkMarker.childNodes.length]
       if (j < matchingCharCount)
@@ -721,4 +713,4 @@ root = exports ? window
 root.LinkHints = LinkHints
 root.HintCoordinator = HintCoordinator
 # For tests:
-extend root, {LinkHintsMode, ClickableElements, AlphabetHints}
+extend root, {LinkHintsMode, LocalHints, AlphabetHints}
