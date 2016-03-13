@@ -140,9 +140,8 @@ class LinkHintsModeBase # This is temporary, because the "visible hints" code is
       keypress: @onKeyPressInMode.bind this, hintMarkers
 
     @hintMode.onExit (event) =>
-      if event?.type == "click" or (event?.type == "keydown" and KeyboardUtils.isEscape event) or
-          (event?.type == "keydown" and event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ])
-        HintCoordinator.sendMessage "deactivate"
+      HintCoordinator.sendMessage "deactivate" if event?.type == "click" or (event?.type == "keydown" and
+        (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
 
     @setOpenLinkMode mode, false
 
@@ -150,8 +149,7 @@ class LinkHintsModeBase # This is temporary, because the "visible hints" code is
     # because some clickable elements cannot contain children, e.g. submit buttons.
     @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
-    # Hide markers from other frames.
-    @hideMarker marker for marker in hintMarkers when marker.hintDescriptor.frameId != frameId
+    @hideMarker hintMarker for hintMarker in hintMarkers when hintMarker.hintDescriptor.frameId != frameId
     @updateKeyState = @updateKeyState.bind this, hintMarkers # TODO(smblott): This can be refactored out.
 
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
@@ -169,7 +167,7 @@ class LinkHintsModeBase # This is temporary, because the "visible hints" code is
       marker = DomUtils.createElement "div"
       marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
       marker.stableSortCount = ++stableSortCount
-      # Extract other relevant fields from the hint descriptor. TODO(smblott) The name "link" here is misleading.
+      # Extract other relevant fields from the hint descriptor. TODO(smblott) "link" here is misleading.
       extend marker,
         {hintDescriptor: link, linkText: link.linkText, showLinkText: link.showLinkText, rect: link.rect}
 
@@ -180,7 +178,7 @@ class LinkHintsModeBase # This is temporary, because the "visible hints" code is
       marker
 
 # TODO(smblott)  This is temporary.  Unfortunately, this code is embedded in the "old" link-hints mode class.
-# It should be moved, but it's left here for the moment to help make the diff clearer.
+# It should be moved, but it's left here for the moment to help keep the diff clearer.
 LocalHints =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -321,12 +319,12 @@ LocalHints =
         # click some elements that we could click before.
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
+    hint.hasHref = hint.element.href? for hint in localHints
     if Settings.get "filterLinkHints"
       DomUtils.textContent.reset()
       @generateLabelMap()
       extend hint, @generateLinkText hint.element for hint in localHints
 
-    hint.hasHref = hint.element.href? for hint in localHints
     localHints
 
   # Generate a map of input element => label
@@ -453,9 +451,9 @@ class LinkHintsMode extends LinkHintsModeBase
       @hideMarker marker for marker in hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
-  # When only one link hint remains, activate it in the appropriate way.  The current frame may
-  # or may not contain the matched link, and may or may not have the focus.  The resulting four cases are
-  # accounted for here by selectively pushing the appropriate HintCoordinator.onExit handlers.
+  # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
+  # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
+  # selectively pushing the appropriate HintCoordinator.onExit handlers.
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
     clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hintDescriptor)?.element
