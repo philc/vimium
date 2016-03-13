@@ -80,6 +80,8 @@ class ExclusionRulesOption extends Option
     super(args...)
     $("exclusionAddButton").addEventListener "click", (event) =>
       @addRule()
+    $("exclusionSortButton").addEventListener "click", (event) =>
+      @sortRules()
 
   # Add a new rule, focus its pattern, scroll it into view, and return the newly-added element.  On the
   # options page, there is no current URL, so there is no initial pattern.  This is the default.  On the popup
@@ -126,6 +128,19 @@ class ExclusionRulesOption extends Option
   getPattern: (element) -> element.querySelector(".pattern")
   getPassKeys: (element) -> element.querySelector(".passKeys")
   getRemoveButton: (element) -> element.querySelector(".exclusionRemoveButton")
+
+  sortRules: ->
+    rules = @readValueFromElement()
+    for rule in rules
+      key = rule.pattern
+      key = RegExp.$1 if 0 == key.search /[a-z?*]+:\/\/(.*)/
+      key = RegExp.$1 if 0 == key.search /www\.(.*)/
+      rule.key = key
+
+    rules.sort (a,b) -> if a.key < b.key then -1 else if b.key < a.key then 1 else 0
+    @element.innerHTML = ""
+    @appendRule rule for rule in rules
+    @onUpdated()
 
 # ExclusionRulesOnPopupOption is ExclusionRulesOption, extended with some UI tweeks suitable for use in the
 # page popup.  This also differs from ExclusionRulesOption in that, on the page popup, there is always a URL

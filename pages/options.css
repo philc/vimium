@@ -201,10 +201,11 @@ input.pattern, input.passKeys, .exclusionHeaderText {
   padding-left: 3px;
   color: #979ca0;
 }
-#exclusionAddButton {
+#exclusionAddButton, #exclusionSortButton {
   float: right;
   margin-right: 0px;
   margin-top: 5px;
+  margin-left: 5px;
 }
 #footer {
   background: #f5f5f5;
