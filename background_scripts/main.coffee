@@ -377,18 +377,21 @@ openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
-registerFrame = (request, sender) ->
-  (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
+Frames =
+  onConnect: (sender) ->
+    (request, port) =>
+      this[request.handler] request, sender, port
 
-unregisterFrame = (request, sender) ->
-  # When a tab is closing, Chrome sometimes passes messages without sender.tab.  Therefore, we guard against
-  # this.
-  tabId = sender.tab?.id
-  if tabId? and frameIdsForTab[tabId]?
-    if request.tab_is_closing
-      delete frameIdsForTab[tabId]
-    else
-      frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
+  registerFrame: (request, sender, port) ->
+    (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
+
+    [tabId, frameId, isTopFrame] = [sender.tab.id, request.frameId, request.isTopFrame]
+    port.onDisconnect.addListener ->
+      if isTopFrame
+        delete frameIdsForTab[tabId]
+      else
+        if tabId of frameIdsForTab
+          frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
 
 handleFrameFocused = (request, sender) ->
   tabId = sender.tab.id
@@ -420,6 +423,7 @@ bgLog = (request, sender) ->
 # Port handler mapping
 portHandlers =
   completions: handleCompletions
+  domReady: Frames.onConnect.bind Frames
 
 sendRequestHandlers =
   runBackgroundCommand: runBackgroundCommand
@@ -428,8 +432,6 @@ sendRequestHandlers =
   openUrlInIncognito: TabOperations.openUrlInIncognito
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
   openOptionsPageInNewTab: openOptionsPageInNewTab
-  registerFrame: registerFrame
-  unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
   copyToClipboard: copyToClipboard
@@ -456,11 +458,6 @@ chrome.tabs.onRemoved.addListener (tabId) ->
           return if window.incognito
         # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
         chrome.storage.local.remove "findModeRawQueryListIncognito"
-
-# Tidy up tab caches when tabs are removed.  We cannot rely on unregisterFrame because Chrome does not always
-# provide sender.tab there.
-chrome.tabs.onRemoved.addListener (tabId) ->
-  delete cache[tabId] for cache in [ frameIdsForTab, urlForTab ]
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
