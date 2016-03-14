@@ -2,6 +2,7 @@
 # Install frontend event handlers.
 installListeners()
 HUD.init()
+Frame.registerFrameId chromeFrameId: 0
 
 installListener = (element, event, callback) ->
   element.addEventListener event, (-> callback.apply(this, arguments)), true

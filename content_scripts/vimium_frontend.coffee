@@ -30,10 +30,8 @@ textInputXPath = (->
   DomUtils.makeXPath(inputElements)
 )()
 
-#
-# Give this frame a unique (non-zero) id.
-#
-frameId = 1 + Math.floor(Math.random()*999999999)
+# This is set by Frame.registerFrameId(). A frameId of 0 indicates that this is the top frame in the tab.
+frameId = null
 
 # For debugging only. This logs to the console on the background page.
 bgLog = (args...) ->
@@ -170,7 +168,7 @@ initializePreDomReady = ->
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
   element.addEventListener(event, ->
-    if isEnabledForUrl then callback.apply(this, arguments) else true
+    if isEnabledForUrl and frameId? then callback.apply(this, arguments) else true
   , true)
 
 #
@@ -209,18 +207,20 @@ onFocus = (event) ->
 window.addEventListener "focus", onFocus
 window.addEventListener "hashchange", onFocus
 
-#
-# Initialization tasks that must wait for the document to be ready.
-#
-initializeOnDomReady = ->
-  # Tell the background page we're in the dom ready state.
-  port = chrome.runtime.connect name: "domReady"
-  port.postMessage handler: "registerFrame", frameId: frameId, isTopFrame: DomUtils.isTopFrame()
-  port.onDisconnect.addListener ->
-    # We disable content scripts when we lose contact with the background page.
-    isEnabledForUrl = false
-    chrome.runtime.sendMessage = ->
-    window.removeEventListener "focus", onFocus
+Frame =
+  port: null
+
+  init: ->
+    # Tell the background page we're in the domReady state.
+    @port = chrome.runtime.connect name: "domReady"
+    @port.onMessage.addListener (request) => this[request.name] request
+    @port.onDisconnect.addListener ->
+      # We disable content scripts when we lose contact with the background page.
+      isEnabledForUrl = false
+      chrome.runtime.sendMessage = ->
+      window.removeEventListener "focus", onFocus
+
+  registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -649,10 +649,11 @@ window.HelpDialog ?=
     if @showing then @hide() else @show html
 
 initializePreDomReady()
-DomUtils.documentReady initializeOnDomReady
+DomUtils.documentReady Frame.init.bind Frame
 
 root = exports ? window
 root.handlerStack = handlerStack
 root.frameId = frameId
+root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog

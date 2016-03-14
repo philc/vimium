@@ -76,7 +76,7 @@ chrome.runtime.onConnect.addListener (port, name) ->
       toCall.call()
 
   if (portHandlers[port.name])
-    port.onMessage.addListener portHandlers[port.name] sender
+    port.onMessage.addListener portHandlers[port.name] sender, port
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
@@ -378,31 +378,28 @@ openOptionsPageInNewTab = ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 Frames =
-  onConnect: (sender) ->
-    (request, port) =>
-      this[request.handler] request, sender, port
+  onConnect: (sender, port) ->
+    [tabId, frameId] = [sender.tab.id, sender.frameId]
+    (frameIdsForTab[tabId] ?= []).push frameId
+    port.postMessage name: "registerFrameId", chromeFrameId: frameId
 
-  registerFrame: (request, sender, port) ->
-    (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
-
-    [tabId, frameId, isTopFrame] = [sender.tab.id, request.frameId, request.isTopFrame]
     port.onDisconnect.addListener ->
-      if isTopFrame
+      if frameId == 0 # This is the top frame in the tab.
         delete frameIdsForTab[tabId]
       else
         if tabId of frameIdsForTab
           frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
+          # Sub-frames can connect before the top frame; so we can't rely on seeing the top frame at all.
+          delete frameIdsForTab[tabId] if frameIdsForTab[tabId].length == 0
 
 handleFrameFocused = (request, sender) ->
-  tabId = sender.tab.id
-  # Cycle frameIdsForTab to the focused frame.  However, also ensure that we don't inadvertently register a
-  # frame which wasn't previously registered (such as a frameset).
-  if frameIdsForTab[tabId]?
-    frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], request.frameId
+  [tabId, frameId] = [sender.tab.id, sender.frameId]
+  # This might be the first time we've heard from this tab.
+  frameIdsForTab[tabId] ?= []
+  # Cycle frameIdsForTab to the focused frame.
+  frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId
   # Inform all frames that a frame has received the focus.
-  chrome.tabs.sendMessage sender.tab.id,
-    name: "frameFocused"
-    focusFrameId: request.frameId
+  chrome.tabs.sendMessage tabId, name: "frameFocused", focusFrameId: frameId
 
 # Rotate through frames to the frame count places after frameId.
 cycleToFrame = (frames, frameId, count = 0) ->
