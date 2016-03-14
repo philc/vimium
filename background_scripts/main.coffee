@@ -383,14 +383,13 @@ Frames =
     (frameIdsForTab[tabId] ?= []).push frameId
     port.postMessage name: "registerFrameId", chromeFrameId: frameId
 
-    port.onDisconnect.addListener ->
-      if frameId == 0 # This is the top frame in the tab.
-        delete frameIdsForTab[tabId]
-      else
-        if tabId of frameIdsForTab
+    port.onDisconnect.addListener listener = ->
+      if tabId of frameIdsForTab
+        if frameId == 0 # This is the top frame in the tab.
+          delete frameIdsForTab[tabId]
+        else
           frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
-          # Sub-frames can connect before the top frame; so we can't rely on seeing the top frame at all.
-          delete frameIdsForTab[tabId] if frameIdsForTab[tabId].length == 0
+      port.onDisconnect.removeListener listener
 
 handleFrameFocused = (request, sender) ->
   [tabId, frameId] = [sender.tab.id, sender.frameId]
@@ -445,9 +444,11 @@ sendRequestHandlers =
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"
 
-# Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode windows.
-# Since the common case is that there are none to begin with, we first check whether the key is set at all.
+# Tidy up tab caches when tabs are removed.  Also remove chrome.storage.local/findModeRawQueryListIncognito if
+# there are no remaining incognito-mode windows.  Since the common case is that there are none to begin with,
+# we first check whether the key is set at all.
 chrome.tabs.onRemoved.addListener (tabId) ->
+  delete cache[tabId] for cache in [frameIdsForTab, urlForTab]
   chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
     if items.findModeRawQueryListIncognito
       chrome.windows.getAll null, (windows) ->
