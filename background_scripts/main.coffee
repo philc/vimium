@@ -102,20 +102,6 @@ logMessage = do ->
 #
 getCurrentTabUrl = (request, sender) -> sender.tab.url
 
-#
-# Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
-# whether any keys should be passed through to the underlying page.
-# The source frame also informs us whether or not it has the focus, which allows us to track the URL of the
-# active frame.
-#
-root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
-  urlForTab[sender.tab.id] = request.url if request.frameIsFocused
-  rule = Exclusions.getRule(request.url)
-  {
-    isEnabledForUrl: not rule or rule.passKeys
-    passKeys: rule?.passKeys or ""
-  }
-
 onURLChange = (details) ->
   chrome.tabs.sendMessage details.tabId, name: "checkEnabledAfterURLChange"
 
@@ -384,7 +370,7 @@ Frames =
     frameIdsForTab[tabId]?
     frameIdsForTab[tabId] ?= [0]
     frameIdsForTab[tabId].push frameId unless frameId == 0
-    port.postMessage name: "registerFrameId", chromeFrameId: frameId
+    port.postMessage handler: "registerFrameId", chromeFrameId: frameId
 
     port.onDisconnect.addListener listener = ->
       # Unregister the frame.  However, we never unregister the main/top frame.  If the tab is navigating to
@@ -394,7 +380,19 @@ Frames =
       # registering before the old one is deregistered).
       if tabId of frameIdsForTab and frameId != 0
         frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
-      port.onDisconnect.removeListener listener
+
+    # Return our onMessage handler for this port.
+    (request, port) =>
+      response = this[request.handler] {request, tabId, frameId, port}
+      port.postMessage response if response != false
+
+  isEnabledForUrl: ({request, tabId}) ->
+    urlForTab[tabId] = request.url if request.frameIsFocused
+    rule = Exclusions.getRule request.url
+    # Send a response...
+    extend request,
+      isEnabledForUrl: not rule or 0 < rule.passKeys.length
+      passKeys: rule?.passKeys ? ""
 
 handleFrameFocused = (request, sender) ->
   [tabId, frameId] = [sender.tab.id, sender.frameId]
@@ -437,7 +435,6 @@ sendRequestHandlers =
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
-  isEnabledForUrl: isEnabledForUrl
   selectSpecificTab: selectSpecificTab
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
@@ -502,3 +499,4 @@ chrome.runtime.onInstalled.addListener ({reason}) ->
 
 root.TabOperations = TabOperations
 root.logMessage = logMessage
+root.Frames = Frames

@@ -218,12 +218,18 @@ DomUtils.documentReady ->
 
 Frame =
   port: null
+  listeners: {}
 
-  init: ->
-    @port = chrome.runtime.connect name: "frames"
-    @port.onMessage.addListener (request) => this[request.name] request
-
+  addEventListener: (handler, callback) -> (@listeners[handler] ?= []).push callback
+  postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
   registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
+
+  init: (callback) ->
+    @port = chrome.runtime.connect name: "frames"
+    @port.onMessage.addListener (request) =>
+      handler request for handler in @listeners[request.handler]
+
+    @addEventListener "registerFrameId", Frame.registerFrameId
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -442,10 +448,9 @@ initializeTopFrame = (request = null) ->
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL.
-checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
-  url = window.location.toString()
-  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url, frameIsFocused: frameIsFocused }, (response) ->
-    { isEnabledForUrl, passKeys } = response
+checkIfEnabledForUrl = do ->
+  Frame.addEventListener "isEnabledForUrl", (response) ->
+    {isEnabledForUrl, passKeys, frameIsFocused} = response
     installListeners() # But only if they have not been installed already.
     # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
     if isEnabledForUrl
@@ -456,14 +461,16 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
       HUD.hide()
     normalMode?.setPassKeys passKeys
     # Update the page icon, if necessary.
-    if windowIsFocused()
+    if frameIsFocused
       chrome.runtime.sendMessage
         handler: "setIcon"
         icon:
           if isEnabledForUrl and not passKeys then "enabled"
           else if isEnabledForUrl then "partial"
           else "disabled"
-    null
+
+  (frameIsFocused = windowIsFocused()) ->
+    Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
 
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
 # correct enabled state (but only if this frame has the focus).
