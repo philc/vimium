@@ -169,7 +169,7 @@ initializePreDomReady = ->
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
   element.addEventListener(event, ->
-    if isEnabledForUrl and frameId? then callback.apply(this, arguments) else true
+    if isEnabledForUrl then callback.apply(this, arguments) else true
   , true)
 
 #
