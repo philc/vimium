@@ -225,11 +225,11 @@ Frame =
   registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
 
   init: (callback) ->
+    @addEventListener "registerFrameId", Frame.registerFrameId
     @port = chrome.runtime.connect name: "frames"
+    @port.onDisconnect.addListener => @port.postMessage = ->
     @port.onMessage.addListener (request) =>
       handler request for handler in @listeners[request.handler]
-
-    @addEventListener "registerFrameId", Frame.registerFrameId
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -270,7 +270,7 @@ DomUtils.documentReady ->
 focusThisFrame = (request) ->
   unless request.forceFocusThisFrame
     if window.innerWidth < 3 or window.innerHeight < 3 or document.body?.tagName.toLowerCase() == "frameset"
-      # This frame is too small to focus or its a frameset. Cancel and tell the background page to focus the
+      # This frame is too small to focus or it's a frameset. Cancel and tell the background page to focus the
       # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See 1317.
       chrome.runtime.sendMessage handler: "nextFrame", frameId: frameId
       return
@@ -476,7 +476,6 @@ checkIfEnabledForUrl = do ->
 # correct enabled state (but only if this frame has the focus).
 checkEnabledAfterURLChange = ->
   checkIfEnabledForUrl() if windowIsFocused()
-
 
 window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
