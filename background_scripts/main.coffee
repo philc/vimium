@@ -381,6 +381,7 @@ Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
     # We always add frameId 0, the top frame, automatically, and never unregister it.
+    frameIdsForTab[tabId]?
     frameIdsForTab[tabId] ?= [0]
     frameIdsForTab[tabId].push frameId unless frameId == 0
     port.postMessage name: "registerFrameId", chromeFrameId: frameId
@@ -391,14 +392,14 @@ Frames =
       # then we'll tidy up in the chrome.tabs.onRemoved listener, below.  This approach avoids any dependency
       # on the order in which register and unregister events happens (on navigation, a new top frame
       # registering before the old one is deregistered).
-      if tabId of frameIdsForTab and tabId != 0
+      if tabId of frameIdsForTab and frameId != 0
         frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
       port.onDisconnect.removeListener listener
 
 handleFrameFocused = (request, sender) ->
   [tabId, frameId] = [sender.tab.id, sender.frameId]
   # This might be the first time we've heard from this tab.
-  frameIdsForTab[tabId] ?= []
+  frameIdsForTab[tabId] ?= [0]
   # Cycle frameIdsForTab to the focused frame.
   frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId
   # Inform all frames that a frame has received the focus.
