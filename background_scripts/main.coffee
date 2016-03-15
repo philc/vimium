@@ -380,14 +380,17 @@ openOptionsPageInNewTab = ->
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
-    (frameIdsForTab[tabId] ?= []).push frameId
+    # We always add frameId 0, the top frame, automatically, and never unregister it.
+    frameIdsForTab[tabId] ?= [0]
+    frameIdsForTab[tabId].push frameId unless frameId == 0
     port.postMessage name: "registerFrameId", chromeFrameId: frameId
 
     port.onDisconnect.addListener listener = ->
       # Unregister the frame.  However, we never unregister the main/top frame.  If the tab is navigating to
       # another page, then there'll be a new top frame (with the same Id) along soon.  If the tab is closing,
-      # then we'll tidy up in the chrome.tabs.onRemoved listener, below.  This approach avoids a dependency on
-      # the order in which register and unregister events happens.
+      # then we'll tidy up in the chrome.tabs.onRemoved listener, below.  This approach avoids any dependency
+      # on the order in which register and unregister events happens (on navigation, a new top frame
+      # registering before the old one is deregistered).
       if tabId of frameIdsForTab and tabId != 0
         frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
       port.onDisconnect.removeListener listener
