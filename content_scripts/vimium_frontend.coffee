@@ -136,6 +136,7 @@ window.initializeModes = ->
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
+  Frame.init()
   checkIfEnabledForUrl()
 
   requestHandlers =
@@ -207,18 +208,20 @@ onFocus = (event) ->
 window.addEventListener "focus", onFocus
 window.addEventListener "hashchange", onFocus
 
+DomUtils.documentReady ->
+  # Tell the background page we're in the domReady state.
+  chrome.runtime.connect({name: "domReady"}).onDisconnect.addListener ->
+    # We disable content scripts when we lose contact with the background page.
+    isEnabledForUrl = false
+    chrome.runtime.sendMessage = ->
+    window.removeEventListener "focus", onFocus
+
 Frame =
   port: null
 
   init: ->
-    # Tell the background page we're in the domReady state.
-    @port = chrome.runtime.connect name: "domReady"
+    @port = chrome.runtime.connect name: "frames"
     @port.onMessage.addListener (request) => this[request.name] request
-    @port.onDisconnect.addListener ->
-      # We disable content scripts when we lose contact with the background page.
-      isEnabledForUrl = false
-      chrome.runtime.sendMessage = ->
-      window.removeEventListener "focus", onFocus
 
   registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
 
@@ -649,7 +652,6 @@ window.HelpDialog ?=
     if @showing then @hide() else @show html
 
 initializePreDomReady()
-DomUtils.documentReady Frame.init.bind Frame
 
 root = exports ? window
 root.handlerStack = handlerStack

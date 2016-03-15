@@ -423,7 +423,7 @@ bgLog = (request, sender) ->
 # Port handler mapping
 portHandlers =
   completions: handleCompletions
-  domReady: Frames.onConnect.bind Frames
+  frames: Frames.onConnect.bind Frames
 
 sendRequestHandlers =
   runBackgroundCommand: runBackgroundCommand
