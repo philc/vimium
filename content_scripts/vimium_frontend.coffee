@@ -336,6 +336,16 @@ extend window,
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration("Yanked #{url}", 2000)
 
+  copyCurrentUrlMarkdown: ->
+    chrome.runtime.sendMessage { handler: "getCurrentTabUrlMarkdown" }, (payload) ->
+      url = payload.url
+      title = payload.title
+      link = "[" + title + "]" + "(" + url + ")"
+      chrome.runtime.sendMessage { handler: "copyToClipboard", data: link }
+      #url = url[0..25] + "...." if 28 < url.length
+      #HUD.showForDuration("Yanked #{url}", 2000)
+      HUD.showForDuration("Yanked markdown link.", 2000)
+
   enterInsertMode: ->
     # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
     # instance to take over.
