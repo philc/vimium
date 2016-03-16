@@ -31,6 +31,15 @@ root.Commands =
             chrome.tabs.update tab.id, selected: true
             return
 
+  # Yank markdown URL; idea from #2054 (@issmirnov).
+  yankMarkdownUrl:
+    key: "ym"
+    description: "Yank the current URL in markdown format"
+    blocking: false
+    run: (count) ->
+      chrome.tabs.getSelected null, ({url, title}) ->
+        Clipboard.copy "[#{title}](#{url})"
+
   # Open a "Hello" popup.
   sayHello:
     key: "qh"
@@ -39,3 +48,29 @@ root.Commands =
     run: (count, sendResponse) ->
       chrome.tabs.getSelected null, (tab) ->
         chrome.tabs.sendMessage tab.id, {name: "sayHello"}, sendResponse
+
+Clipboard =
+  _createTextArea: ->
+    textArea = document.createElement "textarea"
+    textArea.style.position = "absolute"
+    textArea.style.left = "-100%"
+    textArea
+
+  # http://groups.google.com/group/chromium-extensions/browse_thread/thread/49027e7f3b04f68/f6ab2457dee5bf55
+  copy: (data) ->
+    textArea = @_createTextArea()
+    textArea.value = data
+
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand("Copy")
+    document.body.removeChild(textArea)
+
+  paste: ->
+    textArea = @_createTextArea()
+    document.body.appendChild(textArea)
+    textArea.focus()
+    document.execCommand("Paste")
+    value = textArea.value
+    document.body.removeChild(textArea)
+    value
