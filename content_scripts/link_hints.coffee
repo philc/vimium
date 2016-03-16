@@ -253,6 +253,9 @@ LocalHints =
         isClickable ||= not element.disabled
       when "label"
         isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
+      when "body"
+        isClickable ||= element == document.body and not document.hasFocus() and
+          window.innerWidth > 3 and window.innerHeight > 3
 
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
@@ -359,6 +362,9 @@ LocalHints =
         element.firstElementChild.nodeName.toLowerCase() == "img"
       linkText = element.firstElementChild.alt || element.firstElementChild.title
       showLinkText = true if linkText
+    else if element == document.body
+      linkText = "Frame."
+      showLinkText = true
     else
       linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
 
@@ -459,7 +465,9 @@ class LinkHintsMode extends LinkHintsModeBase
 
     if clickEl?
       HintCoordinator.onExit.push =>
-        if DomUtils.isSelectable clickEl
+        if clickEl == document.body
+          Utils.nextTick -> focusThisFrame highlight: true
+        else if DomUtils.isSelectable clickEl
           window.focus()
           DomUtils.simulateSelect clickEl
         else

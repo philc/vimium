@@ -638,8 +638,8 @@ root.frameId = frameId
 root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
-# These are exported for find mode.
+# These are exported for find mode and link-hints mode.
 extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
-  enterFindMode}
+  enterFindMode, focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes, installListeners}
