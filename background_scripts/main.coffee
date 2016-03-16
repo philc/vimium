@@ -103,6 +103,12 @@ logMessage = do ->
 getCurrentTabUrl = (request, sender) -> sender.tab.url
 
 #
+# Returns a payload containing the tab url and the title. This is used client side to generate a markdown link.
+#
+getCurrentTabUrlMarkdown = (request, sender) -> {url : sender.tab.url, title: sender.tab.title }
+
+
+#
 # Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
 # whether any keys should be passed through to the underlying page.
 # The source frame also informs us whether or not it has the focus, which allows us to track the URL of the
@@ -424,6 +430,7 @@ portHandlers =
 sendRequestHandlers =
   runBackgroundCommand: runBackgroundCommand
   getCurrentTabUrl: getCurrentTabUrl
+  getCurrentTabUrlMarkdown: getCurrentTabUrlMarkdown
   openUrlInNewTab: TabOperations.openUrlInNewTab
   openUrlInIncognito: TabOperations.openUrlInIncognito
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
