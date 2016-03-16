@@ -63,20 +63,8 @@ handleCompletions = (sender) -> (request, port) ->
   completionHandlers[request.handler] completers[request.name], request, port
 
 chrome.runtime.onConnect.addListener (port, name) ->
-  sender = port.sender
-  senderTabId = sender.tab?.id
-  # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
-  # the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
-  # the scroll position will not be possible.
-  if (port.name == "domReady" && senderTabId != null)
-    if (tabLoadedHandlers[senderTabId])
-      toCall = tabLoadedHandlers[senderTabId]
-      # Delete first to be sure there's no circular events.
-      delete tabLoadedHandlers[senderTabId]
-      toCall.call()
-
   if (portHandlers[port.name])
-    port.onMessage.addListener portHandlers[port.name] sender, port
+    port.onMessage.addListener portHandlers[port.name] port.sender, port
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
@@ -382,16 +370,19 @@ Frames =
 
     # Return our onMessage handler for this port.
     (request, port) =>
-      response = this[request.handler] {request, tabId, frameId, port}
-      port.postMessage response if response != false
+      this[request.handler] {request, tabId, frameId, port}
 
-  isEnabledForUrl: ({request, tabId}) ->
+  isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
     rule = Exclusions.getRule request.url
-    # Send a response...
-    extend request,
+    port.postMessage extend request,
       isEnabledForUrl: not rule or 0 < rule.passKeys.length
       passKeys: rule?.passKeys ? ""
+
+  domReady: ({tabId, frameId}) ->
+    if frameId == 0
+      tabLoadedHandlers[tabId]?()
+      delete tabLoadedHandlers[tabId]
 
 handleFrameFocused = (request, sender) ->
   [tabId, frameId] = [sender.tab.id, sender.frameId]

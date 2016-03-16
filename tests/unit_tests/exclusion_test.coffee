@@ -19,7 +19,8 @@ extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
 
-isEnabledForUrl = (request) -> Frames.isEnabledForUrl {request, tabId: 0}
+isEnabledForUrl = (request) ->
+  Frames.isEnabledForUrl {request, tabId: 0, port: postMessage: (id) -> id}
 
 # These tests cover only the most basic aspects of excluded URLs and passKeys.
 #

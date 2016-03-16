@@ -1,8 +1,5 @@
 #
-# This content script takes input from its webpage and executes commands locally on behalf of the background
-# page. It must be run prior to domReady so that we perform some operations very early. We tell the
-# background page that we're in domReady and ready to accept normal commands by connectiong to a port named
-# "domReady".
+# This content script  must be run prior to domReady so that we perform some operations very early.
 #
 
 isEnabledForUrl = true
@@ -208,13 +205,9 @@ onFocus = (event) ->
 window.addEventListener "focus", onFocus
 window.addEventListener "hashchange", onFocus
 
-DomUtils.documentReady ->
+initializeOnDomReady = ->
   # Tell the background page we're in the domReady state.
-  chrome.runtime.connect({name: "domReady"}).onDisconnect.addListener ->
-    # We disable content scripts when we lose contact with the background page.
-    isEnabledForUrl = false
-    chrome.runtime.sendMessage = ->
-    window.removeEventListener "focus", onFocus
+  Frame.postMessage "domReady"
 
 Frame =
   port: null
@@ -227,9 +220,16 @@ Frame =
   init: (callback) ->
     @addEventListener "registerFrameId", Frame.registerFrameId
     @port = chrome.runtime.connect name: "frames"
-    @port.onDisconnect.addListener => @port.postMessage = ->
+
     @port.onMessage.addListener (request) =>
       handler request for handler in @listeners[request.handler]
+
+    @port.onDisconnect.addListener =>
+      # We disable content scripts when we lose contact with the background page.
+      isEnabledForUrl = false
+      chrome.runtime.sendMessage = ->
+      window.removeEventListener "focus", onFocus
+      @port.postMessage = ->
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -658,6 +658,7 @@ window.HelpDialog ?=
     if @showing then @hide() else @show html
 
 initializePreDomReady()
+DomUtils.documentReady initializeOnDomReady
 
 root = exports ? window
 root.handlerStack = handlerStack
