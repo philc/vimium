@@ -77,12 +77,14 @@ doesScroll = (element, direction, amount, factor) ->
   delta = getSign delta # 1 or -1
   performScroll(element, direction, delta) and performScroll(element, direction, -delta)
 
+isScrollableElement = (element, direction = "y", amount = 1, factor = 1) ->
+  doesScroll(element, direction, amount, factor) and shouldScroll element, direction
+
 # From element and its parents, find the first which we should scroll and which does scroll.
 findScrollableElement = (element, direction, amount, factor) ->
-  while element != document.body and
-    not (doesScroll(element, direction, amount, factor) and shouldScroll(element, direction))
-      element = (DomUtils.getContainingElement element) ? document.body
-  if element == document.body then firstScrollableElement element else element
+  while element != document.body and not isScrollableElement element, direction, amount, factor
+    element = DomUtils.getContainingElement(element) ? document.body
+  element
 
 # On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
 # element which does scroll vertically. This is used to initialize activatedElement. See #1358.
@@ -256,6 +258,9 @@ Scroller =
     element = findScrollableElement activatedElement, direction, pos, 1
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
+
+  isScrollableElement: (element) ->
+    isScrollableElement element
 
   # Scroll the top, bottom, left and right of element into view.  The is used by visual mode to ensure the
   # focus remains visible.
