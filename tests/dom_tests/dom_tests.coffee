@@ -160,7 +160,7 @@ context "Test link hints for changing mode",
     initializeModeState()
     testDiv = document.getElementById("test-div")
     testDiv.innerHTML = "<a>link</a>"
-    @linkHints = LinkHints.activateMode()
+    @linkHints = activateLinkHintsMode()
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
@@ -328,9 +328,9 @@ context "Filtered link hints",
         {id: 9, text: "test abc one - longer still"}         # For tab test - 3.
       ].map(({id,text}) -> "<a id=\"#{id}\">#{text}</a>").join " "
       document.getElementById("test-div").innerHTML = testContent
-      @linkHints = LinkHints.activateMode()
+      @linkHints = activateLinkHintsMode()
       @getActiveHintMarker = ->
-        @linkHints.markerMatcher.activeHintMarker.clickableItem.id
+        HintCoordinator.getLocalHintMarker(@linkHints.markerMatcher.activeHintMarker.hintDescriptor).element.id
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
