@@ -82,7 +82,7 @@ findScrollableElement = (element, direction, amount, factor) ->
   while element != document.body and
     not (doesScroll(element, direction, amount, factor) and shouldScroll(element, direction))
       element = (DomUtils.getContainingElement element) ? document.body
-  element
+  if element == document.body then firstScrollableElement element else element
 
 # On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
 # element which does scroll vertically. This is used to initialize activatedElement. See #1358.
