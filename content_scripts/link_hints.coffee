@@ -321,8 +321,8 @@ LocalHints =
           while index < position
             candidateDescendant = visibleElements[index].element
             for _ in descendantsToCheck
-              return true if candidateDescendant == element.element
               candidateDescendant = candidateDescendant?.parentElement
+              return true if candidateDescendant == element.element
             index += 1
           false # This is not a false positive.
         element
