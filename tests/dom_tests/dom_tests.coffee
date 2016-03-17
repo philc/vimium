@@ -1,6 +1,6 @@
 
 # Install frontend event handlers.
-installListeners()
+installListeners true
 HUD.init()
 Frame.registerFrameId chromeFrameId: 0
 

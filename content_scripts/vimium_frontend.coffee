@@ -150,18 +150,11 @@ initializePreDomReady = ->
       Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
-    # In the options page, we will receive requests from both content and background scripts. ignore those
-    # from the former.
-    return if sender.tab and not sender.tab.url.startsWith 'chrome-extension://'
-    # These requests are intended for the background page, but are delivered to the options page too, where
-    # there are no handlers.
-    return if request.handler and not request.name
-    shouldHandleRequest = isEnabledForUrl
-    # We always handle the message if it's one of these listed message types.
-    shouldHandleRequest ||= request.name in ["checkEnabledAfterURLChange", "openVomnibar"]
-    sendResponse requestHandlers[request.name](request, sender) if shouldHandleRequest
-    # Ensure the sendResponse callback is freed.
-    false
+    # These requests are intended for the background page, but they're delivered to the options page too.
+    unless request.handler and not request.name
+      if isEnabledForUrl or request.name in ["checkEnabledAfterURLChange", "runInTopFrame"]
+        sendResponse requestHandlers[request.name] request, sender
+    false # Ensure that the sendResponse callback is freed.
 
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
@@ -176,19 +169,18 @@ installListener = (element, event, callback) ->
 # Note: We install the listeners even if Vimium is disabled.  See comment in commit
 # 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
 #
-installedListeners = false
-window.installListeners = ->
-  unless installedListeners
-    initializeModes()
-    # Key event handlers fire on window before they do on document. Prefer window for key events so the page
-    # can't set handlers to grab the keys before us.
-    for type in [ "keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll" ]
-      do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
-    installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-    installedListeners = true
-    # Other once-only initialisation.
-    FindModeHistory.init()
-    new GrabBackFocus if isEnabledForUrl
+window.installListeners = installListeners = (isEnabledForUrl) ->
+  # Prevent this initialization from happening more than once.
+  window.installListeners = installListeners = ->
+  # Key event handlers fire on window before they do on document. Prefer window for key events so the page
+  # can't set handlers to grab the keys before us.
+  for type in ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"]
+    do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
+  installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+  # Initialize mode state.
+  initializeModes()
+  FindModeHistory.init()
+  new GrabBackFocus if isEnabledForUrl
 
 #
 # Whenever we get the focus:
@@ -448,7 +440,8 @@ initializeTopFrame = (request = null) ->
 checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
     {isEnabledForUrl, passKeys, frameIsFocused} = response
-    installListeners() # But only if they have not been installed already.
+    installListeners isEnabledForUrl
+    normalMode?.setPassKeys passKeys
     # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
     if isEnabledForUrl
       initializeTopFrame()
@@ -456,7 +449,6 @@ checkIfEnabledForUrl = do ->
     else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
-    normalMode?.setPassKeys passKeys
     # Update the page icon, if necessary.
     if windowIsFocused()
       chrome.runtime.sendMessage
