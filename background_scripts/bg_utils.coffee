@@ -53,4 +53,28 @@ class TabRecency
 BgUtils =
   tabRecency: new TabRecency()
 
+  # Log messages to the extension's logging page, but only if that page is open.
+  log: do ->
+    loggingPageUrl = chrome.runtime.getURL "pages/logging.html"
+    console.log "Vimium logging URL:\n  #{loggingPageUrl}" if loggingPageUrl? # Do not output URL for tests.
+    # For development, it's sometimes useful to automatically launch the logging page on reload.
+    chrome.windows.create url: loggingPageUrl, focused: false if localStorage.autoLaunchLoggingPage
+    (message, sender = null) ->
+      for viewWindow in chrome.extension.getViews {type: "tab"}
+        if viewWindow.location.pathname == "/pages/logging.html"
+          # Don't log messages from the logging page itself.  We do this check late because most of the time
+          # it's not needed.
+          if sender?.url != loggingPageUrl
+            date = new Date
+            [hours, minutes, seconds, milliseconds] =
+              [date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()]
+            minutes = "0" + minutes if minutes < 10
+            seconds = "0" + seconds if seconds < 10
+            milliseconds = "00" + milliseconds if milliseconds < 10
+            milliseconds = "0" + milliseconds if milliseconds < 100
+            dateString = "#{hours}:#{minutes}:#{seconds}.#{milliseconds}"
+            logElement = viewWindow.document.getElementById "log-text"
+            logElement.value += "#{dateString}: #{message}\n"
+            logElement.scrollTop = 2000000000
+
 root.BgUtils = BgUtils

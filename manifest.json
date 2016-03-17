@@ -10,9 +10,9 @@
     "scripts": [
       "lib/utils.js",
       "lib/settings.js",
+      "background_scripts/bg_utils.js",
       "background_scripts/commands.js",
       "lib/clipboard.js",
-      "background_scripts/bg_utils.js",
       "background_scripts/exclusions.js",
       "background_scripts/completion_engines.js",
       "background_scripts/completion_search.js",
