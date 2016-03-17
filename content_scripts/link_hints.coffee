@@ -189,6 +189,7 @@ LocalHints =
     tagName = element.tagName.toLowerCase()
     isClickable = false
     onlyHasTabIndex = false
+    possibleFalsePositive = false
     visibleElements = []
     reason = null
 
@@ -229,7 +230,6 @@ LocalHints =
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
-        element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
       isClickable = true
 
@@ -265,6 +265,12 @@ LocalHints =
           if Scroller.isScrollableElement element
             reason = "Scroll."
 
+    # An element with a class name containing the text "button" might be clickable.  However, real clickables
+    # are often wrapped in elements with such class names.  So, when we find clickables based only on their
+    # class name, we mark them as unreliable.
+    if not isClickable and 0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
+      possibleFalsePositive = isClickable = true
+
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
     tabIndexValue = element.getAttribute("tabindex")
@@ -275,7 +281,8 @@ LocalHints =
     if isClickable
       clientRect = DomUtils.getVisibleClientRect element, true
       if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex, reason}
+        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
+          possibleFalsePositive, reason}
 
     visibleElements
 
@@ -299,6 +306,27 @@ LocalHints =
       visibleElement = @getVisibleClickable element
       visibleElements.push visibleElement...
 
+    # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
+    visibleElements = visibleElements.reverse()
+
+    # Filter out suspected false positives.  A false positive is taken to be an element marked as a possible
+    # false positive for which a close descendant is already clickable.  False positives tend to be close
+    # together in the DOM, so - to keep the cost down - we only search nearby elements.  NOTE(smblott): The
+    # visible elements have already been reversed, so we're visiting descendants before their ancestors.
+    descendantsToCheck = [1..3] # This determines how many descendants we're willing to consider.
+    visibleElements =
+      for element, position in visibleElements
+        continue if element.possibleFalsePositive and do ->
+          index = Math.max 0, position - 6 # This determines how far back we're willing to look.
+          while index < position
+            candidateDescendant = visibleElements[index].element
+            for _ in descendantsToCheck
+              return true if candidateDescendant == element.element
+              candidateDescendant = candidateDescendant?.parentElement
+            index += 1
+          false # This is not a false positive.
+        element
+
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
     #  * The document has a local stacking context.
     #  * An element with z-index specified
@@ -313,8 +341,6 @@ LocalHints =
     #
     # Remove rects from elements where another clickable element lies above it.
     localHints = nonOverlappingElements = []
-    # Traverse the DOM from first to last, since later elements show above earlier elements.
-    visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
       rects = [visibleElement.rect]
       for {rect: negativeRect} in visibleElements

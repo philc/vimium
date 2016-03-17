@@ -109,6 +109,25 @@ createGeneralHintTests = (isFilteredMode) ->
 createGeneralHintTests false
 createGeneralHintTests true
 
+context "False positives in link-hint",
+
+  setup ->
+    testContent = '<span class="buttonWrapper">false positive<a>clickable</a></span>' + '<span class="buttonWrapper">clickable</span>'
+    document.getElementById("test-div").innerHTML = testContent
+    stubSettings "filterLinkHints", true
+    stubSettings "linkHintNumbers", "12"
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "handle false positives", ->
+    linkHints = activateLinkHintsMode()
+    hintMarkers = getHintMarkers()
+    linkHints.deactivateMode()
+    assert.equal 2, hintMarkers.length
+    for hintMarker in hintMarkers
+      assert.equal "clickable", hintMarker.linkText
+
 inputs = []
 context "Test link hints for focusing input elements correctly",
 
