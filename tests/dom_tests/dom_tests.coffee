@@ -95,21 +95,6 @@ createGeneralHintTests = (isFilteredMode) ->
       assertStartPosition document.getElementsByTagName("a")[1], hintMarkers[1]
       linkHints.deactivateMode()
 
-    should "generate the correct number of alphabet hints", ->
-      alphabetHints = new AlphabetHints
-      for n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        hintStrings = alphabetHints.hintStrings n
-        assert.equal n, hintStrings.length
-
-    should "generate non-overlapping alphabet hints", ->
-      alphabetHints = new AlphabetHints
-      for n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        hintStrings = alphabetHints.hintStrings n
-        for h1 in hintStrings
-          for h2 in hintStrings
-            unless h1 == h2
-              assert.isFalse 0 == h1.indexOf h2
-
 createGeneralHintTests false
 createGeneralHintTests true
 
@@ -209,6 +194,21 @@ context "Alphabetical link hints",
     sendKeyboardEvent "A"
     assert.equal "none", hintMarkers[1].style.display
     assert.equal "", hintMarkers[0].style.display
+
+  should "generate the correct number of alphabet hints", ->
+    alphabetHints = new AlphabetHints
+    for n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      hintStrings = alphabetHints.hintStrings n
+      assert.equal n, hintStrings.length
+
+  should "generate non-overlapping alphabet hints", ->
+    alphabetHints = new AlphabetHints
+    for n in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      hintStrings = alphabetHints.hintStrings n
+      for h1 in hintStrings
+        for h2 in hintStrings
+          unless h1 == h2
+            assert.isFalse 0 == h1.indexOf h2
 
 context "Filtered link hints",
   # Note.  In all of these tests, the order of the elements returned by getHintMarkers() may be different from
