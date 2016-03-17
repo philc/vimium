@@ -65,8 +65,9 @@ createGeneralHintTests = (isFilteredMode) ->
       initializeModeState()
       testContent = "<a>test</a>" + "<a>tress</a>"
       document.getElementById("test-div").innerHTML = testContent
-      stubSettings "filterLinkHints", false
+      stubSettings "filterLinkHints", isFilteredMode
       stubSettings "linkHintCharacters", "ab"
+      stubSettings "linkHintNumbers", "12"
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
