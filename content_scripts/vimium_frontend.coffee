@@ -1,8 +1,5 @@
 #
-# This content script takes input from its webpage and executes commands locally on behalf of the background
-# page. It must be run prior to domReady so that we perform some operations very early. We tell the
-# background page that we're in domReady and ready to accept normal commands by connectiong to a port named
-# "domReady".
+# This content script must be run prior to domReady so that we perform some operations very early.
 #
 
 isEnabledForUrl = true
@@ -30,10 +27,8 @@ textInputXPath = (->
   DomUtils.makeXPath(inputElements)
 )()
 
-#
-# Give this frame a unique (non-zero) id.
-#
-frameId = 1 + Math.floor(Math.random()*999999999)
+# This is set by Frame.registerFrameId(). A frameId of 0 indicates that this is the top frame in the tab.
+frameId = null
 
 # For debugging only. This logs to the console on the background page.
 bgLog = (args...) ->
@@ -138,6 +133,7 @@ window.initializeModes = ->
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
+  Frame.init()
   checkIfEnabledForUrl()
 
   requestHandlers =
@@ -209,30 +205,28 @@ onFocus = (event) ->
 window.addEventListener "focus", onFocus
 window.addEventListener "hashchange", onFocus
 
-#
-# Initialization tasks that must wait for the document to be ready.
-#
 initializeOnDomReady = ->
-  # Tell the background page we're in the dom ready state.
-  chrome.runtime.connect(name: "domReady").onDisconnect.addListener ->
-    # We disable content scripts when we lose contact with the background page.
-    isEnabledForUrl = false
-    chrome.runtime.sendMessage = ->
-    window.removeEventListener "focus", onFocus
+  # Tell the background page we're in the domReady state.
+  Frame.postMessage "domReady"
 
-registerFrame = ->
-  # Don't register frameset containers; focusing them is no use.
-  unless document.body?.tagName.toLowerCase() == "frameset"
-    chrome.runtime.sendMessage
-      handler: "registerFrame"
-      frameId: frameId
+Frame =
+  port: null
+  listeners: {}
 
-# Unregister the frame if we're going to exit.
-unregisterFrame = ->
-  chrome.runtime.sendMessage
-    handler: "unregisterFrame"
-    frameId: frameId
-    tab_is_closing: DomUtils.isTopFrame()
+  addEventListener: (handler, callback) -> @listeners[handler] = callback
+  postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
+  registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
+
+  init: (callback) ->
+    @port = chrome.runtime.connect name: "frames"
+
+    @port.onMessage.addListener (request) =>
+      (@listeners[request.handler] ? this[request.handler]) request
+
+    @port.onDisconnect.addListener ->
+      # We disable the content scripts when we lose contact with the background page.
+      isEnabledForUrl = false
+      window.removeEventListener "focus", onFocus
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -271,12 +265,12 @@ DomUtils.documentReady ->
 # Called from the backend in order to change frame focus.
 #
 focusThisFrame = (request) ->
-  if window.innerWidth < 3 or window.innerHeight < 3
-    # This frame is too small to focus. Cancel and tell the background frame to focus the next one instead.
-    # This affects sites like Google Inbox, which have many tiny iframes. See #1317.
-    # Here we're assuming that there is at least one frame large enough to focus.
-    chrome.runtime.sendMessage({ handler: "nextFrame", frameId: frameId })
-    return
+  unless request.forceFocusThisFrame
+    if window.innerWidth < 3 or window.innerHeight < 3 or document.body?.tagName.toLowerCase() == "frameset"
+      # This frame is too small to focus or it's a frameset. Cancel and tell the background page to focus the
+      # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See #1317.
+      chrome.runtime.sendMessage handler: "nextFrame", frameId: frameId
+      return
   window.focus()
   flashFrame() if request.highlight
 
@@ -317,7 +311,7 @@ extend window,
   goToRoot: ->
     window.location.href = window.location.origin
 
-  mainFrame: -> focusThisFrame highlight: true
+  mainFrame: -> focusThisFrame highlight: true, forceFocusThisFrame: true
 
   toggleViewSource: ->
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
@@ -451,10 +445,9 @@ initializeTopFrame = (request = null) ->
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL.
-checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
-  url = window.location.toString()
-  chrome.runtime.sendMessage { handler: "isEnabledForUrl", url: url, frameIsFocused: frameIsFocused }, (response) ->
-    { isEnabledForUrl, passKeys } = response
+checkIfEnabledForUrl = do ->
+  Frame.addEventListener "isEnabledForUrl", (response) ->
+    {isEnabledForUrl, passKeys, frameIsFocused} = response
     installListeners() # But only if they have not been installed already.
     # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
     if isEnabledForUrl
@@ -472,13 +465,14 @@ checkIfEnabledForUrl = (frameIsFocused = windowIsFocused()) ->
           if isEnabledForUrl and not passKeys then "enabled"
           else if isEnabledForUrl then "partial"
           else "disabled"
-    null
+
+  (frameIsFocused = windowIsFocused()) ->
+    Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
 
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
 # correct enabled state (but only if this frame has the focus).
 checkEnabledAfterURLChange = ->
   checkIfEnabledForUrl() if windowIsFocused()
-
 
 window.handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
@@ -662,11 +656,10 @@ window.HelpDialog ?=
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
-DomUtils.documentReady registerFrame
-window.addEventListener "unload", unregisterFrame
 
 root = exports ? window
 root.handlerStack = handlerStack
 root.frameId = frameId
+root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog

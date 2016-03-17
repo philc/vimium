@@ -63,20 +63,8 @@ handleCompletions = (sender) -> (request, port) ->
   completionHandlers[request.handler] completers[request.name], request, port
 
 chrome.runtime.onConnect.addListener (port, name) ->
-  sender = port.sender
-  senderTabId = sender.tab?.id
-  # If this is a tab we've been waiting to open, execute any "tab loaded" handlers, e.g. to restore
-  # the tab's scroll position. Wait until domReady before doing this; otherwise operations like restoring
-  # the scroll position will not be possible.
-  if (port.name == "domReady" && senderTabId != null)
-    if (tabLoadedHandlers[senderTabId])
-      toCall = tabLoadedHandlers[senderTabId]
-      # Delete first to be sure there's no circular events.
-      delete tabLoadedHandlers[senderTabId]
-      toCall.call()
-
   if (portHandlers[port.name])
-    port.onMessage.addListener portHandlers[port.name] sender
+    port.onMessage.addListener portHandlers[port.name] port.sender, port
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   if (sendRequestHandlers[request.handler])
@@ -101,20 +89,6 @@ logMessage = do ->
 # because window.location doesn't know anything about the Chrome-specific "view-source:".
 #
 getCurrentTabUrl = (request, sender) -> sender.tab.url
-
-#
-# Checks the user's preferences in local storage to determine if Vimium is enabled for the given URL, and
-# whether any keys should be passed through to the underlying page.
-# The source frame also informs us whether or not it has the focus, which allows us to track the URL of the
-# active frame.
-#
-root.isEnabledForUrl = isEnabledForUrl = (request, sender) ->
-  urlForTab[sender.tab.id] = request.url if request.frameIsFocused
-  rule = Exclusions.getRule(request.url)
-  {
-    isEnabledForUrl: not rule or rule.passKeys
-    passKeys: rule?.passKeys or ""
-  }
 
 onURLChange = (details) ->
   chrome.tabs.sendMessage details.tabId, name: "checkEnabledAfterURLChange"
@@ -377,33 +351,46 @@ openOptionsPageInNewTab = ->
   chrome.tabs.getSelected(null, (tab) ->
     chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
-registerFrame = (request, sender) ->
-  (frameIdsForTab[sender.tab.id] ?= []).push request.frameId
+Frames =
+  onConnect: (sender, port) ->
+    [tabId, frameId] = [sender.tab.id, sender.frameId]
+    frameIdsForTab[tabId] ?= []
+    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId]
+    port.postMessage handler: "registerFrameId", chromeFrameId: frameId
 
-unregisterFrame = (request, sender) ->
-  # When a tab is closing, Chrome sometimes passes messages without sender.tab.  Therefore, we guard against
-  # this.
-  tabId = sender.tab?.id
-  if tabId? and frameIdsForTab[tabId]?
-    if request.tab_is_closing
-      delete frameIdsForTab[tabId]
-    else
-      frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (id) -> id != request.frameId
+    port.onDisconnect.addListener listener = ->
+      # Unregister the frame.  However, we never unregister the main/top frame.  If the tab is navigating to
+      # another page, then there'll be a new top frame with the same Id soon.  If the tab is closing, then
+      # we tidy up in the chrome.tabs.onRemoved listener.  This elides any dependency on the order in which
+      # events happen (e.g. on navigation, a new top frame registers before the old one unregisters).
+      if tabId of frameIdsForTab and frameId != 0
+        frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
+
+    # Return our onMessage handler for this port.
+    (request, port) =>
+      this[request.handler] {request, tabId, frameId, port}
+
+  isEnabledForUrl: ({request, tabId, port}) ->
+    urlForTab[tabId] = request.url if request.frameIsFocused
+    rule = Exclusions.getRule request.url
+    port.postMessage extend request,
+      isEnabledForUrl: not rule or 0 < rule.passKeys.length
+      passKeys: rule?.passKeys ? ""
+
+  domReady: ({tabId, frameId}) ->
+    if frameId == 0
+      tabLoadedHandlers[tabId]?()
+      delete tabLoadedHandlers[tabId]
 
 handleFrameFocused = (request, sender) ->
-  tabId = sender.tab.id
-  # Cycle frameIdsForTab to the focused frame.  However, also ensure that we don't inadvertently register a
-  # frame which wasn't previously registered (such as a frameset).
-  if frameIdsForTab[tabId]?
-    frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], request.frameId
+  [tabId, frameId] = [sender.tab.id, sender.frameId]
+  frameIdsForTab[tabId] ?= []
+  frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId
   # Inform all frames that a frame has received the focus.
-  chrome.tabs.sendMessage sender.tab.id,
-    name: "frameFocused"
-    focusFrameId: request.frameId
+  chrome.tabs.sendMessage tabId, name: "frameFocused", focusFrameId: frameId
 
 # Rotate through frames to the frame count places after frameId.
 cycleToFrame = (frames, frameId, count = 0) ->
-  frames ||= []
   # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
   # additional offset such that we do indeed start from frameId.
   count = (count + Math.max 0, frames.indexOf frameId) % frames.length
@@ -420,6 +407,7 @@ bgLog = (request, sender) ->
 # Port handler mapping
 portHandlers =
   completions: handleCompletions
+  frames: Frames.onConnect.bind Frames
 
 sendRequestHandlers =
   runBackgroundCommand: runBackgroundCommand
@@ -428,13 +416,10 @@ sendRequestHandlers =
   openUrlInIncognito: TabOperations.openUrlInIncognito
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
   openOptionsPageInNewTab: openOptionsPageInNewTab
-  registerFrame: registerFrame
-  unregisterFrame: unregisterFrame
   frameFocused: handleFrameFocused
   nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
-  isEnabledForUrl: isEnabledForUrl
   selectSpecificTab: selectSpecificTab
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
@@ -446,9 +431,11 @@ sendRequestHandlers =
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"
 
-# Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode windows.
-# Since the common case is that there are none to begin with, we first check whether the key is set at all.
+# Tidy up tab caches when tabs are removed.  Also remove chrome.storage.local/findModeRawQueryListIncognito if
+# there are no remaining incognito-mode windows.  Since the common case is that there are none to begin with,
+# we first check whether the key is set at all.
 chrome.tabs.onRemoved.addListener (tabId) ->
+  delete cache[tabId] for cache in [frameIdsForTab, urlForTab]
   chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
     if items.findModeRawQueryListIncognito
       chrome.windows.getAll null, (windows) ->
@@ -456,11 +443,6 @@ chrome.tabs.onRemoved.addListener (tabId) ->
           return if window.incognito
         # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
         chrome.storage.local.remove "findModeRawQueryListIncognito"
-
-# Tidy up tab caches when tabs are removed.  We cannot rely on unregisterFrame because Chrome does not always
-# provide sender.tab there.
-chrome.tabs.onRemoved.addListener (tabId) ->
-  delete cache[tabId] for cache in [ frameIdsForTab, urlForTab ]
 
 # Convenience function for development use.
 window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'))
@@ -502,3 +484,4 @@ chrome.runtime.onInstalled.addListener ({reason}) ->
 
 root.TabOperations = TabOperations
 root.logMessage = logMessage
+root.Frames = Frames
