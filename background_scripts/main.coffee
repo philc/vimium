@@ -311,24 +311,6 @@ selectTab = (direction, count = 1) ->
             Math.max 0, tabs.length - count
       chrome.tabs.update tabs[toSelect].id, selected: true
 
-# Here's how we set the page icon.  The default is "disabled", so if we do nothing else, then we get the
-# grey-out disabled icon.  Thereafter, we only set tab-specific icons, so there's no need to update the icon
-# when we visit a tab on which Vimium isn't running.
-#
-# For active tabs, when a frame starts, it requests its active state via isEnabledForUrl.  We also check the
-# state every time a frame gets the focus.  In both cases, the frame then updates the tab's icon accordingly.
-#
-# Exclusion rule changes (from either the options page or the page popup) propagate via the subsequent focus
-# change.  In particular, whenever a frame next gets the focus, it requests its new state and sets the icon
-# accordingly.
-#
-setIcon = (request, sender) ->
-  path = switch request.icon
-    when "enabled" then "icons/browser_action_enabled.png"
-    when "partial" then "icons/browser_action_partial.png"
-    when "disabled" then "icons/browser_action_disabled.png"
-  chrome.browserAction.setIcon tabId: sender.tab.id, path: path
-
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # only do this once per URL change
   cssConf =
@@ -373,9 +355,21 @@ Frames =
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
     rule = Exclusions.getRule request.url
-    port.postMessage extend request,
+    enabledState =
       isEnabledForUrl: not rule or 0 < rule.passKeys.length
       passKeys: rule?.passKeys ? ""
+
+    if request.frameIsFocused
+      chrome.browserAction.setIcon tabId: tabId, path:
+        if not enabledState.isEnabledForUrl
+          "icons/browser_action_disabled.png"
+        else if 0 < enabledState.passKeys.length
+          "icons/browser_action_partial.png"
+        else
+          "icons/browser_action_enabled.png"
+
+    # Send the response.  The tests require this to be last.
+    port.postMessage extend request, enabledState
 
   domReady: ({tabId, frameId}) ->
     if frameId == 0
@@ -423,7 +417,6 @@ sendRequestHandlers =
   selectSpecificTab: selectSpecificTab
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
-  setIcon: setIcon
   sendMessageToFrames: sendMessageToFrames
   log: bgLog
   fetchFileContents: (request, sender) -> fetchFileContents request.fileName

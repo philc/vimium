@@ -449,14 +449,6 @@ checkIfEnabledForUrl = do ->
     else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
-    # Update the page icon, if necessary.
-    if windowIsFocused()
-      chrome.runtime.sendMessage
-        handler: "setIcon"
-        icon:
-          if isEnabledForUrl and not passKeys then "enabled"
-          else if isEnabledForUrl then "partial"
-          else "disabled"
 
   (frameIsFocused = windowIsFocused()) ->
     Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
