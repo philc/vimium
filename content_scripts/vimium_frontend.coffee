@@ -1,5 +1,5 @@
 #
-# This content script  must be run prior to domReady so that we perform some operations very early.
+# This content script must be run prior to domReady so that we perform some operations very early.
 #
 
 isEnabledForUrl = true
@@ -224,12 +224,10 @@ Frame =
     @port.onMessage.addListener (request) =>
       handler request for handler in @listeners[request.handler]
 
-    @port.onDisconnect.addListener =>
-      # We disable content scripts when we lose contact with the background page.
+    @port.onDisconnect.addListener ->
+      # We disable the content scripts when we lose contact with the background page.
       isEnabledForUrl = false
-      chrome.runtime.sendMessage = ->
       window.removeEventListener "focus", onFocus
-      @port.postMessage = ->
 
 handleShowHUDforDuration = ({ text, duration }) ->
   if DomUtils.isTopFrame()
@@ -271,7 +269,7 @@ focusThisFrame = (request) ->
   unless request.forceFocusThisFrame
     if window.innerWidth < 3 or window.innerHeight < 3 or document.body?.tagName.toLowerCase() == "frameset"
       # This frame is too small to focus or it's a frameset. Cancel and tell the background page to focus the
-      # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See 1317.
+      # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See #1317.
       chrome.runtime.sendMessage handler: "nextFrame", frameId: frameId
       return
   window.focus()

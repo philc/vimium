@@ -354,9 +354,8 @@ openOptionsPageInNewTab = ->
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
-    # We always add frameId 0, the top frame, automatically, and never unregister it.
-    frameIdsForTab[tabId] ?= [0]
-    frameIdsForTab[tabId].push frameId unless frameId == 0
+    frameIdsForTab[tabId] ?= []
+    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId]
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
 
     port.onDisconnect.addListener listener = ->
@@ -386,16 +385,13 @@ Frames =
 
 handleFrameFocused = (request, sender) ->
   [tabId, frameId] = [sender.tab.id, sender.frameId]
-  # This might be the first time we've heard from this tab.
-  frameIdsForTab[tabId] ?= [0]
-  # Cycle frameIdsForTab to the focused frame.
+  frameIdsForTab[tabId] ?= []
   frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId
   # Inform all frames that a frame has received the focus.
   chrome.tabs.sendMessage tabId, name: "frameFocused", focusFrameId: frameId
 
 # Rotate through frames to the frame count places after frameId.
 cycleToFrame = (frames, frameId, count = 0) ->
-  frames ||= []
   # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
   # additional offset such that we do indeed start from frameId.
   count = (count + Math.max 0, frames.indexOf frameId) % frames.length
