@@ -436,7 +436,8 @@ initializeTopFrame = (request = null) ->
         chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrame"
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
-# page whether this frame has the focus, allowing the background page to track the active frame's URL.
+# page whether this frame has the focus, allowing the background page to track the active frame's URL and set
+# the page icon.
 checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
     {isEnabledForUrl, passKeys, frameIsFocused} = response
@@ -445,7 +446,8 @@ checkIfEnabledForUrl = do ->
     # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
     if isEnabledForUrl
       initializeTopFrame()
-      DomUtils.documentReady HUD.init.bind HUD if frameIsFocused
+      if frameIsFocused and not HUD.isReady()
+        DomUtils.documentReady HUD.init.bind HUD
     else if HUD.isReady()
       # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
       HUD.hide()
@@ -502,9 +504,8 @@ findAndFocus = (backwards) ->
   else
     HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
 
-window.performFind = -> findAndFocus()
-
-window.performBackwardsFind = -> findAndFocus(true)
+window.performFind = -> findAndFocus false
+window.performBackwardsFind = -> findAndFocus true
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
