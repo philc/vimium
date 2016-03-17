@@ -360,10 +360,9 @@ Frames =
 
     port.onDisconnect.addListener listener = ->
       # Unregister the frame.  However, we never unregister the main/top frame.  If the tab is navigating to
-      # another page, then there'll be a new top frame (with the same Id) along soon.  If the tab is closing,
-      # then we'll tidy up in the chrome.tabs.onRemoved listener, below.  This approach avoids any dependency
-      # on the order in which register and unregister events happens (e.g. on navigation, a new top frame
-      # registering before the old one is deregistered).
+      # another page, then there'll be a new top frame with the same Id soon.  If the tab is closing, then
+      # we tidy up in the chrome.tabs.onRemoved listener.  This elides any dependency on the order in which
+      # events happen (e.g. on navigation, a new top frame registers before the old one unregisters).
       if tabId of frameIdsForTab and frameId != 0
         frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
 

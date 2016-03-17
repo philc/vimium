@@ -213,16 +213,15 @@ Frame =
   port: null
   listeners: {}
 
-  addEventListener: (handler, callback) -> (@listeners[handler] ?= []).push callback
+  addEventListener: (handler, callback) -> @listeners[handler] = callback
   postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
   registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
 
   init: (callback) ->
-    @addEventListener "registerFrameId", Frame.registerFrameId
     @port = chrome.runtime.connect name: "frames"
 
     @port.onMessage.addListener (request) =>
-      handler request for handler in @listeners[request.handler]
+      (@listeners[request.handler] ? this[request.handler]) request
 
     @port.onDisconnect.addListener ->
       # We disable the content scripts when we lose contact with the background page.
@@ -459,7 +458,7 @@ checkIfEnabledForUrl = do ->
       HUD.hide()
     normalMode?.setPassKeys passKeys
     # Update the page icon, if necessary.
-    if frameIsFocused
+    if windowIsFocused()
       chrome.runtime.sendMessage
         handler: "setIcon"
         icon:
