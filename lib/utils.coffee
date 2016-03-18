@@ -236,6 +236,10 @@ Utils =
   # Like Nodejs's nextTick.
   nextTick: (func) -> @setTimeout 0, func
 
+  # Make an idempotent function.
+  makeIdempotent: (func) ->
+    (args...) -> ([previousFunc, func] = [func, null])[0]? args...
+
 # Utility for parsing and using the custom search-engine configuration.  We re-use the previous parse if the
 # search-engine configuration is unchanged.
 SearchEngines =

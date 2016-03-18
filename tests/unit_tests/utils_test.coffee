@@ -102,3 +102,26 @@ context "compare versions",
     assert.equal -1, Utils.compareVersions("1.40.1", "1.40.2")
     assert.equal -1, Utils.compareVersions("1.40.1", "1.41")
     assert.equal 1, Utils.compareVersions("1.41", "1.40")
+
+context "makeIdempotent",
+  setup ->
+    @count = 0
+    @func = Utils.makeIdempotent (n = 1) => @count += n
+
+  should "call a function once", ->
+    @func()
+    assert.equal 1, @count
+
+  should "call a function once with an argument", ->
+    @func 2
+    assert.equal 2, @count
+
+  should "not call a function a second time", ->
+    @func()
+    assert.equal 1, @count
+
+  should "not call a function a second time", ->
+    @func()
+    assert.equal 1, @count
+    @func()
+    assert.equal 1, @count
