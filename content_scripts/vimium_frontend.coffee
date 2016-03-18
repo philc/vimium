@@ -122,15 +122,15 @@ class NormalMode extends KeyHandlerMode
     else
       Utils.invokeCommandString registryEntry.command for i in [0...count]
 
-# Only exported for tests.
-window.installModes = installModes = ->
-  # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
-  # activates/deactivates itself accordingly.  normalMode is exported only for the tests.
-  window.normalMode = normalMode = new NormalMode
+installModes = ->
+  # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
+  # activates/deactivates itself accordingly.
+  normalMode = new NormalMode
   new InsertMode permanent: true
   new GrabBackFocus if isEnabledForUrl
   Scroller.init()
   FindModeHistory.init()
+  normalMode # Return the normalMode object (for the tests).
 
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
@@ -176,7 +176,7 @@ installListener = (element, event, callback) ->
 # Note: We install the listeners even if Vimium is disabled.  See comment in commit
 # 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
 #
-window.installListeners = installListeners = Utils.makeIdempotent ->
+installListeners = Utils.makeIdempotent ->
   # Key event handlers fire on window before they do on document. Prefer window for key events so the page
   # can't set handlers to grab the keys before us.
   for type in ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"]
@@ -464,7 +464,7 @@ checkIfEnabledForUrl = do ->
 checkEnabledAfterURLChange = ->
   checkIfEnabledForUrl() if windowIsFocused()
 
-window.handleEscapeForFindMode = ->
+handleEscapeForFindMode = ->
   document.body.classList.remove("vimiumFindMode")
   # removing the class does not re-color existing selections. we recreate the current selection so it reverts
   # back to the default color.
@@ -478,7 +478,7 @@ window.handleEscapeForFindMode = ->
 # <esc> sends us into insert mode if possible, but <cr> does not.
 # <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
 # this query and do more searches with it'
-window.handleEnterForFindMode = ->
+handleEnterForFindMode = ->
   focusFoundLink()
   document.body.classList.add("vimiumFindMode")
   FindMode.saveQuery()
@@ -508,8 +508,8 @@ findAndFocus = (backwards) ->
   else
     HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
 
-window.performFind = -> findAndFocus false
-window.performBackwardsFind = -> findAndFocus true
+performFind = -> findAndFocus false
+performBackwardsFind = -> findAndFocus true
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
@@ -612,7 +612,7 @@ window.goNext = ->
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
 # Enters find mode.  Returns the new find-mode instance.
-window.enterFindMode = ->
+enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
@@ -652,3 +652,8 @@ root.frameId = frameId
 root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
+# These are exported for find mode.
+extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
+  enterFindMode}
+# These are exported only for the tests.
+extend root, {installModes, installListeners}

@@ -28,7 +28,7 @@ commandName = commandCount = null
 initializeModeState = ->
   Mode.reset()
   handlerStack.reset()
-  installModes()
+  normalMode = installModes()
   normalMode.setPassKeys "p"
   normalMode.setKeyMapping
     m: options: {}, command: "m" # A mapped key.
