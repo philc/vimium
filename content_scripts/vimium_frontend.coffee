@@ -154,7 +154,6 @@ initializePreDomReady = ->
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
-    initializeTopFrameUIComponents: initializeTopFrameUIComponents
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
