@@ -103,6 +103,10 @@ class NormalMode extends KeyHandlerMode
       if area == "local" and changes.normalModeKeyStateMapping?.newValue
         @setKeyMapping changes.normalModeKeyStateMapping.newValue
 
+    # Initialize components which normal mode depends upon.
+    Scroller.init()
+    FindModeHistory.init()
+
   commandHandler: ({command: registryEntry, count}) ->
     count *= registryEntry.options.count ? 1
     count = 1 if registryEntry.noRepeat
@@ -128,8 +132,6 @@ installModes = ->
   normalMode = new NormalMode
   new InsertMode permanent: true
   new GrabBackFocus if isEnabledForUrl
-  Scroller.init()
-  FindModeHistory.init()
   normalMode # Return the normalMode object (for the tests).
 
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
