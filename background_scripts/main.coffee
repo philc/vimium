@@ -21,6 +21,7 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
 currentVersion = Utils.getCurrentVersion()
 frameIdsForTab = {}
 root.urlForTab = {}
+topFramePortForTab = {}
 
 # This is exported for use by "marks.coffee".
 root.tabLoadedHandlers = {} # tabId -> function()
@@ -324,6 +325,7 @@ openOptionsPageInNewTab = ->
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
+    topFramePortForTab[tabId] = port if frameId == 0
     frameIdsForTab[tabId] ?= []
     frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId]
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
@@ -363,6 +365,9 @@ Frames =
     if frameId == 0
       tabLoadedHandlers[tabId]?()
       delete tabLoadedHandlers[tabId]
+
+  initializeTopFrameUIComponents: ({tabId}) ->
+    topFramePortForTab[tabId].postMessage handler: "initializeTopFrameUIComponents"
 
 handleFrameFocused = (request, sender) ->
   [tabId, frameId] = [sender.tab.id, sender.frameId]
@@ -416,7 +421,7 @@ chrome.storage.local.remove "findModeRawQueryListIncognito"
 # there are no remaining incognito-mode windows.  Since the common case is that there are none to begin with,
 # we first check whether the key is set at all.
 chrome.tabs.onRemoved.addListener (tabId) ->
-  delete cache[tabId] for cache in [frameIdsForTab, urlForTab]
+  delete cache[tabId] for cache in [frameIdsForTab, urlForTab, topFramePortForTab]
   chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
     if items.findModeRawQueryListIncognito
       chrome.windows.getAll null, (windows) ->

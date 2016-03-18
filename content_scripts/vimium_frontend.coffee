@@ -425,17 +425,11 @@ extend window,
               indicator: false
 
 # Initialize UI components which are only installed in the main/top frame.
-initializeTopFrameUIComponents = Utils.makeIdempotent (request = null) ->
-  DomUtils.documentReady ->
-    # We only initialize the vomnibar in the tab's top/main frame, because it's only ever opened there.
-    if DomUtils.isTopFrame()
-      Vomnibar.init()
-    else
-      # Ignore requests from other frames (because we're not the top frame).
-      unless request?
-        # Tell the top frame to initialize the Vomnibar.  We already have "DOMContentLoaded".  This ensures
-        # that the listener in the main/top frame (which are installed pre-DomReady) is ready.
-        chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrameUIComponents"
+initializeTopFrameUIComponents = do ->
+  Frame.addEventListener "initializeTopFrameUIComponents", Utils.makeIdempotent Vomnibar.init.bind Vomnibar
+
+  Utils.makeIdempotent ->
+    DomUtils.documentReady -> Frame.postMessage "initializeTopFrameUIComponents"
 
 # Initialize UI components which are only installed in all frames (i.e., the HUD).
 initializeAllFrameUIComponents = Utils.makeIdempotent ->
