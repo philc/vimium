@@ -1,6 +1,6 @@
 
 # Install frontend event handlers.
-installListeners true
+installListeners()
 HUD.init()
 Frame.registerFrameId chromeFrameId: 0
 
@@ -28,7 +28,7 @@ commandName = commandCount = null
 initializeModeState = ->
   Mode.reset()
   handlerStack.reset()
-  initializeModes()
+  installModes()
   normalMode.setPassKeys "p"
   normalMode.setKeyMapping
     m: options: {}, command: "m" # A mapped key.

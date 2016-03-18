@@ -46,7 +46,7 @@ HUD =
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
   # mode indicator, is when hide() is called for the mode indicator itself.
   hide: (immediate = false, updateIndicator = true) ->
-    return unless @tween?
+    return unless @tween? and @isReady()
     clearTimeout(@_showForDurationTimerId)
     @tween.stop()
     if immediate

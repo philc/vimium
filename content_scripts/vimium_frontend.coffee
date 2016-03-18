@@ -4,6 +4,7 @@
 
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
+normalMode = null
 
 # We track whther the current window has the focus or not.
 windowIsFocused = do ->
@@ -122,17 +123,23 @@ class NormalMode extends KeyHandlerMode
       Utils.invokeCommandString registryEntry.command for i in [0...count]
 
 # Only exported for tests.
-window.initializeModes = ->
+window.installModes = installModes = ->
   # Install the permanent modes.  The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.  normalMode is exported only for the tests.
-  window.normalMode = new NormalMode
+  window.normalMode = normalMode = new NormalMode
   new InsertMode permanent: true
+  new GrabBackFocus if isEnabledForUrl
   Scroller.init()
+  FindModeHistory.init()
+
+initializeOnEnabledStateKnown = Utils.makeIdempotent ->
+  installModes()
 
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
+  installListeners()
   Frame.init()
   checkIfEnabledForUrl()
 
@@ -145,7 +152,7 @@ initializePreDomReady = ->
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
-    initializeTopFrame: initializeTopFrame
+    initializeTopFrameUIComponents: initializeTopFrameUIComponents
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
 
@@ -169,18 +176,12 @@ installListener = (element, event, callback) ->
 # Note: We install the listeners even if Vimium is disabled.  See comment in commit
 # 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
 #
-window.installListeners = installListeners = (isEnabledForUrl) ->
-  # Prevent this initialization from happening more than once.
-  window.installListeners = installListeners = ->
+window.installListeners = installListeners = Utils.makeIdempotent ->
   # Key event handlers fire on window before they do on document. Prefer window for key events so the page
   # can't set handlers to grab the keys before us.
   for type in ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"]
     do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
   installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
-  # Initialize mode state.
-  initializeModes()
-  FindModeHistory.init()
-  new GrabBackFocus if isEnabledForUrl
 
 #
 # Whenever we get the focus:
@@ -421,19 +422,22 @@ extend window,
               targetElement: document.activeElement
               indicator: false
 
+# Initialize UI components which are only installed in the main/top frame.
+initializeTopFrameUIComponents = Utils.makeIdempotent (request = null) ->
+  DomUtils.documentReady ->
+    # We only initialize the vomnibar in the tab's top/main frame, because it's only ever opened there.
+    if DomUtils.isTopFrame()
+      Vomnibar.init()
+    else
+      # Ignore requests from other frames (because we're not the top frame).
+      unless request?
+        # Tell the top frame to initialize the Vomnibar.  We already have "DOMContentLoaded".  This ensures
+        # that the listener in the main/top frame (which are installed pre-DomReady) is ready.
+        chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrameUIComponents"
 
-initializeTopFrame = (request = null) ->
-  initializeTopFrame = -> # Only do this initialization once.
-  # We only initialize the vomnibar in the tab's top/main frame, because it's only ever opened there.
-  if DomUtils.isTopFrame()
-    DomUtils.documentReady Vomnibar.init.bind Vomnibar
-  else
-    # Ignore requests from other frames (we're not the top frame).
-    unless request?
-      # Tell the top frame to initialize the Vomnibar.  We wait until "DOMContentLoaded" to ensure that the
-      # listener in the main/top frame (which are installed pre-DomReady) is already installed.
-      DomUtils.documentReady ->
-        chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "initializeTopFrame"
+# Initialize UI components which are only installed in all frames (i.e., the HUD).
+initializeAllFrameUIComponents = Utils.makeIdempotent ->
+  DomUtils.documentReady HUD.init.bind HUD
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL and set
@@ -441,16 +445,16 @@ initializeTopFrame = (request = null) ->
 checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
     {isEnabledForUrl, passKeys, frameIsFocused} = response
-    installListeners isEnabledForUrl
-    normalMode?.setPassKeys passKeys
-    # Initialize UI components. We only initialize these once we know that Vimium is enabled; see #1838.
+    initializeOnEnabledStateKnown()
+    normalMode.setPassKeys passKeys
+    # Initialize UI components, if necessary. We only initialize these once we know that Vimium is enabled;
+    # see #1838.  We need to check this every time so that we can change state from disabled to enabled.
     if isEnabledForUrl
-      initializeTopFrame()
-      if frameIsFocused and not HUD.isReady()
-        DomUtils.documentReady HUD.init.bind HUD
-    else if HUD.isReady()
-      # Quickly hide any HUD we might already be showing, e.g. if we entered insert mode on page load.
-      HUD.hide()
+      initializeTopFrameUIComponents()
+      initializeAllFrameUIComponents() if frameIsFocused
+    else
+      # Hide the HUD if we're not enabled.
+      HUD.hide() if HUD.isReady()
 
   (frameIsFocused = windowIsFocused()) ->
     Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
