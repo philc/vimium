@@ -744,7 +744,7 @@ context "Mode utilities",
     count = 0
 
     class Test extends Mode
-      constructor: -> count += 1; super singleton: Test
+      constructor: -> count += 1; super singleton: "test"
       exit: -> count -= 1; super()
 
     assert.isTrue count == 0

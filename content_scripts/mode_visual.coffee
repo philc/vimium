@@ -212,9 +212,6 @@ class VisualMode extends KeyHandlerMode
     "c": -> @movement.collapseSelectionToAnchor(); new CaretMode
     "o": -> @movement.reverseSelection()
 
-    # TODO(smblott): "aw", etc.
-    # TODO(smblott): simplify singletons.
-
   constructor: (options = {}) ->
     @movement = new Movement options.alterMethod ? "extend"
     @selection = @movement.selection
@@ -236,7 +233,7 @@ class VisualMode extends KeyHandlerMode
     super extend options,
       name: options.name ? "visual"
       indicator: options.indicator ? "Visual mode"
-      singleton: VisualMode
+      singleton: "visual-mode-group" # Visual mode, visual-line mode and caret mode each displace each other.
       exitOnEscape: true
       suppressAllKeyboardEvents: true
       keyMapping: keyMapping

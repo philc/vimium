@@ -197,17 +197,6 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
-  # Give objects (including elements) distinct identities.
-  getIdentity: do ->
-    identities = []
-
-    (obj) ->
-      index = identities.indexOf obj
-      if index < 0
-        index = identities.length
-        identities.push obj
-      "identity-" + index
-
   # Return a copy of object, but with some of its properties omitted.
   copyObjectOmittingProperties: (obj, properties...) ->
     obj = extend {}, obj
