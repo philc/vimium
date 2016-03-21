@@ -23,18 +23,6 @@ class Movement
     else
       beforeText[0] # The existing range selection is backwards.
 
-  # As above, but backwards.
-  getNextBackwardCharacter: ->
-    beforeText = @selection.toString()
-    if beforeText.length == 0 or @getDirection() == backward
-      @selection.modify "extend", backward, character
-      afterText = @selection.toString()
-      if beforeText != afterText
-        @selection.modify "extend", forward, character
-        afterText[0]
-    else
-      beforeText[beforeText.length - 1] # The existing range selection is forwards.
-
   # Test whether the character following the focus is a word character (and leave the selection unchanged).
   nextCharacterIsWordCharacter: do ->
     regexp = null
@@ -201,7 +189,7 @@ class VisualMode extends KeyHandlerMode
     "N": (count) -> @find count, true
     "/": ->
       @exit()
-      new FindMode(returnToViewport: true).onExit => new VisualMode
+      new FindMode(returnToViewport: true).onExit -> new VisualMode
 
     "y": -> @yank()
     "Y": (count) -> @movement.selectLine count; @yank()
@@ -283,7 +271,7 @@ class VisualMode extends KeyHandlerMode
         @movement.runMovement command for [0...count] by 1
       when "function"
         command count
-    return # Prevent CoffeeScript building an array (for the "string" case, above).
+    @movement.scrollIntoView()
 
   find: (count, backwards) =>
     initialRange = @selection.getRangeAt(0).cloneRange()
