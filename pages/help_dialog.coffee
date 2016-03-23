@@ -6,7 +6,6 @@
 #   top-level frame), and then we don't need to be concerned about nested help dialog frames.
 HelpDialog =
   dialogElement: null
-  showing: true
 
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
@@ -30,9 +29,7 @@ HelpDialog =
       @hide() unless @dialogElement.contains event.target
     , false
 
-  isReady: -> true
-
-  show: (html) ->
+  show: ({html}) ->
     for own placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
 
@@ -54,9 +51,6 @@ HelpDialog =
   hide: ->
     @exitOnEscape?.exit()
     UIComponentServer.postMessage "hide"
-
-  toggle: (html) ->
-    if @showing then @hide() else @show html
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
