@@ -68,6 +68,7 @@ chrome.runtime.onConnect.addListener (port, name) ->
     port.onMessage.addListener portHandlers[port.name] port.sender, port
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
+  request = extend {count: 1}, extend request, tab: sender.tab, tabId: sender.tab.id
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
   # Ensure the sendResponse callback is freed.
@@ -146,26 +147,18 @@ fetchFileContents = (extensionFileName) ->
 
 TabOperations =
   # Opens the url in the current tab.
-  openUrlInCurrentTab: (request, callback = (->)) ->
-    chrome.tabs.getSelected null, (tab) ->
-      callback = (->) unless typeof callback == "function"
-      chrome.tabs.update tab.id, { url: Utils.convertToUrl(request.url) }, callback
+  openUrlInCurrentTab: (request) ->
+    chrome.tabs.update request.tabId, url: Utils.convertToUrl request.url
 
   # Opens request.url in new tab and switches to it if request.selected is true.
   openUrlInNewTab: (request, callback = (->)) ->
-    chrome.tabs.getSelected null, (tab) ->
-      tabConfig =
-        url: Utils.convertToUrl request.url
-        index: tab.index + 1
-        selected: true
-        windowId: tab.windowId
-        openerTabId: tab.id
-      callback = (->) unless typeof callback == "function"
-      chrome.tabs.create tabConfig, callback
-
-  openUrlInIncognito: (request, callback = (->)) ->
-    callback = (->) unless typeof callback == "function"
-    chrome.windows.create {url: Utils.convertToUrl(request.url), incognito: true}, callback
+    tabConfig =
+      url: Utils.convertToUrl request.url
+      index: request.tab.index + 1
+      selected: true
+      windowId: request.tab.windowId
+      openerTabId: request.tab.id
+    chrome.tabs.create tabConfig, callback
 
 #
 # Copies or pastes some data (request.data) to/from the clipboard.
@@ -182,118 +175,94 @@ selectSpecificTab = (request) ->
     chrome.windows.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { selected: true }))
 
-repeatFunction = (func, totalCount, currentCount, frameId) ->
-  if (currentCount < totalCount)
-    func(
-      -> repeatFunction(func, totalCount, currentCount + 1, frameId),
-      frameId)
-
-moveTab = (count) ->
+moveTab = ({count, tab, registryEntry}) ->
+  count = -count if registryEntry.command == "moveTabLeft"
   chrome.tabs.getAllInWindow null, (tabs) ->
     pinnedCount = (tabs.filter (tab) -> tab.pinned).length
-    chrome.tabs.getSelected null, (tab) ->
-      minIndex = if tab.pinned then 0 else pinnedCount
-      maxIndex = (if tab.pinned then pinnedCount else tabs.length) - 1
-      chrome.tabs.move tab.id,
-        index: Math.max minIndex, Math.min maxIndex, tab.index + count
+    minIndex = if tab.pinned then 0 else pinnedCount
+    maxIndex = (if tab.pinned then pinnedCount else tabs.length) - 1
+    chrome.tabs.move tab.id,
+      index: Math.max minIndex, Math.min maxIndex, tab.index + count
 
 # Start action functions
 
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  createTab: (callback) ->
-    chrome.tabs.query { active: true, currentWindow: true }, (tabs) ->
-      tab = tabs[0]
+  createTab: (request) ->
+    request.url ?= do ->
       url = Settings.get "newTabUrl"
       if url == "pages/blank.html"
         # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
-        url = if tab.incognito then "chrome://newtab" else chrome.runtime.getURL url
-      TabOperations.openUrlInNewTab { url }, callback
-  duplicateTab: (count) ->
-    chrome.tabs.getSelected null, (tab) ->
-      createTab = (tab) ->
-        chrome.tabs.duplicate tab.id, createTab if 0 < count--
-      createTab tab
-  moveTabToNewWindow: (count) ->
+        if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl
+      else
+        url
+    if 0 < request.count--
+      TabOperations.openUrlInNewTab request, (tab) => @createTab extend request, {tab, tabId: tab.id}
+  duplicateTab: (request) ->
+    if 0 < request.count--
+      chrome.tabs.duplicate request.tabId, (tab) => @duplicateTab extend request, {tab, tabId: tab.id}
+  moveTabToNewWindow: ({count, tab}) ->
     chrome.tabs.query {currentWindow: true}, (tabs) ->
-      chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
-        activeTabIndex = activeTabs[0].index
-        startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
-        [ tab, tabs... ] = tabs[startTabIndex...startTabIndex + count]
-        chrome.windows.create {tabId: tab.id, incognito: tab.incognito}, (window) ->
-          chrome.tabs.move (tab.id for tab in tabs), {windowId: window.id, index: -1}
-  nextTab: (count) -> selectTab "next", count
-  previousTab: (count) -> selectTab "previous", count
-  firstTab: (count) -> selectTab "first", count
-  lastTab: (count) -> selectTab "last", count
-  removeTab: (count) ->
+      activeTabIndex = tab.index
+      startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
+      [ tab, tabs... ] = tabs[startTabIndex...startTabIndex + count]
+      chrome.windows.create {tabId: tab.id, incognito: tab.incognito}, (window) ->
+        chrome.tabs.move (tab.id for tab in tabs), {windowId: window.id, index: -1}
+  nextTab: (request) -> selectTab "next", request
+  previousTab: (request) -> selectTab "previous", request
+  firstTab: (request) -> selectTab "first", request
+  lastTab: (request) -> selectTab "last", request
+  removeTab: ({count, tab}) ->
     chrome.tabs.query {currentWindow: true}, (tabs) ->
-      chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
-        activeTabIndex = activeTabs[0].index
-        startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
-        chrome.tabs.remove (tab.id for tab in tabs[startTabIndex...startTabIndex + count])
-  restoreTab: (callback) ->
-    chrome.sessions.restore null, ->
-        callback() unless chrome.runtime.lastError
-  openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab({ url: Clipboard.paste() })
-  openCopiedUrlInNewTab: (request) -> TabOperations.openUrlInNewTab({ url: Clipboard.paste() })
-  togglePinTab: (request) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.update(tab.id, { pinned: !tab.pinned }))
-  showHelp: (callback, frameId) ->
-    chrome.tabs.getSelected(null, (tab) ->
-      chrome.tabs.sendMessage(tab.id,
-        { name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId:frameId }))
-  moveTabLeft: (count) -> moveTab -count
-  moveTabRight: (count) -> moveTab count
-  nextFrame: (count,frameId) ->
-    chrome.tabs.getSelected null, (tab) ->
-      frameIdsForTab[tab.id] = cycleToFrame frameIdsForTab[tab.id], frameId, count
-      chrome.tabs.sendMessage tab.id, name: "focusFrame", frameId: frameIdsForTab[tab.id][0], highlight: true
-
-  closeTabsOnLeft: -> removeTabsRelative "before"
-  closeTabsOnRight: -> removeTabsRelative "after"
-  closeOtherTabs: -> removeTabsRelative "both"
-
-  visitPreviousTab: (count) ->
-    chrome.tabs.getSelected null, (tab) ->
-      tabIds = BgUtils.tabRecency.getTabsByRecency().filter (tabId) -> tabId != tab.id
-      if 0 < tabIds.length
-        selectSpecificTab id: tabIds[(count-1) % tabIds.length]
+      activeTabIndex = tab.index
+      startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
+      chrome.tabs.remove (tab.id for tab in tabs[startTabIndex...startTabIndex + count])
+  restoreTab: (request) ->
+    if 0 < request.count--
+      chrome.sessions.restore null, => @restoreTab request
+  openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
+  openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
+  togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
+  showHelp: ({tab, frameId}) ->
+    chrome.tabs.sendMessage tab.id, {name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId}
+  moveTabLeft: moveTab
+  moveTabRight: moveTab
+  nextFrame: ({count, frameId, tabId}) ->
+    frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId, count
+    chrome.tabs.sendMessage tabId, name: "focusFrame", frameId: frameIdsForTab[tabId][0], highlight: true
+  closeTabsOnLeft: (request) -> removeTabsRelative "before", request
+  closeTabsOnRight: (request) -> removeTabsRelative "after", request
+  closeOtherTabs: (request) -> removeTabsRelative "both", request
+  visitPreviousTab: ({count, tab}) ->
+    tabIds = BgUtils.tabRecency.getTabsByRecency().filter (tabId) -> tabId != tab.id
+    if 0 < tabIds.length
+      selectSpecificTab id: tabIds[(count-1) % tabIds.length]
 
 # Remove tabs before, after, or either side of the currently active tab
-removeTabsRelative = (direction) ->
+removeTabsRelative = (direction, {tab: activeTab}) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
-    chrome.tabs.query {currentWindow: true, active: true}, (activeTabs) ->
-      activeTabIndex = activeTabs[0].index
+    shouldDelete = switch direction
+      when "before"
+        (index) -> index < activeTab.index
+      when "after"
+        (index) -> index > activeTab.index
+      when "both"
+        (index) -> index != activeTab.index
 
-      shouldDelete = switch direction
-        when "before"
-          (index) -> index < activeTabIndex
-        when "after"
-          (index) -> index > activeTabIndex
-        when "both"
-          (index) -> index != activeTabIndex
-
-      toRemove = []
-      for tab in tabs
-        if not tab.pinned and shouldDelete tab.index
-          toRemove.push tab.id
-      chrome.tabs.remove toRemove
+    chrome.tabs.remove (tab.id for tab in tabs when not tab.pinned and shouldDelete tab.index)
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
-selectTab = (direction, count = 1) ->
+selectTab = (direction, {count, tab}) ->
   chrome.tabs.getAllInWindow null, (tabs) ->
-    return unless tabs.length > 1
-    chrome.tabs.getSelected null, (currentTab) ->
+    if 1 < tabs.length
       toSelect =
         switch direction
           when "next"
-            (currentTab.index + count) % tabs.length
+            (tab.index + count) % tabs.length
           when "previous"
-            (currentTab.index - count + count * tabs.length) % tabs.length
+            (tab.index - count + count * tabs.length) % tabs.length
           when "first"
             Math.min tabs.length - 1, count - 1
           when "last"
@@ -309,18 +278,6 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
 
 # End action functions
-
-runBackgroundCommand = ({frameId, registryEntry, count}, sender) ->
-  if registryEntry.passCountToFunction
-    BackgroundCommands[registryEntry.command] count, frameId
-  else if registryEntry.noRepeat
-    BackgroundCommands[registryEntry.command] frameId
-  else
-    repeatFunction BackgroundCommands[registryEntry.command], count, 0, frameId
-
-openOptionsPageInNewTab = ->
-  chrome.tabs.getSelected(null, (tab) ->
-    chrome.tabs.create({ url: chrome.runtime.getURL("pages/options.html"), index: tab.index + 1 }))
 
 Frames =
   onConnect: (sender, port) ->
@@ -369,8 +326,7 @@ Frames =
   initializeTopFrameUIComponents: ({tabId}) ->
     topFramePortForTab[tabId].postMessage handler: "initializeTopFrameUIComponents"
 
-handleFrameFocused = (request, sender) ->
-  [tabId, frameId] = [sender.tab.id, sender.frameId]
+handleFrameFocused = ({tabId, frameId}) ->
   frameIdsForTab[tabId] ?= []
   frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId
   # Inform all frames that a frame has received the focus.
@@ -397,14 +353,15 @@ portHandlers =
   frames: Frames.onConnect.bind Frames
 
 sendRequestHandlers =
-  runBackgroundCommand: runBackgroundCommand
+  runBackgroundCommand: (request) -> BackgroundCommands[request.registryEntry.command] request
   getCurrentTabUrl: getCurrentTabUrl
   openUrlInNewTab: TabOperations.openUrlInNewTab
-  openUrlInIncognito: TabOperations.openUrlInIncognito
+  openUrlInIncognito: (request) -> chrome.windows.create incognito: true, url: Utils.convertToUrl request.url
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
-  openOptionsPageInNewTab: openOptionsPageInNewTab
+  openOptionsPageInNewTab: (request) ->
+    chrome.tabs.create url: chrome.runtime.getURL("pages/options.html"), index: request.tab.index + 1
   frameFocused: handleFrameFocused
-  nextFrame: (request) -> BackgroundCommands.nextFrame 1, request.frameId
+  nextFrame: BackgroundCommands.nextFrame
   copyToClipboard: copyToClipboard
   pasteFromClipboard: pasteFromClipboard
   selectSpecificTab: selectSpecificTab
@@ -456,7 +413,8 @@ showUpgradeMessage = ->
           Settings.set "previousVersion", currentVersion
           chrome.notifications.onClicked.addListener (id) ->
             if id == notificationId
-              TabOperations.openUrlInNewTab url: "https://github.com/philc/vimium#release-notes"
+              chrome.tabs.getSelected null, (tab) ->
+                TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium#release-notes"}
     else
       # We need to wait for the user to accept the "notifications" permission.
       chrome.permissions.onAdded.addListener showUpgradeMessage

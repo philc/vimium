@@ -50,7 +50,7 @@ Marks =
             duration: 1000
         else if markInfo.vimiumSecret != vimiumSecret
           # This is a different Vimium instantiation, so markInfo.tabId is definitely out of date.
-          @focusOrLaunch markInfo
+          @focusOrLaunch markInfo, req
         else
           # Check whether markInfo.tabId still exists.  According to here (https://developer.chrome.com/extensions/tabs),
           # tab Ids are unqiue within a Chrome session.  So, if we find a match, we can use it.
@@ -60,7 +60,7 @@ Marks =
               @gotoPositionInTab markInfo
             else
               # The original tab no longer exists.
-              @focusOrLaunch markInfo
+              @focusOrLaunch markInfo, req
 
   # Focus an existing tab and scroll to the given position within it.
   gotoPositionInTab: ({ tabId, scrollX, scrollY, markName }) ->
@@ -74,7 +74,7 @@ Marks =
 
   # The tab we're trying to find no longer exists.  We either find another tab with a matching URL and use it,
   # or we create a new tab.
-  focusOrLaunch: (markInfo) ->
+  focusOrLaunch: (markInfo, req) ->
     chrome.tabs.query { url: markInfo.url }, (tabs) =>
       if 0 < tabs.length
         # We have a matching tab: use it (prefering, if there are more than one, one in the current window).
@@ -82,7 +82,7 @@ Marks =
           @gotoPositionInTab extend markInfo, tabId: tab.id
       else
         # There is no existing matching tab, we'll have to create one.
-        TabOperations.openUrlInNewTab { url: @getBaseUrl markInfo.url }, (tab) =>
+        TabOperations.openUrlInNewTab (extend req, url: @getBaseUrl markInfo.url), (tab) =>
           # Note. tabLoadedHandlers is defined in "main.coffee".  The handler below will be called when the tab
           # is loaded, its DOM is ready and it registers with the background page.
           tabLoadedHandlers[tab.id] = => @gotoPositionInTab extend markInfo, tabId: tab.id

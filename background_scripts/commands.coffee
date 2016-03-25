@@ -298,7 +298,7 @@ defaultKeyMappings =
 # If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
 commandDescriptions =
   # Navigating the current page
-  showHelp: ["Show help", { background: true }]
+  showHelp: ["Show help", { background: true, noRepeat: true }]
   scrollDown: ["Scroll down", { passCountToFunction: true }]
   scrollUp: ["Scroll up", { passCountToFunction: true }]
   scrollLeft: ["Scroll left", { passCountToFunction: true }]
@@ -319,7 +319,7 @@ commandDescriptions =
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { passCountToFunction: true }]
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true }]
+  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true, noRepeat: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
@@ -353,28 +353,28 @@ commandDescriptions =
   goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
 
   # Manipulating tabs
-  nextTab: ["Go one tab right", { background: true, passCountToFunction: true }]
-  previousTab: ["Go one tab left", { background: true, passCountToFunction: true }]
-  visitPreviousTab: ["Go to previously-visited tab", { background: true, passCountToFunction: true }]
-  firstTab: ["Go to the first tab", { background: true, passCountToFunction: true }]
-  lastTab: ["Go to the last tab", { background: true, passCountToFunction: true }]
+  nextTab: ["Go one tab right", { background: true }]
+  previousTab: ["Go one tab left", { background: true }]
+  visitPreviousTab: ["Go to previously-visited tab", { background: true }]
+  firstTab: ["Go to the first tab", { background: true }]
+  lastTab: ["Go to the last tab", { background: true }]
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }]
-  duplicateTab: ["Duplicate current tab", { background: true, passCountToFunction: true, repeatLimit: 20 }]
-  removeTab: ["Close current tab", { background: true, passCountToFunction: true, repeatLimit:
+  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }]
+  removeTab: ["Close current tab", { background: true, repeatLimit:
     # Require confirmation to remove more tabs than we can restore.
     (if chrome.session then chrome.session.MAX_SESSION_RESULTS else 25) }]
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
 
-  moveTabToNewWindow: ["Move tab to new window", { background: true, passCountToFunction: true }]
-  togglePinTab: ["Pin/unpin current tab", { background: true }]
+  moveTabToNewWindow: ["Move tab to new window", { background: true }]
+  togglePinTab: ["Pin/unpin current tab", { background: true, noRepeat: true }]
 
   closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
   closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]
   closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}]
 
-  moveTabLeft: ["Move tab to the left", { background: true, passCountToFunction: true }]
-  moveTabRight: ["Move tab to the right", { background: true, passCountToFunction: true  }]
+  moveTabLeft: ["Move tab to the left", { background: true }]
+  moveTabRight: ["Move tab to the right", { background: true }]
 
   "Vomnibar.activate": ["Open URL, bookmark, or history entry", { topFrame: true }]
   "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { topFrame: true }]
@@ -384,7 +384,7 @@ commandDescriptions =
   "Vomnibar.activateEditUrl": ["Edit the current URL", { topFrame: true }]
   "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { topFrame: true }]
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true, passCountToFunction: true }]
+  nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
   mainFrame: ["Select the tab's main/top frame", { topFrame: true, noRepeat: true }]
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
