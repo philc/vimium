@@ -1,3 +1,4 @@
+window.vimiumDomTestsAreRunning = true
 
 # Install frontend event handlers.
 installListeners()
