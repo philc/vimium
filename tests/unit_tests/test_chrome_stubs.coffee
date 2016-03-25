@@ -16,6 +16,8 @@ global.document =
   addEventListener: ->
 
 exports.chrome =
+  areRunningVimiumTests: true
+
   runtime:
     getURL: ->
     getManifest: () ->
