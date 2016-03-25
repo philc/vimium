@@ -250,6 +250,10 @@ class VisualMode extends KeyHandlerMode
     unless @name == "caret"
       if @selection.type in [ "Caret", "Range" ]
         selectionRect = @selection.getRangeAt(0).getBoundingClientRect()
+        # Only for the tests.  We don't have getBoundingClientRect() in the tests, so we patch in a default
+        # rect here.
+        # TODO(smblott) Is there a way to stub this properly?
+        selectionRect ||= {top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0}
         selectionRect = Rect.intersect selectionRect, Rect.create 0, 0, window.innerWidth, window.innerHeight
         if selectionRect.height >= 0 and selectionRect.width >= 0
           # The selection is visible in the current viewport.
