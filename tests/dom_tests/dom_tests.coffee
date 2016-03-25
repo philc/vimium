@@ -744,12 +744,6 @@ context "Caret mode",
       By thy long grey beard and glittering eye,
       Now wherefore stopp'st thou me?
     </pre></p>
-    <p><pre>
-      The Bridegroom's doors are opened wide,
-      And I am next of kin;
-      The guests are met, the feast is set:
-      May'st hear the merry din.
-    </pre></p>
     """
     initializeModeState()
     @initialVisualMode = new VisualMode
@@ -793,6 +787,21 @@ context "Caret mode",
     sendKeyboardEvent "k"
     assert.equal "I", getSelection()
 
+  should "re-use an existing selection", ->
+    assert.equal "I", getSelection()
+    sendKeyboardEvents "ww"
+    assert.equal "a", getSelection()
+    sendKeyboardEvent "escape"
+    new VisualMode
+    assert.equal "a", getSelection()
+
+  should "not move the selection on caret/visual mode toggle", ->
+    sendKeyboardEvents "ww"
+    assert.equal "a", getSelection()
+    for key in "vcvcvc".split()
+      sendKeyboardEvent key
+      assert.equal "a", getSelection()
+
 context "Visual mode",
   setup ->
     document.getElementById("test-div").innerHTML = """
@@ -801,12 +810,6 @@ context "Visual mode",
       And he stoppeth one of three.
       By thy long grey beard and glittering eye,
       Now wherefore stopp'st thou me?
-    </pre></p>
-    <p><pre>
-      The Bridegroom's doors are opened wide,
-      And I am next of kin;
-      The guests are met, the feast is set:
-      May'st hear the merry din.
     </pre></p>
     """
     initializeModeState()

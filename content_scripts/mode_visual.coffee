@@ -197,7 +197,15 @@ class VisualMode extends KeyHandlerMode
     "P": -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
     "v": -> new VisualMode
     "V": -> new VisualLineMode
-    "c": -> @movement.collapseSelectionToAnchor(); new CaretMode
+    "c": ->
+      # If we're already in caret mode, or if the selection looks the same as it would in caret mode, then
+      # callapse to anchor (so that the caret-mode selection will seem unchanged).  Otherwise, we're in visual
+      # mode and the user has moved the focus, so collapse to that.
+      if @name == "caret" or @selection.toString().length <= 1
+        @movement.collapseSelectionToAnchor()
+      else
+        @movement.collapseSelectionToFocus()
+      new CaretMode
     "o": -> @movement.reverseSelection()
 
   constructor: (options = {}) ->
@@ -228,7 +236,11 @@ class VisualMode extends KeyHandlerMode
       commandHandler: @commandHandler.bind this
 
     @onExit (event = null) =>
-      @movement.collapseSelectionToAnchor()
+      # This mimics vim: when leaving visual mode via Escape, collapse to focus, otherwise collapse to anchor.
+      if event?.type == "keydown" and KeyboardUtils.isEscape(event) and @name != "caret"
+        @movement.collapseSelectionToFocus()
+      else
+        @movement.collapseSelectionToAnchor()
       # Don't leave the user in insert mode just because they happen to have selected an input.
       if document.activeElement and DomUtils.isEditable document.activeElement
         document.activeElement.blur() unless event?.type == "click"
