@@ -121,10 +121,8 @@ class NormalMode extends KeyHandlerMode
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
-    else if registryEntry.passCountToFunction
-      Utils.invokeCommandString registryEntry.command, [count]
     else
-      Utils.invokeCommandString registryEntry.command for i in [0...count]
+      Utils.invokeCommandString registryEntry.command, [count]
 
 installModes = ->
   # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and

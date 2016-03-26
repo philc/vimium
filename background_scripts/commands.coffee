@@ -16,8 +16,6 @@ Commands =
   # Registers a command, making it available to be optionally bound to a key.
   # options:
   #  - background: whether this command needs to be run against the background page.
-  #  - passCountToFunction: true if this command should have any digits which were typed prior to the
-  #    command passed to it. This is used to implement e.g. "closing of 3 tabs".
   addCommand: (command, description, options = {}) ->
     if command of @availableCommands
       BgUtils.log "#{command} is already defined! Check commands.coffee for duplicates."
@@ -298,58 +296,57 @@ defaultKeyMappings =
 commandDescriptions =
   # Navigating the current page
   showHelp: ["Show help", { background: true, noRepeat: true }]
-  scrollDown: ["Scroll down", { passCountToFunction: true }]
-  scrollUp: ["Scroll up", { passCountToFunction: true }]
-  scrollLeft: ["Scroll left", { passCountToFunction: true }]
-  scrollRight: ["Scroll right", { passCountToFunction: true }]
+  scrollDown: ["Scroll down"]
+  scrollUp: ["Scroll up"]
+  scrollLeft: ["Scroll left"]
+  scrollRight: ["Scroll right"]
 
-  scrollToTop: ["Scroll to the top of the page", { passCountToFunction: true }]
+  scrollToTop: ["Scroll to the top of the page"]
   scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }]
   scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
   scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
 
-  scrollPageDown: ["Scroll a page down", { passCountToFunction: true }]
-  scrollPageUp: ["Scroll a page up", { passCountToFunction: true }]
-  scrollFullPageDown: ["Scroll a full page down", { passCountToFunction: true }]
-  scrollFullPageUp: ["Scroll a full page up", { passCountToFunction: true }]
+  scrollPageDown: ["Scroll a page down"]
+  scrollPageUp: ["Scroll a page up"]
+  scrollFullPageDown: ["Scroll a full page down"]
+  scrollFullPageUp: ["Scroll a full page up"]
 
   reload: ["Reload the page", { noRepeat: true }]
   toggleViewSource: ["View page source", { noRepeat: true }]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
-  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard", { passCountToFunction: true }]
+  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true, noRepeat: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
-  passNextKey: ["Pass the next key to Chrome", { passCountToFunction: true }]
+  passNextKey: ["Pass the next key to Chrome"]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
-  focusInput: ["Focus the first text box on the page. Cycle between them using tab",
-    { passCountToFunction: true }]
+  focusInput: ["Focus the first text box on the page. Cycle between them using tab"]
 
-  "LinkHints.activateMode": ["Open a link in the current tab", { passCountToFunction: true }]
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab", { passCountToFunction: true }]
-  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it", { passCountToFunction: true }]
+  "LinkHints.activateMode": ["Open a link in the current tab"]
+  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
+  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"]
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window", { passCountToFunction: true }]
-  "LinkHints.activateModeToDownloadLink": ["Download link url", { passCountToFunction: true }]
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
+  "LinkHints.activateModeToDownloadLink": ["Download link url"]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
-  performFind: ["Cycle forward to the next find match", { passCountToFunction: true }]
-  performBackwardsFind: ["Cycle backward to the previous find match", { passCountToFunction: true }]
+  performFind: ["Cycle forward to the next find match"]
+  performBackwardsFind: ["Cycle backward to the previous find match"]
 
   goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }]
   goNext: ["Follow the link labeled next or >", { noRepeat: true }]
 
   # Navigating your history
-  goBack: ["Go back in history", { passCountToFunction: true }]
-  goForward: ["Go forward in history", { passCountToFunction: true }]
+  goBack: ["Go back in history"]
+  goForward: ["Go forward in history"]
 
   # Navigating the URL hierarchy
-  goUp: ["Go up the URL hierarchy", { passCountToFunction: true }]
-  goToRoot: ["Go to root of current URL hierarchy", { passCountToFunction: true }]
+  goUp: ["Go up the URL hierarchy"]
+  goToRoot: ["Go to root of current URL hierarchy"]
 
   # Manipulating tabs
   nextTab: ["Go one tab right", { background: true }]
