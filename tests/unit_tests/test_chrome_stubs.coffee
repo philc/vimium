@@ -30,6 +30,7 @@ exports.chrome =
   extension:
     getURL: (path) -> path
     getBackgroundPage: -> {}
+    getViews: -> []
 
   tabs:
     onSelectionChanged:

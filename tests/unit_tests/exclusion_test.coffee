@@ -16,6 +16,7 @@ extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
 extend(global,require "../../lib/settings.js")
 extend(global,require "../../lib/clipboard.js")
+extend(global, require "../../background_scripts/bg_utils.js")
 extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
@@ -70,3 +71,7 @@ context "Excluded URLs and pass keys",
     assert.isTrue rule.isEnabledForUrl
     assert.equal "abcdef", rule.passKeys
 
+  should "be enabled for malformed regular expressions", ->
+    Exclusions.postUpdateHook [ { pattern: "http*://www.bad-regexp.com/*[a-", passKeys: "" } ]
+    rule = isEnabledForUrl({ url: 'http://www.bad-regexp.com/pages' })
+    assert.isTrue rule.isEnabledForUrl

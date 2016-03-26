@@ -10,6 +10,7 @@ RegexpCache =
         try
           new RegExp("^" + pattern.replace(/\*/g, ".*") + "$")
         catch
+          BgUtils.log "bad regexp in exclusion rule: #{pattern}"
           /^$/ # Match the empty string.
 
 # The Exclusions class manages the exclusion rule setting.  An exclusion is an object with two attributes:
