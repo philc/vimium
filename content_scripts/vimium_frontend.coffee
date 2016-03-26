@@ -122,7 +122,7 @@ class NormalMode extends KeyHandlerMode
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
     else
-      Utils.invokeCommandString registryEntry.command, [count]
+      Utils.invokeCommandString registryEntry.command, count
 
 installModes = ->
   # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
@@ -153,7 +153,7 @@ initializePreDomReady = ->
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
-      Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
+      Utils.invokeCommandString registryEntry.command, sourceFrameId, registryEntry if DomUtils.isTopFrame()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # These requests are intended for the background page, but they're delivered to the options page too.
