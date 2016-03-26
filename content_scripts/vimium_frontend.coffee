@@ -503,8 +503,8 @@ findAndFocus = (backwards) ->
   else
     HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
 
-performFind = -> findAndFocus false
-performBackwardsFind = -> findAndFocus true
+performFind = (count) -> findAndFocus false for [0...count] by 1
+performBackwardsFind = (count) -> findAndFocus true for [0...count] by 1
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode

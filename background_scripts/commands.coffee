@@ -337,8 +337,8 @@ commandDescriptions =
   "LinkHints.activateModeToDownloadLink": ["Download link url", { passCountToFunction: true }]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
-  performFind: ["Cycle forward to the next find match"]
-  performBackwardsFind: ["Cycle backward to the previous find match"]
+  performFind: ["Cycle forward to the next find match", { passCountToFunction: true }]
+  performBackwardsFind: ["Cycle backward to the previous find match", { passCountToFunction: true }]
 
   goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }]
   goNext: ["Follow the link labeled next or >", { noRepeat: true }]
