@@ -146,7 +146,8 @@ initializePreDomReady = ->
   requestHandlers =
     toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
-    getScrollPosition: -> if frameId == 0 then scrollX: window.scrollX, scrollY: window.scrollY
+    getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
+      sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
     setScrollPosition: setScrollPosition
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
@@ -158,7 +159,7 @@ initializePreDomReady = ->
     # These requests are intended for the background page, but they're delivered to the options page too.
     unless request.handler and not request.name
       if isEnabledForUrl or request.name in ["checkEnabledAfterURLChange", "runInTopFrame"]
-        sendResponse requestHandlers[request.name] request, sender
+        requestHandlers[request.name] request, sender, sendResponse
     false # Ensure that the sendResponse callback is freed.
 
 # Wrapper to install event listeners.  Syntactic sugar.
