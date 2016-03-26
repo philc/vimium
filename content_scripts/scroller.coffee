@@ -283,26 +283,5 @@ Scroller =
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
 
-  # Scroll element to position top, left.  This is used by edit mode to ensure that the caret remains visible
-  # in text inputs (not contentEditable).
-  scrollToPosition: (element, top, left) ->
-    activatedElement ||= document.body and firstScrollableElement()
-
-    # Scroll down, "y".
-    amount = top + 20 - (element.clientHeight + element.scrollTop)
-    CoreScroller.scroll element, "y", amount, false if 0 < amount
-
-    # Scroll up, "y".
-    amount = top - (element.scrollTop) - 5
-    CoreScroller.scroll element, "y", amount, false if amount < 0
-
-    # Scroll down, "x".
-    amount = left + 20 - (element.clientWidth + element.scrollLeft)
-    CoreScroller.scroll element, "x", amount, false if 0 < amount
-
-    # Scroll up, "x".
-    amount = left - (element.scrollLeft) - 5
-    CoreScroller.scroll element, "x", amount, false if amount < 0
-
 root = exports ? window
 root.Scroller = Scroller

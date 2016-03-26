@@ -109,15 +109,14 @@ class Mode
         "scroll": (event) => @alwaysContinueBubbling => @exit event
 
     # Some modes are singletons: there may be at most one instance active at any time.  A mode is a singleton
-    # if @options.singleton is truthy.  The value of @options.singleton should be the key which is intended to
-    # be unique.  New instances deactivate existing instances with the same key.
+    # if @options.singleton is set.  The value of @options.singleton should be the key which is intended to be
+    # unique.  New instances deactivate existing instances with the same key.
     if @options.singleton
-      do =>
-        singletons = Mode.singletons ||= {}
-        key = Utils.getIdentity @options.singleton
-        @onExit -> delete singletons[key]
-        @deactivateSingleton @options.singleton
-        singletons[key] = this
+      singletons = Mode.singletons ||= {}
+      key = @options.singleton
+      @onExit -> delete singletons[key]
+      singletons[key]?.exit()
+      singletons[key] = this
 
     # If @options.passInitialKeyupEvents is set, then we pass initial non-printable keyup events to the page
     # or to other extensions (because the corresponding keydown events were passed).  This is used when
@@ -181,9 +180,6 @@ class Mode
       Mode.modes = Mode.modes.filter (mode) => mode != this
       @modeIsActive = false
       @setIndicator()
-
-  deactivateSingleton: (singleton) ->
-    Mode.singletons?[Utils.getIdentity singleton]?.exit()
 
   # Shorthand for an otherwise long name.  This wraps a handler with an arbitrary return value, and always
   # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common

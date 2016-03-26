@@ -392,8 +392,6 @@ extend window,
                 selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
                 selectedInputIndex %= hints.length
                 hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-                # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
-                @deactivateSingleton visibleInputs[selectedInputIndex].element
                 DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
                 @suppressEvent
               else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
@@ -405,8 +403,6 @@ extend window,
             id: "vimiumInputMarkerContainer"
             className: "vimiumReset"
 
-          # Deactivate any active modes on this element (PostFindMode, or a suspended edit mode).
-          @deactivateSingleton visibleInputs[selectedInputIndex].element
           DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
           if visibleInputs.length == 1
             @exit()
@@ -419,7 +415,7 @@ extend window,
           DomUtils.removeElement @hintContainingDiv
           if mode and document.activeElement and DomUtils.isEditable document.activeElement
             new mode
-              singleton: document.activeElement
+              singleton: "post-find-mode/focus-input"
               targetElement: document.activeElement
               indicator: false
 

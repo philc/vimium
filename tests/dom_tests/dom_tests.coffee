@@ -1,3 +1,4 @@
+window.vimiumDomTestsAreRunning = true
 
 # Install frontend event handlers.
 installListeners()
@@ -6,6 +7,9 @@ Frame.registerFrameId chromeFrameId: 0
 
 installListener = (element, event, callback) ->
   element.addEventListener event, (-> callback.apply(this, arguments)), true
+
+getSelection = ->
+    window.getSelection().toString()
 
 # A count of the number of keyboard events received by the page (for the most recently-sent keystroke).  E.g.,
 # we expect 3 if the keystroke is passed through (keydown, keypress, keyup), and 0 if it is suppressed.
@@ -16,6 +20,9 @@ sendKeyboardEvent = (key) ->
   response = window.callPhantom
     request: "keyboard"
     key: key
+
+sendKeyboardEvents = (keys) ->
+  sendKeyboardEvent ch for ch in keys.split()
 
 # These listeners receive events after the main frontend listeners, and do not receive suppressed events.
 for type in [ "keydown", "keypress", "keyup" ]
@@ -326,23 +333,23 @@ context "Filtered link hints",
       @linkHints.deactivateMode()
 
     should "score start-of-word matches highly", ->
-      sendKeyboardEvent ch for ch in "bu".split()
+      sendKeyboardEvents "bu"
       assert.equal "6", @getActiveHintMarker()
 
     should "score start-of-text matches highly (br)", ->
-      sendKeyboardEvent ch for ch in "on".split()
+      sendKeyboardEvents "on"
       assert.equal "2", @getActiveHintMarker()
 
     should "score whole-word matches highly", ->
-      sendKeyboardEvent ch for ch in "boy".split()
+      sendKeyboardEvents "boy"
       assert.equal "1", @getActiveHintMarker()
 
     should "score shorter texts more highly", ->
-      sendKeyboardEvent ch for ch in "stood".split()
+      sendKeyboardEvents "stood"
       assert.equal "5", @getActiveHintMarker()
 
     should "use tab to select the active hint", ->
-      sendKeyboardEvent ch for ch in "abc".split()
+      sendKeyboardEvents "abc"
       assert.equal "8", @getActiveHintMarker()
       sendKeyboardEvent "tab"
       assert.equal "7", @getActiveHintMarker()
@@ -728,6 +735,146 @@ context "Triggering insert mode",
     document.getElementById("fifth").focus()
     assert.isFalse InsertMode.permanentInstance.isActive()
 
+context "Caret mode",
+  setup ->
+    document.getElementById("test-div").innerHTML = """
+    <p><pre>
+      It is an ancient Mariner,
+      And he stoppeth one of three.
+      By thy long grey beard and glittering eye,
+      Now wherefore stopp'st thou me?
+    </pre></p>
+    """
+    initializeModeState()
+    @initialVisualMode = new VisualMode
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "enter caret mode", ->
+    assert.isFalse @initialVisualMode.modeIsActive
+    assert.equal "I", getSelection()
+
+  should "exit caret mode on escape", ->
+    sendKeyboardEvent "escape"
+    assert.equal "", getSelection()
+
+  should "move caret with l and h", ->
+    assert.equal "I", getSelection()
+    sendKeyboardEvent "l"
+    assert.equal "t", getSelection()
+    sendKeyboardEvent "h"
+    assert.equal "I", getSelection()
+
+  should "move caret with w and b", ->
+    assert.equal "I", getSelection()
+    sendKeyboardEvent "w"
+    assert.equal "i", getSelection()
+    sendKeyboardEvent "b"
+    assert.equal "I", getSelection()
+
+  should "move caret with e", ->
+    assert.equal "I", getSelection()
+    sendKeyboardEvent "e"
+    assert.equal " ", getSelection()
+    sendKeyboardEvent "e"
+    assert.equal " ", getSelection()
+
+  should "move caret with j and k", ->
+    assert.equal "I", getSelection()
+    sendKeyboardEvent "j"
+    assert.equal "A", getSelection()
+    sendKeyboardEvent "k"
+    assert.equal "I", getSelection()
+
+  should "re-use an existing selection", ->
+    assert.equal "I", getSelection()
+    sendKeyboardEvents "ww"
+    assert.equal "a", getSelection()
+    sendKeyboardEvent "escape"
+    new VisualMode
+    assert.equal "a", getSelection()
+
+  should "not move the selection on caret/visual mode toggle", ->
+    sendKeyboardEvents "ww"
+    assert.equal "a", getSelection()
+    for key in "vcvcvc".split()
+      sendKeyboardEvent key
+      assert.equal "a", getSelection()
+
+context "Visual mode",
+  setup ->
+    document.getElementById("test-div").innerHTML = """
+    <p><pre>
+      It is an ancient Mariner,
+      And he stoppeth one of three.
+      By thy long grey beard and glittering eye,
+      Now wherefore stopp'st thou me?
+    </pre></p>
+    """
+    initializeModeState()
+    @initialVisualMode = new VisualMode
+    sendKeyboardEvent "w"
+    sendKeyboardEvent "w"
+    # We should now be at the "a" of "an".
+    sendKeyboardEvent "v"
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "select word with e", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvent "e"
+    assert.equal "an", getSelection()
+    sendKeyboardEvent "e"
+    assert.equal "an ancient", getSelection()
+
+  should "select opposite end of the selection with o", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvent "e"
+    assert.equal "an", getSelection()
+    sendKeyboardEvent "e"
+    assert.equal "an ancient", getSelection()
+    sendKeyboardEvents "ow"
+    assert.equal "ancient", getSelection()
+    sendKeyboardEvents "oe"
+    assert.equal "ancient Mariner", getSelection()
+
+  should "accept a count", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "2e"
+    assert.equal "an ancient", getSelection()
+
+  should "select a word", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "aw"
+    assert.equal "an", getSelection()
+
+  should "select a word with a count", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "2aw"
+    assert.equal "an ancient", getSelection()
+
+  should "select a word with a count", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "2aw"
+    assert.equal "an ancient", getSelection()
+
+  should "select to start of line", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "0"
+    assert.equal "It is", getSelection().trim()
+
+  should "select to end of line", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "$"
+    assert.equal "an ancient Mariner,", getSelection()
+
+  should "re-enter caret mode", ->
+    assert.equal "a", getSelection()
+    sendKeyboardEvents "cww"
+    assert.equal "M", getSelection()
+
 context "Mode utilities",
   setup ->
     initializeModeState()
@@ -744,7 +891,7 @@ context "Mode utilities",
     count = 0
 
     class Test extends Mode
-      constructor: -> count += 1; super singleton: Test
+      constructor: -> count += 1; super singleton: "test"
       exit: -> count -= 1; super()
 
     assert.isTrue count == 0

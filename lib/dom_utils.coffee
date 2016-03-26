@@ -306,51 +306,6 @@ DomUtils =
     t = o || t?.parentNode
     t
 
-  # This calculates the caret coordinates within an input element.  It is used by edit mode to calculate the
-  # caret position for scrolling.  It creates a hidden div contain a mirror of element, and all of the text
-  # from element up to position, then calculates the scroll position.
-  # From: https://github.com/component/textarea-caret-position/blob/master/index.js
-  getCaretCoordinates: do ->
-    # The properties that we copy to the mirrored div.
-    properties = [
-      'direction', 'boxSizing', 'width', 'height', 'overflowX', 'overflowY',
-      'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
-      'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
-      'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'fontSizeAdjust',
-      'lineHeight', 'fontFamily',
-      'textAlign', 'textTransform', 'textIndent', 'textDecoration',
-      'letterSpacing', 'wordSpacing' ]
-
-    (element, position) ->
-      div = @createElement "div"
-      div.id = "vimium-input-textarea-caret-position-mirror-div"
-      document.body.appendChild div
-
-      style = div.style
-      computed = getComputedStyle element
-
-      style.whiteSpace = "pre-wrap"
-      style.wordWrap = "break-word" if element.nodeName.toLowerCase() != "input"
-      style.position = "absolute"
-      style.visibility = "hidden"
-      style[prop] = computed[prop] for prop in properties
-      style.overflow = "hidden"
-
-      div.textContent = element.value.substring 0, position
-      if element.nodeName.toLowerCase() == "input"
-        div.textContent = div.textContent.replace /\s/g, "\u00a0"
-
-      span = @createElement "span"
-      span.textContent = element.value.substring(position) || "."
-      div.appendChild span
-
-      coordinates =
-        top: span.offsetTop + parseInt computed["borderTopWidth"]
-        left: span.offsetLeft + parseInt computed["borderLeftWidth"]
-
-      document.body.removeChild div
-      coordinates
-
   getSelectionFocusElement: ->
     sel = window.getSelection()
     if not sel.focusNode?
