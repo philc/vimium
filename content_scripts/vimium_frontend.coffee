@@ -34,7 +34,7 @@ frameId = null
 # For debugging only. This logs to the console on the background page.
 bgLog = (args...) ->
   args = (arg.toString() for arg in args)
-  chrome.runtime.sendMessage handler: "log", frameId: frameId, message: args.join " "
+  chrome.runtime.sendMessage handler: "log", message: args.join " "
 
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
@@ -120,7 +120,7 @@ class NormalMode extends KeyHandlerMode
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
     else if registryEntry.background
-      chrome.runtime.sendMessage {handler: "runBackgroundCommand", frameId, registryEntry, count}
+      chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
     else if registryEntry.passCountToFunction
       Utils.invokeCommandString registryEntry.command, [count]
     else
@@ -191,7 +191,7 @@ installListeners = Utils.makeIdempotent ->
 #
 onFocus = (event) ->
   if event.target == window
-    chrome.runtime.sendMessage handler: "frameFocused", frameId: frameId
+    chrome.runtime.sendMessage handler: "frameFocused"
     checkIfEnabledForUrl true
 
 # We install these listeners directly (that is, we don't use installListener) because we still need to receive
@@ -263,7 +263,7 @@ focusThisFrame = (request) ->
     if window.innerWidth < 3 or window.innerHeight < 3 or document.body?.tagName.toLowerCase() == "frameset"
       # This frame is too small to focus or it's a frameset. Cancel and tell the background page to focus the
       # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See #1317.
-      chrome.runtime.sendMessage handler: "nextFrame", frameId: frameId
+      chrome.runtime.sendMessage handler: "nextFrame"
       return
   window.focus()
   flashFrame() if request.highlight

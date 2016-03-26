@@ -68,7 +68,7 @@ chrome.runtime.onConnect.addListener (port, name) ->
     port.onMessage.addListener portHandlers[port.name] port.sender, port
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
-  request = extend {count: 1}, extend request, tab: sender.tab, tabId: sender.tab.id
+  request = extend {count: 1, frameId: sender.frameId}, extend request, tab: sender.tab, tabId: sender.tab.id
   if (sendRequestHandlers[request.handler])
     sendResponse(sendRequestHandlers[request.handler](request, sender))
   # Ensure the sendResponse callback is freed.
