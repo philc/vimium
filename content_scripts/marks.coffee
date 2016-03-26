@@ -60,20 +60,25 @@ Marks =
       suppressAllKeyboardEvents: true
       keypress: (event) =>
         @exit =>
-          keyChar = String.fromCharCode event.charCode
-          if @isGlobalMark event, keyChar
-            chrome.runtime.sendMessage
-              handler: 'gotoMark'
-              markName: keyChar
+          markName = String.fromCharCode event.charCode
+          if @isGlobalMark event, markName
+            # This key must match @getLocationKey() in the back end.
+            key = "vimiumGlobalMark|#{markName}"
+            chrome.storage.sync.get key, (items) ->
+              if key of items
+                chrome.runtime.sendMessage handler: 'gotoMark', markName: markName
+                HUD.showForDuration "Jumped to global mark '#{markName}'", 1000
+              else
+                HUD.showForDuration "Global mark not set '#{markName}'", 1000
           else
-            markString = @localRegisters[keyChar] ? localStorage[@getLocationKey keyChar]
+            markString = @localRegisters[markName] ? localStorage[@getLocationKey markName]
             if markString?
               @setPreviousPosition()
               position = JSON.parse markString
               window.scrollTo position.scrollX, position.scrollY
-              @showMessage "Jumped to local mark", keyChar
+              @showMessage "Jumped to local mark", markName
             else
-              @showMessage "Local mark not set", keyChar
+              @showMessage "Local mark not set", markName
 
 root = exports ? window
 root.Marks =  Marks

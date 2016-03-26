@@ -144,10 +144,9 @@ initializePreDomReady = ->
   checkIfEnabledForUrl()
 
   requestHandlers =
-    showHUDforDuration: handleShowHUDforDuration
     toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
-    getScrollPosition: -> scrollX: window.scrollX, scrollY: window.scrollY
+    getScrollPosition: -> if frameId == 0 then scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: setScrollPosition
     # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
     frameFocused: ->
@@ -219,10 +218,6 @@ Frame =
       # We disable the content scripts when we lose contact with the background page.
       isEnabledForUrl = false
       window.removeEventListener "focus", onFocus
-
-handleShowHUDforDuration = ({ text, duration }) ->
-  if DomUtils.isTopFrame()
-    DomUtils.documentReady -> HUD.showForDuration text, duration
 
 setScrollPosition = ({ scrollX, scrollY }) ->
   if DomUtils.isTopFrame()

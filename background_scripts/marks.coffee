@@ -23,9 +23,8 @@ Marks =
         @saveMark markInfo
       else
         # The front-end frame hasn't provided the scroll position (because it's not the top frame within its
-        # tab).  We need to ask the top frame what its scroll position is. (With the frame Id set to 0, below,
-        # the request will only be handled by the top frame within the tab.)
-        chrome.tabs.sendMessage sender.tab.id, name: "getScrollPosition", frameId: 0, (response) =>
+        # tab).  We need to ask the top frame what its scroll position is.
+        chrome.tabs.sendMessage sender.tab.id, name: "getScrollPosition", (response) =>
           @saveMark extend markInfo, scrollX: response.scrollX, scrollY: response.scrollY
 
   saveMark: (markInfo) ->
@@ -42,13 +41,7 @@ Marks =
       key = @getLocationKey req.markName
       chrome.storage.sync.get key, (items) =>
         markInfo = items[key]
-        if not markInfo
-          # The mark is not defined.
-          chrome.tabs.sendMessage sender.tab.id,
-            name: "showHUDforDuration",
-            text: "Global mark not set: '#{req.markName}'."
-            duration: 1000
-        else if markInfo.vimiumSecret != vimiumSecret
+        if markInfo.vimiumSecret != vimiumSecret
           # This is a different Vimium instantiation, so markInfo.tabId is definitely out of date.
           @focusOrLaunch markInfo, req
         else
@@ -64,13 +57,8 @@ Marks =
 
   # Focus an existing tab and scroll to the given position within it.
   gotoPositionInTab: ({ tabId, scrollX, scrollY, markName }) ->
-    chrome.tabs.update tabId, { selected: true }, ->
-      chrome.tabs.sendMessage tabId,
-        { name: "setScrollPosition", scrollX: scrollX, scrollY: scrollY }, ->
-          chrome.tabs.sendMessage tabId,
-            name: "showHUDforDuration",
-            text: "Jumped to global mark '#{markName}'."
-            duration: 1000
+    chrome.tabs.update tabId, {selected: true}, ->
+      chrome.tabs.sendMessage tabId, {name: "setScrollPosition", scrollX, scrollY}
 
   # The tab we're trying to find no longer exists.  We either find another tab with a matching URL and use it,
   # or we create a new tab.
