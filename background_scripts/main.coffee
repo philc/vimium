@@ -150,7 +150,7 @@ TabOperations =
   openUrlInCurrentTab: (request) ->
     chrome.tabs.update request.tabId, url: Utils.convertToUrl request.url
 
-  # Opens request.url in new tab and switches to it if request.selected is true.
+  # Opens request.url in new tab and switches to it.
   openUrlInNewTab: (request, callback = (->)) ->
     tabConfig =
       url: Utils.convertToUrl request.url

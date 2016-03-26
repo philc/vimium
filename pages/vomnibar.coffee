@@ -325,7 +325,6 @@ class BackgroundCompleter
       chrome.runtime.sendMessage
         handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
         url: url
-        selected: openInNewTab
 
     switchToTab: (tabId) -> ->
       chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
