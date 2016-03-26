@@ -121,10 +121,8 @@ class NormalMode extends KeyHandlerMode
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
-    else if registryEntry.passCountToFunction
-      Utils.invokeCommandString registryEntry.command, [count]
     else
-      Utils.invokeCommandString registryEntry.command for i in [0...count]
+      Utils.invokeCommandString registryEntry.command, count
 
 installModes = ->
   # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
@@ -155,7 +153,7 @@ initializePreDomReady = ->
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
-      Utils.invokeCommandString registryEntry.command, [sourceFrameId, registryEntry] if DomUtils.isTopFrame()
+      Utils.invokeCommandString registryEntry.command, sourceFrameId, registryEntry if DomUtils.isTopFrame()
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # These requests are intended for the background page, but they're delivered to the options page too.
@@ -499,8 +497,8 @@ findAndFocus = (backwards) ->
   else
     HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
 
-performFind = -> findAndFocus false
-performBackwardsFind = -> findAndFocus true
+performFind = (count) -> findAndFocus false for [0...count] by 1
+performBackwardsFind = (count) -> findAndFocus true for [0...count] by 1
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode

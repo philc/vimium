@@ -52,7 +52,7 @@ Marks =
             localStorage[@getLocationKey keyChar] = @getMarkString()
             @showMessage "Created local mark", keyChar
 
-  activateGotoMode: (registryEntry) ->
+  activateGotoMode: ->
     @mode = new Mode
       name: "goto-mark"
       indicator: "Go to mark..."
