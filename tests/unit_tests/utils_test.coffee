@@ -125,3 +125,7 @@ context "makeIdempotent",
     assert.equal 1, @count
     @func()
     assert.equal 1, @count
+
+context "distinctCharacters",
+  should "eliminate duplicate characters", ->
+    assert.equal "abc", Utils.distinctCharacters "bbabaabbacabbbab"

@@ -15,12 +15,13 @@ root.Marks =
 extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.44'
 extend(global,require "../../lib/settings.js")
+extend(global,require "../../lib/clipboard.js")
 extend(global, require "../../background_scripts/exclusions.js")
 extend(global, require "../../background_scripts/commands.js")
 extend(global, require "../../background_scripts/main.js")
 
 isEnabledForUrl = (request) ->
-  Frames.isEnabledForUrl {request, tabId: 0, port: postMessage: (request) -> request}
+  Exclusions.isEnabledForUrl request.url
 
 # These tests cover only the most basic aspects of excluded URLs and passKeys.
 #
@@ -34,6 +35,9 @@ context "Excluded URLs and pass keys",
         { pattern: "http*://www.facebook.com/*", passKeys: "cdcd" }
         { pattern: "http*://www.bbc.com/*", passKeys: "" }
         { pattern: "http*://www.bbc.com/*", passKeys: "ab" }
+        { pattern: "http*://www.example.com/*", passKeys: "a bb c bba a" }
+        { pattern: "http*://www.duplicate.com/*", passKeys: "ace" }
+        { pattern: "http*://www.duplicate.com/*", passKeys: "bdf" }
       ])
 
   should "be disabled for excluded sites", ->
@@ -55,4 +59,14 @@ context "Excluded URLs and pass keys",
     rule = isEnabledForUrl({ url: 'http://www.twitter.com/pages' })
     assert.isTrue rule.isEnabledForUrl
     assert.isFalse rule.passKeys
+
+  should "handle spaces and duplicates in passkeys", ->
+    rule = isEnabledForUrl({ url: 'http://www.example.com/pages' })
+    assert.isTrue rule.isEnabledForUrl
+    assert.equal "abc", rule.passKeys
+
+  should "handle multiple passkeys rules", ->
+    rule = isEnabledForUrl({ url: 'http://www.duplicate.com/pages' })
+    assert.isTrue rule.isEnabledForUrl
+    assert.equal "abcdef", rule.passKeys
 

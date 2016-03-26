@@ -162,10 +162,8 @@ Utils =
 
   # Transform "zjkjkabz" into "abjkz".
   distinctCharacters: (str) ->
-    unique = ""
-    for char in str.split("").sort()
-      unique += char unless 0 <= unique.indexOf char
-    unique
+    chars = str.split("").sort()
+    (ch for ch, index in chars when index == 0 or ch != chars[index-1]).join ""
 
   # Compares two version strings (e.g. "1.1" and "1.5") and returns
   # -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.

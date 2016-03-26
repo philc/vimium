@@ -74,12 +74,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
   # Ensure the sendResponse callback is freed.
   return false)
 
-#
-# Used by the content scripts to get their full URL. This is needed for URLs like "view-source:http:# .."
-# because window.location doesn't know anything about the Chrome-specific "view-source:".
-#
-getCurrentTabUrl = (request, sender) -> sender.tab.url
-
 onURLChange = (details) ->
   chrome.tabs.sendMessage details.tabId, name: "checkEnabledAfterURLChange"
 
@@ -161,23 +155,12 @@ TabOperations =
     chrome.tabs.create tabConfig, callback
 
 #
-# Copies or pastes some data (request.data) to/from the clipboard.
-# We return null to avoid the return value from the copy operations being passed to sendResponse.
-#
-copyToClipboard = (request) -> Clipboard.copy(request.data); null
-pasteFromClipboard = (request) -> Clipboard.paste()
-
-#
 # Selects the tab with the ID specified in request.id
 #
 selectSpecificTab = (request) ->
   chrome.tabs.get(request.id, (tab) ->
     chrome.windows.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { selected: true }))
-
-repeatCommand = (command) -> (request) ->
-  if 0 < request.count--
-    command request, (request) -> (repeatCommand command) request
 
 moveTab = ({count, tab, registryEntry}) ->
   count = -count if registryEntry.command == "moveTabLeft"
@@ -188,12 +171,14 @@ moveTab = ({count, tab, registryEntry}) ->
     chrome.tabs.move tab.id,
       index: Math.max minIndex, Math.min maxIndex, tab.index + count
 
-# Start action functions
+mkRepeatCommand = (command) -> (request) ->
+  if 0 < request.count--
+    command request, (request) -> (mkRepeatCommand command) request
 
-# These are commands which are bound to keystroke which must be handled by the background page. They are
+# These are commands which are bound to keystrokes which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  createTab: repeatCommand (request, callback) ->
+  createTab: mkRepeatCommand (request, callback) ->
     request.url ?= do ->
       url = Settings.get "newTabUrl"
       if url == "pages/blank.html"
@@ -202,7 +187,7 @@ BackgroundCommands =
       else
         url
     TabOperations.openUrlInNewTab request, (tab) -> callback extend request, {tab, tabId: tab.id}
-  duplicateTab: repeatCommand (request, callback) ->
+  duplicateTab: mkRepeatCommand (request, callback) ->
     chrome.tabs.duplicate request.tabId, (tab) -> callback extend request, {tab, tabId: tab.id}
   moveTabToNewWindow: ({count, tab}) ->
     chrome.tabs.query {currentWindow: true}, (tabs) ->
@@ -220,7 +205,7 @@ BackgroundCommands =
       activeTabIndex = tab.index
       startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
       chrome.tabs.remove (tab.id for tab in tabs[startTabIndex...startTabIndex + count])
-  restoreTab: repeatCommand (request, callback) -> chrome.sessions.restore null, callback request
+  restoreTab: mkRepeatCommand (request, callback) -> chrome.sessions.restore null, callback request
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
   openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
   togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
@@ -242,13 +227,14 @@ BackgroundCommands =
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction, {tab: activeTab}) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
-    shouldDelete = switch direction
-      when "before"
-        (index) -> index < activeTab.index
-      when "after"
-        (index) -> index > activeTab.index
-      when "both"
-        (index) -> index != activeTab.index
+    shouldDelete =
+      switch direction
+        when "before"
+          (index) -> index < activeTab.index
+        when "after"
+          (index) -> index > activeTab.index
+        when "both"
+          (index) -> index != activeTab.index
 
     chrome.tabs.remove (tab.id for tab in tabs when not tab.pinned and shouldDelete tab.index)
 
@@ -270,14 +256,12 @@ selectTab = (direction, {count, tab}) ->
       chrome.tabs.update tabs[toSelect].id, selected: true
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
-  return unless changeInfo.status == "loading" # only do this once per URL change
+  return unless changeInfo.status == "loading" # Only do this once per URL change.
   cssConf =
     allFrames: true
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
-
-# End action functions
 
 Frames =
   onConnect: (sender, port) ->
@@ -293,7 +277,7 @@ Frames =
       # we tidy up in the chrome.tabs.onRemoved listener.  This elides any dependency on the order in which
       # events happen (e.g. on navigation, a new top frame registers before the old one unregisters).
       if tabId of frameIdsForTab and frameId != 0
-        frameIdsForTab[tabId] = frameIdsForTab[tabId].filter (fId) -> fId != frameId
+        frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
 
     # Return our onMessage handler for this port.
     (request, port) =>
@@ -301,10 +285,7 @@ Frames =
 
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
-    rule = Exclusions.getRule request.url
-    enabledState =
-      isEnabledForUrl: not rule or 0 < rule.passKeys.length
-      passKeys: rule?.passKeys ? ""
+    enabledState = Exclusions.isEnabledForUrl request.url
 
     if request.frameIsFocused
       chrome.browserAction.setIcon tabId: tabId, path:
@@ -315,7 +296,6 @@ Frames =
         else
           "icons/browser_action_enabled.png"
 
-    # Send the response.  The tests require this to be last.
     port.postMessage extend request, enabledState
 
   domReady: ({tabId, frameId}) ->
@@ -339,14 +319,6 @@ cycleToFrame = (frames, frameId, count = 0) ->
   count = (count + Math.max 0, frames.indexOf frameId) % frames.length
   [frames[count..]..., frames[0...count]...]
 
-# Send a message to all frames in the current tab.
-sendMessageToFrames = (request, sender) ->
-  chrome.tabs.sendMessage sender.tab.id, request.message
-
-# For debugging only. This allows content scripts to log messages to the extension's logging page.
-bgLog = (request, sender) ->
-  BgUtils.log "#{request.frameId} #{request.message}", sender
-
 # Port handler mapping
 portHandlers =
   completions: handleCompletions
@@ -354,22 +326,26 @@ portHandlers =
 
 sendRequestHandlers =
   runBackgroundCommand: (request) -> BackgroundCommands[request.registryEntry.command] request
-  getCurrentTabUrl: getCurrentTabUrl
-  openUrlInNewTab: TabOperations.openUrlInNewTab
+  # getCurrentTabUrl is used by the content scripts to get their full URL, because window.location cannot help
+  # with Chrome-specific URLs like "view-source:http:..".
+  getCurrentTabUrl: ({tab}) -> tab.url
+  openUrlInNewTab: (request) -> TabOperations.openUrlInNewTab request
   openUrlInIncognito: (request) -> chrome.windows.create incognito: true, url: Utils.convertToUrl request.url
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
   openOptionsPageInNewTab: (request) ->
     chrome.tabs.create url: chrome.runtime.getURL("pages/options.html"), index: request.tab.index + 1
   frameFocused: handleFrameFocused
   nextFrame: BackgroundCommands.nextFrame
-  copyToClipboard: copyToClipboard
-  pasteFromClipboard: pasteFromClipboard
+  copyToClipboard: Clipboard.copy.bind Clipboard
+  pasteFromClipboard: Clipboard.paste.bind Clipboard
   selectSpecificTab: selectSpecificTab
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
-  sendMessageToFrames: sendMessageToFrames
-  log: bgLog
+  # Send a message to all frames in the current tab.
+  sendMessageToFrames: (request, sender) -> chrome.tabs.sendMessage sender.tab.id, request.message
   fetchFileContents: (request, sender) -> fetchFileContents request.fileName
+  # For debugging only. This allows content scripts to log messages to the extension's logging page.
+  log: ({frameId, message}, sender) -> BgUtils.log "#{frameId} #{message}", sender
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"
@@ -395,7 +371,7 @@ window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'
 #
 
 # Show notification on upgrade.
-showUpgradeMessage = ->
+do showUpgradeMessage = ->
   # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
   # installs.
   Settings.set "previousVersion", currentVersion  unless Settings.get "previousVersion"
@@ -419,12 +395,9 @@ showUpgradeMessage = ->
       # We need to wait for the user to accept the "notifications" permission.
       chrome.permissions.onAdded.addListener showUpgradeMessage
 
-showUpgradeMessage()
-
 # The install date is shown on the logging page.
 chrome.runtime.onInstalled.addListener ({reason}) ->
   unless reason in ["chrome_update", "shared_module_update"]
     chrome.storage.local.set installDate: new Date().toString()
 
-root.TabOperations = TabOperations
-root.Frames = Frames
+extend root, {TabOperations, Frames}

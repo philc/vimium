@@ -6,7 +6,7 @@ Clipboard =
     textArea
 
   # http://groups.google.com/group/chromium-extensions/browse_thread/thread/49027e7f3b04f68/f6ab2457dee5bf55
-  copy: (data) ->
+  copy: ({data}) ->
     textArea = @_createTextArea()
     textArea.value = data
 
