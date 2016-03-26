@@ -175,6 +175,10 @@ selectSpecificTab = (request) ->
     chrome.windows.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { selected: true }))
 
+repeatCommand = (command) -> (request) ->
+  if 0 < request.count--
+    command request, (request) -> (repeatCommand command) request
+
 moveTab = ({count, tab, registryEntry}) ->
   count = -count if registryEntry.command == "moveTabLeft"
   chrome.tabs.getAllInWindow null, (tabs) ->
@@ -189,7 +193,7 @@ moveTab = ({count, tab, registryEntry}) ->
 # These are commands which are bound to keystroke which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
-  createTab: (request) ->
+  createTab: repeatCommand (request, callback) ->
     request.url ?= do ->
       url = Settings.get "newTabUrl"
       if url == "pages/blank.html"
@@ -197,11 +201,9 @@ BackgroundCommands =
         if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl
       else
         url
-    if 0 < request.count--
-      TabOperations.openUrlInNewTab request, (tab) => @createTab extend request, {tab, tabId: tab.id}
-  duplicateTab: (request) ->
-    if 0 < request.count--
-      chrome.tabs.duplicate request.tabId, (tab) => @duplicateTab extend request, {tab, tabId: tab.id}
+    TabOperations.openUrlInNewTab request, (tab) -> callback extend request, {tab, tabId: tab.id}
+  duplicateTab: repeatCommand (request, callback) ->
+    chrome.tabs.duplicate request.tabId, (tab) -> callback extend request, {tab, tabId: tab.id}
   moveTabToNewWindow: ({count, tab}) ->
     chrome.tabs.query {currentWindow: true}, (tabs) ->
       activeTabIndex = tab.index
@@ -218,9 +220,7 @@ BackgroundCommands =
       activeTabIndex = tab.index
       startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
       chrome.tabs.remove (tab.id for tab in tabs[startTabIndex...startTabIndex + count])
-  restoreTab: (request) ->
-    if 0 < request.count--
-      chrome.sessions.restore null, => @restoreTab request
+  restoreTab: repeatCommand (request, callback) -> chrome.sessions.restore null, callback request
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
   openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
   togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
