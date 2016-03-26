@@ -313,7 +313,7 @@ extend window,
         url = url.substr(12, url.length - 12)
       else
         url = "view-source:" + url
-      chrome.runtime.sendMessage({ handler: "openUrlInNewTab", url: url, selected: true })
+      chrome.runtime.sendMessage {handler: "openUrlInNewTab", url}
 
   copyCurrentUrl: ->
     # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
