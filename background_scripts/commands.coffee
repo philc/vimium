@@ -131,7 +131,6 @@ Commands =
       "reload",
       "toggleViewSource",
       "copyCurrentUrl",
-      "LinkHints.activateModeToCopyLinkUrl",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
       "goUp",
@@ -147,6 +146,7 @@ Commands =
       "LinkHints.activateModeWithQueue",
       "LinkHints.activateModeToDownloadLink",
       "LinkHints.activateModeToOpenIncognito",
+      "LinkHints.activateModeToCopyLinkUrl",
       "goPrevious",
       "goNext",
       "nextFrame",
@@ -238,9 +238,10 @@ defaultKeyMappings =
 
   "gi": "focusInput"
 
-  "f":     "LinkHints.activateMode"
-  "F":     "LinkHints.activateModeToOpenInNewTab"
+  "f": "LinkHints.activateMode"
+  "F": "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
+  "yf": "LinkHints.activateModeToCopyLinkUrl"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -250,7 +251,6 @@ defaultKeyMappings =
   "]]": "goNext"
 
   "yy": "copyCurrentUrl"
-  "yf": "LinkHints.activateModeToCopyLinkUrl"
 
   "p": "openCopiedUrlInCurrentTab"
   "P": "openCopiedUrlInNewTab"
@@ -315,7 +315,6 @@ commandDescriptions =
   toggleViewSource: ["View page source", { noRepeat: true }]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
-  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true, noRepeat: true }]
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
@@ -332,6 +331,7 @@ commandDescriptions =
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }]
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
   "LinkHints.activateModeToDownloadLink": ["Download link url"]
+  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]
