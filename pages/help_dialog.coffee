@@ -27,18 +27,10 @@ HelpDialog =
       HelpDialog.toggleAdvancedCommands, false)
 
     document.documentElement.addEventListener "click", (event) =>
-      # Normally, we hide the help dialog on "click".  On the options page though, we do not.  This allows the
-      # user to view the help page while typing command names into the key mappings input; see #2045.
-      @hide() unless @isVimiumOptionsPage() or @dialogElement.contains event.target
+      @hide() unless @dialogElement.contains event.target
     , false
 
   isReady: -> true
-
-  isVimiumOptionsPage: ->
-    try
-      window.top.isVimiumOptionsPage
-    catch
-      false
 
   show: (html) ->
     for own placeholder, htmlString of html
@@ -86,7 +78,9 @@ HelpDialog =
 UIComponentServer.registerHandler (event) ->
   switch event.data.name ? event.data
     when "frameFocused"
-      HelpDialog.hide() unless event.data.focusFrameId == frameId
+      # We normally close when we lose the focus.  However, we do not close on the options page.  This allows
+      # users to view the help dialog while typing in the key-mappings input.
+      HelpDialog.hide() unless event.data.focusFrameId == frameId or try window.top.isVimiumOptionsPage
     when "hide"
       HelpDialog.hide()
     else

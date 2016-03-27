@@ -76,7 +76,7 @@ class UIComponent
         if event.target == window
           window.removeEventListener "focus", @onFocus
           @onFocus = null
-          @postMessage "hide"
+          @postMessage "frameFocused"
       @showing = true
 
   hide: (focusWindow = true)->
