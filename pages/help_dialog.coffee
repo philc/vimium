@@ -27,10 +27,18 @@ HelpDialog =
       HelpDialog.toggleAdvancedCommands, false)
 
     document.documentElement.addEventListener "click", (event) =>
-      @hide() unless @dialogElement.contains event.target
+      # Normally, we hide the help dialog on "click".  On the options page though, we do not.  This allows the
+      # user to view the help page while typing command names into the key mappings input; see #2045.
+      @hide() unless @isVimiumOptionsPage() or @dialogElement.contains event.target
     , false
 
   isReady: -> true
+
+  isVimiumOptionsPage: ->
+    try
+      window.top.isVimiumOptionsPage
+    catch
+      false
 
   show: (html) ->
     for own placeholder, htmlString of html
