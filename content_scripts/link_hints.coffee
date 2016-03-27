@@ -262,7 +262,7 @@ LocalHints =
             reason = "Frame."
       when "div", "ol", "ul"
         isClickable ||=
-          if Scroller.isScrollableElement element
+          if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
             reason = "Scroll."
 
     # An element with a class name containing the text "button" might be clickable.  However, real clickables
