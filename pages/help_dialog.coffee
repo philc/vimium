@@ -84,9 +84,14 @@ HelpDialog =
     HelpDialog.dialogElement.classList[addOrRemove] "showAdvanced"
 
 UIComponentServer.registerHandler (event) ->
-  return if event.data == "hide"
-  HelpDialog.init()
-  HelpDialog.show event.data
+  switch event.data.name ? event.data
+    when "frameFocused"
+      HelpDialog.hide() unless event.data.focusFrameId == frameId
+    when "hide"
+      HelpDialog.hide()
+    else
+      HelpDialog.init()
+      HelpDialog.show event.data
 
 root = exports ? window
 root.HelpDialog = HelpDialog

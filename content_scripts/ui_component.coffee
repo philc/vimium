@@ -48,11 +48,9 @@ class UIComponent
           @iframeElement.contentWindow.postMessage vimiumSecret, chrome.runtime.getURL(""), [ port2 ]
           setIframePort port1
 
-    # If any other frame in the current tab receives the focus, then we hide the UI component.
-    # NOTE(smblott) This is correct for the vomnibar, but might be incorrect (and need to be revisited) for
-    # other UI components.
     chrome.runtime.onMessage.addListener (request) =>
-      @postMessage "hide" if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
+      if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
+        @postMessage name: "frameFocused", focusFrameId: request.focusFrameId
       false # Free up the sendResponse handler.
 
   # Posts a message (if one is provided), then calls continuation (if provided).  The continuation is only

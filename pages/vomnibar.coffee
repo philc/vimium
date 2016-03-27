@@ -330,7 +330,8 @@ class BackgroundCompleter
       chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
 
 UIComponentServer.registerHandler (event) ->
-  switch event.data
+  switch event.data.name ? event.data
+    when "frameFocused" then Vomnibar.hide()
     when "hide" then Vomnibar.hide()
     when "hidden" then Vomnibar.onHidden()
     else Vomnibar.activate event.data
