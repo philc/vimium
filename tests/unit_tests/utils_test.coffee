@@ -156,3 +156,19 @@ context "escapeRegexSpecialCharacters",
     regexp = new RegExp Utils.escapeRegexSpecialCharacters str
     assert.isTrue regexp.test str
 
+context "extractQuery",
+  should "extract the query terms from a URL", ->
+    url = "https://www.google.ie/search?q=star+wars&foo&bar"
+    searchUrl = "https://www.google.ie/search?q=%s"
+    assert.equal "star wars", Utils.extractQuery searchUrl, url
+
+  should "require trailing URL components", ->
+    url = "https://www.google.ie/search?q=star+wars&foo&bar"
+    searchUrl = "https://www.google.ie/search?q=%s&foobar=x"
+    assert.equal null, Utils.extractQuery searchUrl, url
+
+  should "accept trailing URL components", ->
+    url = "https://www.google.ie/search?q=star+wars&foo&bar&foobar=x"
+    searchUrl = "https://www.google.ie/search?q=%s&foobar=x"
+    assert.equal "star wars", Utils.extractQuery searchUrl, url
+
