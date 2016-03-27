@@ -45,7 +45,7 @@ class KeyHandlerMode extends Mode
     else if isEscape and HelpDialog?.showing
       @keydownEvents[event.keyCode] = true
       HelpDialog.hide()
-      @stopBubblingAndTrue
+      false # Suppress event.
     else if isEscape
       @continueBubbling
     else if @isMappedKey keyChar
