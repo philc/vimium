@@ -149,3 +149,10 @@ context "invokeCommandString",
     assert.isFalse @beenCalled
     Utils.invokeCommandString "twoComponentCommand.command"
     assert.isTrue @beenCalled
+
+context "escapeRegexSpecialCharacters",
+  should "escape regexp special characters", ->
+    str = "-[]/{}()*+?.^$|"
+    regexp = new RegExp Utils.escapeRegexSpecialCharacters str
+    assert.isTrue regexp.test str
+
