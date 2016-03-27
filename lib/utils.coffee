@@ -193,12 +193,6 @@ Utils =
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
 
-  # Return a copy of object, but with some of its properties omitted.
-  copyObjectOmittingProperties: (obj, properties...) ->
-    obj = extend {}, obj
-    delete obj[property] for property in properties
-    obj
-
   # Does string match any of these regexps?
   matchesAnyRegexp: (regexps, string) ->
     for re in regexps
