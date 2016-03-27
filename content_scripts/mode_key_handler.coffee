@@ -37,12 +37,17 @@ class KeyHandlerMode extends Mode
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
     isEscape = KeyboardUtils.isEscape event
-    if isEscape and @countPrefix == 0 and @keyState.length == 1
-      @continueBubbling
-    else if isEscape
+    if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       @keydownEvents[event.keyCode] = true
       @reset()
       false # Suppress event.
+    # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
+    else if isEscape and HelpDialog?.showing
+      @keydownEvents[event.keyCode] = true
+      HelpDialog.hide()
+      @stopBubblingAndTrue
+    else if isEscape
+      @continueBubbling
     else if @isMappedKey keyChar
       @keydownEvents[event.keyCode] = true
       @handleKeyChar keyChar
