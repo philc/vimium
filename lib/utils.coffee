@@ -9,15 +9,13 @@ Utils =
   # Returns true whenever the current page is the extension's background page.
   isBackgroundPage: -> @isExtensionPage() and chrome.extension.getBackgroundPage?() == window
 
-  # Takes a dot-notation object string and call the function
-  # that it points to with the correct value for 'this'.
+  # Takes a dot-notation object string and calls the function that it points to with the correct value for
+  # 'this'.
   invokeCommandString: (str, args...) ->
-    components = str.split('.')
+    [names..., name] = str.split '.'
     obj = window
-    for component in components[0...-1]
-      obj = obj[component]
-    func = obj[components.pop()]
-    func.apply(obj, args)
+    obj = obj[component] for component in names
+    obj[name].apply obj, args
 
   # Escape all special characters, so RegExp will parse the string 'as is'.
   # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex

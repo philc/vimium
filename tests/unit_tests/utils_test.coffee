@@ -129,3 +129,23 @@ context "makeIdempotent",
 context "distinctCharacters",
   should "eliminate duplicate characters", ->
     assert.equal "abc", Utils.distinctCharacters "bbabaabbacabbbab"
+
+context "invokeCommandString",
+  setup ->
+    @beenCalled = false
+    window.singleComponentCommand = => @beenCalled = true
+    window.twoComponentCommand = command: window.singleComponentCommand
+
+  tearDown ->
+    delete window.singleComponentCommand
+    delete window.twoComponentCommand
+
+  should "invoke single-component commands", ->
+    assert.isFalse @beenCalled
+    Utils.invokeCommandString "singleComponentCommand"
+    assert.isTrue @beenCalled
+
+  should "invoke multi-component commands", ->
+    assert.isFalse @beenCalled
+    Utils.invokeCommandString "twoComponentCommand.command"
+    assert.isTrue @beenCalled
