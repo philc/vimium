@@ -232,8 +232,6 @@ DomUtils =
           if element.selectionStart == 0 and element.selectionEnd == 0
             element.setSelectionRange element.value.length, element.value.length
 
-  simulateUnhover: (element, modifiers) -> @simulateMouseEvent "mouseout", element, modifiers
-
   simulateClick: (element, modifiers) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
