@@ -189,7 +189,9 @@ LocalHints =
     tagName = element.tagName.toLowerCase()
     isClickable = false
     onlyHasTabIndex = false
+    possibleFalsePositive = false
     visibleElements = []
+    reason = null
 
     # Insert area elements that provide click functionality to an img.
     if tagName == "img"
@@ -228,7 +230,6 @@ LocalHints =
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
         element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
-        element.getAttribute("class")?.toLowerCase().indexOf("button") >= 0 or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
       isClickable = true
 
@@ -254,8 +255,21 @@ LocalHints =
       when "label"
         isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
       when "body"
-        isClickable ||= element == document.body and not document.hasFocus() and
-          window.innerWidth > 3 and window.innerHeight > 3
+        isClickable ||=
+          if element == document.body and not document.hasFocus() and
+              window.innerWidth > 3 and window.innerHeight > 3 and
+              document.body?.tagName.toLowerCase() != "frameset"
+            reason = "Frame."
+      when "div", "ol", "ul"
+        isClickable ||=
+          if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
+            reason = "Scroll."
+
+    # An element with a class name containing the text "button" might be clickable.  However, real clickables
+    # are often wrapped in elements with such class names.  So, when we find clickables based only on their
+    # class name, we mark them as unreliable.
+    if not isClickable and 0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
+      possibleFalsePositive = isClickable = true
 
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
@@ -267,7 +281,8 @@ LocalHints =
     if isClickable
       clientRect = DomUtils.getVisibleClientRect element, true
       if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex}
+        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
+          possibleFalsePositive, reason}
 
     visibleElements
 
@@ -291,6 +306,27 @@ LocalHints =
       visibleElement = @getVisibleClickable element
       visibleElements.push visibleElement...
 
+    # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
+    visibleElements = visibleElements.reverse()
+
+    # Filter out suspected false positives.  A false positive is taken to be an element marked as a possible
+    # false positive for which a close descendant is already clickable.  False positives tend to be close
+    # together in the DOM, so - to keep the cost down - we only search nearby elements.  NOTE(smblott): The
+    # visible elements have already been reversed, so we're visiting descendants before their ancestors.
+    descendantsToCheck = [1..3] # This determines how many descendants we're willing to consider.
+    visibleElements =
+      for element, position in visibleElements
+        continue if element.possibleFalsePositive and do ->
+          index = Math.max 0, position - 6 # This determines how far back we're willing to look.
+          while index < position
+            candidateDescendant = visibleElements[index].element
+            for _ in descendantsToCheck
+              candidateDescendant = candidateDescendant?.parentElement
+              return true if candidateDescendant == element.element
+            index += 1
+          false # This is not a false positive.
+        element
+
     # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
     #  * The document has a local stacking context.
     #  * An element with z-index specified
@@ -305,15 +341,13 @@ LocalHints =
     #
     # Remove rects from elements where another clickable element lies above it.
     localHints = nonOverlappingElements = []
-    # Traverse the DOM from first to last, since later elements show above earlier elements.
-    visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
       rects = [visibleElement.rect]
       for {rect: negativeRect} in visibleElements
         # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
         rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
       if rects.length > 0
-        nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
+        nonOverlappingElements.push extend visibleElement, rect: rects[0]
       else
         # Every part of the element is covered by some other element, so just insert the whole element's
         # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
@@ -325,7 +359,7 @@ LocalHints =
     hint.hasHref = hint.element.href? for hint in localHints
     if Settings.get "filterLinkHints"
       @withLabelMap (labelMap) =>
-        extend hint, @generateLinkText labelMap, hint.element for hint in localHints
+        extend hint, @generateLinkText labelMap, hint for hint in localHints
     localHints
 
   # Generate a map of input element => label text, call a callback with it.
@@ -342,7 +376,8 @@ LocalHints =
         labelMap[forElement] = labelText
     callback labelMap
 
-  generateLinkText: (labelMap, element) ->
+  generateLinkText: (labelMap, hint) ->
+    element = hint.element
     linkText = ""
     showLinkText = false
     # toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
@@ -362,8 +397,8 @@ LocalHints =
         element.firstElementChild.nodeName.toLowerCase() == "img"
       linkText = element.firstElementChild.alt || element.firstElementChild.title
       showLinkText = true if linkText
-    else if element == document.body
-      linkText = "Frame."
+    else if hint.reason?
+      linkText = hint.reason
       showLinkText = true
     else
       linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
