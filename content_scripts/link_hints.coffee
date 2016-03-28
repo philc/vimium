@@ -182,21 +182,17 @@ class LinkHintsMode
     return if event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
+    keyCode = event.keyCode
     previousTabCount = @tabCount
     @tabCount = 0
 
-    if event.keyCode in [ keyCodes.shiftKey, keyCodes.ctrlKey ] and
+    if keyCode == keyCodes.shiftKey and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
         @tabCount = previousTabCount
+
         # Toggle whether to open the link in a new or current tab.
         previousMode = @mode
-        keyCode = event.keyCode
-
-        switch keyCode
-          when keyCodes.shiftKey
-            @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
-          when keyCodes.ctrlKey
-            @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
+        @setOpenLinkMode if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB
 
         handlerId = handlerStack.push
           keyup: (event) =>
@@ -209,7 +205,7 @@ class LinkHintsMode
         # Therefore, we ensure that it's always removed when hint mode exits.  See #1911 and #1926.
         @hintMode.onExit -> handlerStack.remove handlerId
 
-    else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+    else if keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
         @updateVisibleMarkers()
       else
@@ -217,11 +213,11 @@ class LinkHintsMode
         # knows not to restart hints mode.
         @hintMode.exit event
 
-    else if event.keyCode == keyCodes.enter
+    else if keyCode == keyCodes.enter
       # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
       HintCoordinator.sendMessage "activateActiveHintMarker" if @markerMatcher.activeHintMarker
 
-    else if event.keyCode == keyCodes.tab
+    else if keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
       @updateVisibleMarkers @tabCount
 
