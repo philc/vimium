@@ -185,7 +185,13 @@ class LinkHintsMode
     previousTabCount = @tabCount
     @tabCount = 0
 
-    if event.keyCode in [ keyCodes.shiftKey, keyCodes.ctrlKey ] and
+    # NOTE(smblott) As of 1.54, the Ctrl modifier doesn't work for filtered link hints; therefore we only
+    # offer the control modifier for alphabet hints.  It is not clear whether we should fix this.  As of
+    # 16-03-28, nobody has complained.
+    modifiers = [keyCodes.shiftKey]
+    modifiers.push keyCodes.ctrlKey unless Settings.get "filterLinkHints"
+
+    if event.keyCode in modifiers and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
         @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
