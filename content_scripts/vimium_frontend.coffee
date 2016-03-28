@@ -39,14 +39,19 @@ bgLog = (args...) ->
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
 class GrabBackFocus extends Mode
-  constructor: ->
+  constructor: (isUrlChange) ->
     super
       name: "grab-back-focus"
+      singleton: "grab-back-focus"
       keydown: => @alwaysContinueBubbling => @exit()
 
     @push
       _name: "grab-back-focus-mousedown"
       mousedown: => @alwaysContinueBubbling => @exit()
+
+    # If it's just that the URL has changed, then bail if an input is already focused.  On some pages (e.g.
+    # search on Google Inbox) it's the act of focusing the input which triggers the URL change.
+    @exit() if isUrlChange and document.activeElement and DomUtils.isEditable document.activeElement
 
     Settings.use "grabBackFocus", (grabBackFocus) =>
       if grabBackFocus
@@ -84,7 +89,7 @@ handlerStack.push
          (target.target in ["", "_self"] or
           (target.target == "_parent" and window.parent == window) or
           (target.target == "_top" and window.top == window))
-        return new GrabBackFocus()
+        return new GrabBackFocus true
       else
         target = target.parentElement
     true
@@ -129,7 +134,7 @@ installModes = ->
   # activates/deactivates itself accordingly.
   normalMode = new NormalMode
   new InsertMode permanent: true
-  new GrabBackFocus if isEnabledForUrl
+  new GrabBackFocus false if isEnabledForUrl
   normalMode # Return the normalMode object (for the tests).
 
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
