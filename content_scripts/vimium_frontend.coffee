@@ -154,6 +154,7 @@ initializePreDomReady = ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, sourceFrameId, registryEntry if DomUtils.isTopFrame()
+    linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     # These requests are intended for the background page, but they're delivered to the options page too.
@@ -637,8 +638,8 @@ root.frameId = frameId
 root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
-# These are exported for find mode.
+# These are exported for find mode and link-hints mode.
 extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
-  enterFindMode}
+  enterFindMode, focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes, installListeners}
