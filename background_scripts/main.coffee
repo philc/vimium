@@ -263,6 +263,30 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
 
+# Symbolic names for the three browser-action icons.
+ENABLED_ICON = "icons/browser_action_enabled.png"
+DISABLED_ICON = "icons/browser_action_disabled.png"
+PARTIAL_ICON = "icons/browser_action_partial.png"
+
+# Convert the three icon PNGs to image data.
+iconImageData = {}
+for icon in [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]
+  iconImageData[icon] = {}
+  for scale in [19, 38]
+    do (icon, scale) ->
+      canvas = document.createElement "canvas"
+      canvas.width = canvas.height = scale
+      # We cannot do the rest of this in the tests.
+      unless chrome.areRunningVimiumTests? and chrome.areRunningVimiumTests
+        context = canvas.getContext "2d"
+        image = new Image
+        image.src = icon
+        image.onload = ->
+          context.drawImage image, 0, 0, scale, scale
+          iconImageData[icon][scale] = context.getImageData 0, 0, scale, scale
+          document.body.removeChild canvas
+        document.body.appendChild canvas
+
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
@@ -288,13 +312,15 @@ Frames =
     enabledState = Exclusions.isEnabledForUrl request.url
 
     if request.frameIsFocused
-      chrome.browserAction.setIcon tabId: tabId, path:
-        if not enabledState.isEnabledForUrl
-          "icons/browser_action_disabled.png"
-        else if 0 < enabledState.passKeys.length
-          "icons/browser_action_partial.png"
-        else
-          "icons/browser_action_enabled.png"
+      chrome.browserAction.setIcon tabId: tabId, imageData: do ->
+        enabledStateIcon =
+          if not enabledState.isEnabledForUrl
+            DISABLED_ICON
+          else if 0 < enabledState.passKeys.length
+            PARTIAL_ICON
+          else
+            ENABLED_ICON
+        iconImageData[enabledStateIcon]
 
     port.postMessage extend request, enabledState
 
