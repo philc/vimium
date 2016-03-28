@@ -192,13 +192,6 @@ context "Test link hints for changing mode",
     sendKeyboardEvent "shift-up"
     assert.equal "curr-tab", @linkHints.mode.name
 
-  should "change mode on ctrl", ->
-    assert.equal "curr-tab", @linkHints.mode.name
-    sendKeyboardEvent "ctrl-down"
-    assert.equal "fg-tab", @linkHints.mode.name
-    sendKeyboardEvent "ctrl-up"
-    assert.equal "curr-tab", @linkHints.mode.name
-
 context "Alphabetical link hints",
 
   setup ->
