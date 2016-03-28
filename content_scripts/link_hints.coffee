@@ -112,19 +112,20 @@ class LinkHintsMode
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (elements, mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (hintDescriptors, mode = OPEN_IN_CURRENT_TAB) ->
     # we need documentElement to be ready in order to append links
     return unless document.documentElement
 
-    # For these modes, we filter out those elements which don't have an HREF (since there's nothing we can do
-    # with them).
-    elements = (el for el in elements when el.hasHref) if mode in [ COPY_LINK_URL, OPEN_INCOGNITO ]
+    if mode in [COPY_LINK_URL, OPEN_INCOGNITO]
+      # For these modes, we filter out those descriptors which don't have an HREF (since there's nothing we
+      # can do with them).
+      hintDescriptors = (desc for desc in hintDescriptors when desc.hasHref)
 
-    if elements.length == 0
+    if hintDescriptors.length == 0
       HUD.showForDuration "No links to select.", 2000
       return
 
-    hintMarkers = (@createMarkerFor(el) for el in elements)
+    hintMarkers = (@createMarkerFor desc for desc in hintDescriptors)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
     @markerMatcher.fillInMarkers hintMarkers
 
@@ -163,15 +164,15 @@ class LinkHintsMode
   createMarkerFor: do ->
     # This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort stable.
     stableSortCount = 0
-    (link) ->
+    (desc) ->
       marker = DomUtils.createElement "div"
       marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
       marker.stableSortCount = ++stableSortCount
-      # Extract other relevant fields from the hint descriptor. TODO(smblott) "link" here is misleading.
+      # Extract other relevant fields from the hint descriptor.
       extend marker,
-        {hintDescriptor: link, linkText: link.linkText, showLinkText: link.showLinkText, rect: link.rect}
+        {hintDescriptor: desc, linkText: desc.linkText, showLinkText: desc.showLinkText, rect: desc.rect}
 
-      clientRect = link.rect
+      clientRect = desc.rect
       marker.style.left = clientRect.left + window.scrollX + "px"
       marker.style.top = clientRect.top  + window.scrollY  + "px"
 
