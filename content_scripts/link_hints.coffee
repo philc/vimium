@@ -125,9 +125,9 @@ class LinkHintsMode
       HUD.showForDuration "No links to select.", 2000
       return
 
-    hintMarkers = (@createMarkerFor desc for desc in hintDescriptors)
+    @hintMarkers = (@createMarkerFor desc for desc in hintDescriptors)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
-    @markerMatcher.fillInMarkers hintMarkers
+    @markerMatcher.fillInMarkers @hintMarkers
 
     @hintMode = new Mode
       name: "hint/#{mode.name}"
@@ -137,8 +137,8 @@ class LinkHintsMode
       suppressTrailingKeyEvents: true
       exitOnEscape: true
       exitOnClick: true
-      keydown: @onKeyDownInMode.bind this, hintMarkers
-      keypress: @onKeyPressInMode.bind this, hintMarkers
+      keydown: @onKeyDownInMode.bind this
+      keypress: @onKeyPressInMode.bind this
 
     @hintMode.onExit (event) =>
       HintCoordinator.sendMessage "deactivate" if event?.type == "click" or (event?.type == "keydown" and
@@ -148,10 +148,9 @@ class LinkHintsMode
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
-    @hintMarkerContainingDiv = DomUtils.addElementList hintMarkers,
+    @hintMarkerContainingDiv = DomUtils.addElementList @hintMarkers,
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
-    @hideMarker hintMarker for hintMarker in hintMarkers when hintMarker.hintDescriptor.frameId != frameId
-    @updateKeyState = @updateKeyState.bind this, hintMarkers # TODO(smblott): This can be refactored out.
+    @hideMarker hintMarker for hintMarker in @hintMarkers when hintMarker.hintDescriptor.frameId != frameId
 
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
     @hintMode.setIndicator @mode.indicator if windowIsFocused()
@@ -179,7 +178,7 @@ class LinkHintsMode
       marker
 
   # Handles <Shift> and <Ctrl>.
-  onKeyDownInMode: (hintMarkers, event) ->
+  onKeyDownInMode: (event) ->
     return if event.repeat
     @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
@@ -212,7 +211,7 @@ class LinkHintsMode
 
     else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
       if @markerMatcher.popKeyChar()
-        @updateVisibleMarkers hintMarkers
+        @updateVisibleMarkers()
       else
         # Exit via @hintMode.exit(), so that the LinkHints.activate() "onExit" callback sees the key event and
         # knows not to restart hints mode.
@@ -224,7 +223,7 @@ class LinkHintsMode
 
     else if event.keyCode == keyCodes.tab
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
-      @updateVisibleMarkers hintMarkers, @tabCount
+      @updateVisibleMarkers @tabCount
 
     else
       return
@@ -233,31 +232,31 @@ class LinkHintsMode
     DomUtils.suppressEvent event
 
   # Handles normal input.
-  onKeyPressInMode: (hintMarkers, event) ->
+  onKeyPressInMode: (event) ->
     return if event.repeat
 
     keyChar = String.fromCharCode(event.charCode).toLowerCase()
     if keyChar
       @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers hintMarkers
+      @updateVisibleMarkers()
 
     # We've handled the event, so suppress it.
     DomUtils.suppressEvent event
 
-  updateVisibleMarkers: (hintMarkers, tabCount = 0) ->
+  updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
     HintCoordinator.sendMessage "updateKeyState", {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}
 
-  updateKeyState: (hintMarkers, {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
+  updateKeyState: ({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
     extend @markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue}
 
-    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints hintMarkers, tabCount
+    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints @hintMarkers, tabCount
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
       @activateLink linksMatched[0], userMightOverType ? false
     else
-      @hideMarker marker for marker in hintMarkers
+      @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
