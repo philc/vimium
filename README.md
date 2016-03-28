@@ -157,25 +157,27 @@ Release Notes
 -------------
 Next version (not yet released)
 
-- New command, `visitPreviousTab`, visits a previously-visited tab by recency.  Visit the previous tab with
-  `^`, or the tab before that with `2^`.
-- New command, `passNextKey`, passes the next key directly to the page;  for example, with `map <c-]>
-  passNextKey`, you can close messenger popups on Facebook with `<c-]><Esc>`.
-- Link-hints modes now accept a `count` prefix; for example, use `3F` to open three new background tabs,  or
-  `999F` to open *many* tabs.  Exit early with `<Esc>`.
-- For filtered link hints, there is a new option which - when you're typing a link's text - requires you to
-  press `Enter` to activate the link; this prevents unintentionally triggering Vimium commands with trailing
-  keystrokes.
-- `gg` now accepts a `count` prefix.  It scrolls to an absolute position measured from the top of the window
-  (and a multiple of `scrollStepSize`).
-- `moveTabToNewWindow` now accepts a count prefix; so, `3W` moves three tabs to (the same) new window.
-- With smooth scrolling, `2j`-and-hold now gives a faster scroll than `j`-and-hold.
-- You can now bind three-key (or longer) sequences; for example, `map abc enterInsertMode`.
-- You can now bind keys to a command with a defined count prefix; for example, `map d scrollDown count=4` (see
-  [here](https://github.com/philc/vimium/wiki/Command-Options#count-prefixes) for details).
-- Web-devs only: when disabled on a tab, Vimium no longer pollutes the dev console with network requests.
+- New commands:
+    - `visitPreviousTab` - visit the previous tab (by recency) with `^`, or the tab before that with `2^`.
+    - `passNextKey` - pass the next key to the page;  for example, with `map
+      <c-]> passNextKey`, you can close Facebook's messenger popups with `<c-]><Esc>`.
+- Link hints:
+    - Now work across all frames in the tab.
+    - Now select frames and scrollable elements.
+    - Now accept a count prefix; `3F` opens three new background tabs,  `999F` opens many tabs.
+    - For filtered link hints, a new option requires you to press `Enter` to activate a link; this
+      prevents unintentionally triggering Vimium commands with trailing keystrokes.
+- Miscellaneous:
+    - `gg` now accepts a `count` prefix.
+    - `W` now accepts a count prefix; `3W` moves three tabs to a new window.
+    - With smooth scrolling, `2j`-and-hold now gives a faster scroll than `j`-and-hold.
+    - You can now bind keys to a command with a defined count prefix; for example, `map d scrollDown count=4`.
+    - You can now bind three-key (or longer) sequences; for example, `map abc enterInsertMode`.
 - Bug fixes:
     - `<c-a-[>` is not longer treated as escape.
+    - Fix icon display and memory leak due to regression in recent Chrome versions (49+).
+- For web-devs only:
+    - When disabled on a tab, Vimium no longer pollutes the dev console with network requests.
 
 1.54 (2016-01-30)
 
