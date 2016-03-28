@@ -101,7 +101,7 @@ LinkHints =
   activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
 
-class LinkHintsModeBase # This is temporary, because the "visible hints" code is embedded in the hints class.
+class LinkHintsMode
   hintMarkerContainingDiv: null
   # One of the enums listed at the top of this file.
   mode: undefined
@@ -176,238 +176,6 @@ class LinkHintsModeBase # This is temporary, because the "visible hints" code is
       marker.style.top = clientRect.top  + window.scrollY  + "px"
 
       marker
-
-# TODO(smblott)  This is temporary.  Unfortunately, this code is embedded in the "old" link-hints mode class.
-# It should be moved, but it's left here for the moment to help keep the diff clearer.
-LocalHints =
-  #
-  # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
-  # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
-  # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
-  #
-  getVisibleClickable: (element) ->
-    tagName = element.tagName.toLowerCase()
-    isClickable = false
-    onlyHasTabIndex = false
-    possibleFalsePositive = false
-    visibleElements = []
-    reason = null
-
-    # Insert area elements that provide click functionality to an img.
-    if tagName == "img"
-      mapName = element.getAttribute "usemap"
-      if mapName
-        imgClientRects = element.getClientRects()
-        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
-        map = document.querySelector "map[name=\"#{mapName}\"]"
-        if map and imgClientRects.length > 0
-          areas = map.getElementsByTagName "area"
-          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-          visibleElements.push areasAndRects...
-
-    # Check aria properties to see if the element should be ignored.
-    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
-        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-      return [] # This element should never have a link hint.
-
-    # Check for AngularJS listeners on the element.
-    @checkForAngularJs ?= do ->
-      angularElements = document.getElementsByClassName "ng-scope"
-      if angularElements.length == 0
-        -> false
-      else
-        ngAttributes = []
-        for prefix in [ '', 'data-', 'x-' ]
-          for separator in [ '-', ':', '_' ]
-            ngAttributes.push "#{prefix}ng#{separator}click"
-        (element) ->
-          for attribute in ngAttributes
-            return true if element.hasAttribute attribute
-          false
-
-    isClickable ||= @checkForAngularJs element
-
-    # Check for attributes that make an element clickable regardless of its tagName.
-    if (element.hasAttribute("onclick") or
-        element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
-        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
-      isClickable = true
-
-    # Check for jsaction event listeners on the element.
-    if element.hasAttribute "jsaction"
-      jsactionRules = element.getAttribute("jsaction").split(";")
-      for jsactionRule in jsactionRules
-        ruleSplit = jsactionRule.split ":"
-        isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
-
-    # Check for tagNames which are natively clickable.
-    switch tagName
-      when "a"
-        isClickable = true
-      when "textarea"
-        isClickable ||= not element.disabled and not element.readOnly
-      when "input"
-        isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
-                             element.disabled or
-                             (element.readOnly and DomUtils.isSelectable element))
-      when "button", "select"
-        isClickable ||= not element.disabled
-      when "label"
-        isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
-      when "body"
-        isClickable ||=
-          if element == document.body and not document.hasFocus() and
-              window.innerWidth > 3 and window.innerHeight > 3 and
-              document.body?.tagName.toLowerCase() != "frameset"
-            reason = "Frame."
-      when "div", "ol", "ul"
-        isClickable ||=
-          if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
-            reason = "Scroll."
-
-    # An element with a class name containing the text "button" might be clickable.  However, real clickables
-    # are often wrapped in elements with such class names.  So, when we find clickables based only on their
-    # class name, we mark them as unreliable.
-    if not isClickable and 0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
-      possibleFalsePositive = isClickable = true
-
-    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-    # citizens when it improves UX, so take special note of them.
-    tabIndexValue = element.getAttribute("tabindex")
-    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-    unless isClickable or isNaN(tabIndex) or tabIndex < 0
-      isClickable = onlyHasTabIndex = true
-
-    if isClickable
-      clientRect = DomUtils.getVisibleClientRect element, true
-      if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
-          possibleFalsePositive, reason}
-
-    visibleElements
-
-  #
-  # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
-  # at which (parts of) the elements are displayed.
-  # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
-  # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
-  # element.
-  #
-  getLocalHints: ->
-    elements = document.documentElement.getElementsByTagName "*"
-    visibleElements = []
-
-    # The order of elements here is important; they should appear in the order they are in the DOM, so that
-    # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
-    # is the sensible, efficient way to ensure this happens.
-    # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
-    # this, so it's necessary to check whether elements are clickable in order, as we do below.
-    for element in elements
-      visibleElement = @getVisibleClickable element
-      visibleElements.push visibleElement...
-
-    # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
-    visibleElements = visibleElements.reverse()
-
-    # Filter out suspected false positives.  A false positive is taken to be an element marked as a possible
-    # false positive for which a close descendant is already clickable.  False positives tend to be close
-    # together in the DOM, so - to keep the cost down - we only search nearby elements.  NOTE(smblott): The
-    # visible elements have already been reversed, so we're visiting descendants before their ancestors.
-    descendantsToCheck = [1..3] # This determines how many descendants we're willing to consider.
-    visibleElements =
-      for element, position in visibleElements
-        continue if element.possibleFalsePositive and do ->
-          index = Math.max 0, position - 6 # This determines how far back we're willing to look.
-          while index < position
-            candidateDescendant = visibleElements[index].element
-            for _ in descendantsToCheck
-              candidateDescendant = candidateDescendant?.parentElement
-              return true if candidateDescendant == element.element
-            index += 1
-          false # This is not a false positive.
-        element
-
-    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
-    #  * The document has a local stacking context.
-    #  * An element with z-index specified
-    #    - sets its z-order position in the containing stacking context, and
-    #    - creates a local stacking context containing its children.
-    #  * An element (1) is shown above another element (2) if either
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
-    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
-    #        + the ancestors of (1) and (2) have equal z-index, and
-    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
-    #
-    # Remove rects from elements where another clickable element lies above it.
-    localHints = nonOverlappingElements = []
-    while visibleElement = visibleElements.pop()
-      rects = [visibleElement.rect]
-      for {rect: negativeRect} in visibleElements
-        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
-        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
-      if rects.length > 0
-        nonOverlappingElements.push extend visibleElement, rect: rects[0]
-      else
-        # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
-        # than they're worth.
-        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
-        # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
-
-    hint.hasHref = hint.element.href? for hint in localHints
-    if Settings.get "filterLinkHints"
-      @withLabelMap (labelMap) =>
-        extend hint, @generateLinkText labelMap, hint for hint in localHints
-    localHints
-
-  # Generate a map of input element => label text, call a callback with it.
-  withLabelMap: (callback) ->
-    labelMap = {}
-    labels = document.querySelectorAll "label"
-    for label in labels
-      forElement = label.getAttribute "for"
-      if forElement
-        labelText = label.textContent.trim()
-        # Remove trailing ":" commonly found in labels.
-        if labelText[labelText.length-1] == ":"
-          labelText = labelText.substr 0, labelText.length-1
-        labelMap[forElement] = labelText
-    callback labelMap
-
-  generateLinkText: (labelMap, hint) ->
-    element = hint.element
-    linkText = ""
-    showLinkText = false
-    # toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
-    nodeName = element.nodeName.toLowerCase()
-
-    if nodeName == "input"
-      if labelMap[element.id]
-        linkText = labelMap[element.id]
-        showLinkText = true
-      else if element.type != "password"
-        linkText = element.value
-        if not linkText and 'placeholder' of element
-          linkText = element.placeholder
-    # Check if there is an image embedded in the <a> tag.
-    else if nodeName == "a" and not element.textContent.trim() and
-        element.firstElementChild and
-        element.firstElementChild.nodeName.toLowerCase() == "img"
-      linkText = element.firstElementChild.alt || element.firstElementChild.title
-      showLinkText = true if linkText
-    else if hint.reason?
-      linkText = hint.reason
-      showLinkText = true
-    else
-      linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
-
-    {linkText, showLinkText}
-
-# TODO(smblott) Again, this is temporary.  We need to move the code above out of the "old" link-hints class.
-class LinkHintsMode extends LinkHintsModeBase
-  constructor: (args...) -> super args...
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (hintMarkers, event) ->
@@ -712,6 +480,232 @@ spanWrap = (hintString) ->
   for char in hintString
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
+
+LocalHints =
+  #
+  # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
+  # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
+  # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
+  #
+  getVisibleClickable: (element) ->
+    tagName = element.tagName.toLowerCase()
+    isClickable = false
+    onlyHasTabIndex = false
+    possibleFalsePositive = false
+    visibleElements = []
+    reason = null
+
+    # Insert area elements that provide click functionality to an img.
+    if tagName == "img"
+      mapName = element.getAttribute "usemap"
+      if mapName
+        imgClientRects = element.getClientRects()
+        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+        map = document.querySelector "map[name=\"#{mapName}\"]"
+        if map and imgClientRects.length > 0
+          areas = map.getElementsByTagName "area"
+          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+          visibleElements.push areasAndRects...
+
+    # Check aria properties to see if the element should be ignored.
+    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+      return [] # This element should never have a link hint.
+
+    # Check for AngularJS listeners on the element.
+    @checkForAngularJs ?= do ->
+      angularElements = document.getElementsByClassName "ng-scope"
+      if angularElements.length == 0
+        -> false
+      else
+        ngAttributes = []
+        for prefix in [ '', 'data-', 'x-' ]
+          for separator in [ '-', ':', '_' ]
+            ngAttributes.push "#{prefix}ng#{separator}click"
+        (element) ->
+          for attribute in ngAttributes
+            return true if element.hasAttribute attribute
+          false
+
+    isClickable ||= @checkForAngularJs element
+
+    # Check for attributes that make an element clickable regardless of its tagName.
+    if (element.hasAttribute("onclick") or
+        element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
+        element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
+      isClickable = true
+
+    # Check for jsaction event listeners on the element.
+    if element.hasAttribute "jsaction"
+      jsactionRules = element.getAttribute("jsaction").split(";")
+      for jsactionRule in jsactionRules
+        ruleSplit = jsactionRule.split ":"
+        isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+
+    # Check for tagNames which are natively clickable.
+    switch tagName
+      when "a"
+        isClickable = true
+      when "textarea"
+        isClickable ||= not element.disabled and not element.readOnly
+      when "input"
+        isClickable ||= not (element.getAttribute("type")?.toLowerCase() == "hidden" or
+                             element.disabled or
+                             (element.readOnly and DomUtils.isSelectable element))
+      when "button", "select"
+        isClickable ||= not element.disabled
+      when "label"
+        isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
+      when "body"
+        isClickable ||=
+          if element == document.body and not document.hasFocus() and
+              window.innerWidth > 3 and window.innerHeight > 3 and
+              document.body?.tagName.toLowerCase() != "frameset"
+            reason = "Frame."
+      when "div", "ol", "ul"
+        isClickable ||=
+          if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
+            reason = "Scroll."
+
+    # An element with a class name containing the text "button" might be clickable.  However, real clickables
+    # are often wrapped in elements with such class names.  So, when we find clickables based only on their
+    # class name, we mark them as unreliable.
+    if not isClickable and 0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
+      possibleFalsePositive = isClickable = true
+
+    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+    # citizens when it improves UX, so take special note of them.
+    tabIndexValue = element.getAttribute("tabindex")
+    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+    unless isClickable or isNaN(tabIndex) or tabIndex < 0
+      isClickable = onlyHasTabIndex = true
+
+    if isClickable
+      clientRect = DomUtils.getVisibleClientRect element, true
+      if clientRect != null
+        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
+          possibleFalsePositive, reason}
+
+    visibleElements
+
+  #
+  # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
+  # at which (parts of) the elements are displayed.
+  # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
+  # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
+  # element.
+  #
+  getLocalHints: ->
+    elements = document.documentElement.getElementsByTagName "*"
+    visibleElements = []
+
+    # The order of elements here is important; they should appear in the order they are in the DOM, so that
+    # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
+    # is the sensible, efficient way to ensure this happens.
+    # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
+    # this, so it's necessary to check whether elements are clickable in order, as we do below.
+    for element in elements
+      visibleElement = @getVisibleClickable element
+      visibleElements.push visibleElement...
+
+    # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
+    visibleElements = visibleElements.reverse()
+
+    # Filter out suspected false positives.  A false positive is taken to be an element marked as a possible
+    # false positive for which a close descendant is already clickable.  False positives tend to be close
+    # together in the DOM, so - to keep the cost down - we only search nearby elements.  NOTE(smblott): The
+    # visible elements have already been reversed, so we're visiting descendants before their ancestors.
+    descendantsToCheck = [1..3] # This determines how many descendants we're willing to consider.
+    visibleElements =
+      for element, position in visibleElements
+        continue if element.possibleFalsePositive and do ->
+          index = Math.max 0, position - 6 # This determines how far back we're willing to look.
+          while index < position
+            candidateDescendant = visibleElements[index].element
+            for _ in descendantsToCheck
+              candidateDescendant = candidateDescendant?.parentElement
+              return true if candidateDescendant == element.element
+            index += 1
+          false # This is not a false positive.
+        element
+
+    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
+    #  * The document has a local stacking context.
+    #  * An element with z-index specified
+    #    - sets its z-order position in the containing stacking context, and
+    #    - creates a local stacking context containing its children.
+    #  * An element (1) is shown above another element (2) if either
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
+    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
+    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
+    #        + the ancestors of (1) and (2) have equal z-index, and
+    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
+    #
+    # Remove rects from elements where another clickable element lies above it.
+    localHints = nonOverlappingElements = []
+    while visibleElement = visibleElements.pop()
+      rects = [visibleElement.rect]
+      for {rect: negativeRect} in visibleElements
+        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
+        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
+      if rects.length > 0
+        nonOverlappingElements.push extend visibleElement, rect: rects[0]
+      else
+        # Every part of the element is covered by some other element, so just insert the whole element's
+        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
+        # than they're worth.
+        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
+        # click some elements that we could click before.
+        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+
+    hint.hasHref = hint.element.href? for hint in localHints
+    if Settings.get "filterLinkHints"
+      @withLabelMap (labelMap) =>
+        extend hint, @generateLinkText labelMap, hint for hint in localHints
+    localHints
+
+  # Generate a map of input element => label text, call a callback with it.
+  withLabelMap: (callback) ->
+    labelMap = {}
+    labels = document.querySelectorAll "label"
+    for label in labels
+      forElement = label.getAttribute "for"
+      if forElement
+        labelText = label.textContent.trim()
+        # Remove trailing ":" commonly found in labels.
+        if labelText[labelText.length-1] == ":"
+          labelText = labelText.substr 0, labelText.length-1
+        labelMap[forElement] = labelText
+    callback labelMap
+
+  generateLinkText: (labelMap, hint) ->
+    element = hint.element
+    linkText = ""
+    showLinkText = false
+    # toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
+    nodeName = element.nodeName.toLowerCase()
+
+    if nodeName == "input"
+      if labelMap[element.id]
+        linkText = labelMap[element.id]
+        showLinkText = true
+      else if element.type != "password"
+        linkText = element.value
+        if not linkText and 'placeholder' of element
+          linkText = element.placeholder
+    # Check if there is an image embedded in the <a> tag.
+    else if nodeName == "a" and not element.textContent.trim() and
+        element.firstElementChild and
+        element.firstElementChild.nodeName.toLowerCase() == "img"
+      linkText = element.firstElementChild.alt || element.firstElementChild.title
+      showLinkText = true if linkText
+    else if hint.reason?
+      linkText = hint.reason
+      showLinkText = true
+    else
+      linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
+
+    {linkText, showLinkText}
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
