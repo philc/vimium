@@ -56,7 +56,7 @@ HintCoordinator =
     chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", messageType, frameId}
 
   prepareToActivateMode: (mode, onExit) ->
-    @onExit = [onExit]
+    @onExit = [(isSuccess) -> onExit() if isSuccess]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
   getHintDescriptors: ->
@@ -78,13 +78,10 @@ HintCoordinator =
   activateActiveHintMarker: -> @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
   getLocalHintMarker: (hint) -> if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
-  exit: ->
-    @onExit.pop()() while 0 < @onExit.length
+  exit: ({isSuccess}) ->
+    @linkHintsMode.deactivateMode()
+    @onExit.pop() isSuccess while 0 < @onExit.length
     @linkHintsMode = @localHints = null
-
-  deactivate: ->
-    @onExit = [=> @linkHintsMode.deactivateMode()]
-    @exit()
 
 LinkHints =
   activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
@@ -141,8 +138,9 @@ class LinkHintsMode
       keypress: @onKeyPressInMode.bind this
 
     @hintMode.onExit (event) =>
-      HintCoordinator.sendMessage "deactivate" if event?.type == "click" or (event?.type == "keydown" and
+      if event?.type == "click" or (event?.type == "keydown" and
         (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
+          HintCoordinator.sendMessage "exit", isSuccess: false
 
     @setOpenLinkMode mode, false
 
@@ -273,19 +271,20 @@ class LinkHintsMode
     clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hintDescriptor)?.element
 
     if clickEl?
-      HintCoordinator.onExit.push =>
-        if clickEl == document.body
-          Utils.nextTick -> focusThisFrame highlight: true
-        else if DomUtils.isSelectable clickEl
-          window.focus()
-          DomUtils.simulateSelect clickEl
-        else
-          clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
-          linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
-          # TODO: Are there any other input elements which should not receive focus?
-          if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
-            clickEl.focus()
-          linkActivator clickEl
+      HintCoordinator.onExit.push (isSuccess) =>
+        if isSuccess
+          if clickEl == document.body
+            Utils.nextTick -> focusThisFrame highlight: true
+          else if DomUtils.isSelectable clickEl
+            window.focus()
+            DomUtils.simulateSelect clickEl
+          else
+            clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
+            linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
+            # TODO: Are there any other input elements which should not receive focus?
+            if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
+              clickEl.focus()
+            linkActivator clickEl
 
     installKeyBoardBlocker = (startKeyboardBlocker) ->
       if linkMatched.hintDescriptor.frameId == frameId
@@ -293,9 +292,8 @@ class LinkHintsMode
         HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
       if document.hasFocus()
-        startKeyboardBlocker -> HintCoordinator.sendMessage "exit"
+        startKeyboardBlocker (isSuccess) -> HintCoordinator.sendMessage "exit", {isSuccess}
 
-    HintCoordinator.onExit.push => @deactivateMode()
     # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
     # frame containing the matched link does.
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
@@ -304,7 +302,7 @@ class LinkHintsMode
       installKeyBoardBlocker (callback) -> new TypingProtector 200, callback
     else if linkMatched.hintDescriptor.frameId == frameId
       DomUtils.flashRect linkMatched.hintDescriptor.rect
-      HintCoordinator.sendMessage "exit"
+      HintCoordinator.sendMessage "exit", isSuccess: true
 
   #
   # Shows the marker, highlighting matchingCharCount characters.
@@ -728,7 +726,8 @@ class TypingProtector extends Mode
       keydown: resetExitTimer
       keypress: resetExitTimer
 
-    @onExit callback
+    @onExit ->
+      callback true # true -> isSuccess.
 
 class WaitForEnter extends Mode
   constructor: (callback) ->
@@ -741,10 +740,11 @@ class WaitForEnter extends Mode
       keydown: (event) =>
         if event.keyCode == keyCodes.enter
           @exit()
-          callback()
-          DomUtils.suppressEvent event
-        else
-          true
+          callback true # true -> isSuccess.
+        else if KeyboardUtils.isEscape event
+          @exit()
+          callback false # false -> isSuccess.
+        DomUtils.suppressEvent event
 
 root = exports ? window
 root.LinkHints = LinkHints
