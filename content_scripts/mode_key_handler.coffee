@@ -101,7 +101,7 @@ class KeyHandlerMode extends Mode
     command = (mapping for mapping in @keyState when "command" of mapping)[0]
     if command
       count = if 0 < @countPrefix then @countPrefix else 1
-      bgLog "Call #{command.command}[#{count}] (#{@mode})"
+      bgLog "Call #{command.command}[#{count}] (#{@name})"
       @reset()
       @commandHandler {command, count}
     false # Suppress event.
