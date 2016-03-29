@@ -28,6 +28,9 @@ page.onCallback = (request) ->
         when "escape"
           page.sendEvent "keydown", page.event.key.Escape
           page.sendEvent "keyup", page.event.key.Escape
+        when "enter"
+          page.sendEvent "keydown", page.event.key.Enter
+          page.sendEvent "keyup", page.event.key.Enter
         when "tab"
           page.sendEvent "keydown", page.event.key.Tab
           page.sendEvent "keyup", page.event.key.Tab

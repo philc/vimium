@@ -286,7 +286,7 @@ class LinkHintsMode
               clickEl.focus()
             linkActivator clickEl
 
-    installKeyBoardBlocker = (startKeyboardBlocker) ->
+    installKeyboardBlocker = (startKeyboardBlocker) ->
       if linkMatched.hintDescriptor.frameId == frameId
         flashEl = DomUtils.addFlashRect linkMatched.hintDescriptor.rect
         HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
@@ -297,9 +297,9 @@ class LinkHintsMode
     # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
     # frame containing the matched link does.
     if userMightOverType and Settings.get "waitForEnterForFilteredHints"
-      installKeyBoardBlocker (callback) -> new WaitForEnter callback
+      installKeyboardBlocker (callback) -> new WaitForEnter callback
     else if userMightOverType
-      installKeyBoardBlocker (callback) -> new TypingProtector 200, callback
+      installKeyboardBlocker (callback) -> new TypingProtector 200, callback
     else if linkMatched.hintDescriptor.frameId == frameId
       DomUtils.flashRect linkMatched.hintDescriptor.rect
       HintCoordinator.sendMessage "exit", isSuccess: true
@@ -750,4 +750,4 @@ root = exports ? window
 root.LinkHints = LinkHints
 root.HintCoordinator = HintCoordinator
 # For tests:
-extend root, {LinkHintsMode, LocalHints, AlphabetHints}
+extend root, {LinkHintsMode, LocalHints, AlphabetHints, WaitForEnter}

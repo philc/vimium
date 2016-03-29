@@ -996,3 +996,29 @@ context "PostFindMode",
     sendKeyboardEvent "escape"
     assert.isTrue @postFindMode.modeIsActive
 
+context "WaitForEnter",
+  setup ->
+    initializeModeState()
+    @isSuccess = null
+    @waitForEnter = new WaitForEnter (isSuccess) => @isSuccess = isSuccess
+
+  should "exit with success on Enter", ->
+    assert.isTrue @waitForEnter.modeIsActive
+    assert.isFalse @isSuccess?
+    sendKeyboardEvent "enter"
+    assert.isFalse @waitForEnter.modeIsActive
+    assert.isTrue @isSuccess? and @isSuccess == true
+
+  should "exit without success on Escape", ->
+    assert.isTrue @waitForEnter.modeIsActive
+    assert.isFalse @isSuccess?
+    sendKeyboardEvent "escape"
+    assert.isFalse @waitForEnter.modeIsActive
+    assert.isTrue @isSuccess? and @isSuccess == false
+
+  should "not exit on other keyboard events", ->
+    assert.isTrue @waitForEnter.modeIsActive
+    assert.isFalse @isSuccess?
+    sendKeyboardEvents "abc"
+    assert.isTrue @waitForEnter.modeIsActive
+    assert.isFalse @isSuccess?
