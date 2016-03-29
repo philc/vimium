@@ -49,14 +49,17 @@ class GrabBackFocus extends Mode
       mousedown: => @alwaysContinueBubbling => @exit()
 
     Settings.use "grabBackFocus", (grabBackFocus) =>
-      if grabBackFocus
-        @push
-          _name: "grab-back-focus-focus"
-          focus: (event) => @grabBackFocus event.target
-        # An input may already be focused. If so, grab back the focus.
-        @grabBackFocus document.activeElement if document.activeElement
-      else
-        @exit()
+      # It is possible that this mode exits (e.g. due to a key event) before the settings are ready -- in
+      # which case we should not install this grab-back-focus watcher.
+      if @modeIsActive
+        if grabBackFocus
+          @push
+            _name: "grab-back-focus-focus"
+            focus: (event) => @grabBackFocus event.target
+          # An input may already be focused. If so, grab back the focus.
+          @grabBackFocus document.activeElement if document.activeElement
+        else
+          @exit()
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isEditable element
