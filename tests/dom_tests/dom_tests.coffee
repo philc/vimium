@@ -31,8 +31,10 @@ for type in [ "keydown", "keypress", "keyup" ]
 
 commandName = commandCount = null
 
-# Some tests have side effects on the handler stack and the active mode, so these are reset on setup.
+# Some tests have side effects on the handler stack and the active mode, so these are reset on setup.  Also,
+# some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has the focus.
 initializeModeState = ->
+  window.focus()
   Mode.reset()
   handlerStack.reset()
   normalMode = installModes()
