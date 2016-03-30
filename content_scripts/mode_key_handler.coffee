@@ -56,8 +56,7 @@ class KeyHandlerMode extends Mode
       # We will possibly be handling a subsequent keypress event, so suppress propagation of this event to
       # prevent triggering page event listeners (e.g. Google instant Search).
       @keydownEvents[event.keyCode] = true
-      DomUtils.suppressPropagation event
-      @passEventToPage
+      @suppressPropagation
     else
       @continueBubbling
 
@@ -76,8 +75,7 @@ class KeyHandlerMode extends Mode
   onKeyup: (event) ->
     return @continueBubbling unless event.keyCode of @keydownEvents
     delete @keydownEvents[event.keyCode]
-    DomUtils.suppressPropagation event
-    @passEventToPage
+    @suppressPropagation
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
   isMappedKey: (keyChar) ->
