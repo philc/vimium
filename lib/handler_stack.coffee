@@ -45,37 +45,30 @@ class HandlerStack
   bubbleEvent: (type, event) ->
     @eventNumber += 1
     eventNumber = @eventNumber
-    # We take a copy of the array in order to avoid interference from concurrent removes (for example, to
-    # avoid calling the same handler twice, because elements have been spliced out of the array by remove).
     for handler in @stack[..].reverse()
-      # A handler may have been removed (handler.id == null), so check.
-      if handler?.id and handler[type]
+      # A handler might have been removed (handler.id == null), so check; or there might just be no handler
+      # for this type of event.
+      unless handler?.id and handler[type]
+        @logResult eventNumber, type, event, handler, "skip [#{handler[type]?}]" if @debug
+      else
         @currentId = handler.id
         result = handler[type].call this, event
         @logResult eventNumber, type, event, handler, result if @debug
-        if result
-          switch result
-            when @passEventToPage
-              return true
-            when @suppressPropagation
-              DomUtils.suppressPropagation event
-              return false
-            when @restartBubbling
-              return @bubbleEvent type, event
-            when @continueBubbling
-              true # Do nothing, continue bubbling.
-            else
-              # Any other truthy value also means continue bubbling.
-              if @debug
-                console.log "Unknown truthy return value in handler stack: #{eventNumber}, #{type}, #{result}"
+        if result == @passEventToPage
+          return true
+        else if result == @suppressPropagation
+          DomUtils.suppressPropagation event
+          return false
+        else if result == @restartBubbling
+          return @bubbleEvent type, event
+        else if result == @continueBubbling or result
+          true # Do nothing, but continue bubbling (for @continueBubbling and all truthy results).
         else
-          if @debug and result != false
-            console.log "Unknown falsy return value in handler stack: #{eventNumber}, #{type}, #{result}"
-          # Any falsy value means suppress event.
+          # result is @suppressEvent or falsy.
           DomUtils.suppressEvent event if @isChromeEvent event
           return false
-      else
-        @logResult eventNumber, type, event, handler, "skip" if @debug
+
+    # None of our handlers want to suppress the event, so pass it to the page.
     true
 
   remove: (id = @currentId) ->
