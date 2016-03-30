@@ -5,6 +5,7 @@ context "handlerStack",
   setup ->
     stub global, "DomUtils", {}
     stub DomUtils, "suppressEvent", ->
+    stub DomUtils, "suppressPropagation", ->
     @handlerStack = new HandlerStack
     @handler1Called = false
     @handler2Called = false
@@ -23,16 +24,16 @@ context "handlerStack",
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
 
-  should "terminate bubbling on stopBubblingAndTrue, and be true", ->
+  should "terminate bubbling on passEventToPage, and be true", ->
     @handlerStack.push { keydown: => @handler1Called = true }
-    @handlerStack.push { keydown: => @handler2Called = true; @handlerStack.stopBubblingAndTrue  }
+    @handlerStack.push { keydown: => @handler2Called = true; @handlerStack.passEventToPage }
     assert.isTrue @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
 
-  should "terminate bubbling on stopBubblingAndTrue, and be false", ->
+  should "terminate bubbling on passEventToPage, and be false", ->
     @handlerStack.push { keydown: => @handler1Called = true }
-    @handlerStack.push { keydown: => @handler2Called = true; @handlerStack.stopBubblingAndFalse  }
+    @handlerStack.push { keydown: => @handler2Called = true; @handlerStack.suppressPropagation }
     assert.isFalse @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called

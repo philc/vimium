@@ -31,11 +31,14 @@ class Mode
   @modes: []
 
   # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent.
-  continueBubbling: true
-  suppressEvent: false
-  stopBubblingAndTrue: handlerStack.stopBubblingAndTrue
-  stopBubblingAndFalse: handlerStack.stopBubblingAndFalse
+  continueBubbling: handlerStack.continueBubbling
+  suppressEvent: handlerStack.suppressEvent
+  passEventToPage: handlerStack.passEventToPage
+  suppressPropagation: handlerStack.suppressPropagation
   restartBubbling: handlerStack.restartBubbling
+
+  alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
+  alwaysSuppressPropagation: handlerStack.alwaysSuppressPropagation
 
   constructor: (@options = {}) ->
     @handlers = []
@@ -53,7 +56,8 @@ class Mode
     # or 2) to worry about event suppression and event-handler return values.
     if @options.suppressAllKeyboardEvents
       for type in [ "keydown", "keypress", "keyup" ]
-        @options[type] = @alwaysSuppressEvent @options[type]
+        do (handler = @options[type]) =>
+          @options[type] = (event) => @alwaysSuppressPropagation => handler? event
 
     @push
       keydown: @options.keydown || null
@@ -67,7 +71,7 @@ class Mode
         if @options.indicator?
           if HUD?.isReady()
             if @options.indicator then HUD.show @options.indicator else HUD.hide true, false
-          @stopBubblingAndTrue
+          @passEventToPage
         else @continueBubbling
 
     # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
@@ -126,7 +130,7 @@ class Mode
         _name: "mode-#{@id}/passInitialKeyupEvents"
         keydown: => @alwaysContinueBubbling -> handlerStack.remove()
         keyup: (event) =>
-          if KeyboardUtils.isPrintable event then @stopBubblingAndFalse else @stopBubblingAndTrue
+          if KeyboardUtils.isPrintable event then @suppressPropagation else @passEventToPage
 
     # if @options.suppressTrailingKeyEvents is set, then  -- on exit -- we suppress all key events until a
     # subsquent (non-repeat) keydown or keypress.  In particular, the intention is to catch keyup events for
@@ -136,16 +140,16 @@ class Mode
       @onExit ->
         handler = (event) ->
           if event.repeat
-            false # Suppress event.
+            handlerStack.suppressEvent
           else
             keyEventSuppressor.exit()
-            true # Do not suppress event.
+            handlerStack.continueBubbling
 
         keyEventSuppressor = new Mode
           name: "suppress-trailing-key-events"
           keydown: handler
           keypress: handler
-          keyup: -> handlerStack.stopBubblingAndFalse
+          keyup: -> handlerStack.suppressPropagation
 
     Mode.modes.push this
     @setIndicator()
@@ -180,18 +184,6 @@ class Mode
       Mode.modes = Mode.modes.filter (mode) => mode != this
       @modeIsActive = false
       @setIndicator()
-
-  # Shorthand for an otherwise long name.  This wraps a handler with an arbitrary return value, and always
-  # yields @continueBubbling instead.  This simplifies handlers if they always continue bubbling (a common
-  # case), because they do not need to be concerned with the value they yield.
-  alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
-
-  # Shorthand for an event handler which always suppresses event propagation.
-  alwaysSuppressEvent: (handler = null) ->
-    (event) =>
-      handler? event
-      DomUtils.suppressPropagation event
-      @stopBubblingAndFalse
 
   # Debugging routines.
   logModes: ->

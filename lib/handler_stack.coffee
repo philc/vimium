@@ -9,15 +9,21 @@ class HandlerStack
 
     # A handler should return this value to immediately discontinue bubbling and pass the event on to the
     # underlying page.
-    @stopBubblingAndTrue = new Object()
+    @passEventToPage = new Object()
 
     # A handler should return this value to indicate that the event has been consumed, and no further
     # processing should take place.  The event does not propagate to the underlying page.
-    @stopBubblingAndFalse = new Object()
+    @suppressPropagation = new Object()
 
     # A handler should return this value to indicate that bubbling should be restarted.  Typically, this is
     # used when, while bubbling an event, a new mode is pushed onto the stack.
     @restartBubbling = new Object()
+
+    # A handler should return this value to continue bubbling the event.
+    @continueBubbling = true
+
+    # A handler should return this value to suppress an event.
+    @suppressEvent = false
 
   # Adds a handler to the top of the stack. Returns a unique ID for that handler that can be used to remove it
   # later.
@@ -34,8 +40,8 @@ class HandlerStack
     handler.id = ++@counter
 
   # Called whenever we receive a key or other event. Each individual handler has the option to stop the
-  # event's propagation by returning a falsy value, or stop bubbling by returning @stopBubblingAndFalse or
-  # @stopBubblingAndTrue.
+  # event's propagation by returning a falsy value, or stop bubbling by returning @suppressPropagation or
+  # @passEventToPage.
   bubbleEvent: (type, event) ->
     @eventNumber += 1
     eventNumber = @eventNumber
@@ -47,12 +53,27 @@ class HandlerStack
         @currentId = handler.id
         result = handler[type].call this, event
         @logResult eventNumber, type, event, handler, result if @debug
-        if not result
+        if result
+          switch result
+            when @passEventToPage
+              return true
+            when @suppressPropagation
+              DomUtils.suppressPropagation event
+              return false
+            when @restartBubbling
+              return @bubbleEvent type, event
+            when @continueBubbling
+              true # Do nothing, continue bubbling.
+            else
+              # Any other truthy value also means continue bubbling.
+              if @debug
+                console.log "Unknown truthy return value in handler stack: #{eventNumber}, #{type}, #{result}"
+        else
+          if @debug and result != false
+            console.log "Unknown falsy return value in handler stack: #{eventNumber}, #{type}, #{result}"
+          # Any falsy value means suppress event.
           DomUtils.suppressEvent event if @isChromeEvent event
           return false
-        return true if result == @stopBubblingAndTrue
-        return false if result == @stopBubblingAndFalse
-        return @bubbleEvent type, event if result == @restartBubbling
       else
         @logResult eventNumber, type, event, handler, "skip" if @debug
     true
@@ -74,21 +95,21 @@ class HandlerStack
   # Convenience wrappers.  Handlers must return an approriate value.  These are wrappers which handlers can
   # use to always return the same value.  This then means that the handler itself can be implemented without
   # regard to its return value.
-  alwaysContinueBubbling: (handler) ->
-    handler()
-    true
+  alwaysContinueBubbling: (handler = null) ->
+    handler?()
+    @continueBubbling
 
-  neverContinueBubbling: (handler) ->
-    handler()
-    false
+  alwaysSuppressPropagation: (handler = null) ->
+    handler?()
+    @suppressPropagation
 
   # Debugging.
   logResult: (eventNumber, type, event, handler, result) ->
     label =
       switch result
-        when @stopBubblingAndTrue then "stop/true"
-        when @stopBubblingAndFalse then "stop/false"
-        when @restartBubbling then "rebubble"
+        when @passEventToPage then "passEventToPage"
+        when @suppressPropagation then "suppressPropagation"
+        when @restartBubbling then "restartBubbling"
         when "skip" then "skip"
         when true then "continue"
     label ||= if result then "continue/truthy" else "suppress"
