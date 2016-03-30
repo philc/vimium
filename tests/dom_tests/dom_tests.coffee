@@ -1022,3 +1022,15 @@ context "WaitForEnter",
     sendKeyboardEvents "abc"
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
+
+context "SuppressAllKeyboardEvents",
+  setup ->
+    initializeModeState()
+
+  should "supress keyboard events", ->
+    sendKeyboardEvent "a"
+    assert.equal 3, pageKeyboardEventCount
+    new SuppressAllKeyboardEvents
+    sendKeyboardEvent "a"
+    assert.equal 0, pageKeyboardEventCount
+

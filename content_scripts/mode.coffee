@@ -27,7 +27,7 @@ count = 0
 
 class Mode
   # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console.
-  debug: false
+  @debug: false
   @modes: []
 
   # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent.
@@ -195,12 +195,12 @@ class Mode
 
   # Debugging routines.
   logModes: ->
-    if @debug
+    if Mode.debug
       @log "active modes (top to bottom):"
       @log " ", mode.id for mode in Mode.modes[..].reverse()
 
   log: (args...) ->
-    console.log args... if @debug
+    console.log args... if Mode.debug
 
   # For tests only.
   @top: ->
@@ -215,7 +215,7 @@ class SuppressAllKeyboardEvents extends Mode
   constructor: (options = {}) ->
     defaults =
       name: "suppressAllKeyboardEvents"
-      suppressallkeyboardevents: true
+      suppressAllKeyboardEvents: true
     super extend defaults, options
 
 root = exports ? window
