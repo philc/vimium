@@ -1034,3 +1034,39 @@ context "SuppressAllKeyboardEvents",
     sendKeyboardEvent "a"
     assert.equal 0, pageKeyboardEventCount
 
+context "GrabBackFocus",
+  setup ->
+    testContent = "<input type='text' value='some value' id='input'/>"
+    document.getElementById("test-div").innerHTML = testContent
+    stubSettings "grabBackFocus", true
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "blur an already focused input", ->
+    document.getElementById("input").focus()
+    assert.isTrue document.activeElement
+    assert.isTrue DomUtils.isEditable document.activeElement
+    initializeModeState()
+    assert.isTrue document.activeElement
+    assert.isFalse DomUtils.isEditable document.activeElement
+
+  should "blur a newly focused input", ->
+    initializeModeState()
+    document.getElementById("input").focus()
+    assert.isTrue document.activeElement
+    assert.isFalse DomUtils.isEditable document.activeElement
+
+  should "exit on a key event", ->
+    initializeModeState()
+    sendKeyboardEvent "a"
+    document.getElementById("input").focus()
+    assert.isTrue document.activeElement
+    assert.isTrue DomUtils.isEditable document.activeElement
+
+  should "exit on a mousedown event", ->
+    initializeModeState()
+    handlerStack.bubbleEvent "mousedown", target: document.body
+    document.getElementById("input").focus()
+    assert.isTrue document.activeElement
+    assert.isTrue DomUtils.isEditable document.activeElement
