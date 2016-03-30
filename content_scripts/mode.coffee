@@ -211,5 +211,12 @@ class Mode
     mode.exit() for mode in @modes
     @modes = []
 
+class SuppressAllKeyboardEvents extends Mode
+  constructor: (options = {}) ->
+    defaults =
+      name: "suppressAllKeyboardEvents"
+      suppressallkeyboardevents: true
+    super extend defaults, options
+
 root = exports ? window
-root.Mode = Mode
+extend root, {Mode, SuppressAllKeyboardEvents}

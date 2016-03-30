@@ -56,6 +56,10 @@ HintCoordinator =
     chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", messageType, frameId}
 
   prepareToActivateMode: (mode, onExit) ->
+    # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
+    # prevent other Vimium commands from being triggered before link-hints mode is launched, we install a
+    # temporary mode to block keyboard events.
+    new SuppressAllKeyboardEvents singleton: "link-hints-mode"
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
@@ -130,6 +134,7 @@ class LinkHintsMode
     @hintMode = new Mode
       name: "hint/#{mode.name}"
       indicator: false
+      singleton: "link-hints-mode"
       passInitialKeyupEvents: true
       suppressAllKeyboardEvents: true
       suppressTrailingKeyEvents: true
@@ -402,7 +407,7 @@ class FilterHints
 
   getMatchingHints: (hintMarkers, tabCount = 0) ->
     # At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
-    # input. use them to filter the link hints accordingly.
+    # input. Use them to filter the link hints accordingly.
     matchString = @hintKeystrokeQueue.join ""
     linksMatched = @filterLinkHints hintMarkers
     linksMatched = linksMatched.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
@@ -634,7 +639,7 @@ LocalHints =
           false # This is not a false positive.
         element
 
-    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
+    # TODO(mrmr1993): Consider z-index. z-index affects behaviour as follows:
     #  * The document has a local stacking context.
     #  * An element with z-index specified
     #    - sets its z-order position in the containing stacking context, and
