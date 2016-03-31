@@ -102,7 +102,7 @@ class KeyHandlerMode extends Mode
       bgLog "Call #{command.command}[#{count}] (#{@name})"
       @reset()
       @commandHandler {command, count}
-    false # Suppress event.
+    @suppressEvent
 
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode

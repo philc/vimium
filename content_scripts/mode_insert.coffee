@@ -14,7 +14,7 @@ class InsertMode extends Mode
       # Check for a pass-next-key key.
       if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
         new PassNextKeyMode
-        return false
+        return @suppressEvent
 
       return @passEventToPage unless event.type == 'keydown' and KeyboardUtils.isEscape event
       DomUtils.suppressKeyupAfterEscape handlerStack
