@@ -14,9 +14,9 @@ class InsertMode extends Mode
       # Check for a pass-next-key key.
       if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
         new PassNextKeyMode
-        return false
+        return @suppressEvent
 
-      return @stopBubblingAndTrue unless event.type == 'keydown' and KeyboardUtils.isEscape event
+      return @passEventToPage unless event.type == 'keydown' and KeyboardUtils.isEscape event
       DomUtils.suppressKeyupAfterEscape handlerStack
       target = event.srcElement
       if target and DomUtils.isFocusable target
@@ -115,19 +115,19 @@ class PassNextKeyMode extends Mode
       # We exit on blur because, once we lose the focus, we can no longer track key events.
       exitOnBlur: window
       keypress: =>
-        @stopBubblingAndTrue
+        @passEventToPage
 
       keydown: =>
         seenKeyDown = true
         keyDownCount += 1
-        @stopBubblingAndTrue
+        @passEventToPage
 
       keyup: =>
         if seenKeyDown
           unless 0 < --keyDownCount
             unless 0 < --count
               @exit()
-        @stopBubblingAndTrue
+        @passEventToPage
 
 root = exports ? window
 root.InsertMode = InsertMode

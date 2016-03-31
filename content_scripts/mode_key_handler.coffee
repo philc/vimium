@@ -40,12 +40,12 @@ class KeyHandlerMode extends Mode
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       @keydownEvents[event.keyCode] = true
       @reset()
-      false # Suppress event.
+      @suppressEvent
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
     else if isEscape and HelpDialog?.showing
       @keydownEvents[event.keyCode] = true
       HelpDialog.hide()
-      false # Suppress event.
+      @suppressEvent
     else if isEscape
       @continueBubbling
     else if @isMappedKey keyChar
@@ -56,8 +56,7 @@ class KeyHandlerMode extends Mode
       # We will possibly be handling a subsequent keypress event, so suppress propagation of this event to
       # prevent triggering page event listeners (e.g. Google instant Search).
       @keydownEvents[event.keyCode] = true
-      DomUtils.suppressPropagation event
-      @stopBubblingAndTrue
+      @suppressPropagation
     else
       @continueBubbling
 
@@ -68,7 +67,7 @@ class KeyHandlerMode extends Mode
     else if @isCountKey keyChar
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
-      false # Suppress event.
+      @suppressEvent
     else
       @reset()
       @continueBubbling
@@ -76,8 +75,7 @@ class KeyHandlerMode extends Mode
   onKeyup: (event) ->
     return @continueBubbling unless event.keyCode of @keydownEvents
     delete @keydownEvents[event.keyCode]
-    DomUtils.suppressPropagation event
-    @stopBubblingAndTrue
+    @suppressPropagation
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
   isMappedKey: (keyChar) ->
@@ -104,7 +102,7 @@ class KeyHandlerMode extends Mode
       bgLog "Call #{command.command}[#{count}] (#{@name})"
       @reset()
       @commandHandler {command, count}
-    false # Suppress event.
+    @suppressEvent
 
 root = exports ? window
 root.KeyHandlerMode = KeyHandlerMode

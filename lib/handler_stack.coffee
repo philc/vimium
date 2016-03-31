@@ -9,15 +9,21 @@ class HandlerStack
 
     # A handler should return this value to immediately discontinue bubbling and pass the event on to the
     # underlying page.
-    @stopBubblingAndTrue = new Object()
+    @passEventToPage = new Object()
 
     # A handler should return this value to indicate that the event has been consumed, and no further
     # processing should take place.  The event does not propagate to the underlying page.
-    @stopBubblingAndFalse = new Object()
+    @suppressPropagation = new Object()
 
     # A handler should return this value to indicate that bubbling should be restarted.  Typically, this is
     # used when, while bubbling an event, a new mode is pushed onto the stack.
     @restartBubbling = new Object()
+
+    # A handler should return this value to continue bubbling the event.
+    @continueBubbling = true
+
+    # A handler should return this value to suppress an event.
+    @suppressEvent = false
 
   # Adds a handler to the top of the stack. Returns a unique ID for that handler that can be used to remove it
   # later.
@@ -34,27 +40,35 @@ class HandlerStack
     handler.id = ++@counter
 
   # Called whenever we receive a key or other event. Each individual handler has the option to stop the
-  # event's propagation by returning a falsy value, or stop bubbling by returning @stopBubblingAndFalse or
-  # @stopBubblingAndTrue.
+  # event's propagation by returning a falsy value, or stop bubbling by returning @suppressPropagation or
+  # @passEventToPage.
   bubbleEvent: (type, event) ->
     @eventNumber += 1
     eventNumber = @eventNumber
-    # We take a copy of the array in order to avoid interference from concurrent removes (for example, to
-    # avoid calling the same handler twice, because elements have been spliced out of the array by remove).
     for handler in @stack[..].reverse()
-      # A handler may have been removed (handler.id == null), so check.
-      if handler?.id and handler[type]
+      # A handler might have been removed (handler.id == null), so check; or there might just be no handler
+      # for this type of event.
+      unless handler?.id and handler[type]
+        @logResult eventNumber, type, event, handler, "skip [#{handler[type]?}]" if @debug
+      else
         @currentId = handler.id
         result = handler[type].call this, event
         @logResult eventNumber, type, event, handler, result if @debug
-        if not result
+        if result == @passEventToPage
+          return true
+        else if result == @suppressPropagation
+          DomUtils.suppressPropagation event
+          return false
+        else if result == @restartBubbling
+          return @bubbleEvent type, event
+        else if result == @continueBubbling or (result and result != @suppressEvent)
+          true # Do nothing, but continue bubbling.
+        else
+          # result is @suppressEvent or falsy.
           DomUtils.suppressEvent event if @isChromeEvent event
           return false
-        return true if result == @stopBubblingAndTrue
-        return false if result == @stopBubblingAndFalse
-        return @bubbleEvent type, event if result == @restartBubbling
-      else
-        @logResult eventNumber, type, event, handler, "skip" if @debug
+
+    # None of our handlers care about this event, so pass it to the page.
     true
 
   remove: (id = @currentId) ->
@@ -74,21 +88,21 @@ class HandlerStack
   # Convenience wrappers.  Handlers must return an approriate value.  These are wrappers which handlers can
   # use to always return the same value.  This then means that the handler itself can be implemented without
   # regard to its return value.
-  alwaysContinueBubbling: (handler) ->
-    handler()
-    true
+  alwaysContinueBubbling: (handler = null) ->
+    handler?()
+    @continueBubbling
 
-  neverContinueBubbling: (handler) ->
-    handler()
-    false
+  alwaysSuppressPropagation: (handler = null) ->
+    handler?()
+    @suppressPropagation
 
   # Debugging.
   logResult: (eventNumber, type, event, handler, result) ->
     label =
       switch result
-        when @stopBubblingAndTrue then "stop/true"
-        when @stopBubblingAndFalse then "stop/false"
-        when @restartBubbling then "rebubble"
+        when @passEventToPage then "passEventToPage"
+        when @suppressPropagation then "suppressPropagation"
+        when @restartBubbling then "restartBubbling"
         when "skip" then "skip"
         when true then "continue"
     label ||= if result then "continue/truthy" else "suppress"

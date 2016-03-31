@@ -750,7 +750,6 @@ class WaitForEnter extends Mode
         else if KeyboardUtils.isEscape event
           @exit()
           callback false # false -> isSuccess.
-        DomUtils.suppressEvent event
 
 root = exports ? window
 root.LinkHints = LinkHints
