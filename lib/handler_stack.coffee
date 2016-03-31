@@ -61,14 +61,14 @@ class HandlerStack
           return false
         else if result == @restartBubbling
           return @bubbleEvent type, event
-        else if result == @continueBubbling or result
-          true # Do nothing, but continue bubbling (for @continueBubbling and all truthy results).
+        else if result == @continueBubbling or (result and result != @suppressEvent)
+          true # Do nothing, but continue bubbling.
         else
           # result is @suppressEvent or falsy.
           DomUtils.suppressEvent event if @isChromeEvent event
           return false
 
-    # None of our handlers want to suppress the event, so pass it to the page.
+    # None of our handlers care about this event, so pass it to the page.
     true
 
   remove: (id = @currentId) ->
