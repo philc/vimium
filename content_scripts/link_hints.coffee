@@ -64,17 +64,21 @@ HintCoordinator =
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
   getHintDescriptors: ->
-    @localHints = LocalHints.getLocalHints()
-    @sendMessage "postHintDescriptors", hintDescriptors:
-      @localHints.map ({rect, linkText, showLinkText, hasHref}, localIndex) ->
-        {rect, linkText, showLinkText, hasHref, frameId, localIndex}
+    # Ensure that the settings are loaded.  The request might have been initiated in another frame.
+    Settings.onLoaded =>
+      @localHints = LocalHints.getLocalHints()
+      @sendMessage "postHintDescriptors", hintDescriptors:
+        @localHints.map ({rect, linkText, showLinkText, hasHref}, localIndex) ->
+          {rect, linkText, showLinkText, hasHref, frameId, localIndex}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
   # step in every frame, and @linkHintsMode is in the same state in every frame.
   activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
-    @onExit = [] unless frameId == originatingFrameId
-    @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex]
+    # Ensure that the settings are loaded.  The request might have been initiated in another frame.
+    Settings.onLoaded =>
+      @onExit = [] unless frameId == originatingFrameId
+      @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex]
 
   # The following messages are exchanged between frames while link-hints mode is active.
   updateKeyState: (request) -> @linkHintsMode.updateKeyState request
