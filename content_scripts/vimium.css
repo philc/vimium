@@ -144,8 +144,8 @@ iframe.vimiumHelpDialogFrame {
 
   width:680px;
   min-width:400px;
-  height:calc(100% - 65px);
-  max-height:calc(100% - 65px);
+  height: 740px;
+  max-height: 85%;
 
   display: block;
   position: fixed;
