@@ -23,7 +23,7 @@ Settings =
       # For UIComponents (or other content of ours in an iframe within a regular page), we can't access
       # localStorage, so we check that the top level frame is also an extension page.
       @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
-      @onLoaded()
+      @runOnLoadedCallbacks()
 
     chrome.storage.local.get null, (localItems) =>
       localItems = {} if chrome.runtime.lastError
@@ -34,14 +34,17 @@ Settings =
         chrome.storage.onChanged.addListener (changes, area) =>
           @propagateChangesFromChromeStorage changes if area == "sync"
 
-        @onLoaded()
+        @runOnLoadedCallbacks()
 
   # Called after @cache has been initialized.  On extension pages, this will be called twice, but that does
   # not matter because it's idempotent.
-  onLoaded: ->
-    @log "onLoaded: #{@onLoadedCallbacks.length} callback(s)"
+  runOnLoadedCallbacks: ->
+    @log "runOnLoadedCallbacks: #{@onLoadedCallbacks.length} callback(s)"
     @isLoaded = true
-    callback() while callback = @onLoadedCallbacks.pop()
+    @onLoadedCallbacks.pop()() while 0 < @onLoadedCallbacks.length
+
+  onLoaded: (callback) ->
+    if @isLoaded then callback() else @onLoadedCallbacks.push callback
 
   shouldSyncKey: (key) ->
     (key of @defaults) and key not in [ "settingsVersion", "previousVersion" ]
@@ -84,8 +87,7 @@ Settings =
 
   use: (key, callback) ->
     @log "use: #{key} (isLoaded=#{@isLoaded})"
-    invokeCallback = => callback @get key
-    if @isLoaded then invokeCallback() else @onLoadedCallbacks.push invokeCallback
+    @onLoaded => callback @get key
 
   # For settings which require action when their value changes, add hooks to this object.
   postUpdateHooks: {}
