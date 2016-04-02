@@ -138,12 +138,15 @@ installModes = ->
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
+registerFrame = ->
+  Frame.postMessage "registerFrame"
+
 #
 # Complete initialization work that sould be done prior to DOMReady.
 #
 initializePreDomReady = ->
   installListeners()
-  Frame.init()
+  Frame.init registerFrame
   checkIfEnabledForUrl()
 
   requestHandlers =
@@ -214,7 +217,7 @@ Frame =
   registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
   linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
 
-  init: (callback) ->
+  init: (callback = null) ->
     @port = chrome.runtime.connect name: "frames"
 
     @port.onMessage.addListener (request) =>
@@ -224,6 +227,8 @@ Frame =
       # We disable the content scripts when we lose contact with the background page.
       isEnabledForUrl = false
       window.removeEventListener "focus", onFocus
+
+    callback?()
 
 setScrollPosition = ({ scrollX, scrollY }) ->
   if DomUtils.isTopFrame()

@@ -290,10 +290,6 @@ for icon in [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
-    frameIdsForTab[tabId] ?= []
-    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId]
-    portsForTab[tabId] ?= {}
-    portsForTab[tabId][frameId] = port
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
 
     port.onDisconnect.addListener listener = ->
@@ -309,6 +305,12 @@ Frames =
     # Return our onMessage handler for this port.
     (request, port) =>
       this[request.handler] {request, tabId, frameId, port}
+
+  registerFrame: ({tabId, frameId, port}) ->
+    frameIdsForTab[tabId] ?= []
+    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId]
+    portsForTab[tabId] ?= {}
+    portsForTab[tabId][frameId] = port
 
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
