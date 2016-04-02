@@ -131,6 +131,8 @@ class LinkHintsMode
       HUD.showForDuration "No links to select.", 2000
       return
 
+    # This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort stable.
+    @stableSortCount = 0
     @hintMarkers = (@createMarkerFor desc for desc in hintDescriptors)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
     @markerMatcher.fillInMarkers @hintMarkers
@@ -168,22 +170,19 @@ class LinkHintsMode
   #
   # Creates a link marker for the given link.
   #
-  createMarkerFor: do ->
-    # This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort stable.
-    stableSortCount = 0
-    (desc) ->
-      marker = DomUtils.createElement "div"
-      marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-      marker.stableSortCount = ++stableSortCount
-      # Extract other relevant fields from the hint descriptor.
-      extend marker,
-        {hintDescriptor: desc, linkText: desc.linkText, showLinkText: desc.showLinkText, rect: desc.rect}
+  createMarkerFor: (desc) ->
+    marker = DomUtils.createElement "div"
+    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+    marker.stableSortCount = ++@stableSortCount
+    # Extract other relevant fields from the hint descriptor.
+    extend marker,
+      {hintDescriptor: desc, linkText: desc.linkText, showLinkText: desc.showLinkText, rect: desc.rect}
 
-      clientRect = desc.rect
-      marker.style.left = clientRect.left + window.scrollX + "px"
-      marker.style.top = clientRect.top  + window.scrollY  + "px"
+    clientRect = desc.rect
+    marker.style.left = clientRect.left + window.scrollX + "px"
+    marker.style.top = clientRect.top  + window.scrollY  + "px"
 
-      marker
+    marker
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (event) ->
