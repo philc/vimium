@@ -439,7 +439,8 @@ initializeTopFrameUIComponents = do ->
   Frame.addEventListener "initializeTopFrameUIComponents", Utils.makeIdempotent ->
     DomUtils.documentReady Vomnibar.init.bind Vomnibar
 
-  Utils.makeIdempotent -> Frame.postMessage "initializeTopFrameUIComponents"
+  Utils.makeIdempotent -> DomUtils.documentReady ->
+    Frame.postMessage "initializeTopFrameUIComponents"
 
 # Initialize UI components which are only installed in all frames (i.e., the HUD).
 initializeAllFrameUIComponents = Utils.makeIdempotent ->
