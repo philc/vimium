@@ -335,6 +335,9 @@ Frames =
   initializeTopFrameUIComponents: ({tabId}) ->
     portsForTab[tabId][0]?.postMessage handler: "initializeTopFrameUIComponents"
 
+  linkHintsMessage: ({request, tabId, frameId}) ->
+    HintCoordinator.onMessage extend(request, {frameId}), tab: id: tabId
+
 handleFrameFocused = ({tabId, frameId}) ->
   frameIdsForTab[tabId] ?= []
   frameIdsForTab[tabId] = cycleToFrame frameIdsForTab[tabId], frameId
@@ -351,6 +354,10 @@ cycleToFrame = (frames, frameId, count = 0) ->
 HintCoordinator =
   tabState: {}
 
+  # These messages can be received via sendRequestHandlers or via a Frames port.  The Frames port seems to be
+  # considerably faster (about a factor of 5), so we use that whenever possible.  However, when sending
+  # messages, we use chrome.tabs.sendMessage because, in tabs with many frames, broadcasting seems (?) likely
+  # to be faster.
   onMessage: (request, {tab: {id: tabId}}) ->
     if request.messageType of this
       this[request.messageType] tabId, request

@@ -53,7 +53,9 @@ HintCoordinator =
   onExit: []
 
   sendMessage: (messageType, request = {}) ->
-    chrome.runtime.sendMessage extend request, {handler: "linkHintsMessage", messageType, frameId}
+    # We use Frame.postMessage() (instead of chrome.runtime.sendMessage()) because that seems to be
+    # considerable faster, by about a factor of 5.
+    Frame.postMessage "linkHintsMessage", extend request, {messageType}
 
   prepareToActivateMode: (mode, onExit) ->
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
