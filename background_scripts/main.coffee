@@ -63,7 +63,7 @@ completionHandlers =
 handleCompletions = (sender) -> (request, port) ->
   completionHandlers[request.handler] completers[request.name], request, port
 
-chrome.runtime.onConnect.addListener (port, name) ->
+chrome.runtime.onConnect.addListener (port) ->
   if (portHandlers[port.name])
     port.onMessage.addListener portHandlers[port.name] port.sender, port
 
