@@ -2,13 +2,16 @@ DomUtils =
   #
   # Runs :callback if the DOM has loaded, otherwise runs it on load
   #
-  documentReady: (callback) ->
-    if document.readyState == "loading"
-      window.addEventListener "DOMContentLoaded", handler = ->
-        window.removeEventListener "DOMContentLoaded", handler
+  documentReady: do ->
+    isReady = false
+    (callback) ->
+      if document.readyState == "loading" and not isReady
+        window.addEventListener "DOMContentLoaded", handler = ->
+          isReady = true
+          window.removeEventListener "DOMContentLoaded", handler
+          callback()
+      else
         callback()
-    else
-      callback()
 
   createElement: (tagName) ->
     element = document.createElement tagName
