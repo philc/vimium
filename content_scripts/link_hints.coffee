@@ -68,8 +68,8 @@ HintCoordinator =
     Settings.onLoaded =>
       @localHints = LocalHints.getLocalHints()
       @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({rect, linkText, showLinkText, hasHref}, localIndex) ->
-          {rect, linkText, showLinkText, hasHref, frameId, localIndex}
+        @localHints.map ({rect, linkText, showLinkText, hasHref, reason}, localIndex) ->
+          {rect, linkText, showLinkText, hasHref, reason, frameId, localIndex}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
@@ -283,8 +283,11 @@ class LinkHintsMode
     if clickEl?
       HintCoordinator.onExit.push (isSuccess) =>
         if isSuccess
-          if clickEl == document.body
+          if linkMatched.hintDescriptor.reason == "Frame."
             Utils.nextTick -> focusThisFrame highlight: true
+          else if linkMatched.hintDescriptor.reason == "Scroll."
+            # Tell the scroller that this is the activated element.
+            handlerStack.bubbleEvent "DOMActivate", target: clickEl
           else if DomUtils.isSelectable clickEl
             window.focus()
             DomUtils.simulateSelect clickEl
@@ -576,6 +579,9 @@ LocalHints =
               window.innerWidth > 3 and window.innerHeight > 3 and
               document.body?.tagName.toLowerCase() != "frameset"
             reason = "Frame."
+        isClickable ||=
+          if element == document.body and document.hasFocus() and Scroller.isScrollableElement element
+            reason = "Scroll."
       when "div", "ol", "ul"
         isClickable ||=
           if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
