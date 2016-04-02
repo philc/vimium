@@ -138,6 +138,11 @@ installModes = ->
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
+initializeUIComponents = ->
+ # Both of these are idempotent.
+ HUD.init()
+ Vomnibar.init() if DomUtils.isTopFrame()
+
 #
 # Complete initialization work that should be done prior to DOMReady.
 #
@@ -214,21 +219,19 @@ Frame =
   linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
   registerFrameId: ({chromeFrameId}) ->
     frameId = window.frameId = chromeFrameId
-    unless frameId == 0
-      # The background page registers the top frame automatically.  We register any other frame immediately if
-      # it is focused or its window isn't tiny.  We register tiny frames later, when necessary.  This affects
-      # focusFrame() and link hints.
-      if windowIsFocused() or not DomUtils.windowIsTooSmall()
+    # We register a frame immediately only if it is focused or its window isn't tiny.  We register tiny
+    # frames later, when necessary.  This affects focusFrame() and link hints.
+    if windowIsFocused() or not DomUtils.windowIsTooSmall()
+      Frame.postMessage "registerFrame"
+    else
+      postRegisterFrame = ->
+        window.removeEventListener "focus", focusHandler
+        window.removeEventListener "resize", resizeHandler
         Frame.postMessage "registerFrame"
-      else
-        postRegisterFrame = ->
-          window.removeEventListener "focus", focusHandler
-          window.removeEventListener "resize", resizeHandler
-          Frame.postMessage "registerFrame"
-        window.addEventListener "focus", focusHandler = ->
-          postRegisterFrame() if event.target == window
-        window.addEventListener "resize", resizeHandler = ->
-          postRegisterFrame() unless DomUtils.windowIsTooSmall()
+      window.addEventListener "focus", focusHandler = ->
+        postRegisterFrame() if event.target == window
+      window.addEventListener "resize", resizeHandler = ->
+        postRegisterFrame() unless DomUtils.windowIsTooSmall()
 
   init: ->
     @port = chrome.runtime.connect name: "frames"
@@ -434,18 +437,6 @@ extend window,
               targetElement: document.activeElement
               indicator: false
 
-# Initialize UI components which are only installed in the main/top frame.
-initializeTopFrameUIComponents = do ->
-  Frame.addEventListener "initializeTopFrameUIComponents", Utils.makeIdempotent ->
-    DomUtils.documentReady Vomnibar.init.bind Vomnibar
-
-  Utils.makeIdempotent -> DomUtils.documentReady ->
-    Frame.postMessage "initializeTopFrameUIComponents"
-
-# Initialize UI components which are only installed in all frames (i.e., the HUD).
-initializeAllFrameUIComponents = Utils.makeIdempotent ->
-  DomUtils.documentReady HUD.init.bind HUD
-
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL and set
 # the page icon.
@@ -457,8 +448,7 @@ checkIfEnabledForUrl = do ->
     # Initialize UI components, if necessary. We only initialize these once we know that Vimium is enabled;
     # see #1838.  We need to check this every time so that we can change state from disabled to enabled.
     if isEnabledForUrl
-      initializeTopFrameUIComponents()
-      initializeAllFrameUIComponents() if frameIsFocused
+      initializeUIComponents() if frameIsFocused
     else
       # Hide the HUD if we're not enabled.
       HUD.hide() if HUD.isReady()

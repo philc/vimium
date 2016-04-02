@@ -291,8 +291,6 @@ Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
-    # We only register the top frame automatically; other frames request registration via "registerFrame".
-    @registerFrame {tabId, frameId, port} if frameId == 0
 
     port.onDisconnect.addListener listener = ->
       # Unregister the frame.  However, we never unregister the main/top frame.  If the tab is navigating to
@@ -333,9 +331,6 @@ Frames =
     if frameId == 0
       tabLoadedHandlers[tabId]?()
       delete tabLoadedHandlers[tabId]
-
-  initializeTopFrameUIComponents: ({tabId}) ->
-    portsForTab[tabId][0]?.postMessage handler: "initializeTopFrameUIComponents"
 
   linkHintsMessage: ({request, tabId, frameId}) ->
     HintCoordinator.onMessage tabId, frameId, request
