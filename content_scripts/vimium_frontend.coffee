@@ -212,6 +212,7 @@ Frame =
   addEventListener: (handler, callback) -> @listeners[handler] = callback
   postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
   registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
+  linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
 
   init: (callback) ->
     @port = chrome.runtime.connect name: "frames"

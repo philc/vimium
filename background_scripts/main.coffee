@@ -336,7 +336,7 @@ Frames =
     portsForTab[tabId][0]?.postMessage handler: "initializeTopFrameUIComponents"
 
   linkHintsMessage: ({request, tabId, frameId}) ->
-    HintCoordinator.onMessage extend(request, {frameId}), tab: id: tabId
+    HintCoordinator.onMessage tabId, frameId, request
 
 handleFrameFocused = ({tabId, frameId}) ->
   frameIdsForTab[tabId] ?= []
@@ -354,26 +354,23 @@ cycleToFrame = (frames, frameId, count = 0) ->
 HintCoordinator =
   tabState: {}
 
-  # These messages can be received via sendRequestHandlers or via a Frames port.  The Frames port seems to be
-  # considerably faster (about a factor of 5), so we use that whenever possible.  However, when sending
-  # messages, we use chrome.tabs.sendMessage because, in tabs with many frames, broadcasting seems (?) likely
-  # to be faster.
-  onMessage: (request, {tab: {id: tabId}}) ->
+  onMessage: (tabId, frameId, request) ->
     if request.messageType of this
-      this[request.messageType] tabId, request
+      this[request.messageType] tabId, frameId, request
     else
-      # If there's no handler here, then the message is bounced to all frames in the sender's tab.
+      # If there's no handler here, then the message is forwarded to all frames in the sender's tab.
       @sendMessage request.messageType, tabId, request
 
   sendMessage: (messageType, tabId, request = {}) ->
-    chrome.tabs.sendMessage tabId, extend request, {name: "linkHintsMessage", messageType}
+    extend request, {handler: "linkHintsMessage", messageType}
+    port.postMessage request for own frameId, port of portsForTab[tabId]
 
-  prepareToActivateMode: (tabId, {frameId: originatingFrameId, modeIndex}) ->
+  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId], hintDescriptors: [], originatingFrameId, modeIndex}
     @sendMessage "getHintDescriptors", tabId
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
-  postHintDescriptors: (tabId, {frameId, hintDescriptors}) ->
+  postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->
     @tabState[tabId].hintDescriptors.push hintDescriptors...
     @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
     if @tabState[tabId].frameIds.length == 0
@@ -405,7 +402,6 @@ sendRequestHandlers =
   # Send a message to all frames in the current tab.
   sendMessageToFrames: (request, sender) -> chrome.tabs.sendMessage sender.tab.id, request.message
   fetchFileContents: (request, sender) -> fetchFileContents request.fileName
-  linkHintsMessage: HintCoordinator.onMessage.bind HintCoordinator
   # For debugging only. This allows content scripts to log messages to the extension's logging page.
   log: ({frameId, message}, sender) -> BgUtils.log "#{frameId} #{message}", sender
 

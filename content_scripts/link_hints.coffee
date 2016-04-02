@@ -53,8 +53,6 @@ HintCoordinator =
   onExit: []
 
   sendMessage: (messageType, request = {}) ->
-    # We use Frame.postMessage() (instead of chrome.runtime.sendMessage()) because that seems to be
-    # considerable faster, by about a factor of 5.
     Frame.postMessage "linkHintsMessage", extend request, {messageType}
 
   prepareToActivateMode: (mode, onExit) ->
