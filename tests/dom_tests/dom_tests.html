@@ -32,6 +32,8 @@
     <script type="text/javascript" src="../../lib/utils.js"></script>
     <script type="text/javascript" src="../../lib/keyboard_utils.js"></script>
     <script type="text/javascript" src="../../lib/dom_utils.js"></script>
+    <!-- For DomUtils.documentReady() tests; see ./dom_utils_test.coffee. -->
+    <script>DomUtils.documentReady(function() {window.documentReadyListenerCalled = true;})</script>
     <script type="text/javascript" src="../../lib/rect.js"></script>
     <script type="text/javascript" src="../../lib/handler_stack.js"></script>
     <script type="text/javascript" src="../../lib/clipboard.js"></script>
