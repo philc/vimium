@@ -264,7 +264,7 @@ DomUtils.documentReady ->
 #
 focusThisFrame = (request) ->
   unless request.forceFocusThisFrame
-    if window.innerWidth < 3 or window.innerHeight < 3 or document.body?.tagName.toLowerCase() == "frameset"
+    if DomUtils.windowIsTooSmall() or document.body?.tagName.toLowerCase() == "frameset"
       # This frame is too small to focus or it's a frameset. Cancel and tell the background page to focus the
       # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See #1317.
       chrome.runtime.sendMessage handler: "nextFrame"

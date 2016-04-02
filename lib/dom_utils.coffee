@@ -322,5 +322,9 @@ DomUtils =
   getContainingElement: (element) ->
     element.getDestinationInsertionPoints()[0] or element.parentElement
 
+  # This tests whether a window is too small to be useful.
+  windowIsTooSmall: ->
+    return window.innerWidth < 3 or window.innerHeight < 3
+
 root = exports ? window
 root.DomUtils = DomUtils
