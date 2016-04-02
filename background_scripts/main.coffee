@@ -291,6 +291,8 @@ Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
+    # We only register the top frame automatically; other frames request registration via "registerFrame".
+    @registerFrame {tabId, frameId, port} if frameId == 0
 
     port.onDisconnect.addListener listener = ->
       # Unregister the frame.  However, we never unregister the main/top frame.  If the tab is navigating to
@@ -307,10 +309,8 @@ Frames =
       this[request.handler] {request, tabId, frameId, port}
 
   registerFrame: ({tabId, frameId, port}) ->
-    frameIdsForTab[tabId] ?= []
-    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId]
-    portsForTab[tabId] ?= {}
-    portsForTab[tabId][frameId] = port
+    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
+    (portsForTab[tabId] ?= {})[frameId] = port
 
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused

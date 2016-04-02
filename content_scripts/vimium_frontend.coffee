@@ -138,15 +138,12 @@ installModes = ->
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
-registerFrame = ->
-  Frame.postMessage "registerFrame"
-
 #
-# Complete initialization work that sould be done prior to DOMReady.
+# Complete initialization work that should be done prior to DOMReady.
 #
 initializePreDomReady = ->
   installListeners()
-  Frame.init registerFrame
+  Frame.init()
   checkIfEnabledForUrl()
 
   requestHandlers =
@@ -214,10 +211,26 @@ Frame =
 
   addEventListener: (handler, callback) -> @listeners[handler] = callback
   postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
-  registerFrameId: ({chromeFrameId}) -> frameId = window.frameId = chromeFrameId
   linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
+  registerFrameId: ({chromeFrameId}) ->
+    frameId = window.frameId = chromeFrameId
+    unless frameId == 0
+      # The background page registers the top frame automatically.  We register any other frame immediately if
+      # it is focused or its window isn't tiny.  We register tiny frames later, when necessary.  This affects
+      # focusFrame() and link hints.
+      if windowIsFocused() or not DomUtils.windowIsTooSmall()
+        Frame.postMessage "registerFrame"
+      else
+        postRegisterFrame = ->
+          window.removeEventListener "focus", focusHandler
+          window.removeEventListener "resize", resizeHandler
+          Frame.postMessage "registerFrame"
+        window.addEventListener "focus", focusHandler = ->
+          postRegisterFrame() if event.target == window
+        window.addEventListener "resize", resizeHandler = ->
+          postRegisterFrame() unless DomUtils.windowIsTooSmall()
 
-  init: (callback = null) ->
+  init: ->
     @port = chrome.runtime.connect name: "frames"
 
     @port.onMessage.addListener (request) =>
@@ -227,8 +240,6 @@ Frame =
       # We disable the content scripts when we lose contact with the background page.
       isEnabledForUrl = false
       window.removeEventListener "focus", onFocus
-
-    callback?()
 
 setScrollPosition = ({ scrollX, scrollY }) ->
   if DomUtils.isTopFrame()
