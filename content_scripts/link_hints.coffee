@@ -119,7 +119,7 @@ class LinkHintsMode
   tabCount: 0
 
   constructor: (hintDescriptors, mode = OPEN_IN_CURRENT_TAB) ->
-    # we need documentElement to be ready in order to append links
+    # We need documentElement to be ready in order to append links.
     return unless document.documentElement
 
     if mode in [COPY_LINK_URL, OPEN_INCOGNITO]
@@ -610,6 +610,8 @@ LocalHints =
   # element.
   #
   getLocalHints: ->
+    # We need documentElement to be ready in order to find links.
+    return [] unless document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 
