@@ -51,6 +51,8 @@ availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, O
 
 HintCoordinator =
   onExit: []
+  localHints: null
+  suppressKeyboardEvents: null
 
   sendMessage: (messageType, request = {}) ->
     Frame.postMessage "linkHintsMessage", extend request, {messageType}
@@ -59,7 +61,11 @@ HintCoordinator =
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
     # prevent other Vimium commands from being triggered before link-hints mode is launched, we install a
     # temporary mode to block keyboard events.
-    new SuppressAllKeyboardEvents singleton: "link-hints-mode"
+    @suppressKeyboardEvents = new SuppressAllKeyboardEvents
+      name: "link-hints/suppress-keyboard-events"
+      singleton: "link-hints-mode"
+      indicator: "Launching hints..."
+      exitOnEscape: true
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
@@ -75,6 +81,8 @@ HintCoordinator =
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
   # step in every frame, and @linkHintsMode is in the same state in every frame.
   activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
+    @suppressKeyboardEvents?.exit() if @suppressKeyboardEvents?.modeIsActive
+    @suppressKeyboardEvents = null
     # Ensure that the settings are loaded.  The request might have been initiated in another frame.
     Settings.onLoaded =>
       @onExit = [] unless frameId == originatingFrameId
