@@ -79,8 +79,8 @@ HintCoordinator =
       @localHints = LocalHints.getLocalHints()
       console.log "getHintDescriptors", frameId, "[#{@localHints.length}]" if @debug
       @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({rect, linkText, showLinkText, hasHref, reason}, localIndex) ->
-          {rect, linkText, showLinkText, hasHref, reason, frameId, localIndex}
+        @localHints.map ({linkText, showLinkText, hasHref, reason}, localIndex) ->
+          {linkText, showLinkText, hasHref, reason, frameId, localIndex}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
@@ -188,18 +188,17 @@ class LinkHintsMode
     marker =
       if desc.frameId == frameId
         el = DomUtils.createElement "div"
-        el.style.left = desc.rect.left + window.scrollX + "px"
-        el.style.top = desc.rect.top  + window.scrollY  + "px"
+        el.rect = HintCoordinator.getLocalHintMarker(desc).rect
+        el.style.left = el.rect.left + window.scrollX + "px"
+        el.style.top = el.rect.top  + window.scrollY  + "px"
         extend el, className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
       else
         {}
 
-    # Extract other relevant fields from the hint descriptor and a stable sort key.
     extend marker,
       hintDescriptor: desc
       linkText: desc.linkText
       showLinkText: desc.showLinkText
-      rect: desc.rect
       isLocalMarker: desc.frameId == frameId
       stableSortCount: ++@stableSortCount
 
@@ -319,7 +318,7 @@ class LinkHintsMode
 
     installKeyboardBlocker = (startKeyboardBlocker) ->
       if linkMatched.isLocalMarker
-        flashEl = DomUtils.addFlashRect linkMatched.hintDescriptor.rect
+        flashEl = DomUtils.addFlashRect linkMatched.rect
         HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
       if document.hasFocus()
@@ -332,7 +331,7 @@ class LinkHintsMode
     else if userMightOverType
       installKeyboardBlocker (callback) -> new TypingProtector 200, callback
     else if linkMatched.isLocalMarker
-      DomUtils.flashRect linkMatched.hintDescriptor.rect
+      DomUtils.flashRect linkMatched.rect
       HintCoordinator.sendMessage "exit", isSuccess: true
 
   #
