@@ -64,7 +64,7 @@ getHintMarkers = ->
 stubSettings = (key, value) -> stub Settings.cache, key, JSON.stringify value
 
 HintCoordinator.sendMessage = (name, request = {}) -> HintCoordinator[name]? request; request
-activateLinkHintsMode = -> HintCoordinator.activateMode HintCoordinator.getHintDescriptors()
+activateLinkHintsMode = -> HintCoordinator.activateMode HintCoordinator.getHintDescriptors {modeIndex: 0}
 
 #
 # Generate tests that are common to both default and filtered

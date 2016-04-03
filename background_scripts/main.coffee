@@ -378,7 +378,7 @@ HintCoordinator =
     console.log "prepareToActivateMode", tabId, "[#{frameIdsForTab[tabId].length}]" if @debug
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: [], originatingFrameId, modeIndex}
     @tabState[tabId].ports = extend {}, portsForTab[tabId]
-    @sendMessage "getHintDescriptors", tabId
+    @sendMessage "getHintDescriptors", tabId, {modeIndex}
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->

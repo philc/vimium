@@ -76,16 +76,16 @@ HintCoordinator =
   # whether and when a hint from *any* frame is selected.  They include the following properties:
   #   frameId: the frame id of this hint's local frame
   #   localIndex: the index in @localHints for the full hint descriptor for this hint
-  #   linkText: the link's text for filtered hints (this is empty for alphabet hints)
-  #   hasHref: boolean indicating whether this hint has an href property
-  getHintDescriptors: ->
+  #   linkText: the link's text for filtered hints (this is null for alphabet hints)
+  getHintDescriptors: ({modeIndex}) ->
     console.log "getHintDescriptors", frameId if @debug
     # Ensure that the settings are loaded.  The request might have been initiated in another frame.
     Settings.onLoaded =>
-      @localHints = LocalHints.getLocalHints()
+      requireHref = availableModes[modeIndex] in [COPY_LINK_URL, OPEN_INCOGNITO]
+      @localHints = LocalHints.getLocalHints requireHref
       console.log "getHintDescriptors", frameId, "[#{@localHints.length}]" if @debug
       @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({linkText, hasHref}, localIndex) -> {frameId, localIndex, linkText, hasHref}
+        @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
@@ -141,11 +141,6 @@ class LinkHintsMode
   constructor: (hintDescriptors, mode = OPEN_IN_CURRENT_TAB) ->
     # We need documentElement to be ready in order to append links.
     return unless document.documentElement
-
-    if mode in [COPY_LINK_URL, OPEN_INCOGNITO]
-      # For these modes, we filter out those descriptors which don't have an HREF (since there's nothing we
-      # can do with them).
-      hintDescriptors = (desc for desc in hintDescriptors when desc.hasHref)
 
     if hintDescriptors.length == 0
       HUD.showForDuration "No links to select.", 2000
@@ -639,7 +634,7 @@ LocalHints =
   # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
   # element.
   #
-  getLocalHints: ->
+  getLocalHints: (requireHref) ->
     # We need documentElement to be ready in order to find links.
     return [] unless document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
@@ -651,8 +646,9 @@ LocalHints =
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      visibleElement = @getVisibleClickable element
-      visibleElements.push visibleElement...
+      unless requireHref and not element.href
+        visibleElement = @getVisibleClickable element
+        visibleElements.push visibleElement...
 
     # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
     visibleElements = visibleElements.reverse()
@@ -704,7 +700,6 @@ LocalHints =
         # click some elements that we could click before.
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
-    hint.hasHref = hint.element.href? for hint in localHints
     if Settings.get "filterLinkHints"
       @withLabelMap (labelMap) =>
         extend hint, @generateLinkText labelMap, hint for hint in localHints
