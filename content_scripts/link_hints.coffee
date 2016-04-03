@@ -72,6 +72,12 @@ HintCoordinator =
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
+  # Hint descriptors are global.  They include all of the information necessary for each frame to determine
+  # whether and when a hint from *any* frame is selected.  They include the following properties:
+  #   frameId: the frame id of this hint's local frame
+  #   localIndex: the index in @localHints for the full hint descriptor for this hint
+  #   linkText: the link's text for filtered hints (this is empty for alphabet hints)
+  #   hasHref: boolean indicating whether this hint has an href property
   getHintDescriptors: ->
     console.log "getHintDescriptors", frameId if @debug
     # Ensure that the settings are loaded.  The request might have been initiated in another frame.
@@ -79,8 +85,7 @@ HintCoordinator =
       @localHints = LocalHints.getLocalHints()
       console.log "getHintDescriptors", frameId, "[#{@localHints.length}]" if @debug
       @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({linkText, hasHref}, localIndex) ->
-          {linkText, hasHref, frameId, localIndex}
+        @localHints.map ({linkText, hasHref}, localIndex) -> {frameId, localIndex, linkText, hasHref}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
