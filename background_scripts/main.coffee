@@ -349,9 +349,11 @@ cycleToFrame = (frames, frameId, count = 0) ->
   [frames[count..]..., frames[0...count]...]
 
 HintCoordinator =
+  debug: false
   tabState: {}
 
   onMessage: (tabId, frameId, request) ->
+    console.log "onMessage", tabId, frameId, "[#{request.messageType}]" if @debug
     if request.messageType of this
       this[request.messageType] tabId, frameId, request
     else
@@ -359,20 +361,32 @@ HintCoordinator =
       @sendMessage request.messageType, tabId, request
 
   sendMessage: (messageType, tabId, request = {}) ->
+    console.log "sendMessage", tabId, "[#{messageType}] [#{@tabState[tabId].ports.length}]" if @debug
     extend request, {handler: "linkHintsMessage", messageType}
-    port.postMessage request for own frameId, port of portsForTab[tabId]
+    for own frameId, port of @tabState[tabId].ports
+      try
+        port.postMessage request
+      catch
+        # If a frame has gone away, then we remove it from consideration.
+        tabState[tabId].frameIds = tabState[tabId].frameIds.filter (fId) -> fId != frameId
+        delete @tabState[tabId].ports[frameId]
+    # We can delete the tab state when we see an "exit" message, that's the last message in the sequence.
+    delete @tabState[tabId] if messageType == "exit"
 
   prepareToActivateMode: (tabId, originatingFrameId, {modeIndex}) ->
-    @tabState[tabId] = {frameIds: frameIdsForTab[tabId], hintDescriptors: [], originatingFrameId, modeIndex}
+    console.log "" if @debug
+    console.log "prepareToActivateMode", tabId, "[#{frameIdsForTab[tabId].length}]" if @debug
+    @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: [], originatingFrameId, modeIndex}
+    @tabState[tabId].ports = extend {}, portsForTab[tabId]
     @sendMessage "getHintDescriptors", tabId
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->
     @tabState[tabId].hintDescriptors.push hintDescriptors...
     @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
+    console.log "postHintDescriptors", tabId, frameId, "[#{@tabState[tabId].frameIds.length}]" if @debug
     if @tabState[tabId].frameIds.length == 0
       @sendMessage "activateMode", tabId, @tabState[tabId]
-      delete @tabState[tabId] # We won't be needing this any more.
 
 # Port handler mapping
 portHandlers =
@@ -409,7 +423,7 @@ chrome.storage.local.remove "findModeRawQueryListIncognito"
 # there are no remaining incognito-mode windows.  Since the common case is that there are none to begin with,
 # we first check whether the key is set at all.
 chrome.tabs.onRemoved.addListener (tabId) ->
-  delete cache[tabId] for cache in [frameIdsForTab, urlForTab, portsForTab]
+  delete cache[tabId] for cache in [frameIdsForTab, urlForTab, portsForTab, HintCoordinator.tabState]
   chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
     if items.findModeRawQueryListIncognito
       chrome.windows.getAll null, (windows) ->
