@@ -173,9 +173,8 @@ class LinkHintsMode
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
-    @hintMarkerContainingDiv = DomUtils.addElementList @hintMarkers,
+    @hintMarkerContainingDiv = DomUtils.addElementList (marker for marker in @hintMarkers when marker.isLocalMarker),
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
-    @hideMarker hintMarker for hintMarker in @hintMarkers when hintMarker.hintDescriptor.frameId != frameId
 
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
     @hintMode.setIndicator @mode.indicator if windowIsFocused()
@@ -186,18 +185,23 @@ class LinkHintsMode
   # Creates a link marker for the given link.
   #
   createMarkerFor: (desc) ->
-    marker = DomUtils.createElement "div"
-    marker.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-    marker.stableSortCount = ++@stableSortCount
-    # Extract other relevant fields from the hint descriptor.
+    marker =
+      if desc.frameId == frameId
+        el = DomUtils.createElement "div"
+        el.style.left = desc.rect.left + window.scrollX + "px"
+        el.style.top = desc.rect.top  + window.scrollY  + "px"
+        extend el, className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+      else
+        {}
+
+    # Extract other relevant fields from the hint descriptor and a stable sort key.
     extend marker,
-      {hintDescriptor: desc, linkText: desc.linkText, showLinkText: desc.showLinkText, rect: desc.rect}
-
-    clientRect = desc.rect
-    marker.style.left = clientRect.left + window.scrollX + "px"
-    marker.style.top = clientRect.top  + window.scrollY  + "px"
-
-    marker
+      hintDescriptor: desc
+      linkText: desc.linkText
+      showLinkText: desc.showLinkText
+      rect: desc.rect
+      isLocalMarker: desc.frameId == frameId
+      stableSortCount: ++@stableSortCount
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (event) ->
@@ -314,7 +318,7 @@ class LinkHintsMode
             linkActivator clickEl
 
     installKeyboardBlocker = (startKeyboardBlocker) ->
-      if linkMatched.hintDescriptor.frameId == frameId
+      if linkMatched.isLocalMarker
         flashEl = DomUtils.addFlashRect linkMatched.hintDescriptor.rect
         HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
@@ -327,7 +331,7 @@ class LinkHintsMode
       installKeyboardBlocker (callback) -> new WaitForEnter callback
     else if userMightOverType
       installKeyboardBlocker (callback) -> new TypingProtector 200, callback
-    else if linkMatched.hintDescriptor.frameId == frameId
+    else if linkMatched.isLocalMarker
       DomUtils.flashRect linkMatched.hintDescriptor.rect
       HintCoordinator.sendMessage "exit", isSuccess: true
 
@@ -335,7 +339,7 @@ class LinkHintsMode
   # Shows the marker, highlighting matchingCharCount characters.
   #
   showMarker: (linkMarker, matchingCharCount) ->
-    return unless linkMarker.hintDescriptor.frameId == frameId
+    return unless linkMarker.isLocalMarker
     linkMarker.style.display = ""
     for j in [0...linkMarker.childNodes.length]
       if (j < matchingCharCount)
@@ -343,7 +347,7 @@ class LinkHintsMode
       else
         linkMarker.childNodes[j].classList.remove("matchingCharacter")
 
-  hideMarker: (linkMarker) -> linkMarker.style.display = "none"
+  hideMarker: (linkMarker) -> linkMarker.style.display = "none" if linkMarker.isLocalMarker
 
   deactivateMode: ->
     @removeHintMarkers()
@@ -368,9 +372,7 @@ class AlphabetHints
     hintStrings = @hintStrings(hintMarkers.length)
     for marker, idx in hintMarkers
       marker.hintString = hintStrings[idx]
-      marker.innerHTML = spanWrap(marker.hintString.toUpperCase())
-
-    hintMarkers
+      marker.innerHTML = spanWrap(marker.hintString.toUpperCase()) if marker.isLocalMarker
 
   #
   # Returns a list of hint strings which will uniquely identify the given number of links. The hint strings
@@ -420,7 +422,7 @@ class FilterHints
         (if marker.showLinkText then ": " + marker.linkText else ""))
 
   fillInMarkers: (hintMarkers) ->
-    @renderMarker marker for marker in hintMarkers
+    @renderMarker marker for marker in hintMarkers when marker.isLocalMarker
 
     # We use @filterLinkHints() here (although we know that all of the hints will match) to fill in the hint
     # strings.  This ensures that we always get hint strings in the same order.
@@ -436,9 +438,9 @@ class FilterHints
     # Visually highlight of the active hint (that is, the one that will be activated if the user
     # types <Enter>).
     tabCount = ((linksMatched.length * Math.abs tabCount) + tabCount) % linksMatched.length
-    @activeHintMarker?.classList.remove "vimiumActiveHintMarker"
+    @activeHintMarker?.classList?.remove "vimiumActiveHintMarker"
     @activeHintMarker = linksMatched[tabCount]
-    @activeHintMarker?.classList.add "vimiumActiveHintMarker"
+    @activeHintMarker?.classList?.add "vimiumActiveHintMarker"
 
     linksMatched: linksMatched
     userMightOverType: @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
