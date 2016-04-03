@@ -79,8 +79,8 @@ HintCoordinator =
       @localHints = LocalHints.getLocalHints()
       console.log "getHintDescriptors", frameId, "[#{@localHints.length}]" if @debug
       @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({linkText, showLinkText, hasHref}, localIndex) ->
-          {linkText, showLinkText, hasHref, frameId, localIndex}
+        @localHints.map ({linkText, hasHref}, localIndex) ->
+          {linkText, hasHref, frameId, localIndex}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
@@ -187,19 +187,22 @@ class LinkHintsMode
   createMarkerFor: (desc) ->
     marker =
       if desc.frameId == frameId
+        localHintDescriptor = HintCoordinator.getLocalHintMarker desc
         el = DomUtils.createElement "div"
-        el.rect = HintCoordinator.getLocalHintMarker(desc).rect
+        el.rect = localHintDescriptor.rect
         el.style.left = el.rect.left + window.scrollX + "px"
         el.style.top = el.rect.top  + window.scrollY  + "px"
-        extend el, className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+        extend el,
+          className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+          showLinkText: localHintDescriptor.showLinkText
+          localHintDescriptor: localHintDescriptor
       else
         {}
 
     extend marker,
       hintDescriptor: desc
-      linkText: desc.linkText
-      showLinkText: desc.showLinkText
       isLocalMarker: desc.frameId == frameId
+      linkText: desc.linkText
       stableSortCount: ++@stableSortCount
 
   # Handles <Shift> and <Ctrl>.
@@ -295,10 +298,10 @@ class LinkHintsMode
   # selectively pushing the appropriate HintCoordinator.onExit handlers.
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
-    localHintDescriptor = HintCoordinator.getLocalHintMarker linkMatched.hintDescriptor
-    clickEl = localHintDescriptor?.element
 
-    if clickEl?
+    if linkMatched.isLocalMarker
+      localHintDescriptor = linkMatched.localHintDescriptor
+      clickEl = localHintDescriptor.element
       HintCoordinator.onExit.push (isSuccess) =>
         if isSuccess
           if localHintDescriptor.reason == "Frame."
