@@ -79,8 +79,8 @@ HintCoordinator =
       @localHints = LocalHints.getLocalHints()
       console.log "getHintDescriptors", frameId, "[#{@localHints.length}]" if @debug
       @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({linkText, showLinkText, hasHref, reason}, localIndex) ->
-          {linkText, showLinkText, hasHref, reason, frameId, localIndex}
+        @localHints.map ({linkText, showLinkText, hasHref}, localIndex) ->
+          {linkText, showLinkText, hasHref, frameId, localIndex}
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
@@ -295,14 +295,15 @@ class LinkHintsMode
   # selectively pushing the appropriate HintCoordinator.onExit handlers.
   activateLink: (linkMatched, userMightOverType=false) ->
     @removeHintMarkers()
-    clickEl = HintCoordinator.getLocalHintMarker(linkMatched.hintDescriptor)?.element
+    localHintDescriptor = HintCoordinator.getLocalHintMarker linkMatched.hintDescriptor
+    clickEl = localHintDescriptor?.element
 
     if clickEl?
       HintCoordinator.onExit.push (isSuccess) =>
         if isSuccess
-          if linkMatched.hintDescriptor.reason == "Frame."
+          if localHintDescriptor.reason == "Frame."
             Utils.nextTick -> focusThisFrame highlight: true
-          else if linkMatched.hintDescriptor.reason == "Scroll."
+          else if localHintDescriptor.reason == "Scroll."
             # Tell the scroller that this is the activated element.
             handlerStack.bubbleEvent "DOMActivate", target: clickEl
           else if DomUtils.isSelectable clickEl
