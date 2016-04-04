@@ -259,8 +259,10 @@ Scroller =
     amount = getDimension(element,direction,pos) - element[scrollProperties[direction].axisName]
     CoreScroller.scroll element, direction, amount
 
+  # Is element scrollable and not the activated element?
   isScrollableElement: (element) ->
-    isScrollableElement element
+    activatedElement ||= (document.body and firstScrollableElement()) or document.body
+    element != activatedElement and isScrollableElement element
 
   # Scroll the top, bottom, left and right of element into view.  The is used by visual mode to ensure the
   # focus remains visible.
