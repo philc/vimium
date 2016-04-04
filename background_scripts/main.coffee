@@ -367,7 +367,7 @@ HintCoordinator =
         delete @tabState[tabId].ports[frameId]
         # It could be that we're expecting hints from this frame; schedule "sending" dummy/empty hints instead.
         Utils.nextTick =>
-          @postHintDescriptors tabId, frameId, {hintDescriptors: []} if frameId in tabState[tabId].frameIds
+          @postHintDescriptors tabId, frameId, hintDescriptors: []
     # We can delete the tab state when we see an "exit" message, that's the last message in the sequence.
     delete @tabState[tabId] if messageType == "exit"
 
@@ -377,14 +377,22 @@ HintCoordinator =
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: [], originatingFrameId, modeIndex}
     @tabState[tabId].ports = extend {}, portsForTab[tabId]
     @sendMessage "getHintDescriptors", tabId, {modeIndex}
+    # FIXME(smblott)  This should not be necessary; it's a backstop to mitigate against the possibility that,
+    # for some reason, we do not hear back from a frame.
+    unless @debug
+      for frameId in frameIdsForTab[tabId]
+        do (frameId) =>
+          Utils.setTimeout 400, =>
+            @postHintDescriptors tabId, frameId, hintDescriptors: []
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->
-    @tabState[tabId].hintDescriptors.push hintDescriptors...
-    @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
-    console.log "postHintDescriptors", tabId, frameId, "[#{@tabState[tabId].frameIds.length}]" if @debug
-    if @tabState[tabId].frameIds.length == 0
-      @sendMessage "activateMode", tabId, @tabState[tabId]
+    if frameId in @tabState[tabId].frameIds
+      @tabState[tabId].hintDescriptors.push hintDescriptors...
+      @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
+      console.log "postHintDescriptors", tabId, frameId, "[#{@tabState[tabId].frameIds.length}]" if @debug
+      if @tabState[tabId].frameIds.length == 0
+        @sendMessage "activateMode", tabId, @tabState[tabId]
 
 # Port handler mapping
 portHandlers =
