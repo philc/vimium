@@ -392,7 +392,10 @@ HintCoordinator =
       @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
       console.log "postHintDescriptors", tabId, frameId, "[#{@tabState[tabId].frameIds.length}]" if @debug
       if @tabState[tabId].frameIds.length == 0
-        @sendMessage "activateMode", tabId, @tabState[tabId]
+        @sendMessage "activateMode", tabId,
+          originatingFrameId: @tabState[tabId].originatingFrameId
+          hintDescriptors: @tabState[tabId].hintDescriptors
+          modeIndex: @tabState[tabId].modeIndex
 
 # Port handler mapping
 portHandlers =
