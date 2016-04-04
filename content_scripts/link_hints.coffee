@@ -69,6 +69,10 @@ HintCoordinator =
       singleton: "link-hints-mode"
       indicator: "Collecting hints..."
       exitOnEscape: true
+    # FIXME(smblott) Global link hints is currently insufficiently reliable.  If the mode above is left in
+    # place, then Vimium blocks.  As a temporary measure, we install a timer to remove it.
+    unless @debug
+      Utils.setTimeout 1000, => @suppressKeyboardEvents.exit() if @suppressKeyboardEvents.modeIsActive
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
