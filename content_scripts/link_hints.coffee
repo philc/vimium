@@ -421,8 +421,10 @@ class FilterHints
     hint.reverse().join ""
 
   renderMarker: (marker) ->
+    linkText = marker.linkText
+    linkText = "#{linkText[..32]}..." if 35 < linkText.length
     marker.innerHTML = spanWrap(marker.hintString +
-        (if marker.showLinkText then ": " + marker.linkText else ""))
+        (if marker.showLinkText then ": " + linkText else ""))
 
   fillInMarkers: (hintMarkers) ->
     @renderMarker marker for marker in hintMarkers when marker.isLocalMarker
