@@ -67,7 +67,7 @@ HintCoordinator =
     @suppressKeyboardEvents = new SuppressAllKeyboardEvents
       name: "link-hints/suppress-keyboard-events"
       singleton: "link-hints-mode"
-      indicator: "Launching hints..."
+      indicator: "Collecting hints..."
       exitOnEscape: true
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
