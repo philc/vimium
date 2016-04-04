@@ -363,9 +363,11 @@ HintCoordinator =
       try
         port.postMessage request
       catch
-        # If a frame has gone away, then we remove it from consideration.
-        tabState[tabId].frameIds = tabState[tabId].frameIds.filter (fId) -> fId != frameId
+        # A frame has gone away; remove it from consideration.
         delete @tabState[tabId].ports[frameId]
+        # It could be that we're expecting hints from this frame; schedule "sending" dummy/empty hints instead.
+        Utils.nextTick =>
+          @postHintDescriptors tabId, frameId, {hintDescriptors: []} if frameId in tabState[tabId].frameIds
     # We can delete the tab state when we see an "exit" message, that's the last message in the sequence.
     delete @tabState[tabId] if messageType == "exit"
 
