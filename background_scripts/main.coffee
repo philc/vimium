@@ -357,7 +357,11 @@ HintCoordinator =
 
   sendMessage: (messageType, tabId, request = {}) ->
     extend request, {handler: "linkHintsMessage", messageType}
-    port.postMessage request for own _, port of @tabState[tabId].ports
+    for own frameId, port of @tabState[tabId].ports
+      try
+        port.postMessage request
+      catch
+        @unregisterFrame tabId, frameId
 
   prepareToActivateMode: (tabId, originatingFrameId, {modeIndex}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: [], originatingFrameId, modeIndex}
