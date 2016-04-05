@@ -244,6 +244,8 @@ Frame =
       isEnabledForUrl = false
       window.removeEventListener "focus", onFocus
 
+    window.addEventListener "unload", => @postMessage "unregsterFrame"
+
 setScrollPosition = ({ scrollX, scrollY }) ->
   if DomUtils.isTopFrame()
     DomUtils.documentReady ->

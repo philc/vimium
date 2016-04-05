@@ -292,12 +292,6 @@ Frames =
     [tabId, frameId] = [sender.tab.id, sender.frameId]
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
 
-    port.onDisconnect.addListener listener = ->
-      if tabId of frameIdsForTab
-        frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
-      if tabId of portsForTab
-        delete portsForTab[tabId][frameId]
-
     # Return our onMessage handler for this port.
     (request, port) =>
       this[request.handler] {request, tabId, frameId, port}
@@ -305,6 +299,12 @@ Frames =
   registerFrame: ({tabId, frameId, port}) ->
     frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
     (portsForTab[tabId] ?= {})[frameId] = port
+
+  unregsterFrame: ({tabId, frameId}) ->
+    if tabId of frameIdsForTab
+      frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
+    if tabId of portsForTab
+      delete portsForTab[tabId][frameId]
 
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
