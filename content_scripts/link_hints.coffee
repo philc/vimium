@@ -50,29 +50,25 @@ availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, O
   OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
 
 HintCoordinator =
-  debug: false
   onExit: []
   localHints: null
   suppressKeyboardEvents: null
 
   sendMessage: (messageType, request = {}) ->
-    console.log "sendMessage", frameId, "[#{messageType}]" if @debug
     Frame.postMessage "linkHintsMessage", extend request, {messageType}
 
   prepareToActivateMode: (mode, onExit) ->
-    console.log "prepareToActivateMode", frameId if @debug
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
     # prevent other Vimium commands from being triggered before link-hints mode is launched, we install a
     # temporary mode to block keyboard events.
-    @suppressKeyboardEvents = new SuppressAllKeyboardEvents
+    @suppressKeyboardEvents = suppressKeyboardEvents = new SuppressAllKeyboardEvents
       name: "link-hints/suppress-keyboard-events"
       singleton: "link-hints-mode"
       indicator: "Collecting hints..."
       exitOnEscape: true
     # FIXME(smblott) Global link hints is currently insufficiently reliable.  If the mode above is left in
     # place, then Vimium blocks.  As a temporary measure, we install a timer to remove it.
-    unless @debug
-      Utils.setTimeout 1000, => @suppressKeyboardEvents.exit() if @suppressKeyboardEvents?.modeIsActive
+    Utils.setTimeout 1000, -> suppressKeyboardEvents.exit() if suppressKeyboardEvents?.modeIsActive
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
 
@@ -82,12 +78,10 @@ HintCoordinator =
   #   localIndex: the index in @localHints for the full hint descriptor for this hint
   #   linkText: the link's text for filtered hints (this is null for alphabet hints)
   getHintDescriptors: ({modeIndex}) ->
-    console.log "getHintDescriptors", frameId if @debug
-    # Ensure that the settings are loaded.  The request might have been initiated in another frame.
-    Settings.onLoaded =>
+    # Ensure that the document is ready and that the settings are loaded.
+    DomUtils.documentReady => Settings.onLoaded =>
       requireHref = availableModes[modeIndex] in [COPY_LINK_URL, OPEN_INCOGNITO]
       @localHints = LocalHints.getLocalHints requireHref
-      console.log "getHintDescriptors", frameId, "[#{@localHints.length}]" if @debug
       @sendMessage "postHintDescriptors", hintDescriptors:
         @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
 
@@ -95,11 +89,10 @@ HintCoordinator =
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
   # step in every frame, and @linkHintsMode is in the same state in every frame.
   activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
-    console.log "activateMode", frameId if @debug
-    @suppressKeyboardEvents?.exit() if @suppressKeyboardEvents?.modeIsActive
-    @suppressKeyboardEvents = null
-    # Ensure that the settings are loaded.  The request might have been initiated in another frame.
-    Settings.onLoaded =>
+    # Ensure that the document is ready and that the settings are loaded.
+    DomUtils.documentReady => Settings.onLoaded =>
+      @suppressKeyboardEvents.exit() if @suppressKeyboardEvents?.modeIsActive
+      @suppressKeyboardEvents = null
       @onExit = [] unless frameId == originatingFrameId
       @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex]
 
@@ -110,8 +103,7 @@ HintCoordinator =
   getLocalHintMarker: (hint) -> if hint.frameId == frameId then @localHints[hint.localIndex] else null
 
   exit: ({isSuccess}) ->
-    console.log "exit", frameId, "[#{isSuccess}]" if @debug
-    @linkHintsMode.deactivateMode()
+    @linkHintsMode?.deactivateMode()
     @onExit.pop() isSuccess while 0 < @onExit.length
     @linkHintsMode = @localHints = null
 

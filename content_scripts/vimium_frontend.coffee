@@ -239,12 +239,21 @@ Frame =
     @port.onMessage.addListener (request) =>
       (@listeners[request.handler] ? this[request.handler]) request
 
-    @port.onDisconnect.addListener ->
-      # We disable the content scripts when we lose contact with the background page.
-      isEnabledForUrl = false
-      window.removeEventListener "focus", onFocus
+    # We disable the content scripts when we lose contact with the background page, or on unload.
+    @port.onDisconnect.addListener disconnect = Utils.makeIdempotent => @disconnect()
+    window.addEventListener "unload", disconnect
 
-    window.addEventListener "unload", => @postMessage "unregsterFrame"
+  disconnect: ->
+    try @postMessage "unregisterFrame"
+    try @port.disconnect()
+    @postMessage = @disconnect = ->
+    @port = null
+    @listeners = {}
+    HintCoordinator.exit isSuccess: false
+    handlerStack.reset()
+    isEnabledForUrl = false
+    window.removeEventListener "focus", onFocus
+    window.removeEventListener "hashchange", onFocus
 
 setScrollPosition = ({ scrollX, scrollY }) ->
   if DomUtils.isTopFrame()
