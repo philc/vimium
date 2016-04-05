@@ -192,7 +192,7 @@ DomUtils =
     element.nodeName?.toLowerCase() in ["embed", "object"]
 
   isFocusable: (element) ->
-    @isEditable(element) or @isEmbed element
+    element and (@isEditable(element) or @isEmbed element)
 
   isDOMDescendant: (parent, child) ->
     node = child
