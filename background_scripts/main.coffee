@@ -361,7 +361,7 @@ HintCoordinator =
       try
         port.postMessage request
       catch
-        @unregisterFrame tabId, frameId
+        @unregisterFrame tabId, parseInt frameId
 
   prepareToActivateMode: (tabId, originatingFrameId, {modeIndex}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: [], originatingFrameId, modeIndex}
