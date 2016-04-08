@@ -179,6 +179,10 @@ Next version (not yet released)
 - For web-devs only:
     - When disabled on a tab, Vimium no longer pollutes the dev console with network requests.
 
+1.55 (2016-03-XX)
+
+- Fix icon not updating in Chrome 49 (#2035).
+
 1.54 (2016-01-30)
 
 - Fix occasional endless scrolling (#1911).
