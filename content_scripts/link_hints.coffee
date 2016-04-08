@@ -464,7 +464,8 @@ class FilterHints
     # hints).
     if 0 <= @linkHintNumbers.indexOf keyChar
       @hintKeystrokeQueue.push keyChar
-    else
+    # We only accept <Space> and characters which are not used for splitting (e.g. "a", "b", etc., but not "-").
+    else if keyChar == " " or not @splitRegexp.test keyChar
       # Since we might renumber the hints, we should reset the current hintKeyStrokeQueue.
       @hintKeystrokeQueue = []
       @linkTextKeystrokeQueue.push keyChar
