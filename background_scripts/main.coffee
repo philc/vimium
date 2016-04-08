@@ -393,7 +393,7 @@ HintCoordinator =
   unregisterFrame: (tabId, frameId) ->
     delete @tabState[tabId]?.ports?[frameId]
     # We fake "postHintDescriptors" for an unregistering frame.
-    @postHintDescriptors tabId, frameId, hintDescriptors: []
+    @postHintDescriptors tabId, frameId, hintDescriptors: [] if @tabState[tabId]?.frameIds
 
 # Port handler mapping
 portHandlers =
