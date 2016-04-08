@@ -465,15 +465,21 @@ class FilterHints
     linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
     do (scoreFunction = @scoreLinkHint linkSearchString) ->
       linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
-    hintMarkers = hintMarkers[..].sort (a,b) ->
+    matchingHintMarkers = hintMarkers[..].sort (a,b) ->
       if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
-    linkHintNumber = 1
-    for linkMarker in hintMarkers
-      continue unless 0 < linkMarker.score
-      linkMarker.hintString = @generateHintString linkHintNumber++
-      @renderMarker linkMarker
-      linkMarker
+    matchingHintMarkers = (linkMarker for linkMarker in matchingHintMarkers when 0 < linkMarker.score)
+
+    if matchingHintMarkers.length == 0 and @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
+      # We don't accept typed text which doesn't match any hints.
+      @linkTextKeystrokeQueue.pop()
+      @filterLinkHints hintMarkers
+    else
+      linkHintNumber = 1
+      for linkMarker in matchingHintMarkers
+        linkMarker.hintString = @generateHintString linkHintNumber++
+        @renderMarker linkMarker
+        linkMarker
 
   # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
   # a word, and a considerably higher score still for matches which are whole words.
