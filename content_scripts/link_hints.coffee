@@ -474,13 +474,13 @@ class FilterHints
 
   # Filter link hints by search string, renumbering the hints as necessary.
   filterLinkHints: (hintMarkers) ->
-    linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
-    do (scoreFunction = @scoreLinkHint linkSearchString) ->
-      linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
-    matchingHintMarkers = hintMarkers[..].sort (a,b) ->
-      if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
-
-    matchingHintMarkers = (linkMarker for linkMarker in matchingHintMarkers when 0 < linkMarker.score)
+    scoreFunction = @scoreLinkHint @linkTextKeystrokeQueue.join ""
+    matchingHintMarkers = hintMarkers
+      .filter (linkMarker) ->
+        linkMarker.score = scoreFunction linkMarker
+        0 < linkMarker.score
+      .sort (a, b) ->
+        if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
     if matchingHintMarkers.length == 0 and @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
       # We don't accept typed text which doesn't match any hints.
@@ -496,7 +496,7 @@ class FilterHints
   # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
   # a word, and a considerably higher score still for matches which are whole words.
   scoreLinkHint: (linkSearchString) ->
-    searchWords = linkSearchString.trim().split @splitRegexp
+    searchWords = linkSearchString.trim().toLowerCase().split @splitRegexp
     (linkMarker) =>
       text = linkMarker.linkText.trim()
       linkWords = linkMarker.linkWords ?= text.toLowerCase().split @splitRegexp
