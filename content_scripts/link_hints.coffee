@@ -134,7 +134,7 @@ class LinkHintsMode
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (hintDescriptors, mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (hintDescriptors, @mode = OPEN_IN_CURRENT_TAB) ->
     # We need documentElement to be ready in order to append links.
     return unless document.documentElement
 
@@ -149,7 +149,7 @@ class LinkHintsMode
     @markerMatcher.fillInMarkers @hintMarkers
 
     @hintMode = new Mode
-      name: "hint/#{mode.name}"
+      name: "hint/#{@mode.name}"
       indicator: false
       singleton: "link-hints-mode"
       passInitialKeyupEvents: true
@@ -160,28 +160,28 @@ class LinkHintsMode
       keydown: @onKeyDownInMode.bind this
       keypress: @onKeyPressInMode.bind this
 
+    @setIndicator()
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
         (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
           HintCoordinator.sendMessage "exit", isSuccess: false
-
-    @setOpenLinkMode mode, false
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
     @hintMarkerContainingDiv = DomUtils.addElementList (marker for marker in @hintMarkers when marker.isLocalMarker),
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
-  # TODO(smblott) This is currently doing two somewhat independent things.  We should refactor it to "update
-  # @mode" and "update mode indicator".
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
-    @hintMode.setIndicator @formatIndicator @mode.indicator if windowIsFocused()
     if shouldPropagateToOtherFrames
       HintCoordinator.sendMessage "setOpenLinkMode", modeIndex: availableModes.indexOf @mode
+    else
+      @setIndicator()
 
-  formatIndicator: (indicator) ->
-    typedCharacters = @markerMatcher.linkTextKeystrokeQueue?.join("") ? ""
-    indicator + (if typedCharacters then ": '#{typedCharacters}'" else "") + "."
+  setIndicator: ->
+    if windowIsFocused()
+      typedCharacters = @markerMatcher.linkTextKeystrokeQueue?.join("") ? ""
+      indicator = @mode.indicator + (if typedCharacters then ": \"#{typedCharacters}\"" else "") + "."
+      @hintMode.setIndicator indicator
 
   #
   # Creates a link marker for the given link.
@@ -295,7 +295,7 @@ class LinkHintsMode
       @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
-    @setOpenLinkMode @mode, false
+    @setIndicator()
 
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
