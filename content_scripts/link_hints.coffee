@@ -476,12 +476,13 @@ class FilterHints
   # Filter link hints by search string, renumbering the hints as necessary.
   filterLinkHints: (hintMarkers) ->
     scoreFunction = @scoreLinkHint @linkTextKeystrokeQueue.join ""
-    matchingHintMarkers = hintMarkers
-      .filter (linkMarker) ->
-        linkMarker.score = scoreFunction linkMarker
-        0 < linkMarker.score
-      .sort (a, b) ->
-        if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
+    matchingHintMarkers =
+      hintMarkers
+        .filter (linkMarker) ->
+          linkMarker.score = scoreFunction linkMarker
+          0 < linkMarker.score
+        .sort (a, b) ->
+          if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
     if matchingHintMarkers.length == 0 and @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
       # We don't accept typed text which doesn't match any hints.
@@ -499,8 +500,7 @@ class FilterHints
   scoreLinkHint: (linkSearchString) ->
     searchWords = linkSearchString.trim().toLowerCase().split @splitRegexp
     (linkMarker) =>
-      text = linkMarker.linkText.trim()
-      linkWords = linkMarker.linkWords ?= text.toLowerCase().split @splitRegexp
+      linkWords = linkMarker.linkWords ?= linkMarker.linkText.toLowerCase().split @splitRegexp
 
       searchWordScores =
         for searchWord in searchWords
@@ -522,8 +522,8 @@ class FilterHints
         addFunc = (a,b) -> a + b
         score = searchWordScores.reduce addFunc, 0
         # Prefer matches in shorter texts.  To keep things balanced for links without any text, we just weight
-        # them as if their length was 50.
-        score / Math.log 1 + (text.length || 50)
+        # them as if their length was 100 (so, quite long).
+        score / Math.log 1 + (linkMarker.linkText.length || 100)
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
@@ -761,9 +761,9 @@ LocalHints =
       linkText = hint.reason
       showLinkText = true
     else
-      linkText = (element.textContent.trim() || element.innerHTML.trim())[...512]
+      linkText = element.textContent[...256] || element.innerHTML[...256]
 
-    {linkText, showLinkText}
+    {linkText: linkText.trim(), showLinkText}
 
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
