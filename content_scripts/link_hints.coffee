@@ -13,22 +13,22 @@
 isMac = KeyboardUtils.platform == "Mac"
 OPEN_IN_CURRENT_TAB =
   name: "curr-tab"
-  indicator: "Open link in current tab."
+  indicator: "Open link in current tab"
 OPEN_IN_NEW_BG_TAB =
   name: "bg-tab"
-  indicator: "Open link in new tab."
+  indicator: "Open link in new tab"
   clickModifiers: metaKey: isMac, ctrlKey: not isMac
 OPEN_IN_NEW_FG_TAB =
   name: "fg-tab"
-  indicator: "Open link in new tab and switch to it."
+  indicator: "Open link in new tab and switch to it"
   clickModifiers: shiftKey: true, metaKey: isMac, ctrlKey: not isMac
 OPEN_WITH_QUEUE =
   name: "queue"
-  indicator: "Open multiple links in new tabs."
+  indicator: "Open multiple links in new tabs"
   clickModifiers: metaKey: isMac, ctrlKey: not isMac
 COPY_LINK_URL =
   name: "link"
-  indicator: "Copy link URL to Clipboard."
+  indicator: "Copy link URL to Clipboard"
   linkActivator: (link) ->
     if link.href?
       chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -39,11 +39,11 @@ COPY_LINK_URL =
       HUD.showForDuration "No link to yank.", 2000
 OPEN_INCOGNITO =
   name: "incognito"
-  indicator: "Open link in incognito window."
+  indicator: "Open link in incognito window"
   linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
 DOWNLOAD_LINK_URL =
   name: "download"
-  indicator: "Download link URL."
+  indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
@@ -138,7 +138,7 @@ class LinkHintsMode
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (hintDescriptors, mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (hintDescriptors, @mode = OPEN_IN_CURRENT_TAB) ->
     # We need documentElement to be ready in order to append links.
     return unless document.documentElement
 
@@ -153,7 +153,7 @@ class LinkHintsMode
     @markerMatcher.fillInMarkers @hintMarkers
 
     @hintMode = new Mode
-      name: "hint/#{mode.name}"
+      name: "hint/#{@mode.name}"
       indicator: false
       singleton: "link-hints-mode"
       passInitialKeyupEvents: true
@@ -164,12 +164,11 @@ class LinkHintsMode
       keydown: @onKeyDownInMode.bind this
       keypress: @onKeyPressInMode.bind this
 
+    @setIndicator()
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
         (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
           HintCoordinator.sendMessage "exit", isSuccess: false
-
-    @setOpenLinkMode mode, false
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
     # because some clickable elements cannot contain children, e.g. submit buttons.
@@ -177,9 +176,16 @@ class LinkHintsMode
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
-    @hintMode.setIndicator @mode.indicator if windowIsFocused()
     if shouldPropagateToOtherFrames
       HintCoordinator.sendMessage "setOpenLinkMode", modeIndex: availableModes.indexOf @mode
+    else
+      @setIndicator()
+
+  setIndicator: ->
+    if windowIsFocused()
+      typedCharacters = @markerMatcher.linkTextKeystrokeQueue?.join("") ? ""
+      indicator = @mode.indicator + (if typedCharacters then ": \"#{typedCharacters}\"" else "") + "."
+      @hintMode.setIndicator indicator
 
   #
   # Creates a link marker for the given link.
@@ -262,7 +268,7 @@ class LinkHintsMode
     else
       return
 
-    # We've handled the event, so suppress it.
+    # We've handled the event, so suppress it and update the mode indicator.
     DomUtils.suppressEvent event
 
   # Handles normal input.
@@ -292,6 +298,8 @@ class LinkHintsMode
     else
       @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
+
+    @setIndicator()
 
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
@@ -469,15 +477,21 @@ class FilterHints
     linkSearchString = @linkTextKeystrokeQueue.join("").trim().toLowerCase()
     do (scoreFunction = @scoreLinkHint linkSearchString) ->
       linkMarker.score = scoreFunction linkMarker for linkMarker in hintMarkers
-    hintMarkers = hintMarkers[..].sort (a,b) ->
+    matchingHintMarkers = hintMarkers[..].sort (a,b) ->
       if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
-    linkHintNumber = 1
-    for linkMarker in hintMarkers
-      continue unless 0 < linkMarker.score
-      linkMarker.hintString = @generateHintString linkHintNumber++
-      @renderMarker linkMarker
-      linkMarker
+    matchingHintMarkers = (linkMarker for linkMarker in matchingHintMarkers when 0 < linkMarker.score)
+
+    if matchingHintMarkers.length == 0 and @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
+      # We don't accept typed text which doesn't match any hints.
+      @linkTextKeystrokeQueue.pop()
+      @filterLinkHints hintMarkers
+    else
+      linkHintNumber = 1
+      for linkMarker in matchingHintMarkers
+        linkMarker.hintString = @generateHintString linkHintNumber++
+        @renderMarker linkMarker
+        linkMarker
 
   # Assign a score to a filter match (higher is better).  We assign a higher score for matches at the start of
   # a word, and a considerably higher score still for matches which are whole words.

@@ -284,6 +284,18 @@ context "Filtered link hints",
       sendKeyboardEvent "A"
       assert.equal "1", hintMarkers[3].hintString
 
+    # This test is the same as above, but with an extra non-matching character.
+    should "narrow the hints and ignore typing mistakes", ->
+      hintMarkers = getHintMarkers()
+      sendKeyboardEvent "T"
+      sendKeyboardEvent "R"
+      sendKeyboardEvent "X"
+      assert.equal "none", hintMarkers[0].style.display
+      assert.equal "3", hintMarkers[1].hintString
+      assert.equal "", hintMarkers[1].style.display
+      sendKeyboardEvent "A"
+      assert.equal "1", hintMarkers[3].hintString
+
   context "Image hints",
 
     setup ->
