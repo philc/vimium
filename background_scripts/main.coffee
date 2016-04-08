@@ -355,35 +355,45 @@ HintCoordinator =
       # If there's no handler here, then the message is forwarded to all frames in the sender's tab.
       @sendMessage request.messageType, tabId, request
 
+  # Post a link-hints message to a particular frame's port. We catch errors in case the frame has gone away.
+  postMessage: (tabId, frameId, messageType, port, request = {}) ->
+    try
+      port.postMessage extend request, {handler: "linkHintsMessage", messageType}
+    catch
+      @unregisterFrame tabId, frameId
+
+  # Post a link-hints message to all participating frames.
   sendMessage: (messageType, tabId, request = {}) ->
-    extend request, {handler: "linkHintsMessage", messageType}
     for own frameId, port of @tabState[tabId].ports
-      try
-        port.postMessage request
-      catch
-        @unregisterFrame tabId, parseInt frameId
+      @postMessage tabId, parseInt(frameId), messageType, port, request
 
   prepareToActivateMode: (tabId, originatingFrameId, {modeIndex}) ->
-    @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: [], originatingFrameId, modeIndex}
+    @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex}
     @tabState[tabId].ports = extend {}, portsForTab[tabId]
     @sendMessage "getHintDescriptors", tabId, {modeIndex}
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->
     if frameId in @tabState[tabId].frameIds
-      @tabState[tabId].hintDescriptors.push hintDescriptors...
+      @tabState[tabId].hintDescriptors[frameId] = hintDescriptors
       @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
       if @tabState[tabId].frameIds.length == 0
-        @sendMessage "activateMode", tabId,
-          originatingFrameId: @tabState[tabId].originatingFrameId
-          hintDescriptors: @tabState[tabId].hintDescriptors
-          modeIndex: @tabState[tabId].modeIndex
+        for own frameId, port of @tabState[tabId].ports
+          if frameId of @tabState[tabId].hintDescriptors
+            hintDescriptors = extend {}, @tabState[tabId].hintDescriptors
+            # We do not send back the frame's own hint descriptors.  This is faster (approx. speedup 3/2) for
+            # link-busy sites like reddit.
+            delete hintDescriptors[frameId]
+            @postMessage tabId, parseInt(frameId), "activateMode", port,
+              originatingFrameId: @tabState[tabId].originatingFrameId
+              hintDescriptors: hintDescriptors
+              modeIndex: @tabState[tabId].modeIndex
 
   # If an unregistering frame is participating in link-hints mode, then we need to tidy up after it.
   unregisterFrame: (tabId, frameId) ->
     delete @tabState[tabId]?.ports?[frameId]
-    # We fake "postHintDescriptors" for an unregistering frame, if necessary.
-    @postHintDescriptors tabId, frameId, hintDescriptors: [] if @tabState[tabId]?.frameIds
+    # We fake "postHintDescriptors" for an unregistering frame.
+    @postHintDescriptors tabId, frameId, hintDescriptors: []
 
 # Port handler mapping
 portHandlers =

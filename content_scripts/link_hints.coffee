@@ -82,13 +82,17 @@ HintCoordinator =
     DomUtils.documentReady => Settings.onLoaded =>
       requireHref = availableModes[modeIndex] in [COPY_LINK_URL, OPEN_INCOGNITO]
       @localHints = LocalHints.getLocalHints requireHref
-      @sendMessage "postHintDescriptors", hintDescriptors:
-        @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
+      @localHintDescriptors = @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
+      @sendMessage "postHintDescriptors", hintDescriptors: @localHintDescriptors
 
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
   # step in every frame, and @linkHintsMode is in the same state in every frame.
   activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
+    # We do not receive the frame's own hint descritors back from the background page.  Instead, we merge them
+    # with the hint descriptors from other frames here.
+    [hintDescriptors[frameId], @localHintDescriptors] = [@localHintDescriptors, null]
+    hintDescriptors = [].concat (hintDescriptors[fId] for fId in (fId for own fId of hintDescriptors).sort())...
     # Ensure that the document is ready and that the settings are loaded.
     DomUtils.documentReady => Settings.onLoaded =>
       @suppressKeyboardEvents.exit() if @suppressKeyboardEvents?.modeIsActive
