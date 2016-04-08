@@ -13,22 +13,22 @@
 isMac = KeyboardUtils.platform == "Mac"
 OPEN_IN_CURRENT_TAB =
   name: "curr-tab"
-  indicator: "Open link in current tab."
+  indicator: "Open link in current tab"
 OPEN_IN_NEW_BG_TAB =
   name: "bg-tab"
-  indicator: "Open link in new tab."
+  indicator: "Open link in new tab"
   clickModifiers: metaKey: isMac, ctrlKey: not isMac
 OPEN_IN_NEW_FG_TAB =
   name: "fg-tab"
-  indicator: "Open link in new tab and switch to it."
+  indicator: "Open link in new tab and switch to it"
   clickModifiers: shiftKey: true, metaKey: isMac, ctrlKey: not isMac
 OPEN_WITH_QUEUE =
   name: "queue"
-  indicator: "Open multiple links in new tabs."
+  indicator: "Open multiple links in new tabs"
   clickModifiers: metaKey: isMac, ctrlKey: not isMac
 COPY_LINK_URL =
   name: "link"
-  indicator: "Copy link URL to Clipboard."
+  indicator: "Copy link URL to Clipboard"
   linkActivator: (link) ->
     if link.href?
       chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
@@ -39,11 +39,11 @@ COPY_LINK_URL =
       HUD.showForDuration "No link to yank.", 2000
 OPEN_INCOGNITO =
   name: "incognito"
-  indicator: "Open link in incognito window."
+  indicator: "Open link in incognito window"
   linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInIncognito', url: link.href
 DOWNLOAD_LINK_URL =
   name: "download"
-  indicator: "Download link URL."
+  indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
@@ -172,10 +172,16 @@ class LinkHintsMode
     @hintMarkerContainingDiv = DomUtils.addElementList (marker for marker in @hintMarkers when marker.isLocalMarker),
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
 
+  # TODO(smblott) This is currently doing two somewhat independent things.  We should refactor it to "update
+  # @mode" and "update mode indicator".
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
-    @hintMode.setIndicator @mode.indicator if windowIsFocused()
+    @hintMode.setIndicator @formatIndicator @mode.indicator if windowIsFocused()
     if shouldPropagateToOtherFrames
       HintCoordinator.sendMessage "setOpenLinkMode", modeIndex: availableModes.indexOf @mode
+
+  formatIndicator: (indicator) ->
+    typedCharacters = @markerMatcher.linkTextKeystrokeQueue?.join("") ? ""
+    indicator + (if typedCharacters then ": '#{typedCharacters}'" else "") + "."
 
   #
   # Creates a link marker for the given link.
@@ -258,7 +264,7 @@ class LinkHintsMode
     else
       return
 
-    # We've handled the event, so suppress it.
+    # We've handled the event, so suppress it and update the mode indicator.
     DomUtils.suppressEvent event
 
   # Handles normal input.
@@ -288,6 +294,8 @@ class LinkHintsMode
     else
       @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
+
+    @setOpenLinkMode @mode, false
 
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
