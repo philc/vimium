@@ -66,10 +66,14 @@ class Suggestion
            <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
          </div>
          <div class="vimiumReset vomnibarBottomHalf">
-          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
+          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @simplifyJavascriptUrls @shortenUrl()}</span>
           #{relevancyHtml}
         </div>
         """
+
+  # Simplify "javascript:" URLs; show them as "javascript:..."; see #961.
+  simplifyJavascriptUrls: (url) ->
+    if Utils.hasJavascriptPrefix(url) then "javascript:..." else url
 
   # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
   getUrlRoot: (url) ->
