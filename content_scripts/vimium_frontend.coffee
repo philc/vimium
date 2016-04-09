@@ -138,8 +138,7 @@ installModes = ->
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
-initializeUIComponents = ->
- # Both of these are idempotent.
+initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
  HUD.init()
  Vomnibar.init() if DomUtils.isTopFrame()
 

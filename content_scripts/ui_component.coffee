@@ -1,4 +1,5 @@
 class UIComponent
+  uiComponentIsReady: false
   iframeElement: null
   iframePort: null
   showing: null
@@ -52,6 +53,8 @@ class UIComponent
       if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
         @postMessage name: "frameFocused", focusFrameId: request.focusFrameId
       false # Free up the sendResponse handler.
+
+    @styleSheetGetter.use => @iframePort.use => Utils.nextTick => @uiComponentIsReady = true
 
   # Posts a message (if one is provided), then calls continuation (if provided).  The continuation is only
   # ever called *after* the message has been posted.

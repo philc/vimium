@@ -23,13 +23,13 @@ HUD =
     @_showForDurationTimerId = setTimeout((=> @hide()), duration)
 
   show: (text) ->
-    return unless @enabled()
+    return unless @isReady()
     clearTimeout(@_showForDurationTimerId)
     @hudUI.show {name: "show", text}
     @tween.fade 1.0, 150
 
   showFindMode: (@findMode = null) ->
-    return unless @enabled()
+    return unless @isReady()
     @hudUI.show {name: "showFindMode", text: ""}
     @tween.fade 1.0, 150
 
@@ -83,12 +83,7 @@ HUD =
     @findMode.exit()
     postExit?()
 
-  isReady: do ->
-    ready = false
-    DomUtils.documentReady -> ready = true
-    -> ready and document.body != null and @hudUI?
-
-  enabled: -> true
+  isReady: -> @hudUI?.uiComponentIsReady
 
 class Tween
   opacity: 0
