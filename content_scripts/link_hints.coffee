@@ -506,14 +506,15 @@ class FilterHints
         for searchWord in searchWords
           linkWordScores =
             for linkWord, idx in linkWords
-              if linkWord == searchWord
-                if idx == 0 then 8 else 6
-              else if linkWord.startsWith searchWord
-                if idx == 0 then 4 else 2
-              else if 0 <= linkWord.indexOf searchWord
-                1
+              position = linkWord.indexOf searchWord
+              if position < 0
+                0 # No match.
+              else if position == 0 and searchWord.length == linkWord.length
+                if idx == 0 then 8 else 6 # Whole-word match.
+              else if position == 0
+                if idx == 0 then 4 else 2 # Match at the start of a word.
               else
-                0
+                1 # 0 < position; other match.
           Math.max linkWordScores...
 
       if 0 in searchWordScores
