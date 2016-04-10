@@ -64,7 +64,8 @@ Vomnibar =
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
   open: (sourceFrameId, options) ->
     @init()
-    @vomnibarUI.activate extend options, { sourceFrameId }
+    if @vomnibarUI?.uiComponentIsReady
+      @vomnibarUI.activate extend options, { sourceFrameId }
 
 root = exports ? window
 root.Vomnibar = Vomnibar

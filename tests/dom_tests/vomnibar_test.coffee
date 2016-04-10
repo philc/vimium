@@ -25,6 +25,8 @@ context "Keep selection within bounds",
     stub vomnibarFrame.UIComponentServer, "postMessage", (data) ->
       UIComponent.handleMessage {data}
 
+    stub Vomnibar.vomnibarUI, "uiComponentIsReady", true
+
   tearDown ->
     Vomnibar.vomnibarUI.hide()
 

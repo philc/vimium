@@ -635,7 +635,7 @@ window.HelpDialog ?=
     @helpUI = new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", (event) =>
       @hide() if event.data == "hide"
 
-  isReady: -> @helpUI?
+  isReady: -> @helpUI?.uiComponentIsReady
 
   show: (html) ->
     @init()
