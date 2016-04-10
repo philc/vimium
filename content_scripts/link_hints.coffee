@@ -196,8 +196,8 @@ class LinkHintsMode
         localHintDescriptor = HintCoordinator.getLocalHintMarker desc
         el = DomUtils.createElement "div"
         el.rect = localHintDescriptor.rect
-        el.style.left = el.rect.left + window.scrollX + "px"
-        el.style.top = el.rect.top  + window.scrollY  + "px"
+        el.style.left = el.rect.left + "px"
+        el.style.top = el.rect.top  + "px"
         extend el,
           className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
           showLinkText: localHintDescriptor.showLinkText
@@ -717,6 +717,11 @@ LocalHints =
         # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
         # click some elements that we could click before.
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+
+    # Position the rects within the window.
+    for hint in nonOverlappingElements
+      hint.rect.top += window.scrollY
+      hint.rect.left += window.scrollX
 
     if Settings.get "filterLinkHints"
       @withLabelMap (labelMap) =>

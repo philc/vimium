@@ -265,8 +265,8 @@ DomUtils =
     flashEl = @createElement "div"
     flashEl.id = "vimiumFlash"
     flashEl.className = "vimiumReset"
-    flashEl.style.left = rect.left + window.scrollX + "px"
-    flashEl.style.top = rect.top  + window.scrollY  + "px"
+    flashEl.style.left = rect.left + "px"
+    flashEl.style.top = rect.top + "px"
     flashEl.style.width = rect.width + "px"
     flashEl.style.height = rect.height + "px"
     document.documentElement.appendChild flashEl
