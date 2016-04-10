@@ -164,7 +164,6 @@ class LinkHintsMode
       keydown: @onKeyDownInMode.bind this
       keypress: @onKeyPressInMode.bind this
 
-    @setIndicator()
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
         (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
@@ -174,6 +173,8 @@ class LinkHintsMode
     # because some clickable elements cannot contain children, e.g. submit buttons.
     @hintMarkerContainingDiv = DomUtils.addElementList (marker for marker in @hintMarkers when marker.isLocalMarker),
       id: "vimiumHintMarkerContainer", className: "vimiumReset"
+
+    @setIndicator()
 
   setOpenLinkMode: (@mode, shouldPropagateToOtherFrames = true) ->
     if shouldPropagateToOtherFrames
