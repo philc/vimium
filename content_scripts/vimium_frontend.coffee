@@ -140,6 +140,7 @@ initializeOnEnabledStateKnown = Utils.makeIdempotent ->
 
 initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
  HUD.init()
+ HelpDialog.init()
  Vomnibar.init() if DomUtils.isTopFrame()
 
 #
