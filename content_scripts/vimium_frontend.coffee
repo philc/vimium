@@ -358,10 +358,10 @@ extend window,
     new InsertMode global: true, exitOnFocus: true
 
   enterVisualMode: ->
-    new VisualMode()
+    new VisualMode userLaunchedMode: true
 
   enterVisualLineMode: ->
-    new VisualLineMode
+    new VisualLineMod userLaunchedMode: true
 
   passNextKey: (count) ->
     new PassNextKeyMode count

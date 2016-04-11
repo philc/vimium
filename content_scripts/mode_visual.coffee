@@ -235,9 +235,14 @@ class VisualMode extends KeyHandlerMode
       keyMapping: keyMapping
       commandHandler: @commandHandler.bind this
 
+    # If there was a range selection when the user lanuched visual mode, then we retain the selection on exit.
+    @shouldRetainSelectionOnExit = @options.userLaunchedMode and @selection.type == "Range"
+
     @onExit (event = null) =>
+      if @shouldRetainSelectionOnExit
+        null # Retain any selection, regardless of how we exit.
       # This mimics vim: when leaving visual mode via Escape, collapse to focus, otherwise collapse to anchor.
-      if event?.type == "keydown" and KeyboardUtils.isEscape(event) and @name != "caret"
+      else if event?.type == "keydown" and KeyboardUtils.isEscape(event) and @name != "caret"
         @movement.collapseSelectionToFocus()
       else
         @movement.collapseSelectionToAnchor()
