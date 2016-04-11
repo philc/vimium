@@ -63,7 +63,7 @@ handlers =
 
     inputElement = document.createElement "span"
     inputElement.contentEditable = "plaintext-only"
-    setTextInInputElement inputElement, data.text ? ""
+    setTextInInputElement inputElement, data.text if data.text
     inputElement.id = "hud-find-input"
     hud.appendChild inputElement
 
