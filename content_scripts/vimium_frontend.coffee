@@ -140,7 +140,6 @@ initializeOnEnabledStateKnown = Utils.makeIdempotent ->
 
 initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
  HUD.init()
- HelpDialog.init()
  Vomnibar.init() if DomUtils.isTopFrame()
 
 #
@@ -636,7 +635,7 @@ window.HelpDialog ?=
     @helpUI = new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", (event) =>
       @hide() if event.data == "hide"
 
-  isReady: -> @helpUI?.uiComponentIsReady
+  isReady: -> @helpUI
 
   show: (html) ->
     @init()
