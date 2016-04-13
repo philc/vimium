@@ -232,7 +232,7 @@ Scroller =
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
-  scrollBy: (direction, amount, factor = 1) ->
+  scrollBy: (direction, amount, factor = 1, continuous = true) ->
     # if this is called before domReady, just use the window scroll function
     if (!document.body and amount instanceof Number)
       if (direction == "x")
@@ -249,7 +249,7 @@ Scroller =
     unless CoreScroller.wouldNotInitiateScroll()
       element = findScrollableElement activatedElement, direction, amount, factor
       elementAmount = factor * getDimension element, direction, amount
-      CoreScroller.scroll element, direction, elementAmount
+      CoreScroller.scroll element, direction, elementAmount, continuous
 
   scrollTo: (direction, pos) ->
     activatedElement ||= (document.body and firstScrollableElement()) or document.body
