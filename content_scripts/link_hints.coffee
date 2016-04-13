@@ -620,9 +620,9 @@ LocalHints =
         isClickable ||=
           if element == document.body and document.hasFocus() and Scroller.isScrollableElement element
             reason = "Scroll."
-      when "div", "ol", "ul"
+      when "div", "ol", "ul", "pre"
         isClickable ||=
-          if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
+          if (element.clientHeight < element.scrollHeight or element.clientWidth < element.scrollWidth) and Scroller.isScrollableElement element
             reason = "Scroll."
 
     # An element with a class name containing the text "button" might be clickable.  However, real clickables
