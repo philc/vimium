@@ -45,7 +45,8 @@ class UIComponent
         # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
         chrome.storage.local.get "vimiumSecret", ({ vimiumSecret }) =>
           { port1, port2 } = new MessageChannel
-          port1.onmessage = (event) => @handleMessage event
+          port1.onmessage = (event) =>
+            if event?.data == "uiComponentIsReady" then @uiComponentIsReady = true else @handleMessage event
           @iframeElement.contentWindow.postMessage vimiumSecret, chrome.runtime.getURL(""), [ port2 ]
           setIframePort port1
 
@@ -53,8 +54,6 @@ class UIComponent
       if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
         @postMessage name: "frameFocused", focusFrameId: request.focusFrameId
       false # Free up the sendResponse handler.
-
-    @styleSheetGetter.use => @iframePort.use => Utils.nextTick => @uiComponentIsReady = true
 
   # Posts a message (if one is provided), then calls continuation (if provided).  The continuation is only
   # ever called *after* the message has been posted.
