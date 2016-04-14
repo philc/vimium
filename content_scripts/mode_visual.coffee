@@ -223,8 +223,12 @@ class VisualMode extends KeyHandlerMode
         keyMapping[keys[0]] ?= {}
         extend keyMapping[keys[0]], "#{keys[1]}": command: movement
 
-    # Aliases.
-    extend keyMapping, "B": keyMapping.b, "W": keyMapping.w
+    # Aliases and complex bindings.
+    extend keyMapping,
+      "B": keyMapping.b
+      "W": keyMapping.w
+      "<c-e>": command: (count) -> Scroller.scrollBy "y", count * Settings.get("scrollStepSize"), 1, false
+      "<c-y>": command: (count) -> Scroller.scrollBy "y", -count * Settings.get("scrollStepSize"), 1, false
 
     super extend options,
       name: options.name ? "visual"

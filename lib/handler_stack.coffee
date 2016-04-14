@@ -93,20 +93,21 @@ class HandlerStack
     @continueBubbling
 
   alwaysSuppressPropagation: (handler = null) ->
-    handler?()
-    @suppressPropagation
+    if handler?() == @suppressEvent then @suppressEvent else @suppressPropagation
 
   # Debugging.
   logResult: (eventNumber, type, event, handler, result) ->
-    label =
-      switch result
-        when @passEventToPage then "passEventToPage"
-        when @suppressPropagation then "suppressPropagation"
-        when @restartBubbling then "restartBubbling"
-        when "skip" then "skip"
-        when true then "continue"
-    label ||= if result then "continue/truthy" else "suppress"
-    console.log "#{eventNumber}", type, handler._name, label
+    if event?.type == "keydown" # Tweak this as needed.
+      label =
+        switch result
+          when @passEventToPage then "passEventToPage"
+          when @suppressEvent then "suppressEvent"
+          when @suppressPropagation then "suppressPropagation"
+          when @restartBubbling then "restartBubbling"
+          when "skip" then "skip"
+          when true then "continue"
+      label ||= if result then "continue/truthy" else "suppress"
+      console.log "#{eventNumber}", type, handler._name, label
 
   show: ->
     console.log "#{@eventNumber}:"
