@@ -173,6 +173,7 @@ Next version (not yet released)
     - With smooth scrolling, `2j`-and-hold now gives a faster scroll than `j`-and-hold.
     - You can now bind keys to a command with a defined count prefix; for example, `map d scrollDown count=4`.
     - You can now bind three-key (or longer) sequences; for example, `map abc enterInsertMode`.
+    - `c-y` and `c-e` now scroll in visual mode.
 - Bug fixes:
     - `<c-a-[>` is not longer treated as escape.
     - Fix icon display and memory leak due to regression in recent Chrome versions (49+).
