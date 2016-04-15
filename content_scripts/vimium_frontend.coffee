@@ -119,7 +119,10 @@ class NormalMode extends KeyHandlerMode
         You have asked Vimium to perform #{count} repetitions of the command: #{registryEntry.description}.\n
         Are you sure you want to continue?"""
 
-    if registryEntry.topFrame
+    if registryEntry.topFrame and window.isVimiumUIComponent? and window.isVimiumUIComponent
+      # We cannot use "topFrame" commands, most notably the Vomnibar, from within a UI component.
+      HUD.showForDuration "#{registryEntry.command} cannot be used here.", 2000
+    else if registryEntry.topFrame
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
     else if registryEntry.background
@@ -156,7 +159,7 @@ initializePreDomReady = ->
     getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
       sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
     setScrollPosition: setScrollPosition
-    # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
+    # A frame has received the focus.  We don't care here (UI components handle this).
     frameFocused: ->
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
@@ -626,29 +629,16 @@ enterFindMode = ->
 # If we are in the help dialog iframe, HelpDialog is already defined with the necessary functions.
 window.HelpDialog ?=
   helpUI: null
-  container: null
-  showing: false
-
-  init: ->
-    return if @helpUI?
-
-    @helpUI = new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", (event) =>
-      @hide() if event.data == "hide"
-
-  isReady: -> @helpUI
-
-  show: (html) ->
-    @init()
-    return if @showing or !@isReady()
-    @showing = true
-    @helpUI.activate html
-
-  hide: ->
-    @showing = false
-    @helpUI.hide()
+  isShowing: -> @helpUI?.showing
 
   toggle: (html) ->
-    if @showing then @hide() else @show html
+    @helpUI ?= new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", ->
+    if @isShowing()
+      @helpUI.hide()
+    else
+      # On the options page, we allow the help dialog to lose the focus, elsewhere we do not.  This allows
+      # users to view the help dialog while typing in the key-mappings input.
+      @helpUI.activate {name: "activate", html, focus: true, allowBlur: window.isVimiumOptionsPage ? false}
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady

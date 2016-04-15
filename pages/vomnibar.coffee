@@ -38,7 +38,7 @@ Vomnibar =
 class VomnibarUI
   constructor: ->
     @refreshInterval = 0
-    @postHideCallback = null
+    @onHiddenCallback = null
     @initDom()
 
   setQuery: (query) -> @input.value = query
@@ -56,14 +56,14 @@ class VomnibarUI
   # 3. Only once the "hidden" message is received here is any required action  invoked (in onHidden).
   # This ensures that the vomnibar is actually hidden before any new tab is created, and avoids flicker after
   # opening a link in a new tab then returning to the original tab (see #1485).
-  hide: (@postHideCallback = null) ->
+  hide: (@onHiddenCallback = null) ->
     UIComponentServer.postMessage "hide"
     @reset()
-    @completer?.reset()
 
   onHidden: ->
-    @postHideCallback?()
-    @postHideCallback = null
+    @onHiddenCallback?()
+    @onHiddenCallback = null
+    @reset()
 
   reset: ->
     @clearUpdateTimer()
@@ -75,6 +75,7 @@ class VomnibarUI
     @selection = @initialSelectionValue
     @keywords = []
     @seenTabToOpenCompletionList = false
+    @completer?.reset()
 
   updateSelection: ->
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
@@ -331,10 +332,9 @@ class BackgroundCompleter
 
 UIComponentServer.registerHandler (event) ->
   switch event.data.name ? event.data
-    when "frameFocused" then Vomnibar.hide()
     when "hide" then Vomnibar.hide()
     when "hidden" then Vomnibar.onHidden()
-    else Vomnibar.activate event.data
+    when "activate" then Vomnibar.activate event.data
 
 root = exports ? window
 root.Vomnibar = Vomnibar

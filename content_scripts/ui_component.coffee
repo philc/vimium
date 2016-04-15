@@ -2,7 +2,8 @@ class UIComponent
   uiComponentIsReady: false
   iframeElement: null
   iframePort: null
-  showing: null
+  iframeFrameId: null
+  showing: false
   options: null
   shadowDOM: null
   styleSheetGetter: null
@@ -27,10 +28,8 @@ class UIComponent
     @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
     @shadowDOM.appendChild styleSheet
     @shadowDOM.appendChild @iframeElement
-
-    @showing = true # The iframe is visible now.
-    # Hide the iframe, but don't interfere with the focus.
-    @hide false
+    @iframeElement.classList.remove "vimiumUIComponentVisible"
+    @iframeElement.classList.add "vimiumUIComponentHidden"
 
     # Open a port and pass it to the iframe via window.postMessage.  We use an AsyncDataFetcher to handle
     # requests which arrive before the iframe (and its message handlers) have completed initialization.  See
@@ -45,74 +44,59 @@ class UIComponent
         # Get vimiumSecret so the iframe can determine that our message isn't the page impersonating us.
         chrome.storage.local.get "vimiumSecret", ({ vimiumSecret }) =>
           { port1, port2 } = new MessageChannel
-          port1.onmessage = (event) =>
-            if event?.data == "uiComponentIsReady" then @uiComponentIsReady = true else @handleMessage event
           @iframeElement.contentWindow.postMessage vimiumSecret, chrome.runtime.getURL(""), [ port2 ]
-          setIframePort port1
 
-    chrome.runtime.onMessage.addListener (request) =>
-      if @showing and request.name == "frameFocused" and request.focusFrameId != frameId
-        @postMessage name: "frameFocused", focusFrameId: request.focusFrameId
-      false # Free up the sendResponse handler.
+          port1.onmessage = (event) =>
+            switch event?.data?.name ? event?.data
+              when "uiComponentIsReady"
+                # If any other frame receives the focus, then hide the UI component.
+                chrome.runtime.onMessage.addListener ({name, focusFrameId}) =>
+                  if name == "frameFocused" and @options?.focus and focusFrameId not in [frameId, @iframeFrameId]
+                    @hide false
+                  false # We will not be calling sendResponse.
 
-  # Posts a message (if one is provided), then calls continuation (if provided).  The continuation is only
-  # ever called *after* the message has been posted.
+                # If this frame receives the focus, then hide the UI component.
+                window.addEventListener "focus", (event) =>
+                  if event.target == window and @options?.focus and not @options?.allowBlur
+                    @hide false
+                  true # Continue propagating the event.
+
+                @uiComponentIsReady = true
+                setIframePort port1
+
+              when "setIframeFrameId" then @iframeFrameId = event.data.iframeFrameId
+              when "hide" then @hide()
+              else @handleMessage event
+
+  # Post a message (if provided), then call continuation (if provided).
   postMessage: (message = null, continuation = null) ->
     @iframePort.use (port) =>
       port.postMessage message if message?
       continuation?()
 
-  activate: (@options) ->
+  activate: (@options = null) ->
     @postMessage @options, =>
-      @show() unless @showing
-      @iframeElement.focus()
-
-  show: (message) ->
-    @postMessage message, =>
       @iframeElement.classList.remove "vimiumUIComponentHidden"
       @iframeElement.classList.add "vimiumUIComponentVisible"
-      # The window may not have the focus.  We focus it now, to prevent the "focus" listener below from firing
-      # immediately.
-      window.focus()
-      window.addEventListener "focus", @onFocus = (event) =>
-        if event.target == window
-          window.removeEventListener "focus", @onFocus
-          @onFocus = null
-          @postMessage "frameFocused"
+      @iframeElement.focus() if @options?.focus
       @showing = true
 
-  hide: (focusWindow = true)->
-    @refocusSourceFrame @options?.sourceFrameId if focusWindow
-    window.removeEventListener "focus", @onFocus if @onFocus
-    @onFocus = null
-    @iframeElement.classList.remove "vimiumUIComponentVisible"
-    @iframeElement.classList.add "vimiumUIComponentHidden"
-    @iframeElement.blur()
-    @options = null
-    @showing = false
-
-  # Refocus the frame from which the UI component was opened.  This may be different from the current frame.
-  # After hiding the UI component, Chrome refocuses the containing frame. To avoid a race condition, we need
-  # to wait until that frame first receives the focus, before then focusing the frame which should now have
-  # the focus.
-  refocusSourceFrame: (sourceFrameId) ->
-    if @showing and sourceFrameId? and sourceFrameId != frameId
-      refocusSourceFrame = ->
-        chrome.runtime.sendMessage
-          handler: "sendMessageToFrames"
-          message:
-            name: "focusFrame"
-            frameId: sourceFrameId
-
-      if windowIsFocused()
-        # We already have the focus.
-        refocusSourceFrame()
-      else
-        # We don't yet have the focus (but we'll be getting it soon).
-        window.addEventListener "focus", handler = (event) ->
-          if event.target == window
-            window.removeEventListener "focus", handler
-            refocusSourceFrame()
+  hide: (shouldRefocusOriginalFrame = true) ->
+    if @showing
+      @showing = false
+      @iframeElement.classList.remove "vimiumUIComponentVisible"
+      @iframeElement.classList.add "vimiumUIComponentHidden"
+      if @options?.focus and shouldRefocusOriginalFrame
+        @iframeElement.blur()
+        if @options?.sourceFrameId?
+          chrome.runtime.sendMessage
+            handler: "sendMessageToFrames",
+            message: name: "focusFrame", frameId: @options.sourceFrameId, forceFocusThisFrame: true
+        else
+          window.focus()
+      @options = null
+      # Inform the UI component that it is hidden.
+      Utils.nextTick => @postMessage "hidden"
 
   # Fetch a Vimium file/resource (such as "content_scripts/vimium.css").
   # We try making an XMLHttpRequest request.  That can fail (see #1817), in which case we fetch the
@@ -134,7 +118,6 @@ class UIComponent
 
     request.open "GET", (chrome.runtime.getURL file), true
     request.send()
-
 
 root = exports ? window
 root.UIComponent = UIComponent

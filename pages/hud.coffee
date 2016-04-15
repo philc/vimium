@@ -50,7 +50,7 @@ handlers =
     document.getElementById("hud").innerText = data.text
     document.getElementById("hud").classList.add "vimiumUIComponentVisible"
     document.getElementById("hud").classList.remove "vimiumUIComponentHidden"
-  hide: ->
+  hidden: ->
     # We get a flicker when the HUD later becomes visible again (with new text) unless we reset its contents
     # here.
     document.getElementById("hud").innerText = ""
@@ -96,8 +96,7 @@ handlers =
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
 
-UIComponentServer.registerHandler (event) ->
-  {data} = event
-  handlers[data.name]? data
+UIComponentServer.registerHandler ({data}) ->
+  handlers[data.name ? data]? data
 
 FindModeHistory.init()

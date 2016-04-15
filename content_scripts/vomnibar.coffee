@@ -51,10 +51,6 @@ Vomnibar =
     unless @vomnibarUI?
       @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", (event) =>
         @vomnibarUI.hide() if event.data == "hide"
-      # Whenever the window receives the focus, we tell the Vomnibar UI that it has been hidden (regardless of
-      # whether it was previously visible).
-      window.addEventListener "focus", (event) =>
-        @vomnibarUI.postMessage "hidden" if event.target == window; true
 
 
   # This function opens the vomnibar. It accepts options, a map with the values:
@@ -65,7 +61,7 @@ Vomnibar =
   open: (sourceFrameId, options) ->
     @init()
     if @vomnibarUI?.uiComponentIsReady
-      @vomnibarUI.activate extend options, { sourceFrameId }
+      @vomnibarUI.activate extend options, { name: "activate", sourceFrameId, focus: true }
 
 root = exports ? window
 root.Vomnibar = Vomnibar
