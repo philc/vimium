@@ -2,8 +2,8 @@ class UIComponent
   uiComponentIsReady: false
   iframeElement: null
   iframePort: null
-  iframeFrameId: null
   showing: false
+  iframeFrameId: null
   options: null
   shadowDOM: null
   styleSheetGetter: null
@@ -118,6 +118,7 @@ class UIComponent
 
     request.open "GET", (chrome.runtime.getURL file), true
     request.send()
+
 
 root = exports ? window
 root.UIComponent = UIComponent

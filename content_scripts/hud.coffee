@@ -50,8 +50,7 @@ HUD =
     clearTimeout(@_showForDurationTimerId)
     @tween.stop()
     if immediate
-      @hudUI.hide()
-      Mode.setIndicator() if updateIndicator
+      if updateIndicator then Mode.setIndicator() else @hudUI.hide()
     else
       @tween.fade 0, 150, => @hide true, updateIndicator
 
