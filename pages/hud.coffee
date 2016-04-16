@@ -63,7 +63,6 @@ handlers =
 
     inputElement = document.createElement "span"
     inputElement.contentEditable = "plaintext-only"
-    setTextInInputElement inputElement, data.text if data.text
     inputElement.id = "hud-find-input"
     hud.appendChild inputElement
 
@@ -76,9 +75,6 @@ handlers =
     countElement.id = "hud-match-count"
     hud.appendChild countElement
     inputElement.focus()
-
-    # Replace \u00A0 (&nbsp;) with a normal space.
-    UIComponentServer.postMessage {name: "search", query: inputElement.textContent.replace "\u00A0", " "}
 
     findMode =
       historyIndex: -1

@@ -30,7 +30,7 @@ HUD =
 
   showFindMode: (@findMode = null) ->
     return unless @isReady()
-    @hudUI.activate name: "showFindMode", text: ""
+    @hudUI.activate name: "showFindMode"
     @tween.fade 1.0, 150
 
   search: (data) ->
