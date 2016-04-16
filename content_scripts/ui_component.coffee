@@ -95,8 +95,7 @@ class UIComponent
         else
           window.focus()
       @options = null
-      # Inform the UI component that it is hidden.
-      @postMessage "hidden"
+      @postMessage "hidden" # Inform the UI component that it is hidden.
 
   # Fetch a Vimium file/resource (such as "content_scripts/vimium.css").
   # We try making an XMLHttpRequest request.  That can fail (see #1817), in which case we fetch the
@@ -118,7 +117,6 @@ class UIComponent
 
     request.open "GET", (chrome.runtime.getURL file), true
     request.send()
-
 
 root = exports ? window
 root.UIComponent = UIComponent

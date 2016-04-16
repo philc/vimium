@@ -121,7 +121,7 @@ class NormalMode extends KeyHandlerMode
 
     if registryEntry.topFrame
       # The Vomnibar (a top-frame command) cannot coexist with the help dialog (it causes focus issues).
-      sourceFrameId = if HelpDialog.isShowing() and window.isVimiumUIComponent then 0 else frameId
+      sourceFrameId = if window.isVimiumUIComponent then 0 else frameId
       HelpDialog.toggle() if HelpDialog.isShowing()
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId, registryEntry}

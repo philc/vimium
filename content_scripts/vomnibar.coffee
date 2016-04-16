@@ -49,9 +49,7 @@ Vomnibar =
 
   init: ->
     unless @vomnibarUI?
-      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", (event) =>
-        @vomnibarUI.hide() if event.data == "hide"
-
+      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", ->
 
   # This function opens the vomnibar. It accepts options, a map with the values:
   #   completer   - The completer to fetch results from.

@@ -92,7 +92,5 @@ handlers =
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
 
-UIComponentServer.registerHandler ({data}) ->
-  handlers[data.name ? data]? data
-
+UIComponentServer.registerHandler ({data}) -> handlers[data.name ? data]? data
 FindModeHistory.init()

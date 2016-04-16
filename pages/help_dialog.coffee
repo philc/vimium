@@ -48,7 +48,7 @@ HelpDialog =
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
   hide: -> UIComponentServer.hide()
-  toggle: (html) -> @hide()
+  toggle: -> @hide()
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.

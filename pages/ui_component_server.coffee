@@ -18,11 +18,8 @@ UIComponentServer =
 
   registerHandler: (@handleMessage) ->
 
-  postMessage: (message) ->
-    @ownerPagePort?.postMessage message
-
-  hide: ->
-    @postMessage "hide"
+  postMessage: (message) -> @ownerPagePort?.postMessage message
+  hide: -> @postMessage "hide"
 
   # We require both that the DOM is ready and that the port has been opened before the UI component is ready.
   # These events can happen in either order.  We count them, and notify the content script when we've seen
