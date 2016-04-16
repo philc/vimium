@@ -6,7 +6,8 @@
 #   top-level frame), and then we don't need to be concerned about nested help dialog frames.
 HelpDialog =
   dialogElement: null
-  isShowing: -> true
+  showing: false
+  isShowing: -> @showing
 
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
@@ -69,8 +70,10 @@ HelpDialog =
 UIComponentServer.registerHandler (event) ->
   switch event.data.name ? event.data
     when "hide" then HelpDialog.hide()
+    when "hidden" then HelpDialog.showing = false
     when "activate"
       HelpDialog.init()
+      HelpDialog.showing = true
       HelpDialog.show event.data
 
 root = exports ? window
