@@ -119,12 +119,12 @@ class NormalMode extends KeyHandlerMode
         You have asked Vimium to perform #{count} repetitions of the command: #{registryEntry.description}.\n
         Are you sure you want to continue?"""
 
-    if registryEntry.topFrame and window.isVimiumUIComponent? and window.isVimiumUIComponent
-      # We cannot use "topFrame" commands, most notably the Vomnibar, from within a UI component.
-      HUD.showForDuration "#{registryEntry.command} cannot be used here.", 2000
-    else if registryEntry.topFrame
+    if registryEntry.topFrame
+      # The Vomnibar (a top-frame command) cannot coexist with the help dialog (it causes focus issues).
+      sourceFrameId = if HelpDialog.isShowing() and window.isVimiumUIComponent then 0 else frameId
+      HelpDialog.toggle() if HelpDialog.isShowing()
       chrome.runtime.sendMessage
-        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
+        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId, registryEntry}
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
     else
