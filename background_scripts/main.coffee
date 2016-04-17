@@ -82,8 +82,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener onURLChange # history.pus
 chrome.webNavigation.onReferenceFragmentUpdated.addListener onURLChange # Hash changed.
 
 # Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-# This is called by options.coffee.
-root.helpDialogHtml = (showUnboundCommands, showCommandNames, customTitle) ->
+getHelpDialogHtml = ({showUnboundCommands, showCommandNames, customTitle}) ->
   commandsToKey = {}
   for own key of Commands.keyToCommandRegistry
     command = Commands.keyToCommandRegistry[key].command
@@ -209,8 +208,6 @@ BackgroundCommands =
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
   openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
   togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
-  showHelp: ({tab, frameId}) ->
-    chrome.tabs.sendMessage tab.id, {name: "toggleHelpDialog", dialogHtml: helpDialogHtml(), frameId}
   moveTabLeft: moveTab
   moveTabRight: moveTab
   nextFrame: ({count, frameId, tabId}) ->
@@ -402,6 +399,7 @@ portHandlers =
 
 sendRequestHandlers =
   runBackgroundCommand: (request) -> BackgroundCommands[request.registryEntry.command] request
+  getHelpDialogHtml: getHelpDialogHtml
   # getCurrentTabUrl is used by the content scripts to get their full URL, because window.location cannot help
   # with Chrome-specific URLs like "view-source:http:..".
   getCurrentTabUrl: ({tab}) -> tab.url

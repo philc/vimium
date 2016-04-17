@@ -234,7 +234,9 @@ initOptionsPage = ->
     event.preventDefault()
 
   activateHelpDialog = ->
-    HelpDialog.toggle chrome.extension.getBackgroundPage().helpDialogHtml true, true, "Command Listing"
+    request = showUnboundCommands: true, showCommandNames: true, customTitle: "Command Listing"
+    chrome.runtime.sendMessage extend(request, handler: "getHelpDialogHtml"), (response) ->
+      HelpDialog.toggle {html: response}
 
   saveOptions = ->
     Option.saveOptions()

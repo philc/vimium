@@ -121,9 +121,8 @@ class NormalMode extends KeyHandlerMode
         Are you sure you want to continue?"""
 
     if registryEntry.topFrame
-      # The Vomnibar (a top-frame command) cannot coexist with the help dialog (it causes focus issues).
+      # We never return to a UI-component frame (e.g. the help dialog), it might have lost the focus.
       sourceFrameId = if window.isVimiumUIComponent then 0 else frameId
-      HelpDialog.toggle() if HelpDialog.isShowing()
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId, registryEntry}
     else if registryEntry.background
@@ -142,10 +141,6 @@ installModes = ->
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
-initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
- HUD.init()
- Vomnibar.init() if DomUtils.isTopFrame()
-
 #
 # Complete initialization work that should be done prior to DOMReady.
 #
@@ -155,7 +150,6 @@ initializePreDomReady = ->
   checkIfEnabledForUrl document.hasFocus()
 
   requestHandlers =
-    toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
       sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
@@ -458,13 +452,8 @@ checkIfEnabledForUrl = do ->
     {isEnabledForUrl, passKeys, frameIsFocused} = response
     initializeOnEnabledStateKnown()
     normalMode.setPassKeys passKeys
-    # Initialize UI components, if necessary. We only initialize these once we know that Vimium is enabled;
-    # see #1838.  We need to check this every time so that we can change state from disabled to enabled.
-    if isEnabledForUrl
-      initializeUIComponents() if frameIsFocused
-    else
-      # Hide the HUD if we're not enabled.
-      HUD.hide() if HUD.isReady()
+    # Hide the HUD if we're not enabled.
+    HUD.hide true, false unless isEnabledForUrl
 
   (frameIsFocused = windowIsFocused()) ->
     Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
@@ -626,19 +615,25 @@ enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
-# If we are in the help dialog iframe, HelpDialog is already defined with the necessary functions.
+window.showHelp = (sourceFrameId) ->
+  chrome.runtime.sendMessage handler: "getHelpDialogHtml", (response) ->
+    HelpDialog.toggle {sourceFrameId, html: response}
+
+# If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 window.HelpDialog ?=
   helpUI: null
   isShowing: -> @helpUI?.showing
+  abort: -> @helpUI.hide false if @isShowing()
 
-  toggle: (html) ->
+  toggle: (request) ->
     @helpUI ?= new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", ->
     if @isShowing()
       @helpUI.hide()
     else
-      # On the options page, we allow the help dialog to lose the focus, elsewhere we do not.  This allows
-      # users to view the help dialog while typing in the key-mappings input.
-      @helpUI.activate {name: "activate", html, focus: true, allowBlur: window.isVimiumOptionsPage ? false}
+      # On the options page, we allow the help dialog to blur, elsewhere we do not.  This allows users to view
+      # the help dialog while typing in the key-mappings input.
+      @helpUI.activate extend request,
+        name: "activate", focus: true, allowBlur: window.isVimiumOptionsPage ? false
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady

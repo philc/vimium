@@ -48,8 +48,7 @@ Vomnibar =
   }
 
   init: ->
-    unless @vomnibarUI?
-      @vomnibarUI = new UIComponent "pages/vomnibar.html", "vomnibarFrame", ->
+    @vomnibarUI ?= new UIComponent "pages/vomnibar.html", "vomnibarFrame", ->
 
   # This function opens the vomnibar. It accepts options, a map with the values:
   #   completer   - The completer to fetch results from.
@@ -58,8 +57,9 @@ Vomnibar =
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
   open: (sourceFrameId, options) ->
     @init()
-    if @vomnibarUI?.uiComponentIsReady
-      @vomnibarUI.activate extend options, { name: "activate", sourceFrameId, focus: true }
+    # The Vomnibar cannot coexist with the help dialog (it causes focus issues).
+    HelpDialog.abort()
+    @vomnibarUI.activate extend options, { name: "activate", sourceFrameId, focus: true }
 
 root = exports ? window
 root.Vomnibar = Vomnibar

@@ -23,13 +23,13 @@ HUD =
     @_showForDurationTimerId = setTimeout((=> @hide()), duration)
 
   show: (text) ->
-    return unless @isReady()
+    @init()
     clearTimeout(@_showForDurationTimerId)
     @hudUI.activate {name: "show", text}
     @tween.fade 1.0, 150
 
   showFindMode: (@findMode = null) ->
-    return unless @isReady()
+    @init()
     @hudUI.activate name: "showFindMode"
     @tween.fade 1.0, 150
 
@@ -46,7 +46,7 @@ HUD =
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
   # mode indicator, is when hide() is called for the mode indicator itself.
   hide: (immediate = false, updateIndicator = true) ->
-    return unless @tween? and @isReady()
+    return unless @hudUI?.uiComponentIsReady
     clearTimeout(@_showForDurationTimerId)
     @tween.stop()
     if immediate
@@ -79,8 +79,6 @@ HUD =
 
     @findMode.exit()
     postExit?()
-
-  isReady: -> @hudUI?.uiComponentIsReady
 
 class Tween
   opacity: 0
