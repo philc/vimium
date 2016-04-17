@@ -217,9 +217,10 @@ class BookmarkCompleter
         queryTerms: @currentSearch.queryTerms
         type: "bookmark"
         url: bookmark.url
-        displayUrl: bookmark.displayUrl
         title: if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
         relevancyFunction: @computeRelevancy
+        displayUrl: bookmark.displayUrl
+        deDuplicate: not bookmark.displayUrl?
     onComplete = @currentSearch.onComplete
     @currentSearch = null
     onComplete suggestions
