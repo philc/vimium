@@ -141,9 +141,6 @@ installModes = ->
 initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
-initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
- Vomnibar.init() if DomUtils.isTopFrame()
-
 #
 # Complete initialization work that should be done prior to DOMReady.
 #
@@ -455,13 +452,8 @@ checkIfEnabledForUrl = do ->
     {isEnabledForUrl, passKeys, frameIsFocused} = response
     initializeOnEnabledStateKnown()
     normalMode.setPassKeys passKeys
-    # Initialize UI components, if necessary. We only initialize these once we know that Vimium is enabled;
-    # see #1838.  We need to check this every time so that we can change state from disabled to enabled.
-    if isEnabledForUrl
-      initializeUIComponents() if frameIsFocused
-    else
-      # Hide the HUD if we're not enabled.
-      HUD.hide true, false # Immediate, do not update indicator.
+    # Hide the HUD if we're not enabled.
+    HUD.hide true, false unless isEnabledForUrl
 
   (frameIsFocused = windowIsFocused()) ->
     Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
