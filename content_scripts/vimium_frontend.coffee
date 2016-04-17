@@ -152,7 +152,7 @@ initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
 initializePreDomReady = ->
   installListeners()
   Frame.init()
-  checkIfEnabledForUrl()
+  checkIfEnabledForUrl document.hasFocus()
 
   requestHandlers =
     toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
