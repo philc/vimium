@@ -159,8 +159,7 @@ initializePreDomReady = ->
     getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
       sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
     setScrollPosition: setScrollPosition
-    # A frame has received the focus.  We don't care here (UI components handle this).
-    frameFocused: ->
+    frameFocused: -> # A frame has received the focus; we don't care here (UI components handle this).
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, sourceFrameId, registryEntry if DomUtils.isTopFrame()
@@ -291,10 +290,9 @@ DomUtils.documentReady ->
 #
 focusThisFrame = (request) ->
   unless request.forceFocusThisFrame
-    skipThisFrame = DomUtils.windowIsTooSmall() # Frame is too small; see #1317.
-    skipThisFrame ||= document.body?.tagName.toLowerCase() == "frameset"
-    if skipThisFrame
-      # Cancel and tell the background page to focus the next frame instead.
+    if DomUtils.windowIsTooSmall() or document.body?.tagName.toLowerCase() == "frameset"
+      # This frame is too small to focus or it's a frameset. Cancel and tell the background page to focus the
+      # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See #1317.
       chrome.runtime.sendMessage handler: "nextFrame"
       return
   window.focus()

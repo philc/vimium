@@ -8,6 +8,10 @@ class UIComponent
   shadowDOM: null
   styleSheetGetter: null
 
+  toggleIframeElementClasses: (removeClass, addClass) ->
+    @iframeElement.classList.remove removeClass
+    @iframeElement.classList.add addClass
+
   constructor: (iframeUrl, className, @handleMessage) ->
     styleSheet = DomUtils.createElement "style"
     styleSheet.type = "text/css"
@@ -28,8 +32,7 @@ class UIComponent
     @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
     @shadowDOM.appendChild styleSheet
     @shadowDOM.appendChild @iframeElement
-    @iframeElement.classList.remove "vimiumUIComponentVisible"
-    @iframeElement.classList.add "vimiumUIComponentHidden"
+    @toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
 
     # Open a port and pass it to the iframe via window.postMessage.  We use an AsyncDataFetcher to handle
     # requests which arrive before the iframe (and its message handlers) have completed initialization.  See
@@ -45,7 +48,6 @@ class UIComponent
         chrome.storage.local.get "vimiumSecret", ({ vimiumSecret }) =>
           { port1, port2 } = new MessageChannel
           @iframeElement.contentWindow.postMessage vimiumSecret, chrome.runtime.getURL(""), [ port2 ]
-
           port1.onmessage = (event) =>
             switch event?.data?.name ? event?.data
               when "uiComponentIsReady"
@@ -54,16 +56,14 @@ class UIComponent
                   if name == "frameFocused" and @options?.focus and focusFrameId not in [frameId, @iframeFrameId]
                     @hide false
                   false # We will not be calling sendResponse.
-
                 # If this frame receives the focus, then hide the UI component.
                 window.addEventListener "focus", (event) =>
                   if event.target == window and @options?.focus and not @options?.allowBlur
                     @hide false
                   true # Continue propagating the event.
-
+                # Register the UI component as ready and post its iframe port.
                 @uiComponentIsReady = true
                 setIframePort port1
-
               when "setIframeFrameId" then @iframeFrameId = event.data.iframeFrameId
               when "hide" then @hide()
               else @handleMessage event
@@ -76,24 +76,23 @@ class UIComponent
 
   activate: (@options = null) ->
     @postMessage @options, =>
-      @iframeElement.classList.remove "vimiumUIComponentHidden"
-      @iframeElement.classList.add "vimiumUIComponentVisible"
+      @toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @iframeElement.focus() if @options?.focus
       @showing = true
 
   hide: (shouldRefocusOriginalFrame = true) ->
     if @showing
       @showing = false
-      @iframeElement.classList.remove "vimiumUIComponentVisible"
-      @iframeElement.classList.add "vimiumUIComponentHidden"
-      if @options?.focus and shouldRefocusOriginalFrame
+      @toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
+      if @options?.focus
         @iframeElement.blur()
-        if @options?.sourceFrameId?
-          chrome.runtime.sendMessage
-            handler: "sendMessageToFrames",
-            message: name: "focusFrame", frameId: @options.sourceFrameId, forceFocusThisFrame: true
-        else
-          window.focus()
+        if shouldRefocusOriginalFrame
+          if @options?.sourceFrameId?
+            chrome.runtime.sendMessage
+              handler: "sendMessageToFrames",
+              message: name: "focusFrame", frameId: @options.sourceFrameId, forceFocusThisFrame: true
+          else
+            window.focus()
       @options = null
       @postMessage "hidden" # Inform the UI component that it is hidden.
 

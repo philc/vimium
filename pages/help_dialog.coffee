@@ -74,7 +74,7 @@ UIComponentServer.registerHandler (event) ->
       HelpDialog.show event.data
       Frame.postMessage "registerFrame"
     when "hidden"
-      # Unregister the frame, so that it's not available for `gf` or linkk hints.
+      # Unregister the frame, so that it's not available for `gf` or link hints.
       Frame.postMessage "unregisterFrame"
 
 root = exports ? window
