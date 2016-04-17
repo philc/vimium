@@ -8,7 +8,8 @@ normalMode = null
 
 # We track whther the current window has the focus or not.
 windowIsFocused = do ->
-  windowHasFocus = document.hasFocus()
+  windowHasFocus = null
+  DomUtils.documentReady -> windowHasFocus = document.hasFocus()
   window.addEventListener "focus", (event) -> windowHasFocus = true if event.target == window; true
   window.addEventListener "blur", (event) -> windowHasFocus = false if event.target == window; true
   -> windowHasFocus
