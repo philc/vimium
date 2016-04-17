@@ -6,8 +6,7 @@
 #   top-level frame), and then we don't need to be concerned about nested help dialog frames.
 HelpDialog =
   dialogElement: null
-  showing: false
-  isShowing: -> @showing
+  isShowing: -> true
 
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
@@ -70,11 +69,13 @@ HelpDialog =
 UIComponentServer.registerHandler (event) ->
   switch event.data.name ? event.data
     when "hide" then HelpDialog.hide()
-    when "hidden" then HelpDialog.showing = false
     when "activate"
       HelpDialog.init()
-      HelpDialog.showing = true
       HelpDialog.show event.data
+      Frame.postMessage "registerFrame"
+    when "hidden"
+      # Unregister the frame, so that it's not available for `gf` or linkk hints.
+      Frame.postMessage "unregisterFrame"
 
 root = exports ? window
 root.HelpDialog = HelpDialog

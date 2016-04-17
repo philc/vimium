@@ -293,7 +293,6 @@ focusThisFrame = (request) ->
   unless request.forceFocusThisFrame
     skipThisFrame = DomUtils.windowIsTooSmall() # Frame is too small; see #1317.
     skipThisFrame ||= document.body?.tagName.toLowerCase() == "frameset"
-    skipThisFrame ||= window.isVimiumUIComponent and not HelpDialog.showing
     if skipThisFrame
       # Cancel and tell the background page to focus the next frame instead.
       chrome.runtime.sendMessage handler: "nextFrame"
