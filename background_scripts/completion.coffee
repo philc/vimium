@@ -204,7 +204,10 @@ class BookmarkCompleter
       if @currentSearch.queryTerms.length > 0
         @bookmarks.filter (bookmark) =>
           suggestionTitle = if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
-          RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, suggestionTitle)
+          bookmark.hasJavascriptPrefix ?= Utils.hasJavascriptPrefix bookmark.url
+          bookmark.shortUrl ?= "javascript:..." if bookmark.hasJavascriptPrefix
+          suggestionUrl = bookmark.shortUrl ? bookmark.url
+          RankingUtils.matches(@currentSearch.queryTerms, suggestionUrl, suggestionTitle)
       else
         []
     suggestions = results.map (bookmark) =>
@@ -214,6 +217,8 @@ class BookmarkCompleter
         url: bookmark.url
         title: if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
         relevancyFunction: @computeRelevancy
+        shortUrl: bookmark.shortUrl
+        deDuplicate: not bookmark.shortUrl?
     onComplete = @currentSearch.onComplete
     @currentSearch = null
     onComplete suggestions
@@ -248,7 +253,7 @@ class BookmarkCompleter
     bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 
   computeRelevancy: (suggestion) ->
-    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.shortUrl ? suggestion.url, suggestion.title)
 
 class HistoryCompleter
   filter: ({ queryTerms, seenTabToOpenCompletionList }, onComplete) ->
