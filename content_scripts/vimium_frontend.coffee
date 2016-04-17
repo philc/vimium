@@ -142,7 +142,6 @@ initializeOnEnabledStateKnown = Utils.makeIdempotent ->
   installModes()
 
 initializeUIComponents = Utils.makeIdempotent -> DomUtils.documentReady ->
- HUD.init()
  Vomnibar.init() if DomUtils.isTopFrame()
 
 #
@@ -462,7 +461,7 @@ checkIfEnabledForUrl = do ->
       initializeUIComponents() if frameIsFocused
     else
       # Hide the HUD if we're not enabled.
-      HUD.hide() if HUD.isReady()
+      HUD.hide true, false # Immediate, do not update indicator.
 
   (frameIsFocused = windowIsFocused()) ->
     Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
