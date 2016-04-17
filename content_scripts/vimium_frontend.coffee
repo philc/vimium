@@ -155,7 +155,6 @@ initializePreDomReady = ->
   checkIfEnabledForUrl document.hasFocus()
 
   requestHandlers =
-    toggleHelpDialog: (request) -> if frameId == request.frameId then HelpDialog.toggle request.dialogHtml
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
       sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
@@ -625,6 +624,9 @@ window.goNext = ->
 enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
+
+window.showHelp = ->
+  chrome.runtime.sendMessage handler: "getHelpDialogHtml", HelpDialog.toggle.bind HelpDialog
 
 # If we are in the help dialog iframe, HelpDialog is already defined with the necessary functions.
 window.HelpDialog ?=
