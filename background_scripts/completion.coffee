@@ -66,14 +66,10 @@ class Suggestion
            <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
          </div>
          <div class="vimiumReset vomnibarBottomHalf">
-          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @simplifyJavascriptUrls @shortenUrl()}</span>
+          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
           #{relevancyHtml}
         </div>
         """
-
-  # Simplify "javascript:" URLs; show them as "javascript:..."; see #961.
-  simplifyJavascriptUrls: (url) ->
-    if Utils.hasJavascriptPrefix(url) then "javascript:..." else url
 
   # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
   getUrlRoot: (url) ->
@@ -150,6 +146,8 @@ class Suggestion
 
   # Simplify a suggestion's URL (by removing those parts which aren't useful for display or comparison).
   shortenUrl: () ->
+    # If we already have display URL, then use it.
+    @shortUrl ?= @displayUrl
     return @shortUrl if @shortUrl?
     # We get easier-to-read shortened URLs if we URI-decode them.
     url = (Utils.decodeURIByParts(@url) || @url).toLowerCase()
@@ -208,7 +206,10 @@ class BookmarkCompleter
       if @currentSearch.queryTerms.length > 0
         @bookmarks.filter (bookmark) =>
           suggestionTitle = if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
-          RankingUtils.matches(@currentSearch.queryTerms, bookmark.url, suggestionTitle)
+          bookmark.hasJavascriptPrefix ?= Utils.hasJavascriptPrefix bookmark.url
+          bookmark.displayUrl ?= "javascript:..." if bookmark.hasJavascriptPrefix
+          suggestionUrl = bookmark.displayUrl ? bookmark.url
+          RankingUtils.matches(@currentSearch.queryTerms, suggestionUrl, suggestionTitle)
       else
         []
     suggestions = results.map (bookmark) =>
@@ -216,6 +217,7 @@ class BookmarkCompleter
         queryTerms: @currentSearch.queryTerms
         type: "bookmark"
         url: bookmark.url
+        displayUrl: bookmark.displayUrl
         title: if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
         relevancyFunction: @computeRelevancy
     onComplete = @currentSearch.onComplete
@@ -252,7 +254,7 @@ class BookmarkCompleter
     bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 
   computeRelevancy: (suggestion) ->
-    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.displayUrl ? suggestion.url, suggestion.title)
 
 class HistoryCompleter
   filter: ({ queryTerms, seenTabToOpenCompletionList }, onComplete) ->
