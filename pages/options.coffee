@@ -234,7 +234,7 @@ initOptionsPage = ->
     event.preventDefault()
 
   activateHelpDialog = ->
-    HelpDialog.show chrome.extension.getBackgroundPage().helpDialogHtml(true, true, "Command Listing"), frameId
+    HelpDialog.toggle chrome.extension.getBackgroundPage().helpDialogHtml true, true, "Command Listing"
 
   saveOptions = ->
     Option.saveOptions()

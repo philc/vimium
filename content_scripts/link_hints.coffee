@@ -334,7 +334,7 @@ class LinkHintsMode
         flashEl = DomUtils.addFlashRect linkMatched.rect
         HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
-      if document.hasFocus()
+      if windowIsFocused()
         startKeyboardBlocker (isSuccess) -> HintCoordinator.sendMessage "exit", {isSuccess}
 
     # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
@@ -613,12 +613,12 @@ LocalHints =
         isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
       when "body"
         isClickable ||=
-          if element == document.body and not document.hasFocus() and
+          if element == document.body and not windowIsFocused() and
               window.innerWidth > 3 and window.innerHeight > 3 and
               document.body?.tagName.toLowerCase() != "frameset"
             reason = "Frame."
         isClickable ||=
-          if element == document.body and document.hasFocus() and Scroller.isScrollableElement element
+          if element == document.body and windowIsFocused() and Scroller.isScrollableElement element
             reason = "Scroll."
       when "div", "ol", "ul"
         isClickable ||=

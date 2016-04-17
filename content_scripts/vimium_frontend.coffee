@@ -8,7 +8,8 @@ normalMode = null
 
 # We track whther the current window has the focus or not.
 windowIsFocused = do ->
-  windowHasFocus = document.hasFocus()
+  windowHasFocus = null
+  DomUtils.documentReady -> windowHasFocus = document.hasFocus()
   window.addEventListener "focus", (event) -> windowHasFocus = true if event.target == window; true
   window.addEventListener "blur", (event) -> windowHasFocus = false if event.target == window; true
   -> windowHasFocus
@@ -120,8 +121,11 @@ class NormalMode extends KeyHandlerMode
         Are you sure you want to continue?"""
 
     if registryEntry.topFrame
+      # The Vomnibar (a top-frame command) cannot coexist with the help dialog (it causes focus issues).
+      sourceFrameId = if window.isVimiumUIComponent then 0 else frameId
+      HelpDialog.toggle() if HelpDialog.isShowing()
       chrome.runtime.sendMessage
-        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
+        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId, registryEntry}
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
     else
@@ -156,8 +160,7 @@ initializePreDomReady = ->
     getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
       sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
     setScrollPosition: setScrollPosition
-    # A frame has received the focus.  We don't care here (the Vomnibar/UI-component handles this).
-    frameFocused: ->
+    frameFocused: -> # A frame has received the focus; we don't care here (UI components handle this).
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
       Utils.invokeCommandString registryEntry.command, sourceFrameId, registryEntry if DomUtils.isTopFrame()
@@ -626,29 +629,16 @@ enterFindMode = ->
 # If we are in the help dialog iframe, HelpDialog is already defined with the necessary functions.
 window.HelpDialog ?=
   helpUI: null
-  container: null
-  showing: false
-
-  init: ->
-    return if @helpUI?
-
-    @helpUI = new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", (event) =>
-      @hide() if event.data == "hide"
-
-  isReady: -> @helpUI
-
-  show: (html) ->
-    @init()
-    return if @showing or !@isReady()
-    @showing = true
-    @helpUI.activate html
-
-  hide: ->
-    @showing = false
-    @helpUI.hide()
+  isShowing: -> @helpUI?.showing
 
   toggle: (html) ->
-    if @showing then @hide() else @show html
+    @helpUI ?= new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", ->
+    if @isShowing()
+      @helpUI.hide()
+    else
+      # On the options page, we allow the help dialog to lose the focus, elsewhere we do not.  This allows
+      # users to view the help dialog while typing in the key-mappings input.
+      @helpUI.activate {name: "activate", html, focus: true, allowBlur: window.isVimiumOptionsPage ? false}
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady

@@ -6,7 +6,7 @@
 #   top-level frame), and then we don't need to be concerned about nested help dialog frames.
 HelpDialog =
   dialogElement: null
-  showing: true
+  isShowing: -> true
 
   # This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands: -> Settings.get("helpDialog_showAdvancedCommands")
@@ -30,9 +30,7 @@ HelpDialog =
       @hide() unless @dialogElement.contains event.target
     , false
 
-  isReady: -> true
-
-  show: (html) ->
+  show: ({html}) ->
     for own placeholder, htmlString of html
       @dialogElement.querySelector("#help-dialog-#{placeholder}").innerHTML = htmlString
 
@@ -48,15 +46,8 @@ HelpDialog =
           chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
-    @exitOnEscape = new Mode name: "help-page-escape", exitOnEscape: true
-    @exitOnEscape.onExit (event) => @hide() if event?.type == "keydown"
-
-  hide: ->
-    @exitOnEscape?.exit()
-    UIComponentServer.postMessage "hide"
-
-  toggle: (html) ->
-    if @showing then @hide() else @show html
+  hide: -> UIComponentServer.hide()
+  toggle: -> @hide()
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
@@ -77,15 +68,14 @@ HelpDialog =
 
 UIComponentServer.registerHandler (event) ->
   switch event.data.name ? event.data
-    when "frameFocused"
-      # We normally close when we lose the focus.  However, we do not close on the options page.  This allows
-      # users to view the help dialog while typing in the key-mappings input.
-      HelpDialog.hide() unless event.data.focusFrameId == frameId or try window.top.isVimiumOptionsPage
-    when "hide"
-      HelpDialog.hide()
-    else
+    when "hide" then HelpDialog.hide()
+    when "activate"
       HelpDialog.init()
       HelpDialog.show event.data
+      Frame.postMessage "registerFrame"
+    when "hidden"
+      # Unregister the frame, so that it's not available for `gf` or link hints.
+      Frame.postMessage "unregisterFrame"
 
 root = exports ? window
 root.HelpDialog = HelpDialog

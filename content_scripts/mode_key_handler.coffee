@@ -42,9 +42,9 @@ class KeyHandlerMode extends Mode
       @reset()
       @suppressEvent
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
-    else if isEscape and HelpDialog?.showing
+    else if isEscape and HelpDialog?.isShowing()
       @keydownEvents[event.keyCode] = true
-      HelpDialog.hide()
+      HelpDialog.toggle()
       @suppressEvent
     else if isEscape
       @continueBubbling

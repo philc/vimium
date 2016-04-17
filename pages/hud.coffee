@@ -50,7 +50,7 @@ handlers =
     document.getElementById("hud").innerText = data.text
     document.getElementById("hud").classList.add "vimiumUIComponentVisible"
     document.getElementById("hud").classList.remove "vimiumUIComponentHidden"
-  hide: ->
+  hidden: ->
     # We get a flicker when the HUD later becomes visible again (with new text) unless we reset its contents
     # here.
     document.getElementById("hud").innerText = ""
@@ -63,7 +63,6 @@ handlers =
 
     inputElement = document.createElement "span"
     inputElement.contentEditable = "plaintext-only"
-    setTextInInputElement inputElement, data.text if data.text
     inputElement.id = "hud-find-input"
     hud.appendChild inputElement
 
@@ -76,9 +75,6 @@ handlers =
     countElement.id = "hud-match-count"
     hud.appendChild countElement
     inputElement.focus()
-
-    # Replace \u00A0 (&nbsp;) with a normal space.
-    UIComponentServer.postMessage {name: "search", query: inputElement.textContent.replace "\u00A0", " "}
 
     findMode =
       historyIndex: -1
@@ -96,8 +92,5 @@ handlers =
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
 
-UIComponentServer.registerHandler (event) ->
-  {data} = event
-  handlers[data.name]? data
-
+UIComponentServer.registerHandler ({data}) -> handlers[data.name ? data]? data
 FindModeHistory.init()

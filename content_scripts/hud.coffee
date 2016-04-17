@@ -25,12 +25,12 @@ HUD =
   show: (text) ->
     return unless @isReady()
     clearTimeout(@_showForDurationTimerId)
-    @hudUI.show {name: "show", text}
+    @hudUI.activate {name: "show", text}
     @tween.fade 1.0, 150
 
   showFindMode: (@findMode = null) ->
     return unless @isReady()
-    @hudUI.show {name: "showFindMode", text: ""}
+    @hudUI.activate name: "showFindMode"
     @tween.fade 1.0, 150
 
   search: (data) ->
@@ -50,19 +50,16 @@ HUD =
     clearTimeout(@_showForDurationTimerId)
     @tween.stop()
     if immediate
-      unless updateIndicator
-        @hudUI.hide()
-        @hudUI.postMessage {name: "hide"}
-      Mode.setIndicator() if updateIndicator
+      if updateIndicator then Mode.setIndicator() else @hudUI.hide()
     else
       @tween.fade 0, 150, => @hide true, updateIndicator
 
   hideFindMode: (data) ->
     @findMode.checkReturnToViewPort()
 
-    # An element element won't receive a focus event if the search landed on it while we were in the HUD
-    # iframe. To end up with the correct modes active, we create a focus/blur event manually after refocusing
-    # this window.
+    # An element won't receive a focus event if the search landed on it while we were in the HUD iframe. To
+    # end up with the correct modes active, we create a focus/blur event manually after refocusing this
+    # window.
     window.focus()
 
     focusNode = DomUtils.getSelectionFocusElement()
