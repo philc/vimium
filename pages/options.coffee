@@ -235,7 +235,8 @@ initOptionsPage = ->
 
   activateHelpDialog = ->
     request = showUnboundCommands: true, showCommandNames: true, customTitle: "Command Listing"
-    chrome.runtime.sendMessage extend(request, handler: "getHelpDialogHtml"), HelpDialog.toggle.bind HelpDialog
+    chrome.runtime.sendMessage extend(request, handler: "getHelpDialogHtml"), (response) ->
+      HelpDialog.toggle {html: response}
 
   saveOptions = ->
     Option.saveOptions()

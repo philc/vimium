@@ -295,7 +295,7 @@ defaultKeyMappings =
 # If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
 commandDescriptions =
   # Navigating the current page
-  showHelp: ["Show help", { noRepeat: true }]
+  showHelp: ["Show help", { topFrame: true, noRepeat: true }]
   scrollDown: ["Scroll down"]
   scrollUp: ["Scroll up"]
   scrollLeft: ["Scroll left"]

@@ -121,9 +121,8 @@ class NormalMode extends KeyHandlerMode
         Are you sure you want to continue?"""
 
     if registryEntry.topFrame
-      # The Vomnibar (a top-frame command) cannot coexist with the help dialog (it causes focus issues).
+      # We never return to a UI-component frame (e.g. the help dialog), it might have lost the focus.
       sourceFrameId = if window.isVimiumUIComponent then 0 else frameId
-      HelpDialog.toggle() if HelpDialog.isShowing()
       chrome.runtime.sendMessage
         handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId, registryEntry}
     else if registryEntry.background
@@ -625,22 +624,25 @@ enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
-window.showHelp = ->
-  chrome.runtime.sendMessage handler: "getHelpDialogHtml", HelpDialog.toggle.bind HelpDialog
+window.showHelp = (sourceFrameId) ->
+  chrome.runtime.sendMessage handler: "getHelpDialogHtml", (response) ->
+    HelpDialog.toggle {sourceFrameId, html: response}
 
-# If we are in the help dialog iframe, HelpDialog is already defined with the necessary functions.
+# If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 window.HelpDialog ?=
   helpUI: null
   isShowing: -> @helpUI?.showing
+  abort: -> @helpUI.hide false if @isShowing()
 
-  toggle: (html) ->
+  toggle: (request) ->
     @helpUI ?= new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", ->
     if @isShowing()
       @helpUI.hide()
     else
-      # On the options page, we allow the help dialog to lose the focus, elsewhere we do not.  This allows
-      # users to view the help dialog while typing in the key-mappings input.
-      @helpUI.activate {name: "activate", html, focus: true, allowBlur: window.isVimiumOptionsPage ? false}
+      # On the options page, we allow the help dialog to blur, elsewhere we do not.  This allows users to view
+      # the help dialog while typing in the key-mappings input.
+      @helpUI.activate extend request,
+        name: "activate", focus: true, allowBlur: window.isVimiumOptionsPage ? false
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
