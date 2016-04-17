@@ -146,8 +146,6 @@ class Suggestion
 
   # Simplify a suggestion's URL (by removing those parts which aren't useful for display or comparison).
   shortenUrl: () ->
-    # If we already have display URL, then use it.
-    @shortUrl ?= @displayUrl
     return @shortUrl if @shortUrl?
     # We get easier-to-read shortened URLs if we URI-decode them.
     url = (Utils.decodeURIByParts(@url) || @url).toLowerCase()
@@ -207,8 +205,8 @@ class BookmarkCompleter
         @bookmarks.filter (bookmark) =>
           suggestionTitle = if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
           bookmark.hasJavascriptPrefix ?= Utils.hasJavascriptPrefix bookmark.url
-          bookmark.displayUrl ?= "javascript:..." if bookmark.hasJavascriptPrefix
-          suggestionUrl = bookmark.displayUrl ? bookmark.url
+          bookmark.shortUrl ?= "javascript:..." if bookmark.hasJavascriptPrefix
+          suggestionUrl = bookmark.shortUrl ? bookmark.url
           RankingUtils.matches(@currentSearch.queryTerms, suggestionUrl, suggestionTitle)
       else
         []
@@ -219,8 +217,8 @@ class BookmarkCompleter
         url: bookmark.url
         title: if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
         relevancyFunction: @computeRelevancy
-        displayUrl: bookmark.displayUrl
-        deDuplicate: not bookmark.displayUrl?
+        shortUrl: bookmark.shortUrl
+        deDuplicate: not bookmark.shortUrl?
     onComplete = @currentSearch.onComplete
     @currentSearch = null
     onComplete suggestions
@@ -255,7 +253,7 @@ class BookmarkCompleter
     bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 
   computeRelevancy: (suggestion) ->
-    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.displayUrl ? suggestion.url, suggestion.title)
+    RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.shortUrl ? suggestion.url, suggestion.title)
 
 class HistoryCompleter
   filter: ({ queryTerms, seenTabToOpenCompletionList }, onComplete) ->
