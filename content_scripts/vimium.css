@@ -138,28 +138,39 @@ div.vimiumHighlightedFrame {
 /* Help Dialog CSS */
 
 iframe.vimiumHelpDialogFrame {
-  padding:0px;
-  overflow:hidden;
-  overflow-y:auto;
-
-  width:680px;
-  min-width:400px;
-  height: 745px;
-  max-height: 85%;
+  background-color: transparent;
+  padding: 0px;
+  overflow: hidden;
 
   display: block;
   position: fixed;
-  top:50px;
-  left:50%;
-  margin-left:-340px; /* Half the width to horizontally center the dialog */
-  z-index:2147483645; /* One less than hint markers and the vomnibar. */
+  width: 100%;
+  min-width: 400px;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  border: none;
 
+  /* One less than hint markers and the vomnibar. */
+  z-index: 2147483645;
+}
+
+div#vimiumHelpDialog {
+  border:3px solid red;
   opacity:0.92;
   background-color:#eee;
-
+  position:fixed;
   border:2px solid #b3b3b3;
   border-radius:6px;
-  -webkit-box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 6px;
+  padding:8px 12px;
+  width:640px;
+  max-height: calc(100% - 80px);
+  left:50%;
+  /* This needs to be 1/2 width to horizontally center the help dialog */
+  margin-left:-320px;
+  top:50px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
+  overflow-y: auto;
 }
 
 div#vimiumHelpDialog a { color:blue; }
