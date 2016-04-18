@@ -23,17 +23,15 @@ HUD =
     @_showForDurationTimerId = setTimeout((=> @hide()), duration)
 
   show: (text) ->
-    DomUtils.ifDocumentIsReady =>
-      @init()
-      clearTimeout(@_showForDurationTimerId)
-      @hudUI.activate {name: "show", text}
-      @tween.fade 1.0, 150
+    @init()
+    clearTimeout(@_showForDurationTimerId)
+    @hudUI.activate {name: "show", text}
+    @tween.fade 1.0, 150
 
   showFindMode: (@findMode = null) ->
-    DomUtils.ifDocumentIsReady =>
-      @init()
-      @hudUI.activate name: "showFindMode"
-      @tween.fade 1.0, 150
+    @init()
+    @hudUI.activate name: "showFindMode"
+    @tween.fade 1.0, 150
 
   search: (data) ->
     @findMode.findInPlace data.query

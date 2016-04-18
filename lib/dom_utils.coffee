@@ -13,9 +13,6 @@ DomUtils =
 
     (callback) -> if isReady then callback() else callbacks.push callback
 
-  ifDocumentIsReady: (callback) ->
-    callback() unless document.readyState == "loading"
-
   createElement: (tagName) ->
     element = document.createElement tagName
     if element instanceof HTMLElement
