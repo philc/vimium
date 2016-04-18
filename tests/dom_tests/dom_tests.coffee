@@ -83,6 +83,7 @@ createGeneralHintTests = (isFilteredMode) ->
       stubSettings "filterLinkHints", isFilteredMode
       stubSettings "linkHintCharacters", "ab"
       stubSettings "linkHintNumbers", "12"
+      stub window, "windowIsFocused", -> true
 
     tearDown ->
       document.getElementById("test-div").innerHTML = ""
@@ -120,6 +121,7 @@ context "False positives in link-hint",
     document.getElementById("test-div").innerHTML = testContent
     stubSettings "filterLinkHints", true
     stubSettings "linkHintNumbers", "12"
+    stub window, "windowIsFocused", -> true
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
@@ -209,6 +211,7 @@ context "Alphabetical link hints",
     initializeModeState()
     stubSettings "filterLinkHints", false
     stubSettings "linkHintCharacters", "ab"
+    stub window, "windowIsFocused", -> true
 
     # Three hints will trigger double hint chars.
     createLinks 3
@@ -253,6 +256,7 @@ context "Filtered link hints",
   setup ->
     stubSettings "filterLinkHints", true
     stubSettings "linkHintNumbers", "0123456789"
+    stub window, "windowIsFocused", -> true
 
   context "Text hints",
 
