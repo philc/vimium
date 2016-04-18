@@ -5,7 +5,6 @@ class UIComponent
   iframeFrameId: null
   options: null
   shadowDOM: null
-  styleSheetGetter: null
 
   toggleIframeElementClasses: (removeClass, addClass) ->
     @iframeElement.classList.remove removeClass
@@ -18,10 +17,9 @@ class UIComponent
       # Default to everything hidden while the stylesheet loads.
       styleSheet.innerHTML = "iframe {display: none;}"
 
-      # Use an XMLHttpRequest, possibly via the background page, to fetch the stylesheet. This allows us to
-      # catch and recover from failures that we could not have caught when using CSS @include (eg. #1817).
-      UIComponent::styleSheetGetter ?= new AsyncDataFetcher @fetchFileContents "content_scripts/vimium.css"
-      @styleSheetGetter.use (styles) -> styleSheet.innerHTML = styles
+      # Fetch "content_scripts/vimium.css" from chrome.storage.local; the background page caches it there.
+      chrome.storage.local.get "vimiumCSSInChromeStorage", (items) ->
+        styleSheet.innerHTML = items.vimiumCSSInChromeStorage
 
       @iframeElement = DomUtils.createElement "iframe"
       extend @iframeElement,
@@ -98,27 +96,6 @@ class UIComponent
               window.focus()
         @options = null
         @postMessage "hidden" # Inform the UI component that it is hidden.
-
-  # Fetch a Vimium file/resource (such as "content_scripts/vimium.css").
-  # We try making an XMLHttpRequest request.  That can fail (see #1817), in which case we fetch the
-  # file/resource via the background page.
-  fetchFileContents: (file) -> (callback) ->
-    request = new XMLHttpRequest()
-
-    request.onload = ->
-      if request.status == 200
-        callback request.responseText
-      else
-        request.onerror()
-
-    request.onerror = ->
-      chrome.runtime.sendMessage
-        handler: "fetchFileContents"
-        fileName: file
-      , callback
-
-    request.open "GET", (chrome.runtime.getURL file), true
-    request.send()
 
 root = exports ? window
 root.UIComponent = UIComponent
