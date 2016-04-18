@@ -53,7 +53,8 @@ HUD =
       else
         @tween.fade 0, 150, => @hide true, updateIndicator
 
-  hideFindMode: (data) ->
+  # These parameters describe the reason find mode is exiting, and come from the HUD UI component.
+  hideFindMode: ({exitEventIsEnter, exitEventIsEscape}) ->
     @findMode.checkReturnToViewPort()
 
     # An element won't receive a focus event if the search landed on it while we were in the HUD iframe. To
@@ -65,13 +66,11 @@ HUD =
     document.activeElement?.blur()
     focusNode?.focus()
 
-    {event} = data
-
-    if event.keyCode == keyCodes.enter
+    if exitEventIsEnter
       handleEnterForFindMode()
       if FindMode.query.hasResults
         postExit = -> new PostFindMode
-    else if KeyboardUtils.isEscape event
+    else if exitEventIsEscape
       # We don't want FindMode to handle the click events that handleEscapeForFindMode can generate, so we
       # wait until the mode is closed before running it.
       postExit = handleEscapeForFindMode

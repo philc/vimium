@@ -15,18 +15,15 @@ setTextInInputElement = (inputElement, text) ->
 document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
-  transferrableEvent = {}
-  # NOTE(mrmr1993): We use for, not for own, here, since we want to access members from the Event prototype.
-  for key, value of event
-    transferrableEvent[key] = value if typeof value in ["number", "string"]
 
   if (event.keyCode in [keyCodes.backspace, keyCodes.deleteKey] and inputElement.textContent.length == 0) or
      event.keyCode == keyCodes.enter or KeyboardUtils.isEscape event
 
     UIComponentServer.postMessage
       name: "hideFindMode"
-      event: transferrableEvent
       query: findMode.rawQuery
+      exitEventIsEnter: event.keyCode == keyCodes.enter
+      exitEventIsEscape: KeyboardUtils.isEscape event
 
   else if event.keyCode == keyCodes.upArrow
     if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
