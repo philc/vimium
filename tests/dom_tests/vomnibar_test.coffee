@@ -20,12 +20,11 @@ context "Keep selection within bounds",
       completer
 
     # Shoulda.js doesn't support async tests, so we have to hack around.
+    stub Vomnibar.vomnibarUI, "hide", ->
     stub Vomnibar.vomnibarUI, "postMessage", (data) ->
       vomnibarFrame.UIComponentServer.handleMessage {data}
     stub vomnibarFrame.UIComponentServer, "postMessage", (data) ->
       UIComponent.handleMessage {data}
-
-    stub Vomnibar.vomnibarUI, "uiComponentIsReady", true
 
   tearDown ->
     Vomnibar.vomnibarUI.hide()

@@ -13,10 +13,8 @@ HUD =
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   init: ->
-    unless @hudUI?
-      @hudUI = new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) =>
-        this[data.name]? data
-      @tween = new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
+    @hudUI ?= new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) => this[data.name]? data
+    @tween ?= new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
 
   showForDuration: (text, duration) ->
     @show(text)
@@ -46,13 +44,13 @@ HUD =
   # If :updateIndicator is truthy, then we also refresh the mode indicator.  The only time we don't update the
   # mode indicator, is when hide() is called for the mode indicator itself.
   hide: (immediate = false, updateIndicator = true) ->
-    return unless @hudUI?.uiComponentIsReady
-    clearTimeout(@_showForDurationTimerId)
-    @tween.stop()
-    if immediate
-      if updateIndicator then Mode.setIndicator() else @hudUI.hide()
-    else
-      @tween.fade 0, 150, => @hide true, updateIndicator
+    if @hudUI? and @tween?
+      clearTimeout @_showForDurationTimerId
+      @tween.stop()
+      if immediate
+        if updateIndicator then Mode.setIndicator() else @hudUI.hide()
+      else
+        @tween.fade 0, 150, => @hide true, updateIndicator
 
   hideFindMode: (data) ->
     @findMode.checkReturnToViewPort()
