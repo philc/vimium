@@ -21,7 +21,6 @@ document.addEventListener "keydown", (event) ->
 
     UIComponentServer.postMessage
       name: "hideFindMode"
-      query: findMode.rawQuery
       exitEventIsEnter: event.keyCode == keyCodes.enter
       exitEventIsEscape: KeyboardUtils.isEscape event
 
