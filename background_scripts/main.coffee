@@ -129,14 +129,14 @@ helpDialogHtmlForCommand = (html, isAdvanced, bindings, description, showCommand
     html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", Utils.escapeHtml(bindings)
   html.push("</td></tr>")
 
-#
-# Fetches the contents of a file bundled with this extension.
-#
-fetchFileContents = (extensionFileName) ->
+# Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.
+do ->
   req = new XMLHttpRequest()
-  req.open("GET", chrome.runtime.getURL(extensionFileName), false) # false => synchronous
+  req.open "GET", chrome.runtime.getURL("content_scripts/vimium.css"), true # true -> asynchronous.
+  req.onload = ->
+    {status, responseText} = req
+    chrome.storage.local.set vimiumCSSInChromeStorage: responseText if status == 200
   req.send()
-  req.responseText
 
 TabOperations =
   # Opens the url in the current tab.
@@ -417,7 +417,6 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
   # Send a message to all frames in the current tab.
   sendMessageToFrames: (request, sender) -> chrome.tabs.sendMessage sender.tab.id, request.message
-  fetchFileContents: (request, sender) -> fetchFileContents request.fileName
   # For debugging only. This allows content scripts to log messages to the extension's logging page.
   log: ({frameId, message}, sender) -> BgUtils.log "#{frameId} #{message}", sender
 

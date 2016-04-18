@@ -15,6 +15,12 @@ global.document =
   createElement: -> {}
   addEventListener: ->
 
+global.XMLHttpRequest =
+  class XMLHttpRequest
+    open: ->
+    onload: ->
+    send: ->
+
 exports.chrome =
   areRunningVimiumTests: true
 
