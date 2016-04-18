@@ -42,6 +42,9 @@ HelpDialog =
           chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
+    # "Click" the dialog element (so that it becomes scrollable).
+    DomUtils.simulateClick @dialogElement
+
   hide: -> UIComponentServer.hide()
   toggle: -> @hide()
 
