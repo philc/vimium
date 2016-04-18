@@ -7,6 +7,7 @@ HUD =
   hudUI: null
   _displayElement: null
   findMode: null
+  abandon: -> @hudUI?.hide false
 
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that

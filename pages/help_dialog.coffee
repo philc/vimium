@@ -69,9 +69,13 @@ UIComponentServer.registerHandler (event) ->
       HelpDialog.init()
       HelpDialog.show event.data
       Frame.postMessage "registerFrame"
+      # If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
+      Mode.setIndicator()
     when "hidden"
       # Unregister the frame, so that it's not available for `gf` or link hints.
       Frame.postMessage "unregisterFrame"
+      # Abandon any HUD which might be showing within the help dialog.
+      HUD.abandon()
 
 root = exports ? window
 root.HelpDialog = HelpDialog
