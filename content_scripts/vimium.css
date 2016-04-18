@@ -137,18 +137,22 @@ div.vimiumHighlightedFrame {
 
 /* Help Dialog CSS */
 
+/* The help dialog iframe covers most of the height of the window, but is only
+ * as wide as it needs to be; so clicking to the left or right of it is
+ * clicking outside of the iframe. */
 iframe.vimiumHelpDialogFrame {
   background-color: transparent;
   padding: 0px;
-  overflow: hidden;
 
   display: block;
   position: fixed;
-  width: 100%;
-  min-width: 400px;
-  height: 100%;
-  top: 0px;
-  left: 0px;
+  /* The width of div#vimiumHelpDialog, plus twice its padding and twice its border. */
+  width: calc(640px + 24px + 4px);
+  height: calc(100% - 100px); /* 100% minus 2 * top. */
+  top: 50px;
+  left: 50%;
+  /* This needs to be 1/2 the width to horizontally center the dialog */
+  margin-left:-320px;
   border: none;
 
   /* One less than hint markers. */
@@ -163,15 +167,12 @@ div#vimiumHelpDialog {
   border:2px solid #b3b3b3;
   border-radius:6px;
   padding:8px 12px;
-  top:50px;
-  left:50%;
+  top:0px;
+  left:0px;
   width:640px;
-  max-height: calc(100% - 100px - 16px); /* 100% - 2*top - 2*padding for top/bottom */
-  /* This needs to be 1/2 width to horizontally center the help dialog */
-  margin-left:-320px;
+  max-height: calc(100% - 24px); /* 100% - twice the padding. */
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto;
 }
 
 div#vimiumHelpDialog a { color:blue; }
