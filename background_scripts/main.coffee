@@ -106,11 +106,12 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
     showUnboundCommands, showCommandNames) ->
   html = []
   for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
+    keys = commandsToKey[command] || []
+    bindings = ("<span class='vimiumHelpDialogKey'>#{Utils.escapeHtml key}</span>" for key in keys).join ", "
     if (showUnboundCommands || commandsToKey[command])
       isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
       description = availableCommands[command].description
-      if bindings.length < 12
+      if keys.join(", ").length < 12
         helpDialogHtmlForCommand html, isAdvanced, bindings, description, showCommandNames, command
       else
         # If the length of the bindings is too long, then we display the bindings on a separate row from the
@@ -122,11 +123,11 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
 helpDialogHtmlForCommand = (html, isAdvanced, bindings, description, showCommandNames, command) ->
   html.push "<tr class='vimiumReset #{"advanced" if isAdvanced}'>"
   if description
-    html.push "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>"
-    html.push "<td class='vimiumReset'>#{if description and bindings then ':' else ''}</td><td class='vimiumReset vimiumHelpDescription'>", description
+    html.push "<td class='vimiumReset'>#{bindings}</td>"
+    html.push "<td class='vimiumReset'></td><td class='vimiumReset vimiumHelpDescription'>", description
     html.push("<span class='vimiumReset commandName'>(#{command})</span>") if showCommandNames
   else
-    html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", Utils.escapeHtml(bindings)
+    html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", bindings
   html.push("</td></tr>")
 
 # Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.

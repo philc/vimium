@@ -168,7 +168,6 @@ div#vimiumHelpDialog {
   overflow: auto;
 }
 
-div#vimiumHelpDialog a { color:blue; }
 div#vimiumTitle, div#vimiumTitle span,  div#vimiumTitle * { font-size:20px; }
 #vimiumTitle {
   display: block;
@@ -198,9 +197,19 @@ div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:14px;
   text-align:right;
-  font-weight:bold;
-  color:#2f508e;
+  /* font-weight:bold; */
+  /* color:#2f508e; */
   white-space:nowrap;
+}
+span.vimiumHelpDialogKey {
+  background-color: rgb(243,243,243);
+  color: rgb(33,33,33);
+  margin: 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 4px;
 }
 /* Make the description column as wide as it can be. */
 div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) { width:100%; }
@@ -228,8 +237,8 @@ div#vimiumHelpDialog.showAdvanced tr.advanced { display: table-row; }
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) { color: #555; }
 div#vimiumHelpDialog a.closeButton {
   position:absolute;
-  right:7px;
-  top:5px;
+  right:4px;
+  top:2px;
   font-family:"courier new";
   font-weight:bold;
   color:#555;
@@ -244,15 +253,16 @@ div#vimiumHelpDialog a {
 div#vimiumHelpDialog .wikiPage, div#vimiumHelpDialog .optionsPage {
   position: absolute;
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 130%;
-  top: 6px;
+  color:#555;
+  top: 11px;
 }
 div#vimiumHelpDialog .optionsPage {
   right: 40px;
 }
 div#vimiumHelpDialog .wikiPage {
-  right: 83px;
+  right: 100px;
 }
 div#vimiumHelpDialog a.closeButton:hover {
   color:black;
@@ -267,6 +277,12 @@ div#vimiumHelpDialogFooter .toggleAdvancedCommands {
   position: absolute;
   right: 2px;
   top: -34px;
+  font-size: 14px;
+  color:#555;
+}
+
+a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink, a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink{
+  color:#555;
 }
 
 /* Vimium HUD CSS */
