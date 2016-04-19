@@ -154,8 +154,8 @@ iframe.vimiumHelpDialogFrame {
 div#vimiumHelpDialog {
   border:3px solid;
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
-  opacity:0.92;
-  background-color:#eee;
+  opacity:1.0;
+  background-color:white;
   position:fixed;
   border:2px solid #b3b3b3;
   border-radius:6px;
@@ -194,6 +194,9 @@ div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr { padding:0; ma
 div.vimiumColumn table { width:100%; table-layout:auto; }
 div.vimiumColumn td { vertical-align:top; padding:1px; }
 div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
+  /* This is the "key" column, e.g. "j", "gg". */
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:14px;
   text-align:right;
   font-weight:bold;
   color:#2f508e;
@@ -204,13 +207,19 @@ div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) { width:100%; }
 div#vimiumHelpDialog div.vimiumDivider {
   display: block;
   height:1px;
-  width:92%;
+  width:100%;
   margin:10px auto;
   background-color:#9a9a9a;
 }
 div#vimiumHelpDialog td.vimiumHelpSectionTitle {
-  font-weight:bold;
   padding-top:3px;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:16px;
+  font-weight:bold;
+}
+div#vimiumHelpDialog td.vimiumHelpDescription {
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:14px;
 }
 div#vimiumHelpDialog div.commandName { font-family:"courier new"; }
 /* Advanced commands are hidden by default until you show them. */

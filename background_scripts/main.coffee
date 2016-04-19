@@ -123,7 +123,7 @@ helpDialogHtmlForCommand = (html, isAdvanced, bindings, description, showCommand
   html.push "<tr class='vimiumReset #{"advanced" if isAdvanced}'>"
   if description
     html.push "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>"
-    html.push "<td class='vimiumReset'>#{if description and bindings then ':' else ''}</td><td class='vimiumReset'>", description
+    html.push "<td class='vimiumReset'>#{if description and bindings then ':' else ''}</td><td class='vimiumReset vimiumHelpDescription'>", description
     html.push("<span class='vimiumReset commandName'>(#{command})</span>") if showCommandNames
   else
     html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", Utils.escapeHtml(bindings)
