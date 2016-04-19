@@ -38,7 +38,7 @@ HelpDialog =
       do (element) ->
         element.setAttribute "role", "link"
         element.addEventListener "click", ->
-          commandName = element.textContent.replace("(","").replace ")", ""
+          commandName = element.textContent
           chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
@@ -82,3 +82,4 @@ UIComponentServer.registerHandler (event) ->
 
 root = exports ? window
 root.HelpDialog = HelpDialog
+root.isVimiumHelpDialog = true
