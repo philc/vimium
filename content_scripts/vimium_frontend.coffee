@@ -630,10 +630,8 @@ window.HelpDialog ?=
     if @isShowing()
       @helpUI.hide()
     else
-      # On the options page, we allow the help dialog to blur, elsewhere we do not.  This allows users to view
-      # the help dialog while typing in the key-mappings input.
       @helpUI.activate extend request,
-        name: "activate", focus: true, allowBlur: window.isVimiumOptionsPage ? false
+        name: "activate", focus: true
 
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady

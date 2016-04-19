@@ -56,7 +56,7 @@ class UIComponent
                     false # We will not be calling sendResponse.
                   # If this frame receives the focus, then hide the UI component.
                   window.addEventListener "focus", (event) =>
-                    if event.target == window and @options?.focus and not @options?.allowBlur
+                    if event.target == window and @options?.focus
                       @hide false
                     true # Continue propagating the event.
                   # Set the iframe's port, thereby rendering the UI component ready.
