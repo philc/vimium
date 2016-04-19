@@ -163,6 +163,7 @@ div#vimiumHelpDialog {
   top:50px;
   left: 50%;
   max-height: calc(100% - 100px - 12px);
+  max-width: calc(100% - 100px + 12px);
   width:      calc(840px + 24px + 4px + 12px);
   margin-left:calc(0px - 420px - 12px - 2px - 6px); /* Minus half of the width, above. */
   overflow: auto;
