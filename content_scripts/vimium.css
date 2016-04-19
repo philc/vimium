@@ -231,7 +231,10 @@ div#vimiumHelpDialog td.vimiumHelpDescription {
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:14px;
 }
-div#vimiumHelpDialog div.commandName { font-family:"courier new"; }
+div#vimiumHelpDialog span.commandName {
+  font-family:"courier new";
+  color: #555;
+}
 /* Advanced commands are hidden by default until you show them. */
 div#vimiumHelpDialog tr.advanced { display: none; }
 div#vimiumHelpDialog.showAdvanced tr.advanced { display: table-row; }
