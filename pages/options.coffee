@@ -324,4 +324,4 @@ document.addEventListener "DOMContentLoaded", ->
 
 # Exported for tests.
 root = exports ? window
-extend root, {Options}
+extend root, {Options, isVimiumOptionsPage: true}
