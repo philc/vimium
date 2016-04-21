@@ -45,9 +45,19 @@ DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
+SEND_MESSAGE =
+  name: "send-message"
+  indicator: "Select link"
+  linkActivator: (link) ->
+    index = do ->
+      elements = document.documentElement.getElementsByTagName "*"
+      for element, i in elements
+        return i if element == link
+    message = extend @options, {index}
+    window.postMessage message, "*"
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, SEND_MESSAGE]
 
 HintCoordinator =
   onExit: []
@@ -70,17 +80,19 @@ HintCoordinator =
     # place, then Vimium blocks.  As a temporary measure, we install a timer to remove it.
     Utils.setTimeout 1000, -> suppressKeyboardEvents.exit() if suppressKeyboardEvents?.modeIsActive
     @onExit = [onExit]
-    @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
+    @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf(mode), options: mode.options
 
   # Hint descriptors are global.  They include all of the information necessary for each frame to determine
   # whether and when a hint from *any* frame is selected.  They include the following properties:
   #   frameId: the frame id of this hint's local frame
   #   localIndex: the index in @localHints for the full hint descriptor for this hint
   #   linkText: the link's text for filtered hints (this is null for alphabet hints)
-  getHintDescriptors: ({modeIndex}) ->
+  getHintDescriptors: ({modeIndex, options}) ->
     # Ensure that the document is ready and that the settings are loaded.
     DomUtils.documentReady => Settings.onLoaded =>
-      requireHref = availableModes[modeIndex] in [COPY_LINK_URL, OPEN_INCOGNITO]
+      mode = availableModes[modeIndex]
+      mode.options = options
+      requireHref = mode in [COPY_LINK_URL, OPEN_INCOGNITO]
       @localHints = LocalHints.getLocalHints requireHref
       @localHintDescriptors = @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
       @sendMessage "postHintDescriptors", hintDescriptors: @localHintDescriptors
@@ -126,6 +138,9 @@ LinkHints =
   activateModeWithQueue: -> @activateMode 1, OPEN_WITH_QUEUE
   activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
+  activateModeToSendMessage: (count, options) ->
+    SEND_MESSAGE.options = options
+    @activateMode count, SEND_MESSAGE
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -323,7 +338,7 @@ class LinkHintsMode
             DomUtils.simulateSelect clickEl
           else
             clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
-            linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
+            linkActivator = @mode.linkActivator?.bind(@mode) ? clickActivator @mode.clickModifiers
             # TODO: Are there any other input elements which should not receive focus?
             if clickEl.nodeName.toLowerCase() == "input" and clickEl.type not in ["button", "submit"]
               clickEl.focus()

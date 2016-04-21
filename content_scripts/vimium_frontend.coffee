@@ -373,7 +373,9 @@ extend window,
   sendMessage: (count, registryEntry) ->
     message = extend {}, registryEntry.options ? {}
     message = extend message, {count}
-    if message.extension
+    if message.hints
+      LinkHints.activateModeToSendMessage count, message
+    else if message.extension
       chrome.runtime.sendMessage message.extension, message
     else
       window.postMessage message, "*"
