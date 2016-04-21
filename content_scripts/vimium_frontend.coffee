@@ -138,8 +138,13 @@ installModes = ->
   new GrabBackFocus if isEnabledForUrl
   normalMode # Return the normalMode object (for the tests).
 
-initializeOnEnabledStateKnown = Utils.makeIdempotent ->
-  installModes()
+initializeOnEnabledStateKnown = (isEnabledForUrl) ->
+  installModes() unless normalMode
+  if isEnabledForUrl
+    # We only initialize (and activate) the Vomnibar in the top frame.  Also, we do not initialize the
+    # Vomnibar until we know that Vimium is enabled.  Thereafter, there's no more initialization to do.
+    Vomnibar.init() if DomUtils.isTopFrame()
+    initializeOnEnabledStateKnown = ->
 
 #
 # Complete initialization work that should be done prior to DOMReady.
@@ -450,7 +455,7 @@ extend window,
 checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
     {isEnabledForUrl, passKeys, frameIsFocused} = response
-    initializeOnEnabledStateKnown()
+    initializeOnEnabledStateKnown isEnabledForUrl
     normalMode.setPassKeys passKeys
     # Hide the HUD if we're not enabled.
     HUD.hide true, false unless isEnabledForUrl
