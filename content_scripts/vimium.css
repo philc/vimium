@@ -146,8 +146,8 @@ iframe.vimiumHelpDialogFrame {
 
   display: block;
   position: fixed;
-  /* The width of div#vimiumHelpDialog, plus twice its padding, twice its border and twice its shadow. */
-  width: calc(640px + 24px + 4px + 12px);
+  /* The width of div#vimiumHelpDialog, plus twice its padding and twice its border. */
+  width: calc(640px + 24px + 4px);
   height: calc(100% - 100px); /* 100% minus 2 * top. */
   top: 50px;
   left: 50%;
@@ -167,10 +167,10 @@ div#vimiumHelpDialog {
   border:2px solid #b3b3b3;
   border-radius:6px;
   padding:8px 12px;
-  top:6px; /* Space for the shadow. */
-  left:6px; /* Space for the shadow. */
+  top:0px;
+  left:0px;
   width:640px;
-  max-height: calc(100% - 24px - 12px); /* 100%, minus twice the padding, minus twice the shadow. */
+  max-height: calc(100% - 24px); /* 100% - twice the padding. */
   -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 6px;
   overflow: auto;
 }
