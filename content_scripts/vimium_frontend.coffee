@@ -391,6 +391,10 @@ extend window,
         HUD.showForDuration("There are no inputs to focus.", 1000)
         return
 
+      # This is a hack to improve usability on the Vimium options page.  We prime the recently-focused input
+      # to be the key-mappings input.  Arguably, this is the input that the user is most likely to use.
+      recentlyFocusedElement ?= document.getElementById "keyMappings" if window.isVimiumOptionsPage
+
       selectedInputIndex =
         if count == 1
           # As the starting index, we pick that of the most recently focused input element (or 0).
