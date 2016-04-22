@@ -16,10 +16,20 @@
   <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
        page with the up-to-date key bindings when the dialog is shown. -->
     <div id="vimiumHelpDialog">
-      <a class="vimiumReset optionsPage" href="#">Options</a>
-      <a class="vimiumReset wikiPage" href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
-      <a class="vimiumReset closeButton" href="#">&times;</a>
-      <div id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium <span id="help-dialog-title"></span></div>
+      <div>
+        <table>
+          <tr>
+            <td>
+              <span id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium <span id="help-dialog-title"></span></span>
+            </td>
+            <td class="vimiumHelpDialogTopButtons">
+              <a class="vimiumReset" id="helpDialogOptionsPage" href="#">Options</a>
+              <a class="vimiumReset" id="helpDialogWikiPage" href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
+              <a class="vimiumReset closeButton" href="#">&times;</a>
+            </td>
+          </tr>
+        </table>
+      </div>
       <div class="vimiumReset vimiumDivider"></div>
       <div class="vimiumReset vimiumColumn">
         <table class="vimiumReset">

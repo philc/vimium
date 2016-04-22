@@ -151,26 +151,32 @@ iframe.vimiumHelpDialogFrame {
 }
 
 div#vimiumHelpDialog {
-  border:3px solid;
   opacity:1.0;
   background-color:white;
-  position:fixed;
   border:2px solid #b3b3b3;
   border-radius:6px;
   padding:8px 12px;
-  top:50px;
-  left: 50%;
   width: 840px;
-  height: calc(100% - 100px - 16px); /* 100% -top - 2*padding */
-  max-width: calc(100% - 100px - 12px);
-  margin-left:calc(-420px - 12px); /* -1/2*width - 1*padding */
-  overflow: auto;
+  max-width: calc(100% - 100px);
+  max-height: calc(100% - 100px);
+  margin: 50px auto;
+  overflow-y: auto;
 }
 
-div#vimiumTitle, div#vimiumTitle span,  div#vimiumTitle * { font-size:20px; }
+span#vimiumTitle, span#vimiumTitle span,  span#vimiumTitle * { font-size:20px; }
 #vimiumTitle {
   display: block;
   line-height: 130%;
+  white-space: nowrap;
+}
+td.vimiumHelpDialogTopButtons {
+  width: 100%;
+  text-align: right;
+}
+#helpDialogOptionsPage, #helpDialogWikiPage {
+  font-size: 14px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 div.vimiumColumn {
   width:50%;
@@ -238,34 +244,19 @@ div#vimiumHelpDialog tr.advanced { display: none; }
 div#vimiumHelpDialog.showAdvanced tr.advanced { display: table-row; }
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) { color: #555; }
 div#vimiumHelpDialog a.closeButton {
-  position:absolute;
-  right:4px;
-  top:2px;
   font-family:"courier new";
   font-weight:bold;
   color:#555;
   text-decoration:none;
-  padding-left:10px;
   font-size:20px;
+  position: relative;
+  top: -12px;
+  right: -10px;
 }
 div#vimiumHelpDialog a {
   text-decoration: underline;
 }
 
-div#vimiumHelpDialog .wikiPage, div#vimiumHelpDialog .optionsPage {
-  position: absolute;
-  display: block;
-  font-size: 14px;
-  line-height: 130%;
-  color:#555;
-  top: 11px;
-}
-div#vimiumHelpDialog .optionsPage {
-  right: 40px;
-}
-div#vimiumHelpDialog .wikiPage {
-  right: 100px;
-}
 div#vimiumHelpDialog a.closeButton:hover {
   color:black;
   -webkit-user-select:none;

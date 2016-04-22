@@ -15,7 +15,7 @@ HelpDialog =
         clickEvent.preventDefault()
         @hide()
       false)
-    @dialogElement.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
+    document.getElementById("helpDialogOptionsPage").addEventListener("click", (clickEvent) ->
         clickEvent.preventDefault()
         chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
       false)
