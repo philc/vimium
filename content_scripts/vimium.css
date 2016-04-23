@@ -208,8 +208,6 @@ div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:14px;
   text-align:right;
-  /* font-weight:bold; */
-  /* color:#2f508e; */
   white-space:nowrap;
 }
 span.vimiumHelpDialogKey {
@@ -245,6 +243,7 @@ div#vimiumHelpDialog span.commandName {
   color: #555;
   font-style: italic;
   cursor: pointer;
+  font-size: 12px;
 }
 /* Advanced commands are hidden by default until you show them. */
 div#vimiumHelpDialog tr.advanced { display: none; }
@@ -271,11 +270,15 @@ div#vimiumHelpDialog a.closeButton:hover {
 div#vimiumHelpDialogFooter {
   display: block;
   position: relative;
+  margin-bottom: 37px;
 }
 td.helpDialogBottomRight {
   width:100%;
   float:right;
   text-align: right;
+}
+td.helpDialogBottomRight, td.helpDialogBottomLeft {
+  padding: 0px;
 }
 div#vimiumHelpDialogFooter * { font-size:10px; }
 a#toggleAdvancedCommands, span#help-dialog-tip {
