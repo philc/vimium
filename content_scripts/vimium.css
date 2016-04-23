@@ -273,18 +273,19 @@ div#vimiumHelpDialogFooter {
   position: relative;
 }
 td.helpDialogBottomRight {
-   width: 100%;
-   text-align: right;
+  width:100%;
+  float:right;
+  text-align: right;
 }
 div#vimiumHelpDialogFooter * { font-size:10px; }
 a#toggleAdvancedCommands, span#help-dialog-tip {
   position: relative;
   top: 19px;
-  color: #555;
   white-space: nowrap;
+  font-size: 10px;
 }
-td.helpDialogBottomLeft, td.helpDialogBottomRight {
-  font-size: 14px;
+a#toggleAdvancedCommands {
+  color: #555;
 }
 
 a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink, a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink{
