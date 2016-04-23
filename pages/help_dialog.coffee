@@ -19,7 +19,7 @@ HelpDialog =
         clickEvent.preventDefault()
         chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
       false)
-    @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+    document.getElementById("toggleAdvancedCommands").addEventListener("click",
       HelpDialog.toggleAdvancedCommands, false)
 
     document.documentElement.addEventListener "click", (event) =>
@@ -58,7 +58,7 @@ HelpDialog =
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
   showAdvancedCommands: (visible) ->
-    HelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+    document.getElementById("toggleAdvancedCommands").innerHTML =
       if visible then "Hide advanced commands" else "Show advanced commands"
 
     # Add/remove the showAdvanced class to show/hide advanced commands.
