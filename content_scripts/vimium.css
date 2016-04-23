@@ -150,17 +150,22 @@ iframe.vimiumHelpDialogFrame {
   z-index: 2147483645; /* One less than hint markers. */
 }
 
-div#vimiumHelpDialog {
+div#vimiumHelpDialogContainer {
   opacity:1.0;
   background-color:white;
   border:2px solid #b3b3b3;
   border-radius:6px;
-  padding:8px 12px;
   width: 840px;
   max-width: calc(100% - 100px);
   max-height: calc(100% - 100px);
   margin: 50px auto;
   overflow-y: auto;
+  overflow-x: auto;
+}
+
+div#vimiumHelpDialog {
+  min-width: 600px;
+  padding:8px 12px;
 }
 
 span#vimiumTitle, span#vimiumTitle span,  span#vimiumTitle * { font-size:20px; }
