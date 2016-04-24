@@ -501,7 +501,9 @@ class FilterHints
   scoreLinkHint: (linkSearchString) ->
     searchWords = linkSearchString.trim().toLowerCase().split @splitRegexp
     (linkMarker) =>
-      linkWords = linkMarker.linkWords ?= linkMarker.linkText.toLowerCase().split @splitRegexp
+      # We only keep non-empty link words.  Empty link words cannot be matched, and leading empty link words
+      # disrupt the scoring of matches at the start of the text.
+      linkWords = linkMarker.linkWords ?= linkMarker.linkText.toLowerCase().split(@splitRegexp).filter (term) -> term
 
       searchWordScores =
         for searchWord in searchWords
