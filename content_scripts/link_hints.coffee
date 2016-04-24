@@ -481,7 +481,7 @@ class FilterHints
       hintMarkers
         .filter (linkMarker) =>
           linkMarker.score = scoreFunction linkMarker
-          0 < linkMarker.score or 0 == @linkTextKeystrokeQueue.length
+          0 == @linkTextKeystrokeQueue.length or 0 < linkMarker.score
         .sort (a, b) ->
           if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
@@ -501,6 +501,7 @@ class FilterHints
   scoreLinkHint: (linkSearchString) ->
     searchWords = linkSearchString.trim().toLowerCase().split @splitRegexp
     (linkMarker) =>
+      return 0 unless 0 < searchWords.length
       # We only keep non-empty link words.  Empty link words cannot be matched, and leading empty link words
       # disrupt the scoring of matches at the start of the text.
       linkWords = linkMarker.linkWords ?= linkMarker.linkText.toLowerCase().split(@splitRegexp).filter (term) -> term
