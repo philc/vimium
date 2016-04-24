@@ -479,9 +479,9 @@ class FilterHints
     scoreFunction = @scoreLinkHint @linkTextKeystrokeQueue.join ""
     matchingHintMarkers =
       hintMarkers
-        .filter (linkMarker) ->
+        .filter (linkMarker) =>
           linkMarker.score = scoreFunction linkMarker
-          0 < linkMarker.score
+          0 < linkMarker.score or 0 == @linkTextKeystrokeQueue.length
         .sort (a, b) ->
           if b.score == a.score then b.stableSortCount - a.stableSortCount else b.score - a.score
 
