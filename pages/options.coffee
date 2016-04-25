@@ -199,6 +199,7 @@ Options =
   searchEngines: TextOption
   searchUrl: NonEmptyTextOption
   userDefinedLinkHintCss: TextOption
+  useGlobalLinkHints: CheckBoxOption
 
 initOptionsPage = ->
   onUpdated = ->

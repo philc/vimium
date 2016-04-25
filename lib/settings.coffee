@@ -178,6 +178,7 @@ Settings =
     helpDialog_showAdvancedCommands: false
     optionsPage_showAdvancedOptions: false
     passNextKeyKeys: []
+    useGlobalLinkHints: false
 
 Settings.init()
 
