@@ -140,6 +140,7 @@ Commands =
       "enterVisualMode",
       "enterVisualLineMode",
       "focusInput",
+      "sendMessage",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
       "LinkHints.activateModeToOpenInNewForegroundTab",
@@ -207,7 +208,8 @@ Commands =
     "closeTabsOnLeft",
     "closeTabsOnRight",
     "closeOtherTabs",
-    "passNextKey"]
+    "passNextKey",
+    "sendMessage"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -320,6 +322,7 @@ commandDescriptions =
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
   passNextKey: ["Pass the next key to Chrome"]
+  sendMessage: ["Post a message to the page or an extension"]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
