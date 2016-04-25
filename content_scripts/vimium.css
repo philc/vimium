@@ -242,7 +242,6 @@ div#vimiumHelpDialog td.vimiumHelpDescription {
   font-size:14px;
 }
 div#vimiumHelpDialog span.commandName {
-  color: #555;
   font-style: italic;
   cursor: pointer;
   font-size: 12px;
