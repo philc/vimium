@@ -91,7 +91,7 @@ getHelpDialogHtml = ({showUnboundCommands, showCommandNames, customTitle}) ->
   replacementStrings =
     version: currentVersion
     title: customTitle || "Help"
-    tip: if showCommandNames then "Tip: click command names to yank them to the clipboard." else ""
+    tip: if showCommandNames then "Tip: click command names to yank them to the clipboard." else "&nbsp;"
 
   for own group of Commands.commandGroups
     replacementStrings[group] =
