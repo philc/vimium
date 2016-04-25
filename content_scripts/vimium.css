@@ -182,7 +182,6 @@ td.vimiumHelpDialogTopButtons {
   font-size: 14px;
   padding-left: 5px;
   padding-right: 5px;
-  color:#555;
 }
 div.vimiumColumn {
   width:50%;
@@ -287,12 +286,9 @@ a#toggleAdvancedCommands, span#help-dialog-tip {
   white-space: nowrap;
   font-size: 10px;
 }
-a#toggleAdvancedCommands {
-  color: #555;
-}
-
-a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink, a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink{
-  color:#555;
+a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink, a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink {
+  color:blue;
+  text-decoration: underline;
 }
 
 /* Vimium HUD CSS */
