@@ -623,6 +623,8 @@ LocalHints =
         isClickable ||=
           if element == document.body and windowIsFocused() and Scroller.isScrollableElement element
             reason = "Scroll."
+      when "img"
+        isClickable ||= element.style.cursor in ["zoom-in", "zoom-out"]
       when "div", "ol", "ul"
         isClickable ||=
           if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
