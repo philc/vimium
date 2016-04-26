@@ -15,11 +15,11 @@ HelpDialog =
         clickEvent.preventDefault()
         @hide()
       false)
-    @dialogElement.getElementsByClassName("optionsPage")[0].addEventListener("click", (clickEvent) ->
+    document.getElementById("helpDialogOptionsPage").addEventListener("click", (clickEvent) ->
         clickEvent.preventDefault()
         chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"})
       false)
-    @dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].addEventListener("click",
+    document.getElementById("toggleAdvancedCommands").addEventListener("click",
       HelpDialog.toggleAdvancedCommands, false)
 
     document.documentElement.addEventListener "click", (event) =>
@@ -38,7 +38,7 @@ HelpDialog =
       do (element) ->
         element.setAttribute "role", "link"
         element.addEventListener "click", ->
-          commandName = element.textContent.replace("(","").replace ")", ""
+          commandName = element.textContent
           chrome.runtime.sendMessage handler: "copyToClipboard", data: commandName
           HUD.showForDuration("Yanked #{commandName}.", 2000)
 
@@ -58,7 +58,7 @@ HelpDialog =
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
 
   showAdvancedCommands: (visible) ->
-    HelpDialog.dialogElement.getElementsByClassName("toggleAdvancedCommands")[0].innerHTML =
+    document.getElementById("toggleAdvancedCommands").innerHTML =
       if visible then "Hide advanced commands" else "Show advanced commands"
 
     # Add/remove the showAdvanced class to show/hide advanced commands.
@@ -82,3 +82,4 @@ UIComponentServer.registerHandler (event) ->
 
 root = exports ? window
 root.HelpDialog = HelpDialog
+root.isVimiumHelpDialog = true

@@ -91,6 +91,7 @@ getHelpDialogHtml = ({showUnboundCommands, showCommandNames, customTitle}) ->
   replacementStrings =
     version: currentVersion
     title: customTitle || "Help"
+    tip: if showCommandNames then "Tip: click command names to yank them to the clipboard." else "&nbsp;"
 
   for own group of Commands.commandGroups
     replacementStrings[group] =
@@ -106,11 +107,12 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
     showUnboundCommands, showCommandNames) ->
   html = []
   for command in Commands.commandGroups[group]
-    bindings = (commandsToKey[command] || [""]).join(", ")
+    keys = commandsToKey[command] || []
+    bindings = ("<span class='vimiumHelpDialogKey'>#{Utils.escapeHtml key}</span>" for key in keys).join ", "
     if (showUnboundCommands || commandsToKey[command])
       isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
       description = availableCommands[command].description
-      if bindings.length < 12
+      if keys.join(", ").length < 12
         helpDialogHtmlForCommand html, isAdvanced, bindings, description, showCommandNames, command
       else
         # If the length of the bindings is too long, then we display the bindings on a separate row from the
@@ -122,11 +124,11 @@ helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
 helpDialogHtmlForCommand = (html, isAdvanced, bindings, description, showCommandNames, command) ->
   html.push "<tr class='vimiumReset #{"advanced" if isAdvanced}'>"
   if description
-    html.push "<td class='vimiumReset'>", Utils.escapeHtml(bindings), "</td>"
-    html.push "<td class='vimiumReset'>#{if description and bindings then ':' else ''}</td><td class='vimiumReset'>", description
-    html.push("<span class='vimiumReset commandName'>(#{command})</span>") if showCommandNames
+    html.push "<td class='vimiumReset'>#{bindings}</td>"
+    html.push "<td class='vimiumReset'></td><td class='vimiumReset vimiumHelpDescription'>", description
+    html.push("(<span class='vimiumReset commandName'>#{command}</span>)") if showCommandNames
   else
-    html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", Utils.escapeHtml(bindings)
+    html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", bindings
   html.push("</td></tr>")
 
 # Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.
@@ -364,10 +366,10 @@ HintCoordinator =
     for own frameId, port of @tabState[tabId].ports
       @postMessage tabId, parseInt(frameId), messageType, port, request
 
-  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex}) ->
+  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, isVimiumHelpDialog}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex}
     @tabState[tabId].ports = extend {}, portsForTab[tabId]
-    @sendMessage "getHintDescriptors", tabId, {modeIndex}
+    @sendMessage "getHintDescriptors", tabId, {modeIndex, isVimiumHelpDialog}
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->

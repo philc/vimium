@@ -70,18 +70,26 @@ HintCoordinator =
     # place, then Vimium blocks.  As a temporary measure, we install a timer to remove it.
     Utils.setTimeout 1000, -> suppressKeyboardEvents.exit() if suppressKeyboardEvents?.modeIsActive
     @onExit = [onExit]
-    @sendMessage "prepareToActivateMode", modeIndex: availableModes.indexOf mode
+    @sendMessage "prepareToActivateMode",
+      modeIndex: availableModes.indexOf(mode), isVimiumHelpDialog: window.isVimiumHelpDialog
 
   # Hint descriptors are global.  They include all of the information necessary for each frame to determine
   # whether and when a hint from *any* frame is selected.  They include the following properties:
   #   frameId: the frame id of this hint's local frame
   #   localIndex: the index in @localHints for the full hint descriptor for this hint
   #   linkText: the link's text for filtered hints (this is null for alphabet hints)
-  getHintDescriptors: ({modeIndex}) ->
+  getHintDescriptors: ({modeIndex, isVimiumHelpDialog}) ->
     # Ensure that the document is ready and that the settings are loaded.
     DomUtils.documentReady => Settings.onLoaded =>
       requireHref = availableModes[modeIndex] in [COPY_LINK_URL, OPEN_INCOGNITO]
-      @localHints = LocalHints.getLocalHints requireHref
+      # If link hints is launched within the help dialog, then we only offer hints from that frame.  This
+      # improves the usability of the help dialog on the options page (particularly for selecting command
+      # names).
+      @localHints =
+        if isVimiumHelpDialog and not window.isVimiumHelpDialog
+          []
+        else
+          LocalHints.getLocalHints requireHref
       @localHintDescriptors = @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
       @sendMessage "postHintDescriptors", hintDescriptors: @localHintDescriptors
 
