@@ -213,14 +213,16 @@ span.vimiumHelpDialogKey {
   background-color: rgb(243,243,243);
   color: rgb(33,33,33);
   margin-left: 2px;
-  padding-top: 0px;
-  padding-bottom: 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
   padding-left: 4px;
   padding-right: 4px;
   border-radius: 3px;
   border: solid 1px #ccc;
   border-bottom-color: #bbb;
   box-shadow: inset 0 -1px 0 #bbb;
+  font-family: monospace;
+  font-size: 11px;
 }
 /* Make the description column as wide as it can be. */
 div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) { width:100%; }
