@@ -118,27 +118,26 @@ Commands =
     pageNavigation:
       ["scrollDown",
       "scrollUp",
-      "scrollLeft",
-      "scrollRight",
       "scrollToTop",
       "scrollToBottom",
-      "scrollToLeft",
-      "scrollToRight",
       "scrollPageDown",
       "scrollPageUp",
       "scrollFullPageUp",
       "scrollFullPageDown",
+      "scrollLeft",
+      "scrollRight",
+      "scrollToLeft",
+      "scrollToRight",
       "reload",
-      "toggleViewSource",
       "copyCurrentUrl",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
       "goUp",
       "goToRoot",
       "enterInsertMode",
-      "passNextKey",
       "enterVisualMode",
       "enterVisualLineMode",
+      "passNextKey",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
@@ -156,32 +155,33 @@ Commands =
     vomnibarCommands:
       ["Vomnibar.activate",
       "Vomnibar.activateInNewTab",
-      "Vomnibar.activateTabSelection",
       "Vomnibar.activateBookmarks",
       "Vomnibar.activateBookmarksInNewTab",
+      "Vomnibar.activateTabSelection",
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab"]
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"]
     historyNavigation:
       ["goBack", "goForward"]
     tabManipulation:
-      ["nextTab",
+      ["createTab",
       "previousTab",
+      "nextTab",
       "visitPreviousTab",
       "firstTab",
       "lastTab",
-      "createTab",
       "duplicateTab",
+      "togglePinTab",
       "removeTab",
       "restoreTab",
       "moveTabToNewWindow",
-      "togglePinTab",
       "closeTabsOnLeft","closeTabsOnRight",
       "closeOtherTabs",
       "moveTabLeft",
       "moveTabRight"]
     misc:
-      ["showHelp"]
+      ["showHelp",
+      "toggleViewSource"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
@@ -192,12 +192,12 @@ Commands =
     "moveTabToNewWindow",
     "goUp",
     "goToRoot",
-    "focusInput",
     "LinkHints.activateModeWithQueue",
     "LinkHints.activateModeToDownloadLink",
     "Vomnibar.activateEditUrl",
     "Vomnibar.activateEditUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito",
+    "LinkHints.activateModeToCopyLinkUrl",
     "goNext",
     "goPrevious",
     "Marks.activateCreateMode",
@@ -207,6 +207,8 @@ Commands =
     "closeTabsOnLeft",
     "closeTabsOnRight",
     "closeOtherTabs",
+    "enterVisualLineMode",
+    "toggleViewSource",
     "passNextKey"]
 
 defaultKeyMappings =
@@ -306,8 +308,8 @@ commandDescriptions =
   scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }]
   scrollToRight: ["Scroll all the way to the right", { noRepeat: true }]
 
-  scrollPageDown: ["Scroll a page down"]
-  scrollPageUp: ["Scroll a page up"]
+  scrollPageDown: ["Scroll a half page down"]
+  scrollPageUp: ["Scroll a half page up"]
   scrollFullPageDown: ["Scroll a full page down"]
   scrollFullPageUp: ["Scroll a full page up"]
 
@@ -323,7 +325,7 @@ commandDescriptions =
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
-  focusInput: ["Focus the first text box on the page. Cycle between them using tab"]
+  focusInput: ["Focus the first text input on the page"]
 
   "LinkHints.activateMode": ["Open a link in the current tab"]
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
@@ -370,16 +372,16 @@ commandDescriptions =
   moveTabLeft: ["Move tab to the left", { background: true }]
   moveTabRight: ["Move tab to the right", { background: true }]
 
-  "Vomnibar.activate": ["Open URL, bookmark, or history entry", { topFrame: true }]
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark, history entry, in a new tab", { topFrame: true }]
+  "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }]
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark or history entry in a new tab", { topFrame: true }]
   "Vomnibar.activateTabSelection": ["Search through your open tabs", { topFrame: true }]
   "Vomnibar.activateBookmarks": ["Open a bookmark", { topFrame: true }]
   "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { topFrame: true }]
   "Vomnibar.activateEditUrl": ["Edit the current URL", { topFrame: true }]
   "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { topFrame: true }]
 
-  nextFrame: ["Cycle forward to the next frame on the page", { background: true }]
-  mainFrame: ["Select the tab's main/top frame", { topFrame: true, noRepeat: true }]
+  nextFrame: ["Select the next frame on the page", { background: true }]
+  mainFrame: ["Select the page's main/top frame", { topFrame: true, noRepeat: true }]
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
