@@ -290,9 +290,10 @@ a#toggleAdvancedCommands, span#help-dialog-tip {
   white-space: nowrap;
   font-size: 10px;
 }
-a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink, a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink {
-  color:blue;
-  text-decoration: underline;
+a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink,
+  a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink, a#toggleAdvancedCommands {
+    color:#2f508e;
+    text-decoration: underline;
 }
 
 /* Vimium HUD CSS */
