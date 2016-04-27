@@ -289,6 +289,7 @@ for icon in [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
+    port.onDisconnect.addListener -> Frames.unregisterFrame {tabId, frameId}
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
 
     # Return our onMessage handler for this port.
@@ -390,9 +391,12 @@ HintCoordinator =
 
   # If an unregistering frame is participating in link-hints mode, then we need to tidy up after it.
   unregisterFrame: (tabId, frameId) ->
-    delete @tabState[tabId]?.ports?[frameId]
-    # We fake "postHintDescriptors" for an unregistering frame.
-    @postHintDescriptors tabId, frameId, hintDescriptors: [] if @tabState[tabId]?.frameIds
+    if @tabState[tabId]?
+      if @tabState[tabId].ports?[frameId]?
+        delete @tabState[tabId].ports[frameId]
+      if @tabState[tabId].frameIds? and frameId in @tabState[tabId].frameIds
+        # We fake an empty "postHintDescriptors" because the frame has gone away.
+        @postHintDescriptors tabId, frameId, hintDescriptors: []
 
 # Port handler mapping
 portHandlers =
