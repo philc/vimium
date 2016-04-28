@@ -56,10 +56,10 @@ Vomnibar =
   #   selectFirst - Optional, boolean. Whether to select the first entry.
   #   newTab      - Optional, boolean. Whether to open the result in a new tab.
   open: (sourceFrameId, options) ->
-    @init()
-    # The Vomnibar cannot coexist with the help dialog (it causes focus issues).
-    HelpDialog.abort()
-    @vomnibarUI.activate extend options, { name: "activate", sourceFrameId, focus: true }
+    if @vomnibarUI?
+      # The Vomnibar cannot coexist with the help dialog (it causes focus issues).
+      HelpDialog.abort()
+      @vomnibarUI.activate extend options, { name: "activate", sourceFrameId, focus: true }
 
 root = exports ? window
 root.Vomnibar = Vomnibar

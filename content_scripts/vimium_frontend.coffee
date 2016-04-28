@@ -143,7 +143,7 @@ initializeOnEnabledStateKnown = (isEnabledForUrl) ->
   if isEnabledForUrl
     # We only initialize (and activate) the Vomnibar in the top frame.  Also, we do not initialize the
     # Vomnibar until we know that Vimium is enabled.  Thereafter, there's no more initialization to do.
-    Vomnibar.init() if DomUtils.isTopFrame()
+    DomUtils.documentComplete Vomnibar.init.bind Vomnibar if DomUtils.isTopFrame()
     initializeOnEnabledStateKnown = ->
 
 #
@@ -635,10 +635,11 @@ window.HelpDialog ?=
   abort: -> @helpUI.hide false if @isShowing()
 
   toggle: (request) ->
-    @helpUI ?= new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", ->
-    if @isShowing()
+    DomUtils.documentComplete =>
+      @helpUI ?= new UIComponent "pages/help_dialog.html", "vimiumHelpDialogFrame", ->
+    if @helpUI? and @isShowing()
       @helpUI.hide()
-    else
+    else if @helpUI?
       @helpUI.activate extend request,
         name: "activate", focus: true
 

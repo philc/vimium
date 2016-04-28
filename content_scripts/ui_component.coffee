@@ -68,10 +68,9 @@ class UIComponent
   # Post a message (if provided), then call continuation (if provided).  We wait for documentReady() to ensure
   # that the @iframePort set (so that we can use @iframePort.use()).
   postMessage: (message = null, continuation = null) ->
-    DomUtils.documentReady =>
-      @iframePort.use (port) ->
-        port.postMessage message if message?
-        continuation?()
+    @iframePort?.use (port) ->
+      port.postMessage message if message?
+      continuation?()
 
   activate: (@options = null) ->
     @postMessage @options, =>
