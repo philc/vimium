@@ -263,8 +263,8 @@ DomUtils =
 
   addFlashRect: (rect) ->
     flashEl = @createElement "div"
-    flashEl.id = "vimiumFlash"
-    flashEl.className = "vimiumReset"
+    flashEl.classList.add "vimiumReset"
+    flashEl.classList.add "vimiumFlash"
     flashEl.style.left = rect.left + "px"
     flashEl.style.top = rect.top + "px"
     flashEl.style.width = rect.width + "px"
