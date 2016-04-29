@@ -136,7 +136,7 @@ class VomnibarUI
         @input.value.trim().length == 0
           @seenTabToOpenCompletionList = true
           @update true
-      else
+      else if 0 < @completions.length
         @selection += 1
         @selection = @initialSelectionValue if @selection == @completions.length
         @updateSelection()
