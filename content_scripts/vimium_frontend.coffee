@@ -563,7 +563,8 @@ findAndFollowLink = (linkStrings) ->
 
     linkMatches = false
     for linkString in linkStrings
-      if (link.innerText.toLowerCase().indexOf(linkString) != -1)
+      if link.innerText.toLowerCase().indexOf(linkString) != -1 ||
+          link.value?.indexOf(linkString) != -1
         linkMatches = true
         break
     continue unless linkMatches
@@ -595,7 +596,8 @@ findAndFollowLink = (linkStrings) ->
       else
         new RegExp linkString, "i"
     for candidateLink in candidateLinks
-      if (exactWordRegex.test(candidateLink.innerText))
+      if exactWordRegex.test(candidateLink.innerText) ||
+          (candidateLink.value && exactWordRegex.test(candidateLink.value))
         followLink(candidateLink)
         return true
   false
