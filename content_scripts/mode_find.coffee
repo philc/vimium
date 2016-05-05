@@ -179,7 +179,7 @@ class FindMode extends Mode
 
     if options.colorSelection
       setTimeout(
-        -> document.addEventListener("selectionchange", @restoreDefaultSelectionHighlight, true)
+        => document.addEventListener("selectionchange", @restoreDefaultSelectionHighlight, true)
       , 0)
 
     # We are either in normal mode ("n"), or find mode ("/").  We are not in insert mode.  Nevertheless, if a
