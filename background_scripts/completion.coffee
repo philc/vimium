@@ -779,7 +779,7 @@ HistoryCache =
   # correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
   onPageVisited: (newPage) ->
     i = HistoryCache.binarySearch(newPage, @history, @compareHistoryByUrl)
-    pageWasFound = (@history[i].url == newPage.url)
+    pageWasFound = (@history[i]?.url == newPage.url)
     if pageWasFound
       @history[i] = newPage
     else
