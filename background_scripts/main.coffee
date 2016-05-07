@@ -301,10 +301,14 @@ Frames =
     (portsForTab[tabId] ?= {})[frameId] = port
 
   unregisterFrame: ({tabId, frameId}) ->
-    if tabId of frameIdsForTab
-      frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
-    if tabId of portsForTab
-      delete portsForTab[tabId][frameId]
+    # FrameId 0 is the top/main frame.  We never unregister that frame.  If the tab is closing, then we tidy
+    # up elsewhere.  If the tab is navigating to a new page, then a new top frame will be along soon.
+    # This mitigates against the unregister and register messages arriving in the "wrong" order.
+    if 0 < frameId
+      if tabId of frameIdsForTab
+        frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
+      if tabId of portsForTab
+        delete portsForTab[tabId][frameId]
     HintCoordinator.unregisterFrame tabId, frameId
 
   isEnabledForUrl: ({request, tabId, port}) ->
