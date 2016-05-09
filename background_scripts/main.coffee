@@ -303,7 +303,7 @@ Frames =
   unregisterFrame: ({tabId, frameId}) ->
     # FrameId 0 is the top/main frame.  We never unregister that frame.  If the tab is closing, then we tidy
     # up elsewhere.  If the tab is navigating to a new page, then a new top frame will be along soon.
-    # This mitigates against the unregister and register messages arriving in the "wrong" order.
+    # This mitigates against the unregister and register messages arriving out of order. See #2125.
     if 0 < frameId
       if tabId of frameIdsForTab
         frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
