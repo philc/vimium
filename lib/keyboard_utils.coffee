@@ -32,14 +32,14 @@ KeyboardUtils =
 
   getKeyChar: (event) ->
     # Not a letter
-    if (event.keyIdentifier.slice(0, 2) != "U+")
+    if (event.key.slice(0, 2) != "U+")
       return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
       # F-key
       if (event.keyCode >= @keyCodes.f1 && event.keyCode <= @keyCodes.f12)
         return "f" + (1 + event.keyCode - keyCodes.f1)
       return ""
 
-    keyIdentifier = event.keyIdentifier
+    keyIdentifier = event.key
     # On Windows, the keyIdentifiers for non-letter keys are incorrect. See
     # https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
     if ((@platform == "Windows" || @platform == "Linux") && @keyIdentifierCorrectionMap[keyIdentifier])
@@ -80,7 +80,7 @@ KeyboardUtils =
         # avoid / being interpreted as ?
         if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31) || (
             # TODO(philc): some events don't have a keyidentifier. How is that possible?
-            event.keyIdentifier && event.keyIdentifier.slice(0, 2) != "U+"))
+            event.key && event.key.slice(0, 2) != "U+"))
           keyChar = @getKeyChar event
           # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
           if 0 < keyChar.length
