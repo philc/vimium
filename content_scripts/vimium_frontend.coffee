@@ -543,7 +543,7 @@ followLink = (linkElement) ->
 # next big thing', and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
 #
 findAndFollowLink = (linkStrings) ->
-  linksXPath = DomUtils.makeXPath(["a", "button", "*[@onclick or @role='link' or contains(@class, 'button')]"])
+  linksXPath = DomUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"])
   links = DomUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
   candidateLinks = []
 
