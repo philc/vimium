@@ -564,7 +564,7 @@ findAndFollowLink = (linkStrings) ->
     linkMatches = false
     for linkString in linkStrings
       if link.innerText.toLowerCase().indexOf(linkString) != -1 ||
-          link.value?.indexOf(linkString) != -1
+          0 <= link.value?.indexOf? linkString
         linkMatches = true
         break
     continue unless linkMatches
