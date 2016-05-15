@@ -96,23 +96,18 @@ KeyboardUtils =
           String.fromCharCode event.charCode
 
       when "keydown"
-        # handle special keys, and normal input keys with modifiers being pressed. don't handle shiftKey alone (to
-        # avoid / being interpreted as ?
-        if (((event.metaKey || event.ctrlKey || event.altKey) && event.keyCode > 31) || (
-            # TODO(philc): some events don't have a keyidentifier. How is that possible?
-            event.keyIdentifier && event.keyIdentifier.slice(0, 2) != "U+"))
-          keyChar = @getKeyChar event
-          # Again, ignore just modifiers. Maybe this should replace the keyCode>31 condition.
-          if 0 < keyChar.length
-            modifiers = []
+        # Handle special keys and normal input keys with modifiers being pressed.
+        keyChar = @getKeyChar event
+        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey))
+          modifiers = []
 
-            keyChar = keyChar.toUpperCase() if event.shiftKey
-            modifiers.push "m" if event.metaKey
-            modifiers.push "c" if event.ctrlKey
-            modifiers.push "a" if event.altKey
+          keyChar = keyChar.toUpperCase() if event.shiftKey
+          modifiers.push "m" if event.metaKey
+          modifiers.push "c" if event.ctrlKey
+          modifiers.push "a" if event.altKey
 
-            keyChar = [modifiers..., keyChar].join "-"
-            if 1 < keyChar.length then "<#{keyChar}>" else keyChar
+          keyChar = [modifiers..., keyChar].join "-"
+          if 1 < keyChar.length then "<#{keyChar}>" else keyChar
 
 KeyboardUtils.init()
 
