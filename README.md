@@ -159,14 +159,14 @@ Next version (not yet released)
 
 - New commands:
     - `visitPreviousTab` - visit the previous tab (by recency) with `^`, or the tab before that with `2^`.
-    - `passNextKey` - pass the next key to the page;  for example, with `map
-      <c-]> passNextKey`, you can close Facebook's messenger popups with `<c-]><Esc>`.
+    - `passNextKey` - pass the next key to the page. For example, using `map <c-]> passNextKey`, you can close
+      Facebook's messenger popups with `<c-]><Esc>`.
 - Link hints:
     - Now work across all frames in the tab.
     - Now select frames and scrollable elements.
-    - Now accept a count prefix; `3F` opens three new background tabs,  `999F` opens many tabs.
-    - For filtered link hints, a new option requires you to press `Enter` to activate a link; this
-      prevents unintentionally triggering Vimium commands with trailing keystrokes.
+    - Now accept a count prefix; `3F` opens three new background tabs, `999F` opens many tabs.
+    - For filtered link hints, a new option on the settings page requires you to press `Enter` to activate a
+      link; this prevents unintentionally triggering Vimium commands with trailing keystrokes.
 - Miscellaneous:
     - `gg` now accepts a `count` prefix.
     - `W` now accepts a count prefix; `3W` moves three tabs to a new window.
@@ -176,8 +176,8 @@ Next version (not yet released)
     - `c-y` and `c-e` now scroll in visual mode.
     - The Vimium help dialog has been re-styled.
 - Bug fixes:
-    - `<c-a-[>` is not longer treated as escape.
-    - Fix icon display and memory leak due to regression in recent Chrome versions (49+).
+    - `<c-a-[>` is no longer treated as escape.
+    - Fix icon display and memory leak due to a regression in recent Chrome versions (49+).
 - For web-devs only:
     - When disabled on a tab, Vimium no longer pollutes the dev console with network requests.
 
