@@ -155,7 +155,8 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 
 Release Notes
 -------------
-Next version (not yet released)
+
+1.55 (2016-05-26)
 
 - New commands:
     - `visitPreviousTab` - visit the previous tab (by recency) with `^`, or the tab before that with `2^`.
