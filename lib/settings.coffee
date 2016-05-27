@@ -144,10 +144,10 @@ Settings =
     # "first/last page", so we put the single bracket first in the pattern string so that it gets searched
     # for first.
 
-    # "\bprev\b,\bprevious\b,\bback\b,<,←,«,≪,<<"
-    previousPatterns: "prev,previous,back,older,<,\u2190,\xab,\u226a,<<"
-    # "\bnext\b,\bmore\b,>,→,»,≫,>>"
-    nextPatterns: "next,more,newer,>,\u2192,\xbb,\u226b,>>"
+    # "\bprev\b,\bprevious\b,\bback\b,<,‹,←,«,≪,<<"
+    previousPatterns: "prev,previous,back,older,<,\u2039,\u2190,\xab,\u226a,<<"
+    # "\bnext\b,\bmore\b,>,›,→,»,≫,>>"
+    nextPatterns: "next,more,newer,>,\u203a,\u2192,\xbb,\u226b,>>"
     # default/fall back search engine
     searchUrl: "https://www.google.com/search?q="
     # put in an example search engine
