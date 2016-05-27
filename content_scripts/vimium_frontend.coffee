@@ -363,7 +363,7 @@ extend window,
     new VisualMode userLaunchedMode: true
 
   enterVisualLineMode: ->
-    new VisualLineMod userLaunchedMode: true
+    new VisualLineMode userLaunchedMode: true
 
   passNextKey: (count) ->
     new PassNextKeyMode count
