@@ -153,7 +153,7 @@ iframe.vimiumHelpDialogFrame {
 div#vimiumHelpDialogContainer {
   opacity:1.0;
   background-color:white;
-  border:2px solid #b3b3b3;
+  border:none;
   border-radius:6px;
   width: 840px;
   max-width: calc(100% - 100px);
@@ -168,7 +168,11 @@ div#vimiumHelpDialog {
   padding:8px 12px;
 }
 
-span#vimiumTitle, span#vimiumTitle span,  span#vimiumTitle * { font-size:20px; }
+span#vimiumTitle, span#vimiumTitle span,  span#vimiumTitle * { 
+  font-size:20px; 
+  font-weight: bold;
+  letter-spacing: .25px;
+}
 #vimiumTitle {
   display: block;
   line-height: 130%;
@@ -231,7 +235,7 @@ div#vimiumHelpDialog div.vimiumDivider {
   height:1px;
   width:100%;
   margin:10px auto;
-  background-color:#9a9a9a;
+  background-color:#ddd;
 }
 div#vimiumHelpDialog td.vimiumHelpSectionTitle {
   padding-top:3px;
