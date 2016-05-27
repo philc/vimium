@@ -157,6 +157,12 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
+Not yet released:
+
+- Bug fixes:
+    - Fix visual-line mode.  Due to a bug in version 1.55, visual-line mode
+      (`V`) is broken.  As a workaround, enter visual mode with `v` and then visual-line mode with `V`.
+
 1.55 (2016-05-26)
 
 - New commands:
