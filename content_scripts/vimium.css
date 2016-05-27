@@ -165,7 +165,7 @@ div#vimiumHelpDialogContainer {
 
 div#vimiumHelpDialog {
   min-width: 600px;
-  padding:8px 12px;
+  padding:30px;
 }
 
 span#vimiumTitle, span#vimiumTitle span,  span#vimiumTitle * { 
