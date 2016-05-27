@@ -74,6 +74,7 @@ Manipulating tabs:
     K, gt   go one tab right
     g0      go to the first tab
     g$      go to the last tab
+    ^       visit the previously-visited tab
     t       create tab
     yt      duplicate current tab
     x       close current tab
