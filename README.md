@@ -159,9 +159,9 @@ Release Notes
 
 Not yet released:
 
-- Bug fixes:
-    - Fix visual-line mode.  Due to a bug in version 1.55, visual-line mode
-      (`V`) is broken.  As a workaround, enter visual mode with `v` and then visual-line mode with `V`.
+- Vimium now works around a Chromium bug affecting users with non-standard keyboard layouts (see #2147).
+- Bug fix:
+    - Visual line mode (`V`) has been fixed.
 
 1.55 (2016-05-26)
 
