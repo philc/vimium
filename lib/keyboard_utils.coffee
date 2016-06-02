@@ -33,10 +33,12 @@ KeyboardUtils =
   # We are migrating from using event.keyIdentifier to using event.key.  For some period of time, we must
   # support both.  This wrapper can be removed once Chrome 52 is considered too old to support.
   getKeyChar: (event) ->
-    if event.key?
-      @getKeyCharUsingKey event
-    else
+    # We favor using event.keyIdentifier due to Chromium's currently (Chrome 51) incorrect implementataion of
+    # event.key; see #2147.
+    if event.keyIdentifier?
       @getKeyCharUsingKeyIdentifier event
+    else
+      @getKeyCharUsingKey event
 
   getKeyCharUsingKey: (event) ->
     if event.keyCode of @keyNames
