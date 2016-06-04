@@ -71,6 +71,13 @@
     "default_icon": "icons/browser_action_disabled.png",
     "default_popup": "pages/popup.html"
   },
+  "commands": {
+    "nextTab": { "description": "Go one tab right" },
+    "previousTab": { "description": "Go one tab left" },
+    "visitPreviousTab": { "description": "Go to previously-visited tab" },
+    "firstTab": { "description": "Go to the first tab" },
+    "lastTab": { "description": "Go to the last tab" }
+  },
   "web_accessible_resources": [
     "pages/vomnibar.html",
     "content_scripts/vimium.css",
