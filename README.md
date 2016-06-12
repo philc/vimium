@@ -157,11 +157,10 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
-Not yet released:
+1.56 (2016-06-11)
 
 - Vimium now works around a Chromium bug affecting users with non-standard keyboard layouts (see #2147).
-- Bug fix:
-    - Visual line mode (`V`) has been fixed.
+- Fixed a bug preventing visual line mode (`V`) from working.
 
 1.55 (2016-05-26)
 
