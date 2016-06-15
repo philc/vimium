@@ -241,23 +241,38 @@ class LinkHintsMode
     #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
     #
     # Remove rects from elements where another clickable element lies above it.
+    # This loop will check if any corner or center of element is clickable
+    # document.elementFromPoint will find an element at a x,y location.
+    # Node.contain checks to see if an element contains another.
+    # If we do not find our element as a descendant of any element we find, assume it's completely covered.
     nonOverlappingElements = []
-    # Traverse the DOM from first to last, since later elements show above earlier elements.
-    visibleElements = visibleElements.reverse()
     while visibleElement = visibleElements.pop()
-      rects = [visibleElement.rect]
-      for {rect: negativeRect} in visibleElements
-        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
-        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
-      if rects.length > 0
-        nonOverlappingElements.push {element: visibleElement.element, rect: rects[0]}
-      else
-        # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
-        # than they're worth.
-        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
-        # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+        rect = visibleElement.rect
+        elem = visibleElement.element
+        leftTop = document.elementFromPoint(rect.left, rect.top)
+        leftTopContains = leftTop && leftTop.contains(elem)
+        if leftTopContains
+            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+            continue
+        leftBottom = document.elementFromPoint(rect.left, rect.bottom)
+        leftBottomContains = leftBottom && leftBottom.contains(elem)
+        if leftBottomContains
+            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+            continue
+        rightTop = document.elementFromPoint(rect.right, rect.top)
+        rightTopContains = rightTop && rightTop.contains(elem)
+        if rightTopContains
+            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+            continue
+        rightBottom = document.elementFromPoint(rect.right, rect.bottom)
+        rightBottomContains = rightBottom && rightBottom.contains(elem)
+        if rightBottomContains
+            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+            continue
+        middle = document.elementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
+        middleContains = middle && middle.contains(elem)
+        if middleContains
+            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
     nonOverlappingElements
 
