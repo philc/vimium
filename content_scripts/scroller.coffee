@@ -4,6 +4,9 @@
 #
 activatedElement = null
 
+if !('scrollingElement' of document)
+  Object.defineProperty(document, 'scrollingElement', { get: () -> document.body })
+
 # Return 0, -1 or 1: the sign of the argument.
 # NOTE(smblott; 2014/12/17) We would like to use Math.sign().  However, according to this site
 # (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign) Math.sign() was
@@ -37,7 +40,7 @@ getDimension = (el, direction, amount) ->
     name = amount
     # the clientSizes of the body are the dimensions of the entire page, but the viewport should only be the
     # part visible through the window
-    if name is 'viewSize' and el is document.body
+    if name is 'viewSize' and el is document.scrollingElement
       # TODO(smblott) Should we not be returning the width/height of element, here?
       if direction is 'x' then window.innerWidth else window.innerHeight
     else
@@ -82,13 +85,13 @@ isScrollableElement = (element, direction = "y", amount = 1, factor = 1) ->
 
 # From element and its parents, find the first which we should scroll and which does scroll.
 findScrollableElement = (element, direction, amount, factor) ->
-  while element != document.body and not isScrollableElement element, direction, amount, factor
-    element = DomUtils.getContainingElement(element) ? document.body
+  while element != document.scrollingElement and not isScrollableElement element, direction, amount, factor
+    element = DomUtils.getContainingElement(element) ? document.scrollingElement
   element
 
-# On some pages, document.body is not scrollable.  Here, we search the document for the largest visible
+# On some pages, document.scrollingElement is not scrollable.  Here, we search the document for the largest visible
 # element which does scroll vertically. This is used to initialize activatedElement. See #1358.
-firstScrollableElement = (element=document.body) ->
+firstScrollableElement = (element=document.scrollingElement) ->
   if doesScroll(element, "y", 1, 1) or doesScroll(element, "y", -1, 1)
     element
   else
@@ -234,14 +237,14 @@ Scroller =
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
   scrollBy: (direction, amount, factor = 1, continuous = true) ->
     # if this is called before domReady, just use the window scroll function
-    if (!document.body and amount instanceof Number)
+    if (!document.scrollingElement and amount instanceof Number)
       if (direction == "x")
         window.scrollBy(amount, 0)
       else
         window.scrollBy(0, amount)
       return
 
-    activatedElement ||= (document.body and firstScrollableElement()) or document.body
+    activatedElement ||= (document.scrollingElement and firstScrollableElement()) or document.scrollingElement
     return unless activatedElement
 
     # Avoid the expensive scroll calculation if it will not be used.  This reduces costs during smooth,
@@ -252,7 +255,7 @@ Scroller =
       CoreScroller.scroll element, direction, elementAmount, continuous
 
   scrollTo: (direction, pos) ->
-    activatedElement ||= (document.body and firstScrollableElement()) or document.body
+    activatedElement ||= (document.scrollingElement and firstScrollableElement()) or document.scrollingElement
     return unless activatedElement
 
     element = findScrollableElement activatedElement, direction, pos, 1
@@ -261,13 +264,13 @@ Scroller =
 
   # Is element scrollable and not the activated element?
   isScrollableElement: (element) ->
-    activatedElement ||= (document.body and firstScrollableElement()) or document.body
+    activatedElement ||= (document.scrollingElement and firstScrollableElement()) or document.scrollingElement
     element != activatedElement and isScrollableElement element
 
   # Scroll the top, bottom, left and right of element into view.  The is used by visual mode to ensure the
   # focus remains visible.
   scrollIntoView: (element) ->
-    activatedElement ||= document.body and firstScrollableElement()
+    activatedElement ||= document.scrollingElement and firstScrollableElement()
     rect = element. getClientRects()?[0]
     if rect?
       # Scroll y axis.
