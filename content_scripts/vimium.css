@@ -88,7 +88,7 @@ div.internalVimiumHintMarker {
 
 div.internalVimiumHintMarker span {
   color: #302505;
-  font-family: Helvetica, Arial, sans-serif !important;
+  font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
   font-size: 11px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
