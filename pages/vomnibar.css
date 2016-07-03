@@ -21,8 +21,8 @@
   background: #F1F1F1;
   text-align: left;
   border-radius: 4px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
-  border: 1px solid #aaa;
+  box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.3);
+  border: 1px solid #888;
   /* One less than hint markers and the help dialog. */
   z-index: 2147483646;
 }
