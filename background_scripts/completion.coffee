@@ -46,15 +46,13 @@ class Suggestion
   generateHtml: (request) ->
     return @html if @html
     relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
-    insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
-    insertTextIndicator = "&#8618;" # A right hooked arrow.
     @title = @insertText if @insertText and request.isCustomSearch
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     @html =
       if request.isCustomSearch
         """
         <div class="vimiumReset vomnibarTopHalf">
-           <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
+           <span class="vimiumReset vomnibarSource">#{@type}</span>
            <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
            #{relevancyHtml}
          </div>
@@ -62,11 +60,11 @@ class Suggestion
       else
         """
         <div class="vimiumReset vomnibarTopHalf">
-           <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
+           </span><span class="vimiumReset vomnibarSource">#{@type}</span>
            <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
          </div>
          <div class="vimiumReset vomnibarBottomHalf">
-          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
+          <span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
           #{relevancyHtml}
         </div>
         """
