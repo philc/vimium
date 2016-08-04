@@ -10,19 +10,12 @@
   display: block;
   position: fixed;
   width: calc(100% - 20px); /* adjusted to keep border radius and box-shadow visible*/
-  /*min-width: 400px;
-  top: 70px;
-  left: 50%;*/
   top: 8px;
   left: 8px;
-  /*margin: 0 0 0 -40%;*/
   font-family: sans-serif;
-
-  background: #F1F1F1;
   text-align: left;
   border-radius: 4px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
-  border: 1px solid #aaa;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
   /* One less than hint markers and the help dialog. */
   z-index: 2147483646;
 }
@@ -31,24 +24,21 @@
   color: #000;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 20px;
-  height: 34px;
+  min-height: 34px;
   margin-bottom: 0;
-  padding: 4px;
-  background-color: white;
-  border-radius: 3px;
-  border: 1px solid #E8E8E8;
-  box-shadow: #444 0px 0px 1px;
+  padding: 19px 30px;
+  border-radius: 4px;
+  background-color: rgba(255,255,255,0.9);
   width: 100%;
   outline: none;
   box-sizing: border-box;
+
 }
 
 #vomnibar .vomnibarSearchArea {
   display: block;
-  padding: 10px;
-  background-color: #F1F1F1;
   border-radius: 4px 4px 0 0;
-  border-bottom: 1px solid #C6C9CE;
+  border-bottom: 1px solid #ddd;
 }
 
 #vomnibar ul {
@@ -62,8 +52,8 @@
 #vomnibar li {
   border-bottom: 1px solid #ddd;
   line-height: 1.1em;
-  padding: 7px 10px;
-  font-size: 16px;
+  padding: 10px 10px;
+  font-size: 14px;
   color: black;
   position: relative;
   display: list-item;
@@ -76,7 +66,7 @@
 
 #vomnibar li .vomnibarTopHalf, #vomnibar li .vomnibarBottomHalf {
   display: block;
-  overflow: hidden;
+  overflow: visible; /* fix display issue when "g,j,y,p,q" showing */
 }
 
 #vomnibar li .vomnibarBottomHalf {
