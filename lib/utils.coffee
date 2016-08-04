@@ -1,13 +1,16 @@
+root = exports ? window
+
 Utils =
   getCurrentVersion: ->
     chrome.runtime.getManifest().version
 
-  # Returns true whenever the current page (or the page supplied as an argument) is from the extension's
-  # origin (and thus can access the extension's localStorage).
-  isExtensionPage: (win = window) -> try win.document.location?.origin + "/" == chrome.extension.getURL ""
+  # Returns true whenever the current page is from the extension's origin (and thus can access the
+  # extension's localStorage).  We use "try" because, if "block third-party cookies and data" is enabled, then
+  # accessing localStorage raises an exception, so we do not use localStorage in that case.
+  isExtensionPage: (win = root) -> try win.isVimiumExtensionPage? and win.isVimiumExtensionPage
 
   # Returns true whenever the current page is the extension's background page.
-  isBackgroundPage: -> @isExtensionPage() and chrome.extension.getBackgroundPage?() == window
+  isBackgroundPage: -> root.isVimiumBackgroundPage? and root.isVimiumBackgroundPage
 
   # Takes a dot-notation object string and calls the function that it points to with the correct value for
   # 'this'.
@@ -338,7 +341,6 @@ class JobRunner
   onReady: (callback) ->
     @fetcher.use callback
 
-root = exports ? window
 root.Utils = Utils
 root.SearchEngines = SearchEngines
 root.SimpleCache = SimpleCache
