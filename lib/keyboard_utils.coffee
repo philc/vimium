@@ -103,7 +103,7 @@ KeyboardUtils =
         if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey))
           modifiers = []
 
-          keyChar = keyChar.toUpperCase() if event.shiftKey
+          keyChar = keyChar.toUpperCase() if event.shiftKey and 1 < keyChar.length
           modifiers.push "m" if event.metaKey
           modifiers.push "c" if event.ctrlKey
           modifiers.push "a" if event.altKey
