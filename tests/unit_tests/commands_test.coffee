@@ -10,6 +10,9 @@ context "Key mappings",
     assert.equal (Commands.normalizeKey '<C-A>'), '<c-A>'
     assert.equal (Commands.normalizeKey '<F12>'), '<F12>'
     assert.equal (Commands.normalizeKey '<C-F12>'), '<c-F12>'
+    assert.equal (Commands.normalizeKey '<C-a-Left>'), '<c-a-left>'
+    assert.equal (Commands.normalizeKey '<C-A-LEFT>'), '<c-a-LEFT>'
+    assert.equal (Commands.normalizeKey 'Fa'), 'Fa'
 
 context "Validate commands and options",
   should "have either noRepeat or repeatLimit, but not both", ->
