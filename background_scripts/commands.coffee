@@ -42,7 +42,7 @@ Commands =
   normalizeKey: (key) ->
     key.replace(/<(?:[acm]-){1,3}/ig, (match) -> match.toLowerCase())
        .replace(/<((?:[acm]-){0,3})([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
-          "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
+          "<" + optionalPrefix + (if /[a-z]/.test(keyName) then keyName.toLowerCase() else keyName) + ">")
 
   parseCustomKeyMappings: (customKeyMappings) ->
     for line in customKeyMappings.split "\n"
@@ -97,7 +97,7 @@ Commands =
     # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
     # This regular expression captures two groups: the first is a named key, the second is the remainder of
     # the string.
-    namedKeyRegex = /^(<(?:(?:[acm]-){1,3}.|(?:(?:[acm]-){1,3})?[a-z0-9]{2,5})>)(.*)$/
+    namedKeyRegex = /^(<(?:(?:[acm]-){1,3}.|(?:(?:[acm]-){1,3})?[a-zA-Z0-9]{2,5})>)(.*)$/
     keyStateMapping = {}
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyStateMapping
