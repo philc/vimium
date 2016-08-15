@@ -8,7 +8,7 @@ Clipboard =
   # http://groups.google.com/group/chromium-extensions/browse_thread/thread/49027e7f3b04f68/f6ab2457dee5bf55
   copy: ({data}) ->
     textArea = @_createTextArea()
-    textArea.value = data
+    textArea.value = data.replace /\xa0/g, " "
 
     document.body.appendChild(textArea)
     textArea.select()
@@ -22,7 +22,7 @@ Clipboard =
     document.execCommand("Paste")
     value = textArea.value
     document.body.removeChild(textArea)
-    value
+    value.replace /\xa0/g, " "
 
 
 root = exports ? window
