@@ -49,6 +49,8 @@ KeyboardUtils =
       event.key.toLowerCase() # F1 to F9.
     else if event.key.length == 3 and "F10" <= event.key <= "F12"
       event.key.toLowerCase() # F10 to F12.
+    else if event.key.length > 3 and event.key in ["Backspace"]
+      event.key.toLowerCase() # F10 to F12.
     else
       ""
 
@@ -60,6 +62,7 @@ KeyboardUtils =
       if (event.keyCode >= @keyCodes.f1 && event.keyCode <= @keyCodes.f12)
         return "f" + (1 + event.keyCode - keyCodes.f1)
       return ""
+    return "backspace" if event.keyIdentifier == "U+0008"
 
     keyIdentifier = event.keyIdentifier
     # On Windows, the keyIdentifiers for non-letter keys are incorrect. See
