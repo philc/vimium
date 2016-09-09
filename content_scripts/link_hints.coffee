@@ -326,6 +326,8 @@ class LinkHintsMode
           else if localHintDescriptor.reason == "Scroll."
             # Tell the scroller that this is the activated element.
             handlerStack.bubbleEvent "DOMActivate", target: clickEl
+          else if localHintDescriptor.reason == "Open."
+            clickEl.open = !clickEl.open
           else if DomUtils.isSelectable clickEl
             window.focus()
             DomUtils.simulateSelect clickEl
@@ -637,6 +639,9 @@ LocalHints =
         isClickable ||=
           if element.clientHeight < element.scrollHeight and Scroller.isScrollableElement element
             reason = "Scroll."
+      when "details"
+        isClickable = true
+        reason = "Open."
 
     # An element with a class name containing the text "button" might be clickable.  However, real clickables
     # are often wrapped in elements with such class names.  So, when we find clickables based only on their
