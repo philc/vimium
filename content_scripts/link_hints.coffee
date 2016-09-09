@@ -621,7 +621,8 @@ LocalHints =
       when "button", "select"
         isClickable ||= not element.disabled
       when "label"
-        isClickable ||= element.control? and (@getVisibleClickable element.control).length == 0
+        isClickable ||= element.control? and not element.control.disabled and
+                        (@getVisibleClickable element.control).length == 0
       when "body"
         isClickable ||=
           if element == document.body and not windowIsFocused() and
