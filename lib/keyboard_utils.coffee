@@ -49,8 +49,8 @@ KeyboardUtils =
       event.key.toLowerCase() # F1 to F9.
     else if event.key.length == 3 and "F10" <= event.key <= "F12"
       event.key.toLowerCase() # F10 to F12.
-    else if event.key.length > 3 and event.key in ["Backspace"]
-      event.key.toLowerCase() # F10 to F12.
+    else if event.key == "Backspace"
+      event.key.toLowerCase() # Backspace.
     else
       ""
 
