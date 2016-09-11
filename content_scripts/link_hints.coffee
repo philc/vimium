@@ -228,51 +228,38 @@ class LinkHintsMode
       visibleElement = @getVisibleClickable element
       visibleElements.push visibleElement...
 
-    # TODO(mrmr1993): Consider z-index. z-index affects behviour as follows:
-    #  * The document has a local stacking context.
-    #  * An element with z-index specified
-    #    - sets its z-order position in the containing stacking context, and
-    #    - creates a local stacking context containing its children.
-    #  * An element (1) is shown above another element (2) if either
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
-    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
-    #        + the ancestors of (1) and (2) have equal z-index, and
-    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
-    #
-    # Remove rects from elements where another clickable element lies above it.
     # This loop will check if any corner or center of element is clickable
     # document.elementFromPoint will find an element at a x,y location.
-    # Node.contain checks to see if an element contains another.
+    # Node.contain checks to see if an element contains another. note: someNode.contains(someNode) === true
     # If we do not find our element as a descendant of any element we find, assume it's completely covered.
     nonOverlappingElements = []
     while visibleElement = visibleElements.pop()
-        rect = visibleElement.rect
-        elem = visibleElement.element
-        leftTop = document.elementFromPoint(rect.left, rect.top)
-        leftTopContains = leftTop && leftTop.contains(elem)
-        if leftTopContains
-            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
-            continue
-        leftBottom = document.elementFromPoint(rect.left, rect.bottom)
-        leftBottomContains = leftBottom && leftBottom.contains(elem)
-        if leftBottomContains
-            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
-            continue
-        rightTop = document.elementFromPoint(rect.right, rect.top)
-        rightTopContains = rightTop && rightTop.contains(elem)
-        if rightTopContains
-            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
-            continue
-        rightBottom = document.elementFromPoint(rect.right, rect.bottom)
-        rightBottomContains = rightBottom && rightBottom.contains(elem)
-        if rightBottomContains
-            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
-            continue
-        middle = document.elementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
-        middleContains = middle && middle.contains(elem)
-        if middleContains
-            nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+      if visibleElement.secondClassCitizen
+        continue
+
+      rect = visibleElement.rect
+      element = visibleElement.element
+
+      # check middle of element first, as this is perhaps most likely to return true
+      elementFromMiddlePoint = document.elementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
+      if elementFromMiddlePoint && elementFromMiddlePoint.contains(element)
+        nonOverlappingElements.push visibleElement
+        continue
+
+      # if not in middle, try corners
+      verticalCoordinates = [rect.top, rect.bottom]
+      horizontalCoordinates = [rect.left, rect.right]
+
+      foundElement = false
+      for verticalCoordinate in verticalCoordinates
+        for horizontalCoordinate in horizontalCoordinates
+          elementFromPoint = document.elementFromPoint(verticalCoordinate, horizontalCoordinate)
+          if elementFromPoint && elementFromPoint.contains(element)
+            foundElement = true
+            break
+        if foundElement
+          nonOverlappingElements.push visibleElement
+          break;
 
     nonOverlappingElements
 
