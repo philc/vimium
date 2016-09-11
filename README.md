@@ -159,6 +159,11 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
+Changes since previous release (not in the Chrome Store version)
+
+- Bug fixes:
+    - `<c-a-[>` is no longer handled (incorrectly) as `Escape`.  This also affects `<Alt-Gr-[>`.
+
 1.56 (2016-06-11)
 
 - Vimium now works around a Chromium bug affecting users with non-standard keyboard layouts (see #2147).
