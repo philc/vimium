@@ -66,7 +66,7 @@ Marks =
     # If we're not going to be scrolling to a particular position in the tab, then we choose all tabs with a
     # matching URL prefix.  Otherwise, we require an exact match.
     query = if markInfo.scrollX == markInfo.scrollY == 0 then "#{markInfo.url}*" else markInfo.url
-    chrome.tabs.query { url: "#{markInfo.url}*" }, (tabs) =>
+    chrome.tabs.query { url: query }, (tabs) =>
       if 0 < tabs.length
         # We have at least one matching tab.  Pick one and go to it.
         @pickTab tabs, (tab) =>
