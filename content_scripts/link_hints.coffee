@@ -709,34 +709,38 @@ LocalHints =
           false # This is not a false positive.
         element
 
-    # TODO(mrmr1993): Consider z-index. z-index affects behaviour as follows:
-    #  * The document has a local stacking context.
-    #  * An element with z-index specified
-    #    - sets its z-order position in the containing stacking context, and
-    #    - creates a local stacking context containing its children.
-    #  * An element (1) is shown above another element (2) if either
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2), the
-    #      ancestor of (1) has a higher z-index than the ancestor of (2); or
-    #    - in the last stacking context which contains both an ancestor of (1) and an ancestor of (2),
-    #        + the ancestors of (1) and (2) have equal z-index, and
-    #        + the ancestor of (1) appears later in the DOM than the ancestor of (2).
-    #
-    # Remove rects from elements where another clickable element lies above it.
+    # This loop will check if any corner or center of element is clickable
+  	# document.elementFromPoint will find an element at a x,y location.
+  	# Node.contain checks to see if an element contains another. note: someNode.contains(someNode) === true
+  	# If we do not find our element as a descendant of any element we find, assume it's completely covered.
     localHints = nonOverlappingElements = []
     while visibleElement = visibleElements.pop()
-      rects = [visibleElement.rect]
-      for {rect: negativeRect} in visibleElements
-        # Subtract negativeRect from every rect in rects, and concatenate the arrays of rects that result.
-        rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
-      if rects.length > 0
-        nonOverlappingElements.push extend visibleElement, rect: rects[0]
-      else
-        # Every part of the element is covered by some other element, so just insert the whole element's
-        # rect. Except for elements with tabIndex set (second class citizens); these are often more trouble
-        # than they're worth.
-        # TODO(mrmr1993): This is probably the wrong thing to do, but we don't want to stop being able to
-        # click some elements that we could click before.
-        nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
+      if visibleElement.secondClassCitizen
+        continue
+
+      rect = visibleElement.rect
+      element = visibleElement.element
+
+      # check middle of element first, as this is perhaps most likely to return true
+      elementFromMiddlePoint = document.elementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
+      if elementFromMiddlePoint && elementFromMiddlePoint.contains(element)
+        nonOverlappingElements.push visibleElement
+        continue
+
+      # if not in middle, try corners
+      verticalCoordinates = [rect.top, rect.bottom]
+      horizontalCoordinates = [rect.left, rect.right]
+
+      foundElement = false
+      for verticalCoordinate in verticalCoordinates
+        for horizontalCoordinate in horizontalCoordinates
+          elementFromPoint = document.elementFromPoint(verticalCoordinate, horizontalCoordinate)
+          if elementFromPoint && elementFromPoint.contains(element)
+            foundElement = true
+            break
+        if foundElement
+          nonOverlappingElements.push visibleElement
+          break;
 
     # Position the rects within the window.
     for hint in nonOverlappingElements
