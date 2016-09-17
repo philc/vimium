@@ -64,7 +64,8 @@ Marks =
   # or we create a new tab.
   focusOrLaunch: (markInfo, req) ->
     # If we're not going to be scrolling to a particular position in the tab, then we choose all tabs with a
-    # matching URL prefix.  Otherwise, we require an exact match.
+    # matching URL prefix.  Otherwise, we require an exact match (because it doesn't make sense to scroll
+    # unless there's an exact URL match).
     query = if markInfo.scrollX == markInfo.scrollY == 0 then "#{markInfo.url}*" else markInfo.url
     chrome.tabs.query { url: query }, (tabs) =>
       if 0 < tabs.length
@@ -85,7 +86,8 @@ Marks =
       # Prefer tabs in the current window, if there are any.
       tabsInWindow = tabs.filter (tab) -> tab.windowId == id
       tabs = tabsInWindow if 0 < tabsInWindow.length
-      # If more than one tab remains and the current tab remains a conadidate, then pick another one.
+      # If more than one tab remains and the current tab is still a candidate, then don't pick the current
+      # tab (because jumping to it does nothing).
       tabs = (tab for tab in tabs when not tab.active) if 1 < tabs.length
       # Prefer shorter URLs.
       tabs.sort (a,b) -> a.url.length - b.url.length
