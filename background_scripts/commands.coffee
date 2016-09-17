@@ -72,10 +72,10 @@ Commands =
     Settings.set "passNextKeyKeys",
       (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
 
-    # Push any key mappings for escape into Settings so that they are available in KeyboardUtils.isEscape(),
+    # Push any key mappings for exitMode into Settings so that they are available in KeyboardUtils.isEscape(),
     # and remove those bindings from @keyToCommandRegistry (they're not needed).
     escapeKeyBindings =
-      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "escape")
+      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "exitMode")
 
     if 0 < escapeKeyBindings.length
       delete @keyToCommandRegistry[key] for own key of escapeKeyBindings
@@ -191,7 +191,7 @@ Commands =
       "moveTabRight"]
     misc:
       ["showHelp",
-      "escape",
+      "exitMode",
       "toggleViewSource"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
@@ -221,7 +221,7 @@ Commands =
     "enterVisualLineMode",
     "toggleViewSource",
     "passNextKey",
-    "escape"]
+    "exitMode"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -338,7 +338,7 @@ commandDescriptions =
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text input on the page"]
-  escape: ["Escape (exit the current Vimium mode)"]
+  exitMode: ["exit the current Vimium mode (like Escape)"]
 
   "LinkHints.activateMode": ["Open a link in the current tab"]
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
