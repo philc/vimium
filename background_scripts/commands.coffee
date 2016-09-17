@@ -41,7 +41,7 @@ Commands =
   # them you have to press "shift" as well.
   normalizeKey: (key) ->
     key.replace(/<[acm]-/ig, (match) -> match.toLowerCase())
-       .replace(/<([acm]-)?([a-zA-Z0-9]{2,5})>/g, (match, optionalPrefix, keyName) ->
+       .replace(/<([acm]-)?([a-zA-Z0-9]{2,})>/g, (match, optionalPrefix, keyName) ->
           "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
 
   parseCustomKeyMappings: (customKeyMappings) ->
@@ -97,7 +97,7 @@ Commands =
     # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
     # This regular expression captures two groups: the first is a named key, the second is the remainder of
     # the string.
-    namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,5})>)(.*)$/
+    namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,})>)(.*)$/
     keyStateMapping = {}
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyStateMapping
