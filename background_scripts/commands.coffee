@@ -63,7 +63,9 @@ Commands =
               delete @keyToCommandRegistry[key]
 
           when "unmapAll"
-            @keyToCommandRegistry = {}
+            # We do not unmap "<c-[>" because it was previously hardwired into KeyboardUtils.isEscape(), and
+            # therefore unaffected by "unmapAll".
+            @keyToCommandRegistry = "<c-[>": {command: "exitMode"}
 
     # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
     # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
@@ -303,6 +305,9 @@ defaultKeyMappings =
 
   "m": "Marks.activateCreateMode"
   "`": "Marks.activateGotoMode"
+
+  # <c-[> is mapped to <Escape> in Vim by default.
+  "<c-[>": "exitMode"
 
 
 # This is a mapping of: commandIdentifier => [description, options].
