@@ -343,7 +343,7 @@ commandDescriptions =
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text input on the page"]
-  exitMode: ["exit the current Vimium mode (like Escape)"]
+  exitMode: ["Exit the current Vimium mode (like Escape)"]
 
   "LinkHints.activateMode": ["Open a link in the current tab"]
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
