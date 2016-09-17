@@ -53,16 +53,21 @@ KeyboardUtils =
       ""
 
   getKeyCharUsingKeyIdentifier: (event) ->
-    # Not a letter
-    if (event.keyIdentifier.slice(0, 2) != "U+")
-      return @keyNames[event.keyCode] if (@keyNames[event.keyCode])
-      # F-key
-      if (event.keyCode >= @keyCodes.f1 && event.keyCode <= @keyCodes.f12)
-        return "f" + (1 + event.keyCode - keyCodes.f1)
-      return ""
-    return "backspace" if event.keyIdentifier == "U+0008"
+    # Handle named keys.
+    keyCode = event.keyCode
+    if keyCode
+      if keyCode of @keyNames
+        return @keyNames[keyCode]
+      # Function keys.
+      if @keyCodes.f1 <= keyCode <= @keyCodes.f12
+        return "f" + (1 + keyCode - keyCodes.f1)
 
     keyIdentifier = event.keyIdentifier
+
+    # Not a letter.
+    if not keyIdentifier.startsWith "U+"
+      return ""
+
     # On Windows, the keyIdentifiers for non-letter keys are incorrect. See
     # https://bugs.webkit.org/show_bug.cgi?id=19906 for more details.
     if ((@platform == "Windows" || @platform == "Linux") && @keyIdentifierCorrectionMap[keyIdentifier])
