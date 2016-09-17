@@ -1,16 +1,10 @@
 #
-# Mock the Chrome extension API.
+# Stub the Chrome extension API, if necessary.
 #
+# NOTE(smblott): This is loaded within the live HUD and Vomnibar windows; however, it has no effect there.
+# Within the tests, it provides stubs of various missing Chrome API functions.
 
-root = exports ? window
-root.chromeMessages = []
-
-document.hasFocus = -> true
-
-fakeManifest =
-  version: "1.51"
-
-root.chrome =
+window.chrome ?=
   runtime:
     connect: ->
       onMessage:
@@ -20,8 +14,8 @@ root.chrome =
       postMessage: ->
     onMessage:
       addListener: ->
-    sendMessage: (message) -> chromeMessages.unshift message
-    getManifest: -> fakeManifest
+    sendMessage: ->
+    getManifest: -> version: "1.51"
     getURL: (url) -> "../../#{url}"
   storage:
     local:
