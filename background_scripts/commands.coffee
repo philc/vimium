@@ -73,13 +73,15 @@ Commands =
       (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
 
     # Push any key mappings for escape into Settings so that they are available in KeyboardUtils.isEscape(),
-    # and remove those bindings from the key-to-command registry (they're not needed).
+    # and remove those bindings from @keyToCommandRegistry (they're not needed).
     escapeKeyBindings =
       (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "escape")
-    for own key of escapeKeyBindings
-      delete @keyToCommandRegistry[key]
 
-    Settings.set "escapeKeyBindings", escapeKeyBindings
+    if 0 < escapeKeyBindings.length
+      delete @keyToCommandRegistry[key] for own key of escapeKeyBindings
+      Settings.set "escapeKeyBindings", escapeKeyBindings
+    else
+      Settings.clear "escapeKeyBindings"
 
   # Command options follow command mappings, and are of one of two forms:
   #   key=value     - a value
@@ -219,8 +221,7 @@ Commands =
     "enterVisualLineMode",
     "toggleViewSource",
     "passNextKey",
-    "escape"
-  ]
+    "escape"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -337,7 +338,7 @@ commandDescriptions =
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text input on the page"]
-  escape: ["Escape"]
+  escape: ["Escape (exit the current Vimium mode)"]
 
   "LinkHints.activateMode": ["Open a link in the current tab"]
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]
