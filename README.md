@@ -161,6 +161,7 @@ Release Notes
 
 Changes since previous release (not in the Chrome Store version)
 
+- You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
 - Bug fixes:
     - `<c-a-[>` is no longer handled (incorrectly) as `Escape`.  This also affects `<Alt-Gr-[>`.
 
