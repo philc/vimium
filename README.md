@@ -391,7 +391,7 @@ Changes since previous release (not in the Chrome Store version)
 -  In link hints mode, holding down the shift key will now toggle between opening in the current tab and
    opening in a new tab.
 -  Two new commands (`zH` and `zL`) to scroll to the left and right edges of the page.
--  A new command (`gi`) to focus the first (or n-th) text input box on the page.
+-  A new command (`gi`) to focus the first (or n-th) visible text input.
 -  A new command (`<a-f>`) to open up multiple links at a time in new tabs.
 -  Frame support.
 -  More robust support for non-US keyboard layouts.
