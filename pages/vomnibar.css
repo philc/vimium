@@ -85,6 +85,10 @@
   padding: 2px 0;
 }
 
+.vomnibarSuggestion {
+  cursor: pointer;
+}
+
 #vomnibar li .vomnibarIcon {
   background-position-y: center;
   background-size: 16px;
