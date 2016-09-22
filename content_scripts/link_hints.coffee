@@ -723,7 +723,7 @@ LocalHints =
 
       # check middle of element first, as this is perhaps most likely to return true
       elementFromMiddlePoint = document.elementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
-      if elementFromMiddlePoint && (element.contains(elementFromMiddlePoint) or elementFromMiddlePoint.contains(element))
+      if elementFromMiddlePoint && element.contains(elementFromMiddlePoint)
         nonOverlappingElements.push visibleElement
         continue
 
@@ -735,7 +735,7 @@ LocalHints =
       for verticalCoordinate in verticalCoordinates
         for horizontalCoordinate in horizontalCoordinates
           elementFromPoint = document.elementFromPoint(verticalCoordinate, horizontalCoordinate)
-          if elementFromPoint && (element.contains(elementFromPoint) or elementFromPoint.contains(element))
+          if elementFromPoint && element.contains(elementFromPoint)
             foundElement = true
             break
         if foundElement
