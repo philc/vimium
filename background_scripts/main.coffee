@@ -210,6 +210,7 @@ BackgroundCommands =
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
   openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
   togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
+  toggleMuteTab: ({tab}) -> chrome.tabs.update tab.id, {muted: !tab.muted}
   moveTabLeft: moveTab
   moveTabRight: moveTab
   nextFrame: ({count, frameId, tabId}) ->
