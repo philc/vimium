@@ -155,6 +155,23 @@ TabOperations =
       openerTabId: request.tab.id
     chrome.tabs.create tabConfig, callback
 
+toggleMuteTab = do ->
+  muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
+
+  ({tab: currentTab, registryEntry}) ->
+    if registryEntry.options.all? or registryEntry.options.other?
+      # If there are any audible, unmuted tabs, then we mute them; otherwise we unmute any muted tabs.
+      chrome.tabs.query {audible: true}, (tabs) ->
+        if registryEntry.options.other?
+          tabs = (tab for tab in tabs when tab.id != currentTab.id)
+        audibleUnmutedTabs = (tab for tab in tabs when tab.audible and not tab.mutedInfo.muted)
+        if 0 < audibleUnmutedTabs.length
+          muteTab tab for tab in audibleUnmutedTabs
+        else
+          muteTab tab for tab in tabs when tab.mutedInfo.muted
+    else
+      muteTab currentTab
+
 #
 # Selects the tab with the ID specified in request.id
 #
@@ -210,7 +227,7 @@ BackgroundCommands =
   openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
   openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
   togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
-  toggleMuteTab: ({tab}) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
+  toggleMuteTab: toggleMuteTab
   moveTabLeft: moveTab
   moveTabRight: moveTab
   nextFrame: ({count, frameId, tabId}) ->
