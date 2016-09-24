@@ -166,6 +166,7 @@ Changes since previous release (not in the Chrome Store version)
 - You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
 - Bug fixes:
     - `<c-a-[>` is no longer handled (incorrectly) as `Escape`.  This also affects `<Alt-Gr-[>`.
+    - If `goX` is mapped, then `go` no longer launches the vomnibar.  This only affects three-key (or longer) bindings.
 
 1.56 (2016-06-11)
 
