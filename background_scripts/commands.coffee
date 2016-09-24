@@ -171,6 +171,7 @@ Commands =
       "lastTab",
       "duplicateTab",
       "togglePinTab",
+      "toggleMuteTab",
       "removeTab",
       "restoreTab",
       "moveTabToNewWindow",
@@ -273,6 +274,7 @@ defaultKeyMappings =
   "X": "restoreTab"
 
   "<a-p>": "togglePinTab"
+  "<a-m>": "toggleMuteTab"
 
   "o": "Vomnibar.activate"
   "O": "Vomnibar.activateInNewTab"
@@ -363,6 +365,7 @@ commandDescriptions =
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
   togglePinTab: ["Pin/unpin current tab", { background: true, noRepeat: true }]
+  toggleMuteTab: ["Mute/unmute current tab", { background: true, noRepeat: true }]
 
   closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
   closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]
