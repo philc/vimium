@@ -159,11 +159,16 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
-Changes since previous release (not in the Chrome Store version)
+Changes since the previous release (not in the Chrome Store version)
 
 - New commands:
     - `toggleMuteTab` - mute or unmute the current tab (default binding `<a-m>`).
-- You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
+- Other new features:
+    - You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
+- Changes:
+    - Global marks now search for an existing matching tab by prefix (rather than exact match).
+      This allows global marks to be used as quick bookmarks on sites (like Facebook, Gmail, etc)
+      where the URL changes as you navigate around.
 - Bug fixes:
     - `<c-a-[>` is no longer handled (incorrectly) as `Escape`.  This also affects `<Alt-Gr-[>`.
     - If `goX` is mapped, then `go` no longer launches the vomnibar.  This only affects three-key (or longer) bindings.
