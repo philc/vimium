@@ -63,10 +63,14 @@ Marks =
   # The tab we're trying to find no longer exists.  We either find another tab with a matching URL and use it,
   # or we create a new tab.
   focusOrLaunch: (markInfo, req) ->
-    chrome.tabs.query { url: markInfo.url }, (tabs) =>
+    # If we're not going to be scrolling to a particular position in the tab, then we choose all tabs with a
+    # matching URL prefix.  Otherwise, we require an exact match (because it doesn't make sense to scroll
+    # unless there's an exact URL match).
+    query = if markInfo.scrollX == markInfo.scrollY == 0 then "#{markInfo.url}*" else markInfo.url
+    chrome.tabs.query { url: query }, (tabs) =>
       if 0 < tabs.length
-        # We have a matching tab: use it (prefering, if there are more than one, one in the current window).
-        @pickTabInWindow tabs, (tab) =>
+        # We have at least one matching tab.  Pick one and go to it.
+        @pickTab tabs, (tab) =>
           @gotoPositionInTab extend markInfo, tabId: tab.id
       else
         # There is no existing matching tab, we'll have to create one.
@@ -75,11 +79,19 @@ Marks =
           # is loaded, its DOM is ready and it registers with the background page.
           tabLoadedHandlers[tab.id] = => @gotoPositionInTab extend markInfo, tabId: tab.id
 
-  # Given a list of tabs, pick one in the current window, if possible, otherwise just pick any.
-  pickTabInWindow: (tabs, continuation) ->
+  # Given a list of tabs candidate tabs, pick one.  Prefer tabs in the current window and tabs with shorter
+  # (matching) URLs.
+  pickTab: (tabs, callback) ->
     chrome.windows.getCurrent ({ id }) ->
+      # Prefer tabs in the current window, if there are any.
       tabsInWindow = tabs.filter (tab) -> tab.windowId == id
-      continuation tabsInWindow[0] ? tabs[0]
+      tabs = tabsInWindow if 0 < tabsInWindow.length
+      # If more than one tab remains and the current tab is still a candidate, then don't pick the current
+      # tab (because jumping to it does nothing).
+      tabs = (tab for tab in tabs when not tab.active) if 1 < tabs.length
+      # Prefer shorter URLs.
+      tabs.sort (a,b) -> a.url.length - b.url.length
+      callback tabs[0]
 
 root = exports ? window
 root.Marks = Marks

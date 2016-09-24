@@ -257,8 +257,8 @@ Frame =
     window.removeEventListener "hashchange", onFocus
 
 setScrollPosition = ({ scrollX, scrollY }) ->
-  if DomUtils.isTopFrame()
-    DomUtils.documentReady ->
+  DomUtils.documentReady ->
+    if DomUtils.isTopFrame()
       window.focus()
       document.body.focus()
       if 0 < scrollX or 0 < scrollY
