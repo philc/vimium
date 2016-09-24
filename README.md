@@ -81,7 +81,6 @@ Manipulating tabs:
     X       restore closed tab (i.e. unwind the 'x' command)
     T       search through your open tabs
     <a-p>   pin/unpin current tab
-    <a-m>   mute/unmute current tab
 
 Using marks:
 
@@ -162,7 +161,8 @@ Release Notes
 
 Changes since previous release (not in the Chrome Store version)
 
-- New commands: "mute/unmute tab".
+- New commands:
+    - `toggleMuteTab` - mute or unmute the current tab (default binding `<a-m>`).
 - You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
 - Bug fixes:
     - `<c-a-[>` is no longer handled (incorrectly) as `Escape`.  This also affects `<Alt-Gr-[>`.

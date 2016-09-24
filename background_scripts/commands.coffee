@@ -364,8 +364,8 @@ commandDescriptions =
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }]
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }]
-  togglePinTab: ["Pin/unpin current tab", { background: true, noRepeat: true }]
-  toggleMuteTab: ["Mute/unmute current tab", { background: true, noRepeat: true }]
+  togglePinTab: ["Pin or unpin current tab", { background: true, noRepeat: true }]
+  toggleMuteTab: ["Mute or unmute current tab", { background: true, noRepeat: true }]
 
   closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}]
   closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}]
