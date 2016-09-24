@@ -96,8 +96,8 @@ class KeyHandlerMode extends Mode
     @countPrefix = 0 unless keyChar of @keyState[0]
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
     @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
-    command = (mapping for mapping in @keyState when "command" of mapping)[0]
-    if command
+    if @keyState[0].command?
+      command = @keyState[0]
       count = if 0 < @countPrefix then @countPrefix else 1
       bgLog "Call #{command.command}[#{count}] (#{@name})"
       @reset()
