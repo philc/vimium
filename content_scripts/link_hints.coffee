@@ -312,7 +312,7 @@ class LinkHintsMode
   updateKeyState: ({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
     extend @markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue}
 
-    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints @hintMarkers, tabCount
+    {linksMatched, userMightOverType} = @markerMatcher.getMatchingHints @hintMarkers, tabCount, this.getNextZIndex.bind this
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
@@ -513,7 +513,7 @@ class FilterHints
     # strings.  This ensures that we always get hint strings in the same order.
     @filterLinkHints hintMarkers
 
-  getMatchingHints: (hintMarkers, tabCount = 0) ->
+  getMatchingHints: (hintMarkers, tabCount, getNextZIndex) ->
     # At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
     # input. Use them to filter the link hints accordingly.
     matchString = @hintKeystrokeQueue.join ""
@@ -526,6 +526,7 @@ class FilterHints
     @activeHintMarker?.classList?.remove "vimiumActiveHintMarker"
     @activeHintMarker = linksMatched[tabCount]
     @activeHintMarker?.classList?.add "vimiumActiveHintMarker"
+    @activeHintMarker.style.zIndex = getNextZIndex()
 
     linksMatched: linksMatched
     userMightOverType: @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
