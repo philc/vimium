@@ -159,7 +159,7 @@ class LinkHintsMode
     @stableSortCount = 0
     @hintMarkers = (@createMarkerFor desc for desc in hintDescriptors)
     @markerMatcher = new (if Settings.get "filterLinkHints" then FilterHints else AlphabetHints)
-    @markerMatcher.fillInMarkers @hintMarkers
+    @markerMatcher.fillInMarkers @hintMarkers, @.getNextZIndex.bind this
 
     @hintMode = new Mode
       name: "hint/#{@mode.name}"
@@ -507,12 +507,12 @@ class FilterHints
     marker.innerHTML = spanWrap(marker.hintString +
         (if marker.showLinkText then ": " + linkText else ""))
 
-  fillInMarkers: (hintMarkers) ->
+  fillInMarkers: (hintMarkers, getNextZIndex) ->
     @renderMarker marker for marker in hintMarkers when marker.isLocalMarker
 
-    # We use @filterLinkHints() here (although we know that all of the hints will match) to fill in the hint
-    # strings.  This ensures that we always get hint strings in the same order.
-    @filterLinkHints hintMarkers
+    # We use @getMatchingHints() here (although we know that all of the hints will match) to get an order on
+    # the hints and highlight the first one.
+    @getMatchingHints hintMarkers, 0, getNextZIndex
 
   getMatchingHints: (hintMarkers, tabCount, getNextZIndex) ->
     # At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the latest
