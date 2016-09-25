@@ -197,36 +197,37 @@ class LinkHintsMode
       indicator = @mode.indicator + (if typedCharacters then ": \"#{typedCharacters}\"" else "") + "."
       @hintMode.setIndicator indicator
 
-  #
-  # Creates a link marker for the given link.
-  #
-  createMarkerFor: do ->
+  getNextZIndex: do ->
     # This is the starting z-index value; it produces z-index values which are greater than all of the other
     # z-index values used by Vimium.
     baseZIndex = 2140000000
+    -> baseZIndex += 1
 
-    (desc) ->
-      marker =
-        if desc.frameId == frameId
-          localHintDescriptor = HintCoordinator.getLocalHintMarker desc
-          el = DomUtils.createElement "div"
-          el.rect = localHintDescriptor.rect
-          el.style.left = el.rect.left + "px"
-          el.style.top = el.rect.top  + "px"
-          # Each hint marker is assigned a different z-index.
-          el.style.zIndex = baseZIndex += 1
-          extend el,
-            className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-            showLinkText: localHintDescriptor.showLinkText
-            localHintDescriptor: localHintDescriptor
-        else
-          {}
+  #
+  # Creates a link marker for the given link.
+  #
+  createMarkerFor: (desc) ->
+    marker =
+      if desc.frameId == frameId
+        localHintDescriptor = HintCoordinator.getLocalHintMarker desc
+        el = DomUtils.createElement "div"
+        el.rect = localHintDescriptor.rect
+        el.style.left = el.rect.left + "px"
+        el.style.top = el.rect.top  + "px"
+        # Each hint marker is assigned a different z-index.
+        el.style.zIndex = @getNextZIndex()
+        extend el,
+          className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+          showLinkText: localHintDescriptor.showLinkText
+          localHintDescriptor: localHintDescriptor
+      else
+        {}
 
-      extend marker,
-        hintDescriptor: desc
-        isLocalMarker: desc.frameId == frameId
-        linkText: desc.linkText
-        stableSortCount: ++@stableSortCount
+    extend marker,
+      hintDescriptor: desc
+      isLocalMarker: desc.frameId == frameId
+      linkText: desc.linkText
+      stableSortCount: ++@stableSortCount
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (event) ->
