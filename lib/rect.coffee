@@ -82,5 +82,14 @@ Rect =
     @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
         (Math.min rect1.right, rect2.right), (Math.min rect1.bottom, rect2.bottom)
 
+  # Determine whether two rects overlap.
+  rectsOverlap: do ->
+    halfOverlapChecker = (rect1, rect2) ->
+      (rect1.left <= rect2.left <= rect1.right or rect1.left <= rect2.right <= rect1.right) and
+        (rect1.top <= rect2.top <= rect1.bottom or rect1.top <= rect2.bottom <= rect1.bottom)
+
+    (rect1, rect2) ->
+      halfOverlapChecker(rect1, rect2) or halfOverlapChecker rect2, rect1
+
 root = exports ? window
 root.Rect = Rect

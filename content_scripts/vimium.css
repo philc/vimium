@@ -3,9 +3,9 @@
  * use the same CSS class names that the page is using, so the page's CSS doesn't mess with the style of our
  * Vimium dialogs.
  *
- * The z-indexes of Vimium elements are very large, because we always want them to show on top. Chrome may
- * support up to Number.MAX_VALUE, which is approximately 1.7976e+308. We're using 2^31, which is the max
- * value of a signed 32 bit int. Let's try larger values if 2**31 empirically isn't large enough.
+ * The z-indexes of Vimium elements are very large, because we always want them to show on top.  We know
+ * that Chrome supports z-index values up to about 2^31.  The values we use are large numbers approaching
+ * that bound.  However, we must leave headroom for link hints.  Hint marker z-indexes start at 2140000001.
  */
 
 /*
@@ -58,7 +58,7 @@ tr.vimiumReset {
   vertical-align: baseline;
   white-space: normal;
   width: auto;
-  z-index: 2147483648;
+  z-index: 2140000000; /* Vimium's reference z-index value. */
 }
 
 thead.vimiumReset, tbody.vimiumReset {
@@ -147,7 +147,7 @@ iframe.vimiumHelpDialogFrame {
   display: block;
   position: fixed;
   border: none;
-  z-index: 2147483645; /* One less than hint markers. */
+  z-index: 2139999997; /* Three less than the reference value. */
 }
 
 div#vimiumHelpDialogContainer {
@@ -335,8 +335,7 @@ iframe.vimiumHUDFrame {
   padding: 0px;
   margin: 0;
   border: none;
-  /* One less than vimium's hint markers, so link hints can be shown e.g. for the HUD panel's close button. */
-  z-index: 2147483646;
+  z-index: 2149999998; /* Two less than the reference value. */
   opacity: 0;
 }
 
@@ -377,9 +376,7 @@ iframe.vomnibarFrame {
   margin: 0 0 0 -40%;
   border: none;
   font-family: sans-serif;
-
-  /* One less than hint markers. */
-  z-index: 2147483646;
+  z-index: 2149999998; /* Two less than the reference value. */
 }
 
 div.vimiumFlash {
@@ -387,7 +384,7 @@ div.vimiumFlash {
   padding: 1px;
   background-color: transparent;
   position: absolute;
-  z-index: 2147483648;
+  z-index: 2140000000;
 }
 
 /* UIComponent CSS */
