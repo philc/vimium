@@ -288,6 +288,7 @@ class LinkHintsMode
       HintCoordinator.sendMessage "rotateHints"
 
     else
+      @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
       return
 
     # We've handled the event, so suppress it and update the mode indicator.
