@@ -527,7 +527,7 @@ class FilterHints
     @activeHintMarker?.classList?.remove "vimiumActiveHintMarker"
     @activeHintMarker = linksMatched[tabCount]
     @activeHintMarker?.classList?.add "vimiumActiveHintMarker"
-    @activeHintMarker.style.zIndex = getNextZIndex()
+    @activeHintMarker?.style?.zIndex = getNextZIndex()
 
     linksMatched: linksMatched
     userMightOverType: @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
