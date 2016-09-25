@@ -283,6 +283,7 @@ class LinkHintsMode
       @updateVisibleMarkers @tabCount
 
     else if event.keyCode == keyCodes.space and @markerMatcher.shouldRotateHints event
+      @tabCount = previousTabCount
       HintCoordinator.sendMessage "rotateHints"
 
     else
