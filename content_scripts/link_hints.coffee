@@ -201,7 +201,8 @@ class LinkHintsMode
   # Creates a link marker for the given link.
   #
   createMarkerFor: do ->
-    # This generates z-index values which are greater than all of the other z-index values used by Vimium.
+    # This is the starting z-index value; it produces z-index values which are greater than all of the other
+    # z-index values used by Vimium.
     baseZIndex = 2140000000
 
     (desc) ->
@@ -342,16 +343,18 @@ class LinkHintsMode
         stackForThisMarker = null
         stacks =
           for stack in stacks
-            if markerOverlapsStack marker, stack
-              if stackForThisMarker?
-                # Merge stack into stackForThisMarker and discard stack.
-                stackForThisMarker.push stack...
-                continue
-              else
-                stack.push marker
-                stackForThisMarker = stack
+            markerOverlapsThisStack = markerOverlapsStack marker, stack
+            if markerOverlapsThisStack and not stackForThisMarker?
+              # We've found an existing stack for this marker.
+              stack.push marker
+              stackForThisMarker = stack
+            else if markerOverlapsThisStack and stackForThisMarker?
+              # This marker overlaps a second (or subsequent) stack; merge that stack into stackForThisMarker
+              # and discard it.
+              stackForThisMarker.push stack...
+              continue # Discard this stack.
             else
-              stack
+              stack # Keep this stack.
         stacks.push [marker] unless stackForThisMarker?
 
       # Rotate the z-indexes within each stack.
