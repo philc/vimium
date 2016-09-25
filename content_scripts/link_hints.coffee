@@ -110,6 +110,7 @@ HintCoordinator =
 
   # The following messages are exchanged between frames while link-hints mode is active.
   updateKeyState: (request) -> @linkHintsMode.updateKeyState request
+  rotateHints: -> @linkHintsMode.rotateHints()
   setOpenLinkMode: ({modeIndex}) -> @linkHintsMode.setOpenLinkMode availableModes[modeIndex], false
   activateActiveHintMarker: -> @linkHintsMode.activateLink @linkHintsMode.markerMatcher.activeHintMarker
   getLocalHintMarker: (hint) -> if hint.frameId == frameId then @localHints[hint.localIndex] else null
@@ -199,26 +200,33 @@ class LinkHintsMode
   #
   # Creates a link marker for the given link.
   #
-  createMarkerFor: (desc) ->
-    marker =
-      if desc.frameId == frameId
-        localHintDescriptor = HintCoordinator.getLocalHintMarker desc
-        el = DomUtils.createElement "div"
-        el.rect = localHintDescriptor.rect
-        el.style.left = el.rect.left + "px"
-        el.style.top = el.rect.top  + "px"
-        extend el,
-          className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
-          showLinkText: localHintDescriptor.showLinkText
-          localHintDescriptor: localHintDescriptor
-      else
-        {}
+  createMarkerFor: do ->
+    # This is the starting z-index value; it produces z-index values which are greater than all of the other
+    # z-index values used by Vimium.
+    baseZIndex = 2140000000
 
-    extend marker,
-      hintDescriptor: desc
-      isLocalMarker: desc.frameId == frameId
-      linkText: desc.linkText
-      stableSortCount: ++@stableSortCount
+    (desc) ->
+      marker =
+        if desc.frameId == frameId
+          localHintDescriptor = HintCoordinator.getLocalHintMarker desc
+          el = DomUtils.createElement "div"
+          el.rect = localHintDescriptor.rect
+          el.style.left = el.rect.left + "px"
+          el.style.top = el.rect.top  + "px"
+          # Each hint marker is assigned a different z-index.
+          el.style.zIndex = baseZIndex += 1
+          extend el,
+            className: "vimiumReset internalVimiumHintMarker vimiumHintMarker"
+            showLinkText: localHintDescriptor.showLinkText
+            localHintDescriptor: localHintDescriptor
+        else
+          {}
+
+      extend marker,
+        hintDescriptor: desc
+        isLocalMarker: desc.frameId == frameId
+        linkText: desc.linkText
+        stableSortCount: ++@stableSortCount
 
   # Handles <Shift> and <Ctrl>.
   onKeyDownInMode: (event) ->
@@ -274,6 +282,9 @@ class LinkHintsMode
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
       @updateVisibleMarkers @tabCount
 
+    else if event.keyCode == keyCodes.space and @markerMatcher.shouldRotateHints event
+      HintCoordinator.sendMessage "rotateHints"
+
     else
       return
 
@@ -309,6 +320,51 @@ class LinkHintsMode
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
 
     @setIndicator()
+
+  # Rotate the hints' z-index values so that hidden hints become visible.
+  rotateHints: do ->
+    markerOverlapsStack = (marker, stack) ->
+      for otherMarker in stack
+        return true if Rect.rectsOverlap marker.markerRect, otherMarker.markerRect
+      false
+
+    ->
+      # Get local, visible hint markers.
+      localHintMarkers = @hintMarkers.filter (marker) ->
+        marker.isLocalMarker and marker.style.display != "none"
+
+      # Fill in the markers' rects, if necessary.
+      marker.markerRect ?= marker.getClientRects()[0] for marker in localHintMarkers
+
+      # Calculate the overlapping groups of hints.  This is O(n^2) in the best case and O(n^3) in the worst
+      # case.
+      stacks = []
+      for marker in localHintMarkers
+        stackForThisMarker = null
+        stacks =
+          for stack in stacks
+            markerOverlapsThisStack = markerOverlapsStack marker, stack
+            if markerOverlapsThisStack and not stackForThisMarker?
+              # We've found an existing stack for this marker.
+              stack.push marker
+              stackForThisMarker = stack
+            else if markerOverlapsThisStack and stackForThisMarker?
+              # This marker overlaps a second (or subsequent) stack; merge that stack into stackForThisMarker
+              # and discard it.
+              stackForThisMarker.push stack...
+              continue # Discard this stack.
+            else
+              stack # Keep this stack.
+        stacks.push [marker] unless stackForThisMarker?
+
+      # Rotate the z-indexes within each stack.
+      for stack in stacks
+        if 1 < stack.length
+          zIndexes = (marker.style.zIndex for marker in stack)
+          zIndexes.push zIndexes[0]
+          marker.style.zIndex = zIndexes[index + 1] for marker, index in stack
+
+      null # Prevent Coffeescript from building an unnecessary array.
 
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
@@ -419,6 +475,9 @@ class AlphabetHints
   pushKeyChar: (keyChar, keydownKeyChar) ->
     @hintKeystrokeQueue.push (if @useKeydown then keydownKeyChar else keyChar)
   popKeyChar: -> @hintKeystrokeQueue.pop()
+
+  # For alphabet hints, <Space> always rotates the hints, regardless of modifiers.
+  shouldRotateHints: -> true
 
 # Use numbers (usually) for hints, and also filter links by their text.
 class FilterHints
@@ -539,6 +598,10 @@ class FilterHints
         # Prefer matches in shorter texts.  To keep things balanced for links without any text, we just weight
         # them as if their length was 100 (so, quite long).
         score / Math.log 1 + (linkMarker.linkText.length || 100)
+
+  # For filtered hints, we require a modifier (because <Space> on its own is a token separator).
+  shouldRotateHints: (event) ->
+    event.ctrlKey or event.altKey or event.metaKey
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.

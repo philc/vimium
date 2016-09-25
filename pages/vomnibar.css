@@ -23,8 +23,7 @@
   border-radius: 4px;
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
   border: 1px solid #aaa;
-  /* One less than hint markers and the help dialog. */
-  z-index: 2147483646;
+  z-index: 2139999999; /* One less than hint markers and the help dialog (see ../content_scripts/vimium.css). */
 }
 
 #vomnibar input {
