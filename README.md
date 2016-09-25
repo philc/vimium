@@ -165,6 +165,9 @@ Changes since the previous release (not in the Chrome Store version)
     - `toggleMuteTab` - mute or unmute the current tab (default binding `<a-m>`).
 - Other new features:
     - You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
+    - For link hints, when one hint marker is covered by another, `<Space>` now
+      rotates the stacking order.  If you use filtered hints, you'll need to
+      use a modifier (e.g. `<c-Space>`).
 - Changes:
     - Global marks now search for an existing matching tab by prefix (rather than exact match).
       This allows global marks to be used as quick bookmarks on sites (like Facebook, Gmail, etc)
