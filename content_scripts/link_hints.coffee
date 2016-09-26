@@ -858,8 +858,12 @@ LocalHints =
     else if hint.reason?
       linkText = hint.reason
       showLinkText = true
+    else if 0 < element.textContent.length
+      linkText = element.textContent[...256]
+    else if element.hasAttribute "title"
+      linkText = element.getAttribute "title"
     else
-      linkText = element.textContent[...256] || element.innerHTML[...256]
+      linkText = element.innerHTML[...256]
 
     {linkText: linkText.trim(), showLinkText}
 
