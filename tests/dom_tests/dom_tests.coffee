@@ -134,6 +134,35 @@ context "False positives in link-hint",
     for hintMarker in hintMarkers
       assert.equal "clickable", hintMarker.linkText
 
+context "jsaction matching",
+
+  setup ->
+    stubSettings "filterLinkHints", true
+    testContent = '<p id="test-paragraph">clickable</p>'
+    document.getElementById("test-div").innerHTML = testContent
+    @element = document.getElementById("test-paragraph")
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "select jsaction elements", ->
+    for text in ["click:namespace.actionName", "namespace.actionName"]
+      @element.setAttribute "jsaction", text
+      linkHints = activateLinkHintsMode()
+      hintMarkers = getHintMarkers().filter (marker) -> marker.linkText != "Frame."
+      linkHints.deactivateMode()
+      assert.equal 1, hintMarkers.length
+      assert.equal "clickable", hintMarkers[0].linkText
+      assert.equal @element, hintMarkers[0].localHintDescriptor.element
+
+  should "not select inactive jsaction elements", ->
+    for text in ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"]
+      @element.setAttribute "jsaction", text
+      linkHints = activateLinkHintsMode()
+      hintMarkers = getHintMarkers().filter (marker) -> marker.linkText != "Frame."
+      linkHints.deactivateMode()
+      assert.equal 0, hintMarkers.length
+
 inputs = []
 context "Test link hints for focusing input elements correctly",
 

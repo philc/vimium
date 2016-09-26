@@ -670,11 +670,17 @@ LocalHints =
       isClickable = true
 
     # Check for jsaction event listeners on the element.
-    if element.hasAttribute "jsaction"
+    if not isClickable and element.hasAttribute "jsaction"
       jsactionRules = element.getAttribute("jsaction").split(";")
       for jsactionRule in jsactionRules
-        ruleSplit = jsactionRule.split ":"
-        isClickable ||= ruleSplit[0] == "click" or (ruleSplit.length == 1 and ruleSplit[0] != "none")
+        ruleSplit = jsactionRule.trim().split ":"
+        if 1 <= ruleSplit.length <= 2
+          [eventType, namespace, actionName ] =
+            if ruleSplit.length == 1
+              ["click", ruleSplit[0].trim().split(".")..., "_"]
+            else
+              [ruleSplit[0], ruleSplit[1].trim().split(".")..., "_"]
+          isClickable ||= eventType == "click" and namespace != "none" and actionName != "_"
 
     # Check for tagNames which are natively clickable.
     switch tagName
