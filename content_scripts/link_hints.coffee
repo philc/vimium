@@ -339,8 +339,7 @@ class LinkHintsMode
       # Fill in the markers' rects, if necessary.
       marker.markerRect ?= marker.getClientRects()[0] for marker in localHintMarkers
 
-      # Calculate the overlapping groups of hints.  This is O(n^2) in the best case and O(n^3) in the worst
-      # case.
+      # Calculate the overlapping groups of hints.  We call each group a "stack".  This is O(n^2).
       stacks = []
       for marker in localHintMarkers
         stackForThisMarker = null
