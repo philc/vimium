@@ -153,7 +153,7 @@ input[type="text"], textarea {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
   color: #444;
-  font: inherit;
+  font-size: inherit;
   padding: 3px;
 }
 button:focus, input[type="text"]:focus, textarea:focus {
