@@ -16,6 +16,7 @@ div#wrapper, #footerWrapper {
    * - 35px (to ensure right margin is same as left margin of #wrapper)
    */
   width: calc(100% - 390px);
+  max-width: 810px; /* Capped at 1200px (1200px - 390px) */
   margin-left: 35px;
 }
 header {
