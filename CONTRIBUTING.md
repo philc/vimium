@@ -19,7 +19,7 @@ Please include the following when reporting an issue:
 Vimium is written in Coffeescript, which compiles to Javascript. To
 install Vimium from source:
 
- 1. Install [Coffeescript](http://coffeescript.org/#installation).  As of 2016-09-30, Vimium fails to build with Coffeescript version 1.11; use version 1.10 instead.
+ 1. Install [Coffeescript](http://coffeescript.org/#installation).
  1. Run `cake build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
  1. Navigate to `chrome://extensions`
  1. Toggle into Developer Mode

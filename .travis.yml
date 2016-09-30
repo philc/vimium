@@ -1,8 +1,7 @@
 language: node_js
 node_js: 0.12
 before_install:
-  # We need to use coffee-script@1.10.0.  See #2273.
-  - "npm install -g coffee-script@1.10.0"
+  - "npm install -g coffee-script"
   - "npm install path@0.11"
   - "npm install util"
   - "cake build"
