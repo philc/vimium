@@ -184,40 +184,20 @@ Settings.init()
 # Perform migration from old settings versions, if this is the background page.
 if Utils.isBackgroundPage()
 
-  if not Settings.get "settingsVersion"
+  unless Settings.get "settingsVersion"
     # This is a new install.  For some settings, we retain a legacy default behaviour for existing users but
     # use a non-default behaviour for new users.
 
-    # For waitForEnterForFilteredHints, we (smblott) think that "true" gives a better UX; see #1950.  However,
-    # forcing the change on existing users would be unnecessarily disruptive.  So, only new users default to
-    # "true".
+    # For waitForEnterForFilteredHints, "true" gives a better UX; see #1950.  However, forcing the change on
+    # existing users would be unnecessarily disruptive.  So, only new users default to "true".
     Settings.set "waitForEnterForFilteredHints", true
 
   # We use settingsVersion to coordinate any necessary schema changes.
   Settings.set("settingsVersion", Utils.getCurrentVersion())
 
-  # In 1.46 we migrated the old "excludedUrls" setting to the new "exclusionRules" setting.  And we kept a
-  # backup in "excludedUrlsBackup".  Now (post 1.54, post 2016-02-12) we can clear up that backup (and any
-  # extraordinalrily old "excludedUrls" setting).
-  Settings.nuke "excludedUrlsBackup"
-  Settings.nuke "excludedUrls"
-
-  # Migration (post 1.54, post 2016-2-12).  Nuke legacy "findModeRawQuery" setting.
-  Settings.nuke "findModeRawQuery"
-
-  # Migration (after 1.51, 2015/6/17).
-  # Copy options with non-default values (and which are not in synced storage) to chrome.storage.local;
-  # thereby making these settings accessible within content scripts.
-  do (migrationKey = "copyNonDefaultsToChromeStorage-20150717") ->
-    unless localStorage[migrationKey]
-      chrome.storage.sync.get null, (items) ->
-        unless chrome.runtime.lastError
-          updates = {}
-          for own key of localStorage
-            if Settings.shouldSyncKey(key) and not items[key]
-              updates[key] = localStorage[key]
-          chrome.storage.local.set updates, ->
-            localStorage[migrationKey] = not chrome.runtime.lastError
+  # Remove legacy key which was used to control storage migration.  This was after 1.57 (2016-10-01), and can
+  # be removed after 1.58 has been out for sufficiently long.
+  Settings.nuke "copyNonDefaultsToChromeStorage-20150717"
 
 root = exports ? window
 root.Settings = Settings
