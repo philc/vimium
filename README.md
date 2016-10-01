@@ -175,6 +175,7 @@ Changes since the previous release (not in the Chrome Store version)
       This allows global marks to be used as quick bookmarks on sites (like Facebook, Gmail, etc)
       where the URL changes as you navigate around.
 - Bug fixes:
+    - `/i` can no longer hang Vimium while the page is loading.
     - `<c-a-[>` is no longer handled (incorrectly) as `Escape`.  This also affects `<Alt-Gr-[>`.
     - If `goX` is mapped, then `go` no longer launches the vomnibar.  This only affects three-key (or longer) bindings.
 
