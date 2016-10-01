@@ -159,12 +159,15 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
+<!--
 Changes since the previous release (not in the Chrome Store version)
+-->
+
+1.57 (2016-10-01)
 
 - New commands:
     - `toggleMuteTab` - mute or unmute the current tab (default binding
-      `<a-m>`), see also [advanced
-      usage](https://github.com/philc/vimium/wiki/Tips-and-Tricks#muting-tabs).
+      `<a-m>`), see also [advanced usage](https://github.com/philc/vimium/wiki/Tips-and-Tricks#muting-tabs).
 - Other new features:
     - You can now map `<backspace>` to a Vimium command (e.g. `map <backspace> goBack`).
     - For link hints, when one hint marker is covered by another, `<Space>` now
