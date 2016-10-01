@@ -71,6 +71,10 @@ class FindMode extends Mode
       name: "find"
       indicator: false
       exitOnClick: true
+      exitOnEscape: true
+      # This prevents further Vimium commands launching before the find-mode HUD receives the focus.
+      # E.g. "/" followed quickly by "i" should not leave us in insert mode.
+      suppressAllKeyboardEvents: true
 
     HUD.showFindMode this
 
