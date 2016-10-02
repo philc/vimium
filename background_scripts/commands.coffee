@@ -40,6 +40,7 @@ Commands =
   # On the other hand, <c-a> and <c-A> are different named keys - for one of
   # them you have to press "shift" as well.
   # We sort modifiers here to match the order used in keyboard_utils.coffee.
+  # The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
   normalizeKey: (key) ->
     if key.length == 0
       []
