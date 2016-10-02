@@ -18,6 +18,7 @@ context "Key mappings",
   should "parse keys with modifiers", ->
     @testKeySequence "<c-a>", "<c-a>", 1
     @testKeySequence "<c-A>", "<c-A>", 1
+    @testKeySequence "<C-A>", "<c-A>", 1
     @testKeySequence "<c-a><a-b>", "<c-a>/<a-b>", 2
     @testKeySequence "<m-a>", "<m-a>", 1
 
@@ -44,6 +45,11 @@ context "Key mappings",
 
     @testKeySequence "<<space>", "</<space>", 2
     @testKeySequence "<C->>", "<c->>", 1
+
+  should "negative tests", ->
+    # These should not be parsed as modifiers.
+    @testKeySequence "<b-a>", "</b/-/a/>", 5
+    @testKeySequence "<c-@@>", "</c/-/@/@/>", 6
 
 context "Validate commands and options",
   should "have either noRepeat or repeatLimit, but not both", ->
