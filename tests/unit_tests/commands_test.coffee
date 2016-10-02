@@ -6,7 +6,7 @@ global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 context "Key mappings",
   setup ->
     @testKeySequence = (key, expectedKeyText, expectedKeyLength) ->
-      keySequence = Commands.normalizeKey key
+      keySequence = Commands.parseKeySequence key
       assert.equal expectedKeyText, keySequence.join "/"
       assert.equal expectedKeyLength, keySequence.length
 

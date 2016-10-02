@@ -41,7 +41,7 @@ Commands =
   # them you have to press "shift" as well.
   # We sort modifiers here to match the order used in keyboard_utils.coffee.
   # The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
-  normalizeKey: (key) ->
+  parseKeySequence: (key) ->
     if key.length == 0
       []
     else if 0 == key.search /^<([^<>]+)>(.*)/ # Parse "<c-a>bcd" as "<c-a>" and "bcd".
@@ -49,9 +49,9 @@ Commands =
       keyChar = keyChar.toLowerCase() unless keyChar.length == 1
       modifiers = (modifier.toLowerCase() for modifier in modifiers)
       modifiers.sort()
-      ["<#{[modifiers..., keyChar].join "-"}>", @normalizeKey(RegExp.$2)...]
+      ["<#{[modifiers..., keyChar].join "-"}>", @parseKeySequence(RegExp.$2)...]
     else
-      [key[0], @normalizeKey(key[1..])...]
+      [key[0], @parseKeySequence(key[1..])...]
 
   parseCustomKeyMappings: (customKeyMappings) ->
     for line in customKeyMappings.split "\n"
@@ -61,14 +61,14 @@ Commands =
           when "map"
             [ _, key, command, optionList... ] = tokens
             if command? and @availableCommands[command]
-              keySequence = @normalizeKey key
+              keySequence = @parseKeySequence key
               key = keySequence.join ""
               BgUtils.log "Mapping #{key} to #{command}"
               @mapKeyToCommand { key, command, keySequence, options: @parseCommandOptions command, optionList }
 
           when "unmap"
             if tokens.length == 2
-              keySequence = @normalizeKey tokens[1]
+              keySequence = @parseKeySequence tokens[1]
               key = keySequence.join ""
               BgUtils.log "Unmapping #{key}"
               delete @keyToCommandRegistry[key]
@@ -102,7 +102,7 @@ Commands =
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
     for own key, command of defaultKeyMappings
-      keySequence = @normalizeKey key
+      keySequence = @parseKeySequence key
       key = keySequence.join ""
       @mapKeyToCommand { key, command, keySequence }
 
