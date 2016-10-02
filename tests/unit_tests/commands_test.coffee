@@ -43,6 +43,7 @@ context "Key mappings",
     @testKeySequence "<>", "</>", 2
 
     @testKeySequence "<<space>", "</<space>", 2
+    @testKeySequence "<C->>", "<c->>", 1
 
 context "Validate commands and options",
   should "have either noRepeat or repeatLimit, but not both", ->

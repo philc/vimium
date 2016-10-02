@@ -44,7 +44,8 @@ Commands =
   parseKeySequence: (key) ->
     if key.length == 0
       []
-    else if 0 == key.search /^<([^<>]+)>(.*)/ # Parse "<c-a>bcd" as "<c-a>" and "bcd".
+    # Parse "<c-a>bcd" as "<c-a>" and "bcd".
+    else if 0 == key.search /^<((?:[acm]-)*(?:.|[a-zA-Z0-9]{2,}))>(.*)/i
       [modifiers..., keyChar] = RegExp.$1.split "-"
       keyChar = keyChar.toLowerCase() unless keyChar.length == 1
       modifiers = (modifier.toLowerCase() for modifier in modifiers)
