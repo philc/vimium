@@ -49,7 +49,7 @@ Commands =
       keyChar = keyChar.toLowerCase() unless keyChar.length == 1
       modifiers = (modifier.toLowerCase() for modifier in modifiers)
       modifiers.sort()
-      ["<#{[modifiers..., keyChar].join "-"}>", @parseKeySequence(RegExp.$2)...]
+      ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
     else
       [key[0], @parseKeySequence(key[1..])...]
 
