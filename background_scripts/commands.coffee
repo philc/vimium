@@ -61,11 +61,13 @@ Commands =
         switch tokens[0]
           when "map"
             [ _, key, command, optionList... ] = tokens
+            keySequence = @parseKeySequence key
             if command? and @availableCommands[command]
-              keySequence = @parseKeySequence key
               key = keySequence.join ""
-              BgUtils.log "Mapping #{key} to #{command}"
+              BgUtils.log "mapping [\"#{keySequence.join '", "'}\"] to #{command}"
               @mapKeyToCommand { key, command, keySequence, options: @parseCommandOptions command, optionList }
+            else
+              BgUtils.log "skipping [\"#{keySequence.join '", "'}\"] for #{command} -- something is not right"
 
           when "unmap"
             if tokens.length == 2
