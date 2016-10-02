@@ -18,7 +18,6 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
         for file in files
           func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
 
-currentVersion = Utils.getCurrentVersion()
 frameIdsForTab = {}
 portsForTab = {}
 root.urlForTab = {}
@@ -89,7 +88,7 @@ getHelpDialogHtml = ({showUnboundCommands, showCommandNames, customTitle}) ->
     commandsToKey[command] = (commandsToKey[command] || []).concat(key)
 
   replacementStrings =
-    version: currentVersion
+    version: Utils.getCurrentVersion()
     title: customTitle || "Help"
     tip: if showCommandNames then "Tip: click command names to yank them to the clipboard." else "&nbsp;"
 
@@ -473,28 +472,37 @@ window.runTests = -> open(chrome.runtime.getURL('tests/dom_tests/dom_tests.html'
 
 # Show notification on upgrade.
 do showUpgradeMessage = ->
+  currentVersion = Utils.getCurrentVersion()
   # Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
   # installs.
-  Settings.set "previousVersion", currentVersion  unless Settings.get "previousVersion"
-  if Utils.compareVersions(currentVersion, Settings.get "previousVersion" ) == 1
-    notificationId = "VimiumUpgradeNotification"
-    notification =
-      type: "basic"
-      iconUrl: chrome.runtime.getURL "icons/vimium.png"
-      title: "Vimium Upgrade"
-      message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information."
-      isClickable: true
-    if chrome.notifications?.create?
-      chrome.notifications.create notificationId, notification, ->
-        unless chrome.runtime.lastError
-          Settings.set "previousVersion", currentVersion
-          chrome.notifications.onClicked.addListener (id) ->
-            if id == notificationId
-              chrome.tabs.getSelected null, (tab) ->
-                TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium#release-notes"}
+  Settings.set "previousVersion", currentVersion  unless Settings.has "previousVersion"
+  previousVersion = Settings.get "previousVersion"
+  if Utils.compareVersions(currentVersion, previousVersion ) == 1
+    currentVersionNumbers = currentVersion.split "."
+    previousVersionNumbers = previousVersion.split "."
+    if currentVersionNumbers[...2].join(".") == previousVersionNumbers[...2].join(".")
+      # We do not show an upgrade message for patch/silent releases.  Such releases have the same major and
+      # minor version numbers.  We do, however, update the recorded previous version.
+      Settings.set "previousVersion", currentVersion
     else
-      # We need to wait for the user to accept the "notifications" permission.
-      chrome.permissions.onAdded.addListener showUpgradeMessage
+      notificationId = "VimiumUpgradeNotification"
+      notification =
+        type: "basic"
+        iconUrl: chrome.runtime.getURL "icons/vimium.png"
+        title: "Vimium Upgrade"
+        message: "Vimium has been upgraded to version #{currentVersion}. Click here for more information."
+        isClickable: true
+      if chrome.notifications?.create?
+        chrome.notifications.create notificationId, notification, ->
+          unless chrome.runtime.lastError
+            Settings.set "previousVersion", currentVersion
+            chrome.notifications.onClicked.addListener (id) ->
+              if id == notificationId
+                chrome.tabs.getSelected null, (tab) ->
+                  TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium#release-notes"}
+      else
+        # We need to wait for the user to accept the "notifications" permission.
+        chrome.permissions.onAdded.addListener showUpgradeMessage
 
 # The install date is shown on the logging page.
 chrome.runtime.onInstalled.addListener ({reason}) ->

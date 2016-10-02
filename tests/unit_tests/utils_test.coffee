@@ -99,9 +99,14 @@ context "Function currying",
 context "compare versions",
   should "compare correctly", ->
     assert.equal 0, Utils.compareVersions("1.40.1", "1.40.1")
+    assert.equal 0, Utils.compareVersions("1.40", "1.40.0")
+    assert.equal 0, Utils.compareVersions("1.40.0", "1.40")
     assert.equal -1, Utils.compareVersions("1.40.1", "1.40.2")
     assert.equal -1, Utils.compareVersions("1.40.1", "1.41")
+    assert.equal -1, Utils.compareVersions("1.40", "1.40.1")
     assert.equal 1, Utils.compareVersions("1.41", "1.40")
+    assert.equal 1, Utils.compareVersions("1.41.0", "1.40")
+    assert.equal 1, Utils.compareVersions("1.41.1", "1.41")
 
 context "makeIdempotent",
   setup ->
