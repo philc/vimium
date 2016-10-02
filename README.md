@@ -159,9 +159,12 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
-<!--
 Changes since the previous release (not in the Chrome Store version)
--->
+
+- Features:
+    - You can now map multi-modifier keys, for example: `<c-a-X>`.
+- Process:
+    - In order to provide faster bug fixes, we may in future push new releases without the noisy notification.
 
 1.57 (2016-10-01)
 
