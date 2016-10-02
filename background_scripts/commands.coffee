@@ -23,13 +23,13 @@ Commands =
 
     @availableCommands[command] = extend options, description: description
 
-  mapKeyToCommand: ({ key, command, options }) ->
+  mapKeyToCommand: ({ key, keySequence, command, options }) ->
     unless @availableCommands[command]
       BgUtils.log "#{command} doesn't exist!"
       return
 
     options ?= {}
-    @keyToCommandRegistry[key] = extend { command, options }, @availableCommands[command]
+    @keyToCommandRegistry[key] = extend { keySequence, command, options }, @availableCommands[command]
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -39,10 +39,20 @@ Commands =
   # humans may prefer other forms <Left> or <C-a>.
   # On the other hand, <c-a> and <c-A> are different named keys - for one of
   # them you have to press "shift" as well.
-  normalizeKey: (key) ->
-    key.replace(/<[acm]-/ig, (match) -> match.toLowerCase())
-       .replace(/<([acm]-)?([a-zA-Z0-9]{2,})>/g, (match, optionalPrefix, keyName) ->
-          "<" + (if optionalPrefix then optionalPrefix else "") + keyName.toLowerCase() + ">")
+  # We sort modifiers here to match the order used in keyboard_utils.coffee.
+  # The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
+  parseKeySequence: (key) ->
+    if key.length == 0
+      []
+    # Parse "<c-a>bcd" as "<c-a>" and "bcd".
+    else if 0 == key.search /^<((?:[acm]-)*(?:.|[a-zA-Z0-9]{2,}))>(.*)/i
+      [modifiers..., keyChar] = RegExp.$1.split "-"
+      keyChar = keyChar.toLowerCase() unless keyChar.length == 1
+      modifiers = (modifier.toLowerCase() for modifier in modifiers)
+      modifiers.sort()
+      ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
+    else
+      [key[0], @parseKeySequence(key[1..])...]
 
   parseCustomKeyMappings: (customKeyMappings) ->
     for line in customKeyMappings.split "\n"
@@ -52,13 +62,15 @@ Commands =
           when "map"
             [ _, key, command, optionList... ] = tokens
             if command? and @availableCommands[command]
-              key = @normalizeKey key
+              keySequence = @parseKeySequence key
+              key = keySequence.join ""
               BgUtils.log "Mapping #{key} to #{command}"
-              @mapKeyToCommand { key, command, options: @parseCommandOptions command, optionList }
+              @mapKeyToCommand { key, command, keySequence, options: @parseCommandOptions command, optionList }
 
           when "unmap"
             if tokens.length == 2
-              key = @normalizeKey tokens[1]
+              keySequence = @parseKeySequence tokens[1]
+              key = keySequence.join ""
               BgUtils.log "Unmapping #{key}"
               delete @keyToCommandRegistry[key]
 
@@ -90,24 +102,25 @@ Commands =
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
-    @mapKeyToCommand { key, command } for own key, command of defaultKeyMappings
+    for own key, command of defaultKeyMappings
+      keySequence = @parseKeySequence key
+      key = keySequence.join ""
+      @mapKeyToCommand { key, command, keySequence }
 
   # This generates a nested key-to-command mapping structure. There is an example in mode_key_handler.coffee.
   generateKeyStateMapping: ->
-    # Keys are either literal characters, or "named" - for example <a-b> (alt+b), <left> (left arrow) or <f12>
-    # This regular expression captures two groups: the first is a named key, the second is the remainder of
-    # the string.
-    namedKeyRegex = /^(<(?:[amc]-.|(?:[amc]-)?[a-z0-9]{2,})>)(.*)$/
     keyStateMapping = {}
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyStateMapping
-      while 0 < keys.length
-        [key, keys] = if 0 == keys.search namedKeyRegex then [RegExp.$1, RegExp.$2] else [keys[0], keys[1..]]
+      for key, index in registryEntry.keySequence
         if currentMapping[key]?.command
-          break # Do not overwrite existing command bindings, they take priority.
-        else if 0 < keys.length
+          # Do not overwrite existing command bindings, they take priority.  NOTE(smblott) This is the legacy
+          # behaviour.
+          break
+        else if index < registryEntry.keySequence.length - 1
           currentMapping = currentMapping[key] ?= {}
         else
+          delete registryEntry.keySequence # We don't need this any more.
           currentMapping[key] = registryEntry
     chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
 
