@@ -4,12 +4,45 @@ global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
 
 context "Key mappings",
+  setup ->
+    @testKeySequence = (key, expectedKeyText, expectedKeyLength) ->
+      keySequence = Commands.normalizeKey key
+      assert.equal expectedKeyText, keySequence.join "/"
+      assert.equal expectedKeyLength, keySequence.length
+
   should "lowercase keys correctly", ->
-    assert.equal (Commands.normalizeKey '<c-a>'), '<c-a>'
-    assert.equal (Commands.normalizeKey '<C-a>'), '<c-a>'
-    assert.equal (Commands.normalizeKey '<C-A>'), '<c-A>'
-    assert.equal (Commands.normalizeKey '<F12>'), '<f12>'
-    assert.equal (Commands.normalizeKey '<C-F12>'), '<c-f12>'
+    @testKeySequence "a", "a", 1
+    @testKeySequence "A", "A", 1
+    @testKeySequence "ab", "a/b", 2
+
+  should "parse keys with modifiers", ->
+    @testKeySequence "<c-a>", "<c-a>", 1
+    @testKeySequence "<c-A>", "<c-A>", 1
+    @testKeySequence "<c-a><a-b>", "<c-a>/<a-b>", 2
+    @testKeySequence "<m-a>", "<m-a>", 1
+
+  should "normalize with modifiers", ->
+    # Modifiers should be in alphabetical order.
+    @testKeySequence "<m-c-a-A>", "<a-c-m-A>", 1
+
+  should "parse and normalize named keys", ->
+    @testKeySequence "<space>", "<space>", 1
+    @testKeySequence "<Space>", "<space>", 1
+    @testKeySequence "<C-Space>", "<c-space>", 1
+    @testKeySequence "<f12>", "<f12>", 1
+    @testKeySequence "<F12>", "<f12>", 1
+
+  should "handle angle brackets", ->
+    @testKeySequence "<", "<", 1
+    @testKeySequence ">", ">", 1
+
+    @testKeySequence "<<", "</<", 2
+    @testKeySequence ">>", ">/>", 2
+
+    @testKeySequence "<>", "</>", 2
+    @testKeySequence "<>", "</>", 2
+
+    @testKeySequence "<<space>", "</<space>", 2
 
 context "Validate commands and options",
   should "have either noRepeat or repeatLimit, but not both", ->
