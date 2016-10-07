@@ -78,13 +78,16 @@ else
   # Make these placeholder event listeners available to vimium_frontend.coffee, which later installs the
   # real listener functions.
   root = exports ? window
-  root.vimiumEventTypes = (type for own type, element of eventHookLocations)
+  root.vimiumEventTypes = (type for own type of eventHookLocations)
   root.installVimiumEventListener = (type, callback) -> vimiumEventListeners[type] = callback
 
   unless chrome.extension?.getBackgroundPage?
     # This is *not* one of Vimium's own pages (e.g. the options page).  Those pages inject the Vimium content
     # scripts themselves.  For other pages, we ask the background page to inject the scripts (via the message
     # handler above).
+    #
+    # We do not activate Vimium in very-small frames (it's no use there, and initializing Vimium takes time
+    # and requires memory).
     if window.top == window.self or 3 <= window.innerWidth or 3 <= window.innerHeight
       chrome.runtime.sendMessage handler: "injectVimium"
     else
