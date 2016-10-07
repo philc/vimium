@@ -1,6 +1,7 @@
 
 if chrome.extension?.getBackgroundPage?() == window
   # This is the background page.
+  # Important: All resources listed here must also be listed in ../pages/vimium_resources.html.
   jss = [
     "lib/utils.js",
     "lib/keyboard_utils.js",
@@ -32,7 +33,6 @@ if chrome.extension?.getBackgroundPage?() == window
     if handler == "injectVimium"
       tabId = sender.tab.id
       frameId = sender.frameId
-      console.log tabId, frameId
 
       for file in jss
         chrome.tabs.executeScript tabId, {file, frameId, runAt: "document_start"}, ->
@@ -89,7 +89,6 @@ else
       chrome.runtime.sendMessage handler: "injectVimium"
     else
       window.addEventListener "resize", resizeHandler = (thing) ->
-        console.log thing
         if 3 <= window.innerWidth or 3 <= window.innerHeight
           chrome.runtime.sendMessage handler: "injectVimium"
           window.removeEventListener "resize", resizeHandler
