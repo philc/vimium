@@ -88,7 +88,7 @@ else
     if window.top == window.self or 3 <= window.innerWidth or 3 <= window.innerHeight
       chrome.runtime.sendMessage handler: "injectVimium"
     else
-      window.addEventListener "resize", resizeHandler = (thing) ->
+      window.addEventListener "resize", resizeHandler = ->
         if 3 <= window.innerWidth or 3 <= window.innerHeight
           chrome.runtime.sendMessage handler: "injectVimium"
           window.removeEventListener "resize", resizeHandler
