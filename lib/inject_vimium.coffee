@@ -52,7 +52,34 @@ if chrome.extension?.getBackgroundPage?() == window
             chrome.runtime.lastError
 
 else
-  # This is not the background page.  Request that Vimium's content scripts be loaded.  This message is
-  # received by the background page and handled by the listener above.
-  chrome.runtime.sendMessage handler: "injectVimium"
+  # This is not the background page.
+  vimiumEventListeners = {}
+
+  eventHookLocations =
+    keydown: window
+    keypress: window
+    keyup: window
+    click: window
+    focus: window
+    blur: window
+    mousedown: window
+    scroll: window
+    DOMActivate: document
+
+  # Run this as early as possible, so that the page cannot register any event handlers before us.
+  # Note: We install these listeners even if Vimium is disabled.  See comment in commit
+  # 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
+  # The actual listener functions are added later (in vimium_frontend.coffee).
+  for own type, element of eventHookLocations
+    do (type) -> element.addEventListener type, (-> vimiumEventListeners[type]? arguments...), true
+
+  root = exports ? window
+  root.vimiumEventTypes = (type for own type, element of eventHookLocations)
+  root.installVimiumEventListener = (type, callback) -> vimiumEventListeners[type] = callback
+
+  unless chrome.extension?.getBackgroundPage?
+    # This is *not* one of Vimium's own pages (e.g. the options page).  Those pages inject the Vimium content
+    # scripts themselves.  For other pages, ask the background page to inject the scripts (via the message
+    # handler above).
+    chrome.runtime.sendMessage handler: "injectVimium"
 
