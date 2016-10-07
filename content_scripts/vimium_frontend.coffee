@@ -175,7 +175,7 @@ initializePreDomReady = ->
 # Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
 # we know whether the listener should run or not.
 installListeners = Utils.makeIdempotent ->
-  # We use the listeners which were installed (very early) by lib/inject_vimium.coffee.
+  # We use the listener placeholders which were installed (very early) by lib/inject_vimium.coffee.
   for type in window.vimiumEventTypes
     do (type) ->
       window.installVimiumEventListener type, (event) ->
