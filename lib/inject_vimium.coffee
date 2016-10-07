@@ -32,12 +32,15 @@ if chrome.extension?.getBackgroundPage?() == window
     if handler == "injectVimium"
       tabId = sender.tab.id
       frameId = sender.frameId
+      console.log tabId, frameId
 
       for file in jss
-        chrome.tabs.executeScript tabId, {file, frameId, runAt: "document_start"}
+        chrome.tabs.executeScript tabId, {file, frameId, runAt: "document_start"}, ->
+          chrome.runtime.lastError
 
       for file in css
-        chrome.tabs.insertCSS tabId, {file, frameId}
+        chrome.tabs.insertCSS tabId, {file, frameId}, ->
+          chrome.runtime.lastError
 
     # Ensure that the sendResponse callback is freed.
     false
@@ -48,8 +51,7 @@ if chrome.extension?.getBackgroundPage?() == window
     unless reason in ["chrome_update", "shared_module_update"]
       chrome.tabs.query {status: "complete"}, (tabs) ->
         for tab in tabs
-          chrome.tabs.executeScript tab.id, {file: "lib/inject_vimium.js", allFrames: true}, ->
-            # Chrome complains if we do not check for errors.
+          chrome.tabs.executeScript tab.id, {file: "lib/inject_vimium.js", allFrames: true, matchAboutBlank: true}, ->
             chrome.runtime.lastError
 
 else
@@ -81,7 +83,14 @@ else
 
   unless chrome.extension?.getBackgroundPage?
     # This is *not* one of Vimium's own pages (e.g. the options page).  Those pages inject the Vimium content
-    # scripts themselves.  For other pages, ask the background page to inject the scripts (via the message
+    # scripts themselves.  For other pages, we ask the background page to inject the scripts (via the message
     # handler above).
-    chrome.runtime.sendMessage handler: "injectVimium"
+    if window.top == window.self or 3 <= window.innerWidth or 3 <= window.innerHeight
+      chrome.runtime.sendMessage handler: "injectVimium"
+    else
+      window.addEventListener "resize", resizeHandler = (thing) ->
+        console.log thing
+        if 3 <= window.innerWidth or 3 <= window.innerHeight
+          chrome.runtime.sendMessage handler: "injectVimium"
+          window.removeEventListener "resize", resizeHandler
 
