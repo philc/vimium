@@ -63,7 +63,7 @@ class GrabBackFocus extends Mode
           @exit()
 
   grabBackFocus: (element) ->
-    return @continueBubbling unless DomUtils.isEditable element
+    return @continueBubbling unless DomUtils.isFocusable element
     element.blur()
     @suppressEvent
 
