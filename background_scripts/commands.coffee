@@ -41,18 +41,23 @@ Commands =
   # them you have to press "shift" as well.
   # We sort modifiers here to match the order used in keyboard_utils.coffee.
   # The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
-  parseKeySequence: (key) ->
-    if key.length == 0
-      []
-    # Parse "<c-a>bcd" as "<c-a>" and "bcd".
-    else if 0 == key.search /^<((?:[acm]-)*(?:.|[a-zA-Z0-9]{2,}))>(.*)/i
-      [modifiers..., keyChar] = RegExp.$1.split "-"
-      keyChar = keyChar.toLowerCase() unless keyChar.length == 1
-      modifiers = (modifier.toLowerCase() for modifier in modifiers)
-      modifiers.sort()
-      ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
-    else
-      [key[0], @parseKeySequence(key[1..])...]
+  parseKeySequence: do ->
+    modifier = "(?:[acm]-)"                             # E.g. "a-", "c-", "m-".
+    namedKey = "(?:[a-z][a-z0-9]+)"                     # E.g. "left" or "f12" (always two characters or more).
+    modifiedKey = "(?:#{modifier}+(?:.|#{namedKey}))"   # E.g. "c-*" or "c-left".
+    specialKeyRegexp = new RegExp "^<(#{namedKey}|#{modifiedKey})>(.*)", "i"
+    (key) ->
+      if key.length == 0
+        []
+      # Parse "<c-a>bcd" as "<c-a>" and "bcd".
+      else if 0 == key.search specialKeyRegexp
+        [modifiers..., keyChar] = RegExp.$1.split "-"
+        keyChar = keyChar.toLowerCase() unless keyChar.length == 1
+        modifiers = (modifier.toLowerCase() for modifier in modifiers)
+        modifiers.sort()
+        ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
+      else
+        [key[0], @parseKeySequence(key[1..])...]
 
   parseCustomKeyMappings: (customKeyMappings) ->
     for line in customKeyMappings.split "\n"

@@ -15,12 +15,19 @@ context "Key mappings",
     @testKeySequence "A", "A", 1
     @testKeySequence "ab", "a/b", 2
 
+  should "recognise non-alphabetic keys", ->
+    @testKeySequence "#", "#", 1
+    @testKeySequence ".", ".", 1
+    @testKeySequence "##", "#/#", 2
+    @testKeySequence "..", "./.", 2
+
   should "parse keys with modifiers", ->
     @testKeySequence "<c-a>", "<c-a>", 1
     @testKeySequence "<c-A>", "<c-A>", 1
     @testKeySequence "<C-A>", "<c-A>", 1
     @testKeySequence "<c-a><a-b>", "<c-a>/<a-b>", 2
     @testKeySequence "<m-a>", "<m-a>", 1
+    @testKeySequence "z<m-a>", "z/<m-a>", 2
 
   should "normalize with modifiers", ->
     # Modifiers should be in alphabetical order.
@@ -33,7 +40,7 @@ context "Key mappings",
     @testKeySequence "<f12>", "<f12>", 1
     @testKeySequence "<F12>", "<f12>", 1
 
-  should "handle angle brackets", ->
+  should "handle angle brackets which are part of not modifiers", ->
     @testKeySequence "<", "<", 1
     @testKeySequence ">", ">", 1
 
@@ -45,6 +52,8 @@ context "Key mappings",
 
     @testKeySequence "<<space>", "</<space>", 2
     @testKeySequence "<C->>", "<c->>", 1
+
+    @testKeySequence "<a>", "</a/>", 3
 
   should "negative tests", ->
     # These should not be parsed as modifiers.
