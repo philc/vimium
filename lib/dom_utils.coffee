@@ -288,6 +288,13 @@ DomUtils =
     flashEl = @addFlashRect rect
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 
+  getViewportTopLeft: ->
+    if getComputedStyle(document.documentElement).position == "static"
+      top: window.scrollY, left: window.scrollX
+    else
+      rect = document.documentElement.getBoundingClientRect()
+      top: -rect.top, left: -rect.left
+
   suppressPropagation: (event) ->
     event.stopImmediatePropagation()
 

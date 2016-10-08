@@ -399,8 +399,11 @@ class LinkHintsMode
 
     installKeyboardBlocker = (startKeyboardBlocker) ->
       if linkMatched.isLocalMarker
-        flashEl = DomUtils.addFlashRect linkMatched.rect
-        HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
+        {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
+        for rect in (Rect.copy rect for rect in clickEl.getClientRects())
+          extend rect, top: rect.top + viewportTop, left: rect.left + viewportLeft
+          flashEl = DomUtils.addFlashRect rect
+          do (flashEl) -> HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
       if windowIsFocused()
         startKeyboardBlocker (isSuccess) -> HintCoordinator.sendMessage "exit", {isSuccess}
@@ -811,13 +814,7 @@ LocalHints =
         nonOverlappingElements.push visibleElement unless visibleElement.secondClassCitizen
 
     # Position the rects within the window.
-    if getComputedStyle(document.documentElement).position == "static"
-      top = window.scrollY
-      left = window.scrollX
-    else
-      rect = document.documentElement.getBoundingClientRect()
-      top = -rect.top
-      left = -rect.left
+    {top, left} = DomUtils.getViewportTopLeft()
     for hint in nonOverlappingElements
       hint.rect.top += top
       hint.rect.left += left
