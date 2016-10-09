@@ -66,12 +66,12 @@ chrome.runtime.onConnect.addListener (port) ->
   if (portHandlers[port.name])
     port.onMessage.addListener portHandlers[port.name] port.sender, port
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) ->
+chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   request = extend {count: 1, frameId: sender.frameId}, extend request, tab: sender.tab, tabId: sender.tab.id
-  if (sendRequestHandlers[request.handler])
-    sendResponse(sendRequestHandlers[request.handler](request, sender))
-  # Ensure the sendResponse callback is freed.
-  return false)
+  if sendRequestHandlers[request.handler]
+    sendResponse sendRequestHandlers[request.handler] request, sender
+  # Ensure that the sendResponse callback is freed.
+  false
 
 onURLChange = (details) ->
   chrome.tabs.sendMessage details.tabId, name: "checkEnabledAfterURLChange"
@@ -311,7 +311,7 @@ Frames =
 
     # Return our onMessage handler for this port.
     (request, port) =>
-      this[request.handler] {request, tabId, frameId, port}
+      this[request.handler] {request, tabId, frameId, port, sender}
 
   registerFrame: ({tabId, frameId, port}) ->
     frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
@@ -352,6 +352,9 @@ Frames =
 
   linkHintsMessage: ({request, tabId, frameId}) ->
     HintCoordinator.onMessage tabId, frameId, request
+
+  # For debugging only. This allows content scripts to log messages to the extension's logging page.
+  log: ({frameId, sender, request: {message}}) -> BgUtils.log "#{frameId} #{message}", sender
 
 handleFrameFocused = ({tabId, frameId}) ->
   frameIdsForTab[tabId] ?= []
@@ -444,8 +447,6 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
   # Send a message to all frames in the current tab.
   sendMessageToFrames: (request, sender) -> chrome.tabs.sendMessage sender.tab.id, request.message
-  # For debugging only. This allows content scripts to log messages to the extension's logging page.
-  log: ({frameId, message}, sender) -> BgUtils.log "#{frameId} #{message}", sender
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

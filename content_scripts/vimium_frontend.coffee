@@ -32,10 +32,11 @@ textInputXPath = (->
 # This is set by Frame.registerFrameId(). A frameId of 0 indicates that this is the top frame in the tab.
 frameId = null
 
-# For debugging only. This logs to the console on the background page.
+# For debugging only. This writes to the Vimium log page, the URL of whichis shown on the console on the
+# background page.
 bgLog = (args...) ->
   args = (arg.toString() for arg in args)
-  chrome.runtime.sendMessage handler: "log", message: args.join " "
+  Frame.postMessage "log", message: args.join " "
 
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
