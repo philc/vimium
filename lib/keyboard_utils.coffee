@@ -86,11 +86,10 @@ KeyboardUtils =
 
     (event) ->
       event.keyCode == @keyCodes.ESC || do =>
-        keyChar = @getKeyChar event
-        keyChar.length == 1 and do =>
-          keyChar = @getModifiedKeyChar keyChar, event
-          keyChar = keyTranslationRegistry[keyChar] ? keyChar
-          keyChar == "<c-[>"
+        keyChar = @getKeyCharString event, true
+        keyChar = keyTranslationRegistry[keyChar] ? keyChar
+        # <c-[> is mapped to Escape in Vim by default.
+        keyChar == "<c-[>"
 
   # TODO. This is probably a poor way of detecting printable characters.  However, it shouldn't incorrectly
   # identify any of chrome's own keyboard shortcuts as printable.
@@ -105,7 +104,7 @@ KeyboardUtils =
 
   # Return the Vimium key representation for this keyboard event. Return a falsy value (the empty string or
   # undefined) when no Vimium representation is appropriate.
-  getKeyCharString: (event) ->
+  getKeyCharString: (event, allKeydownEvents = false) ->
     switch event.type
       when "keypress"
         # Ignore modifier keys by themselves.
@@ -115,20 +114,17 @@ KeyboardUtils =
       when "keydown"
         # Handle special keys and normal input keys with modifiers being pressed.
         keyChar = @getKeyChar event
-        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey))
-          @getModifiedKeyChar keyChar, event
+        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey)) or allKeydownEvents
+          modifiers = []
 
-  getModifiedKeyChar: (keyChar, event) ->
-    modifiers = []
+          keyChar = keyChar.toUpperCase() if event.shiftKey
+          # These must be in alphabetical order (to match the sorted modifier order in Commands.normalizeKey).
+          modifiers.push "a" if event.altKey
+          modifiers.push "c" if event.ctrlKey
+          modifiers.push "m" if event.metaKey
 
-    keyChar = keyChar.toUpperCase() if event.shiftKey
-    # These must be in alphabetical order (to match the sorted modifier order in Commands.normalizeKey).
-    modifiers.push "a" if event.altKey
-    modifiers.push "c" if event.ctrlKey
-    modifiers.push "m" if event.metaKey
-
-    keyChar = [modifiers..., keyChar].join "-"
-    if 1 < keyChar.length then "<#{keyChar}>" else keyChar
+          keyChar = [modifiers..., keyChar].join "-"
+          if 1 < keyChar.length then "<#{keyChar}>" else keyChar
 
 KeyboardUtils.init()
 
