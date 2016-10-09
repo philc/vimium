@@ -65,6 +65,11 @@ class GrabBackFocus extends Mode
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isFocusable element
     element.blur()
+    # Do not let non-top frames acquire the focus (see #2303).
+    unless DomUtils.isTopFrame()
+      registryEntry = command: "mainFrame"
+      chrome.runtime.sendMessage
+        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry}
     @suppressEvent
 
 # Pages can load new content dynamically and change the displayed URL using history.pushState. Since this can
