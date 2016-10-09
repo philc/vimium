@@ -34,11 +34,7 @@ class KeyHandlerMode extends Mode
       blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
     @keyTranslationRegistry = {}
-    chrome.storage.local.get "keyTranslationRegistry", (obj) =>
-      @keyTranslationRegistry = obj.keyTranslationRegistry
-      chrome.storage.onChanged.addListener (changes, area) =>
-        if area == "local" and changes.keyTranslationRegistry?.newValue?
-          @keyTranslationRegistry = changes.keyTranslationRegistry.newValue
+    Utils.monitorChromeStorage "keyTranslationRegistry", (value) => @keyTranslationRegistry = value
 
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
