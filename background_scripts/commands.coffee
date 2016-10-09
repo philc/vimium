@@ -82,7 +82,9 @@ Commands =
               delete @keyToCommandRegistry[key]
 
           when "unmapAll"
-            @keyToCommandRegistry = {}
+            # We do not unmap "<c-[>" because it was previously hardwired into KeyboardUtils.isEscape(), and
+            # therefore unaffected by "unmapAll".
+            @keyToCommandRegistry = "<c-[>": {command: "exitMode"}
 
     # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
     # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
@@ -90,6 +92,17 @@ Commands =
     # mode.
     Settings.set "passNextKeyKeys",
       (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
+
+    # Push any key mappings for exitMode into Settings so that they are available in KeyboardUtils.isEscape(),
+    # and remove those bindings from @keyToCommandRegistry (they're not needed).
+    escapeKeyBindings =
+      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "exitMode")
+
+    if 0 < escapeKeyBindings.length
+      delete @keyToCommandRegistry[key] for own key of escapeKeyBindings
+      Settings.set "escapeKeyBindings", escapeKeyBindings
+    else
+      Settings.clear "escapeKeyBindings"
 
   # Command options follow command mappings, and are of one of two forms:
   #   key=value     - a value
@@ -202,6 +215,7 @@ Commands =
       "moveTabRight"]
     misc:
       ["showHelp",
+      "exitMode",
       "toggleViewSource"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
@@ -230,7 +244,8 @@ Commands =
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
-    "passNextKey"]
+    "passNextKey",
+    "exitMode"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -314,6 +329,9 @@ defaultKeyMappings =
   "m": "Marks.activateCreateMode"
   "`": "Marks.activateGotoMode"
 
+  # <c-[> is mapped to <Escape> in Vim by default.
+  "<c-[>": "exitMode"
+
 
 # This is a mapping of: commandIdentifier => [description, options].
 # If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
@@ -348,6 +366,7 @@ commandDescriptions =
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
   focusInput: ["Focus the first text input on the page"]
+  exitMode: ["Exit the current Vimium mode (like Escape)"]
 
   "LinkHints.activateMode": ["Open a link in the current tab"]
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"]

@@ -80,9 +80,13 @@ KeyboardUtils =
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
 
   isEscape: (event) ->
-    # c-[ is mapped to ESC in Vim by default.
-    (event.keyCode == @keyCodes.ESC) ||
-    (event.ctrlKey && @getKeyChar(event) == '[' and not event.metaKey and not event.altKey)
+    event.keyCode == @keyCodes.ESC or
+      do =>
+        # Handle custom mappings (the "exitMode" command).
+        keyChar = @getKeyCharString event
+        for key in Settings.get "escapeKeyBindings"
+          return true if key == keyChar
+        false
 
   # TODO. This is probably a poor way of detecting printable characters.  However, it shouldn't incorrectly
   # identify any of chrome's own keyboard shortcuts as printable.
