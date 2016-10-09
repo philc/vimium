@@ -127,8 +127,9 @@ Commands =
         else if index < registryEntry.keySequence.length - 1
           currentMapping = currentMapping[key] ?= {}
         else
-          delete registryEntry.keySequence # We don't need this any more.
-          currentMapping[key] = registryEntry
+          currentMapping[key] = extend {}, registryEntry
+          # We don't need these properties in the content scripts.
+          delete registryEntry[prop] for prop in ["keySequence", "description"]
     chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
