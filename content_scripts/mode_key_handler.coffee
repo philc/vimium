@@ -33,8 +33,16 @@ class KeyHandlerMode extends Mode
       # We cannot track keyup events if we lose the focus.
       blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
+    @keyTranslationRegistry = {}
+    chrome.storage.local.get "keyTranslationRegistry", (obj) =>
+      @keyTranslationRegistry = obj.keyTranslationRegistry
+      chrome.storage.onChanged.addListener (changes, area) =>
+        if area == "local" and changes.keyTranslationRegistry?.newValue?
+          @keyTranslationRegistry = changes.keyTranslationRegistry.newValue
+
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
+    keyChar = @keyTranslationRegistry[keyChar] ? keyChar
     isEscape = KeyboardUtils.isEscape event
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       @keydownEvents[event.keyCode] = true
@@ -61,6 +69,7 @@ class KeyHandlerMode extends Mode
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
+    keyChar = @keyTranslationRegistry[keyChar] ? keyChar
     if @isMappedKey keyChar
       @handleKeyChar keyChar
     else if @isCountKey keyChar
