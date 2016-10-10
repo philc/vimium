@@ -84,6 +84,7 @@ KeyboardUtils =
     # NOTE: "?" here for the tests.
     Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
 
+    # TODO(smblott) Change this to use event.key.
     (event) ->
       event.keyCode == @keyCodes.ESC || do =>
         keyChar = @getKeyCharString event, true
