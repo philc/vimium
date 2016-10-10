@@ -80,14 +80,14 @@ KeyboardUtils =
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
 
   isEscape: do ->
-    keyTranslationRegistry = {}
+    mapKeyRegistry = {}
     # NOTE: "?" here for the tests.
-    Utils?.monitorChromeStorage "keyTranslationRegistry", (value) => keyTranslationRegistry = value
+    Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
 
     (event) ->
       event.keyCode == @keyCodes.ESC || do =>
         keyChar = @getKeyCharString event, true
-        keyChar = keyTranslationRegistry[keyChar] ? keyChar
+        keyChar = mapKeyRegistry[keyChar] ? keyChar
         # <c-[> is mapped to Escape in Vim by default.
         keyChar == "<c-[>"
 
