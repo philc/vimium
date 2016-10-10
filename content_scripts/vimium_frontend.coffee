@@ -41,14 +41,20 @@ bgLog = (args...) ->
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
 class GrabBackFocus extends Mode
+
   constructor: ->
+    exitEventHandler = =>
+      @alwaysContinueBubbling =>
+        @exit()
+        chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "userIsInteractingWithThePage"
+
     super
       name: "grab-back-focus"
-      keydown: => @alwaysContinueBubbling => @exit()
+      keydown: exitEventHandler
 
     @push
       _name: "grab-back-focus-mousedown"
-      mousedown: => @alwaysContinueBubbling => @exit()
+      mousedown: exitEventHandler
 
     Settings.use "grabBackFocus", (grabBackFocus) =>
       # It is possible that this mode exits (e.g. due to a key event) before the settings are ready -- in
@@ -62,6 +68,15 @@ class GrabBackFocus extends Mode
           @grabBackFocus document.activeElement if document.activeElement
         else
           @exit()
+
+    # This mode is active in all frames.  A user might have begun interacting with one frame without other
+    # frames detecting this.  When one GrabBackFocus mode exits, we broadcast a message to inform all
+    # GrabBackFocus modes that they should exit; see #2296.
+    chrome.runtime.onMessage.addListener listener = ({name}) =>
+      if name == "userIsInteractingWithThePage"
+        chrome.runtime.onMessage.removeListener listener
+        @exit() if @modeIsActive
+      false # We will not be calling sendResponse.
 
   grabBackFocus: (element) ->
     return @continueBubbling unless DomUtils.isFocusable element
@@ -167,10 +182,12 @@ initializePreDomReady = ->
     linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
-    # These requests are intended for the background page, but they're delivered to the options page too.
+    # Some requests intended for the background page are delivered to the options page too; ignore them.
     unless request.handler and not request.name
-      if isEnabledForUrl or request.name in ["checkEnabledAfterURLChange", "runInTopFrame"]
-        requestHandlers[request.name] request, sender, sendResponse
+      # Some request are handled elsewhere; ignore them too.
+      unless request.name in ["userIsInteractingWithThePage"]
+        if isEnabledForUrl or request.name in ["checkEnabledAfterURLChange", "runInTopFrame"]
+          requestHandlers[request.name] request, sender, sendResponse
     false # Ensure that the sendResponse callback is freed.
 
 # Wrapper to install event listeners.  Syntactic sugar.
