@@ -79,10 +79,18 @@ KeyboardUtils =
 
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
 
-  isEscape: (event) ->
-    # c-[ is mapped to ESC in Vim by default.
-    (event.keyCode == @keyCodes.ESC) ||
-    (event.ctrlKey && @getKeyChar(event) == '[' and not event.metaKey and not event.altKey)
+  isEscape: do ->
+    mapKeyRegistry = {}
+    # NOTE: "?" here for the tests.
+    Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
+
+    # TODO(smblott) Change this to use event.key.
+    (event) ->
+      event.keyCode == @keyCodes.ESC || do =>
+        keyChar = @getKeyCharString event, true
+        keyChar = mapKeyRegistry[keyChar] ? keyChar
+        # <c-[> is mapped to Escape in Vim by default.
+        keyChar == "<c-[>"
 
   # TODO. This is probably a poor way of detecting printable characters.  However, it shouldn't incorrectly
   # identify any of chrome's own keyboard shortcuts as printable.
@@ -97,7 +105,7 @@ KeyboardUtils =
 
   # Return the Vimium key representation for this keyboard event. Return a falsy value (the empty string or
   # undefined) when no Vimium representation is appropriate.
-  getKeyCharString: (event) ->
+  getKeyCharString: (event, allKeydownEvents = false) ->
     switch event.type
       when "keypress"
         # Ignore modifier keys by themselves.
@@ -107,7 +115,7 @@ KeyboardUtils =
       when "keydown"
         # Handle special keys and normal input keys with modifiers being pressed.
         keyChar = @getKeyChar event
-        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey))
+        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey)) or allKeydownEvents
           modifiers = []
 
           keyChar = keyChar.toUpperCase() if event.shiftKey

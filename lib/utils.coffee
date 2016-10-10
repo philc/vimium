@@ -209,6 +209,13 @@ Utils =
   makeIdempotent: (func) ->
     (args...) -> ([previousFunc, func] = [func, null])[0]? args...
 
+  monitorChromeStorage: (key, setter) ->
+    # NOTE: "?" here for the tests.
+    chrome?.storage.local.get key, (obj) =>
+      setter obj[key] if obj[key]?
+      chrome.storage.onChanged.addListener (changes, area) =>
+        setter changes[key].newValue if changes[key]?.newValue?
+
 # Utility for parsing and using the custom search-engine configuration.  We re-use the previous parse if the
 # search-engine configuration is unchanged.
 SearchEngines =

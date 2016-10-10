@@ -9,6 +9,7 @@ Commands =
     @clearKeyMappingsAndSetDefaults()
     @parseCustomKeyMappings customKeyMappings
     @generateKeyStateMapping()
+    chrome.storage.local.set mapKeyRegistry: @mapKeyRegistry
 
   availableCommands: {}
   keyToCommandRegistry: {}
@@ -84,6 +85,12 @@ Commands =
           when "unmapAll"
             @keyToCommandRegistry = {}
 
+          when "mapkey"
+            if tokens.length == 3
+              fromChar = @parseKeySequence tokens[1]
+              toChar = @parseKeySequence tokens[2]
+              @mapKeyRegistry[fromChar[0]] = toChar[0] if fromChar.length == toChar.length == 1
+
     # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
     # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
     # in insert mode they expect the character to be input, not to be droppped into some special Vimium
@@ -109,6 +116,7 @@ Commands =
 
   clearKeyMappingsAndSetDefaults: ->
     @keyToCommandRegistry = {}
+    @mapKeyRegistry = {}
     for own key, command of defaultKeyMappings
       keySequence = @parseKeySequence key
       key = keySequence.join ""
