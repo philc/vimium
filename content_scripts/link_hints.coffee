@@ -121,7 +121,8 @@ HintCoordinator =
     @linkHintsMode = @localHints = null
 
 LinkHints =
-  activateMode: (count = 1, mode = OPEN_IN_CURRENT_TAB) ->
+  activateMode: (count = 1, {mode}) ->
+    mode ?= OPEN_IN_CURRENT_TAB
     if 0 < count or mode is OPEN_WITH_QUEUE
       HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
         if isSuccess
@@ -129,12 +130,12 @@ LinkHints =
           # which would cause our new mode to exit immediately.
           Utils.nextTick -> LinkHints.activateMode count-1, mode
 
-  activateModeToOpenInNewTab: (count) -> @activateMode count, OPEN_IN_NEW_BG_TAB
-  activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, OPEN_IN_NEW_FG_TAB
-  activateModeToCopyLinkUrl: (count) -> @activateMode count, COPY_LINK_URL
-  activateModeWithQueue: -> @activateMode 1, OPEN_WITH_QUEUE
-  activateModeToOpenIncognito: (count) -> @activateMode count, OPEN_INCOGNITO
-  activateModeToDownloadLink: (count) -> @activateMode count, DOWNLOAD_LINK_URL
+  activateModeToOpenInNewTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_BG_TAB
+  activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_FG_TAB
+  activateModeToCopyLinkUrl: (count) -> @activateMode count, mode: COPY_LINK_URL
+  activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
+  activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
+  activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
 
 class LinkHintsMode
   hintMarkerContainingDiv: null

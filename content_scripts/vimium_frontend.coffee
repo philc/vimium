@@ -144,7 +144,7 @@ class NormalMode extends KeyHandlerMode
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
     else
-      Utils.invokeCommandString registryEntry.command, count
+      Utils.invokeCommandString registryEntry.command, count, {registryEntry}
 
 installModes = ->
   # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
@@ -393,7 +393,8 @@ extend window,
       (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
     , true
 
-    (count, mode = InsertMode) ->
+    (count) ->
+      mode = InsertMode
       # Focus the first input element on the page, and create overlays to highlight all the input elements, with
       # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
       # Pressing any other key will remove the overlays and the special tab behavior.
