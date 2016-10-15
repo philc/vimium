@@ -388,7 +388,11 @@ extend window,
     new PassNextKeyMode count
 
   enterNormalMode: (count) ->
-    new NormalMode exitOnEscape: true, indicator: "Normal mode", count: count, singleton: "enterNormalMode"
+    new NormalMode
+      indicator: "Normal mode (pass keys disabled)"
+      exitOnEscape: true
+      singleton: "enterNormalMode"
+      count: count
 
   focusInput: do ->
     # Track the most recently focused input element.
