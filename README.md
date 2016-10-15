@@ -159,10 +159,14 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
-Changes since the previous release (not in the Chrome Store version)
+Changes since the previous release (not yet in the Chrome Store version)
 
 - Features:
     - You can now map multi-modifier keys, for example: `<c-a-X>`.
+    - Vimium can now do simple key mapping in some modes; see
+      [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#key-mapping).
+      This can be helpful with some non-English keyboards (and can also be used
+      to remap `Escape`).
 - Process:
     - In order to provide faster bug fixes, we may in future push new releases without the noisy notification.
 
