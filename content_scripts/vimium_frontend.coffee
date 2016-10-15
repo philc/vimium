@@ -111,10 +111,12 @@ handlerStack.push
 
 class NormalMode extends KeyHandlerMode
   constructor: (options = {}) ->
-    super extend options,
+    defaults =
       name: "normal"
-      indicator: false # There is no mode indicator in normal mode.
+      indicator: false # There is normally no mode indicator in normal mode.
       commandHandler: @commandHandler.bind this
+
+    super extend defaults, options
 
     chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
       @setKeyMapping items.normalModeKeyStateMapping
@@ -122,10 +124,6 @@ class NormalMode extends KeyHandlerMode
     chrome.storage.onChanged.addListener (changes, area) =>
       if area == "local" and changes.normalModeKeyStateMapping?.newValue
         @setKeyMapping changes.normalModeKeyStateMapping.newValue
-
-    # Initialize components which normal mode depends upon.
-    Scroller.init()
-    FindModeHistory.init()
 
   commandHandler: ({command: registryEntry, count}) ->
     count *= registryEntry.options.count ? 1
@@ -150,6 +148,9 @@ installModes = ->
   # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
   # activates/deactivates itself accordingly.
   normalMode = new NormalMode
+  # Initialize components upon which normal mode depends.
+  Scroller.init()
+  FindModeHistory.init()
   new InsertMode permanent: true
   new GrabBackFocus if isEnabledForUrl
   normalMode # Return the normalMode object (for the tests).
@@ -385,6 +386,9 @@ extend window,
 
   passNextKey: (count) ->
     new PassNextKeyMode count
+
+  enterNormalMode: (count) ->
+    new NormalMode exitOnEscape: true, indicator: "Normal mode", count: count, singleton: "enterNormalMode"
 
   focusInput: do ->
     # Track the most recently focused input element.

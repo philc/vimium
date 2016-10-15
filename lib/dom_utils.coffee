@@ -310,6 +310,7 @@ DomUtils =
         return true unless KeyboardUtils.isEscape event
         @remove()
         false
+    handlerStack.suppressEvent
 
   # Adapted from: http://roysharon.com/blog/37.
   # This finds the element containing the selection focus.

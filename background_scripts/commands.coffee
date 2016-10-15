@@ -166,6 +166,7 @@ Commands =
       "enterVisualMode",
       "enterVisualLineMode",
       "passNextKey",
+      "enterNormalMode",
       "focusInput",
       "LinkHints.activateMode",
       "LinkHints.activateModeToOpenInNewTab",
@@ -238,6 +239,7 @@ Commands =
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
+    "enterNormalMode",
     "passNextKey"]
 
 defaultKeyMappings =
@@ -354,6 +356,7 @@ commandDescriptions =
   passNextKey: ["Pass the next key to Chrome"]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
+  enterNormalMode: ["Handle following key sequence in normal mode"]
 
   focusInput: ["Focus the first text input on the page"]
 
