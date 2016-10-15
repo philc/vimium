@@ -473,7 +473,7 @@ extend window,
               indicator: false
 
   # We cannot use the name "postMessage", because window.postMessage() already exists.
-  sendMessage: (count, registryEntry) ->
+  sendMessage: (count, {registryEntry}) ->
     message = extend (extend {}, registryEntry.options ? {}), {count}
     if message.extension
       chrome.runtime.sendMessage message.extension, message
