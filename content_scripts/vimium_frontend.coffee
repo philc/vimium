@@ -472,6 +472,14 @@ extend window,
               targetElement: document.activeElement
               indicator: false
 
+  # We cannot use the name "postMessage", because window.postMessage() already exists.
+  sendMessage: (count, registryEntry) ->
+    message = extend (extend {}, registryEntry.options ? {}), {count}
+    if message.extension
+      chrome.runtime.sendMessage message.extension, message
+    else
+      window.postMessage message, "*"
+
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL and set
 # the page icon.

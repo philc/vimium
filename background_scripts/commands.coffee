@@ -210,7 +210,8 @@ Commands =
       "moveTabRight"]
     misc:
       ["showHelp",
-      "toggleViewSource"]
+      "toggleViewSource",
+      "sendMessage"]
 
   # Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
   # a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
@@ -238,7 +239,8 @@ Commands =
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
-    "passNextKey"]
+    "passNextKey",
+    "sendMessage"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -416,6 +418,8 @@ commandDescriptions =
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+
+  sendMessage: ["Post a message to the page or another extension"]
 
 Commands.init()
 
