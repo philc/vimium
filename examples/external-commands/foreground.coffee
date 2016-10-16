@@ -1,10 +1,10 @@
 hoverElement = null
 
 Commands =
-  sayHello:
-    description: "Say hello."
+  showAlert:
+    description: "Pop up an alert."
     command: (options) ->
-      alert "Hello!"
+      alert options.message ? "Hello!"
 
   hover:
     description: "Hover on an element selected via link hints."
