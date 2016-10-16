@@ -8,6 +8,7 @@ Examples:
     map eh sendMessage name=showAlert message=Message
     map el sendMessage name=hover hint
     map eu sendMessage name=unhover
+    map eo sendMessage name=openUrls extension=ohmajiahfhgmmijaombnjclabhjlbfon http://edition.cnn.com/ http://www.bbc.com/news
 
 If the `extension` command options is set, then `sendMessage` uses
 [cross-extension messaging](https://developer.chrome.com/extensions/messaging#external).
