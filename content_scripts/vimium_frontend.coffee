@@ -472,13 +472,23 @@ extend window,
               targetElement: document.activeElement
               indicator: false
 
-  # We cannot use the name "postMessage", because window.postMessage() already exists.
   sendMessage: (count, {registryEntry}) ->
-    message = extend (extend {}, registryEntry.options ? {}), {count}
-    if message.extension
-      chrome.runtime.sendMessage message.extension, message
-    else
-      window.postMessage message, "*"
+    message = extend {}, registryEntry?.options ? {}
+    sendMessageCommandHandler count, message
+
+sendMessageCommandHandler = (count, message) ->
+  if message.hint and message.linkHintsElement
+    element = message.linkHintsElement
+    # We remove these two properties so that we can make a recursive call below.
+    delete message[prop] for prop in ["hint", "linkHintsElement"]
+    for el, index in document.documentElement.getElementsByTagName("*")
+      return sendMessageCommandHandler count, extend message, elementIndex: index if el == element
+  else if message.hint and not message.linkHintsElement
+    LinkHints.activateModeToSendMessage count, message
+  else if message.extension
+    chrome.runtime.sendMessage message.extension, message
+  else
+    window.postMessage message, "*"
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL and set
@@ -683,6 +693,6 @@ root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
 extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
-  enterFindMode, focusThisFrame}
+  enterFindMode, focusThisFrame, sendMessageCommandHandler}
 # These are exported only for the tests.
 extend root, {installModes, installListeners}
