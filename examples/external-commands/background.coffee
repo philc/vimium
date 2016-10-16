@@ -10,6 +10,7 @@ Commands =
 
   openUrls:
     description: "Open one or more URLs in new tabs."
+    extra: "http://edition.cnn.com/ http://www.bbc.com/news"
     command: (options) ->
       chrome.windows.getLastFocused {populate: true}, (win) ->
         tab = (tab for tab in win.tabs when tab.active)[0]
@@ -26,8 +27,17 @@ Commands =
 chrome.runtime.onMessageExternal.addListener (request) ->
   Commands[request.name]?.command request
 
-# Show instructions on the background page.
-console.log "# Add (and tweak) one or more of the following on the Vimium options page."
-console.log "\n# Background-page commands:"
+# Store documentation in chrome.storage.local (for the options/help page).
+helpLines = []
+helpLines.push "# Background-page commands"
 for own name, command of Commands
-  console.log "# #{command.description}\n  map X sendMessage name=#{name} extension=#{chrome.runtime.id}"
+  helpLines.push ""
+  helpLines.push "# #{command.description}"
+  helpLines.push "map X sendMessage name=#{name} extension=#{chrome.runtime.id} #{command.extra ? ''}"
+
+helpLines.push ""
+chrome.storage.local.set "contentBackground": helpLines.join "\n"
+
+# Wait a few milliseconds for the help text to be stored, then pop up the options/commands page.
+timeoutSet = (ms, func) -> setTimeout func, ms
+timeoutSet 500, -> chrome.tabs.create url: chrome.runtime.getURL "commands.html"

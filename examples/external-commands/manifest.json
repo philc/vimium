@@ -15,6 +15,7 @@
     "webNavigation",
     "<all_urls>"
   ],
+  "options_page": "commands.html",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
