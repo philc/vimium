@@ -1,5 +1,6 @@
 require "./test_helper.js"
 extend global, require "./test_chrome_stubs.js"
+extend global, require "../../background_scripts/bg_utils.js"
 global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
 

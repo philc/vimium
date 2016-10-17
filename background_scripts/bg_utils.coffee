@@ -77,4 +77,18 @@ BgUtils =
             logElement.value += "#{dateString}: #{message}\n"
             logElement.scrollTop = 2000000000
 
+  # Remove comments from a list of lines and merge lines where the last character on the preceding line is "\".
+  parseLines: (lines) ->
+    previousText = []
+    for line in lines
+      line = line.replace /^\s+/g, ''
+      continue if line.length == 0
+      continue if line[0] in '#"'
+      if line[line.length-1] == "\\"
+        previousText.push line[...line.length-1]
+        continue
+      line = previousText.join(" ") + line
+      previousText = []
+      line
+
 root.BgUtils = BgUtils

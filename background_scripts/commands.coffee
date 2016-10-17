@@ -61,7 +61,7 @@ Commands =
         [key[0], @parseKeySequence(key[1..])...]
 
   parseCustomKeyMappings: (customKeyMappings) ->
-    for line in customKeyMappings.split "\n"
+    for line in BgUtils.parseLines customKeyMappings.split "\n"
       unless  line[0] == "\"" or line[0] == "#"
         tokens = line.replace(/\s+$/, "").split /\s+/
         switch tokens[0]
