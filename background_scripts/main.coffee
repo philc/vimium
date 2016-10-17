@@ -146,14 +146,30 @@ mkRepeatCommand = (command) -> (request) ->
 # mapped in commands.coffee.
 BackgroundCommands =
   createTab: mkRepeatCommand (request, callback) ->
-    request.url ?= do ->
-      url = Settings.get "newTabUrl"
-      if url == "pages/blank.html"
-        # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
-        if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl
+    request.urls ?=
+      if request.url
+        # If the request contains a URL, then use it.
+        [request.url]
       else
-        url
-    TabOperations.openUrlInNewTab request, (tab) -> callback extend request, {tab, tabId: tab.id}
+        # Otherwise, if we have a registryEntry containing URLs, then use them.
+        urlList = (opt for own opt of request.registryEntry?.options ? {} when Utils.isUrl opt)
+        if 0 < urlList.length
+          urlList
+        else
+          # Otherwise, just create a new tab.
+          url = Settings.get "newTabUrl"
+          if url == "pages/blank.html"
+            # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
+            [if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl]
+          else
+            [url]
+    urls = request.urls[..]
+    do openNextUrl = (request) ->
+      if 0 < urls.length
+        TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), (tab) ->
+          openNextUrl extend request, {tab, tabId: tab.id}
+      else
+        callback request
   duplicateTab: mkRepeatCommand (request, callback) ->
     chrome.tabs.duplicate request.tabId, (tab) -> callback extend request, {tab, tabId: tab.id}
   moveTabToNewWindow: ({count, tab}) ->
