@@ -41,6 +41,7 @@ KeyboardUtils =
       @getKeyCharUsingKey event
 
   getKeyCharUsingKey: (event) ->
+    return unless event.key?  # Avoid error if event.key is undefined
     if event.keyCode of @keyNames
       @keyNames[event.keyCode]
     else if event.key.length == 1
