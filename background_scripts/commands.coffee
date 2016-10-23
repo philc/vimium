@@ -61,35 +61,34 @@ Commands =
         [key[0], @parseKeySequence(key[1..])...]
 
   parseCustomKeyMappings: (customKeyMappings) ->
-    for line in customKeyMappings.split "\n"
-      unless  line[0] == "\"" or line[0] == "#"
-        tokens = line.replace(/\s+$/, "").split /\s+/
-        switch tokens[0]
-          when "map"
-            [ _, key, command, optionList... ] = tokens
-            keySequence = @parseKeySequence key
-            if command? and @availableCommands[command]
-              key = keySequence.join ""
-              BgUtils.log "mapping [\"#{keySequence.join '", "'}\"] to #{command}"
-              @mapKeyToCommand { key, command, keySequence, options: @parseCommandOptions command, optionList }
-            else
-              BgUtils.log "skipping [\"#{keySequence.join '", "'}\"] for #{command} -- something is not right"
+    for line in BgUtils.parseLines customKeyMappings
+      tokens = line.split /\s+/
+      switch tokens[0]
+        when "map"
+          [ _, key, command, optionList... ] = tokens
+          keySequence = @parseKeySequence key
+          if command? and @availableCommands[command]
+            key = keySequence.join ""
+            BgUtils.log "mapping [\"#{keySequence.join '", "'}\"] to #{command}"
+            @mapKeyToCommand { key, command, keySequence, options: @parseCommandOptions command, optionList }
+          else
+            BgUtils.log "skipping [\"#{keySequence.join '", "'}\"] for #{command} -- something is not right"
 
-          when "unmap"
-            if tokens.length == 2
-              keySequence = @parseKeySequence tokens[1]
-              key = keySequence.join ""
-              BgUtils.log "Unmapping #{key}"
-              delete @keyToCommandRegistry[key]
+        when "unmap"
+          if tokens.length == 2
+            keySequence = @parseKeySequence tokens[1]
+            key = keySequence.join ""
+            BgUtils.log "Unmapping #{key}"
+            delete @keyToCommandRegistry[key]
 
-          when "unmapAll"
-            @keyToCommandRegistry = {}
+        when "unmapAll"
+          @keyToCommandRegistry = {}
 
-          when "mapkey"
-            if tokens.length == 3
-              fromChar = @parseKeySequence tokens[1]
-              toChar = @parseKeySequence tokens[2]
-              @mapKeyRegistry[fromChar[0]] = toChar[0] if fromChar.length == toChar.length == 1
+        when "mapkey"
+          if tokens.length == 3
+            fromChar = @parseKeySequence tokens[1]
+            toChar = @parseKeySequence tokens[2]
+            @mapKeyRegistry[fromChar[0]] = toChar[0] if fromChar.length == toChar.length == 1
 
     # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
     # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
