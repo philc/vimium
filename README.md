@@ -167,6 +167,7 @@ Changes since the previous release (not yet in the Chrome Store version)
       [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#key-mapping).
       This can be helpful with some non-English keyboards (and can also be used
       to remap `Escape`).
+    - For *Custom key mappings* on the options page, lines which end with `\\` are now continued on the following line.
 - Process:
     - In order to provide faster bug fixes, we may in future push new releases without the noisy notification.
 
