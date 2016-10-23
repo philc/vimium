@@ -98,6 +98,22 @@ context "Validate advanced commands",
     for command in Commands.advancedCommands
       assert.isTrue 0 <= @allCommands.indexOf command
 
+context "Parse commands",
+  should "omit whitespace", ->
+    assert.equal 0, BgUtils.parseLines("    \n    \n   ").length
+
+  should "omit comments", ->
+    assert.equal 0, BgUtils.parseLines(" # comment   \n \" comment   \n   ").length
+
+  should "join lines", ->
+    assert.equal 1, BgUtils.parseLines("a\\\nb").length
+    assert.equal "ab", BgUtils.parseLines("a\\\nb")[0]
+
+  should "trim lines", ->
+    assert.equal 2, BgUtils.parseLines("  a  \n  b").length
+    assert.equal "a", BgUtils.parseLines("  a  \n  b")[0]
+    assert.equal "b", BgUtils.parseLines("  a  \n  b")[1]
+
 # TODO (smblott) More tests:
 # - Ensure each background command has an implmentation in BackgroundCommands
 # - Ensure each foreground command has an implmentation in vimium_frontent.coffee
