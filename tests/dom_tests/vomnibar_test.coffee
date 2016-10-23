@@ -1,5 +1,4 @@
 vomnibarFrame = null
-SearchEngines.refresh ""
 Vomnibar.init()
 
 context "Keep selection within bounds",
@@ -30,7 +29,7 @@ context "Keep selection within bounds",
     Vomnibar.vomnibarUI.hide()
 
   should "set selection to position -1 for omni completion by default", ->
-    Vomnibar.activate()
+    Vomnibar.activate 0, options: {}
     ui = vomnibarFrame.Vomnibar.vomnibarUI
 
     @completions = []
@@ -62,7 +61,7 @@ context "Keep selection within bounds",
     assert.equal -1, ui.selection
 
   should "keep selection within bounds", ->
-    Vomnibar.activate()
+    Vomnibar.activate 0, options: {}
     ui = vomnibarFrame.Vomnibar.vomnibarUI
 
     @completions = []

@@ -4,22 +4,19 @@
 Vomnibar =
   vomnibarUI: null
 
-  # Parse any additional options from the command's registry entry.  Currently, this only includes a flag of
-  # the form "keyword=X", for direct activation of a custom search engine.
-  parseRegistryEntry: (registryEntry = { options: [] }, callback = null) ->
-    searchEngines = Settings.get("searchEngines") ? ""
-    SearchEngines.refreshAndUse searchEngines, (engines) ->
-      callback? registryEntry.options
+  # Extract any additional options from the command's registry entry.
+  extractOptionsFromRegistryEntry: (registryEntry, callback) ->
+    callback? extend {}, registryEntry.options
 
   # sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be different
   # from the current frame.
 
   activate: (sourceFrameId, registryEntry) ->
-    @parseRegistryEntry registryEntry, (options) =>
+    @extractOptionsFromRegistryEntry registryEntry, (options) =>
       @open sourceFrameId, extend options, completer:"omni"
 
   activateInNewTab: (sourceFrameId, registryEntry) ->
-    @parseRegistryEntry registryEntry, (options) =>
+    @extractOptionsFromRegistryEntry registryEntry, (options) =>
       @open sourceFrameId, extend options, completer:"omni", newTab: true
 
   activateTabSelection: (sourceFrameId) -> @open sourceFrameId, {
