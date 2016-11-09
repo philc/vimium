@@ -188,6 +188,11 @@ context "Test link hints for focusing input elements correctly",
       testDiv.appendChild input
       inputs.push input
 
+    # manually add the select element to test focus
+    input = document.createElement "select"
+    testDiv.appendChild input
+    inputs.push input
+
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
 
