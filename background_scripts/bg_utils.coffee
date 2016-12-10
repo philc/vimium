@@ -85,4 +85,35 @@ BgUtils =
       continue if line[0] in '#"'
       line
 
+# Utility for parsing and using the custom search-engine configuration.  We re-use the previous parse if the
+# search-engine configuration is unchanged.
+SearchEngines =
+  previousSearchEngines: null
+  searchEngines: null
+
+  refresh: (searchEngines) ->
+    unless @previousSearchEngines? and searchEngines == @previousSearchEngines
+      @previousSearchEngines = searchEngines
+      @searchEngines = new AsyncDataFetcher (callback) ->
+        engines = {}
+        for line in BgUtils.parseLines searchEngines
+          tokens = line.split /\s+/
+          if 2 <= tokens.length
+            keyword = tokens[0].split(":")[0]
+            searchUrl = tokens[1]
+            description = tokens[2..].join(" ") || "search (#{keyword})"
+            engines[keyword] = {keyword, searchUrl, description} if Utils.hasFullUrlPrefix searchUrl
+
+        callback engines
+
+  # Use the parsed search-engine configuration, possibly asynchronously.
+  use: (callback) ->
+    @searchEngines.use callback
+
+  # Both set (refresh) the search-engine configuration and use it at the same time.
+  refreshAndUse: (searchEngines, callback) ->
+    @refresh searchEngines
+    @use callback
+
+root.SearchEngines = SearchEngines
 root.BgUtils = BgUtils
