@@ -384,8 +384,11 @@ extend window,
   enterVisualLineMode: ->
     new VisualLineMode userLaunchedMode: true
 
-  passNextKey: (count) ->
-    new PassNextKeyMode count
+  passNextKey: (count, options) ->
+    if options.registryEntry.options.normal
+      enterNormalMode count, options
+    else
+      new PassNextKeyMode count
 
   enterNormalMode: (count) ->
     new NormalMode
