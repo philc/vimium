@@ -9,6 +9,7 @@ Commands =
 
     Settings.postUpdateHooks["keyMappings"] = @loadKeyMappings.bind this
     @loadKeyMappings Settings.get "keyMappings"
+    @prepareHelpPageData()
 
   loadKeyMappings: (customKeyMappings) ->
     @keyToCommandRegistry = {}
@@ -112,6 +113,24 @@ Commands =
           # We don't need these properties in the content scripts.
           delete currentMapping[key][prop] for prop in ["keySequence", "description"]
     chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
+
+  # Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.  We do
+  # this on the "nextTick" because there's not need for it to be done synchronously.
+  prepareHelpPageData: ->
+    Utils.nextTick =>
+      commandToKey = {}
+      for own key, registryEntry of @keyToCommandRegistry
+        (commandToKey[registryEntry.command] ?= []).push key
+      commandGroups = {}
+      for own group, commands of @commandGroups
+        commandGroups[group] = []
+        for command in commands
+          commandGroups[group].push
+            command: command
+            description: @availableCommands[command].description
+            keys: commandToKey[command] ? []
+            advanced: command in @advancedCommands
+      chrome.storage.local.set helpPageData: commandGroups
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.

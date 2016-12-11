@@ -646,8 +646,7 @@ enterFindMode = ->
   new FindMode()
 
 window.showHelp = (sourceFrameId) ->
-  chrome.runtime.sendMessage handler: "getHelpDialogHtml", (response) ->
-    HelpDialog.toggle {sourceFrameId, html: response}
+  HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
 
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 window.HelpDialog ?=
