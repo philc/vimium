@@ -1,36 +1,55 @@
 Commands =
+  availableCommands: {}
+  keyToCommandRegistry: null
+  mapKeyRegistry: null
+
   init: ->
-    for own command, descriptor of commandDescriptions
-      @addCommand(command, descriptor[0], descriptor[1])
-    @loadKeyMappings Settings.get "keyMappings"
+    for own command, [description, options] of commandDescriptions
+      @availableCommands[command] = extend (options ? {}), description: description
+
     Settings.postUpdateHooks["keyMappings"] = @loadKeyMappings.bind this
+    @loadKeyMappings Settings.get "keyMappings"
+    @prepareHelpPageData()
 
   loadKeyMappings: (customKeyMappings) ->
-    @clearKeyMappingsAndSetDefaults()
-    @parseCustomKeyMappings customKeyMappings
-    @generateKeyStateMapping()
+    @keyToCommandRegistry = {}
+    @mapKeyRegistry = {}
+
+    configLines = ("map #{key} #{command}" for own key, command of defaultKeyMappings)
+    configLines.push BgUtils.parseLines(customKeyMappings)...
+    seen = {}
+    unmapAll = false
+    for line in configLines.reverse()
+      tokens = line.split /\s+/
+      switch tokens[0]
+        when "map"
+          if 3 <= tokens.length and not unmapAll
+            [_, key, command, optionsList...] = tokens
+            if not seen[key] and registryEntry = @availableCommands[command]
+              seen[key] = true
+              keySequence = @parseKeySequence key
+              options = @parseCommandOptions command, optionsList
+              @keyToCommandRegistry[key] = extend {keySequence, command, options}, @availableCommands[command]
+        when "unmap"
+          if tokens.length == 2
+            seen[tokens[1]] = true
+        when "unmapAll"
+          unmapAll = true
+        when "mapkey"
+          if tokens.length == 3
+            fromChar = @parseKeySequence tokens[1]
+            toChar = @parseKeySequence tokens[2]
+            @mapKeyRegistry[fromChar[0]] ?= toChar[0] if fromChar.length == toChar.length == 1
+
     chrome.storage.local.set mapKeyRegistry: @mapKeyRegistry
+    @installKeyStateMapping()
 
-  availableCommands: {}
-  keyToCommandRegistry: {}
-
-  # Registers a command, making it available to be optionally bound to a key.
-  # options:
-  #  - background: whether this command needs to be run against the background page.
-  addCommand: (command, description, options = {}) ->
-    if command of @availableCommands
-      BgUtils.log "#{command} is already defined! Check commands.coffee for duplicates."
-      return
-
-    @availableCommands[command] = extend options, description: description
-
-  mapKeyToCommand: ({ key, keySequence, command, options }) ->
-    unless @availableCommands[command]
-      BgUtils.log "#{command} doesn't exist!"
-      return
-
-    options ?= {}
-    @keyToCommandRegistry[key] = extend { keySequence, command, options }, @availableCommands[command]
+    # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
+    # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
+    # in insert mode they expect the character to be input, not to be droppped into some special Vimium
+    # mode.
+    Settings.set "passNextKeyKeys",
+      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -60,43 +79,6 @@ Commands =
       else
         [key[0], @parseKeySequence(key[1..])...]
 
-  parseCustomKeyMappings: (customKeyMappings) ->
-    for line in BgUtils.parseLines customKeyMappings
-      tokens = line.split /\s+/
-      switch tokens[0]
-        when "map"
-          [ _, key, command, optionList... ] = tokens
-          keySequence = @parseKeySequence key
-          if command? and @availableCommands[command]
-            key = keySequence.join ""
-            BgUtils.log "mapping [\"#{keySequence.join '", "'}\"] to #{command}"
-            @mapKeyToCommand { key, command, keySequence, options: @parseCommandOptions command, optionList }
-          else
-            BgUtils.log "skipping [\"#{keySequence.join '", "'}\"] for #{command} -- something is not right"
-
-        when "unmap"
-          if tokens.length == 2
-            keySequence = @parseKeySequence tokens[1]
-            key = keySequence.join ""
-            BgUtils.log "Unmapping #{key}"
-            delete @keyToCommandRegistry[key]
-
-        when "unmapAll"
-          @keyToCommandRegistry = {}
-
-        when "mapkey"
-          if tokens.length == 3
-            fromChar = @parseKeySequence tokens[1]
-            toChar = @parseKeySequence tokens[2]
-            @mapKeyRegistry[fromChar[0]] = toChar[0] if fromChar.length == toChar.length == 1
-
-    # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
-    # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
-    # in insert mode they expect the character to be input, not to be droppped into some special Vimium
-    # mode.
-    Settings.set "passNextKeyKeys",
-      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
-
   # Command options follow command mappings, and are of one of two forms:
   #   key=value     - a value
   #   key           - a flag
@@ -113,16 +95,9 @@ Commands =
 
     options
 
-  clearKeyMappingsAndSetDefaults: ->
-    @keyToCommandRegistry = {}
-    @mapKeyRegistry = {}
-    for own key, command of defaultKeyMappings
-      keySequence = @parseKeySequence key
-      key = keySequence.join ""
-      @mapKeyToCommand { key, command, keySequence }
-
-  # This generates a nested key-to-command mapping structure. There is an example in mode_key_handler.coffee.
-  generateKeyStateMapping: ->
+  # This generates and installs a nested key-to-command mapping structure. There is an example in
+  # mode_key_handler.coffee.
+  installKeyStateMapping: ->
     keyStateMapping = {}
     for own keys, registryEntry of @keyToCommandRegistry
       currentMapping = keyStateMapping
@@ -136,8 +111,24 @@ Commands =
         else
           currentMapping[key] = extend {}, registryEntry
           # We don't need these properties in the content scripts.
-          delete registryEntry[prop] for prop in ["keySequence", "description"]
+          delete currentMapping[key][prop] for prop in ["keySequence", "description"]
     chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
+
+  # Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.
+  prepareHelpPageData: ->
+    commandToKey = {}
+    for own key, registryEntry of @keyToCommandRegistry
+      (commandToKey[registryEntry.command] ?= []).push key
+    commandGroups = {}
+    for own group, commands of @commandGroups
+      commandGroups[group] = []
+      for command in commands
+        commandGroups[group].push
+          command: command
+          description: @availableCommands[command].description
+          keys: commandToKey[command] ? []
+          advanced: command in @advancedCommands
+    chrome.storage.local.set helpPageData: commandGroups
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.

@@ -80,56 +80,6 @@ onURLChange = (details) ->
 chrome.webNavigation.onHistoryStateUpdated.addListener onURLChange # history.pushState.
 chrome.webNavigation.onReferenceFragmentUpdated.addListener onURLChange # Hash changed.
 
-# Retrieves the help dialog HTML template from a file, and populates it with the latest keybindings.
-getHelpDialogHtml = ({showUnboundCommands, showCommandNames, customTitle}) ->
-  commandsToKey = {}
-  for own key of Commands.keyToCommandRegistry
-    command = Commands.keyToCommandRegistry[key].command
-    commandsToKey[command] = (commandsToKey[command] || []).concat(key)
-
-  replacementStrings =
-    version: Utils.getCurrentVersion()
-    title: customTitle || "Help"
-    tip: if showCommandNames then "Tip: click command names to yank them to the clipboard." else "&nbsp;"
-
-  for own group of Commands.commandGroups
-    replacementStrings[group] =
-        helpDialogHtmlForCommandGroup(group, commandsToKey, Commands.availableCommands,
-                                      showUnboundCommands, showCommandNames)
-
-  replacementStrings
-
-#
-# Generates HTML for a given set of commands. commandGroups are defined in commands.js
-#
-helpDialogHtmlForCommandGroup = (group, commandsToKey, availableCommands,
-    showUnboundCommands, showCommandNames) ->
-  html = []
-  for command in Commands.commandGroups[group]
-    keys = commandsToKey[command] || []
-    bindings = ("<span class='vimiumHelpDialogKey'>#{Utils.escapeHtml key}</span>" for key in keys).join ", "
-    if (showUnboundCommands || commandsToKey[command])
-      isAdvanced = Commands.advancedCommands.indexOf(command) >= 0
-      description = availableCommands[command].description
-      if keys.join(", ").length < 12
-        helpDialogHtmlForCommand html, isAdvanced, bindings, description, showCommandNames, command
-      else
-        # If the length of the bindings is too long, then we display the bindings on a separate row from the
-        # description.  This prevents the column alignment from becoming out of whack.
-        helpDialogHtmlForCommand html, isAdvanced, bindings, "", false, ""
-        helpDialogHtmlForCommand html, isAdvanced, "", description, showCommandNames, command
-  html.join("\n")
-
-helpDialogHtmlForCommand = (html, isAdvanced, bindings, description, showCommandNames, command) ->
-  html.push "<tr class='vimiumReset #{"advanced" if isAdvanced}'>"
-  if description
-    html.push "<td class='vimiumReset'>#{bindings}</td>"
-    html.push "<td class='vimiumReset'></td><td class='vimiumReset vimiumHelpDescription'>", description
-    html.push("(<span class='vimiumReset commandName'>#{command}</span>)") if showCommandNames
-  else
-    html.push "<td class='vimiumReset' colspan='3' style='text-align: left;'>", bindings
-  html.push("</td></tr>")
-
 # Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.
 do ->
   req = new XMLHttpRequest()
@@ -429,7 +379,6 @@ portHandlers =
 
 sendRequestHandlers =
   runBackgroundCommand: (request) -> BackgroundCommands[request.registryEntry.command] request
-  getHelpDialogHtml: getHelpDialogHtml
   # getCurrentTabUrl is used by the content scripts to get their full URL, because window.location cannot help
   # with Chrome-specific URLs like "view-source:http:..".
   getCurrentTabUrl: ({tab}) -> tab.url

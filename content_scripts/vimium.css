@@ -243,7 +243,7 @@ div#vimiumHelpDialog td.vimiumHelpDescription {
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:14px;
 }
-div#vimiumHelpDialog span.commandName {
+div#vimiumHelpDialog span.vimiumCopyCommandNameName {
   font-style: italic;
   cursor: pointer;
   font-size: 12px;
@@ -274,6 +274,9 @@ div#vimiumHelpDialogFooter {
   display: block;
   position: relative;
   margin-bottom: 37px;
+}
+table.helpDialogBottom {
+  width:100%;
 }
 td.helpDialogBottomRight {
   width:100%;
