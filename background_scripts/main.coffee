@@ -152,18 +152,18 @@ BackgroundCommands =
         [request.url]
       else
         # Otherwise, if we have a registryEntry containing URLs, then use them.
-        urlList = (opt for own opt of request.registryEntry?.options ? {} when Utils.isUrl opt)
+        urlList = (opt for opt in request.registryEntry.optionList when Utils.isUrl opt)
         if 0 < urlList.length
           urlList
         else
           # Otherwise, just create a new tab.
-          url = Settings.get "newTabUrl"
-          if url == "pages/blank.html"
+          newTabUrl = Settings.get "newTabUrl"
+          if newTabUrl == "pages/blank.html"
             # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
             [if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl]
           else
-            [url]
-    urls = request.urls[..]
+            [newTabUrl]
+    urls = request.urls[..].reverse()
     do openNextUrl = (request) ->
       if 0 < urls.length
         TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), (tab) ->
