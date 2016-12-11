@@ -341,7 +341,7 @@ commandDescriptions =
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
-  passNextKey: ["Pass the next key to Chrome"]
+  passNextKey: ["Pass the next key to the page"]
   enterVisualMode: ["Enter visual mode", { noRepeat: true }]
   enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }]
 
