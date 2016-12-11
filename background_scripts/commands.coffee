@@ -39,7 +39,7 @@ Commands =
           if tokens.length == 3
             fromChar = @parseKeySequence tokens[1]
             toChar = @parseKeySequence tokens[2]
-            @mapKeyRegistry[fromChar[0]] = toChar[0] if fromChar.length == toChar.length == 1
+            @mapKeyRegistry[fromChar[0]] ?= toChar[0] if fromChar.length == toChar.length == 1
 
     chrome.storage.local.set mapKeyRegistry: @mapKeyRegistry
     @installKeyStateMapping()
