@@ -145,6 +145,9 @@ mkRepeatCommand = (command) -> (request) ->
 # These are commands which are bound to keystrokes which must be handled by the background page. They are
 # mapped in commands.coffee.
 BackgroundCommands =
+  # Create a new tab.  Also, with:
+  #     map X createTab http://www.bbc.com/news
+  # create a new tab with the given URL.
   createTab: mkRepeatCommand (request, callback) ->
     request.urls ?=
       if request.url

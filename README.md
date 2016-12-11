@@ -162,6 +162,7 @@ Release Notes
 Changes since the previous release (not yet in the Chrome Store version)
 
 - Features:
+    - The `createTab` command can now open specific URLs (e.g, `map X createTab http://www.bbc.com/news`).
     - You can now map multi-modifier keys, for example: `<c-a-X>`.
     - Vimium can now do simple key mapping in some modes; see
       [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#key-mapping).
