@@ -24,12 +24,12 @@ Commands =
       switch tokens[0]
         when "map"
           if 3 <= tokens.length and not unmapAll
-            [_, key, command, optionsList...] = tokens
+            [_, key, command, optionList...] = tokens
             if not seen[key] and registryEntry = @availableCommands[command]
               seen[key] = true
               keySequence = @parseKeySequence key
-              options = @parseCommandOptions command, optionsList
-              @keyToCommandRegistry[key] = extend {keySequence, command, options}, @availableCommands[command]
+              options = @parseCommandOptions command, optionList
+              @keyToCommandRegistry[key] = extend {keySequence, command, options, optionList}, @availableCommands[command]
         when "unmap"
           if tokens.length == 2
             seen[tokens[1]] = true
