@@ -386,7 +386,7 @@ extend window,
 
   passNextKey: (count, options) ->
     if options.registryEntry.options.normal
-      enterNormalMode count, options
+      enterNormalMode count
     else
       new PassNextKeyMode count
 
