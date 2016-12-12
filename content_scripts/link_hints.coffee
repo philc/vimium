@@ -444,7 +444,17 @@ class LinkHintsMode
 # Use characters for hints, and do not filter links by their text.
 class AlphabetHints
   constructor: ->
-    @linkHintCharacters = Settings.get "linkHintCharacters"
+    settingsLinkHintCharacters = Settings.get "linkHintCharacters"
+
+    # Test to see if 'Characters used for link hints' option is set to default
+    if settingsLinkHintCharacters == 'sadfjklewcmpgh'
+      @linkHintCharacters = settingsLinkHintCharacters
+    # If 'Characters used for link hints' option is customized, make all link hints are lowercase
+    else
+      @linkHintCharacters = ''
+      for linkHintCharacter in settingsLinkHintCharacters
+        @linkHintCharacters += linkHintCharacter.toLowerCase()
+
     # We use the keyChar from keydown if the link-hint characters are all "a-z0-9".  This is the default
     # settings value, and preserves the legacy behavior (which always used keydown) for users which are
     # familiar with that behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin
