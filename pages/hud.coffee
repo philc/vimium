@@ -69,6 +69,7 @@ handlers =
 
     countElement = document.createElement "span"
     countElement.id = "hud-match-count"
+    countElement.style.float = "right"
     hud.appendChild countElement
     inputElement.focus()
 
