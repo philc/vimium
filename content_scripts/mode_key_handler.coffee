@@ -36,6 +36,18 @@ class KeyHandlerMode extends Mode
     @mapKeyRegistry = {}
     Utils.monitorChromeStorage "mapKeyRegistry", (value) => @mapKeyRegistry = value
 
+    if options.exitOnEscape
+      # If we're part way through a command's key sequence, then a first Escape should reset the key state,
+      # and only a second Escape should actually exit this mode.
+      @push
+        _name: "key-handler-escape-listener"
+        keydown: (event) =>
+          if KeyboardUtils.isEscape(event) and not @isInResetState()
+            @reset()
+            DomUtils.suppressKeyupAfterEscape handlerStack
+          else
+            @continueBubbling
+
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
     keyChar = @mapKeyRegistry[keyChar] ? keyChar
@@ -92,7 +104,10 @@ class KeyHandlerMode extends Mode
   # Keystrokes are *never* considered pass keys if the user has begun entering a command.  So, for example, if
   # 't' is a passKey, then the "t"-s of 'gt' and '99t' are neverthless handled as regular keys.
   isPassKey: (keyChar) ->
-    @countPrefix == 0 and @keyState.length == 1 and keyChar in (@passKeys ? "")
+    @isInResetState() and keyChar in (@passKeys ? "")
+
+  isInResetState: ->
+    @countPrefix == 0 and @keyState.length == 1
 
   handleKeyChar: (keyChar) ->
     bgLog "handle key #{keyChar} (#{@name})"
@@ -106,6 +121,7 @@ class KeyHandlerMode extends Mode
       bgLog "  invoke #{command.command} count=#{count} "
       @reset()
       @commandHandler {command, count}
+      @exit() if @options.count? and --@options.count <= 0
     @suppressEvent
 
 root = exports ? window
