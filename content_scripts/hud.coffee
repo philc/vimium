@@ -66,7 +66,7 @@ HUD =
 
     focusNode = DomUtils.getSelectionFocusElement()
     document.activeElement?.blur()
-    focusNode?.focus()
+    focusNode?.focus?()
 
     if exitEventIsEnter
       handleEnterForFindMode()
