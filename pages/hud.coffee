@@ -63,6 +63,7 @@ handlers =
     document.getElementById("hud").innerText = data.text
     document.getElementById("hud").classList.add "vimiumUIComponentVisible"
     document.getElementById("hud").classList.remove "vimiumUIComponentHidden"
+    document.getElementById("hud").classList.remove "hud-find"
   hidden: ->
     # We get a flicker when the HUD later becomes visible again (with new text) unless we reset its contents
     # here.
@@ -72,7 +73,7 @@ handlers =
 
   showFindMode: (data) ->
     hud = document.getElementById "hud"
-    hud.innerText = "/\u200A" # \u200A is a "hair space", to leave enough space before the caret/first char.
+    hud.classList.add "hud-find"
 
     inputElement = document.createElement "span"
     try # NOTE(mrmr1993): Chrome supports non-standard "plaintext-only", which is what we *really* want.
