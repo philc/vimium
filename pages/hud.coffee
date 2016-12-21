@@ -46,6 +46,7 @@ handlers =
     document.getElementById("hud").innerText = data.text
     document.getElementById("hud").classList.add "vimiumUIComponentVisible"
     document.getElementById("hud").classList.remove "vimiumUIComponentHidden"
+    document.getElementById("hud").classList.remove "hud-find"
   hidden: ->
     # We get a flicker when the HUD later becomes visible again (with new text) unless we reset its contents
     # here.
@@ -55,6 +56,7 @@ handlers =
 
   showFindMode: (data) ->
     hud = document.getElementById "hud"
+    hud.classList.add "hud-find"
 
     inputElement = document.createElement "span"
     inputElement.contentEditable = "plaintext-only"
