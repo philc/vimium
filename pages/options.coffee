@@ -237,6 +237,7 @@ initOptionsPage = ->
     HelpDialog.toggle showAllCommandDetails: true
 
   saveOptions = ->
+    $("linkHintCharacters").value = $("linkHintCharacters").value.toLowerCase()
     Option.saveOptions()
     $("saveOptions").disabled = true
     $("saveOptions").innerHTML = "No Changes"
