@@ -55,7 +55,6 @@ handlers =
 
   showFindMode: (data) ->
     hud = document.getElementById "hud"
-    hud.innerText = "/\u200A" # \u200A is a "hair space", to leave enough space before the caret/first char.
 
     inputElement = document.createElement "span"
     inputElement.contentEditable = "plaintext-only"
