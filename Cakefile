@@ -86,7 +86,11 @@ task "package-custom-crx", "build .crx file", ->
   # ugly hack to modify our manifest file on-the-fly
   origManifestText = fs.readFileSync "manifest.json"
   manifest = JSON.parse origManifestText
-  manifest.update_url = "http://philc.github.com/vimium/updates.xml"
+  # Update manifest fields that you would like to override here.  If
+  # distributing your CRX outside the Chrome webstore in a fork, please follow
+  # the instructions available at
+  # https://developer.chrome.com/extensions/autoupdate.
+  # manifest.update_url = "http://philc.github.com/vimium/updates.xml"
   fs.writeFileSync "manifest.json", JSON.stringify manifest
 
   pem = process.env.VIMIUM_CRX_PEM ? "vimium.pem"
