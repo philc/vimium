@@ -328,15 +328,13 @@ DomUtils =
 
   getSelectionFocusElement: ->
     sel = window.getSelection()
-    if not sel.focusNode?
-      null
-    else if sel.focusNode == sel.anchorNode and sel.focusOffset == sel.anchorOffset
+    node = sel.focusNode
+    if not node?
+      return null
+    if node == sel.anchorNode and sel.focusOffset == sel.anchorOffset
       # The selection either *is* an element, or is inside an opaque element (eg. <input>).
-      sel.focusNode.childNodes[sel.focusOffset]
-    else if sel.focusNode.nodeType != sel.focusNode.ELEMENT_NODE
-      sel.focusNode.parentElement
-    else
-      sel.focusNode
+      node = node.childNodes[sel.focusOffset]
+    if node.nodeType != Node.ELEMENT_NODE then node.parentElement else node
 
   # Get the element in the DOM hierachy that contains `element`.
   # If the element is rendered in a shadow DOM via a <content> element, the <content> element will be
