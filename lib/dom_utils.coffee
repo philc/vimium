@@ -290,7 +290,7 @@ DomUtils =
 
   getViewportTopLeft: ->
     style = getComputedStyle document.documentElement
-    if style.position == "static"
+    if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
       zoom = +style.zoom || 1
       top: Math.ceil(window.scrollY / zoom), left: Math.ceil(window.scrollX / zoom)
     else
