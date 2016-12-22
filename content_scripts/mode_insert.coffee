@@ -10,6 +10,7 @@ class InsertMode extends Mode
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
+      return @passEventToPage if @insertModeLock is document.body
 
       # Check for a pass-next-key key.
       if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
