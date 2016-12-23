@@ -384,7 +384,9 @@ class LinkHintsMode
             # Note(gdh1995): Here we should allow special elements to get focus,
             # <select>: latest Chrome refuses `mousedown` event, and we can only
             #     focus it to let user press space to activate the popup menu
-            if clickEl.nodeName.toLowerCase() in ["input", "select"] or clickEl.tabIndex >= 0
+            # <object> & <embed>: for Flash games which have their own key event handlers
+            #     since we have been able to blur them by pressing `Escape` 
+            if clickEl.nodeName.toLowerCase() in ["input", "select", "object", "embed"] or clickEl.tabIndex >= 0
               clickEl.focus()
             linkActivator clickEl
 
@@ -690,6 +692,8 @@ LocalHints =
                              (element.readOnly and DomUtils.isSelectable element))
       when "button", "select"
         isClickable ||= not element.disabled
+      when "object", "embed"
+        isClickable = true
       when "label"
         isClickable ||= element.control? and not element.control.disabled and
                         (@getVisibleClickable element.control).length == 0
