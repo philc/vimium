@@ -729,8 +729,8 @@ LocalHints =
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
     tabIndexValue = element.getAttribute("tabindex")
-    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-    unless isClickable or isNaN(tabIndex) or tabIndex < 0
+    tabIndex = if tabIndexValue then parseInt tabIndexValue else -1
+    unless isClickable or tabIndex < 0 or isNaN(tabIndex)
       isClickable = onlyHasTabIndex = true
 
     if isClickable
