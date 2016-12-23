@@ -381,7 +381,9 @@ class LinkHintsMode
           else
             clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
             linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
-            # TODO: Are there any other input elements which should not receive focus?
+            # Note(gdh1995): Here we should allow special elements to get focus,
+            # <select>: latest Chrome refuses `mousedown` event, and we can only
+            #     focus it to let user press space to activate the popup menu
             if clickEl.nodeName.toLowerCase() in ["input", "select"] or clickEl.tabIndex >= 0
               clickEl.focus()
             linkActivator clickEl
