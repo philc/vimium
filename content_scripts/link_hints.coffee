@@ -626,7 +626,9 @@ LocalHints =
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
   getVisibleClickable: (element) ->
-    tagName = element.tagName.toLowerCase()
+    # Get the tag name.  However, `element.tagName` can be an element (not a string, see #2305), so we guard
+    # against that.
+    tagName = element.tagName.toLowerCase?() ? ""
     isClickable = false
     onlyHasTabIndex = false
     possibleFalsePositive = false
