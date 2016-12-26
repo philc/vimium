@@ -128,15 +128,15 @@ checkVisibility = (element) ->
 CoreScroller =
   init: ->
     @time = 0
-    @lastEvent = @keyIsDown = @cancelEventListenerId = null
+    @lastEvent = @keyIsDown = null
+    @installCanceEventListener()
 
   # This installs listeners for events which should cancel smooth scrolling.
   installCanceEventListener: ->
-    @removeCancelEventListener()
     # NOTE(smblott) With extreme keyboard configurations, Chrome sometimes does not get a keyup event for
     # every keydown, in which case tapping "j" scrolls indefinitely.  This appears to be a Chrome/OS/XOrg bug
     # of some kind.  See #1549.
-    @cancelEventListenerId = handlerStack.push
+    handlerStack.push
       _name: 'scroller/track-key-status'
       keydown: (event) =>
         handlerStack.alwaysContinueBubbling =>
@@ -150,10 +150,6 @@ CoreScroller =
       blur: =>
         handlerStack.alwaysContinueBubbling =>
           @time += 1 if event.target == window
-
-  removeCancelEventListener: ->
-    handlerStack.remove @cancelEventListenerId if @cancelEventListenerId?
-    @cancelEventListenerId = @lastEvent = @keyIsDown = null
 
   # Return true if CoreScroller would not initiate a new scroll right now.
   wouldNotInitiateScroll: -> @lastEvent?.repeat and Settings.get "smoothScroll"
@@ -194,6 +190,7 @@ CoreScroller =
     totalElapsed = 0.0
     calibration = 1.0
     previousTimestamp = null
+    cancelEventListener = @installCanceEventListener()
 
     animate = (timestamp) =>
       previousTimestamp ?= timestamp
@@ -221,7 +218,7 @@ CoreScroller =
         requestAnimationFrame animate
       else
         # We're done.
-        @removeCancelEventListener()
+        handlerStack.remove cancelEventListener
         checkVisibility element
 
     # If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test always
@@ -229,7 +226,6 @@ CoreScroller =
     ++@time unless continuous
 
     # Start scrolling.
-    @installCanceEventListener()
     requestAnimationFrame animate
 
 # Scroller contains the two main scroll functions which are used by clients.
