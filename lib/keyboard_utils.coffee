@@ -118,11 +118,12 @@ KeyboardUtils =
         if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey)) or allKeydownEvents
           modifiers = []
 
-          keyChar = keyChar.toUpperCase() if event.shiftKey
+          keyChar = keyChar.toUpperCase() if event.shiftKey and keyChar.length == 1
           # These must be in alphabetical order (to match the sorted modifier order in Commands.normalizeKey).
           modifiers.push "a" if event.altKey
           modifiers.push "c" if event.ctrlKey
           modifiers.push "m" if event.metaKey
+          modifiers.push "s" if event.shiftKey and keyChar.length > 1
 
           keyChar = [modifiers..., keyChar].join "-"
           if 1 < keyChar.length then "<#{keyChar}>" else keyChar
