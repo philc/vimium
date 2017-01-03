@@ -66,13 +66,14 @@ Commands =
     namedKey = "(?:[a-z][a-z0-9]+)"                     # E.g. "left" or "f12" (always two characters or more).
     modifiedKey = "(?:#{modifier}+(?:.|#{namedKey}))"   # E.g. "c-*" or "c-left".
     specialKeyRegexp = new RegExp "^<(#{namedKey}|#{modifiedKey})>(.*)", "i"
+    lowerCaseRegexp = /[a-z]/
     (key) ->
       if key.length == 0
         []
       # Parse "<c-a>bcd" as "<c-a>" and "bcd".
       else if 0 == key.search specialKeyRegexp
         [modifiers..., keyChar] = RegExp.$1.split "-"
-        keyChar = keyChar.toLowerCase() unless keyChar.length == 1
+        keyChar = keyChar.toLowerCase() if keyChar.length > 1 and lowerCaseRegexp.test(keyChar)
         modifiers = (modifier.toLowerCase() for modifier in modifiers)
         modifiers.sort()
         ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
