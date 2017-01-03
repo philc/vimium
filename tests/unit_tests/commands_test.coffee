@@ -37,9 +37,10 @@ context "Key mappings",
   should "parse and normalize named keys", ->
     @testKeySequence "<space>", "<space>", 1
     @testKeySequence "<Space>", "<space>", 1
+    @testKeySequence "<SPACE>", "<SPACE>", 1
     @testKeySequence "<C-Space>", "<c-space>", 1
     @testKeySequence "<f12>", "<f12>", 1
-    @testKeySequence "<F12>", "<f12>", 1
+    @testKeySequence "<F12>", "<F12>", 1
 
   should "handle angle brackets which are part of not modifiers", ->
     @testKeySequence "<", "<", 1
