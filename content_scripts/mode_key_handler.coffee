@@ -128,7 +128,6 @@ class KeyHandlerMode extends Mode
     @countPrefix = 0 unless keyChar of @keyState[0]
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
     @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
-
     if @keyState[0].command?
       command = @keyState[0]
       count = if 0 < @countPrefix then @countPrefix else 1
@@ -139,7 +138,6 @@ class KeyHandlerMode extends Mode
       @exit() if @options.count? and --@options.count <= 0
     else
       @setMultiCharTimer()
-
     @suppressEvent
 
 root = exports ? window
