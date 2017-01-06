@@ -54,6 +54,7 @@ class KeyHandlerMode extends Mode
     isEscape = KeyboardUtils.isEscape event
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       @keydownEvents[event.keyCode] = true
+      @removeMultiCharTimeout()
       @reset()
       @suppressEvent
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
@@ -109,19 +110,36 @@ class KeyHandlerMode extends Mode
   isInResetState: ->
     @countPrefix == 0 and @keyState.length == 1
 
+  clearKeyState: ->
+    bgLog "multi-character command timed out"
+    @reset()
+
+  setMultiCharTimer: ->
+    @removeMultiCharTimeout()
+    @multiCharTimeout = setTimeout @clearKeyState.bind(this), 1000
+
+  removeMultiCharTimeout: ->
+    @multiCharTimeout == undefined || clearTimeout(@multiCharTimeout)
+    @multiCharTimeout = undefined
+
   handleKeyChar: (keyChar) ->
     bgLog "handle key #{keyChar} (#{@name})"
     # A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     @countPrefix = 0 unless keyChar of @keyState[0]
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
     @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
+
     if @keyState[0].command?
       command = @keyState[0]
       count = if 0 < @countPrefix then @countPrefix else 1
       bgLog "  invoke #{command.command} count=#{count} "
+      @removeMultiCharTimeout()
       @reset()
       @commandHandler {command, count}
       @exit() if @options.count? and --@options.count <= 0
+    else
+      @setMultiCharTimer()
+
     @suppressEvent
 
 root = exports ? window
