@@ -879,6 +879,47 @@ context "Caret mode",
       sendKeyboardEvent key
       assert.equal "a", getSelection()
 
+context "Visual line mode",
+  setup ->
+    document.getElementById("test-div").innerHTML = """
+    <p><pre>
+      It is an ancient Mariner,
+      And he stoppeth one of three.
+      By thy long grey beard and glittering eye,
+      Now wherefore stopp'st thou me?
+    </pre></p>
+    """
+    initializeModeState()
+    @initialVisualMode = new VisualMode
+    # Enter visual line mode with the second line selected
+    sendKeyboardEvent "c"
+    sendKeyboardEvent "j"
+    sendKeyboardEvent "V"
+
+  tearDown ->
+    document.getElementById("test-div").innerHTML = ""
+
+  should "select lines with j and k", ->
+    assert.equal "  And he stoppeth one of three.", getSelection()
+    sendKeyboardEvent "j"
+    assert.equal "  And he stoppeth one of three.\n" +
+                 "  By thy long grey beard and glittering eye,", getSelection()
+    sendKeyboardEvent "k"
+    assert.equal "  And he stoppeth one of three.", getSelection()
+    sendKeyboardEvent "k"
+    assert.equal "  It is an ancient Mariner,\n" +
+                 "  And he stoppeth one of three.", getSelection()
+
+  should "select lines with j and k with a count", ->
+    assert.equal "  And he stoppeth one of three.", getSelection()
+    sendKeyboardEvent "2j"
+    assert.equal "  And he stoppeth one of three.\n" +
+                 "  By thy long grey beard and glittering eye,\n" +
+                 "  Now wherefore stopp'st thou me?", getSelection()
+    sendKeyboardEvent "3k"
+    assert.equal "  It is an ancient Mariner,\n" +
+                 "  And he stoppeth one of three.", getSelection()
+
 context "Visual mode",
   setup ->
     document.getElementById("test-div").innerHTML = """
