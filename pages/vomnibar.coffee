@@ -31,6 +31,7 @@ Vomnibar =
     @vomnibarUI.setQuery options.query
     @vomnibarUI.setKeyword options.keyword
     @vomnibarUI.update true
+    @vomnibarUI.show()
 
   hide: -> @vomnibarUI?.hide()
   onHidden: -> @vomnibarUI?.onHidden()
@@ -41,6 +42,7 @@ class VomnibarUI
     @onHiddenCallback = null
     @initDom()
 
+  show: -> UIComponentServer.show()
   setQuery: (query) -> @input.value = query
   setKeyword: (keyword) -> @customSearchMode = keyword
   setInitialSelectionValue: (@initialSelectionValue) ->

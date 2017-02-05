@@ -87,6 +87,7 @@ HelpDialog =
                 HUD.showForDuration("Yanked #{commandNameElement.textContent}.", 2000)
 
       @showAdvancedCommands(@getShowAdvancedCommands())
+      UIComponentServer.show()
 
       # "Click" the dialog element (so that it becomes scrollable).
       DomUtils.simulateClick @dialogElement

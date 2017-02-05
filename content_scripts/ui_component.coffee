@@ -63,6 +63,7 @@ class UIComponent
                   setIframePort port1
                 when "setIframeFrameId" then @iframeFrameId = event.data.iframeFrameId
                 when "hide" then @hide()
+                when "show" then @show()
                 else @handleMessage event
 
   # Post a message (if provided), then call continuation (if provided).  We wait for documentReady() to ensure
@@ -74,9 +75,11 @@ class UIComponent
 
   activate: (@options = null) ->
     @postMessage @options, =>
-      @toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @iframeElement.focus() if @options?.focus
-      @showing = true
+
+  show: ->
+    @showing = true
+    @toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
 
   hide: (shouldRefocusOriginalFrame = true) ->
     # We post a non-message (null) to ensure that hide() requests cannot overtake activate() requests.
