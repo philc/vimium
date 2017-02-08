@@ -143,11 +143,11 @@ CoreScroller =
           @keyIsDown = true
           @time += 1 unless event.repeat
           @lastEvent = event
-      keyup: =>
+      keyup: (event) =>
         handlerStack.alwaysContinueBubbling =>
           @keyIsDown = false
           @time += 1
-      blur: =>
+      blur: (event) =>
         handlerStack.alwaysContinueBubbling =>
           @time += 1 if event.target == window
 
