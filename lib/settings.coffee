@@ -75,7 +75,7 @@ Settings =
         setting = {}; setting[key] = @cache[key]
         @log "   chrome.storage.#{storageArea}.set(#{key})"
         @storage.set setting
-      if Utils.isBackgroundPage()
+      if Utils.isBackgroundPage() and storageArea == "sync"
         # Remove options installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
         @log "   chrome.storage.local.remove(#{key})"
         chrome.storage.local.remove key
