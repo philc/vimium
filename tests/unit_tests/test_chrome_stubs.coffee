@@ -49,8 +49,6 @@ exports.chrome =
       addListener: () -> true
     onRemoved:
       addListener: () -> true
-    onActiveChanged:
-      addListener: () -> true
     onActivated:
       addListener: () -> true
     onReplaced:
