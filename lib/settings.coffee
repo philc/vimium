@@ -10,9 +10,11 @@
 #
 # In all cases except Settings.defaults, values are stored as jsonified strings.
 
+storageArea = if chrome.storage.sync? then "sync" else "local"
+
 Settings =
   debug: false
-  storage: chrome.storage.sync
+  storage: chrome.storage[storageArea]
   cache: {}
   isLoaded: false
   onLoadedCallbacks: []
@@ -32,7 +34,7 @@ Settings =
           @handleUpdateFromChromeStorage key, value for own key, value of extend localItems, syncedItems
 
         chrome.storage.onChanged.addListener (changes, area) =>
-          @propagateChangesFromChromeStorage changes if area == "sync"
+          @propagateChangesFromChromeStorage changes if area == storageArea
 
         @runOnLoadedCallbacks()
 
@@ -71,7 +73,7 @@ Settings =
     if @shouldSyncKey key
       if shouldSetInSyncedStorage
         setting = {}; setting[key] = @cache[key]
-        @log "   chrome.storage.sync.set(#{key})"
+        @log "   chrome.storage.#{storageArea}.set(#{key})"
         @storage.set setting
       if Utils.isBackgroundPage()
         # Remove options installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
@@ -98,7 +100,7 @@ Settings =
   nuke: (key) ->
     delete localStorage[key]
     chrome.storage.local.remove key
-    chrome.storage.sync.remove key
+    chrome.storage.sync?.remove key
 
   # For development only.
   log: (args...) ->
