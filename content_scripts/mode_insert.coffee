@@ -17,14 +17,14 @@ class InsertMode extends Mode
         return @suppressEvent
 
       return @passEventToPage unless event.type == 'keydown' and KeyboardUtils.isEscape event
-      target = event.srcElement
+      target = event.target
       if target and DomUtils.isFocusable target
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
         target.blur()
       else if target?.shadowRoot and @insertModeLock
         # An editable element in a shadow DOM is focused; blur it.
         @insertModeLock.blur()
-      @exit event, event.srcElement
+      @exit event, event.target
       DomUtils.suppressKeyupAfterEscape handlerStack
 
     defaults =
