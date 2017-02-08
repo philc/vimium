@@ -101,8 +101,13 @@ TabOperations =
       index: request.tab.index + 1
       active: true
       windowId: request.tab.windowId
-      openerTabId: request.tab.id
-    chrome.tabs.create tabConfig, callback
+    chrome.tabs.create tabConfig, (tab) ->
+      # NOTE(mrmr1993, 2017-02-08): Firefox currently doesn't support openerTabId (issue 1238314) and throws
+      # a type error if it is present. We work around this by attempting to set it separately from creating
+      # the tab.
+      try chrome.tabs.update tab.id, { openerTabId : request.tab.id }, callback
+      catch
+        callback.apply this, arguments
 
 toggleMuteTab = do ->
   muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
