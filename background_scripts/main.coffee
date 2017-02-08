@@ -99,7 +99,7 @@ TabOperations =
     tabConfig =
       url: Utils.convertToUrl request.url
       index: request.tab.index + 1
-      selected: true
+      active: true
       windowId: request.tab.windowId
       openerTabId: request.tab.id
     chrome.tabs.create tabConfig, callback
@@ -127,7 +127,7 @@ toggleMuteTab = do ->
 selectSpecificTab = (request) ->
   chrome.tabs.get(request.id, (tab) ->
     chrome.windows.update(tab.windowId, { focused: true })
-    chrome.tabs.update(request.id, { selected: true }))
+    chrome.tabs.update(request.id, { active: true }))
 
 moveTab = ({count, tab, registryEntry}) ->
   count = -count if registryEntry.command == "moveTabLeft"
@@ -238,7 +238,7 @@ selectTab = (direction, {count, tab}) ->
             Math.min tabs.length - 1, count - 1
           when "last"
             Math.max 0, tabs.length - count
-      chrome.tabs.update tabs[toSelect].id, selected: true
+      chrome.tabs.update tabs[toSelect].id, active: true
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # Only do this once per URL change.
