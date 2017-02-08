@@ -131,7 +131,7 @@ selectSpecificTab = (request) ->
 
 moveTab = ({count, tab, registryEntry}) ->
   count = -count if registryEntry.command == "moveTabLeft"
-  chrome.tabs.getAllInWindow null, (tabs) ->
+  chrome.tabs.query { currentWindow: true }, (tabs) ->
     pinnedCount = (tabs.filter (tab) -> tab.pinned).length
     minIndex = if tab.pinned then 0 else pinnedCount
     maxIndex = (if tab.pinned then pinnedCount else tabs.length) - 1
@@ -226,7 +226,7 @@ removeTabsRelative = (direction, {tab: activeTab}) ->
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
 selectTab = (direction, {count, tab}) ->
-  chrome.tabs.getAllInWindow null, (tabs) ->
+  chrome.tabs.query { currentWindow: true }, (tabs) ->
     if 1 < tabs.length
       toSelect =
         switch direction
