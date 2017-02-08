@@ -342,7 +342,7 @@ DomUtils =
   # If the element is rendered in a shadow DOM via a <content> element, the <content> element will be
   # returned, so the shadow DOM is traversed rather than passed over.
   getContainingElement: (element) ->
-    element.getDestinationInsertionPoints()[0] or element.parentElement
+    element.getDestinationInsertionPoints?()[0] or element.parentElement
 
   # This tests whether a window is too small to be useful.
   windowIsTooSmall: ->
