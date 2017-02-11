@@ -265,7 +265,7 @@ initOptionsPage = ->
   maintainLinkHintsView()
 
 initPopupPage = ->
-  chrome.tabs.getSelected null, (tab) ->
+  chrome.tabs.query { active: true, currentWindow: true }, ([tab]) ->
     exclusions = null
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
 

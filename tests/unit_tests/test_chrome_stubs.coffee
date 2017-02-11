@@ -41,8 +41,6 @@ exports.chrome =
     getViews: -> []
 
   tabs:
-    onSelectionChanged:
-      addListener: () -> true
     onUpdated:
       addListener: () -> true
     onAttached:
@@ -50,8 +48,6 @@ exports.chrome =
     onMoved:
       addListener: () -> true
     onRemoved:
-      addListener: () -> true
-    onActiveChanged:
       addListener: () -> true
     onActivated:
       addListener: () -> true

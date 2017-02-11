@@ -99,7 +99,7 @@ TabOperations =
     tabConfig =
       url: Utils.convertToUrl request.url
       index: request.tab.index + 1
-      selected: true
+      active: true
       windowId: request.tab.windowId
       openerTabId: request.tab.id
     chrome.tabs.create tabConfig, callback
@@ -127,11 +127,11 @@ toggleMuteTab = do ->
 selectSpecificTab = (request) ->
   chrome.tabs.get(request.id, (tab) ->
     chrome.windows.update(tab.windowId, { focused: true })
-    chrome.tabs.update(request.id, { selected: true }))
+    chrome.tabs.update(request.id, { active: true }))
 
 moveTab = ({count, tab, registryEntry}) ->
   count = -count if registryEntry.command == "moveTabLeft"
-  chrome.tabs.getAllInWindow null, (tabs) ->
+  chrome.tabs.query { currentWindow: true }, (tabs) ->
     pinnedCount = (tabs.filter (tab) -> tab.pinned).length
     minIndex = if tab.pinned then 0 else pinnedCount
     maxIndex = (if tab.pinned then pinnedCount else tabs.length) - 1
@@ -226,7 +226,7 @@ removeTabsRelative = (direction, {tab: activeTab}) ->
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
 selectTab = (direction, {count, tab}) ->
-  chrome.tabs.getAllInWindow null, (tabs) ->
+  chrome.tabs.query { currentWindow: true }, (tabs) ->
     if 1 < tabs.length
       toSelect =
         switch direction
@@ -238,7 +238,7 @@ selectTab = (direction, {count, tab}) ->
             Math.min tabs.length - 1, count - 1
           when "last"
             Math.max 0, tabs.length - count
-      chrome.tabs.update tabs[toSelect].id, selected: true
+      chrome.tabs.update tabs[toSelect].id, active: true
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   return unless changeInfo.status == "loading" # Only do this once per URL change.
@@ -467,7 +467,7 @@ do showUpgradeMessage = ->
             Settings.set "previousVersion", currentVersion
             chrome.notifications.onClicked.addListener (id) ->
               if id == notificationId
-                chrome.tabs.getSelected null, (tab) ->
+                chrome.tabs.query { active: true, currentWindow: true }, ([tab]) ->
                   TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium#release-notes"}
       else
         # We need to wait for the user to accept the "notifications" permission.
