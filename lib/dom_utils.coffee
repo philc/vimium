@@ -289,11 +289,14 @@ DomUtils =
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 
   getViewportTopLeft: ->
-    if getComputedStyle(document.documentElement).position == "static"
-      top: window.scrollY, left: window.scrollX
+    box = document.documentElement
+    style = getComputedStyle box
+    if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
+      zoom = +style.zoom || 1
+      top: Math.ceil(window.scrollY / zoom), left: Math.ceil(window.scrollX / zoom)
     else
-      rect = document.documentElement.getBoundingClientRect()
-      top: -rect.top, left: -rect.left
+      rect = box.getBoundingClientRect()
+      top: -rect.top - box.clientTop, left: -rect.left - box.clientLeft
 
   suppressPropagation: (event) ->
     event.stopImmediatePropagation()
