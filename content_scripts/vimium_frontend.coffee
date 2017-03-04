@@ -248,9 +248,9 @@ Frame =
         window.removeEventListener "focus", focusHandler
         window.removeEventListener "resize", resizeHandler
         Frame.postMessage "registerFrame"
-      window.addEventListener "focus", focusHandler = ->
+      window.addEventListener "focus", focusHandler = (event) ->
         postRegisterFrame() if event.target == window
-      window.addEventListener "resize", resizeHandler = ->
+      window.addEventListener "resize", resizeHandler = (event) ->
         postRegisterFrame() unless DomUtils.windowIsTooSmall()
 
   init: ->
