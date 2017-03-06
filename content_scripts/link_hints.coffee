@@ -45,9 +45,14 @@ DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
+SEND_MESSAGE =
+  name: "send-message"
+  indicator: "Send link-hints message"
+  linkActivator: (link) ->
+    sendMessageCommandHandler 1, extend SEND_MESSAGE.options.message, linkHintsElement: link
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, SEND_MESSAGE]
 
 HintCoordinator =
   onExit: []
@@ -57,7 +62,7 @@ HintCoordinator =
   sendMessage: (messageType, request = {}) ->
     Frame.postMessage "linkHintsMessage", extend request, {messageType}
 
-  prepareToActivateMode: (mode, onExit) ->
+  prepareToActivateMode: (options, onExit) ->
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
     # prevent other Vimium commands from being triggered before link-hints mode is launched, we install a
     # temporary mode to block keyboard events.
@@ -71,7 +76,7 @@ HintCoordinator =
     Utils.setTimeout 1000, -> suppressKeyboardEvents.exit() if suppressKeyboardEvents?.modeIsActive
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode",
-      modeIndex: availableModes.indexOf(mode), isVimiumHelpDialog: window.isVimiumHelpDialog
+      modeIndex: availableModes.indexOf(options.mode), isVimiumHelpDialog: window.isVimiumHelpDialog, options: options
 
   # Hint descriptors are global.  They include all of the information necessary for each frame to determine
   # whether and when a hint from *any* frame is selected.  They include the following properties:
@@ -96,7 +101,7 @@ HintCoordinator =
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
   # step in every frame, and @linkHintsMode is in the same state in every frame.
-  activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
+  activateMode: ({hintDescriptors, modeIndex, originatingFrameId, options}) ->
     # We do not receive the frame's own hint descritors back from the background page.  Instead, we merge them
     # with the hint descriptors from other frames here.
     [hintDescriptors[frameId], @localHintDescriptors] = [@localHintDescriptors, null]
@@ -106,7 +111,7 @@ HintCoordinator =
       @suppressKeyboardEvents.exit() if @suppressKeyboardEvents?.modeIsActive
       @suppressKeyboardEvents = null
       @onExit = [] unless frameId == originatingFrameId
-      @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex]
+      @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex], options
 
   # The following messages are exchanged between frames while link-hints mode is active.
   updateKeyState: (request) -> @linkHintsMode.updateKeyState request
@@ -121,14 +126,14 @@ HintCoordinator =
     @linkHintsMode = @localHints = null
 
 LinkHints =
-  activateMode: (count = 1, {mode}) ->
-    mode ?= OPEN_IN_CURRENT_TAB
-    if 0 < count or mode is OPEN_WITH_QUEUE
-      HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
+  activateMode: (count = 1, options) ->
+    options.mode ?= OPEN_IN_CURRENT_TAB
+    if 0 < count or options.mode is OPEN_WITH_QUEUE
+      HintCoordinator.prepareToActivateMode options, (isSuccess) ->
         if isSuccess
           # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
           # which would cause our new mode to exit immediately.
-          Utils.nextTick -> LinkHints.activateMode count-1, mode
+          Utils.nextTick -> LinkHints.activateMode count-1, options
 
   activateModeToOpenInNewTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_BG_TAB
   activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_FG_TAB
@@ -136,6 +141,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
   activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToSendMessage: (count, message) -> @activateMode count, mode: SEND_MESSAGE, message: message
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -148,7 +154,8 @@ class LinkHintsMode
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (hintDescriptors, @mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (hintDescriptors, @mode = OPEN_IN_CURRENT_TAB, options = {}) ->
+    @mode.options = options
     # We need documentElement to be ready in order to append links.
     return unless document.documentElement
 
