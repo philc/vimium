@@ -164,7 +164,7 @@ Release Notes
 - Features:
     - The `createTab` command can now open specific URLs (e.g, `map X createTab http://www.bbc.com/news`).
     - With pass keys defined for a site (such as GMail), you can now use Vimium's bindings again with, for example, `map \ passNextKey normal`;
-      this reactivates normal mode temporarily, but with *without any pass keys*.
+      this reactivates normal mode temporarily, but *without any pass keys*.
     - You can now map multi-modifier keys, for example: `<c-a-X>`.
     - Vimium can now do simple key mapping in some modes; see
       [here](https://github.com/philc/vimium/wiki/Tips-and-Tricks#key-mapping).
