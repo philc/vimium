@@ -159,7 +159,7 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
-Changes since the previous release (not yet in the Chrome Store version)
+1.58 (2017-03-08)
 
 - Features:
     - The `createTab` command can now open specific URLs (e.g, `map X createTab http://www.bbc.com/news`).
