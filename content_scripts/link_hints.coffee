@@ -710,6 +710,16 @@ LocalHints =
     # # Detect elements with "click" listeners installed with `addEventListener()`.
     # isClickable ||= element.hasAttribute "_vimium-has-onclick-listener"
 
+    # in the meantime, use the more expensive computedStyleMap to see if elements have a "cursor: pointer" style
+    # NOTE: because we are optimizing by checking the className attribute of the element, we will miss elements
+    # that get their pointer style from combinators and tag styles, e.g. li > span, .menu > div
+    isClickable ||= element.style.cursor == "pointer" or
+      element.className != "" and
+      element.computedStyleMap().get("cursor").value == "pointer" and
+      element.parentElement.computedStyleMap().get("cursor").value != "pointer"
+
+
+
     # An element with a class name containing the text "button" might be clickable.  However, real clickables
     # are often wrapped in elements with such class names.  So, when we find clickables based only on their
     # class name, we mark them as unreliable.
