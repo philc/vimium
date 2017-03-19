@@ -174,8 +174,9 @@ Release Notes
 - Process:
     - In order to provide faster bug fixes, we may in future push new releases without the noisy notification.
 
-- Subsequent fixes:
+- Post-release minor fixes:
     - 1.58.1 (2017-03-09) fix bug in `LinkHints.activateModeWithQueue` (#2445).
+    - 1.58.2 (2017-03-19) fix key handling bug (#2453).
 
 1.57 (2016-10-01)
 
