@@ -43,6 +43,9 @@ KeyboardUtils =
   getKeyCharUsingKey: (event) ->
     if event.keyCode of @keyNames
       @keyNames[event.keyCode]
+    # It appears that event.key is not always defined (see #2453).
+    else if not event.key?
+      ""
     else if event.key.length == 1
       event.key
     else if event.key.length == 2 and "F1" <= event.key <= "F9"
