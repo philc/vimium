@@ -1,3 +1,7 @@
+mapKeyRegistry = {}
+# NOTE: "?" here for the tests.
+Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
+
 KeyboardUtils =
   keyCodes:
     { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, ctrlEnter: 10, space: 32, shiftKey: 16, ctrlKey: 17, f1: 112,
@@ -83,9 +87,6 @@ KeyboardUtils =
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
 
   isEscape: do ->
-    mapKeyRegistry = {}
-    # NOTE: "?" here for the tests.
-    Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
 
     # TODO(smblott) Change this to use event.key.
     (event) ->
