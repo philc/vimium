@@ -91,8 +91,7 @@ KeyboardUtils =
     # TODO(smblott) Change this to use event.key.
     (event) ->
       event.keyCode == @keyCodes.ESC || do =>
-        keyChar = @getKeyCharString event, true
-        keyChar = mapKeyRegistry[keyChar] ? keyChar
+        keyChar = @getKeyCharString event
         # <c-[> is mapped to Escape in Vim by default.
         keyChar == "<c-[>"
 
@@ -109,7 +108,7 @@ KeyboardUtils =
 
   # Return the Vimium key representation for this keyboard event. Return a falsy value (the empty string or
   # undefined) when no Vimium representation is appropriate.
-  getKeyCharString: (event, allKeydownEvents = false) ->
+  getKeyCharString: (event) ->
     switch event.type
       when "keypress"
         # Ignore modifier keys by themselves.
@@ -117,19 +116,19 @@ KeyboardUtils =
           String.fromCharCode event.charCode
 
       when "keydown"
-        # Handle special keys and normal input keys with modifiers being pressed.
-        keyChar = @getKeyChar event
-        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey)) or allKeydownEvents
+        if keyChar = @getKeyChar event
           modifiers = []
 
-          keyChar = keyChar.toUpperCase() if event.shiftKey
+          keyChar = keyChar.toUpperCase() if event.shiftKey and keyChar.length == 1
           # These must be in alphabetical order (to match the sorted modifier order in Commands.normalizeKey).
           modifiers.push "a" if event.altKey
           modifiers.push "c" if event.ctrlKey
           modifiers.push "m" if event.metaKey
 
           keyChar = [modifiers..., keyChar].join "-"
-          if 1 < keyChar.length then "<#{keyChar}>" else keyChar
+          keyChar = "<#{keyChar}>" if 1 < keyChar.length
+          keyChar = mapKeyRegistry[keyChar] ? keyChar
+          keyChar
 
 KeyboardUtils.init()
 
