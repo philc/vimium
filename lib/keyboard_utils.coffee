@@ -115,6 +115,10 @@ KeyboardUtils =
         if 31 < event.keyCode
           String.fromCharCode event.charCode
 
+      # TODO(smblott). Currently all (almost?) keyhandling is being done on keydown.  All legacy code related
+      # to key handling on keypress should be reviewed and probably removed.  This is not being done right now
+      # (2017-03-22) because it is better to wait until we've verified that the change to keydown is indeed
+      # correct and reliable.
       when "keydown"
         if keyChar = @getKeyChar event
           modifiers = []
