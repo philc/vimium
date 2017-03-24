@@ -33,9 +33,6 @@ class KeyHandlerMode extends Mode
       # We cannot track keyup events if we lose the focus.
       blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
-    @mapKeyRegistry = {}
-    Utils.monitorChromeStorage "mapKeyRegistry", (value) => @mapKeyRegistry = value
-
     if options.exitOnEscape
       # If we're part way through a command's key sequence, then a first Escape should reset the key state,
       # and only a second Escape should actually exit this mode.
@@ -50,7 +47,6 @@ class KeyHandlerMode extends Mode
 
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
-    keyChar = @mapKeyRegistry[keyChar] ? keyChar
     isEscape = KeyboardUtils.isEscape event
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       @keydownEvents[event.keyCode] = true
@@ -77,7 +73,6 @@ class KeyHandlerMode extends Mode
 
   onKeypress: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
-    keyChar = @mapKeyRegistry[keyChar] ? keyChar
     if @isMappedKey keyChar
       @handleKeyChar keyChar
     else if @isCountKey keyChar

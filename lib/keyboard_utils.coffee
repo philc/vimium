@@ -1,3 +1,7 @@
+mapKeyRegistry = {}
+# NOTE: "?" here for the tests.
+Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
+
 KeyboardUtils =
   keyCodes:
     { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, ctrlEnter: 10, space: 32, shiftKey: 16, ctrlKey: 17, f1: 112,
@@ -83,15 +87,11 @@ KeyboardUtils =
   isPrimaryModifierKey: (event) -> if (@platform == "Mac") then event.metaKey else event.ctrlKey
 
   isEscape: do ->
-    mapKeyRegistry = {}
-    # NOTE: "?" here for the tests.
-    Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
 
     # TODO(smblott) Change this to use event.key.
     (event) ->
       event.keyCode == @keyCodes.ESC || do =>
-        keyChar = @getKeyCharString event, true
-        keyChar = mapKeyRegistry[keyChar] ? keyChar
+        keyChar = @getKeyCharString event
         # <c-[> is mapped to Escape in Vim by default.
         keyChar == "<c-[>"
 
@@ -108,27 +108,31 @@ KeyboardUtils =
 
   # Return the Vimium key representation for this keyboard event. Return a falsy value (the empty string or
   # undefined) when no Vimium representation is appropriate.
-  getKeyCharString: (event, allKeydownEvents = false) ->
+  getKeyCharString: (event) ->
     switch event.type
       when "keypress"
         # Ignore modifier keys by themselves.
         if 31 < event.keyCode
           String.fromCharCode event.charCode
 
+      # TODO(smblott). Currently all (almost?) keyhandling is being done on keydown.  All legacy code related
+      # to key handling on keypress should be reviewed and probably removed.  This is not being done right now
+      # (2017-03-22) because it is better to wait until we've verified that the change to keydown is indeed
+      # correct and reliable.
       when "keydown"
-        # Handle special keys and normal input keys with modifiers being pressed.
-        keyChar = @getKeyChar event
-        if 1 < keyChar.length or (keyChar.length == 1 and (event.metaKey or event.ctrlKey or event.altKey)) or allKeydownEvents
+        if keyChar = @getKeyChar event
           modifiers = []
 
-          keyChar = keyChar.toUpperCase() if event.shiftKey
+          keyChar = keyChar.toUpperCase() if event.shiftKey and keyChar.length == 1
           # These must be in alphabetical order (to match the sorted modifier order in Commands.normalizeKey).
           modifiers.push "a" if event.altKey
           modifiers.push "c" if event.ctrlKey
           modifiers.push "m" if event.metaKey
 
           keyChar = [modifiers..., keyChar].join "-"
-          if 1 < keyChar.length then "<#{keyChar}>" else keyChar
+          keyChar = "<#{keyChar}>" if 1 < keyChar.length
+          keyChar = mapKeyRegistry[keyChar] ? keyChar
+          keyChar
 
 KeyboardUtils.init()
 
