@@ -159,6 +159,10 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
+New features (not yet released)
+
+- Changes to key handling which make some commands (including `J`/`K`) work on PDF tabs.
+
 1.58 (2017-03-08)
 
 - Features:
