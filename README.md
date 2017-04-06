@@ -161,7 +161,7 @@ Release Notes
 
 New features (not yet released)
 
-- Changes to key handling which make some commands (including `J`/`K`) work on PDF tabs.
+- Changes to key handling which make some commands (including `J`, `K`, `o`, `b`, etc.) now work on PDF tabs.
 
 1.58 (2017-03-08)
 
