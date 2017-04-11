@@ -125,8 +125,7 @@ class VomnibarUI
     @lastAction = action = @actionFromKeyEvent event
     return true unless action # pass through
 
-    openInNewTab = @forceNewTab ||
-      (event.shiftKey || event.ctrlKey || event.altKey || KeyboardUtils.isPrimaryModifierKey(event))
+    openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
