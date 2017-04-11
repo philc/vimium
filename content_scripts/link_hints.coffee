@@ -172,7 +172,6 @@ class LinkHintsMode
       exitOnEscape: true
       exitOnClick: true
       keydown: @onKeyDownInMode.bind this
-      keypress: @onKeyPressInMode.bind this
 
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
@@ -230,10 +229,9 @@ class LinkHintsMode
       linkText: desc.linkText
       stableSortCount: ++@stableSortCount
 
-  # Handles <Shift> and <Ctrl>.
+  # Handles all keyboard events.
   onKeyDownInMode: (event) ->
     return if event.repeat
-    @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     previousTabCount = @tabCount
     @tabCount = 0
@@ -290,22 +288,12 @@ class LinkHintsMode
 
     else
       @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
-      return
+      return if event.repeat
+      if keyChar = KeyboardUtils.getKeyChar event
+        @markerMatcher.pushKeyChar keyChar
+        @updateVisibleMarkers()
 
-    # We've handled the event, so suppress it and update the mode indicator.
-    DomUtils.suppressEvent event
-
-  # Handles normal input.
-  onKeyPressInMode: (event) ->
-    return if event.repeat
-
-    keyChar = String.fromCharCode(event.charCode).toLowerCase()
-    if keyChar
-      @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers()
-
-    # We've handled the event, so suppress it.
-    DomUtils.suppressEvent event
+    DomUtils.consumeKeyup event
 
   updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
@@ -449,7 +437,6 @@ class AlphabetHints
     # settings value, and preserves the legacy behavior (which always used keydown) for users which are
     # familiar with that behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin
     # characters. See #1722.
-    @useKeydown = /^[a-z0-9]*$/.test @linkHintCharacters
     @hintKeystrokeQueue = []
 
   fillInMarkers: (hintMarkers) ->
@@ -478,8 +465,8 @@ class AlphabetHints
     matchString = @hintKeystrokeQueue.join ""
     linksMatched: hintMarkers.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
 
-  pushKeyChar: (keyChar, keydownKeyChar) ->
-    @hintKeystrokeQueue.push (if @useKeydown then keydownKeyChar else keyChar)
+  pushKeyChar: (keyChar) ->
+    @hintKeystrokeQueue.push keyChar
   popKeyChar: -> @hintKeystrokeQueue.pop()
 
   # For alphabet hints, <Space> always rotates the hints, regardless of modifiers.
@@ -535,10 +522,7 @@ class FilterHints
     linksMatched: linksMatched
     userMightOverType: @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
 
-  pushKeyChar: (keyChar, keydownKeyChar) ->
-    # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
-    # easy-to-understand meaning for choosing one of keyChar or keydownKeyChar (as there is for alphabet
-    # hints).
+  pushKeyChar: (keyChar) ->
     if 0 <= @linkHintNumbers.indexOf keyChar
       @hintKeystrokeQueue.push keyChar
     # We only accept <Space> and characters which are not used for splitting (e.g. "a", "b", etc., but not "-").
