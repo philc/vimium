@@ -58,7 +58,7 @@ class KeyHandlerMode extends Mode
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
       @suppressEvent
-    else
+    else if keyChar
       @reset()
       @continueBubbling
 
