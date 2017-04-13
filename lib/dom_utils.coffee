@@ -318,19 +318,20 @@ DomUtils =
   consumeKeyup: (event, callback = null) ->
     @suppressEvent event
     keyChar = KeyboardUtils.getKeyCharString event
-    handlerStack.push
-      _name: "dom_utils/consumeKeyup"
-      keydown: (event) ->
-        @remove()
-        handlerStack.continueBubbling
-      keyup: (event) ->
-        return handlerStack.continueBubbling unless keyChar == KeyboardUtils.getKeyCharString event
-        @remove()
-        handlerStack.suppressEvent
-      # We cannot track keyup events if we lose the focus.
-      blur: (event) ->
-        @remove() if event.target == window
-        handlerStack.continueBubbling
+    unless event.repeat
+      handlerStack.push
+        _name: "dom_utils/consumeKeyup"
+        keydown: (event) ->
+          @remove()
+          handlerStack.continueBubbling
+        keyup: (event) ->
+          return handlerStack.continueBubbling unless keyChar == KeyboardUtils.getKeyCharString event
+          @remove()
+          handlerStack.suppressEvent
+        # We cannot track keyup events if we lose the focus.
+        blur: (event) ->
+          @remove() if event.target == window
+          handlerStack.continueBubbling
     callback?()
     handlerStack.suppressEvent
 
