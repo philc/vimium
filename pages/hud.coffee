@@ -16,7 +16,7 @@ document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
 
-  if (event.key in ["Backspace", "Delete"] and inputElement.textContent.length == 0) or
+  if (KeyboardUtils.isBackspace(event) and inputElement.textContent.length == 0) or
      event.key == "Enter" or KeyboardUtils.isEscape event
 
     UIComponentServer.postMessage

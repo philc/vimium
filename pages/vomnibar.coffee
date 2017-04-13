@@ -116,7 +116,7 @@ class VomnibarUI
       return "down"
     else if (event.key == "Enter")
       return "enter"
-    else if event.key in ["Backspace", "Delete"]
+    else if KeyboardUtils.isBackspace event
       return "delete"
 
     null

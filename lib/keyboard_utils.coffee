@@ -49,6 +49,9 @@ KeyboardUtils =
     # <c-[> is mapped to Escape in Vim by default.
     event.key == "Escape" || @getKeyCharString(event) == "<c-[>"
 
+  isBackspace: (event) ->
+    event.key in ["Backspace", "Delete"]
+
   isPrintable: (event) ->
     return false if event.metaKey or event.ctrlKey or event.altKey
     keyChar =

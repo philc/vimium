@@ -175,7 +175,7 @@ class LinkHintsMode
 
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
-        (KeyboardUtils.isEscape(event) or event.key in ["Backspace", "Delete"]))
+        (KeyboardUtils.isEscape(event) or KeyboardUtils.isBackspace event))
           HintCoordinator.sendMessage "exit", isSuccess: false
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
@@ -266,7 +266,7 @@ class LinkHintsMode
         # Therefore, we ensure that it's always removed when hint mode exits.  See #1911 and #1926.
         @hintMode.onExit -> handlerStack.remove handlerId
 
-    else if event.key in [ "Backspace", "Delete" ]
+    else if KeyboardUtils.isBackspace event
       if @markerMatcher.popKeyChar()
         @updateVisibleMarkers()
       else
