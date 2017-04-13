@@ -58,8 +58,8 @@ class KeyHandlerMode extends Mode
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
       @suppressEvent
-    else if keyChar
-      @reset()
+    else
+      @reset() if keyChar
       @continueBubbling
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
