@@ -175,7 +175,7 @@ class LinkHintsMode
 
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
-        (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
+        (KeyboardUtils.isEscape(event) or event.key in ["Backspace", "Delete"]))
           HintCoordinator.sendMessage "exit", isSuccess: false
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
@@ -239,25 +239,25 @@ class LinkHintsMode
     # NOTE(smblott) As of 1.54, the Ctrl modifier doesn't work for filtered link hints; therefore we only
     # offer the control modifier for alphabet hints.  It is not clear whether we should fix this.  As of
     # 16-03-28, nobody has complained.
-    modifiers = [keyCodes.shiftKey]
-    modifiers.push keyCodes.ctrlKey unless Settings.get "filterLinkHints"
+    modifiers = ["Shift"]
+    modifiers.push "Control" unless Settings.get "filterLinkHints"
 
-    if event.keyCode in modifiers and
+    if event.key in modifiers and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
         @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
         previousMode = @mode
-        keyCode = event.keyCode
+        key = event.key
 
-        switch keyCode
-          when keyCodes.shiftKey
+        switch key
+          when "Shift"
             @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
-          when keyCodes.ctrlKey
+          when "Control"
             @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
         handlerId = handlerStack.push
           keyup: (event) =>
-            if event.keyCode == keyCode
+            if event.key == key
               handlerStack.remove()
               @setOpenLinkMode previousMode
             true # Continue bubbling the event.
@@ -266,7 +266,7 @@ class LinkHintsMode
         # Therefore, we ensure that it's always removed when hint mode exits.  See #1911 and #1926.
         @hintMode.onExit -> handlerStack.remove handlerId
 
-    else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+    else if event.key in [ "Backspace", "Delete" ]
       if @markerMatcher.popKeyChar()
         @updateVisibleMarkers()
       else
@@ -274,15 +274,15 @@ class LinkHintsMode
         # knows not to restart hints mode.
         @hintMode.exit event
 
-    else if event.keyCode == keyCodes.enter
+    else if event.key == "Enter"
       # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
       HintCoordinator.sendMessage "activateActiveHintMarker" if @markerMatcher.activeHintMarker
 
-    else if event.keyCode == keyCodes.tab
+    else if event.key == "Tab"
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
       @updateVisibleMarkers @tabCount
 
-    else if event.keyCode == keyCodes.space and @markerMatcher.shouldRotateHints event
+    else if event.key == " " and @markerMatcher.shouldRotateHints event
       @tabCount = previousTabCount
       HintCoordinator.sendMessage "rotateHints"
 
@@ -884,7 +884,7 @@ class WaitForEnter extends Mode
 
     @push
       keydown: (event) =>
-        if event.keyCode == keyCodes.enter
+        if event.key == "Enter"
           @exit()
           callback true # true -> isSuccess.
         else if KeyboardUtils.isEscape event

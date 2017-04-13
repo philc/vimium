@@ -16,21 +16,21 @@ document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
 
-  if (event.keyCode in [keyCodes.backspace, keyCodes.deleteKey] and inputElement.textContent.length == 0) or
-     event.keyCode == keyCodes.enter or KeyboardUtils.isEscape event
+  if (event.key in ["Backspace", "Delete"] and inputElement.textContent.length == 0) or
+     event.key == "Enter" or KeyboardUtils.isEscape event
 
     UIComponentServer.postMessage
       name: "hideFindMode"
-      exitEventIsEnter: event.keyCode == keyCodes.enter
+      exitEventIsEnter: event.key == "Enter"
       exitEventIsEscape: KeyboardUtils.isEscape event
 
-  else if event.keyCode == keyCodes.upArrow
+  else if event.key == "ArrowUp"
     if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
       findMode.historyIndex += 1
       findMode.partialQuery = findMode.rawQuery if findMode.historyIndex == 0
       setTextInInputElement inputElement, rawQuery
       findMode.executeQuery()
-  else if event.keyCode == keyCodes.downArrow
+  else if event.key == "ArrowDown"
     findMode.historyIndex = Math.max -1, findMode.historyIndex - 1
     rawQuery = if 0 <= findMode.historyIndex then FindModeHistory.getQuery findMode.historyIndex else findMode.partialQuery
     setTextInInputElement inputElement, rawQuery

@@ -215,16 +215,16 @@ context "Test link hints for changing mode",
 
   should "change mode on shift", ->
     assert.equal "curr-tab", @linkHints.mode.name
-    sendKeyboardEvent "Shift", "keydown", keyCode: keyCodes.shiftKey
+    sendKeyboardEvent "Shift", "keydown"
     assert.equal "bg-tab", @linkHints.mode.name
-    sendKeyboardEvent "Shift", "keyup", keyCode: keyCodes.shiftKey
+    sendKeyboardEvent "Shift", "keyup"
     assert.equal "curr-tab", @linkHints.mode.name
 
   should "change mode on ctrl", ->
     assert.equal "curr-tab", @linkHints.mode.name
-    sendKeyboardEvent "Control", "keydown", keyCode: keyCodes.ctrlKey
+    sendKeyboardEvent "Control", "keydown"
     assert.equal "fg-tab", @linkHints.mode.name
-    sendKeyboardEvent "Control", "keyup", keyCode: keyCodes.ctrlKey
+    sendKeyboardEvent "Control", "keyup"
     assert.equal "curr-tab", @linkHints.mode.name
 
 context "Alphabetical link hints",
@@ -419,9 +419,9 @@ context "Filtered link hints",
     should "use tab to select the active hint", ->
       sendKeyboardEvents "abc"
       assert.equal "8", @getActiveHintMarker()
-      sendKeyboardEvent "Tab", "keydown", keyCode: keyCodes.tab
+      sendKeyboardEvent "Tab", "keydown"
       assert.equal "7", @getActiveHintMarker()
-      sendKeyboardEvent "Tab", "keydown", keyCode: keyCodes.tab
+      sendKeyboardEvent "Tab", "keydown"
       assert.equal "9", @getActiveHintMarker()
 
 context "Input focus",
@@ -608,7 +608,7 @@ context "Key mapping",
 
   should "cancel a prefix key on escape", ->
     sendKeyboardEvent "z"
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     sendKeyboardEvent "p"
     assert.equal 0, @handlerCalledCount
 
@@ -718,7 +718,7 @@ context "Insert mode",
 
   should "exit on escape", ->
     assert.isTrue @insertMode.modeIsActive
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.isFalse @insertMode.modeIsActive
 
   should "resume normal mode after leaving insert mode", ->
@@ -783,7 +783,7 @@ context "Caret mode",
     assert.equal "I", getSelection()
 
   should "exit caret mode on escape", ->
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.equal "", getSelection()
 
   should "move caret with l and h", ->
@@ -818,7 +818,7 @@ context "Caret mode",
     assert.equal "I", getSelection()
     sendKeyboardEvents "ww"
     assert.equal "a", getSelection()
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     new VisualMode
     assert.equal "a", getSelection()
 
@@ -933,14 +933,14 @@ context "Mode utilities",
     test = new Mode exitOnEscape: true
 
     assert.isTrue test.modeIsActive
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.isFalse test.modeIsActive
 
   should "not exit on escape if not enabled", ->
     test = new Mode exitOnEscape: false
 
     assert.isTrue test.modeIsActive
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.isTrue test.modeIsActive
 
   should "exit on blur", ->
@@ -987,13 +987,13 @@ context "PostFindMode",
     assert.isFalse @postFindMode.modeIsActive
 
   should "enter insert mode on immediate escape", ->
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.equal null, commandCount
     assert.isFalse @postFindMode.modeIsActive
 
   should "not enter insert mode on subsequent escapes", ->
     sendKeyboardEvent "a"
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.isTrue @postFindMode.modeIsActive
 
 context "WaitForEnter",
@@ -1005,14 +1005,14 @@ context "WaitForEnter",
   should "exit with success on Enter", ->
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
-    sendKeyboardEvent "Enter", "keydown", keyCode: keyCodes.enter
+    sendKeyboardEvent "Enter", "keydown"
     assert.isFalse @waitForEnter.modeIsActive
     assert.isTrue @isSuccess? and @isSuccess == true
 
   should "exit without success on Escape", ->
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
-    sendKeyboardEvent "Escape", "keydown", keyCode: keyCodes.ESC
+    sendKeyboardEvent "Escape", "keydown"
     assert.isFalse @waitForEnter.modeIsActive
     assert.isTrue @isSuccess? and @isSuccess == false
 

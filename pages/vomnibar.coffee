@@ -106,17 +106,17 @@ class VomnibarUI
     if (KeyboardUtils.isEscape(event))
       return "dismiss"
     else if (key == "up" ||
-        (event.shiftKey && event.keyCode == keyCodes.tab) ||
+        (event.shiftKey && event.key == "Tab") ||
         (event.ctrlKey && (key == "k" || key == "p")))
       return "up"
-    else if (event.keyCode == keyCodes.tab && !event.shiftKey)
+    else if (event.key == "Tab" && !event.shiftKey)
       return "tab"
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event.keyCode == keyCodes.enter)
+    else if (event.key == "Enter")
       return "enter"
-    else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+    else if event.key in ["Backspace", "Delete"]
       return "delete"
 
     null

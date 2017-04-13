@@ -3,12 +3,9 @@ mapKeyRegistry = {}
 Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
 
 KeyboardUtils =
-  keyCodes:
-    { ESC: 27, backspace: 8, deleteKey: 46, enter: 13, ctrlEnter: 10, space: 32, shiftKey: 16, ctrlKey: 17, f1: 112,
-    f12: 123, tab: 9, downArrow: 40, upArrow: 38 }
-
+  # This maps event.key key names to Vimium key names.
   keyNames:
-    { 37: "left", 38: "up", 39: "right", 40: "down", 32: "space", 8: "backspace" }
+    "ArrowLeft": "left", "ArrowUp": "up", "ArrowRight": "right", "ArrowDown": "down", " ": "space", "Backspace": "backspace"
 
   init: ->
     if (navigator.userAgent.indexOf("Mac") != -1)
@@ -19,8 +16,8 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
-    if event.keyCode of @keyNames
-      @keyNames[event.keyCode]
+    if event.key of @keyNames
+      @keyNames[event.key]
     # It appears that event.key is not always defined (see #2453).
     else if not event.key?
       ""
@@ -50,7 +47,7 @@ KeyboardUtils =
 
   isEscape: (event) ->
     # <c-[> is mapped to Escape in Vim by default.
-    event.keyCode == @keyCodes.ESC || @getKeyCharString(event) == "<c-[>"
+    event.key == "Escape" || @getKeyCharString(event) == "<c-[>"
 
   isPrintable: (event) ->
     return false if event.metaKey or event.ctrlKey or event.altKey
@@ -65,5 +62,3 @@ KeyboardUtils.init()
 
 root = exports ? window
 root.KeyboardUtils = KeyboardUtils
-# TODO(philc): A lot of code uses this keyCodes hash... maybe we shouldn't export it as a global.
-root.keyCodes = KeyboardUtils.keyCodes
