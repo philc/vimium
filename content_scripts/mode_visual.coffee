@@ -70,7 +70,7 @@ class Movement
     else
       @selection.modify @alterMethod, direction, granularity
 
-  # Return a simple camparable value which depends on various aspects of the selection.  This is used to
+  # Return a simple comparable value which depends on various aspects of the selection.  This is used to
   # detect, after a movement, whether the selection has changed.
   hashSelection: ->
     range = @selection.getRangeAt(0)
