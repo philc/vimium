@@ -54,7 +54,12 @@ class KeyHandlerMode extends Mode
       @continueBubbling
     else if @isMappedKey keyChar
       DomUtils.consumeKeyup event, => @handleKeyChar keyChar
+    else if @isCountKey keyChar
+      digit = parseInt keyChar
+      @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
+      @suppressEvent
     else
+      @reset()
       @continueBubbling
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).

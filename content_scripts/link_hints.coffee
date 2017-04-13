@@ -292,8 +292,11 @@ class LinkHintsMode
       if keyChar = KeyboardUtils.getKeyChar event
         @markerMatcher.pushKeyChar keyChar
         @updateVisibleMarkers()
+        DomUtils.consumeKeyup event
+        return
 
-    DomUtils.consumeKeyup event
+    # We've handled the event, so suppress it and update the mode indicator.
+    DomUtils.suppressEvent event
 
   updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher

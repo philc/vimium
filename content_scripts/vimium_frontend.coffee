@@ -687,4 +687,4 @@ root.bgLog = bgLog
 extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
   enterFindMode, focusThisFrame}
 # These are exported only for the tests.
-extend root, {installModes, installListeners}
+extend root, {installModes}
