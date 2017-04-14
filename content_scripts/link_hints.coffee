@@ -288,15 +288,14 @@ class LinkHintsMode
 
     else
       @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
-      return if event.repeat
-      if keyChar = KeyboardUtils.getKeyChar event
-        @markerMatcher.pushKeyChar keyChar
-        @updateVisibleMarkers()
-        DomUtils.consumeKeyup event
-        return
+      unless event.repeat
+        if keyChar = KeyboardUtils.getKeyChar event
+          keyChar = " " if keyChar == "space"
+          if keyChar.length == 1
+            @markerMatcher.pushKeyChar keyChar
+            @updateVisibleMarkers()
 
-    # We've handled the event, so suppress it and update the mode indicator.
-    DomUtils.suppressEvent event
+    DomUtils.consumeKeyup event
 
   updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
