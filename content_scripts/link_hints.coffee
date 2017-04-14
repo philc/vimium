@@ -294,8 +294,7 @@ class LinkHintsMode
           if keyChar.length == 1
             @markerMatcher.pushKeyChar keyChar
             @updateVisibleMarkers()
-
-    DomUtils.consumeKeyup event
+          DomUtils.consumeKeyup event
 
   updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
