@@ -306,11 +306,11 @@ DomUtils =
     @suppressPropagation(event)
 
   consumeKeyup: do ->
-    handlerId = null
+    handlerId = "not-an-id"
 
     (event, callback = null) ->
       unless event.repeat
-        handlerStack.remove handlerId ? "not-an-id"
+        handlerStack.remove handlerId
         code = event.code
         handlerId = handlerStack.push
           _name: "dom_utils/consumeKeyup"
