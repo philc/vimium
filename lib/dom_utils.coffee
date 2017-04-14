@@ -305,22 +305,26 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
-  consumeKeyup: (event, callback = null) ->
-    code = event.code
-    unless event.repeat
-      handlerStack.push
-        _name: "dom_utils/consumeKeyup"
-        keyup: (event) ->
-          return handlerStack.continueBubbling unless event.code == code
-          @remove()
-          handlerStack.suppressEvent
-        # We cannot track keyup events if we lose the focus.
-        blur: (event) ->
-          @remove() if event.target == window
-          handlerStack.continueBubbling
-    callback?()
-    @suppressEvent event
-    handlerStack.suppressEvent
+  consumeKeyup: do ->
+    handlerId = null
+
+    (event, callback = null) ->
+      unless event.repeat
+        handlerStack.remove handlerId ? "not-an-id"
+        code = event.code
+        handlerId = handlerStack.push
+          _name: "dom_utils/consumeKeyup"
+          keyup: (event) ->
+            return handlerStack.continueBubbling unless event.code == code
+            @remove()
+            handlerStack.suppressEvent
+          # We cannot track keyup events if we lose the focus.
+          blur: (event) ->
+            @remove() if event.target == window
+            handlerStack.continueBubbling
+      callback?()
+      @suppressEvent event
+      handlerStack.suppressEvent
 
   # Adapted from: http://roysharon.com/blog/37.
   # This finds the element containing the selection focus.
