@@ -38,7 +38,7 @@ class KeyHandlerMode extends Mode
         keydown: (event) =>
           if KeyboardUtils.isEscape(event) and not @isInResetState()
             @reset()
-            DomUtils.suppressKeyupAfterEscape handlerStack
+            DomUtils.consumeKeyup event
           else
             @continueBubbling
 

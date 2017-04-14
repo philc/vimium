@@ -305,27 +305,13 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
-  # Suppress the next keyup event for Escape.
-  suppressKeyupAfterEscape: (handlerStack) ->
-    handlerStack.push
-      _name: "dom_utils/suppressKeyupAfterEscape"
-      keyup: (event) ->
-        return true unless KeyboardUtils.isEscape event
-        @remove()
-        false
-    handlerStack.suppressEvent
-
   consumeKeyup: (event, callback = null) ->
-    @suppressEvent event
-    keyChar = KeyboardUtils.getKeyCharString event
+    code = event.code
     unless event.repeat
       handlerStack.push
         _name: "dom_utils/consumeKeyup"
-        keydown: (event) ->
-          @remove()
-          handlerStack.continueBubbling
         keyup: (event) ->
-          return handlerStack.continueBubbling unless keyChar == KeyboardUtils.getKeyCharString event
+          return handlerStack.continueBubbling unless event.code == code
           @remove()
           handlerStack.suppressEvent
         # We cannot track keyup events if we lose the focus.
@@ -333,6 +319,7 @@ DomUtils =
           @remove() if event.target == window
           handlerStack.continueBubbling
     callback?()
+    @suppressEvent event
     handlerStack.suppressEvent
 
   # Adapted from: http://roysharon.com/blog/37.

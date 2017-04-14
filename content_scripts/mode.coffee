@@ -82,7 +82,7 @@ class Mode
         "keydown": (event) =>
           return @continueBubbling unless KeyboardUtils.isEscape event
           @exit event, event.target
-          DomUtils.suppressKeyupAfterEscape handlerStack
+          DomUtils.consumeKeyup event
 
     # If @options.exitOnBlur is truthy, then it should be an element.  The mode will exit when that element
     # loses the focus.

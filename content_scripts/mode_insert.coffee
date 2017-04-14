@@ -26,7 +26,7 @@ class InsertMode extends Mode
         # An editable element in a shadow DOM is focused; blur it.
         @insertModeLock.blur()
       @exit event, event.target
-      DomUtils.suppressKeyupAfterEscape handlerStack
+      DomUtils.consumeKeyup event
 
     defaults =
       name: "insert"
