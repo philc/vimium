@@ -87,7 +87,7 @@ class FindMode extends Mode
     selection.removeAllRanges()
     selection.addRange range
 
-  findInPlace: (query) ->
+  findInPlace: (query, options) ->
     # If requested, restore the scroll position (so that failed searches leave the scroll position unchanged).
     @checkReturnToViewPort()
     FindMode.updateQuery query
@@ -95,7 +95,7 @@ class FindMode extends Mode
     # match as the user adds matching characters, or removes previously-matched characters. See #1434.
     @restoreSelection()
     query = if FindMode.query.isRegex then FindMode.getNextQueryFromRegexMatches(0) else FindMode.query.parsedQuery
-    FindMode.query.hasResults = FindMode.execute query
+    FindMode.query.hasResults = FindMode.execute query, options
 
   @updateQuery: (query) ->
     @query.rawQuery = query
@@ -181,9 +181,7 @@ class FindMode extends Mode
     try
       result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
     catch # Failed searches throw on Firefox.
-    # NOTE(mrmr1993): On Firefox, window.find moves the window focus away from the HUD. We put it back, so
-    # the user can continue typing.
-    try HUD.hudUI.iframeElement.contentWindow.focus()
+    options.postFindFocus?.focus()
 
     if options.colorSelection
       setTimeout(
