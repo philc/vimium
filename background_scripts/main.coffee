@@ -1,3 +1,4 @@
+# Just a no-op to validate tests on Travis.
 root = exports ? window
 
 # The browser may have tabs already open. We inject the content scripts immediately so that they work straight
