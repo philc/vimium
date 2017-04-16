@@ -171,7 +171,7 @@ Settings =
       # az: http://www.amazon.com/s/?field-keywords=%s Amazon
       # qw: https://www.qwant.com/?q=%s Qwant
       """
-    newTabUrl: "chrome://newtab"
+    newTabUrl: "about:newtab"
     grabBackFocus: false
     regexFindMode: false
     waitForEnterForFilteredHints: false # Note: this defaults to true for new users; see below.
