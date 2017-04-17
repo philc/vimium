@@ -191,25 +191,17 @@ initializePreDomReady = ->
           requestHandlers[request.name] request, sender, sendResponse
     false # Ensure that the sendResponse callback is freed.
 
-# Wrapper to install event listeners.  Syntactic sugar.
-installListener = (element, event, callback) ->
-  element.addEventListener(event, ->
-    if isEnabledForUrl then callback.apply(this, arguments) else true
-  , true)
-
-#
 # Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
 # we know whether the listener should run or not.
-# Run this as early as possible, so the page can't register any event handlers before us.
-# Note: We install the listeners even if Vimium is disabled.  See comment in commit
-# 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
-#
 installListeners = Utils.makeIdempotent ->
-  # Key event handlers fire on window before they do on document. Prefer window for key events so the page
-  # can't set handlers to grab the keys before us.
-  for type in ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"]
-    do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
-  installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+  # We use the listener placeholders which were installed (very early) by lib/inject_vimium.coffee.
+  for type in window.vimiumEventTypes
+    do (type) ->
+      window.installVimiumEventListener type, (event) ->
+        handlerStack.bubbleEvent type, event if isEnabledForUrl
+  # We don't need these any more.
+  delete window.vimiumEventTypes
+  delete window.installVimiumEventListener
 
 #
 # Whenever we get the focus:
@@ -221,8 +213,7 @@ onFocus = (event) ->
     chrome.runtime.sendMessage handler: "frameFocused"
     checkIfEnabledForUrl true
 
-# We install these listeners directly (that is, we don't use installListener) because we still need to receive
-# events when Vimium is not enabled.
+# We install these listeners directly because we still need to receive events when Vimium is not enabled.
 window.addEventListener "focus", onFocus
 window.addEventListener "hashchange", checkEnabledAfterURLChange
 
