@@ -181,6 +181,9 @@ class FindMode extends Mode
     try
       result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
     catch # Failed searches throw on Firefox.
+
+    # window.find focuses the |window| that it is called on. This gives us an opportunity to (re-)focus
+    # another element/window, if that isn't the behaviour we want.
     options.postFindFocus?.focus()
 
     if options.colorSelection
