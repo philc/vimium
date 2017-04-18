@@ -601,7 +601,7 @@ findAndFollowLink = (linkStrings) ->
 
     candidateLinks.push(link)
 
-  return if (candidateLinks.length == 0)
+  return false if (candidateLinks.length == 0)
 
   for link in candidateLinks
     link.wordCount = link.innerText.trim().split(/\s+/).length
@@ -630,7 +630,7 @@ findAndFollowLink = (linkStrings) ->
           (candidateLink.value && exactWordRegex.test(candidateLink.value))
         followLink(candidateLink)
         return true
-  false
+  false # We did not find anything to follow.
 
 findAndFollowRel = (value) ->
   relTags = ["link", "a", "area"]
@@ -640,16 +640,25 @@ findAndFollowRel = (value) ->
       if (element.hasAttribute("rel") && element.rel.toLowerCase() == value)
         followLink(element)
         return true
+  false # We did not find anything to follow.
+
+# If count is 1, then navigate from http://example.com/issue/4/x to http://example.com/issue/5/x.
+changeUrlDigits = (count) ->
+  chrome.runtime.sendMessage {handler: "getCurrentTabUrl"}, (url) ->
+    if 0 == url.search /(.*[^0-9])([0-9]+)([^0-9]*)/
+      [prefix, digits, suffix ] = [RegExp.$1, RegExp.$2, RegExp.$3]
+      chrome.runtime.sendMessage
+        handler: "openUrlInCurrentTab", url: "#{prefix}#{count + parseInt digits}#{suffix}"
 
 window.goPrevious = ->
   previousPatterns = Settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
-  findAndFollowRel("prev") || findAndFollowLink(previousStrings)
+  findAndFollowRel("prev") or findAndFollowLink(previousStrings) or changeUrlDigits -1
 
 window.goNext = ->
   nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
-  findAndFollowRel("next") || findAndFollowLink(nextStrings)
+  findAndFollowRel("next") or findAndFollowLink(nextStrings) or changeUrlDigits 1
 
 # Enters find mode.  Returns the new find-mode instance.
 enterFindMode = ->
