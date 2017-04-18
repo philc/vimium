@@ -45,6 +45,7 @@ KeyboardUtils =
       @getKeyCharUsingKey event
 
   getKeyCharUsingKey: (event) ->
+    return unless event.key?  # Avoid error if event.key is undefined
     if event.keyCode of @keyNames
       @keyNames[event.keyCode]
     # It appears that event.key is not always defined (see #2453).
