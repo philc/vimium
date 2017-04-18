@@ -27,6 +27,14 @@ Settings =
       @cache = if Utils.isBackgroundPage() then localStorage else extend {}, localStorage
       @runOnLoadedCallbacks()
 
+    # Test chrome.storage.sync to see if it is enabled.
+    # NOTE(mrmr1993, 2017-04-18): currently the API is defined in FF, but it is disabled behind a flag in
+    # about:config. Every use sets chrome.runtime.lastError, so we use that to check whether we can use it.
+    chrome.storage.sync.get null, =>
+      if chrome.runtime.lastError
+        storageArea = "local"
+        @storage = chrome.storage[storageArea]
+
     chrome.storage.local.get null, (localItems) =>
       localItems = {} if chrome.runtime.lastError
       @storage.get null, (syncedItems) =>
