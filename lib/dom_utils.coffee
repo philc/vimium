@@ -305,15 +305,26 @@ DomUtils =
     event.preventDefault()
     @suppressPropagation(event)
 
-  # Suppress the next keyup event for Escape.
-  suppressKeyupAfterEscape: (handlerStack) ->
-    handlerStack.push
-      _name: "dom_utils/suppressKeyupAfterEscape"
-      keyup: (event) ->
-        return true unless KeyboardUtils.isEscape event
-        @remove()
-        false
-    handlerStack.suppressEvent
+  consumeKeyup: do ->
+    handlerId = null
+
+    (event, callback = null) ->
+      unless event.repeat
+        handlerStack.remove handlerId if handlerId?
+        code = event.code
+        handlerId = handlerStack.push
+          _name: "dom_utils/consumeKeyup"
+          keyup: (event) ->
+            return handlerStack.continueBubbling unless event.code == code
+            @remove()
+            handlerStack.suppressEvent
+          # We cannot track keyup events if we lose the focus.
+          blur: (event) ->
+            @remove() if event.target == window
+            handlerStack.continueBubbling
+      callback?()
+      @suppressEvent event
+      handlerStack.suppressEvent
 
   # Adapted from: http://roysharon.com/blog/37.
   # This finds the element containing the selection focus.

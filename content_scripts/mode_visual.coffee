@@ -258,7 +258,7 @@ class VisualMode extends KeyHandlerMode
       _name: "#{@id}/enter/click"
       # Yank on <Enter>.
       keypress: (event) =>
-        if event.keyCode == keyCodes.enter
+        if event.key == "Enter"
           unless event.metaKey or event.ctrlKey or event.altKey or event.shiftKey
             @yank()
             return @suppressEvent

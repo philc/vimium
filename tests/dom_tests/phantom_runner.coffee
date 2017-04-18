@@ -21,30 +21,6 @@ page.onError = (msg, trace) ->
 page.onResourceError = (resourceError) ->
   console.log(resourceError.errorString)
 
-page.onCallback = (request) ->
-  switch request.request
-    when "keyboard"
-      switch request.key
-        when "escape"
-          page.sendEvent "keydown", page.event.key.Escape
-          page.sendEvent "keyup", page.event.key.Escape
-        when "enter"
-          page.sendEvent "keydown", page.event.key.Enter
-          page.sendEvent "keyup", page.event.key.Enter
-        when "tab"
-          page.sendEvent "keydown", page.event.key.Tab
-          page.sendEvent "keyup", page.event.key.Tab
-        when "shift-down"
-          page.sendEvent "keydown", page.event.key.Shift
-        when "shift-up"
-          page.sendEvent "keyup", page.event.key.Shift
-        when "ctrl-down"
-          page.sendEvent "keydown", page.event.key.Control
-        when "ctrl-up"
-          page.sendEvent "keyup", page.event.key.Control
-        else
-          page.sendEvent "keypress", request.key
-
 testfile = path.join(path.dirname(system.args[0]), 'dom_tests.html')
 page.open testfile, (status) ->
   if status != 'success'

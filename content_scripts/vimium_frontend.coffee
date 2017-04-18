@@ -451,14 +451,14 @@ extend window,
             name: "focus-selector"
             exitOnClick: true
             keydown: (event) =>
-              if event.keyCode == KeyboardUtils.keyCodes.tab
+              if event.key == "Tab"
                 hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
                 selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
                 selectedInputIndex %= hints.length
                 hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
                 DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
                 @suppressEvent
-              else unless event.keyCode == KeyboardUtils.keyCodes.shiftKey
+              else unless event.key == "Shift"
                 @exit()
                 # Give the new mode the opportunity to handle the event.
                 @restartBubbling
@@ -687,4 +687,4 @@ root.bgLog = bgLog
 extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
   enterFindMode, focusThisFrame}
 # These are exported only for the tests.
-extend root, {installModes, installListeners}
+extend root, {installModes}

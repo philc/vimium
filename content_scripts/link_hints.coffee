@@ -172,11 +172,10 @@ class LinkHintsMode
       exitOnEscape: true
       exitOnClick: true
       keydown: @onKeyDownInMode.bind this
-      keypress: @onKeyPressInMode.bind this
 
     @hintMode.onExit (event) =>
       if event?.type == "click" or (event?.type == "keydown" and
-        (KeyboardUtils.isEscape(event) or event.keyCode in [keyCodes.backspace, keyCodes.deleteKey]))
+        (KeyboardUtils.isEscape(event) or KeyboardUtils.isBackspace event))
           HintCoordinator.sendMessage "exit", isSuccess: false
 
     # Note(philc): Append these markers as top level children instead of as child nodes to the link itself,
@@ -230,10 +229,9 @@ class LinkHintsMode
       linkText: desc.linkText
       stableSortCount: ++@stableSortCount
 
-  # Handles <Shift> and <Ctrl>.
+  # Handles all keyboard events.
   onKeyDownInMode: (event) ->
     return if event.repeat
-    @keydownKeyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
 
     previousTabCount = @tabCount
     @tabCount = 0
@@ -241,25 +239,25 @@ class LinkHintsMode
     # NOTE(smblott) As of 1.54, the Ctrl modifier doesn't work for filtered link hints; therefore we only
     # offer the control modifier for alphabet hints.  It is not clear whether we should fix this.  As of
     # 16-03-28, nobody has complained.
-    modifiers = [keyCodes.shiftKey]
-    modifiers.push keyCodes.ctrlKey unless Settings.get "filterLinkHints"
+    modifiers = ["Shift"]
+    modifiers.push "Control" unless Settings.get "filterLinkHints"
 
-    if event.keyCode in modifiers and
+    if event.key in modifiers and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
         @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
         previousMode = @mode
-        keyCode = event.keyCode
+        key = event.key
 
-        switch keyCode
-          when keyCodes.shiftKey
+        switch key
+          when "Shift"
             @setOpenLinkMode(if @mode is OPEN_IN_CURRENT_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_CURRENT_TAB)
-          when keyCodes.ctrlKey
+          when "Control"
             @setOpenLinkMode(if @mode is OPEN_IN_NEW_FG_TAB then OPEN_IN_NEW_BG_TAB else OPEN_IN_NEW_FG_TAB)
 
         handlerId = handlerStack.push
           keyup: (event) =>
-            if event.keyCode == keyCode
+            if event.key == key
               handlerStack.remove()
               @setOpenLinkMode previousMode
             true # Continue bubbling the event.
@@ -268,7 +266,7 @@ class LinkHintsMode
         # Therefore, we ensure that it's always removed when hint mode exits.  See #1911 and #1926.
         @hintMode.onExit -> handlerStack.remove handlerId
 
-    else if event.keyCode in [ keyCodes.backspace, keyCodes.deleteKey ]
+    else if KeyboardUtils.isBackspace event
       if @markerMatcher.popKeyChar()
         @updateVisibleMarkers()
       else
@@ -276,36 +274,27 @@ class LinkHintsMode
         # knows not to restart hints mode.
         @hintMode.exit event
 
-    else if event.keyCode == keyCodes.enter
+    else if event.key == "Enter"
       # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
       HintCoordinator.sendMessage "activateActiveHintMarker" if @markerMatcher.activeHintMarker
 
-    else if event.keyCode == keyCodes.tab
+    else if event.key == "Tab"
       @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
       @updateVisibleMarkers @tabCount
 
-    else if event.keyCode == keyCodes.space and @markerMatcher.shouldRotateHints event
+    else if event.key == " " and @markerMatcher.shouldRotateHints event
       @tabCount = previousTabCount
       HintCoordinator.sendMessage "rotateHints"
 
     else
       @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
-      return
-
-    # We've handled the event, so suppress it and update the mode indicator.
-    DomUtils.suppressEvent event
-
-  # Handles normal input.
-  onKeyPressInMode: (event) ->
-    return if event.repeat
-
-    keyChar = String.fromCharCode(event.charCode).toLowerCase()
-    if keyChar
-      @markerMatcher.pushKeyChar keyChar, @keydownKeyChar
-      @updateVisibleMarkers()
-
-    # We've handled the event, so suppress it.
-    DomUtils.suppressEvent event
+      unless event.repeat
+        if keyChar = KeyboardUtils.getKeyChar event
+          keyChar = " " if keyChar == "space"
+          if keyChar.length == 1
+            @markerMatcher.pushKeyChar keyChar
+            @updateVisibleMarkers()
+          DomUtils.consumeKeyup event
 
   updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
@@ -445,11 +434,6 @@ class LinkHintsMode
 class AlphabetHints
   constructor: ->
     @linkHintCharacters = Settings.get("linkHintCharacters").toLowerCase()
-    # We use the keyChar from keydown if the link-hint characters are all "a-z0-9".  This is the default
-    # settings value, and preserves the legacy behavior (which always used keydown) for users which are
-    # familiar with that behavior.  Otherwise, we use keyChar from keypress, which admits non-Latin
-    # characters. See #1722.
-    @useKeydown = /^[a-z0-9]*$/.test @linkHintCharacters
     @hintKeystrokeQueue = []
 
   fillInMarkers: (hintMarkers) ->
@@ -478,8 +462,8 @@ class AlphabetHints
     matchString = @hintKeystrokeQueue.join ""
     linksMatched: hintMarkers.filter (linkMarker) -> linkMarker.hintString.startsWith matchString
 
-  pushKeyChar: (keyChar, keydownKeyChar) ->
-    @hintKeystrokeQueue.push (if @useKeydown then keydownKeyChar else keyChar)
+  pushKeyChar: (keyChar) ->
+    @hintKeystrokeQueue.push keyChar
   popKeyChar: -> @hintKeystrokeQueue.pop()
 
   # For alphabet hints, <Space> always rotates the hints, regardless of modifiers.
@@ -535,10 +519,7 @@ class FilterHints
     linksMatched: linksMatched
     userMightOverType: @hintKeystrokeQueue.length == 0 and 0 < @linkTextKeystrokeQueue.length
 
-  pushKeyChar: (keyChar, keydownKeyChar) ->
-    # For filtered hints, we *always* use the keyChar value from keypress, because there is no obvious and
-    # easy-to-understand meaning for choosing one of keyChar or keydownKeyChar (as there is for alphabet
-    # hints).
+  pushKeyChar: (keyChar) ->
     if 0 <= @linkHintNumbers.indexOf keyChar
       @hintKeystrokeQueue.push keyChar
     # We only accept <Space> and characters which are not used for splitting (e.g. "a", "b", etc., but not "-").
@@ -901,7 +882,7 @@ class WaitForEnter extends Mode
 
     @push
       keydown: (event) =>
-        if event.keyCode == keyCodes.enter
+        if event.key == "Enter"
           @exit()
           callback true # true -> isSuccess.
         else if KeyboardUtils.isEscape event

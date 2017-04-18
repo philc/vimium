@@ -1,33 +1,11 @@
 window.vimiumDomTestsAreRunning = true
 
 # Install frontend event handlers.
-installListeners()
 HUD.init()
 Frame.registerFrameId chromeFrameId: 0
 
-installListener = (element, event, callback) ->
-  element.addEventListener event, (-> callback.apply(this, arguments)), true
-
 getSelection = ->
-    window.getSelection().toString()
-
-# A count of the number of keyboard events received by the page (for the most recently-sent keystroke).  E.g.,
-# we expect 3 if the keystroke is passed through (keydown, keypress, keyup), and 0 if it is suppressed.
-pageKeyboardEventCount = 0
-
-sendKeyboardEvent = (key) ->
-  pageKeyboardEventCount = 0
-  response = window.callPhantom
-    request: "keyboard"
-    key: key
-
-sendKeyboardEvents = (keys) ->
-  sendKeyboardEvent ch for ch in keys.split()
-
-# These listeners receive events after the main frontend listeners, and do not receive suppressed events.
-for type in [ "keydown", "keypress", "keyup" ]
-  installListener window, type, (event) ->
-    pageKeyboardEventCount += 1
+  window.getSelection().toString()
 
 commandName = commandCount = null
 
@@ -163,6 +141,16 @@ context "jsaction matching",
       linkHints.deactivateMode()
       assert.equal 0, hintMarkers.length
 
+sendKeyboardEvent = (key, type="keydown", extra={}) ->
+  handlerStack.bubbleEvent type, extend extra,
+    type: type
+    key: key
+    preventDefault: ->
+    stopImmediatePropagation: ->
+
+sendKeyboardEvents = (keys) ->
+  sendKeyboardEvent key for key in keys.split ""
+
 inputs = []
 context "Test link hints for focusing input elements correctly",
 
@@ -227,16 +215,16 @@ context "Test link hints for changing mode",
 
   should "change mode on shift", ->
     assert.equal "curr-tab", @linkHints.mode.name
-    sendKeyboardEvent "shift-down"
+    sendKeyboardEvent "Shift", "keydown"
     assert.equal "bg-tab", @linkHints.mode.name
-    sendKeyboardEvent "shift-up"
+    sendKeyboardEvent "Shift", "keyup"
     assert.equal "curr-tab", @linkHints.mode.name
 
   should "change mode on ctrl", ->
     assert.equal "curr-tab", @linkHints.mode.name
-    sendKeyboardEvent "ctrl-down"
+    sendKeyboardEvent "Control", "keydown"
     assert.equal "fg-tab", @linkHints.mode.name
-    sendKeyboardEvent "ctrl-up"
+    sendKeyboardEvent "Control", "keyup"
     assert.equal "curr-tab", @linkHints.mode.name
 
 context "Alphabetical link hints",
@@ -247,6 +235,7 @@ context "Alphabetical link hints",
     stubSettings "linkHintCharacters", "ab"
     stub window, "windowIsFocused", -> true
 
+    document.getElementById("test-div").innerHTML = ""
     # Three hints will trigger double hint chars.
     createLinks 3
     @linkHints = activateLinkHintsMode()
@@ -258,12 +247,13 @@ context "Alphabetical link hints",
   should "label the hints correctly", ->
     hintMarkers = getHintMarkers()
     expectedHints = ["aa", "b", "ab"]
+    assert.equal 3, hintMarkers.length
     for hint, i in expectedHints
       assert.equal hint, hintMarkers[i].hintString
 
   should "narrow the hints", ->
     hintMarkers = getHintMarkers()
-    sendKeyboardEvent "A"
+    sendKeyboardEvent "a"
     assert.equal "none", hintMarkers[1].style.display
     assert.equal "", hintMarkers[0].style.display
 
@@ -314,24 +304,25 @@ context "Filtered link hints",
 
     should "narrow the hints", ->
       hintMarkers = getHintMarkers()
-      sendKeyboardEvent "T"
-      sendKeyboardEvent "R"
+      sendKeyboardEvent "t"
+      sendKeyboardEvent "r"
       assert.equal "none", hintMarkers[0].style.display
       assert.equal "3", hintMarkers[1].hintString
       assert.equal "", hintMarkers[1].style.display
-      sendKeyboardEvent "A"
+      sendKeyboardEvent "a"
       assert.equal "1", hintMarkers[3].hintString
 
-    # This test is the same as above, but with an extra non-matching character.
+    # This test is the same as above, but with an extra non-matching character.  The effect should be the
+    # same.
     should "narrow the hints and ignore typing mistakes", ->
       hintMarkers = getHintMarkers()
-      sendKeyboardEvent "T"
-      sendKeyboardEvent "R"
-      sendKeyboardEvent "X"
+      sendKeyboardEvent "t"
+      sendKeyboardEvent "r"
+      sendKeyboardEvent "x"
       assert.equal "none", hintMarkers[0].style.display
       assert.equal "3", hintMarkers[1].hintString
       assert.equal "", hintMarkers[1].style.display
-      sendKeyboardEvent "A"
+      sendKeyboardEvent "a"
       assert.equal "1", hintMarkers[3].hintString
 
   context "Image hints",
@@ -428,9 +419,9 @@ context "Filtered link hints",
     should "use tab to select the active hint", ->
       sendKeyboardEvents "abc"
       assert.equal "8", @getActiveHintMarker()
-      sendKeyboardEvent "tab"
+      sendKeyboardEvent "Tab", "keydown"
       assert.equal "7", @getActiveHintMarker()
-      sendKeyboardEvent "tab"
+      sendKeyboardEvent "Tab", "keydown"
       assert.equal "9", @getActiveHintMarker()
 
 context "Input focus",
@@ -576,92 +567,54 @@ context "Key mapping",
   should "set and call command handler", ->
     sendKeyboardEvent "m"
     assert.isTrue @handlerCalled
-    assert.equal 0, pageKeyboardEventCount
 
   should "not call command handler for pass keys", ->
     sendKeyboardEvent "p"
     assert.isFalse @handlerCalled
-    assert.equal 3, pageKeyboardEventCount
 
   should "accept a count prefix with a single digit", ->
     sendKeyboardEvent "2"
     sendKeyboardEvent "m"
     assert.equal 2, @handlerCalledCount
-    assert.equal 0, pageKeyboardEventCount
 
   should "accept a count prefix with multiple digits", ->
     sendKeyboardEvent "2"
     sendKeyboardEvent "0"
     sendKeyboardEvent "m"
     assert.equal 20, @handlerCalledCount
-    assert.equal 0, pageKeyboardEventCount
 
   should "cancel a count prefix", ->
     sendKeyboardEvent "2"
     sendKeyboardEvent "z"
     sendKeyboardEvent "m"
     assert.equal 1, @handlerCalledCount
-    assert.equal 0, pageKeyboardEventCount
 
   should "accept a count prefix for multi-key command mappings", ->
-    sendKeyboardEvent "2"
+    sendKeyboardEvent "5"
     sendKeyboardEvent "z"
     sendKeyboardEvent "p"
-    assert.equal 2, @handlerCalledCount
-    assert.equal 0, pageKeyboardEventCount
+    assert.equal 5, @handlerCalledCount
 
   should "cancel a key prefix", ->
     sendKeyboardEvent "z"
     sendKeyboardEvent "m"
     assert.equal 1, @handlerCalledCount
-    assert.equal 0, pageKeyboardEventCount
 
   should "cancel a count prefix after a prefix key", ->
     sendKeyboardEvent "2"
     sendKeyboardEvent "z"
     sendKeyboardEvent "m"
     assert.equal 1, @handlerCalledCount
-    assert.equal 0, pageKeyboardEventCount
 
   should "cancel a prefix key on escape", ->
     sendKeyboardEvent "z"
-    sendKeyboardEvent "escape"
+    sendKeyboardEvent "Escape", "keydown"
     sendKeyboardEvent "p"
     assert.equal 0, @handlerCalledCount
-
-  should "not handle escape on its own", ->
-    sendKeyboardEvent "escape"
-    assert.equal 2, pageKeyboardEventCount
 
 context "Normal mode",
   setup ->
     initializeModeState()
-
-  should "suppress mapped keys", ->
-    sendKeyboardEvent "m"
-    assert.equal 0, pageKeyboardEventCount
-
-  should "not suppress unmapped keys", ->
-    sendKeyboardEvent "u"
-    assert.equal 3, pageKeyboardEventCount
-
-  should "not suppress escape", ->
-    sendKeyboardEvent "escape"
-    assert.equal 2, pageKeyboardEventCount
-
-  should "not suppress passKeys", ->
-    sendKeyboardEvent "p"
-    assert.equal 3, pageKeyboardEventCount
-
-  should "suppress passKeys with a non-empty key state (a count)", ->
-    sendKeyboardEvent "5"
-    sendKeyboardEvent "p"
-    assert.equal 0, pageKeyboardEventCount
-
-  should "suppress passKeys with a non-empty key state (a key)", ->
-    sendKeyboardEvent "z"
-    sendKeyboardEvent "p"
-    assert.equal 0, pageKeyboardEventCount
 
   should "invoke commands for mapped keys", ->
     sendKeyboardEvent "m"
@@ -706,7 +659,7 @@ context "Normal mode",
     assert.equal 2, commandCount
 
   should "accept count prefixes of length 2", ->
-    sendKeyboardEvent "12"
+    sendKeyboardEvents "12"
     sendKeyboardEvent "m"
     assert.equal 12, commandCount
 
@@ -763,19 +716,16 @@ context "Insert mode",
     initializeModeState()
     @insertMode = new InsertMode global: true
 
-  should "not suppress mapped keys in insert mode", ->
-    sendKeyboardEvent "m"
-    assert.equal 3, pageKeyboardEventCount
-
   should "exit on escape", ->
     assert.isTrue @insertMode.modeIsActive
-    sendKeyboardEvent "escape"
+    sendKeyboardEvent "Escape", "keydown"
     assert.isFalse @insertMode.modeIsActive
 
   should "resume normal mode after leaving insert mode", ->
+    assert.equal null, commandCount
     @insertMode.exit()
     sendKeyboardEvent "m"
-    assert.equal 0, pageKeyboardEventCount
+    assert.equal 1, commandCount
 
 context "Triggering insert mode",
   setup ->
@@ -833,7 +783,7 @@ context "Caret mode",
     assert.equal "I", getSelection()
 
   should "exit caret mode on escape", ->
-    sendKeyboardEvent "escape"
+    sendKeyboardEvent "Escape", "keydown"
     assert.equal "", getSelection()
 
   should "move caret with l and h", ->
@@ -868,7 +818,7 @@ context "Caret mode",
     assert.equal "I", getSelection()
     sendKeyboardEvents "ww"
     assert.equal "a", getSelection()
-    sendKeyboardEvent "escape"
+    sendKeyboardEvent "Escape", "keydown"
     new VisualMode
     assert.equal "a", getSelection()
 
@@ -983,16 +933,14 @@ context "Mode utilities",
     test = new Mode exitOnEscape: true
 
     assert.isTrue test.modeIsActive
-    sendKeyboardEvent "escape"
-    assert.equal 0, pageKeyboardEventCount
+    sendKeyboardEvent "Escape", "keydown"
     assert.isFalse test.modeIsActive
 
   should "not exit on escape if not enabled", ->
     test = new Mode exitOnEscape: false
 
     assert.isTrue test.modeIsActive
-    sendKeyboardEvent "escape"
-    assert.equal 2, pageKeyboardEventCount
+    sendKeyboardEvent "Escape", "keydown"
     assert.isTrue test.modeIsActive
 
   should "exit on blur", ->
@@ -1031,21 +979,21 @@ context "PostFindMode",
     assert.isFalse @postFindMode.modeIsActive
 
   should "suppress unmapped printable keys", ->
-    sendKeyboardEvent "m"
-    assert.equal 0, pageKeyboardEventCount
+    sendKeyboardEvent "a"
+    assert.equal null, commandCount
 
   should "be deactivated on click events", ->
     handlerStack.bubbleEvent "click", target: document.activeElement
     assert.isFalse @postFindMode.modeIsActive
 
   should "enter insert mode on immediate escape", ->
-    sendKeyboardEvent "escape"
-    assert.equal 0, pageKeyboardEventCount
+    sendKeyboardEvent "Escape", "keydown"
+    assert.equal null, commandCount
     assert.isFalse @postFindMode.modeIsActive
 
   should "not enter insert mode on subsequent escapes", ->
     sendKeyboardEvent "a"
-    sendKeyboardEvent "escape"
+    sendKeyboardEvent "Escape", "keydown"
     assert.isTrue @postFindMode.modeIsActive
 
 context "WaitForEnter",
@@ -1057,14 +1005,14 @@ context "WaitForEnter",
   should "exit with success on Enter", ->
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
-    sendKeyboardEvent "enter"
+    sendKeyboardEvent "Enter", "keydown"
     assert.isFalse @waitForEnter.modeIsActive
     assert.isTrue @isSuccess? and @isSuccess == true
 
   should "exit without success on Escape", ->
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
-    sendKeyboardEvent "escape"
+    sendKeyboardEvent "Escape", "keydown"
     assert.isFalse @waitForEnter.modeIsActive
     assert.isTrue @isSuccess? and @isSuccess == false
 
@@ -1074,17 +1022,6 @@ context "WaitForEnter",
     sendKeyboardEvents "abc"
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
-
-context "SuppressAllKeyboardEvents",
-  setup ->
-    initializeModeState()
-
-  should "supress keyboard events", ->
-    sendKeyboardEvent "a"
-    assert.equal 3, pageKeyboardEventCount
-    new SuppressAllKeyboardEvents
-    sendKeyboardEvent "a"
-    assert.equal 0, pageKeyboardEventCount
 
 context "GrabBackFocus",
   setup ->

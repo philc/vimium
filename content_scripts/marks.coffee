@@ -35,8 +35,8 @@ Marks =
       indicator: "Create mark..."
       exitOnEscape: true
       suppressAllKeyboardEvents: true
-      keypress: (event) =>
-        keyChar = String.fromCharCode event.charCode
+      keydown: (event) =>
+        keyChar = KeyboardUtils.getKeyChar event
         @exit =>
           if @isGlobalMark event, keyChar
             # We record the current scroll position, but only if this is the top frame within the tab.
@@ -58,27 +58,27 @@ Marks =
       indicator: "Go to mark..."
       exitOnEscape: true
       suppressAllKeyboardEvents: true
-      keypress: (event) =>
+      keydown: (event) =>
         @exit =>
-          markName = String.fromCharCode event.charCode
-          if @isGlobalMark event, markName
+          keyChar = KeyboardUtils.getKeyChar event
+          if @isGlobalMark event, keyChar
             # This key must match @getLocationKey() in the back end.
-            key = "vimiumGlobalMark|#{markName}"
+            key = "vimiumGlobalMark|#{keyChar}"
             Settings.storage.get key, (items) ->
               if key of items
-                chrome.runtime.sendMessage handler: 'gotoMark', markName: markName
-                HUD.showForDuration "Jumped to global mark '#{markName}'", 1000
+                chrome.runtime.sendMessage handler: 'gotoMark', markName: keyChar
+                HUD.showForDuration "Jumped to global mark '#{keyChar}'", 1000
               else
-                HUD.showForDuration "Global mark not set '#{markName}'", 1000
+                HUD.showForDuration "Global mark not set '#{keyChar}'", 1000
           else
-            markString = @localRegisters[markName] ? localStorage[@getLocationKey markName]
+            markString = @localRegisters[keyChar] ? localStorage[@getLocationKey keyChar]
             if markString?
               @setPreviousPosition()
               position = JSON.parse markString
               window.scrollTo position.scrollX, position.scrollY
-              @showMessage "Jumped to local mark", markName
+              @showMessage "Jumped to local mark", keyChar
             else
-              @showMessage "Local mark not set", markName
+              @showMessage "Local mark not set", keyChar
 
 root = exports ? window
 root.Marks =  Marks

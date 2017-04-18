@@ -12,7 +12,6 @@
 # consists of a (non-empty) list of such mappings.
 
 class KeyHandlerMode extends Mode
-  keydownEvents: {}
   setKeyMapping: (@keyMapping) -> @reset()
   setPassKeys: (@passKeys) -> @reset()
   # Only for tests.
@@ -28,8 +27,6 @@ class KeyHandlerMode extends Mode
 
     super extend options,
       keydown: @onKeydown.bind this
-      keypress: @onKeypress.bind this
-      keyup: @onKeyup.bind this
       # We cannot track keyup events if we lose the focus.
       blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
@@ -41,7 +38,7 @@ class KeyHandlerMode extends Mode
         keydown: (event) =>
           if KeyboardUtils.isEscape(event) and not @isInResetState()
             @reset()
-            DomUtils.suppressKeyupAfterEscape handlerStack
+            DomUtils.consumeKeyup event
           else
             @continueBubbling
 
@@ -49,44 +46,21 @@ class KeyHandlerMode extends Mode
     keyChar = KeyboardUtils.getKeyCharString event
     isEscape = KeyboardUtils.isEscape event
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
-      @keydownEvents[event.keyCode] = true
-      @reset()
-      @suppressEvent
+      DomUtils.consumeKeyup event, => @reset()
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
     else if isEscape and HelpDialog?.isShowing()
-      @keydownEvents[event.keyCode] = true
-      HelpDialog.toggle()
-      @suppressEvent
+      DomUtils.consumeKeyup event, -> HelpDialog.toggle()
     else if isEscape
       @continueBubbling
     else if @isMappedKey keyChar
-      @keydownEvents[event.keyCode] = true
-      @handleKeyChar keyChar
-    else if not keyChar and (keyChar = KeyboardUtils.getKeyChar event) and
-        (@isMappedKey(keyChar) or @isCountKey keyChar)
-      # We will possibly be handling a subsequent keypress event, so suppress propagation of this event to
-      # prevent triggering page event listeners (e.g. Google instant Search).
-      @keydownEvents[event.keyCode] = true
-      @suppressPropagation
-    else
-      @continueBubbling
-
-  onKeypress: (event) ->
-    keyChar = KeyboardUtils.getKeyCharString event
-    if @isMappedKey keyChar
-      @handleKeyChar keyChar
+      DomUtils.consumeKeyup event, => @handleKeyChar keyChar
     else if @isCountKey keyChar
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
       @suppressEvent
     else
-      @reset()
+      @reset() if keyChar
       @continueBubbling
-
-  onKeyup: (event) ->
-    return @continueBubbling unless event.keyCode of @keydownEvents
-    delete @keydownEvents[event.keyCode]
-    @suppressPropagation
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
   isMappedKey: (keyChar) ->

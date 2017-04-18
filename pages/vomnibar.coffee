@@ -106,17 +106,17 @@ class VomnibarUI
     if (KeyboardUtils.isEscape(event))
       return "dismiss"
     else if (key == "up" ||
-        (event.shiftKey && event.keyCode == keyCodes.tab) ||
+        (event.shiftKey && event.key == "Tab") ||
         (event.ctrlKey && (key == "k" || key == "p")))
       return "up"
-    else if (event.keyCode == keyCodes.tab && !event.shiftKey)
+    else if (event.key == "Tab" && !event.shiftKey)
       return "tab"
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event.keyCode == keyCodes.enter)
+    else if (event.key == "Enter")
       return "enter"
-    else if event.keyCode == keyCodes.backspace || event.keyCode == keyCodes.deleteKey
+    else if KeyboardUtils.isBackspace event
       return "delete"
 
     null
@@ -125,8 +125,7 @@ class VomnibarUI
     @lastAction = action = @actionFromKeyEvent event
     return true unless action # pass through
 
-    openInNewTab = @forceNewTab ||
-      (event.shiftKey || event.ctrlKey || event.altKey || KeyboardUtils.isPrimaryModifierKey(event))
+    openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
