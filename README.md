@@ -159,6 +159,11 @@ Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIB
 Release Notes
 -------------
 
+Changes in git (not yet released)
+
+- Firefox support.  This is a work in progress; please report any issues [here](https://github.com/philc/vimium/issues?q=is%3Aopen+sort%3Aupdated-desc).
+- Reworked key handling; please report any new key-handling bugs [here](https://github.com/philc/vimium/issues?q=is%3Aopen+sort%3Aupdated-desc).
+
 1.59 (2017-04-07)
 
 - Features:
