@@ -64,7 +64,7 @@ Marks =
           if @isGlobalMark event, markName
             # This key must match @getLocationKey() in the back end.
             key = "vimiumGlobalMark|#{markName}"
-            chrome.storage.sync.get key, (items) ->
+            Settings.storage.get key, (items) ->
               if key of items
                 chrome.runtime.sendMessage handler: 'gotoMark', markName: markName
                 HUD.showForDuration "Jumped to global mark '#{markName}'", 1000

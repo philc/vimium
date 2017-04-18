@@ -58,7 +58,10 @@ handlers =
     hud.innerText = "/\u200A" # \u200A is a "hair space", to leave enough space before the caret/first char.
 
     inputElement = document.createElement "span"
-    inputElement.contentEditable = "plaintext-only"
+    try # NOTE(mrmr1993): Chrome supports non-standard "plaintext-only", which is what we *really* want.
+      inputElement.contentEditable = "plaintext-only"
+    catch # Fallback to standard-compliant version.
+      inputElement.contentEditable = "true"
     inputElement.id = "hud-find-input"
     hud.appendChild inputElement
 

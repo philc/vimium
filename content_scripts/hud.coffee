@@ -35,7 +35,9 @@ HUD =
       @tween.fade 1.0, 150
 
   search: (data) ->
-    @findMode.findInPlace data.query
+    # NOTE(mrmr1993): On Firefox, window.find moves the window focus away from the HUD. We use postFindFocus
+    # to put it back, so the user can continue typing.
+    @findMode.findInPlace data.query, {"postFindFocus": @hudUI.iframeElement.contentWindow}
 
     # Show the number of matches in the HUD UI.
     matchCount = if FindMode.query.parsedQuery.length > 0 then FindMode.query.matchCount else 0
