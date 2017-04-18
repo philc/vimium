@@ -9,7 +9,6 @@ Commands =
 
     Settings.postUpdateHooks["keyMappings"] = @loadKeyMappings.bind this
     @loadKeyMappings Settings.get "keyMappings"
-    @prepareHelpPageData()
 
   loadKeyMappings: (customKeyMappings) ->
     @keyToCommandRegistry = {}
@@ -43,6 +42,7 @@ Commands =
 
     chrome.storage.local.set mapKeyRegistry: @mapKeyRegistry
     @installKeyStateMapping()
+    @prepareHelpPageData()
 
     # Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
     # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
