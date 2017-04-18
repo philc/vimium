@@ -55,7 +55,23 @@ HintCoordinator =
   suppressKeyboardEvents: null
 
   sendMessage: (messageType, request = {}) ->
-    Frame.postMessage "linkHintsMessage", extend request, {messageType}
+    if Settings.get "useGlobalLinkHints"
+      Frame.postMessage "linkHintsMessage", extend request, {messageType}
+    else
+      # We mimic the behavior of the HintCoordinator on the background page.
+      switch messageType
+        when "prepareToActivateMode"
+          @modeIndex = request.modeIndex
+          @getHintDescriptors request
+        when "postHintDescriptors"
+          @activateMode
+            originatingFrameId: frameId
+            hintDescriptors: {} # We already have our own hint descriptors.
+            modeIndex: @modeIndex
+        else
+          # Any other message should be handled directly (the HintCoordinator on the background page would
+          # just forward it back here anyway).
+          this[messageType] request
 
   prepareToActivateMode: (mode, onExit) ->
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
