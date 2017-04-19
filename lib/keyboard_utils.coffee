@@ -53,13 +53,7 @@ KeyboardUtils =
     event.key in ["Backspace", "Delete"]
 
   isPrintable: (event) ->
-    return false if event.metaKey or event.ctrlKey or event.altKey
-    keyChar =
-      if event.type == "keypress"
-        String.fromCharCode event.charCode
-      else
-        @getKeyChar event
-    keyChar.length == 1
+    @getKeyCharString(event)?.length == 1
 
 KeyboardUtils.init()
 
