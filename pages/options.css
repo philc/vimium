@@ -5,7 +5,8 @@ body {
   color: #303942;
   margin: 0 auto;
 }
-a, a:visited { color: #15c; }
+a, a:visited { color: #15c; cursor: pointer; }
+a:hover { text-decoration: underline; }
 a:active { color: #052577; }
 div#wrapper, #footerWrapper {
   width: 540px;

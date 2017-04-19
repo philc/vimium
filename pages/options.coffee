@@ -264,6 +264,33 @@ initOptionsPage = ->
 
   maintainLinkHintsView()
 
+  do ->
+    autoResize = ->
+      target = $(@getAttribute "data-auto-resize")
+      return if target.scrollHeight <= target.clientHeight and target.scrollWidth <= target.clientWidth
+      target.style.height = target.style.width = ""
+      target.style.maxWidth = Math.min(window.innerWidth, 1024) - 120 + "px"
+      height = target.scrollHeight
+      delta = target.offsetHeight - target.clientHeight # height increment
+      # delta(height) = if: horizontal scrollable
+      #                 then: at least one line height (prepared for more user input)
+      #                 else: self + at least horizontal scrollbar height
+      # 26 and 18 are hard-coded height data, and we may use larger numbers if needed
+      delta = if target.scrollWidth > target.clientWidth then Math.max 26, delta else delta + 18
+      height += delta
+      delta = target.scrollWidth - target.clientWidth # width increment
+      # here use offsetWidth to take vertical scrollbar into consideration and make a margin
+      target.style.width = target.offsetWidth + delta + "px" if delta > 0
+      target.style.height = height + "px"
+      null
+
+    for element in document.querySelectorAll "[data-auto-resize]"
+      element.onclick = autoResize
+      element.tabIndex = 0
+      element.textContent = "Auto resize"
+
+    null
+
 initPopupPage = ->
   chrome.tabs.query { active: true, currentWindow: true }, ([tab]) ->
     exclusions = null
