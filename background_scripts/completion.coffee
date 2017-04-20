@@ -763,6 +763,8 @@ HistoryCache =
     return @callbacks.push(callback) if @callbacks
     @callbacks = [callback]
     chrome.history.search { text: "", maxResults: @size, startTime: 0 }, (history) =>
+      # On Firefox, some history entries do not have titles.
+      history.map (entry) -> entry.title ?= ""
       history.sort @compareHistoryByUrl
       @history = history
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
@@ -778,6 +780,8 @@ HistoryCache =
   # When a page we've seen before has been visited again, be sure to replace our History item so it has the
   # correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
   onPageVisited: (newPage) ->
+    # On Firefox, some history entries do not have titles.
+    newPage.title ?= ""
     i = HistoryCache.binarySearch(newPage, @history, @compareHistoryByUrl)
     pageWasFound = (@history[i]?.url == newPage.url)
     if pageWasFound
