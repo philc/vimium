@@ -35,16 +35,18 @@ Settings =
         storageArea = "local"
         @storage = chrome.storage[storageArea]
 
-    chrome.storage.local.get null, (localItems) =>
-      localItems = {} if chrome.runtime.lastError
-      @storage.get null, (syncedItems) =>
-        unless chrome.runtime.lastError
-          @handleUpdateFromChromeStorage key, value for own key, value of extend localItems, syncedItems
+      # Delay this initialisation until after the correct storage area is known.  The significance of this is
+      # that it delays the on-loaded callbacks.
+      chrome.storage.local.get null, (localItems) =>
+        localItems = {} if chrome.runtime.lastError
+        @storage.get null, (syncedItems) =>
+          unless chrome.runtime.lastError
+            @handleUpdateFromChromeStorage key, value for own key, value of extend localItems, syncedItems
 
-        chrome.storage.onChanged.addListener (changes, area) =>
-          @propagateChangesFromChromeStorage changes if area == storageArea
+          chrome.storage.onChanged.addListener (changes, area) =>
+            @propagateChangesFromChromeStorage changes if area == storageArea
 
-        @runOnLoadedCallbacks()
+          @runOnLoadedCallbacks()
 
   # Called after @cache has been initialized.  On extension pages, this will be called twice, but that does
   # not matter because it's idempotent.
@@ -193,21 +195,21 @@ Settings.init()
 
 # Perform migration from old settings versions, if this is the background page.
 if Utils.isBackgroundPage()
+  Settings.onLoaded ->
+    unless Settings.get "settingsVersion"
+      # This is a new install.  For some settings, we retain a legacy default behaviour for existing users but
+      # use a non-default behaviour for new users.
 
-  unless Settings.get "settingsVersion"
-    # This is a new install.  For some settings, we retain a legacy default behaviour for existing users but
-    # use a non-default behaviour for new users.
+      # For waitForEnterForFilteredHints, "true" gives a better UX; see #1950.  However, forcing the change on
+      # existing users would be unnecessarily disruptive.  So, only new users default to "true".
+      Settings.set "waitForEnterForFilteredHints", true
 
-    # For waitForEnterForFilteredHints, "true" gives a better UX; see #1950.  However, forcing the change on
-    # existing users would be unnecessarily disruptive.  So, only new users default to "true".
-    Settings.set "waitForEnterForFilteredHints", true
+    # We use settingsVersion to coordinate any necessary schema changes.
+    Settings.set("settingsVersion", Utils.getCurrentVersion())
 
-  # We use settingsVersion to coordinate any necessary schema changes.
-  Settings.set("settingsVersion", Utils.getCurrentVersion())
-
-  # Remove legacy key which was used to control storage migration.  This was after 1.57 (2016-10-01), and can
-  # be removed after 1.58 has been out for sufficiently long.
-  Settings.nuke "copyNonDefaultsToChromeStorage-20150717"
+    # Remove legacy key which was used to control storage migration.  This was after 1.57 (2016-10-01), and can
+    # be removed after 1.58 has been out for sufficiently long.
+    Settings.nuke "copyNonDefaultsToChromeStorage-20150717"
 
 root = exports ? window
 root.Settings = Settings
