@@ -101,6 +101,8 @@ TabOperations =
       index: request.tab.index + 1
       active: true
       windowId: request.tab.windowId
+    # Firefox does not support "about:newtab" in chrome.tabs.create.
+    delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
     chrome.tabs.create tabConfig, (tab) ->
       # NOTE(mrmr1993, 2017-02-08): Firefox currently doesn't support openerTabId (issue 1238314) and throws
       # a type error if it is present. We work around this by attempting to set it separately from creating
