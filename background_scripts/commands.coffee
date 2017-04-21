@@ -147,6 +147,7 @@ Commands =
       "scrollToLeft",
       "scrollToRight",
       "reload",
+      "hardReload",
       "copyCurrentUrl",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
@@ -246,6 +247,7 @@ defaultKeyMappings =
   "d": "scrollPageDown"
   "u": "scrollPageUp"
   "r": "reload"
+  "R": "hardReload"
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
