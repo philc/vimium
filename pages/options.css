@@ -227,7 +227,7 @@ input.pattern, input.passKeys, .exclusionHeaderText {
 #saveOptionsTableData {
   float: right;
 }
-#saveOptions {
+#saveOptions, #exclusionAddButton {
   white-space: nowrap;
   width: 110px;
 }
