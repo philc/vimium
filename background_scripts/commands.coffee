@@ -336,6 +336,7 @@ commandDescriptions =
   scrollFullPageUp: ["Scroll a full page up"]
 
   reload: ["Reload the page", { noRepeat: true }]
+  hardReload: ["Hard reload the page", { noRepeat: true }]
   toggleViewSource: ["View page source", { noRepeat: true }]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
