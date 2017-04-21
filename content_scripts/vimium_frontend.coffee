@@ -315,6 +315,9 @@ focusThisFrame = (request) ->
       chrome.runtime.sendMessage handler: "nextFrame"
       return
   window.focus()
+  # On Firefox, window.focus doesn't always draw focus back from a child frame (bug 554039).
+  # We blur the active element if it is an iframe, which gives the window back focus as intended.
+  document.activeElement.blur() if document.activeElement.tagName.toLowerCase() == "iframe"
   flashFrame() if request.highlight
 
 extend window,
