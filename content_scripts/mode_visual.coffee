@@ -159,7 +159,7 @@ class Movement
 
   # Scroll the focus into view.
   scrollIntoView: ->
-    unless @selection.type == "None"
+    if @selection.anchorNode
       elementWithFocus = DomUtils.getElementWithFocus @selection, @getDirection() == backward
       Scroller.scrollIntoView elementWithFocus if elementWithFocus
 
@@ -240,7 +240,7 @@ class VisualMode extends KeyHandlerMode
       commandHandler: @commandHandler.bind this
 
     # If there was a range selection when the user lanuched visual mode, then we retain the selection on exit.
-    @shouldRetainSelectionOnExit = @options.userLaunchedMode and @selection.type == "Range"
+    @shouldRetainSelectionOnExit = @options.userLaunchedMode and 0 < @selection.toString().length
 
     @onExit (event = null) =>
       if @shouldRetainSelectionOnExit
@@ -269,7 +269,7 @@ class VisualMode extends KeyHandlerMode
 
     # Establish or use the initial selection.  If that's not possible, then enter caret mode.
     unless @name == "caret"
-      if @selection.type in [ "Caret", "Range" ]
+      if @selection.anchorNode?
         selectionRect = @selection.getRangeAt(0).getBoundingClientRect()
         if window.vimiumDomTestsAreRunning
           # We're running the DOM tests, where getBoundingClientRect() isn't available.
@@ -277,7 +277,7 @@ class VisualMode extends KeyHandlerMode
         selectionRect = Rect.intersect selectionRect, Rect.create 0, 0, window.innerWidth, window.innerHeight
         if selectionRect.height >= 0 and selectionRect.width >= 0
           # The selection is visible in the current viewport.
-          if @selection.type == "Caret"
+          if @selection.toString().length == 0
             # The caret is in the viewport. Make make it visible.
             @movement.extendByOneCharacter(forward) or @movement.extendByOneCharacter backward
         else
@@ -285,7 +285,7 @@ class VisualMode extends KeyHandlerMode
           # more likely to be interested in visible content.
           @selection.removeAllRanges()
 
-      if @selection.type != "Range" and @name != "caret"
+      unless @selection.anchorNode
         new CaretMode
         HUD.showForDuration "No usable selection, entering caret mode...", 2500
 
@@ -341,15 +341,14 @@ class CaretMode extends VisualMode
     super extend options, name: "caret", indicator: "Caret mode", alterMethod: "move"
 
     # Establish the initial caret.
-    switch @selection.type
-      when "None"
-        @establishInitialSelectionAnchor()
-        if @selection.type == "None"
-          @exit()
-          HUD.showForDuration "Create a selection before entering visual mode.", 2500
-          return
-      when "Range"
-        @movement.collapseSelectionToAnchor()
+    if @selection.anchorNode
+      @movement.collapseSelectionToAnchor()
+    else
+      @establishInitialSelectionAnchor()
+      unless @selection.anchorNode
+        @exit()
+        HUD.showForDuration "Create a selection before entering visual mode.", 2500
+        return
 
     @movement.extendByOneCharacter forward
     @movement.scrollIntoView()
