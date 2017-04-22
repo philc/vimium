@@ -157,3 +157,8 @@ task "coverage", "generate coverage report", ->
           source: (Utils.escapeHtml fs.readFileSync fname, 'utf-8').split '\n'
 
       fs.writeFileSync 'jscoverage.json', JSON.stringify(result)
+
+task "zip", "build Firefox zip file in ../vimium.zip", ->
+  spawn "zip", "-r -FS ../vimium.zip background_scripts Cakefile content_scripts CONTRIBUTING.md CREDITS icons lib
+                manifest.json MIT-LICENSE.txt pages README.md".split /\s+/
+
