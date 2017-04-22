@@ -326,6 +326,10 @@ DomUtils =
       @suppressEvent event
       handlerStack.suppressEvent
 
+
+  getSelectionType: (selection) ->
+    selection.type
+
   # Adapted from: http://roysharon.com/blog/37.
   # This finds the element containing the selection focus.
   getElementWithFocus: (selection, backwards) ->
