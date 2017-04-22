@@ -326,9 +326,15 @@ DomUtils =
       @suppressEvent event
       handlerStack.suppressEvent
 
-
+  # Polyfill for selection.type (which is not available in Firefox).
   getSelectionType: (selection) ->
-    selection.type
+    selection.type or do ->
+      if selection.rangeCount == 0
+        "None"
+      else if selection.isCollapsed
+        "Caret"
+      else
+        "Range"
 
   # Adapted from: http://roysharon.com/blog/37.
   # This finds the element containing the selection focus.
