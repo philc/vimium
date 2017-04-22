@@ -36,21 +36,22 @@ Marks =
       exitOnEscape: true
       suppressAllKeyboardEvents: true
       keydown: (event) =>
-        keyChar = KeyboardUtils.getKeyChar event
-        @exit =>
-          if @isGlobalMark event, keyChar
-            # We record the current scroll position, but only if this is the top frame within the tab.
-            # Otherwise, we'll fetch the scroll position of the top frame from the background page later.
-            [ scrollX, scrollY ] = [ window.scrollX, window.scrollY ] if DomUtils.isTopFrame()
-            chrome.runtime.sendMessage
-              handler: 'createMark'
-              markName: keyChar
-              scrollX: scrollX
-              scrollY: scrollY
-            , => @showMessage "Created global mark", keyChar
-          else
-            localStorage[@getLocationKey keyChar] = @getMarkString()
-            @showMessage "Created local mark", keyChar
+        if KeyboardUtils.isPrintable event
+          keyChar = KeyboardUtils.getKeyChar event
+          @exit =>
+            if @isGlobalMark event, keyChar
+              # We record the current scroll position, but only if this is the top frame within the tab.
+              # Otherwise, we'll fetch the scroll position of the top frame from the background page later.
+              [ scrollX, scrollY ] = [ window.scrollX, window.scrollY ] if DomUtils.isTopFrame()
+              chrome.runtime.sendMessage
+                handler: 'createMark'
+                markName: keyChar
+                scrollX: scrollX
+                scrollY: scrollY
+              , => @showMessage "Created global mark", keyChar
+            else
+              localStorage[@getLocationKey keyChar] = @getMarkString()
+              @showMessage "Created local mark", keyChar
 
   activateGotoMode: ->
     @mode = new Mode
@@ -59,26 +60,27 @@ Marks =
       exitOnEscape: true
       suppressAllKeyboardEvents: true
       keydown: (event) =>
-        @exit =>
-          keyChar = KeyboardUtils.getKeyChar event
-          if @isGlobalMark event, keyChar
-            # This key must match @getLocationKey() in the back end.
-            key = "vimiumGlobalMark|#{keyChar}"
-            Settings.storage.get key, (items) ->
-              if key of items
-                chrome.runtime.sendMessage handler: 'gotoMark', markName: keyChar
-                HUD.showForDuration "Jumped to global mark '#{keyChar}'", 1000
-              else
-                HUD.showForDuration "Global mark not set '#{keyChar}'", 1000
-          else
-            markString = @localRegisters[keyChar] ? localStorage[@getLocationKey keyChar]
-            if markString?
-              @setPreviousPosition()
-              position = JSON.parse markString
-              window.scrollTo position.scrollX, position.scrollY
-              @showMessage "Jumped to local mark", keyChar
+        if KeyboardUtils.isPrintable event
+          @exit =>
+            keyChar = KeyboardUtils.getKeyChar event
+            if @isGlobalMark event, keyChar
+              # This key must match @getLocationKey() in the back end.
+              key = "vimiumGlobalMark|#{keyChar}"
+              Settings.storage.get key, (items) ->
+                if key of items
+                  chrome.runtime.sendMessage handler: 'gotoMark', markName: keyChar
+                  HUD.showForDuration "Jumped to global mark '#{keyChar}'", 1000
+                else
+                  HUD.showForDuration "Global mark not set '#{keyChar}'", 1000
             else
-              @showMessage "Local mark not set", keyChar
+              markString = @localRegisters[keyChar] ? localStorage[@getLocationKey keyChar]
+              if markString?
+                @setPreviousPosition()
+                position = JSON.parse markString
+                window.scrollTo position.scrollX, position.scrollY
+                @showMessage "Jumped to local mark", keyChar
+              else
+                @showMessage "Local mark not set", keyChar
 
 root = exports ? window
 root.Marks =  Marks
