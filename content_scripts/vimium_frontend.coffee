@@ -371,7 +371,8 @@ extend window,
     # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
     # page to copy.
     # http://code.google.com/p/chromium/issues/detail?id=55188
-    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
+    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (urlEncoding) ->
+      url = decodeURI(urlEncoding)
       chrome.runtime.sendMessage { handler: "copyToClipboard", data: url }
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration("Yanked #{url}", 2000)
