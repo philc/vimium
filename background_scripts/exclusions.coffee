@@ -20,12 +20,12 @@ Exclusions =
   # Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
   RegexpCache: RegexpCache
 
-  rules: Settings.get("exclusionRules")
+  rules: Settings.get "exclusionRules"
 
   # Merge the matching rules for URL, or null.  In the normal case, we use the configured @rules; hence, this
   # is the default.  However, when called from the page popup, we are testing what effect candidate new rules
   # would have on the current tab.  In this case, the candidate rules are provided by the caller.
-  getRule: (url, rules=@rules) ->
+  getRule: (url, rules = @rules) ->
     matchingRules = (rule for rule in rules when rule.pattern and 0 <= url.search RegexpCache.get rule.pattern)
     # An absolute exclusion rule (one with no passKeys) takes priority.
     for rule in matchingRules
@@ -47,7 +47,10 @@ Exclusions =
     @rules = rules.filter (rule) -> rule and rule.pattern
     Settings.set "exclusionRules", @rules
 
-  postUpdateHook: (@rules) ->
+  postUpdateHook: (rules) ->
+    # NOTE(mrmr1993): In FF, the |rules| argument will be garbage collected when the exclusions popup is
+    # closed. Do NOT store it/use it asynchronously.
+    @rules = Settings.get "exclusionRules"
     RegexpCache.clear()
 
 # Register postUpdateHook for exclusionRules setting.

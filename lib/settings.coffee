@@ -89,6 +89,9 @@ Settings =
         # Remove options installed by the "copyNonDefaultsToChromeStorage-20150717" migration; see below.
         @log "   chrome.storage.local.remove(#{key})"
         chrome.storage.local.remove key
+    # NOTE(mrmr1993): In FF, |value| will be garbage collected when the page owning it is unloaded.
+    # Any postUpdateHooks that can be called from the options page/exclusions popup should be careful not to
+    # use |value| asynchronously, or else it may refer to a |DeadObject| and accesses will throw an error.
     @performPostUpdateHook key, value
 
   clear: (key) ->
