@@ -29,7 +29,7 @@ isEnabledForUrl = (request) ->
 context "Excluded URLs and pass keys",
 
   setup ->
-    Exclusions.postUpdateHook(
+    Settings.set "exclusionRules",
       [
         { pattern: "http*://mail.google.com/*", passKeys: "" }
         { pattern: "http*://www.facebook.com/*", passKeys: "abab" }
@@ -39,7 +39,8 @@ context "Excluded URLs and pass keys",
         { pattern: "http*://www.example.com/*", passKeys: "a bb c bba a" }
         { pattern: "http*://www.duplicate.com/*", passKeys: "ace" }
         { pattern: "http*://www.duplicate.com/*", passKeys: "bdf" }
-      ])
+      ]
+    Exclusions.postUpdateHook()
 
   should "be disabled for excluded sites", ->
     rule = isEnabledForUrl({ url: 'http://mail.google.com/calendar/page' })
