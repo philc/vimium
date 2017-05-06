@@ -70,11 +70,10 @@ class InsertMode extends Mode
 
           handlerStack.push
             _name: "shadow-DOM-input-mode"
-            blur: (event) ->
-              if event.target.shadowRoot == shadowRoot
-                handlerStack.remove()
-                for own type, listener of eventListeners
-                  shadowRoot.removeEventListener type, listener, true
+            blur: (event) => @alwaysContinueBubbling ->
+              handlerStack.remove()
+              for own type, listener of eventListeners
+                shadowRoot.removeEventListener type, listener, true
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = this if @permanent
