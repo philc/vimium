@@ -18,14 +18,14 @@ class InsertMode extends Mode
         return @suppressEvent
 
       return @passEventToPage unless event.type == 'keydown' and KeyboardUtils.isEscape event
-      target = event.target
+      target = event.path?[0] ? event.target
       if target and DomUtils.isFocusable target
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
         target.blur()
       else if target?.shadowRoot and @insertModeLock
         # An editable element in a shadow DOM is focused; blur it.
         @insertModeLock.blur()
-      @exit event, event.target
+      @exit event, target
       DomUtils.consumeKeyup event
 
     defaults =
@@ -47,34 +47,61 @@ class InsertMode extends Mode
       else
         null
 
+    @boundShadowRoots = new WeakMap?()
+
     @push
       _name: "mode-#{@id}-focus"
       "blur": (event) => @alwaysContinueBubbling =>
-        target = event.target
+        target = event.path?[0] ? event.target
         # We can't rely on focus and blur events arriving in the expected order.  When the active element
         # changes, we might get "focus" before "blur".  We track the active element in @insertModeLock, and
         # exit only when that element blurs.
         @exit event, target if @insertModeLock and target == @insertModeLock
       "focus": (event) => @alwaysContinueBubbling =>
-        if @insertModeLock != event.target and DomUtils.isFocusable event.target
-          @activateOnElement event.target
-        else if event.target.shadowRoot
-          # A focusable element inside the shadow DOM might have been selected. If so, we can catch the focus
-          # event inside the shadow DOM. This fixes #853.
-          shadowRoot = event.target.shadowRoot
-          eventListeners = {}
-          for type in [ "focus", "blur" ]
-            eventListeners[type] = do (type) ->
-              (event) -> handlerStack.bubbleEvent type, event
-            shadowRoot.addEventListener type, eventListeners[type], true
+        # NOTE(mrmr1993): The first element of event.path gives us the element being focused, even when it is
+        # in an (open) shadow DOM.
+        target = event.path?[0] ? event.target
+        if ShadowRoot?
+          shadowRoots = event.path?.filter (node) -> node instanceof ShadowRoot
+        if @insertModeLock != target and DomUtils.isFocusable target
+          @activateOnElement target
+        else if shadowRoots?.length > 0
+          # A focusable element inside the shadow DOM has been selected. We catch subsequent focus and blur
+          # events inside the shadow DOM. This fixes #853.
+          eventListeners = []
+          for shadowRoot in shadowRoots
+            # Use the following check so we don't get into an infinite loop.
+            continue if @boundShadowRoots.has shadowRoot
+            @boundShadowRoots.set shadowRoot, true
+            do (shadowRoot) =>
 
-          handlerStack.push
-            _name: "shadow-DOM-input-mode"
-            blur: (event) ->
-              if event.target.shadowRoot == shadowRoot
-                handlerStack.remove()
-                for own type, listener of eventListeners
-                  shadowRoot.removeEventListener type, listener, true
+              # Capture events inside the shadow DOM.
+              # NOTE(mrmr1993): A change of focus between two focusable elements only triggers an event as
+              # far out as their outermost shadow DOM common ancestor.
+              # - We bubble events from each of these so that we don't miss any relevant change of focus.
+              # - The handler pushed onto the stack below will remove all listeners on child shadow DOMs, so:
+              #   * we only handle 1 blur event (and thus 1 corresponding focus event).
+              #   * we have handlers exactly as deep into nested shadow DOMs as the current focus, and no
+              #     further.
+              #   * we don't duplicate handlers, fixing #2505.
+              eventListeners = {}
+              for type in [ "focus", "blur" ]
+                eventListeners[type] = do (type) ->
+                  (event) -> handlerStack.bubbleEvent type, event
+                shadowRoot.addEventListener type, eventListeners[type], true
+
+              handlerStack.push
+                _name: "shadow-DOM-input-mode"
+                blur: (event) =>
+                  if event.path?
+                    eventOutsideShadow =
+                      event.path.indexOf(shadowRoot) >= 0 and
+                      event.path.indexOf(event.currentTarget) > event.path.indexOf(shadowRoot)
+                  if eventOutsideShadow ? true
+                    @boundShadowRoots.delete shadowRoot
+                    handlerStack.remove()
+                    for own type, listener of eventListeners
+                      shadowRoot.removeEventListener type, listener, true
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = this if @permanent
