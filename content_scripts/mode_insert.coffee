@@ -102,6 +102,7 @@ class InsertMode extends Mode
                     handlerStack.remove()
                     for own type, listener of eventListeners
                       shadowRoot.removeEventListener type, listener, true
+                  return handlerStack.continueBubbling
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = this if @permanent
