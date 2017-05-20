@@ -156,6 +156,14 @@ Contributing
 ------------
 Please see [CONTRIBUTING.md](https://github.com/philc/vimium/blob/master/CONTRIBUTING.md) for details.
 
+Firefox Support
+---------------
+
+There is an *experimental* port of Vimium on Firefox [here](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ux/).
+This is very much experimental: most features work, although some bugs and issues remain.
+
+PRs are welcome.
+
 Release Notes
 -------------
 
