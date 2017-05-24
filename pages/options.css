@@ -8,7 +8,15 @@ body {
 a, a:visited { color: #15c; }
 a:active { color: #052577; }
 div#wrapper, #footerWrapper {
-  width: 540px;
+  /**
+   * 100% of the screen width, minus:
+   * - 300px (width of `.example`)
+   * - 20px (left margin of `.example`)
+   * - 35px (left margin of #wrapper)
+   * - 35px (to ensure right margin is same as left margin of #wrapper)
+   */
+  width: calc(100% - 390px);
+  max-width: 810px; /* Capped at 1200px (1200px - 390px) */
   margin-left: 35px;
 }
 header {
@@ -153,7 +161,7 @@ input[type="text"], textarea {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
   color: #444;
-  font: inherit;
+  font-size: inherit;
   padding: 3px;
 }
 button:focus, input[type="text"]:focus, textarea:focus {
