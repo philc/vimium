@@ -53,21 +53,29 @@ class Suggestion
     @html =
       if request.isCustomSearch
         """
-        <div class="vimiumReset vomnibarTopHalf">
-           <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
-           <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
-           #{relevancyHtml}
-         </div>
+        <div class="vimiumReset">
+          <div class="vomnibarSuggestion">
+            <div class="vomnibarTopHalf">
+              <span class="vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vomnibarSource">#{@type}</span>
+              <span class="vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
+              #{relevancyHtml}
+            </div>
+          </div>
+        </div>
         """
       else
         """
-        <div class="vimiumReset vomnibarTopHalf">
-           <span class="vimiumReset vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vimiumReset vomnibarSource">#{@type}</span>
-           <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
-         </div>
-         <div class="vimiumReset vomnibarBottomHalf">
-          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
-          #{relevancyHtml}
+        <div class="vimiumReset">
+          <div class="vomnibarSuggestion">
+            <div class="vomnibarTopHalf">
+              <span class="vomnibarSource #{insertTextClass}">#{insertTextIndicator}</span><span class="vomnibarSource">#{@type}</span>
+              <span class="vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
+             </div>
+             <div class="vomnibarBottomHalf">
+              <span class="vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
+              #{relevancyHtml}
+            </div>
+          </div>
         </div>
         """
 

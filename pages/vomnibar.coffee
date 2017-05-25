@@ -201,7 +201,16 @@ class VomnibarUI
         @completions = results
         @selection = if @completions[0]?.autoSelect then 0 else @initialSelectionValue
         # Update completion list with the new suggestions.
-        @completionList.innerHTML = @completions.map((completion) -> "<li>#{completion.html}</li>").join("")
+        @completionList.innerHTML = @completions.map(
+          (completion, index) -> "<li data-index=\"#{index}\">#{completion.html}</li>"
+        ).join("")
+        # Add click listeners for each completion.
+        for element in @completionList.childNodes
+          do (element) =>
+            element.addEventListener "click", (event) =>
+              openInNewTab = event.shiftKey or event.ctrlKey or event.altKey or KeyboardUtils.isPrimaryModifierKey event
+              completion = @completions[parseInt element.dataset.index]
+              @hide -> completion.performAction openInNewTab
         @completionList.style.display = if @completions.length > 0 then "block" else ""
         @selection = Math.min @completions.length - 1, Math.max @initialSelectionValue, @selection
         @updateSelection()
