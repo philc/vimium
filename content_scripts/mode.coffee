@@ -130,10 +130,10 @@ class Mode
           if event.repeat
             handlerStack.suppressEvent
           else
-            keyEventSuppressor.exit()
+            @remove()
             handlerStack.continueBubbling
 
-        keyEventSuppressor = new Mode
+        handlerStack.push
           name: "suppress-trailing-key-events"
           keydown: handler
           keypress: handler
