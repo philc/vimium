@@ -13,6 +13,7 @@ Clipboard =
     document.body.appendChild(textArea)
     textArea.select()
     document.execCommand("Copy")
+    textArea.blur()
     document.body.removeChild(textArea)
 
   paste: ->
@@ -21,6 +22,7 @@ Clipboard =
     textArea.focus()
     document.execCommand("Paste")
     value = textArea.value
+    textArea.blur()
     document.body.removeChild(textArea)
     value
 

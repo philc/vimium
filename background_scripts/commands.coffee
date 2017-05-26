@@ -337,8 +337,8 @@ commandDescriptions =
   toggleViewSource: ["View page source", { noRepeat: true }]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { background: true, noRepeat: true }]
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { background: true, repeatLimit: 20 }]
+  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { noRepeat: true }]
+  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { repeatLimit: 20 }]
 
   enterInsertMode: ["Enter insert mode", { noRepeat: true }]
   passNextKey: ["Pass the next key to the page"]
