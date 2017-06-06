@@ -27,7 +27,7 @@ tr.vimiumReset {
   border: none;
   bottom: auto;
   box-shadow: none;
-  color: black;
+  color: black !important;
   cursor: auto;
   display: inline;
   float: none;
