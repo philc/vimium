@@ -70,6 +70,11 @@ exports.chrome =
 
   browserAction:
     setBadgeBackgroundColor: ->
+
+  commands:
+    onCommand:
+      addListener: () ->
+
   storage:
     # chrome.storage.local
     local:

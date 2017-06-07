@@ -73,6 +73,10 @@ chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
   # Ensure that the sendResponse callback is freed.
   false
 
+# Allow simple commands to be run from restricted tabs
+chrome.commands.onCommand.addListener (command) ->
+  chrome.tabs.getSelected null, (tab) -> BackgroundCommands[command] { count: 1, tab: tab }
+
 onURLChange = (details) ->
   chrome.tabs.sendMessage details.tabId, name: "checkEnabledAfterURLChange"
 
