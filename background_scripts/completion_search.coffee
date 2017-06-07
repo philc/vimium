@@ -42,7 +42,7 @@ CompletionSearch =
 
   # The amount of time to wait for new requests before launching the current request (for example, if the user
   # is still typing).
-  delay: 100
+  delay: 0
 
   get: (searchUrl, url, callback) ->
     xhr = new XMLHttpRequest()
