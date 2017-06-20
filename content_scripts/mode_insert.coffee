@@ -8,6 +8,8 @@ class InsertMode extends Mode
     # If truthy, then we were activated by the user (with "i").
     @global = options.global
 
+    @passExitKey = options.passExitKey
+
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
       return @passEventToPage if @insertModeLock is document.body
@@ -26,6 +28,8 @@ class InsertMode extends Mode
         # An editable element in a shadow DOM is focused; blur it.
         @insertModeLock.blur()
       @exit event, event.target
+      if @passExitKey
+        return @passEventToPage
       DomUtils.consumeKeyup event
 
     defaults =

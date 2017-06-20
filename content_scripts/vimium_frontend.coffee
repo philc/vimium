@@ -376,10 +376,10 @@ extend window,
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration("Yanked #{url}", 2000)
 
-  enterInsertMode: ->
+  enterInsertMode: (count, { registryEntry: { options } }) ->
     # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
     # instance to take over.
-    new InsertMode global: true, exitOnFocus: true
+    new InsertMode global: true, exitOnFocus: !options.ignoreFocusEvents, passExitKey: options.passExitKey
 
   enterVisualMode: ->
     new VisualMode userLaunchedMode: true
