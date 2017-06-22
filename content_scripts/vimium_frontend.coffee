@@ -367,14 +367,19 @@ extend window,
         url = "view-source:" + url
       chrome.runtime.sendMessage {handler: "openUrlInNewTab", url}
 
-  copyCurrentUrl: ->
+  copyCurrentUrl: (count, options) ->
     # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
     # page to copy.
     # http://code.google.com/p/chromium/issues/detail?id=55188
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
+      url = decodeURIComponent(url) if options.registryEntry.options.decoded
       chrome.runtime.sendMessage { handler: "copyToClipboard", data: url }
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration("Yanked #{url}", 2000)
+
+  copyDecodedCurrentUrl: (count, options) ->
+    options.registryEntry.options.decoded = true
+    copyCurrentUrl(count, options)
 
   enterInsertMode: ->
     # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
