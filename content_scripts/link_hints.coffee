@@ -615,14 +615,21 @@ LocalHints =
 
     return isClickable unless clickableProps
 
-    {imgClientRects, imgMap} = clickableProps
+    visibleElements = []
+
+    {imgClientRects, imgMap, secondClassCitizen, possibleFalsePositive, reason} = clickableProps
     isClickable.shift() unless clickableProps.element? # Remove placeholder if we added one
     if imgMap and imgClientRects.length > 0
       areas = imgMap.getElementsByTagName "area"
       areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-      isClickable = areasAndRects.append isClickable
+      visibleElements.push areasAndRects...
 
-    isClickable
+    if clickableProps.isClickable
+      clientRect = DomUtils.getVisibleClientRect element, true
+      if clientRect != null
+        visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive, reason}
+
+    visibleElements
 
   #
   # Determine whether the element is clickable.
@@ -735,14 +742,9 @@ LocalHints =
     unless isClickable or isNaN(tabIndex) or tabIndex < 0
       isClickable = onlyHasTabIndex = true
 
-    if isClickable
-      clientRect = DomUtils.getVisibleClientRect element, true
-      if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
-          possibleFalsePositive, reason}
-
-    clickableProps = visibleElements[0] ? {}
-    extend clickableProps, {imgClientRects, imgMap}
+    if isClickable or imgMap
+      visibleElements.push {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive,
+        reason, imgClientRects, imgMap}
 
     visibleElements
 
