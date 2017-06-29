@@ -617,16 +617,21 @@ class RenderCache
     @cssStyles = new WeakMap()
 
     # Bind functions for cached getters.
-    @getClientRects = cachedGet.bind(this, @_getClientRects, new WeakMap())
-    @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
     @getComputedStyle = cachedGet.bind(this, @_getComputedStyle, new WeakMap())
+    @getClientRects = cachedGet.bind(this, @_getClientRects, new WeakMap())
+    @getBoundingClientRect = cachedGet.bind(this, @_getBoundingClientRect, new WeakMap())
+    @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
 
   getCssStyle: (element, property) ->
     cssStyles = cachedGet (-> {}), @cssStyles, element
     cssStyles[property] ?= @getComputedStyle(element).getPropertyValue property
 
+  inViewport: (element) ->
+    DomUtils.inViewport @getBoundingClientRect element
+
   _getComputedStyle: (element) -> window.getComputedStyle element, null
   _getClientRects: (element) -> element.getClientRects()
+  _getBoundingClientRect: (element) -> element.getBoundingClientRect()
 
   _getVisibleClientRect: (element) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
@@ -829,7 +834,7 @@ LocalHints =
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      unless requireHref and not element.href
+      unless (requireHref and not element.href) or not renderCache.inViewport element
         visibleElement = @getVisibleClickable element, renderCache
         visibleElements.push visibleElement...
 

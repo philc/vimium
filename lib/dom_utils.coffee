@@ -147,6 +147,12 @@ DomUtils =
     else
       boundedRect
 
+  inViewport: (rect) ->
+    rect.bottom > 0 and
+    rect.right > 0 and
+    rect.left < window.innerWidth and
+    rect.top < window.innerHeight
+
   #
   # Get the client rects for the <area> elements in a <map> based on the position of the <img> element using
   # the map. Returns an array of rects.
