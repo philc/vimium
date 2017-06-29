@@ -624,6 +624,8 @@ LocalHints =
     possibleFalsePositive = false
     visibleElements = []
     reason = null
+    imgClientRects = []
+    imgMap = null
 
     # Insert area elements that provide click functionality to an img.
     if tagName == "img"
@@ -631,9 +633,9 @@ LocalHints =
       if mapName
         imgClientRects = element.getClientRects()
         mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
-        map = document.querySelector "map[name=\"#{mapName}\"]"
-        if map and imgClientRects.length > 0
-          areas = map.getElementsByTagName "area"
+        imgMap = document.querySelector "map[name=\"#{mapName}\"]"
+        if imgMap and imgClientRects.length > 0
+          areas = imgMap.getElementsByTagName "area"
           areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
           visibleElements.push areasAndRects...
 
