@@ -604,14 +604,33 @@ spanWrap = (hintString) ->
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
 
+cachedGet = (key, getter, cache) ->
+  unless cache.has key
+    cache.set key, getter key
+  cache.get key
+
+
 class RenderCache
   visibleClientRectCache: null
+  clientRectsCache: null
   constructor: ->
     @visibleClientRectCache = new WeakMap()
+    @clientRectsCache = new WeakMap()
+
+  getClientRects: (element) ->
+    cachedGet element,
+      @_getClientRects.bind(this),
+      @clientRectsCache
+  getVisibleClientRect: (element) ->
+    cachedGet element,
+      @_getVisibleClientRect.bind(this),
+      @visibleClientRectCache
+
+  _getClientRects: (element) -> element.getClientRects()
 
   _getVisibleClientRect: (element) ->
     # Note: this call will be expensive if we modify the DOM in between calls.
-    clientRects = (Rect.copy clientRect for clientRect in element.getClientRects())
+    clientRects = (Rect.copy clientRect for clientRect in @getClientRects element)
 
     # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
     # font-size contains text.
@@ -652,11 +671,6 @@ class RenderCache
         return clientRect
 
     null
-
-  getVisibleClientRect: (element) ->
-    unless @visibleClientRectCache.has element
-      @visibleClientRectCache.set element, @_getVisibleClientRect element
-    @visibleClientRectCache.get element
 
 
 LocalHints =
