@@ -604,6 +604,19 @@ spanWrap = (hintString) ->
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
 
+class RenderCache
+  visibleClientRectCache: null
+  constructor: ->
+    @visibleClientRectCache = new WeakMap()
+
+  _getVisibleClientRect: (element) ->
+    DomUtils.getVisibleClientRect element, true
+  getVisibleClientRect: (element) ->
+    unless @visibleClientRectCache.has element
+      @visibleClientRectCache.set element, @_getVisibleClientRect element
+    @visibleClientRectCache.get element
+
+
 LocalHints =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
@@ -611,7 +624,7 @@ LocalHints =
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
   getVisibleClickable: (element, renderCache) ->
-    clickableProps = @isClickable element
+    clickableProps = @isClickable element, renderCache
     return [] unless clickableProps
 
     visibleElements = []
@@ -623,7 +636,7 @@ LocalHints =
       visibleElements.push areasAndRects...
 
     if clickableProps.isClickable
-      clientRect = DomUtils.getVisibleClientRect element, true
+      clientRect = renderCache.getVisibleClientRect element
       if clientRect != null
         visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive, reason}
 
@@ -633,7 +646,7 @@ LocalHints =
   # Determine whether the element is clickable. Returns false when an element is not clickable, or a dict
   # with properties used by getVisisbleClickable otherwise.
   #
-  isClickable: (element) ->
+  isClickable: (element, renderCache) ->
     # Get the tag name.  However, `element.tagName` can be an element (not a string, see #2305), so we guard
     # against that.
     tagName = element.tagName.toLowerCase?() ? ""
@@ -707,7 +720,7 @@ LocalHints =
         isClickable ||= not element.disabled
       when "label"
         isClickable ||= element.control? and not element.control.disabled and
-                        (@getVisibleClickable element.control).length == 0
+                        (@getVisibleClickable element.control, renderCache).length == 0
       when "body"
         isClickable ||=
           if element == document.body and not windowIsFocused() and
@@ -758,6 +771,7 @@ LocalHints =
     return [] unless document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
+    renderCache = new RenderCache()
 
     # The order of elements here is important; they should appear in the order they are in the DOM, so that
     # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
@@ -766,7 +780,7 @@ LocalHints =
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
       unless requireHref and not element.href
-        visibleElement = @getVisibleClickable element
+        visibleElement = @getVisibleClickable element, renderCache
         visibleElements.push visibleElement...
 
     # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
