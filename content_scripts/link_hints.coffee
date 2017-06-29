@@ -604,7 +604,7 @@ spanWrap = (hintString) ->
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
 
-cachedGet = (key, getter, cache) ->
+cachedGet = (getter, cache, key) ->
   unless cache.has key
     cache.set key, getter key
   cache.get key
@@ -614,17 +614,9 @@ class RenderCache
   visibleClientRectCache: null
   clientRectsCache: null
   constructor: ->
-    @visibleClientRectCache = new WeakMap()
-    @clientRectsCache = new WeakMap()
-
-  getClientRects: (element) ->
-    cachedGet element,
-      @_getClientRects.bind(this),
-      @clientRectsCache
-  getVisibleClientRect: (element) ->
-    cachedGet element,
-      @_getVisibleClientRect.bind(this),
-      @visibleClientRectCache
+    # Bind functions for cached getters.
+    @getClientRects = cachedGet.bind(this, @_getClientRects.bind(this), new WeakMap())
+    @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect.bind(this), new WeakMap())
 
   _getClientRects: (element) -> element.getClientRects()
 
