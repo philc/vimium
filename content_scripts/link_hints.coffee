@@ -610,7 +610,12 @@ LocalHints =
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element) ->
+  getVisibleClickable: (element) -> @isClickable element
+
+  #
+  # Determine whether the element is clickable.
+  #
+  isClickable: (element) ->
     # Get the tag name.  However, `element.tagName` can be an element (not a string, see #2305), so we guard
     # against that.
     tagName = element.tagName.toLowerCase?() ? ""
