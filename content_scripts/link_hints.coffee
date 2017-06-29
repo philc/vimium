@@ -612,13 +612,18 @@ cachedGet = (getter, cache, args...) ->
 
 
 class RenderCache
-  visibleClientRectCache: null
-  clientRectsCache: null
+  cssStyles: null
   constructor: ->
+    @cssStyles = new WeakMap()
+
     # Bind functions for cached getters.
     @getClientRects = cachedGet.bind(this, @_getClientRects, new WeakMap())
     @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
     @getComputedStyle = cachedGet.bind(this, @_getComputedStyle, new WeakMap())
+
+  getCssStyle: (element, property) ->
+    cssStyles = cachedGet (-> {}), @cssStyles, element
+    cssStyles[property] ?= @getComputedStyle(element).getPropertyValue property
 
   _getComputedStyle: (element) -> window.getComputedStyle element, null
   _getClientRects: (element) -> element.getClientRects()
@@ -629,10 +634,9 @@ class RenderCache
 
     # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
     # font-size contains text.
-    isInlineZeroHeight = ->
-      elementComputedStyle = @getComputedStyle element
-      isInlineZeroFontSize = (0 == elementComputedStyle.getPropertyValue("display").indexOf "inline") and
-        (elementComputedStyle.getPropertyValue("font-size") == "0px")
+    isInlineZeroHeight = =>
+      isInlineZeroFontSize = (0 == @getCssStyle(element, "display").indexOf "inline") and
+        (@getCssStyle(element, "font-size") == "0px")
       # Override the function to return this value for the rest of this context.
       isInlineZeroHeight = -> isInlineZeroFontSize
       isInlineZeroFontSize
@@ -641,15 +645,14 @@ class RenderCache
       # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
       if clientRect.width == 0 or clientRect.height == 0
         for child in element.children
-          computedStyle = @getComputedStyle child
           # Ignore child elements which are not floated and not absolutely positioned for parent elements
           # with zero width/height, as long as the case described at isInlineZeroHeight does not apply.
           # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline
           # children.
-          continue if (computedStyle.getPropertyValue("float") == "none" and
-            not (computedStyle.getPropertyValue("position") in ["absolute", "fixed"]) and
+          continue if (@getCssStyle(child, "float") == "none" and
+            not (@getCssStyle(child, "position") in ["absolute", "fixed"]) and
             not (clientRect.height == 0 and isInlineZeroHeight() and
-              0 == computedStyle.getPropertyValue("display").indexOf "inline"))
+              0 == @getCssStyle(child, "display").indexOf "inline"))
           childClientRect = @getVisibleClientRect child
           continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
           return childClientRect
@@ -660,8 +663,7 @@ class RenderCache
         continue if clientRect == null or clientRect.width < 3 or clientRect.height < 3
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
-        computedStyle = @getComputedStyle element
-        continue if computedStyle.getPropertyValue('visibility') != 'visible'
+        continue if @getCssStyle(element, 'visibility') != 'visible'
 
         return clientRect
 
