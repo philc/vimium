@@ -610,7 +610,19 @@ LocalHints =
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element) -> @isClickable element
+  getVisibleClickable: (element) ->
+    [clickableProps] = isClickable = @isClickable element
+
+    return isClickable unless clickableProps
+
+    {imgClientRects, imgMap} = clickableProps
+    isClickable.shift() unless clickableProps.element? # Remove placeholder if we added one
+    if imgMap and imgClientRects.length > 0
+      areas = imgMap.getElementsByTagName "area"
+      areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+      isClickable = areasAndRects.append isClickable
+
+    isClickable
 
   #
   # Determine whether the element is clickable.
@@ -634,10 +646,6 @@ LocalHints =
         imgClientRects = element.getClientRects()
         mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
         imgMap = document.querySelector "map[name=\"#{mapName}\"]"
-        if imgMap and imgClientRects.length > 0
-          areas = imgMap.getElementsByTagName "area"
-          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-          visibleElements.push areasAndRects...
 
     # Check aria properties to see if the element should be ignored.
     if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
@@ -732,6 +740,9 @@ LocalHints =
       if clientRect != null
         visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
           possibleFalsePositive, reason}
+
+    clickableProps = visibleElements[0] ? {}
+    extend clickableProps, {imgClientRects, imgMap}
 
     visibleElements
 
