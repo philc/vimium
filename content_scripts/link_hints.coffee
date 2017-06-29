@@ -637,9 +637,6 @@ class RenderCache
     isInlineZeroHeight = =>
       isInlineZeroFontSize = (0 == @getCssStyle(element, "display").indexOf "inline") and
         (@getCssStyle(element, "font-size") == "0px")
-      # Override the function to return this value for the rest of this context.
-      isInlineZeroHeight = -> isInlineZeroFontSize
-      isInlineZeroFontSize
 
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
