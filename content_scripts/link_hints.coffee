@@ -610,15 +610,13 @@ LocalHints =
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element) ->
-    [clickableProps] = isClickable = @isClickable element
-
-    return isClickable unless clickableProps
+  getVisibleClickable: (element, renderCache) ->
+    clickableProps = @isClickable element
+    return [] unless clickableProps
 
     visibleElements = []
 
     {imgClientRects, imgMap, secondClassCitizen, possibleFalsePositive, reason} = clickableProps
-    isClickable.shift() unless clickableProps.element? # Remove placeholder if we added one
     if imgMap and imgClientRects.length > 0
       areas = imgMap.getElementsByTagName "area"
       areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
@@ -632,7 +630,8 @@ LocalHints =
     visibleElements
 
   #
-  # Determine whether the element is clickable.
+  # Determine whether the element is clickable. Returns false when an element is not clickable, or a dict
+  # with properties used by getVisisbleClickable otherwise.
   #
   isClickable: (element) ->
     # Get the tag name.  However, `element.tagName` can be an element (not a string, see #2305), so we guard
@@ -641,7 +640,6 @@ LocalHints =
     isClickable = false
     onlyHasTabIndex = false
     possibleFalsePositive = false
-    visibleElements = []
     reason = null
     imgClientRects = []
     imgMap = null
@@ -657,7 +655,7 @@ LocalHints =
     # Check aria properties to see if the element should be ignored.
     if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-      return [] # This element should never have a link hint.
+      return false # This element should never have a link hint.
 
     # Check for AngularJS listeners on the element.
     @checkForAngularJs ?= do ->
@@ -743,10 +741,10 @@ LocalHints =
       isClickable = onlyHasTabIndex = true
 
     if isClickable or imgMap
-      visibleElements.push {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive,
-        reason, imgClientRects, imgMap}
-
-    visibleElements
+      {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason,
+        imgClientRects, imgMap}
+    else
+      false
 
   #
   # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
