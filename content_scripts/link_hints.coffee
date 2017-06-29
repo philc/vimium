@@ -627,7 +627,8 @@ class RenderCache
     cssStyles[property] ?= @getComputedStyle(element).getPropertyValue property
 
   inViewport: (element) ->
-    DomUtils.inViewport @getBoundingClientRect element
+    Rect.rectsOverlap (@getBoundingClientRect element),
+      {left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight}
 
   _getComputedStyle: (element) -> window.getComputedStyle element, null
   _getClientRects: (element) -> element.getClientRects()
