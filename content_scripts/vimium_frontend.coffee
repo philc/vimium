@@ -595,9 +595,14 @@ findAndFollowLink = (linkStrings) ->
       continue
 
     linkMatches = false
-    for linkString in linkStrings
-      if link.innerText.toLowerCase().indexOf(linkString) != -1 ||
-          0 <= link.value?.indexOf? linkString
+    for LS in linkStrings
+      # NOTE: the "0 <= a.b?.c?..." clasues need to be wrapped in parens,
+      # as if they aren't and the "a.b?.c?..." evalutes to undefined then
+      # the clauses after the "||" don't get handled properly
+      if link.innerText.toLowerCase().indexOf(LS) != -1 ||
+          (0 <= link.value?.indexOf? LS) ||
+          (0 <= link.attributes.title?.value.toLowerCase().indexOf(LS)) ||
+          (0 <= link.attributes.id?.value.toLowerCase().indexOf(LS))
         linkMatches = true
         break
     continue unless linkMatches
@@ -630,7 +635,11 @@ findAndFollowLink = (linkStrings) ->
         new RegExp linkString, "i"
     for candidateLink in candidateLinks
       if exactWordRegex.test(candidateLink.innerText) ||
-          (candidateLink.value && exactWordRegex.test(candidateLink.value))
+          (candidateLink.value && exactWordRegex.test(candidateLink.value)) ||
+          (candidateLink.attributes.title &&
+            exactWordRegex.test(candidateLink.attributes.title.value)) ||
+          (candidateLink.attributes.id &&
+            exactWordRegex.test(candidateLink.attributes.id.value))
         followLink(candidateLink)
         return true
   false
