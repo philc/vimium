@@ -74,6 +74,11 @@ Rect =
     rect1.bottom > rect2.top and
     rect1.top < rect2.bottom
 
+  # Determine whether two rects overlap, including 0-width intersections at borders.
+  intersectsStrict: (rect1, rect2) ->
+    rect1.right >= rect2.left and rect1.left <= rect2.right and
+    rect1.bottom >= rect2.top and rect1.top <= rect2.bottom
+
   equals: (rect1, rect2) ->
     for property in ["top", "bottom", "left", "right", "width", "height"]
       return false if rect1[property] != rect2[property]
@@ -82,11 +87,6 @@ Rect =
   intersect: (rect1, rect2) ->
     @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
         (Math.min rect1.right, rect2.right), (Math.min rect1.bottom, rect2.bottom)
-
-  # Determine whether two rects overlap.
-  rectsOverlap: (rect1, rect2) ->
-    rect1.right >= rect2.left and rect1.left <= rect2.right and
-    rect1.bottom >= rect2.top and rect1.top <= rect2.bottom
 
 root = exports ? window
 root.Rect = Rect

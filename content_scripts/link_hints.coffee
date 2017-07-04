@@ -322,7 +322,7 @@ class LinkHintsMode
   rotateHints: do ->
     markerOverlapsStack = (marker, stack) ->
       for otherMarker in stack
-        return true if Rect.rectsOverlap marker.markerRect, otherMarker.markerRect
+        return true if Rect.intersectsStrict marker.markerRect, otherMarker.markerRect
       false
 
     ->
@@ -628,7 +628,7 @@ class RenderCache
     cssStyles[property] ?= @getComputedStyle(element).getPropertyValue property
 
   inViewport: (element) ->
-    Rect.rectsOverlap (@getBoundingClientRect element),
+    Rect.intersectsStrict (@getBoundingClientRect element),
       {left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight}
 
   _getComputedStyle: (element) -> window.getComputedStyle element, null
