@@ -322,7 +322,7 @@ class LinkHintsMode
   rotateHints: do ->
     markerOverlapsStack = (marker, stack) ->
       for otherMarker in stack
-        return true if Rect.intersectsStrict marker.markerRect, otherMarker.markerRect
+        return true if Rect.intersects marker.markerRect, otherMarker.markerRect
       false
 
     ->
