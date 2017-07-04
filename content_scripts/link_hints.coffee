@@ -642,19 +642,8 @@ class RenderCache
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
       if clientRect.width == 0 or clientRect.height == 0
-        for child in element.children
-          # Ignore child elements which are not floated and not absolutely positioned for parent elements
-          # with zero width/height, as long as the case described at isInlineZeroHeight does not apply.
-          # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline
-          # children.
-          continue if (@getCssStyle(child, "float") == "none" and
-            not (@getCssStyle(child, "position") in ["absolute", "fixed"]) and
-            not (clientRect.height == 0 and @isInlineZeroHeight(element) and
-              0 == @getCssStyle(child, "display").indexOf "inline"))
-          childClientRect = @getVisibleClientRect child
-          continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
-          return childClientRect
-
+        childRect = @zeroDimensionHasVisibleChildren element, clientRect
+        return childRect if childRect?
       else
         clientRect = DomUtils.cropRectToVisible clientRect
 
@@ -672,6 +661,20 @@ class RenderCache
   _isInlineZeroHeight: (element) ->
     (0 == @getCssStyle(element, "display").indexOf "inline") and
       (@getCssStyle(element, "font-size") == "0px")
+
+  zeroDimensionHasVisibleChildren: (element, clientRect) ->
+    for child in element.children
+      # Ignore child elements which are not floated and not absolutely positioned for parent elements with
+      # zero width/height, as long as the case described at isInlineZeroHeight does not apply.
+      # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline children.
+      continue if (@getCssStyle(child, "float") == "none" and
+        not (@getCssStyle(child, "position") in ["absolute", "fixed"]) and
+        not (clientRect.height == 0 and @isInlineZeroHeight(element) and
+          0 == @getCssStyle(child, "display").indexOf "inline"))
+      childClientRect = @getVisibleClientRect child
+      continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
+      return childClientRect
+    null
 
 
 LocalHints =
