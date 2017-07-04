@@ -201,7 +201,7 @@ context "Rect subtraction",
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             for resultRect in resultRects
-              assert.isFalse Rect.contains subtractRect, resultRect
+              assert.isFalse Rect.intersects subtractRect, resultRect
 
   should "be contained in original rect", ->
     rect = Rect.create 0, 0, 3, 3
@@ -212,7 +212,7 @@ context "Rect subtraction",
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             for resultRect in resultRects
-              assert.isTrue Rect.contains rect, resultRect
+              assert.isTrue Rect.intersects rect, resultRect
 
   should "contain the  subtracted rect in the original minus the results", ->
     rect = Rect.create 0, 0, 3, 3
@@ -229,7 +229,7 @@ context "Rect subtraction",
             assert.isTrue (resultComplement.length == 0 or resultComplement.length == 1)
             if resultComplement.length == 1
               complementRect = resultComplement[0]
-              assert.isTrue Rect.contains subtractRect, complementRect
+              assert.isTrue Rect.intersects subtractRect, complementRect
 
 context "Rect overlaps",
   should "detect that a rect overlaps itself", ->
