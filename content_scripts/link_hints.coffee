@@ -621,6 +621,7 @@ class RenderCache
     @getClientRects = cachedGet.bind(this, @_getClientRects, new WeakMap())
     @getBoundingClientRect = cachedGet.bind(this, @_getBoundingClientRect, new WeakMap())
     @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
+    @isInlineZeroHeight = cachedGet.bind(this, @_isInlineZeroHeight, new WeakMap())
 
   getCssStyle: (element, property) ->
     cssStyles = cachedGet (-> {}), @cssStyles, element
@@ -638,12 +639,6 @@ class RenderCache
     # Note: this call will be expensive if we modify the DOM in between calls.
     clientRects = (Rect.copy clientRect for clientRect in @getClientRects element)
 
-    # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
-    # font-size contains text.
-    isInlineZeroHeight = =>
-      isInlineZeroFontSize = (0 == @getCssStyle(element, "display").indexOf "inline") and
-        (@getCssStyle(element, "font-size") == "0px")
-
     for clientRect in clientRects
       # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
       if clientRect.width == 0 or clientRect.height == 0
@@ -654,7 +649,7 @@ class RenderCache
           # children.
           continue if (@getCssStyle(child, "float") == "none" and
             not (@getCssStyle(child, "position") in ["absolute", "fixed"]) and
-            not (clientRect.height == 0 and isInlineZeroHeight() and
+            not (clientRect.height == 0 and @isInlineZeroHeight(element) and
               0 == @getCssStyle(child, "display").indexOf "inline"))
           childClientRect = @getVisibleClientRect child
           continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
@@ -671,6 +666,12 @@ class RenderCache
         return clientRect
 
     null
+
+  # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
+  # font-size contains text.
+  _isInlineZeroHeight: (element) ->
+    (0 == @getCssStyle(element, "display").indexOf "inline") and
+      (@getCssStyle(element, "font-size") == "0px")
 
 
 LocalHints =
