@@ -67,7 +67,8 @@ Rect =
 
     rects.filter (rect) -> rect.height > 0 and rect.width > 0
 
-  contains: (rect1, rect2) ->
+  # Determine whether two rects overlap.
+  intersects: (rect1, rect2) ->
     rect1.right > rect2.left and
     rect1.left < rect2.right and
     rect1.bottom > rect2.top and
