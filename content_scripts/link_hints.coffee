@@ -694,7 +694,7 @@ LocalHints =
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
   getVisibleClickable: (element, renderCache) ->
-    visibleElements = @getImageAreaRects element
+    visibleElements = @getImageAreaRects element, renderCache
     clickableProps = @isClickable element, renderCache
     return visibleElements unless clickableProps
 
@@ -708,7 +708,7 @@ LocalHints =
 
     visibleElements
 
-  getImageAreaRects: (element) ->
+  getImageAreaRects: (element, renderCache) ->
     # Insert area elements that provide click functionality to an img.
     if element.tagName.toLowerCase?() == "img"
       mapName = element.getAttribute "usemap"
@@ -716,10 +716,10 @@ LocalHints =
         mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
         imgMap = document.querySelector "map[name=\"#{mapName}\"]"
 
-        imgClientRects = element.getClientRects()
-        if imgMap and imgClientRects.length > 0
+        imgClientRects = renderCache.getBoundingClientRect element
+        if imgMap and imgClientRects.height > 0
           areas = imgMap.getElementsByTagName "area"
-          return DomUtils.getClientRectsForAreas imgClientRects[0], areas
+          return DomUtils.getClientRectsForAreas imgClientRects, areas
     []
 
   #
