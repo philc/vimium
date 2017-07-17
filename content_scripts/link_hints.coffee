@@ -610,7 +610,6 @@ cachedGet = (getter, cache, args...) ->
     cache.set key, getter.apply this, args
   cache.get key
 
-
 class RenderCache
   cssStyles: null
   constructor: ->
@@ -695,12 +694,12 @@ LocalHints =
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
   getVisibleClickable: (element, renderCache) ->
+    visibleElements = @getImageAreaRects element
     clickableProps = @isClickable element, renderCache
-    return [] unless clickableProps
+    return visibleElements unless clickableProps
 
 
-    {imgMap, secondClassCitizen, possibleFalsePositive, reason} = clickableProps
-    visibleElements = @getImageAreaRects element, imgMap
+    {secondClassCitizen, possibleFalsePositive, reason} = clickableProps
 
     if clickableProps.isClickable
       clientRect = renderCache.getVisibleClientRect element
@@ -709,7 +708,16 @@ LocalHints =
 
     visibleElements
 
-  getImageAreaRects: (element, imgMap) ->
+  getImageAreaRects: (element) ->
+    imgMap = null
+
+    # Insert area elements that provide click functionality to an img.
+    if element.tagName.toLowerCase?() == "img"
+      mapName = element.getAttribute "usemap"
+      if mapName
+        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+        imgMap = document.querySelector "map[name=\"#{mapName}\"]"
+
     imgClientRects = element.getClientRects()
     if imgMap and imgClientRects.length > 0
       areas = imgMap.getElementsByTagName "area"
@@ -729,14 +737,6 @@ LocalHints =
     onlyHasTabIndex = false
     possibleFalsePositive = false
     reason = null
-    imgMap = null
-
-    # Insert area elements that provide click functionality to an img.
-    if tagName == "img"
-      mapName = element.getAttribute "usemap"
-      if mapName
-        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
-        imgMap = document.querySelector "map[name=\"#{mapName}\"]"
 
     # Check aria properties to see if the element should be ignored.
     if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
@@ -826,8 +826,8 @@ LocalHints =
     unless isClickable or isNaN(tabIndex) or tabIndex < 0
       isClickable = onlyHasTabIndex = true
 
-    if isClickable or imgMap
-      {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason, imgMap}
+    if isClickable
+      {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason}
     else
       false
 
