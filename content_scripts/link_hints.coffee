@@ -709,8 +709,6 @@ LocalHints =
     visibleElements
 
   getImageAreaRects: (element) ->
-    imgMap = null
-
     # Insert area elements that provide click functionality to an img.
     if element.tagName.toLowerCase?() == "img"
       mapName = element.getAttribute "usemap"
@@ -718,12 +716,11 @@ LocalHints =
         mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
         imgMap = document.querySelector "map[name=\"#{mapName}\"]"
 
-    imgClientRects = element.getClientRects()
-    if imgMap and imgClientRects.length > 0
-      areas = imgMap.getElementsByTagName "area"
-      DomUtils.getClientRectsForAreas imgClientRects[0], areas
-    else
-      []
+        imgClientRects = element.getClientRects()
+        if imgMap and imgClientRects.length > 0
+          areas = imgMap.getElementsByTagName "area"
+          return DomUtils.getClientRectsForAreas imgClientRects[0], areas
+    []
 
   #
   # Determine whether the element is clickable. Returns false when an element is not clickable, or a dict
