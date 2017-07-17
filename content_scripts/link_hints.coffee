@@ -698,13 +698,9 @@ LocalHints =
     clickableProps = @isClickable element, renderCache
     return [] unless clickableProps
 
-    visibleElements = []
 
     {imgClientRects, imgMap, secondClassCitizen, possibleFalsePositive, reason} = clickableProps
-    if imgMap and imgClientRects.length > 0
-      areas = imgMap.getElementsByTagName "area"
-      areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-      visibleElements.push areasAndRects...
+    visibleElements = @getImageAreaRects element, imgMap, imgClientRects
 
     if clickableProps.isClickable
       clientRect = renderCache.getVisibleClientRect element
@@ -712,6 +708,13 @@ LocalHints =
         visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive, reason}
 
     visibleElements
+
+  getImageAreaRects: (element, imgMap, imgClientRects) ->
+    if imgMap and imgClientRects.length > 0
+      areas = imgMap.getElementsByTagName "area"
+      DomUtils.getClientRectsForAreas imgClientRects[0], areas
+    else
+      []
 
   #
   # Determine whether the element is clickable. Returns false when an element is not clickable, or a dict
