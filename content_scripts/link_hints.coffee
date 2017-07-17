@@ -699,8 +699,8 @@ LocalHints =
     return [] unless clickableProps
 
 
-    {imgClientRects, imgMap, secondClassCitizen, possibleFalsePositive, reason} = clickableProps
-    visibleElements = @getImageAreaRects element, imgMap, imgClientRects
+    {imgMap, secondClassCitizen, possibleFalsePositive, reason} = clickableProps
+    visibleElements = @getImageAreaRects element, imgMap
 
     if clickableProps.isClickable
       clientRect = renderCache.getVisibleClientRect element
@@ -709,7 +709,8 @@ LocalHints =
 
     visibleElements
 
-  getImageAreaRects: (element, imgMap, imgClientRects) ->
+  getImageAreaRects: (element, imgMap) ->
+    imgClientRects = element.getClientRects()
     if imgMap and imgClientRects.length > 0
       areas = imgMap.getElementsByTagName "area"
       DomUtils.getClientRectsForAreas imgClientRects[0], areas
@@ -728,14 +729,12 @@ LocalHints =
     onlyHasTabIndex = false
     possibleFalsePositive = false
     reason = null
-    imgClientRects = []
     imgMap = null
 
     # Insert area elements that provide click functionality to an img.
     if tagName == "img"
       mapName = element.getAttribute "usemap"
       if mapName
-        imgClientRects = element.getClientRects()
         mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
         imgMap = document.querySelector "map[name=\"#{mapName}\"]"
 
@@ -828,8 +827,7 @@ LocalHints =
       isClickable = onlyHasTabIndex = true
 
     if isClickable or imgMap
-      {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason,
-        imgClientRects, imgMap}
+      {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason, imgMap}
     else
       false
 
