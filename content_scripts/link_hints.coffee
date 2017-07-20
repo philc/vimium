@@ -622,6 +622,7 @@ class RenderCache
     @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
     @isInlineZeroHeight = cachedGet.bind(this, @_isInlineZeroHeight, new WeakMap())
     @ariaHiddenOrDisabled = cachedGet.bind(this, @_ariaHiddenOrDisabled, new WeakMap())
+    @hasClickableTabIndex = cachedGet.bind(this, @_hasClickableTabIndex, new WeakMap())
 
   getCssStyle: (element, property) ->
     cssStyles = cachedGet (-> {}), @cssStyles, element
@@ -693,6 +694,12 @@ class RenderCache
     else
       element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
       element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"]
+
+  _hasClickableTabIndex: (element) ->
+    tabIndexValue = element.getAttribute "tabindex"
+    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
+    unless isNaN(tabIndex) or tabIndex < 0
+      true
 
 LocalHints =
   #
@@ -824,9 +831,7 @@ LocalHints =
 
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
     # citizens when it improves UX, so take special note of them.
-    tabIndexValue = element.getAttribute("tabindex")
-    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-    unless isClickable or isNaN(tabIndex) or tabIndex < 0
+    if not isClickable and renderCache.hasClickableTabIndex element
       isClickable = onlyHasTabIndex = true
 
     if isClickable
