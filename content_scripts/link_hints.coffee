@@ -715,15 +715,25 @@ LocalHints =
   getVisibleClickable: (element, renderCache) ->
     visibleElements = @getImageAreaRects element, renderCache
     clickableProps = @isClickable element, renderCache
-    return visibleElements unless clickableProps
 
+    unless clickableProps
+      # An element with a class name containing the text "button" might be clickable.  However, real
+      # clickables are often wrapped in elements with such class names.  So, when we find clickables based
+      # only on their class name, we mark them as unreliable.
+      if renderCache.hasButtonClass element
+        possibleFalsePositive = true
 
-    {secondClassCitizen, possibleFalsePositive, reason} = clickableProps
+      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+      # citizens when it improves UX, so take special note of them.
+      else if renderCache.hasClickableTabIndex element
+        secondClassCitizen = true
+      else
+        return visibleElements
 
-    if clickableProps.isClickable
-      clientRect = renderCache.getVisibleClientRect element
-      if clientRect != null
-        visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive, reason}
+    clientRect = renderCache.getVisibleClientRect element
+    if clientRect != null
+      visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive,
+      reason: clickableProps?.reason}
 
     visibleElements
 
@@ -827,17 +837,6 @@ LocalHints =
       when "details"
         isClickable = true
         reason = "Open."
-
-    # An element with a class name containing the text "button" might be clickable.  However, real clickables
-    # are often wrapped in elements with such class names.  So, when we find clickables based only on their
-    # class name, we mark them as unreliable.
-    if not isClickable and renderCache.hasButtonClass element
-      possibleFalsePositive = isClickable = true
-
-    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-    # citizens when it improves UX, so take special note of them.
-    if not isClickable and renderCache.hasClickableTabIndex element
-      isClickable = onlyHasTabIndex = true
 
     if isClickable
       {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason}
