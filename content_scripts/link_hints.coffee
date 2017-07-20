@@ -622,6 +622,7 @@ class RenderCache
     @getVisibleClientRect = cachedGet.bind(this, @getVisibleClientRect, new WeakMap())
     @isInlineZeroHeight = cachedGet.bind(this, @isInlineZeroHeight, new WeakMap())
     @ariaHiddenOrDisabled = cachedGet.bind(this, @ariaHiddenOrDisabled, new WeakMap())
+    @hasButtonClass = cachedGet.bind(this, @hasButtonClass, new WeakMap())
     @hasClickableTabIndex = cachedGet.bind(this, @hasClickableTabIndex, new WeakMap())
 
   getCssStyle: (element, property) ->
@@ -694,6 +695,9 @@ class RenderCache
     else
       element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
       element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"]
+
+  hasButtonClass: (element) ->
+    0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
 
   hasClickableTabIndex: (element) ->
     tabIndexValue = element.getAttribute "tabindex"
@@ -827,7 +831,7 @@ LocalHints =
     # An element with a class name containing the text "button" might be clickable.  However, real clickables
     # are often wrapped in elements with such class names.  So, when we find clickables based only on their
     # class name, we mark them as unreliable.
-    if not isClickable and 0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
+    if not isClickable and renderCache.hasButtonClass element
       possibleFalsePositive = isClickable = true
 
     # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
