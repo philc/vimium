@@ -697,9 +697,10 @@ class RenderCache
 
   _hasClickableTabIndex: (element) ->
     tabIndexValue = element.getAttribute "tabindex"
-    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-    unless isNaN(tabIndex) or tabIndex < 0
+    if tabIndexValue == ""
       true
+    else
+      parseInt(tabIndexValue) >= 0
 
 LocalHints =
   #
