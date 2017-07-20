@@ -721,9 +721,9 @@ LocalHints =
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element, renderCache) ->
+  getVisibleClickable: (element, renderCache, clickableProps) ->
     visibleElements = @getImageAreaRects element, renderCache
-    clickableProps = @isClickable element, renderCache
+    clickableProps ?= @isClickable element, renderCache
 
     unless clickableProps
       # An element with a class name containing the text "button" might be clickable.  However, real
@@ -859,6 +859,7 @@ LocalHints =
     # We need documentElement to be ready in order to find links.
     return [] unless document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
+    clickableElements = []
     visibleElements = []
     renderCache = new RenderCache()
 
@@ -868,9 +869,18 @@ LocalHints =
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      unless (requireHref and not element.href) or not renderCache.inViewport element
-        visibleElement = @getVisibleClickable element, renderCache
-        visibleElements.push visibleElement...
+      continue if requireHref and not element.href
+      continue unless renderCache.inViewport element
+      clickableProps = @isClickable element, renderCache
+
+      if clickableProps
+        clickableElements.push {element, clickableProps}
+      else if renderCache.hasButtonClass(element) or renderCache.hasClickableTabIndex element
+        clickableElements.push {element}
+
+    for {element, clickableProps} in clickableElements
+      visibleElement = @getVisibleClickable element, renderCache, clickableProps
+      visibleElements.push visibleElement...
 
     # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
     visibleElements = visibleElements.reverse()
