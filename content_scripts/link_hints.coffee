@@ -612,8 +612,12 @@ cachedGet = (getter, cache, args...) ->
 
 class RenderCache
   cssStyles: null
+  overflowingDescendents: null
+  cachedViewport: null
   constructor: ->
     @cssStyles = new WeakMap()
+    @overflowingDescendents = new WeakMap()
+    @cachedViewport = {left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight}
 
     # Bind functions for cached getters.
     @getComputedStyle = cachedGet.bind(this, @getComputedStyle, new WeakMap())
@@ -631,18 +635,26 @@ class RenderCache
     cssStyles[property] ?= @getComputedStyle(element).getPropertyValue property
 
   inViewport: (element) ->
-    Rect.intersectsStrict (@getBoundingClientRect element),
-      {left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight}
+    Rect.intersectsStrict (@getBoundingClientRect element), @cachedViewport
+
+  inElement: (element, containingElement) ->
+    Rect.contains (@getBoundingClientRect element), @getBoundingClientRect containingElement
+
+  setOverflowingDescendents: (element, value) ->
+    @overflowingDescendents.set element, value
+
+  hasOverflowingDescendents: (element) ->
+    @overflowingDescendents.get element
 
   getComputedStyle: (element) -> window.getComputedStyle element, null
   getClientRects: (element) -> element.getClientRects()
   getBoundingClientRect: (element) -> element.getBoundingClientRect()
 
-  getVisibleClientRect: (element) ->
+  getVisibleClientRect: (element, firstPass) ->
     boundingClientRect = @getBoundingClientRect element
 
     if boundingClientRect.width == 0 or boundingClientRect.height == 0
-      return @zeroDimensionHasVisibleChildren element, (boundingClientRect.height == 0)
+      return @zeroDimensionHasVisibleChildren element, (boundingClientRect.height == 0), firstPass
 
     hasEmptyRects = false
     elementIsZeroHeight = false
@@ -665,7 +677,7 @@ class RenderCache
         return clientRect
 
     if hasEmptyRects
-      @zeroDimensionHasVisibleChildren element, elementIsZeroHeight
+      @zeroDimensionHasVisibleChildren element, elementIsZeroHeight, firstPass
     else
       null
 
@@ -676,7 +688,8 @@ class RenderCache
       (@getCssStyle(element, "font-size") == "0px")
 
   # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
-  zeroDimensionHasVisibleChildren: (element, elementIsZeroHeight) ->
+  zeroDimensionHasVisibleChildren: (element, elementIsZeroHeight, firstPass) ->
+    return null unless firstPass or @hasOverflowingDescendents element
     for child in element.children
       # Ignore child elements which are not floated and not absolutely positioned for parent elements with
       # zero width/height, as long as the case described at isInlineZeroHeight does not apply.
@@ -685,7 +698,7 @@ class RenderCache
         not (@getCssStyle(child, "position") in ["absolute", "fixed"]) and
         not (elementIsZeroHeight and @isInlineZeroHeight(element) and
           0 == @getCssStyle(child, "display").indexOf "inline"))
-      childClientRect = @getVisibleClientRect child
+      childClientRect = @getVisibleClientRect child, firstPass
       continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
       return childClientRect
     null
@@ -721,7 +734,7 @@ LocalHints =
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element, renderCache, clickableProps) ->
+  getVisibleClickable: (element, renderCache, clickableProps, firstPass = false) ->
     visibleElements = @getImageAreaRects element, renderCache
     clickableProps ?= @isClickable element, renderCache
 
@@ -739,7 +752,7 @@ LocalHints =
       else
         return visibleElements
 
-    clientRect = renderCache.getVisibleClientRect element
+    clientRect = renderCache.getVisibleClientRect element, firstPass
     if clientRect != null
       visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive,
       reason: clickableProps?.reason}
@@ -823,7 +836,7 @@ LocalHints =
         isClickable ||= not element.disabled
       when "label"
         isClickable ||= element.control? and not element.control.disabled and
-                        (@getVisibleClickable element.control, renderCache).length == 0
+                        (@getVisibleClickable element.control, renderCache, null, true).length == 0
       when "body"
         isClickable ||=
           if element == document.body and not windowIsFocused() and
@@ -877,6 +890,11 @@ LocalHints =
         clickableElements.push {element, clickableProps}
       else if renderCache.hasButtonClass(element) or renderCache.hasClickableTabIndex element
         clickableElements.push {element}
+
+      containingElement = element
+      while (containingElement = containingElement.parentElement)?
+        break if renderCache.inElement element, containingElement
+        renderCache.setOverflowingDescendents containingElement, true
 
     for {element, clickableProps} in clickableElements
       visibleElement = @getVisibleClickable element, renderCache, clickableProps

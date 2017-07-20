@@ -67,6 +67,13 @@ Rect =
 
     rects.filter (rect) -> rect.height > 0 and rect.width > 0
 
+  # Determine whether rect1 contains (ie. completely covers) rect2.
+  contains: (rect1, rect2) ->
+    rect1.left <= rect2.left and
+    rect1.right >= rect2.right and
+    rect1.top <= rect2.top and
+    rect1.bottom >= rect2.bottom
+
   # Determine whether two rects overlap.
   intersects: (rect1, rect2) ->
     rect1.right > rect2.left and
