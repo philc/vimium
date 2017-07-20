@@ -624,6 +624,7 @@ class RenderCache
     @ariaHiddenOrDisabled = cachedGet.bind(this, @ariaHiddenOrDisabled, new WeakMap())
     @hasButtonClass = cachedGet.bind(this, @hasButtonClass, new WeakMap())
     @hasClickableTabIndex = cachedGet.bind(this, @hasClickableTabIndex, new WeakMap())
+    @getImageMap = cachedGet.bind(this, @getImageMap, new WeakMap())
 
   getCssStyle: (element, property) ->
     cssStyles = cachedGet (-> {}), @cssStyles, element
@@ -696,6 +697,14 @@ class RenderCache
       element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
       element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"]
 
+  getImageMap: (element) ->
+    if element.tagName.toLowerCase?() == "img"
+      mapName = element.getAttribute "usemap"
+      if mapName
+        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+        return document.querySelector "map[name=\"#{mapName}\"]"
+    null
+
   hasButtonClass: (element) ->
     0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
 
@@ -739,16 +748,12 @@ LocalHints =
 
   getImageAreaRects: (element, renderCache) ->
     # Insert area elements that provide click functionality to an img.
-    if element.tagName.toLowerCase?() == "img"
-      mapName = element.getAttribute "usemap"
-      if mapName
-        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
-        imgMap = document.querySelector "map[name=\"#{mapName}\"]"
+    imgMap = renderCache.getImageMap element
+    imgClientRects = renderCache.getBoundingClientRect element
 
-        imgClientRects = renderCache.getBoundingClientRect element
-        if imgMap and imgClientRects.height > 0
-          areas = imgMap.getElementsByTagName "area"
-          return DomUtils.getClientRectsForAreas imgClientRects, areas
+    if imgMap and imgClientRects.height > 0
+      areas = imgMap.getElementsByTagName "area"
+      return DomUtils.getClientRectsForAreas imgClientRects, areas
     []
 
   #
