@@ -616,13 +616,13 @@ class RenderCache
     @cssStyles = new WeakMap()
 
     # Bind functions for cached getters.
-    @getComputedStyle = cachedGet.bind(this, @_getComputedStyle, new WeakMap())
-    @getClientRects = cachedGet.bind(this, @_getClientRects, new WeakMap())
-    @getBoundingClientRect = cachedGet.bind(this, @_getBoundingClientRect, new WeakMap())
-    @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
-    @isInlineZeroHeight = cachedGet.bind(this, @_isInlineZeroHeight, new WeakMap())
-    @ariaHiddenOrDisabled = cachedGet.bind(this, @_ariaHiddenOrDisabled, new WeakMap())
-    @hasClickableTabIndex = cachedGet.bind(this, @_hasClickableTabIndex, new WeakMap())
+    @getComputedStyle = cachedGet.bind(this, @getComputedStyle, new WeakMap())
+    @getClientRects = cachedGet.bind(this, @getClientRects, new WeakMap())
+    @getBoundingClientRect = cachedGet.bind(this, @getBoundingClientRect, new WeakMap())
+    @getVisibleClientRect = cachedGet.bind(this, @getVisibleClientRect, new WeakMap())
+    @isInlineZeroHeight = cachedGet.bind(this, @isInlineZeroHeight, new WeakMap())
+    @ariaHiddenOrDisabled = cachedGet.bind(this, @ariaHiddenOrDisabled, new WeakMap())
+    @hasClickableTabIndex = cachedGet.bind(this, @hasClickableTabIndex, new WeakMap())
 
   getCssStyle: (element, property) ->
     cssStyles = cachedGet (-> {}), @cssStyles, element
@@ -632,11 +632,11 @@ class RenderCache
     Rect.intersectsStrict (@getBoundingClientRect element),
       {left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight}
 
-  _getComputedStyle: (element) -> window.getComputedStyle element, null
-  _getClientRects: (element) -> element.getClientRects()
-  _getBoundingClientRect: (element) -> element.getBoundingClientRect()
+  getComputedStyle: (element) -> window.getComputedStyle element, null
+  getClientRects: (element) -> element.getClientRects()
+  getBoundingClientRect: (element) -> element.getBoundingClientRect()
 
-  _getVisibleClientRect: (element) ->
+  getVisibleClientRect: (element) ->
     boundingClientRect = @getBoundingClientRect element
 
     if boundingClientRect.width == 0 or boundingClientRect.height == 0
@@ -669,7 +669,7 @@ class RenderCache
 
   # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
   # font-size contains text.
-  _isInlineZeroHeight: (element) ->
+  isInlineZeroHeight: (element) ->
     (0 == @getCssStyle(element, "display").indexOf "inline") and
       (@getCssStyle(element, "font-size") == "0px")
 
@@ -688,14 +688,14 @@ class RenderCache
       return childClientRect
     null
 
-  _ariaHiddenOrDisabled: (element) ->
+  ariaHiddenOrDisabled: (element) ->
     if element.parentElement? and @ariaHiddenOrDisabled element.parentElement
       true
     else
       element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
       element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"]
 
-  _hasClickableTabIndex: (element) ->
+  hasClickableTabIndex: (element) ->
     tabIndexValue = element.getAttribute "tabindex"
     if tabIndexValue == ""
       true
