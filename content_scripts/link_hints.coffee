@@ -621,6 +621,7 @@ class RenderCache
     @getBoundingClientRect = cachedGet.bind(this, @_getBoundingClientRect, new WeakMap())
     @getVisibleClientRect = cachedGet.bind(this, @_getVisibleClientRect, new WeakMap())
     @isInlineZeroHeight = cachedGet.bind(this, @_isInlineZeroHeight, new WeakMap())
+    @ariaHiddenOrDisabled = cachedGet.bind(this, @_ariaHiddenOrDisabled, new WeakMap())
 
   getCssStyle: (element, property) ->
     cssStyles = cachedGet (-> {}), @cssStyles, element
@@ -686,6 +687,12 @@ class RenderCache
       return childClientRect
     null
 
+  _ariaHiddenOrDisabled: (element) ->
+    if element.parentElement? and @ariaHiddenOrDisabled element.parentElement
+      true
+    else
+      element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+      element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"]
 
 LocalHints =
   #
@@ -736,8 +743,7 @@ LocalHints =
     reason = null
 
     # Check aria properties to see if the element should be ignored.
-    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
-        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+    if renderCache.ariaHiddenOrDisabled element
       return false # This element should never have a link hint.
 
     # Check for AngularJS listeners on the element.
