@@ -50,6 +50,10 @@ completers =
 completionHandlers =
   filter: (completer, request, port) ->
     completer.filter request, (response) ->
+      # NOTE(smblott): response contains `relevancyFunction` (function) properties which cause postMessage,
+      # below, to fail in Firefox. See #2576.  We cannot simply delete these methods, as they're needed
+      # elsewhere.  Converting the response to JSON and back is a quick and easy way to sanitize the object.
+      response = JSON.parse JSON.stringify response
       # We use try here because this may fail if the sender has already navigated away from the original page.
       # This can happen, for example, when posting completion suggestions from the SearchEngineCompleter
       # (which is done asynchronously).
