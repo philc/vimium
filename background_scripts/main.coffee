@@ -106,6 +106,7 @@ TabOperations =
       index: request.tab.index + 1
       active: true
       windowId: request.tab.windowId
+    tabConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
     delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
     chrome.tabs.create tabConfig, (tab) ->
