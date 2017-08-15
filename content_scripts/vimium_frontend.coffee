@@ -338,6 +338,20 @@ extend window,
   scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count
   scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
 
+# Clipboard commands.
+# NB: Clipboard accesses must be done in the content script: Firefox doesn't support it in the background
+# page. See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard.
+extend window,
+  copyCurrentUrl: ->
+    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
+      Clipboard.copy data: url
+      url = url[0..25] + "...." if 28 < url.length
+      HUD.showForDuration("Yanked #{url}", 2000)
+  openCopiedUrlInCurrentTab: ->
+      chrome.runtime.sendMessage {handler: "openUrlInCurrentTab", url: Clipboard.paste()}
+  openCopiedUrlInNewTab: ->
+      chrome.runtime.sendMessage {handler: "openUrlInNewTab", url: Clipboard.paste()}
+
 extend window,
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
@@ -366,15 +380,6 @@ extend window,
       else
         url = "view-source:" + url
       chrome.runtime.sendMessage {handler: "openUrlInNewTab", url}
-
-  copyCurrentUrl: ->
-    # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
-    # page to copy.
-    # http://code.google.com/p/chromium/issues/detail?id=55188
-    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
-      chrome.runtime.sendMessage { handler: "copyToClipboard", data: url }
-      url = url[0..25] + "...." if 28 < url.length
-      HUD.showForDuration("Yanked #{url}", 2000)
 
   enterInsertMode: ->
     # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
