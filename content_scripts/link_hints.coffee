@@ -31,7 +31,7 @@ COPY_LINK_URL =
   indicator: "Copy link URL to Clipboard"
   linkActivator: (link) ->
     if link.href?
-      chrome.runtime.sendMessage handler: "copyToClipboard", data: link.href
+      HUD.copyToClipboard link.href
       url = link.href
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration "Yanked #{url}", 2000
