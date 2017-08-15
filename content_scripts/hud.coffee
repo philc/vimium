@@ -97,10 +97,19 @@ HUD =
   pasteFromClipboard: (@pasteListener) ->
     DomUtils.documentComplete =>
       @init()
-      @hudUI?.postMessage {name: "pasteFromClipboard"}
+      # Show the HUD frame, so Firefox will actually perform the paste.
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
+      @tween.fade 0, 0
+      @hudUI.postMessage {name: "pasteFromClipboard"}
 
   pasteResponse: ({data}) ->
+    # Hide the HUD frame again.
+    @hudUI.toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
+    @unfocusIfFocused()
     @pasteListener data
+
+  unfocusIfFocused: ->
+    document.activeElement.blur() if document.activeElement == @hudUI?.iframeElement
 
 class Tween
   opacity: 0
