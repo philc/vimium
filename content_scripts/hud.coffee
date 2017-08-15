@@ -90,10 +90,14 @@ HUD =
   # * we don't want to disrupt the focus in the page, in case the page is listening for focus/blur events.
   # * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
   copyToClipboard: (text) ->
-    @hudUI.postMessage {name: "copyToClipboard", data: text}
+    DomUtils.documentComplete =>
+      @init()
+      @hudUI?.postMessage {name: "copyToClipboard", data: text}
 
   pasteFromClipboard: (@pasteListener) ->
-    @hudUI.postMessage {name: "pasteFromClipboard"}
+    DomUtils.documentComplete =>
+      @init()
+      @hudUI?.postMessage {name: "pasteFromClipboard"}
 
   pasteResponse: ({data}) ->
     @pasteListener data
