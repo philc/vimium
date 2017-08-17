@@ -7,6 +7,7 @@ window.forTrusted ?= (handler) -> (event) ->
     true
 
 Utils =
+  isFirefox: -> 0 <= navigator.userAgent.indexOf "Firefox"
   getCurrentVersion: ->
     chrome.runtime.getManifest().version
 

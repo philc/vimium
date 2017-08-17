@@ -5,6 +5,7 @@ root = exports ? window
 chrome.runtime.onInstalled.addListener ({ reason }) ->
   # See https://developer.chrome.com/extensions/runtime#event-onInstalled
   return if reason in [ "chrome_update", "shared_module_update" ]
+  return if Utils.isFirefox()
   manifest = chrome.runtime.getManifest()
   # Content scripts loaded on every page should be in the same group. We assume it is the first.
   contentScripts = manifest.content_scripts[0]
