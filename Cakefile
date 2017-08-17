@@ -160,5 +160,5 @@ task "coverage", "generate coverage report", ->
 
 task "zip", "build Firefox zip file in ../vimium.zip", ->
   spawn "zip", "-r -FS ../vimium.zip background_scripts Cakefile content_scripts CONTRIBUTING.md CREDITS icons lib
-                manifest.json MIT-LICENSE.txt pages README.md".split /\s+/
+                manifest.json MIT-LICENSE.txt pages README.md -x *.coffee".split /\s+/
 
