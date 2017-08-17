@@ -11,7 +11,6 @@
 # The "name" property below is a short-form name to appear in the link-hints mode's name.  It's for debug only.
 #
 isMac = KeyboardUtils.platform == "Mac"
-simulateClickDefaultAction = true
 OPEN_IN_CURRENT_TAB =
   name: "curr-tab"
   indicator: "Open link in current tab"
@@ -387,6 +386,7 @@ class LinkHintsMode
           else
             clickActivator = (modifiers) -> (link) ->
               defaultActionsTriggered = DomUtils.simulateClick link, modifiers
+              simulateClickDefaultAction = Utils.isFirefox()
               if simulateClickDefaultAction and
                   defaultActionsTriggered[3] and link.tagName?.toLowerCase() == "a" and
                   modifiers? and modifiers.metaKey == isMac and modifiers.ctrlKey == not isMac
