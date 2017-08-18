@@ -220,8 +220,23 @@ handleSubframeBlur = (event) ->
   if isEnabledForUrl
     document.activeElement.blur()
     window.focus()
-    keyEvent = JSON.parse event.detail
-    DomUtils.consumeKeyup keyEvent
+    keyEvent = event.detail
+
+    captureKey = (event) ->
+      if event.code == keyEvent.code
+        @suppressEvent
+      else
+        @continueBubbling
+    handlerStack.push
+      _name: "subframeBlur-keyEventSuppressor"
+      keydown: captureKey
+      keypress: captureKey
+      keyup: (event) ->
+        if event.code == keyEvent.code
+          @remove()
+          @suppressEvent
+        else
+          @continueBubbling
   else if window.frameElement?
     # If we blur to this frame, the user will get stuck, since we're not enabled. Instead, we pass the event
     # up to the parent frame, if one exists.
