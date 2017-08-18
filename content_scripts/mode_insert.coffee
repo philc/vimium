@@ -65,7 +65,7 @@ class InsertMode extends Mode
           eventListeners = {}
           for type in [ "focus", "blur" ]
             eventListeners[type] = do (type) ->
-              (event) -> handlerStack.bubbleEvent type, event
+              forTrusted (event) -> handlerStack.bubbleEvent type, event
             shadowRoot.addEventListener type, eventListeners[type], true
 
           handlerStack.push

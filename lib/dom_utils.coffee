@@ -5,7 +5,7 @@ DomUtils =
   documentReady: do ->
     [isReady, callbacks] = [document.readyState != "loading", []]
     unless isReady
-      window.addEventListener "DOMContentLoaded", onDOMContentLoaded = ->
+      window.addEventListener "DOMContentLoaded", onDOMContentLoaded = forTrusted ->
         window.removeEventListener "DOMContentLoaded", onDOMContentLoaded
         isReady = true
         callback() for callback in callbacks
@@ -16,7 +16,7 @@ DomUtils =
   documentComplete: do ->
     [isComplete, callbacks] = [document.readyState == "complete", []]
     unless isComplete
-      window.addEventListener "load", onLoad = ->
+      window.addEventListener "load", onLoad = forTrusted ->
         window.removeEventListener "load", onLoad
         isComplete = true
         callback() for callback in callbacks

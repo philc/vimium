@@ -199,7 +199,7 @@ class FindMode extends Mode
 
     result
 
-  @restoreDefaultSelectionHighlight: -> document.body.classList.remove("vimiumFindMode")
+  @restoreDefaultSelectionHighlight: forTrusted -> document.body.classList.remove("vimiumFindMode")
 
   checkReturnToViewPort: ->
     window.scrollTo @scrollX, @scrollY if @options.returnToViewport
