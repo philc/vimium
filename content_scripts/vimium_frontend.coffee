@@ -210,6 +210,21 @@ installListeners = Utils.makeIdempotent ->
   for type in ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"]
     do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
   installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
+  window.addEventListener "vimiumBlurEvent", handleSubframeBlur, true
+
+# If a frame is focused, its body is contentEditable, and the user presses <esc>, we need to move up a frame
+# to blur it. This handler receives the event sent by the frame and uses it to blur it.
+handleSubframeBlur = (event) ->
+  if document.activeElement != event.target
+    return # The frame isn't focused anyway.
+  if isEnabledForUrl
+    window.focus()
+    document.activeElement.blur()
+  else if window.frameElement?
+    # If we blur to this frame, the user will get stuck, since we're not enabled. Instead, we pass the event
+    # up to the parent frame, if one exists.
+    vimiumBlurEvent = new CustomEvent "vimiumBlurEvent"
+    window.frameElement.dispatchEvent vimiumBlurEvent
 
 #
 # Whenever we get the focus:

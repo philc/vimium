@@ -10,7 +10,6 @@ class InsertMode extends Mode
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
-      return @passEventToPage if @insertModeLock is document.body
 
       # Check for a pass-next-key key.
       if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
@@ -18,6 +17,19 @@ class InsertMode extends Mode
         return @suppressEvent
 
       return @passEventToPage unless event.type == 'keydown' and KeyboardUtils.isEscape event
+
+      if @insertModeLock is document.body
+        # We can't blur the body of the document, since that's the default active element. Regardless, it's
+        # not usually very useful to be in a fully contentEditable frame without being able to edit content.
+        # We pass a message to the parent frame (if one exists) to get it to blur us.
+        if window.frameElement?
+          # We can't get a |frameId| from a |window| in a content script, so the only way of communicating
+          # with a specific window is a custom event.
+          vimiumBlurEvent = new CustomEvent "vimiumBlurEvent"
+          window.frameElement.dispatchEvent vimiumBlurEvent
+          return DomUtils.consumeKeyup event
+        return @passEventToPage # We can't use the <esc>: assume the user intended it for the page.
+
       target = event.target
       if target and DomUtils.isFocusable target
         # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
