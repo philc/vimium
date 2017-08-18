@@ -25,7 +25,7 @@ class InsertMode extends Mode
         if window.frameElement?
           # We can't get a |frameId| from a |window| in a content script, so the only way of communicating
           # with a specific window is a custom event.
-          vimiumBlurEvent = new CustomEvent "vimiumBlurEvent"
+          vimiumBlurEvent = new CustomEvent "vimiumBlurEvent", {detail: JSON.stringify event}
           window.frameElement.dispatchEvent vimiumBlurEvent
           return DomUtils.consumeKeyup event
         return @passEventToPage # We can't use the <esc>: assume the user intended it for the page.

@@ -299,10 +299,10 @@ DomUtils =
       top: -rect.top - box.clientTop, left: -rect.left - box.clientLeft
 
   suppressPropagation: (event) ->
-    event.stopImmediatePropagation()
+    event.stopImmediatePropagation?()
 
   suppressEvent: (event) ->
-    event.preventDefault()
+    event.preventDefault?()
     @suppressPropagation(event)
 
   consumeKeyup: do ->

@@ -218,12 +218,14 @@ handleSubframeBlur = (event) ->
   if document.activeElement != event.target
     return # The frame isn't focused anyway.
   if isEnabledForUrl
-    window.focus()
     document.activeElement.blur()
+    window.focus()
+    keyEvent = JSON.parse event.detail
+    DomUtils.consumeKeyup keyEvent
   else if window.frameElement?
     # If we blur to this frame, the user will get stuck, since we're not enabled. Instead, we pass the event
     # up to the parent frame, if one exists.
-    vimiumBlurEvent = new CustomEvent "vimiumBlurEvent"
+    vimiumBlurEvent = new CustomEvent "vimiumBlurEvent", {detail: event.detail}
     window.frameElement.dispatchEvent vimiumBlurEvent
 
 #
