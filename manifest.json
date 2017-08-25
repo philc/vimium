@@ -21,7 +21,11 @@
       "background_scripts/main.js"
     ]
   },
-  "options_page": "pages/options.html",
+  "options_ui": {
+    "page": "pages/options.html",
+    "chrome_style": false,
+    "open_in_tab": true
+  },
   "permissions": [
     "tabs",
     "bookmarks",
