@@ -2,7 +2,7 @@
 # This is a wrapper class for completion engines.  It handles the case where a custom search engine includes a
 # prefix query term (or terms).  For example:
 #
-#   http://www.google.com/search?q=javascript+%s
+#   https://www.google.com/search?q=javascript+%s
 #
 # In this case, we get better suggestions if we include the term "javascript" in queries sent to the
 # completion engine.  This wrapper handles adding such prefixes to completion-engine queries and removing them

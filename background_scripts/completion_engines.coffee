@@ -47,17 +47,17 @@ class GoogleXMLBaseEngine extends BaseEngine
 class Google extends GoogleXMLBaseEngine
   constructor: () ->
     super
-      engineUrl: "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
+      engineUrl: "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
       regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/"
       example:
-        searchUrl: "http://www.google.com/search?q=%s"
+        searchUrl: "https://www.google.com/search?q=%s"
         keyword: "g"
 
 class GoogleMaps extends GoogleXMLBaseEngine
   prefix: "map of "
   constructor: () ->
     super
-      engineUrl: "http://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{@prefix.split(' ').join '+'}%s"
+      engineUrl: "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{@prefix.split(' ').join '+'}%s"
       regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
       example:
         searchUrl: "https://www.google.com/maps?q=%s"
@@ -77,10 +77,10 @@ class GoogleMaps extends GoogleXMLBaseEngine
 class Youtube extends GoogleXMLBaseEngine
   constructor: ->
     super
-      engineUrl: "http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s"
+      engineUrl: "https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s"
       regexps: "^https?://[a-z]+\\.youtube\\.com/results"
       example:
-        searchUrl: "http://www.youtube.com/results?search_query=%s"
+        searchUrl: "https://www.youtube.com/results?search_query=%s"
         keyword: "y"
 
 class Wikipedia extends BaseEngine
@@ -89,7 +89,7 @@ class Wikipedia extends BaseEngine
       engineUrl: "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=%s"
       regexps: "^https?://[a-z]+\\.wikipedia\\.org/"
       example:
-        searchUrl: "http://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
+        searchUrl: "https://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
         keyword: "w"
 
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
@@ -97,7 +97,7 @@ class Wikipedia extends BaseEngine
 class Bing extends BaseEngine
   constructor: ->
     super
-      engineUrl: "http://api.bing.com/osjson.aspx?query=%s"
+      engineUrl: "https://api.bing.com/osjson.aspx?query=%s"
       regexps: "^https?://www\\.bing\\.com/search"
       example:
         searchUrl: "https://www.bing.com/search?q=%s"
@@ -111,7 +111,7 @@ class Amazon extends BaseEngine
       engineUrl: "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s"
       regexps: "^https?://www\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"
       example:
-        searchUrl: "http://www.amazon.com/s/?field-keywords=%s"
+        searchUrl: "https://www.amazon.com/s/?field-keywords=%s"
         keyword: "a"
 
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
@@ -131,10 +131,10 @@ class DuckDuckGo extends BaseEngine
 class Webster extends BaseEngine
   constructor: ->
     super
-      engineUrl: "http://www.merriam-webster.com/autocomplete?query=%s"
+      engineUrl: "https://www.merriam-webster.com/autocomplete?query=%s"
       regexps: "^https?://www.merriam-webster.com/dictionary/"
       example:
-        searchUrl: "http://www.merriam-webster.com/dictionary/%s"
+        searchUrl: "https://www.merriam-webster.com/dictionary/%s"
         keyword: "dw"
         description: "Dictionary"
 

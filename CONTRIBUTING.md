@@ -3,7 +3,7 @@
 You'd like to fix a bug or implement a feature? Great! Check out the bugs on our issues tracker, or implement
 one of the suggestions there that have been tagged "help wanted". If you have a suggestion of your own, start
 a discussion on the issues tracker or on the
-[mailing list](http://groups.google.com/group/vimium-dev?hl=en). If it mirrors a similar feature in another
+[mailing list](https://groups.google.com/group/vimium-dev?hl=en). If it mirrors a similar feature in another
 browser or in Vim itself, let us know. Once you've picked something to work on, add a comment to the
 respective issue so others don't duplicate your effort.
 
@@ -37,7 +37,7 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
 
  1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. Install [PhantomJS](http://phantomjs.org/download.html).
- 1. `npm install path@0.11` to install the [Node.js Path module](http://nodejs.org/api/path.html), used by the test runner.
+ 1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
  1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
@@ -47,7 +47,7 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
 You can find out which portions of code need them by looking at our coverage reports. To generate these
 reports:
 
- 1. Download [JSCoverage](http://siliconforks.com/jscoverage/download.html) or `brew install jscoverage`
+ 1. Download [JSCoverage](https://siliconforks.com/jscoverage/download.html) or `brew install jscoverage`
  1. `npm install temp`
  1. `cake coverage` will generate a coverage report in the form of a JSON file (`jscoverage.json`), which can
     then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).  See
