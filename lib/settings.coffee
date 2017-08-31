@@ -193,6 +193,7 @@ Settings =
     helpDialog_showAdvancedCommands: false
     optionsPage_showAdvancedOptions: false
     passNextKeyKeys: []
+    ignoreKeyboardLayout: false
 
 Settings.init()
 
