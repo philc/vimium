@@ -461,7 +461,7 @@ Changes in git (not yet released)
 -  Arrow keys and function keys can now be mapped using &lt;left&gt;, &lt;right&gt;, &lt;up&gt;, &lt;down&gt;,
    &lt;f1&gt;, &lt;f2&gt;, etc. in the mappings interface.
 -  There is a new command `goUp` (mapped to `gu` by default) that will go up one level in the URL hierarchy.
-   For example: from http://vimium.github.com/foo/bar to http://vimium.github.com/foo. At the moment, `goUp`
+   For example: from https://vimium.github.io/foo/bar to https://vimium.github.io/foo. At the moment, `goUp`
 does not support command repetition.
 -  Bug fixes and optimizations.
 
