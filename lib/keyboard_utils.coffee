@@ -16,17 +16,24 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
-    if event.key of @keyNames
-      @keyNames[event.key]
-    # It appears that event.key is not always defined (see #2453).
-    else if not event.key?
+    unless Settings.get "ignoreKeyboardLayout"
+      key = event.key
+    else
+      key = event.code
+      key = key[3..] if key[...3] == "Key"
+      key = key.toLowerCase() unless event.shiftKey
+
+    if key of @keyNames
+      @keyNames[key]
+    # It appears that key is not always defined (see #2453).
+    else if not key?
       ""
-    else if event.key.length == 1
-      event.key
-    else if event.key.length == 2 and "F1" <= event.key <= "F9"
-      event.key.toLowerCase() # F1 to F9.
-    else if event.key.length == 3 and "F10" <= event.key <= "F12"
-      event.key.toLowerCase() # F10 to F12.
+    else if key.length == 1
+      key
+    else if key.length == 2 and "F1" <= key <= "F9"
+      key.toLowerCase() # F1 to F9.
+    else if key.length == 3 and "F10" <= key <= "F12"
+      key.toLowerCase() # F10 to F12.
     else
       ""
 
