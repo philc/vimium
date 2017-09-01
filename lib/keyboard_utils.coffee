@@ -18,12 +18,13 @@ KeyboardUtils =
   getKeyChar: (event) ->
     unless Settings.get "ignoreKeyboardLayout"
       key = event.key
+    else if event.code[...6] == "Numpad"
+      # We cannot correctly emulate the numpad, so fall back to event.key; see #2626.
+      key = event.key
     else
       # The logic here is from the vim-like-key-notation project (https://github.com/lydell/vim-like-key-notation).
       key = event.code
-      # Strip some standard prefixes.
       key = key[3..] if key[...3] == "Key"
-      key = key[6..] if key[...6] == "Numpad"
       # Translate some special keys to event.key-like strings.
       if @enUsTranslations[key]
         key = if event.shift then @enUsTranslations[key][1] else @enUsTranslations[key][0]
