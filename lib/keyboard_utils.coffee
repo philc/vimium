@@ -19,8 +19,15 @@ KeyboardUtils =
     unless Settings.get "ignoreKeyboardLayout"
       key = event.key
     else
+      # The logic here is from the vim-like-key-notation project (https://github.com/lydell/vim-like-key-notation).
       key = event.code
+      # Strip some standard prefixes.
       key = key[3..] if key[...3] == "Key"
+      key = key[5..] if key[...5] == "Digit"
+      key = key[6..] if key[...6] == "Numpad"
+      # Translate some special keys to event.key-like strings.
+      if @enUsTranslations[key]
+        key = if event.shift then @enUsTranslations[key][1] else @enUsTranslations[key][0]
       key = key.toLowerCase() unless event.shiftKey
 
     if key of @keyNames
@@ -61,6 +68,21 @@ KeyboardUtils =
 
   isPrintable: (event) ->
     @getKeyCharString(event)?.length == 1
+
+  enUsTranslations:
+    "Backquote":     ["`", "~"]
+    "Minus":         ["-", "_"]
+    "Equal":         ["=", "+"]
+    "Backslash":     ["\\","|"]
+    "IntlBackslash": ["\\","|"]
+    "BracketLeft":   ["[", "{"]
+    "BracketRight":  ["]", "}"]
+    "Semicolon":     [";", ":"]
+    "Quote":         ["'", '"']
+    "Comma":         [",", "<"]
+    "Period":        [".", ">"]
+    "Slash":         ["/", "?"]
+    "Space":         [" ", " "]
 
 KeyboardUtils.init()
 
