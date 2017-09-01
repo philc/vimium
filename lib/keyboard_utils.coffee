@@ -23,7 +23,6 @@ KeyboardUtils =
       key = event.code
       # Strip some standard prefixes.
       key = key[3..] if key[...3] == "Key"
-      key = key[5..] if key[...5] == "Digit"
       key = key[6..] if key[...6] == "Numpad"
       # Translate some special keys to event.key-like strings.
       if @enUsTranslations[key]
@@ -83,6 +82,16 @@ KeyboardUtils =
     "Period":        [".", ">"]
     "Slash":         ["/", "?"]
     "Space":         [" ", " "]
+    "Digit1":        ["1", "!"]
+    "Digit2":        ["2", "@"]
+    "Digit3":        ["3", "#"]
+    "Digit4":        ["4", "$"]
+    "Digit5":        ["5", "%"]
+    "Digit6":        ["6", "^"]
+    "Digit7":        ["7", "&"]
+    "Digit8":        ["8", "*"]
+    "Digit9":        ["9", "("]
+    "Digit0":        ["0", ")"]
 
 KeyboardUtils.init()
 
