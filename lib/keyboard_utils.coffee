@@ -25,10 +25,11 @@ KeyboardUtils =
       # The logic here is from the vim-like-key-notation project (https://github.com/lydell/vim-like-key-notation).
       key = event.code
       key = key[3..] if key[...3] == "Key"
-      # Translate some special keys to event.key-like strings.
+      # Translate some special keys to event.key-like strings and handle <Shift>.
       if @enUsTranslations[key]
-        key = if event.shift then @enUsTranslations[key][1] else @enUsTranslations[key][0]
-      key = key.toLowerCase() unless event.shiftKey
+        key = if event.shiftKey then @enUsTranslations[key][1] else @enUsTranslations[key][0]
+      else if key.length == 1 and not event.shiftKey
+        key = key.toLowerCase()
 
     if key of @keyNames
       @keyNames[key]
