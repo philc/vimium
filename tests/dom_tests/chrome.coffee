@@ -7,6 +7,8 @@ root.chromeMessages = []
 
 document.hasFocus = -> true
 
+window.forTrusted = (handler) -> handler
+
 fakeManifest =
   version: "1.51"
 

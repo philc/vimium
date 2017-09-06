@@ -1,3 +1,11 @@
+# Only pass events to the handler if they are marked as trusted by the browser.
+# This is kept in the global namespace for brevity and ease of use.
+window.forTrusted ?= (handler) -> (event) ->
+  if event?.isTrusted
+    handler.apply this, arguments
+  else
+    true
+
 Utils =
   getCurrentVersion: ->
     chrome.runtime.getManifest().version

@@ -10,8 +10,10 @@ normalMode = null
 windowIsFocused = do ->
   windowHasFocus = null
   DomUtils.documentReady -> windowHasFocus = document.hasFocus()
-  window.addEventListener "focus", (event) -> windowHasFocus = true if event.target == window; true
-  window.addEventListener "blur", (event) -> windowHasFocus = false if event.target == window; true
+  window.addEventListener "focus", forTrusted (event) ->
+    windowHasFocus = true if event.target == window; true
+  window.addEventListener "blur", forTrusted (event) ->
+    windowHasFocus = false if event.target == window; true
   -> windowHasFocus
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
@@ -193,9 +195,9 @@ initializePreDomReady = ->
 
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
-  element.addEventListener(event, ->
+  element.addEventListener(event, forTrusted(->
     if isEnabledForUrl then callback.apply(this, arguments) else true
-  , true)
+  ), true)
 
 #
 # Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
@@ -216,7 +218,7 @@ installListeners = Utils.makeIdempotent ->
 # - Tell the background page this frame's URL.
 # - Check if we should be enabled.
 #
-onFocus = (event) ->
+onFocus = forTrusted (event) ->
   if event.target == window
     chrome.runtime.sendMessage handler: "frameFocused"
     checkIfEnabledForUrl true
@@ -248,9 +250,9 @@ Frame =
         window.removeEventListener "focus", focusHandler
         window.removeEventListener "resize", resizeHandler
         Frame.postMessage "registerFrame"
-      window.addEventListener "focus", focusHandler = (event) ->
+      window.addEventListener "focus", focusHandler = forTrusted (event) ->
         postRegisterFrame() if event.target == window
-      window.addEventListener "resize", resizeHandler = (event) ->
+      window.addEventListener "resize", resizeHandler = forTrusted (event) ->
         postRegisterFrame() unless DomUtils.windowIsTooSmall()
 
   init: ->
@@ -261,7 +263,7 @@ Frame =
 
     # We disable the content scripts when we lose contact with the background page, or on unload.
     @port.onDisconnect.addListener disconnect = Utils.makeIdempotent => @disconnect()
-    window.addEventListener "unload", disconnect
+    window.addEventListener "unload", forTrusted disconnect
 
   disconnect: ->
     try @postMessage "unregisterFrame"
@@ -404,7 +406,7 @@ extend window,
     # Track the most recently focused input element.
     recentlyFocusedElement = null
     window.addEventListener "focus",
-      (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+      forTrusted (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
     , true
 
     (count) ->
@@ -502,7 +504,7 @@ checkIfEnabledForUrl = do ->
 
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
 # correct enabled state (but only if this frame has the focus).
-checkEnabledAfterURLChange = ->
+checkEnabledAfterURLChange = forTrusted ->
   checkIfEnabledForUrl() if windowIsFocused()
 
 handleEscapeForFindMode = ->
