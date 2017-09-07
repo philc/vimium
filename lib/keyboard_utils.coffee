@@ -16,17 +16,32 @@ KeyboardUtils =
       @platform = "Windows"
 
   getKeyChar: (event) ->
-    if event.key of @keyNames
-      @keyNames[event.key]
-    # It appears that event.key is not always defined (see #2453).
-    else if not event.key?
+    unless Settings.get "ignoreKeyboardLayout"
+      key = event.key
+    else if event.code[...6] == "Numpad"
+      # We cannot correctly emulate the numpad, so fall back to event.key; see #2626.
+      key = event.key
+    else
+      # The logic here is from the vim-like-key-notation project (https://github.com/lydell/vim-like-key-notation).
+      key = event.code
+      key = key[3..] if key[...3] == "Key"
+      # Translate some special keys to event.key-like strings and handle <Shift>.
+      if @enUsTranslations[key]
+        key = if event.shiftKey then @enUsTranslations[key][1] else @enUsTranslations[key][0]
+      else if key.length == 1 and not event.shiftKey
+        key = key.toLowerCase()
+
+    if key of @keyNames
+      @keyNames[key]
+    # It appears that key is not always defined (see #2453).
+    else if not key?
       ""
-    else if event.key.length == 1
-      event.key
-    else if event.key.length == 2 and "F1" <= event.key <= "F9"
-      event.key.toLowerCase() # F1 to F9.
-    else if event.key.length == 3 and "F10" <= event.key <= "F12"
-      event.key.toLowerCase() # F10 to F12.
+    else if key.length == 1
+      key
+    else if key.length == 2 and "F1" <= key <= "F9"
+      key.toLowerCase() # F1 to F9.
+    else if key.length == 3 and "F10" <= key <= "F12"
+      key.toLowerCase() # F10 to F12.
     else
       ""
 
@@ -54,6 +69,31 @@ KeyboardUtils =
 
   isPrintable: (event) ->
     @getKeyCharString(event)?.length == 1
+
+  enUsTranslations:
+    "Backquote":     ["`", "~"]
+    "Minus":         ["-", "_"]
+    "Equal":         ["=", "+"]
+    "Backslash":     ["\\","|"]
+    "IntlBackslash": ["\\","|"]
+    "BracketLeft":   ["[", "{"]
+    "BracketRight":  ["]", "}"]
+    "Semicolon":     [";", ":"]
+    "Quote":         ["'", '"']
+    "Comma":         [",", "<"]
+    "Period":        [".", ">"]
+    "Slash":         ["/", "?"]
+    "Space":         [" ", " "]
+    "Digit1":        ["1", "!"]
+    "Digit2":        ["2", "@"]
+    "Digit3":        ["3", "#"]
+    "Digit4":        ["4", "$"]
+    "Digit5":        ["5", "%"]
+    "Digit6":        ["6", "^"]
+    "Digit7":        ["7", "&"]
+    "Digit8":        ["8", "*"]
+    "Digit9":        ["9", "("]
+    "Digit0":        ["0", ")"]
 
 KeyboardUtils.init()
 

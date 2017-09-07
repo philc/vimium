@@ -193,6 +193,7 @@ Options =
   nextPatterns: NonEmptyTextOption
   previousPatterns: NonEmptyTextOption
   regexFindMode: CheckBoxOption
+  ignoreKeyboardLayout: CheckBoxOption
   scrollStepSize: NumberOption
   smoothScroll: CheckBoxOption
   grabBackFocus: CheckBoxOption
