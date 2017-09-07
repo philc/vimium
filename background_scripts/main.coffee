@@ -311,6 +311,7 @@ Frames =
 
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
+    request.isFirefox = Utils.isFirefox() # Update the value for Utils.isFirefox in the frontend.
     enabledState = Exclusions.isEnabledForUrl request.url
 
     if request.frameIsFocused
