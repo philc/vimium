@@ -170,6 +170,7 @@ Release Notes
 
 Changes in git (not yet released)
 
+- Added a new option to ignore keyboard layout; this might be useful for users of non-Latin keyboards.
 - Firefox support.  This is a work in progress; please report any issues [here](https://github.com/philc/vimium/issues?q=is%3Aopen+sort%3Aupdated-desc).
 - Reworked key handling; please report any new key-handling bugs [here](https://github.com/philc/vimium/issues?q=is%3Aopen+sort%3Aupdated-desc).
 - Fixed search completion for Firefox (released as 1.59.1, Firefox only).
