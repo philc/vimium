@@ -10,24 +10,8 @@
 #
 # In all cases except Settings.defaults, values are stored as jsonified strings.
 
-# This is a minimal stub of chrome services for the tests.  This needs to be here (and not in
-# ../tests/dom_tests/chrome.coffee) because the regular test stubs are not loaded in the Vomnibar or HUD
-# iframes.
-# NOTE(smblott): Possibly these should go in a separate file.
-window.chrome ?=
-  runtime:
-    lastError: false
-  storage:
-    local:
-      get: ->
-      set: ->
-    sync:
-      get: (_, callback) -> callback? {}
-      set: ->
-    onChanged:
-      addListener: ->
-  extension:
-    inIncognitoContext: false
+# If the current frame is the Vomnibar or the HUD, then we'll need our Chrome stubs for the tests.
+window.chrome ?= window.top?.chrome
 
 storageArea = if chrome.storage.sync? then "sync" else "local"
 
