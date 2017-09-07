@@ -4,6 +4,7 @@ before_install:
   - "npm install -g coffee-script"
   - "npm install path@0.11"
   - "npm install util"
+  - "npm install -g phantomjs@1.9.20"
   - "cake build"
 script: "cake test"
 notifications:
