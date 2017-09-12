@@ -293,7 +293,8 @@ DomUtils =
     style = getComputedStyle box
     if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
       zoom = +style.zoom || 1
-      ratio = window.devicePixelRatio ? 1
+      ratio = window.devicePixelRatio
+      ratio = 1 if Utils.isFirefox() or not ratio?
       top: Math.ceil(window.scrollY * ratio / zoom), left: Math.ceil(window.scrollX * ratio / zoom)
     else
       rect = box.getBoundingClientRect()
