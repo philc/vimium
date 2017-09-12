@@ -174,6 +174,7 @@ Changes in git (not yet released)
 - Firefox support.  This is a work in progress; please report any issues [here](https://github.com/philc/vimium/issues?q=is%3Aopen+sort%3Aupdated-desc).
 - Reworked key handling; please report any new key-handling bugs [here](https://github.com/philc/vimium/issues?q=is%3Aopen+sort%3Aupdated-desc).
 - Fixed search completion for Firefox (released as 1.59.1, Firefox only).
+- Fixed issue affecting hint placement when the display is zoomed.
 
 1.59 (2017-04-07)
 
