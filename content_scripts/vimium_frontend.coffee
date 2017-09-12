@@ -493,7 +493,8 @@ extend window,
 # the page icon.
 checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
-    {isEnabledForUrl, passKeys, frameIsFocused} = response
+    {isEnabledForUrl, passKeys, frameIsFocused, isFirefox} = response
+    Utils.isFirefox = -> isFirefox
     initializeOnEnabledStateKnown isEnabledForUrl
     normalMode.setPassKeys passKeys
     # Hide the HUD if we're not enabled.
