@@ -293,7 +293,8 @@ DomUtils =
     style = getComputedStyle box
     if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
       zoom = +style.zoom || 1
-      top: Math.ceil(window.scrollY / zoom), left: Math.ceil(window.scrollX / zoom)
+      ratio = window.devicePixelRatio ? 1
+      top: Math.ceil(window.scrollY * ratio / zoom), left: Math.ceil(window.scrollX * ratio / zoom)
     else
       rect = box.getBoundingClientRect()
       top: -rect.top - box.clientTop, left: -rect.left - box.clientLeft
