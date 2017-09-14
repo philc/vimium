@@ -183,7 +183,7 @@ Release Notes
     - Fixed search completion for Firefox (released as 1.59.1, Firefox only).
 
 - Minor versions:
-    - 1.60.1: fix #2642.
+    - 1.60.1: fix [#2642](https://github.com/philc/vimium/issues/2642).
 
 1.59 (2017-04-07)
 
