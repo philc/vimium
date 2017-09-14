@@ -182,6 +182,9 @@ Release Notes
     - Fixed issue affecting hint placement when the display is zoomed.
     - Fixed search completion for Firefox (released as 1.59.1, Firefox only).
 
+- Minor versions:
+    - 1.60.1: fix #2642.
+
 1.59 (2017-04-07)
 
 - Features:
