@@ -289,7 +289,7 @@ class LinkHintsMode
     else
       @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
       unless event.repeat
-        if keyChar = KeyboardUtils.getKeyChar event
+        if keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
           keyChar = " " if keyChar == "space"
           if keyChar.length == 1
             @markerMatcher.pushKeyChar keyChar
