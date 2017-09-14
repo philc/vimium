@@ -291,12 +291,16 @@ DomUtils =
   getViewportTopLeft: ->
     box = document.documentElement
     style = getComputedStyle box
+    rect = box.getBoundingClientRect()
+    {clientTop, clientLeft} = box
     if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
-      zoom = +style.zoom || 1
-      top: Math.ceil(window.scrollY / zoom), left: Math.ceil(window.scrollX / zoom)
+      # The margin is included in the client rect, so we need to subtract it back out.
+      marginTop = parseInt style.marginTop
+      marginLeft = parseInt style.marginLeft
+      top: -rect.top + marginTop, left: -rect.left + marginLeft
     else
-      rect = box.getBoundingClientRect()
-      top: -rect.top - box.clientTop, left: -rect.left - box.clientLeft
+      top: -rect.top - clientTop, left: -rect.left - clientLeft
+
 
   suppressPropagation: (event) ->
     event.stopImmediatePropagation()
