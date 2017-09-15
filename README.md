@@ -185,6 +185,7 @@ Release Notes
 - Minor versions:
     - 1.60.1: fix [#2642](https://github.com/philc/vimium/issues/2642).
     - 1.60.2: revert previous fix for HiDPI screens.  This was breaking link-hint positioning for some users.
+    - 1.60.3: [fix](https://github.com/philc/vimium/pull/2649) link-hint positioning.
 
 1.59 (2017-04-07)
 
