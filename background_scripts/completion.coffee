@@ -364,19 +364,22 @@ class TabCompleter
     chrome.tabs.query {}, (tabs) =>
       results = tabs.filter (tab) -> RankingUtils.matches(queryTerms, tab.url, tab.title)
       suggestions = results.map (tab) =>
-        new Suggestion
+        suggestion = new Suggestion
           queryTerms: queryTerms
           type: "tab"
           url: tab.url
           title: tab.title
-          relevancyFunction: @computeRelevancy
           tabId: tab.id
           deDuplicate: false
+        suggestion.relevancy = @computeRelevancy suggestion
+        suggestion
+      .sort (a,b) -> b.relevancy - a.relevancy
+      suggestions.forEach( (sugg,i) -> sugg.relevancy /= ( i / 4 + 1 ) )
       onComplete suggestions
 
   computeRelevancy: (suggestion) ->
     if suggestion.queryTerms.length
-      RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
+      RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title) * 8.0
     else
       BgUtils.tabRecency.recencyScore(suggestion.tabId)
 
