@@ -204,7 +204,7 @@ Options =
 initOptionsPage = ->
   onUpdated = ->
     $("saveOptions").removeAttribute "disabled"
-    $("saveOptions").innerHTML = "Save Changes"
+    $("saveOptions").textContent = "Save Changes"
 
   # Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
   maintainLinkHintsView = ->
@@ -222,10 +222,10 @@ initOptionsPage = ->
   maintainAdvancedOptions = ->
     if bgSettings.get "optionsPage_showAdvancedOptions"
       $("advancedOptions").style.display = "table-row-group"
-      $("advancedOptionsButton").innerHTML = "Hide Advanced Options"
+      $("advancedOptionsButton").textContent = "Hide Advanced Options"
     else
       $("advancedOptions").style.display = "none"
-      $("advancedOptionsButton").innerHTML = "Show Advanced Options"
+      $("advancedOptionsButton").textContent = "Show Advanced Options"
   maintainAdvancedOptions()
 
   toggleAdvancedOptions = (event) ->
@@ -241,7 +241,7 @@ initOptionsPage = ->
     $("linkHintCharacters").value = $("linkHintCharacters").value.toLowerCase()
     Option.saveOptions()
     $("saveOptions").disabled = true
-    $("saveOptions").innerHTML = "No Changes"
+    $("saveOptions").textContent = "Saved"
 
   $("saveOptions").addEventListener "click", saveOptions
   $("advancedOptionsButton").addEventListener "click", toggleAdvancedOptions
@@ -250,7 +250,7 @@ initOptionsPage = ->
 
   for element in document.getElementsByClassName "nonEmptyTextOption"
     element.className = element.className + " example info"
-    element.innerHTML = "Leave empty to reset this option."
+    element.textContent = "Leave empty to reset this option."
 
   window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
 
@@ -287,12 +287,12 @@ initPopupPage = ->
     onUpdated = ->
       $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close."
       $("saveOptions").removeAttribute "disabled"
-      $("saveOptions").innerHTML = "Save Changes"
+      $("saveOptions").textContent = "Save Changes"
       updateState() if exclusions
 
     saveOptions = ->
       Option.saveOptions()
-      $("saveOptions").innerHTML = "Saved"
+      $("saveOptions").textContent = "Saved"
       $("saveOptions").disabled = true
 
     $("saveOptions").addEventListener "click", saveOptions
