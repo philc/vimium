@@ -43,6 +43,7 @@ completers =
     completionSources.bookmarks
     completionSources.history
     completionSources.domains
+    completionSources.tabs
     completionSources.searchEngines
     ]
   bookmarks: new MultiCompleter [completionSources.bookmarks]
