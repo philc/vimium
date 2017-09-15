@@ -291,12 +291,21 @@ DomUtils =
   getViewportTopLeft: ->
     box = document.documentElement
     style = getComputedStyle box
+    rect = box.getBoundingClientRect()
     if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
-      zoom = +style.zoom || 1
-      top: Math.ceil(window.scrollY / zoom), left: Math.ceil(window.scrollX / zoom)
+      # The margin is included in the client rect, so we need to subtract it back out.
+      marginTop = parseInt style.marginTop
+      marginLeft = parseInt style.marginLeft
+      top: -rect.top + marginTop, left: -rect.left + marginLeft
     else
-      rect = box.getBoundingClientRect()
-      top: -rect.top - box.clientTop, left: -rect.left - box.clientLeft
+      if Utils.isFirefox()
+        # These are always 0 for documentElement on Firefox, so we derive them from CSS border.
+        clientTop = parseInt style.borderTopWidth
+        clientLeft = parseInt style.borderLeftWidth
+      else
+        {clientTop, clientLeft} = box
+      top: -rect.top - clientTop, left: -rect.left - clientLeft
+
 
   suppressPropagation: (event) ->
     event.stopImmediatePropagation()
