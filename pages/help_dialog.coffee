@@ -73,7 +73,7 @@ HelpDialog =
           for key in command.keys.sort compareKeys
             @instantiateHtmlTemplate keysElement, "#keysTemplate", (element) ->
               lastElement = element
-              $$(element, ".vimiumHelpDialogKey").innerHTML = Utils.escapeHtml key
+              $$(element, ".vimiumHelpDialogKey").textContent = key
           # And strip off the trailing ", ", if necessary.
           lastElement.removeChild $$ lastElement, ".commaSeparator" if lastElement
 
@@ -109,7 +109,7 @@ HelpDialog =
     vimiumHelpDialogContainer.scrollTop += scrollHeightDelta if 0 < scrollHeightDelta
 
   showAdvancedCommands: (visible) ->
-    document.getElementById("toggleAdvancedCommands").innerHTML =
+    document.getElementById("toggleAdvancedCommands").textContent =
       if visible then "Hide advanced commands" else "Show advanced commands"
 
     # Add/remove the showAdvanced class to show/hide advanced commands.
