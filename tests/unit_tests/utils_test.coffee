@@ -22,6 +22,9 @@ context "isUrl",
     assert.isTrue Utils.isUrl "illinois.state.museum"
     assert.isTrue Utils.isUrl "eqt5g4fuenphqinx.onion"
 
+    # Internal URLs.
+    assert.isTrue Utils.isUrl "moz-extension://c66906b4-3785-4a60-97bc-094a6366017e/pages/options.html"
+
   should "reject invalid URLs", ->
     assert.isFalse Utils.isUrl "a.x"
     assert.isFalse Utils.isUrl "www-domain-tld"

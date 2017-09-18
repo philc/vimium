@@ -56,7 +56,7 @@ Utils =
     url.startsWith "javascript:"
 
   hasFullUrlPrefix: do ->
-    urlPrefix = new RegExp "^[a-z]{3,}://."
+    urlPrefix = new RegExp "^[a-z][-+.a-z0-9]{2,}://."
     (url) -> urlPrefix.test url
 
   # Decode valid escape sequences in a URI.  This is intended to mimic the best-effort decoding
