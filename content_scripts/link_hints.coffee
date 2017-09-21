@@ -384,17 +384,7 @@ class LinkHintsMode
             window.focus()
             DomUtils.simulateSelect clickEl
           else
-            clickActivator = (modifiers) -> (link) ->
-              defaultActionsTriggered = DomUtils.simulateClick link, modifiers
-              simulateClickDefaultAction = Utils.isFirefox()
-              if simulateClickDefaultAction and
-                  defaultActionsTriggered[3] and link.tagName?.toLowerCase() == "a" and
-                  modifiers? and modifiers.metaKey == isMac and modifiers.ctrlKey == not isMac
-              # We've clicked a link that *should* open in a new tab. If simulateClickDefaultAction is true,
-              # we assume the popup-blocker is active, and simulate opening the new tab ourselves.
-                chrome.runtime.sendMessage {handler: "openUrlInNewTab", url: link.href, active:
-                  modifiers.shiftKey == true}
-
+            clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
             linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers
             # TODO: Are there any other input elements which should not receive focus?
             if clickEl.nodeName.toLowerCase() in ["input", "select"] and clickEl.type not in ["button", "submit"]

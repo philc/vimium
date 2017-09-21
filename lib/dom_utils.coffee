@@ -249,7 +249,11 @@ DomUtils =
   simulateClick: (element, modifiers) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
-      @simulateMouseEvent event, element, modifiers
+      defaultActionShouldTrigger = @simulateMouseEvent event, element, modifiers
+      if event == "click" and defaultActionShouldTrigger and Utils.isFirefox()
+        # Firefox doesn't (currently) trigger the default action for modified keys.
+        DomUtils.simulateClickDefaultAction element, modifiers
+      defaultActionShouldTrigger # return the values returned by each @simulateMouseEvent call.
 
   simulateMouseEvent: do ->
     lastHoveredElement = undefined
@@ -271,6 +275,28 @@ DomUtils =
       # Debugging note: Firefox will not execute the element's default action if we dispatch this click event,
       # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
       element.dispatchEvent(mouseEvent)
+
+  simulateClickDefaultAction: (element, modifiers) ->
+    return unless modifiers?
+    return unless element.tagName?.toLowerCase() == "a" and element.href?
+
+    {ctrlKey, shiftKey, metaKey, altKey} = modifiers
+
+    # Mac uses a different new tab modifier (meta vs. ctrl).
+    if KeyboardUtils.platform == "Mac"
+      newTabModifier = metaKey == true and ctrlKey == false
+    else
+      newTabModifier = metaKey == false and ctrlKey == true
+
+    if newTabModifier
+      # Open in new tab. Shift determines whether the tab is focused when created. Alt is ignored.
+      chrome.runtime.sendMessage {handler: "openUrlInNewTab", url: element.href, active:
+        shiftKey == true}
+    else if shiftKey == true and metaKey == false and ctrlKey == false and altKey == false
+      # Open in new window.
+      chrome.runtime.sendMessage {handler: "openUrlInNewWindow", url: element.href}
+
+    return
 
   addFlashRect: (rect) ->
     flashEl = @createElement "div"
