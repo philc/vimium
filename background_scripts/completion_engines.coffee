@@ -48,7 +48,7 @@ class Google extends GoogleXMLBaseEngine
   constructor: () ->
     super
       engineUrl: "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
-      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/"
+      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/"
       example:
         searchUrl: "https://www.google.com/search?q=%s"
         keyword: "g"
@@ -58,7 +58,7 @@ class GoogleMaps extends GoogleXMLBaseEngine
   constructor: () ->
     super
       engineUrl: "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{@prefix.split(' ').join '+'}%s"
-      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.uk|ca|com\\.au)/maps"
+      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/maps"
       example:
         searchUrl: "https://www.google.com/maps?q=%s"
         keyword: "m"
