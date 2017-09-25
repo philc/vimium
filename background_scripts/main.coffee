@@ -106,6 +106,7 @@ TabOperations =
       index: request.tab.index + 1
       active: true
       windowId: request.tab.windowId
+    tabConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
     delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
     chrome.tabs.create tabConfig, (tab) ->
@@ -115,6 +116,16 @@ TabOperations =
       try chrome.tabs.update tab.id, { openerTabId : request.tab.id }, callback
       catch
         callback.apply this, arguments
+
+  # Opens request.url in new window and switches to it.
+  openUrlInNewWindow: (request, callback = (->)) ->
+    winConfig =
+      url: Utils.convertToUrl request.url
+      active: true
+    winConfig.active = request.active if request.active?
+    # Firefox does not support "about:newtab" in chrome.tabs.create.
+    delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
+    chrome.windows.create winConfig, callback
 
 toggleMuteTab = do ->
   muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
@@ -415,6 +426,7 @@ sendRequestHandlers =
   # with Chrome-specific URLs like "view-source:http:..".
   getCurrentTabUrl: ({tab}) -> tab.url
   openUrlInNewTab: (request) -> TabOperations.openUrlInNewTab request
+  openUrlInNewWindow: (request) -> TabOperations.openUrlInNewWindow request
   openUrlInIncognito: (request) -> chrome.windows.create incognito: true, url: Utils.convertToUrl request.url
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
   openOptionsPageInNewTab: (request) ->
