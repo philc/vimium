@@ -1,6 +1,7 @@
 $ = (id) -> document.getElementById id
 
 document.addEventListener "DOMContentLoaded", ->
+  DomUtils.injectUserCss() # Manually inject custom user styles.
   $("vimiumVersion").innerText = Utils.getCurrentVersion()
 
   chrome.storage.local.get "installDate", (items) ->

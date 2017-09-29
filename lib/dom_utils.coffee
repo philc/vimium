@@ -407,5 +407,13 @@ DomUtils =
   windowIsTooSmall: ->
     return window.innerWidth < 3 or window.innerHeight < 3
 
+  # Inject user styles manually. This is only necessary for our chrome-extension:// pages and frames.
+  injectUserCss: ->
+    Settings.onLoaded ->
+      style = document.createElement "style"
+      style.type = "text/css"
+      style.textContent = Settings.get "userDefinedLinkHintCss"
+      document.head.appendChild style
+
 root = exports ? window
 root.DomUtils = DomUtils

@@ -335,5 +335,8 @@ UIComponentServer.registerHandler (event) ->
     when "hidden" then Vomnibar.onHidden()
     when "activate" then Vomnibar.activate event.data
 
+document.addEventListener "DOMContentLoaded", ->
+  DomUtils.injectUserCss() # Manually inject custom user styles.
+
 root = exports ? window
 root.Vomnibar = Vomnibar
