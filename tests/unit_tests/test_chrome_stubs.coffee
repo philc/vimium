@@ -60,6 +60,8 @@ exports.chrome =
       addListener: () ->
     onReferenceFragmentUpdated:
       addListener: () ->
+    onCommitted:
+      addListener: () ->
 
   windows:
     onRemoved:
