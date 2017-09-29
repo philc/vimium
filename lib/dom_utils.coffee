@@ -276,8 +276,7 @@ DomUtils =
       # but Webkit will. Dispatching a click on an input box does not seem to focus it; we do that separately
       element.dispatchEvent(mouseEvent)
 
-  simulateClickDefaultAction: (element, modifiers) ->
-    return unless modifiers?
+  simulateClickDefaultAction: (element, modifiers = {}) ->
     return unless element.tagName?.toLowerCase() == "a" and element.href?
 
     {ctrlKey, shiftKey, metaKey, altKey} = modifiers
@@ -295,6 +294,8 @@ DomUtils =
     else if shiftKey == true and metaKey == false and ctrlKey == false and altKey == false
       # Open in new window.
       chrome.runtime.sendMessage {handler: "openUrlInNewWindow", url: element.href}
+    else if element.target == "_blank"
+      chrome.runtime.sendMessage {handler: "openUrlInNewTab", url: element.href, active: true}
 
     return
 
