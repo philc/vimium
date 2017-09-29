@@ -263,10 +263,9 @@ selectTab = (direction, {count, tab}) ->
             Math.max 0, tabs.length - count
       chrome.tabs.update tabs[toSelect].id, active: true
 
-chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
-  return unless changeInfo.status == "loading" # Only do this once per URL change.
+chrome.webNavigation.onCommitted.addListener ({tabId, frameId}) ->
   cssConf =
-    allFrames: true
+    frameId: frameId
     code: Settings.get("userDefinedLinkHintCss")
     runAt: "document_start"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
