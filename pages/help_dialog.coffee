@@ -131,6 +131,9 @@ UIComponentServer.registerHandler (event) ->
       # Abandon any HUD which might be showing within the help dialog.
       HUD.abandon()
 
+document.addEventListener "DOMContentLoaded", ->
+  DomUtils.injectUserCss() # Manually inject custom user styles.
+
 root = exports ? window
 root.HelpDialog = HelpDialog
 root.isVimiumHelpDialog = true

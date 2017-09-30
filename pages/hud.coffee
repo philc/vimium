@@ -12,6 +12,9 @@ setTextInInputElement = (inputElement, text) ->
   selection.removeAllRanges()
   selection.addRange range
 
+document.addEventListener "DOMContentLoaded", ->
+  DomUtils.injectUserCss() # Manually inject custom user styles.
+
 document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
