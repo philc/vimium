@@ -1,7 +1,7 @@
 require "./test_helper.js"
 extend(global, require "../../lib/rect.js")
 
-context "Rect",
+context "Rect", ->
   should "set rect properties correctly", ->
     [x1, y1, x2, y2] = [1, 2, 3, 4]
     rect = Rect.create x1, y1, x2, y2
@@ -40,8 +40,8 @@ context "Rect",
     assert.equal rect1.left, rect2.left
     assert.equal rect1.right, rect2.right
 
-context "Rect subtraction",
-  context "unchanged by rects outside",
+context "Rect subtraction", ->
+  context "unchanged by rects outside", ->
     should "left, above", ->
       rect1 = Rect.create 0, 0, 1, 1
       rect2 = Rect.create -2, -2, -1, -1
@@ -114,7 +114,7 @@ context "Rect subtraction",
       rect = rects[0]
       assert.isTrue Rect.equals rect1, rect
 
-  context "unchanged by rects touching",
+  context "unchanged by rects touching", ->
     should "left, above", ->
       rect1 = Rect.create 0, 0, 1, 1
       rect2 = Rect.create -1, -1, 0, 0
@@ -231,7 +231,7 @@ context "Rect subtraction",
               complementRect = resultComplement[0]
               assert.isTrue Rect.contains subtractRect, complementRect
 
-context "Rect overlaps",
+context "Rect overlaps", ->
   should "detect that a rect overlaps itself", ->
     rect = Rect.create 2, 2, 4, 4
     assert.isTrue Rect.rectsOverlap rect, rect

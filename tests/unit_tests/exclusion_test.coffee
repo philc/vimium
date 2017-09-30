@@ -26,7 +26,7 @@ isEnabledForUrl = (request) ->
 
 # These tests cover only the most basic aspects of excluded URLs and passKeys.
 #
-context "Excluded URLs and pass keys",
+context "Excluded URLs and pass keys", ->
 
   setup ->
     Settings.set "exclusionRules",

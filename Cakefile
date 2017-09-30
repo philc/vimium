@@ -2,6 +2,7 @@ util = require "util"
 fs = require "fs"
 path = require "path"
 child_process = require "child_process"
+Mocha = require "mocha"
 
 spawn = (procName, optArray, silent = false, sync = false) ->
   if process.platform is "win32"
@@ -111,24 +112,25 @@ task "package-custom-crx", "build .crx file", ->
 
 runUnitTests = (projectDir=".", testNameFilter) ->
   console.log "Running unit tests..."
-  basedir = path.join projectDir, "/tests/unit_tests/"
+  basedir = (path.resolve "./tests/unit_tests/") + "/"
   test_files = fs.readdirSync(basedir).filter((filename) -> filename.indexOf("_test.js") > 0)
   test_files = test_files.map((filename) -> basedir + filename)
-  test_files.forEach (file) -> require (if file[0] == '/' then '' else './') + file
-  Tests.run(testNameFilter)
-  return Tests.testsFailed
+  mocha = new Mocha {ui: "bdd", reporter: "min", useColors: true}
+  test_files.forEach (file) -> mocha.addFile ((if file[0] == '/' then '' else './') + file)
+  return new Promise (resolve) -> mocha.run resolve
 
 option '', '--filter-tests [string]', 'filter tests by matching string'
 task "test", "run all tests", (options) ->
   unitTestsFailed = runUnitTests('.', options['filter-tests'])
 
-  console.log "Running DOM tests..."
-  phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]
-  phantom.on 'exit', (returnCode) ->
-    if returnCode > 0 or unitTestsFailed > 0
-      process.exit 1
-    else
-      process.exit 0
+  unitTestsFailed.then (unitTestsFailed) ->
+    console.log "Running DOM tests..."
+    phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]
+    phantom.on 'exit', (returnCode) ->
+      if returnCode > 0 or unitTestsFailed > 0
+        process.exit 1
+      else
+        process.exit 0
 
 task "coverage", "generate coverage report", ->
   {Utils} = require './lib/utils'

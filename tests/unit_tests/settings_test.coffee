@@ -9,7 +9,7 @@ global.localStorage = {}
 extend(global,require "../../lib/settings.js")
 extend(global,require "../../pages/options.js")
 
-context "settings",
+context "settings", ->
 
   setup ->
     stub global, 'localStorage', {}
@@ -33,7 +33,7 @@ context "settings",
     Settings.clear 'scrollStepSize'
     assert.equal Settings.get('scrollStepSize'), 60
 
-context "synced settings",
+context "synced settings", ->
 
   setup ->
     stub global, 'localStorage', {}
@@ -76,7 +76,7 @@ context "synced settings",
   should "sync a key which is not a known setting (without crashing)", ->
     chrome.storage.sync.set { notASetting: JSON.stringify("notAUsefullValue") }
 
-context "default valuess",
+context "default valuess", ->
 
   should "have a default value for every option", ->
     for own key of Options

@@ -1,7 +1,7 @@
 require "./test_helper.js"
 extend(global, require "../../lib/handler_stack.js")
 
-context "handlerStack",
+context "handlerStack", ->
   setup ->
     stub global, "DomUtils", {}
     stub DomUtils, "suppressEvent", ->

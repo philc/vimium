@@ -4,7 +4,7 @@ extend global, require "../../background_scripts/bg_utils.js"
 global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
 
-context "Key mappings",
+context "Key mappings", ->
   setup ->
     @testKeySequence = (key, expectedKeyText, expectedKeyLength) ->
       keySequence = Commands.parseKeySequence key
@@ -61,7 +61,7 @@ context "Key mappings",
     @testKeySequence "<b-a>", "</b/-/a/>", 5
     @testKeySequence "<c-@@>", "</c/-/@/@/>", 6
 
-context "Validate commands and options",
+context "Validate commands and options", ->
   should "have either noRepeat or repeatLimit, but not both", ->
     # TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
     # of the offending command appears in the output, if the test fails?
@@ -90,7 +90,7 @@ context "Validate commands and options",
       assert.equal 'object', typeof command
       assert.isTrue Commands.availableCommands[command.command]
 
-context "Validate advanced commands",
+context "Validate advanced commands", ->
   setup ->
     @allCommands = [].concat.apply [], (commands for own group, commands of Commands.commandGroups)
 
@@ -98,7 +98,7 @@ context "Validate advanced commands",
     for command in Commands.advancedCommands
       assert.isTrue 0 <= @allCommands.indexOf command
 
-context "Parse commands",
+context "Parse commands", ->
   should "omit whitespace", ->
     assert.equal 0, BgUtils.parseLines("    \n    \n   ").length
 

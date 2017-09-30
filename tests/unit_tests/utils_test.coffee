@@ -4,7 +4,7 @@ extend(global, require "../../lib/utils.js")
 Utils.getCurrentVersion = -> '1.43'
 extend(global, require "../../lib/settings.js")
 
-context "isUrl",
+context "isUrl", ->
   should "accept valid URLs", ->
     assert.isTrue Utils.isUrl "www.google.com"
     assert.isTrue Utils.isUrl "www.bbc.co.uk"
@@ -29,7 +29,7 @@ context "isUrl",
     assert.isFalse Utils.isUrl "a.x"
     assert.isFalse Utils.isUrl "www-domain-tld"
 
-context "convertToUrl",
+context "convertToUrl", ->
   should "detect and clean up valid URLs", ->
     assert.equal "http://www.google.com/", Utils.convertToUrl("http://www.google.com/")
     assert.equal "http://www.google.com/", Utils.convertToUrl("    http://www.google.com/     ")
@@ -50,7 +50,7 @@ context "convertToUrl",
     assert.equal "https://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com")
     assert.equal "https://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter")
 
-context "extractQuery",
+context "extractQuery", ->
   should "extract queries from search URLs", ->
     assert.equal "bbc sport 1", Utils.extractQuery "https://www.google.ie/search?q=%s", "https://www.google.ie/search?q=bbc+sport+1"
     assert.equal "bbc sport 2", Utils.extractQuery "http://www.google.ie/search?q=%s", "https://www.google.ie/search?q=bbc+sport+2"
@@ -60,7 +60,7 @@ context "extractQuery",
   should "extract not queries from incorrect search URLs", ->
     assert.isFalse Utils.extractQuery "https://www.google.ie/search?q=%s&foo=bar", "https://www.google.ie/search?q=bbc+sport"
 
-context "hasChromePrefix",
+context "hasChromePrefix", ->
   should "detect chrome prefixes of URLs", ->
     assert.isTrue Utils.hasChromePrefix "about:foobar"
     assert.isTrue Utils.hasChromePrefix "view-source:foobar"
@@ -74,32 +74,32 @@ context "hasChromePrefix",
     assert.isFalse Utils.hasChromePrefix "data"
     assert.isFalse Utils.hasChromePrefix "data :foobar"
 
-context "hasJavascriptPrefix",
+context "hasJavascriptPrefix", ->
   should "detect javascript: URLs", ->
     assert.isTrue Utils.hasJavascriptPrefix "javascript:foobar"
     assert.isFalse Utils.hasJavascriptPrefix "http:foobar"
 
-context "decodeURIByParts",
+context "decodeURIByParts", ->
   should "decode javascript: URLs", ->
     assert.equal "foobar", Utils.decodeURIByParts "foobar"
     assert.equal " ", Utils.decodeURIByParts "%20"
     assert.equal "25 % 20 25 ", Utils.decodeURIByParts "25 % 20 25%20"
 
-context "isUrl",
+context "isUrl", ->
   should "identify URLs as URLs", ->
     assert.isTrue Utils.isUrl "http://www.example.com/blah"
 
   should "identify non-URLs and non-URLs", ->
     assert.isFalse Utils.isUrl "http://www.example.com/ blah"
 
-context "Function currying",
+context "Function currying", ->
   should "Curry correctly", ->
     foo = (a, b) -> "#{a},#{b}"
     assert.equal "1,2", foo.curry()(1,2)
     assert.equal "1,2", foo.curry(1)(2)
     assert.equal "1,2", foo.curry(1,2)()
 
-context "compare versions",
+context "compare versions", ->
   should "compare correctly", ->
     assert.equal 0, Utils.compareVersions("1.40.1", "1.40.1")
     assert.equal 0, Utils.compareVersions("1.40", "1.40.0")
@@ -111,7 +111,7 @@ context "compare versions",
     assert.equal 1, Utils.compareVersions("1.41.0", "1.40")
     assert.equal 1, Utils.compareVersions("1.41.1", "1.41")
 
-context "makeIdempotent",
+context "makeIdempotent", ->
   setup ->
     @count = 0
     @func = Utils.makeIdempotent (n = 1) => @count += n
@@ -134,11 +134,11 @@ context "makeIdempotent",
     @func()
     assert.equal 1, @count
 
-context "distinctCharacters",
+context "distinctCharacters", ->
   should "eliminate duplicate characters", ->
     assert.equal "abc", Utils.distinctCharacters "bbabaabbacabbbab"
 
-context "invokeCommandString",
+context "invokeCommandString", ->
   setup ->
     @beenCalled = false
     window.singleComponentCommand = => @beenCalled = true
@@ -158,13 +158,13 @@ context "invokeCommandString",
     Utils.invokeCommandString "twoComponentCommand.command"
     assert.isTrue @beenCalled
 
-context "escapeRegexSpecialCharacters",
+context "escapeRegexSpecialCharacters", ->
   should "escape regexp special characters", ->
     str = "-[]/{}()*+?.^$|"
     regexp = new RegExp Utils.escapeRegexSpecialCharacters str
     assert.isTrue regexp.test str
 
-context "extractQuery",
+context "extractQuery", ->
   should "extract the query terms from a URL", ->
     url = "https://www.google.ie/search?q=star+wars&foo&bar"
     searchUrl = "https://www.google.ie/search?q=%s"

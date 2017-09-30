@@ -5,7 +5,7 @@ extend(global, require "../../background_scripts/completion_engines.js")
 extend(global, require "../../background_scripts/completion.js")
 extend global, require "./test_chrome_stubs.js"
 
-context "bookmark completer",
+context "bookmark completer", ->
   setup ->
     @bookmark3 = { title: "bookmark3", url: "bookmark3.com" }
     @bookmark2 = { title: "bookmark2", url: "bookmark2.com" }
@@ -44,8 +44,8 @@ context "bookmark completer",
     results = filterCompleter(@completer, ["/bookmark1", "mark2"])
     assert.arrayEqual ["/bookmark1/bookmark2"], results.map (suggestion) -> suggestion.title
 
-context "HistoryCache",
-  context "binary search",
+context "HistoryCache", ->
+  context "binary search", ->
     setup ->
       @compare = (a, b) -> a - b
 
@@ -55,7 +55,7 @@ context "HistoryCache",
     should "find elements to the right of the middle", ->
       assert.equal 2, HistoryCache.binarySearch(8, [3, 5, 8], @compare)
 
-    context "unfound elements",
+    context "unfound elements", ->
       should "return 0 if it should be the head of the list", ->
         assert.equal 0, HistoryCache.binarySearch(1, [3, 5, 8], @compare)
 
@@ -69,7 +69,7 @@ context "HistoryCache",
         assert.equal 1, HistoryCache.binarySearch(4, [3, 5, 8], @compare)
         assert.equal 2, HistoryCache.binarySearch(7, [3, 5, 8], @compare)
 
-  context "fetchHistory",
+  context "fetchHistory", ->
     setup ->
       @history1 = { url: "b.com", lastVisitTime: 5 }
       @history2 = { url: "a.com", lastVisitTime: 10 }
@@ -125,7 +125,7 @@ context "HistoryCache",
       HistoryCache.use (@results) =>
       assert.arrayEqual [], @results
 
-context "history completer",
+context "history completer", ->
   setup ->
     @history1 = { title: "history1", url: "history1.com", lastVisitTime: hours(1) }
     @history2 = { title: "history2", url: "history2.com", lastVisitTime: hours(5) }
@@ -147,7 +147,7 @@ context "history completer",
     results.sort (a, b) -> b.relevancy - a.relevancy
     assert.arrayEqual [@history2.url, @history1.url], results.map (result) -> result.url
 
-context "domain completer",
+context "domain completer", ->
   setup ->
     @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) }
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
@@ -177,7 +177,7 @@ context "domain completer",
   should "not return any results for empty queries", ->
     assert.arrayEqual [], filterCompleter(@completer, [])
 
-context "domain completer (removing entries)",
+context "domain completer (removing entries)", ->
   setup ->
     @history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(2) }
     @history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) }
@@ -221,7 +221,7 @@ context "domain completer (removing entries)",
     @onVisitRemovedListener { allHistory: true }
     assert.equal 0, filterCompleter(@completer, ["story"]).length
 
-context "tab completer",
+context "tab completer", ->
   setup ->
     @tabs = [
       { url: "tab1.com", title: "tab1", id: 1 }
@@ -234,7 +234,7 @@ context "tab completer",
     assert.arrayEqual ["tab2.com"], results.map (tab) -> tab.url
     assert.arrayEqual [2], results.map (tab) -> tab.tabId
 
-context "suggestions",
+context "suggestions", ->
   should "escape html in page titles", ->
     suggestion = new Suggestion
       queryTerms: ["queryterm"]
@@ -273,7 +273,7 @@ context "suggestions",
       relevancyFunction: returns 1
     assert.equal -1, suggestion.generateHtml({}).indexOf("http://ninjawords.com")
 
-context "RankingUtils.wordRelevancy",
+context "RankingUtils.wordRelevancy", ->
   should "score higher in shorter URLs", ->
     highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/short",  "a-title")
     lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/longer", "a-title")
@@ -316,7 +316,7 @@ context "RankingUtils.wordRelevancy",
   #   highScore = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
   #   assert.isTrue highScore > lowScore
 
-context "Suggestion.pushMatchingRanges",
+context "Suggestion.pushMatchingRanges", ->
   should "extract ranges matching term (simple case, two matches)", ->
     ranges = []
     [ one, two, three ] = [ "one", "two", "three" ]
@@ -345,7 +345,7 @@ context "Suggestion.pushMatchingRanges",
     suggestion.pushMatchingRanges("#{one}#{two}#{three}#{two}#{one}", "does-not-match", ranges)
     assert.equal 0, ranges.length
 
-context "RankingUtils",
+context "RankingUtils", ->
   should "do a case insensitive match", ->
     assert.isTrue RankingUtils.matches(["ari"], "maRio")
 
@@ -383,7 +383,7 @@ context "RankingUtils",
   should "every query term must match at least one thing (not matching)", ->
     assert.isTrue not RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog")
 
-context "RegexpCache",
+context "RegexpCache", ->
   should "RegexpCache is in fact caching (positive case)", ->
     assert.isTrue RegexpCache.get("this") is RegexpCache.get("this")
 
@@ -410,7 +410,7 @@ context "RegexpCache",
 
 fakeTimeDeltaElapsing = ->
 
-context "TabRecency",
+context "TabRecency", ->
   setup ->
     @tabRecency = BgUtils.tabRecency
 
