@@ -116,7 +116,7 @@ class Amazon extends BaseEngine
 
   parse: (xhr) -> JSON.parse(xhr.responseText)[1]
 
-class AmazonJp extends BaseEngine
+class AmazonJapan extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://completion.amazon.co.jp/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=6&q=%s"
@@ -180,7 +180,7 @@ CompletionEngines = [
   Wikipedia
   Bing
   Amazon
-  AmazonJp
+  AmazonJapan
   Webster
   Qwant
   DummyCompletionEngine
