@@ -6,14 +6,22 @@ window.forTrusted ?= (handler) -> (event) ->
   else
     true
 
+browserInfo = browser?.runtime?.getBrowserInfo?()
+
 Utils =
   isFirefox: do ->
     # NOTE(mrmr1993): This test only works in the background page, this is overwritten by isEnabledForUrl for
     # content scripts.
     isFirefox = false
-    browser?.runtime?.getBrowserInfo?()?.then? (browserInfo) ->
+    browserInfo?.then? (browserInfo) ->
       isFirefox = browserInfo?.name == "Firefox"
     -> isFirefox
+  firefoxVersion: do ->
+    # NOTE(mrmr1993): This only works in the background page.
+    ffVersion = undefined
+    browserInfo?.then? (browserInfo) ->
+      ffVersion = browserInfo?.version
+    -> ffVersion
   getCurrentVersion: ->
     chrome.runtime.getManifest().version
 

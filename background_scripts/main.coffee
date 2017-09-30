@@ -109,13 +109,12 @@ TabOperations =
     tabConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
     delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
-    chrome.tabs.create tabConfig, (tab) ->
-      # NOTE(mrmr1993, 2017-02-08): Firefox currently doesn't support openerTabId (issue 1238314) and throws
-      # a type error if it is present. We work around this by attempting to set it separately from creating
-      # the tab.
-      try chrome.tabs.update tab.id, { openerTabId : request.tab.id }, callback
-      catch
-        callback.apply this, arguments
+
+    # Firefox <57 throws an error when openerTabId is used (issue 1238314).
+    canUseOpenerTabId = not (Utils.isFirefox() and Utils.compareVersions(Utils.firefoxVersion(), "57") < 0)
+    tabConfig.openerTabId = request.tab.id if canUseOpenerTabId
+
+    chrome.tabs.create tabConfig, callback
 
   # Opens request.url in new window and switches to it.
   openUrlInNewWindow: (request, callback = (->)) ->
