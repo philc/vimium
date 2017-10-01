@@ -135,6 +135,7 @@ context "history completer", ->
       onVisited: { addListener: -> }
       onVisitRemoved: { addListener: -> }
 
+    HistoryCache.reset()
     @completer = new HistoryCompleter()
 
   should "return matching history entries when searching", ->
