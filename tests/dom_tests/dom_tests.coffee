@@ -188,7 +188,9 @@ context "Test link hints for focusing input elements correctly", ->
     for input in inputs
       input.scrollIntoView() # Ensure the element is visible so we create a link hint for it.
 
-      activeListener = ensureCalled (event) ->
+      listenerHasRun = false
+      activeListener = (event) ->
+        listenerHasRun = true
         input.blur() if event.type == "focus"
       input.addEventListener "focus", activeListener, false
       input.addEventListener "click", activeListener, false
@@ -200,6 +202,7 @@ context "Test link hints for focusing input elements correctly", ->
 
       input.removeEventListener "focus", activeListener, false
       input.removeEventListener "click", activeListener, false
+      assert.isTrue listenerHasRun
 
 context "Test link hints for changing mode", ->
 
