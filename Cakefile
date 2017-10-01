@@ -125,7 +125,10 @@ task "test", "run all tests", (options) ->
 
   unitTestsFailed.then (unitTestsFailed) ->
     console.log "Running DOM tests..."
-    phantom = spawn "phantomjs", ["./tests/dom_tests/phantom_runner.js"]
+    phantom = spawn "node_modules/mocha-phantomjs/bin/mocha-phantomjs",
+      ["-R", "min",
+       "-v", "900x600",
+       "tests/dom_tests/dom_tests.html"]
     phantom.on 'exit', (returnCode) ->
       if returnCode > 0 or unitTestsFailed > 0
         process.exit 1

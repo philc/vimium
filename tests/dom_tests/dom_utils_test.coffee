@@ -1,4 +1,4 @@
-context "DOM content loaded",
+context "DOM content loaded", ->
 
   # The DOM content has already loaded, this should be called immediately.
   should "call callback immediately.", ->
@@ -10,7 +10,7 @@ context "DOM content loaded",
   should "already have called callback embedded in test page.", ->
     assert.isTrue window.documentReadyListenerCalled? and window.documentReadyListenerCalled
 
-context "Check visibility",
+context "Check visibility", ->
 
   should "detect visible elements as visible", ->
     document.getElementById("test-div").innerHTML = """

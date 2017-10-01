@@ -6,6 +6,7 @@ before_install:
   - "npm install util"
   - "npm install mocha"
   - "npm install -g phantomjs@1.9.20"
+  - "npm install mocha-phantomjs"
   - "cake build"
 script: "cake test"
 notifications:

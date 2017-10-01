@@ -52,7 +52,7 @@ activateLinkHintsMode = ->
 #
 createGeneralHintTests = (isFilteredMode) ->
 
-  context "Link hints",
+  context "Link hints", ->
 
     setup ->
       initializeModeState()
@@ -92,7 +92,7 @@ createGeneralHintTests = (isFilteredMode) ->
 createGeneralHintTests false
 createGeneralHintTests true
 
-context "False positives in link-hint",
+context "False positives in link-hint", ->
 
   setup ->
     testContent = '<span class="buttonWrapper">false positive<a>clickable</a></span>' + '<span class="buttonWrapper">clickable</span>'
@@ -112,7 +112,7 @@ context "False positives in link-hint",
     for hintMarker in hintMarkers
       assert.equal "clickable", hintMarker.linkText
 
-context "jsaction matching",
+context "jsaction matching", ->
 
   setup ->
     stubSettings "filterLinkHints", true
@@ -152,7 +152,7 @@ sendKeyboardEvents = (keys) ->
   sendKeyboardEvent key for key in keys.split ""
 
 inputs = []
-context "Test link hints for focusing input elements correctly",
+context "Test link hints for focusing input elements correctly", ->
 
   setup ->
     initializeModeState()
@@ -201,7 +201,7 @@ context "Test link hints for focusing input elements correctly",
       input.removeEventListener "focus", activeListener, false
       input.removeEventListener "click", activeListener, false
 
-context "Test link hints for changing mode",
+context "Test link hints for changing mode", ->
 
   setup ->
     initializeModeState()
@@ -227,7 +227,7 @@ context "Test link hints for changing mode",
     sendKeyboardEvent "Control", "keyup"
     assert.equal "curr-tab", @linkHints.mode.name
 
-context "Alphabetical link hints",
+context "Alphabetical link hints", ->
 
   setup ->
     initializeModeState()
@@ -272,7 +272,7 @@ context "Alphabetical link hints",
           unless h1 == h2
             assert.isFalse 0 == h1.indexOf h2
 
-context "Filtered link hints",
+context "Filtered link hints", ->
   # Note.  In all of these tests, the order of the elements returned by getHintMarkers() may be different from
   # the order they are listed in the test HTML content.  This is because LinkHints.activateMode() sorts the
   # elements.
@@ -282,7 +282,7 @@ context "Filtered link hints",
     stubSettings "linkHintNumbers", "0123456789"
     stub window, "windowIsFocused", -> true
 
-  context "Text hints",
+  context "Text hints", ->
 
     setup ->
       initializeModeState()
@@ -325,7 +325,7 @@ context "Filtered link hints",
       sendKeyboardEvent "a"
       assert.equal "1", hintMarkers[3].hintString
 
-  context "Image hints",
+  context "Image hints", ->
 
     setup ->
       initializeModeState()
@@ -348,7 +348,7 @@ context "Filtered link hints",
       assert.isTrue "N: alt text" in hintMarkers
       assert.isTrue "N" in hintMarkers
 
-  context "Input hints",
+  context "Input hints", ->
 
     setup ->
       initializeModeState()
@@ -375,7 +375,7 @@ context "Filtered link hints",
       assert.isTrue "N: a label" in hintMarkers
       assert.isTrue "N" in hintMarkers
 
-  context "Text hint scoring",
+  context "Text hint scoring", ->
 
     setup ->
       initializeModeState()
@@ -424,7 +424,7 @@ context "Filtered link hints",
       sendKeyboardEvent "Tab", "keydown"
       assert.equal "9", @getActiveHintMarker()
 
-context "Input focus",
+context "Input focus", ->
 
   setup ->
     initializeModeState()
@@ -467,7 +467,7 @@ context "Input focus",
 # i.e. these tests should look something like:
 # assert.equal(findLink(html("<a href=...">))[0].href, "first")
 # These could then move outside of the dom_tests file.
-context "Find prev / next links",
+context "Find prev / next links", ->
 
   setup ->
     initializeModeState()
@@ -527,7 +527,7 @@ createLinks = (n) ->
     link.textContent = "test"
     document.getElementById("test-div").appendChild link
 
-context "Key mapping",
+context "Key mapping", ->
   setup ->
     @normalMode = initializeModeState()
     @handlerCalled = false
@@ -612,7 +612,7 @@ context "Key mapping",
     sendKeyboardEvent "p"
     assert.equal 0, @handlerCalledCount
 
-context "Normal mode",
+context "Normal mode", ->
   setup ->
     initializeModeState()
 
@@ -711,7 +711,7 @@ context "Normal mode",
     sendKeyboardEvent "u"
     assert.equal null, commandCount
 
-context "Insert mode",
+context "Insert mode", ->
   setup ->
     initializeModeState()
     @insertMode = new InsertMode global: true
@@ -727,7 +727,7 @@ context "Insert mode",
     sendKeyboardEvent "m"
     assert.equal 1, commandCount
 
-context "Triggering insert mode",
+context "Triggering insert mode", ->
   setup ->
     initializeModeState()
 
@@ -762,7 +762,7 @@ context "Triggering insert mode",
     document.getElementById("fifth").focus()
     assert.isFalse InsertMode.permanentInstance.isActive()
 
-context "Caret mode",
+context "Caret mode", ->
   setup ->
     document.getElementById("test-div").innerHTML = """
     <p><pre>
@@ -829,7 +829,7 @@ context "Caret mode",
       sendKeyboardEvent key
       assert.equal "a", getSelection()
 
-context "Visual mode",
+context "Visual mode", ->
   setup ->
     document.getElementById("test-div").innerHTML = """
     <p><pre>
@@ -902,7 +902,7 @@ context "Visual mode",
     sendKeyboardEvents "cww"
     assert.equal "M", getSelection()
 
-context "Mode utilities",
+context "Mode utilities", ->
   setup ->
     initializeModeState()
 
@@ -961,7 +961,7 @@ context "Mode utilities",
     element.blur()
     assert.isTrue test.modeIsActive
 
-context "PostFindMode",
+context "PostFindMode", ->
   setup ->
     initializeModeState()
 
@@ -996,7 +996,7 @@ context "PostFindMode",
     sendKeyboardEvent "Escape", "keydown"
     assert.isTrue @postFindMode.modeIsActive
 
-context "WaitForEnter",
+context "WaitForEnter", ->
   setup ->
     initializeModeState()
     @isSuccess = null
@@ -1023,7 +1023,7 @@ context "WaitForEnter",
     assert.isTrue @waitForEnter.modeIsActive
     assert.isFalse @isSuccess?
 
-context "GrabBackFocus",
+context "GrabBackFocus", ->
   setup ->
     testContent = "<input type='text' value='some value' id='input'/>"
     document.getElementById("test-div").innerHTML = testContent

@@ -1,7 +1,7 @@
 vomnibarFrame = null
 Vomnibar.init()
 
-context "Keep selection within bounds",
+context "Keep selection within bounds", ->
 
   setup ->
     @completions = []

@@ -1,4 +1,4 @@
-Tests.outputMethod = (args...) ->
+outputMethod = (args...) ->
   newOutput = args.join "\n"
   # escape html
   newOutput = newOutput.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -11,4 +11,4 @@ Tests.outputMethod = (args...) ->
 unless navigator.userAgent == 'phantom'
   # ensure the extension has time to load before commencing the tests
   document.addEventListener "DOMContentLoaded", ->
-    setTimeout Tests.run, 200
+    setTimeout mocha.run, 200
