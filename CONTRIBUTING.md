@@ -39,7 +39,8 @@ Our tests use [Mocha](https://mochajs.org/) and [PhantomJS](http://phantomjs.org
  1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
  1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
  1. `npm install assertion` to install the [assertion module](https://www.npmjs.com/package/assertion), used in place of the Node.js assert module in DOM tests.
- 1. `npm install mocha-phantomjs` to install the [mocha-phantomjs module](https://www.npmjs.com/package/mocha-phantomjs), which will install Mocha as a dependency.
+ 1. `npm install mocha` to install Mocha.
+ 1. `npm install mocha-phantomjs` to install the [mocha-phantomjs module](https://www.npmjs.com/package/mocha-phantomjs).
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
 
