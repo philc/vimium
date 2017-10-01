@@ -33,12 +33,12 @@ install Vimium from source:
 
 ## Running the tests
 
-Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run the tests:
+Our tests use [Mocha](https://mochajs.org/) and [PhantomJS](http://phantomjs.org/). To run the tests:
 
- 1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. Install [PhantomJS](http://phantomjs.org/download.html).
  1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
  1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
+ 1. `npm install mocha-phantomjs` to install the [mocha-phantomjs module](https://www.npmjs.com/package/mocha-phantomjs), which will install Mocha as a dependency.
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
 
