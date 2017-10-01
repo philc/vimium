@@ -5,6 +5,7 @@ before_install:
   - "npm install path@0.11"
   - "npm install util"
   - "npm install mocha"
+  - "npm install assertion"
   - "npm install -g phantomjs@1.9.20"
   - "npm install mocha-phantomjs"
   - "cake build"
