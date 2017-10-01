@@ -10,8 +10,6 @@ then
 fi
 
 git checkout-index --prefix=$TDIR/ -af
-# because submodules don't get picked up by checkout-index
-cp -r ./tests/shoulda.js/ $TDIR/tests/shoulda.js/
 
 pushd $TDIR > /dev/null
   cake build && cake test
