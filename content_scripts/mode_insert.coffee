@@ -1,6 +1,11 @@
 
 class InsertMode extends Mode
   constructor: (options = {}) ->
+    defaults =
+      name: "insert"
+      indicator: if not options.permanent and not Settings.get "hideHud"  then "Insert mode"
+    super extend defaults, options
+
     # There is one permanently-installed instance of InsertMode.  It tracks focus changes and
     # activates/deactivates itself (by setting @insertModeLock) accordingly.
     @permanent = options.permanent
@@ -28,14 +33,10 @@ class InsertMode extends Mode
       @exit event, event.target
       DomUtils.consumeKeyup event
 
-    defaults =
-      name: "insert"
-      indicator: if not @permanent and not Settings.get "hideHud"  then "Insert mode"
+    @push
       keypress: handleKeyEvent
       keyup: handleKeyEvent
       keydown: handleKeyEvent
-
-    super extend defaults, options
 
     @insertModeLock =
       if options.targetElement and DomUtils.isEditable options.targetElement
