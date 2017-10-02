@@ -21,12 +21,12 @@ class KeyHandlerMode extends Mode
     @keyState = [@keyMapping]
 
   constructor: (options) ->
+    super options
     @setKeyMapping options.keyMapping ? {}
 
-    super extend options,
+    @push
       keydown: @onKeydown.bind this
-
-    @push # We cannot track keyup events if we lose the focus.
+      # We cannot track keyup events if we lose the focus.
       blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
     if options.exitOnEscape
