@@ -20,8 +20,6 @@ Vimium is written in Coffeescript, which compiles to Javascript. To
 install Vimium from source:
 
  1. Install [Coffeescript](http://coffeescript.org/#installation).
-   - Vimium doesn't currently support Coffeescript v2.
-   - You can install the latest Coffeescript v1 release using `npm install --global coffeescript@1`.
  1. Run `cake build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
  1. Navigate to `chrome://extensions`
  1. Toggle into Developer Mode
@@ -37,6 +35,7 @@ install Vimium from source:
 
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run the tests:
 
+ 1. `npm install coffeescript@1` to install Coffeescript v1. We do not yet support coffeescript v2.
  1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. Install [PhantomJS](http://phantomjs.org/download.html).
  1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
