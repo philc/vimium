@@ -118,7 +118,7 @@ runUnitTests = (projectDir=".", testNameFilter) ->
   Tests.run(testNameFilter)
   return Tests.testsFailed
 
-option '', '--filter-tests [string]', 'filter tests by matching string'
+option undefined, '--filter-tests [string]', 'filter tests by matching string'
 task "test", "run all tests", (options) ->
   unitTestsFailed = runUnitTests('.', options['filter-tests'])
 
