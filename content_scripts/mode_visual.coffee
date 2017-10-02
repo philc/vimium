@@ -209,6 +209,13 @@ class VisualMode extends KeyHandlerMode
     "o": -> @movement.reverseSelection()
 
   constructor: (options = {}) ->
+    super extend options,
+      name: options.name ? "visual"
+      indicator: options.indicator ? "Visual mode"
+      singleton: "visual-mode-group" # Visual mode, visual-line mode and caret mode each displace each other.
+      exitOnEscape: true
+      suppressAllKeyboardEvents: true
+
     @movement = new Movement options.alterMethod ? "extend"
     @selection = @movement.selection
 
@@ -230,13 +237,7 @@ class VisualMode extends KeyHandlerMode
       "<c-e>": command: (count) -> Scroller.scrollBy "y", count * Settings.get("scrollStepSize"), 1, false
       "<c-y>": command: (count) -> Scroller.scrollBy "y", -count * Settings.get("scrollStepSize"), 1, false
 
-    super extend options,
-      name: options.name ? "visual"
-      indicator: options.indicator ? "Visual mode"
-      singleton: "visual-mode-group" # Visual mode, visual-line mode and caret mode each displace each other.
-      exitOnEscape: true
-      suppressAllKeyboardEvents: true
-      keyMapping: keyMapping
+    @setKeyMapping keyMapping
     @setCommandHandler @commandHandler.bind this
 
     # If there was a range selection when the user lanuched visual mode, then we retain the selection on exit.
