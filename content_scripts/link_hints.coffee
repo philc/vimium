@@ -862,15 +862,17 @@ LocalHints =
 # Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode
   constructor: (delay, callback) ->
+    super
+      name: "hint/typing-protector"
+      suppressAllKeyboardEvents: true
+
     @timer = Utils.setTimeout delay, => @exit()
 
     resetExitTimer = (event) =>
       clearTimeout @timer
       @timer = Utils.setTimeout delay, => @exit()
 
-    super
-      name: "hint/typing-protector"
-      suppressAllKeyboardEvents: true
+    @push
       keydown: resetExitTimer
       keypress: resetExitTimer
 
