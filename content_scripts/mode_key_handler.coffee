@@ -14,7 +14,6 @@
 class KeyHandlerMode extends Mode
   setKeyMapping: (@keyMapping) -> @reset()
   setPassKeys: (@passKeys) -> @reset()
-  # Only for tests.
   setCommandHandler: (@commandHandler) ->
 
   # Reset the key state, optionally retaining the count provided.
@@ -22,7 +21,6 @@ class KeyHandlerMode extends Mode
     @keyState = [@keyMapping]
 
   constructor: (options) ->
-    @commandHandler = options.commandHandler ? (->)
     @setKeyMapping options.keyMapping ? {}
 
     super extend options,

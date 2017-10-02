@@ -116,9 +116,9 @@ class NormalMode extends KeyHandlerMode
     defaults =
       name: "normal"
       indicator: false # There is normally no mode indicator in normal mode.
-      commandHandler: @commandHandler.bind this
 
     super extend defaults, options
+    @setCommandHandler @commandHandler.bind this
 
     chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
       @setKeyMapping items.normalModeKeyStateMapping

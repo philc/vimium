@@ -237,7 +237,7 @@ class VisualMode extends KeyHandlerMode
       exitOnEscape: true
       suppressAllKeyboardEvents: true
       keyMapping: keyMapping
-      commandHandler: @commandHandler.bind this
+    @setCommandHandler @commandHandler.bind this
 
     # If there was a range selection when the user lanuched visual mode, then we retain the selection on exit.
     @shouldRetainSelectionOnExit = @options.userLaunchedMode and DomUtils.getSelectionType(@selection) == "Range"
