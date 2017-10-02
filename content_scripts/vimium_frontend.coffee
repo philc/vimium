@@ -160,9 +160,14 @@ installModes = ->
 initializeOnEnabledStateKnown = (isEnabledForUrl) ->
   installModes() unless normalMode
   if isEnabledForUrl
-    # We only initialize (and activate) the Vomnibar in the top frame.  Also, we do not initialize the
-    # Vomnibar until we know that Vimium is enabled.  Thereafter, there's no more initialization to do.
-    DomUtils.documentComplete Vomnibar.init.bind Vomnibar if DomUtils.isTopFrame()
+    unless Utils.isFirefox() and document.documentElement.namespaceURI != "http://www.w3.org/1999/xhtml"
+      # We only initialize (and activate) the Vomnibar in the top frame.  Also, we do not initialize the
+      # Vomnibar until we know that Vimium is enabled.  Thereafter, there's no more initialization to do.
+      #
+      # NOTE(mrmr1993): In XML documents on Firefox, injecting HTML into the DOM breaks the rendering, so we
+      # lazy load the Vomnibar. This comes with the expected issues, but is better than breaking all XML
+      # documents.
+      DomUtils.documentComplete Vomnibar.init.bind Vomnibar if DomUtils.isTopFrame()
     initializeOnEnabledStateKnown = ->
 
 #
