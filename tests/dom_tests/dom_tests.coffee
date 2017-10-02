@@ -768,11 +768,10 @@ context "Triggering insert mode", ->
 context "Caret mode", ->
   setup ->
     document.getElementById("test-div").innerHTML = """
-    <p><pre>
-      It is an ancient Mariner,
-      And he stoppeth one of three.
-      By thy long grey beard and glittering eye,
-      Now wherefore stopp'st thou me?
+    <p><pre>It is an ancient Mariner,
+And he stoppeth one of three.
+By thy long grey beard and glittering eye,
+Now wherefore stopp'st thou me?
     </pre></p>
     """
     initializeModeState()
@@ -780,6 +779,7 @@ context "Caret mode", ->
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
+    window.getSelection().collapse()
 
   should "enter caret mode", ->
     assert.isFalse @initialVisualMode.modeIsActive
@@ -835,11 +835,10 @@ context "Caret mode", ->
 context "Visual mode", ->
   setup ->
     document.getElementById("test-div").innerHTML = """
-    <p><pre>
-      It is an ancient Mariner,
-      And he stoppeth one of three.
-      By thy long grey beard and glittering eye,
-      Now wherefore stopp'st thou me?
+    <p><pre>It is an ancient Mariner,
+And he stoppeth one of three.
+By thy long grey beard and glittering eye,
+Now wherefore stopp'st thou me?
     </pre></p>
     """
     initializeModeState()
@@ -851,6 +850,7 @@ context "Visual mode", ->
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
+    window.getSelection().collapse()
 
   should "select word with e", ->
     assert.equal "a", getSelection()
