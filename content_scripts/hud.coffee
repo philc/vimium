@@ -15,7 +15,8 @@ HUD =
 
   init: ->
     @hudUI ?= new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) => this[data.name]? data
-    @tween ?= new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
+    DomUtils.documentReady =>
+      @tween ?= new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
 
   showForDuration: (text, duration) ->
     @show(text)
