@@ -45,17 +45,17 @@ bgLog = (args...) ->
 class GrabBackFocus extends Mode
 
   constructor: ->
+    super
+      name: "grab-back-focus"
+
     exitEventHandler = =>
       @alwaysContinueBubbling =>
         @exit()
         chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "userIsInteractingWithThePage"
 
-    super
-      name: "grab-back-focus"
-      keydown: exitEventHandler
-
     @push
-      _name: "grab-back-focus-mousedown"
+      _name: "grab-back-focus-keydown-mousedown"
+      keydown: exitEventHandler
       mousedown: exitEventHandler
 
     Settings.use "grabBackFocus", (grabBackFocus) =>
