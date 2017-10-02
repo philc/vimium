@@ -60,12 +60,6 @@ class FindMode extends Mode
     hasResults: false
 
   constructor: (options = {}) ->
-    # Save the selection, so findInPlace can restore it.
-    @initialRange = getCurrentRange()
-    FindMode.query = rawQuery: ""
-    if options.returnToViewport
-      @scrollX = window.scrollX
-      @scrollY = window.scrollY
     super extend options,
       name: "find"
       indicator: false
@@ -74,6 +68,13 @@ class FindMode extends Mode
       # This prevents further Vimium commands launching before the find-mode HUD receives the focus.
       # E.g. "/" followed quickly by "i" should not leave us in insert mode.
       suppressAllKeyboardEvents: true
+
+    # Save the selection, so findInPlace can restore it.
+    @initialRange = getCurrentRange()
+    FindMode.query = rawQuery: ""
+    if options.returnToViewport
+      @scrollX = window.scrollX
+      @scrollY = window.scrollY
 
     HUD.showFindMode this
 
