@@ -133,6 +133,7 @@ class ExclusionRulesOption extends Option
 class ExclusionRulesOnPopupOption extends ExclusionRulesOption
   constructor: (@url, args...) ->
     super(args...)
+    @fetch()
 
   addRule: ->
     element = super @generateDefaultPattern()
@@ -151,7 +152,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
     haveMatch = false
     for element in elements
       pattern = @getPattern(element).value.trim()
-      if 0 <= @url.search bgExclusions.RegexpCache.get pattern
+      if 0 <= @url?.search bgExclusions.RegexpCache.get pattern
         haveMatch = true
         @getPassKeys(element).focus()
       else
