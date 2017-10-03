@@ -1,4 +1,5 @@
 webdriver = require "selenium-webdriver"
+fs = require "fs"
 
 chromeOptions = ->
   try
@@ -40,17 +41,33 @@ buildFirefox = ->
       .build()
 
 exports.run = ->
-  console.log "Running Chrome tests..."
-  buildChrome().then runTests
-  , (failure) ->
+  new Promise (resolve) ->
+    # Write to the test_harness_location file.
+    fs.writeFile "tests/browser_tests/test_harness_location", "tests/browser_tests/test_harness.html", {},
+    (err) -> if err?
+      console.log "Error writing to test_harness_location file."
+      throw err
+    else resolve()
+  .then ->
+    console.log "Running Chrome tests..."
+    buildChrome()
+  .then runTests, (failure) ->
     console.log failure if failure?
     console.log "Chrome tests aborted."
   .then ->
     console.log "Running Firefox tests..."
-    buildFirefox().then runTests
-    , (failure) ->
-      console.log failure if failure?
-      console.log "Firefox tests aborted."
+    buildFirefox()
+  .then runTests, (failure) ->
+    console.log failure if failure?
+    console.log "Firefox tests aborted."
+  .then ->
+    new Promise (resolve, reject) ->
+      fs.unlink "tests/browser_tests/test_harness_location", (err) ->
+        if err?
+          console.log "Error deleting test_harness_location file."
+          console.log err
+        resolve()
+
 
 runTests = (driver) ->
   extensionHandle = driver.wait new webdriver.Condition "for extension tab to open", ->
