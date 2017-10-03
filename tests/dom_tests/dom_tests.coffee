@@ -779,7 +779,7 @@ Now wherefore stopp'st thou me?
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
-    window.getSelection().collapse()
+    window.getSelection().removeAllRanges()
 
   should "enter caret mode", ->
     assert.isFalse @initialVisualMode.modeIsActive
@@ -850,7 +850,7 @@ Now wherefore stopp'st thou me?
 
   tearDown ->
     document.getElementById("test-div").innerHTML = ""
-    window.getSelection().collapse()
+    window.getSelection().removeAllRanges()
 
   should "select word with e", ->
     assert.equal "a", getSelection()
