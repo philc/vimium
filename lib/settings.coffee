@@ -11,7 +11,32 @@
 # In all cases except Settings.defaults, values are stored as jsonified strings.
 
 # If the current frame is the Vomnibar or the HUD, then we'll need our Chrome stubs for the tests.
-window.chrome ?= window.top?.chrome
+unless chrome?.storage?
+  window.chrome =
+    runtime:
+      connect: ->
+        onMessage:
+          addListener: ->
+        onDisconnect:
+          addListener: ->
+        postMessage: ->
+      onMessage:
+        addListener: ->
+      sendMessage: (message) -> chromeMessages.unshift message
+      getManifest: -> fakeManifest
+      getURL: (url) -> "../../#{url}"
+    storage:
+      local:
+        get: ->
+        set: ->
+      sync:
+        get: (_, callback) -> callback? {}
+        set: ->
+      onChanged:
+        addListener: ->
+    extension:
+      inIncognitoContext: false
+      getURL: (url) -> chrome.runtime.getURL url
 
 storageArea = if chrome.storage.sync? then "sync" else "local"
 

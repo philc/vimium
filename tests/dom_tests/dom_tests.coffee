@@ -46,6 +46,16 @@ activateLinkHintsMode = ->
   HintCoordinator.getHintDescriptors modeIndex: 0
   HintCoordinator.activateMode hintDescriptors: {}, modeIndex: 0, originatingFrameId: frameId,
 
+
+localHintsOld = LocalHints.getVisibleClickable
+LocalHints.getVisibleClickable = (element) ->
+  # Only consider elements within test-div for link hints.
+    testDiv = document.getElementById("test-div")
+    if Node.DOCUMENT_POSITION_CONTAINED_BY & testDiv.compareDocumentPosition element
+      localHintsOld.apply this, arguments
+    else
+      []
+
 #
 # Generate tests that are common to both default and filtered
 # link hinting modes.

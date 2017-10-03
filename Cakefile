@@ -115,7 +115,7 @@ runUnitTests = (projectDir=".", testNameFilter) ->
   basedir = (path.resolve "./tests/unit_tests/") + "/"
   test_files = fs.readdirSync(basedir).filter((filename) -> filename.indexOf("_test.js") > 0)
   test_files = test_files.map((filename) -> basedir + filename)
-  mocha = new Mocha {ui: "bdd", reporter: "min", useColors: true}
+  mocha = new Mocha {ui: "bdd", reporter: "spec", useColors: true}
   test_files.forEach (file) -> mocha.addFile ((if file[0] == '/' then '' else './') + file)
   return new Promise (resolve) -> mocha.run resolve
 
@@ -126,7 +126,7 @@ task "test", "run all tests", (options) ->
   unitTestsFailed.then (unitTestsFailed) ->
     console.log "Running DOM tests..."
     phantom = spawn "node_modules/mocha-phantomjs/bin/mocha-phantomjs",
-      ["-R", "min",
+      ["-R", "spec",
        "-v", "900x600",
        "tests/dom_tests/dom_tests.html"]
     phantom.on 'exit', (returnCode) ->
