@@ -149,6 +149,9 @@ task "test", "run all tests", (options) ->
     else
       process.exit 0
 
+task "browser-test", "run browser tests", (options) ->
+  runBrowserTests()
+
 task "coverage", "generate coverage report", ->
   {Utils} = require './lib/utils'
   temp = require 'temp'
