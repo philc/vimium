@@ -53,4 +53,21 @@ exports.run = ->
       console.log "Firefox tests aborted."
 
 runTests = (driver) ->
-  driver.quit()
+  extensionHandle = driver.wait new webdriver.Condition "for extension tab to open", ->
+    driver.getAllWindowHandles().then (windowHandles) ->
+      new Promise (resolve, reject) ->
+        promise = windowHandles.reduce (accumulatedPromise, handle) ->
+          accumulatedPromise
+            .then -> driver.switchTo().window handle
+            .then -> driver.getCurrentUrl()
+            .then (url) ->
+              if url.match /^(chrome|moz)-extension:\/\//
+                resolve handle
+                Promise.reject()
+        , Promise.resolve()
+        promise.then (-> resolve false), -> resolve false
+
+  extensionHandle.then ->
+    driver.getCurrentUrl().then console.log
+    driver.quit()
+  .catch -> console.log "Could not find the test harness page."
