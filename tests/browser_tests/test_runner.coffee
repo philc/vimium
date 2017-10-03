@@ -41,15 +41,16 @@ buildFirefox = ->
 
 exports.run = ->
   console.log "Running Chrome tests..."
-  buildChrome().then (chromeDriver) ->
-    chromeDriver.quit()
+  buildChrome().then runTests
   , (failure) ->
     console.log failure if failure?
     console.log "Chrome tests aborted."
   .then ->
     console.log "Running Firefox tests..."
-    buildFirefox().then (firefoxDriver) ->
-      firefoxDriver.quit()
+    buildFirefox().then runTests
     , (failure) ->
       console.log failure if failure?
       console.log "Firefox tests aborted."
+
+runTests = (driver) ->
+  driver.quit()
