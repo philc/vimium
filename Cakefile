@@ -125,6 +125,7 @@ runBrowserTests = ->
   browserTests.run()
 
 option '', '--filter-tests [string]', 'filter tests by matching string'
+option '', '--browser-tests', 'run browser tests in selenium'
 task "test", "run all tests", (options) ->
   unitTestsFailed = runUnitTests('.', options['filter-tests'])
 
@@ -138,7 +139,10 @@ task "test", "run all tests", (options) ->
       phantom.on 'exit', (returnCode) ->
         resolve (returnCode > 0 or unitTestsFailed > 0)
   .then (failed) ->
-    runBrowserTests().then -> failed
+    if options['browser-tests']
+      runBrowserTests().then -> failed
+    else
+      failed
   .then (failed) ->
     if failed
       process.exit 1
