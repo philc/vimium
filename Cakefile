@@ -119,6 +119,11 @@ runUnitTests = (projectDir=".", testNameFilter) ->
   test_files.forEach (file) -> mocha.addFile ((if file[0] == '/' then '' else './') + file)
   return new Promise (resolve) -> mocha.run resolve
 
+runBrowserTests = ->
+  console.log "Running browser tests..."
+  browserTests = require "./tests/browser_tests/test_runner.js"
+  browserTests.run()
+
 option '', '--filter-tests [string]', 'filter tests by matching string'
 task "test", "run all tests", (options) ->
   unitTestsFailed = runUnitTests('.', options['filter-tests'])
@@ -129,11 +134,16 @@ task "test", "run all tests", (options) ->
       ["-R", "spec",
        "-v", "900x600",
        "tests/dom_tests/dom_tests.html"]
-    phantom.on 'exit', (returnCode) ->
-      if returnCode > 0 or unitTestsFailed > 0
-        process.exit 1
-      else
-        process.exit 0
+    new Promise (resolve) ->
+      phantom.on 'exit', (returnCode) ->
+        resolve (returnCode > 0 or unitTestsFailed > 0)
+  .then (failed) ->
+    runBrowserTests().then -> failed
+  .then (failed) ->
+    if failed
+      process.exit 1
+    else
+      process.exit 0
 
 task "coverage", "generate coverage report", ->
   {Utils} = require './lib/utils'
