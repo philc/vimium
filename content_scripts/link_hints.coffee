@@ -239,8 +239,11 @@ class LinkHintsMode
     # NOTE(smblott) As of 1.54, the Ctrl modifier doesn't work for filtered link hints; therefore we only
     # offer the control modifier for alphabet hints.  It is not clear whether we should fix this.  As of
     # 16-03-28, nobody has complained.
-    modifiers = ["Shift"]
-    modifiers.push "Control" unless Settings.get "filterLinkHints"
+    modifiers =
+      if Settings.get "filterLinkHints"
+        []
+      else
+        ["Control", "Shift"]
 
     if event.key in modifiers and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
@@ -288,8 +291,13 @@ class LinkHintsMode
 
     else
       @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
+      keyChar =
+        if Settings.get "filterLinkHints"
+          KeyboardUtils.getKeyChar(event)
+        else
+          KeyboardUtils.getKeyChar(event).toLowerCase()
       unless event.repeat
-        if keyChar = KeyboardUtils.getKeyChar(event).toLowerCase()
+        if keyChar
           keyChar = " " if keyChar == "space"
           if keyChar.length == 1
             @markerMatcher.pushKeyChar keyChar
@@ -473,7 +481,7 @@ class AlphabetHints
   # For alphabet hints, <Space> always rotates the hints, regardless of modifiers.
   shouldRotateHints: -> true
 
-# Use numbers (usually) for hints, and also filter links by their text.
+# Use characters for hints, and also filter links by their text.
 class FilterHints
   constructor: ->
     @linkHintNumbers = Settings.get "linkHintNumbers"
