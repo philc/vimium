@@ -121,8 +121,9 @@ runUnitTests = (projectDir=".", testNameFilter) ->
 
 runBrowserTests = ->
   console.log "Running browser tests..."
-  browserTests = require "./tests/browser_tests/test_runner.js"
-  browserTests.run()
+  mocha = new Mocha {ui: "bdd", reporter: "spec", useColors: true}
+  mocha.addFile "./tests/browser_tests/test_runner.js"
+  return new Promise (resolve) -> mocha.run resolve
 
 option '', '--filter-tests [string]', 'filter tests by matching string'
 option '', '--browser-tests', 'run browser tests in selenium'
