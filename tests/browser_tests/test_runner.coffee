@@ -158,9 +158,6 @@ linkHintTests = (filterLinkHints) ->
 
     test.after -> changeSetting key, value, true for key, value of settingsOld
 
-    it "should open the link hints test page", ->
-      findOpenTab driver, "link hints testbed", (url) -> url.match /\/link_hints.html$/
-
     it "should create hints when activated, discard them when deactivated", ->
       driver.findElement(By.css "body").sendKeys "f"
       driver.findElements By.id "vimiumHintMarkerContainer"
