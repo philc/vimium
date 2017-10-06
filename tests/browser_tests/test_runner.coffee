@@ -88,16 +88,25 @@ it = (testName, testFunction) ->
     @skip() if abortTests()
     testFunction.apply this, arguments
 
+driver = undefined
+testbedHandle = undefined
+harnessHandle = harnessUrl = undefined
+
 runTests = (driverName, driverBuilder) ->
   new Promise (resolve) ->
     test.describe "#{driverName} tests", ->
-      driver = undefined
-      harnessHandle = harnessUrl = undefined
-
       test.before ->
         @timeout 20000
         driverBuilder().then (newDriver) -> driver = newDriver
       test.after -> driver.quit()
+
+      it "should open the testbed", ->
+        abortTests = -> true # Don't run any later tests if the testbed doesn't open.
+        driver.get "file://" + path.resolve "./tests/browser_tests/testbed.html"
+          .then -> driver.getWindowHandle()
+          .then (handle) ->
+            abortTests = -> false
+            testbedHandle = handle
 
       it "should open the test harness page", ->
         abortTests = -> true # Don't run any later tests if the test harness doesn't open.
