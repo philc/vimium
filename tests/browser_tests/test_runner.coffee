@@ -124,12 +124,10 @@ runTests = (driverName, driverBuilder) ->
           findOpenTab driver, "link hints testbed", (url) -> url.match /\/link_hints.html$/
             .then -> abortLinkHintTests = false
 
-        it "should create hints when activated", ->
+        it "should create hints when activated, discard them when deactivated", ->
           driver.findElement(By.css "body").sendKeys "f"
           driver.findElements By.id "vimiumHintMarkerContainer"
             .then (markerContainers) -> assert.equal markerContainers.length, 1
-
-        it "should discard hints when deactivated", ->
           driver.findElement(By.css "body").sendKeys Key.ESCAPE
           driver.findElements By.id "vimiumHintMarkerContainer"
             .then (markerContainers) -> assert.equal markerContainers.length, 0
