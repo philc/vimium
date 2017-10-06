@@ -82,12 +82,13 @@ findOpenTab = (driver, pageDescription, pageCondition) ->
 
 getLinkHints = (driver) -> driver.findElements By.className "vimiumHintMarker"
 
+abortTests = -> false
+it = (testName, testFunction) ->
+  test.it testName, ->
+    @skip() if abortTests()
+    testFunction.apply this, arguments
+
 runTests = (driverName, driverBuilder) ->
-  abortTests = -> false
-  it = (testName, testFunction) ->
-    test.it testName, ->
-      @skip() if abortTests()
-      testFunction.apply this, arguments
   new Promise (resolve) ->
     test.describe "#{driverName} tests", ->
       driver = undefined
