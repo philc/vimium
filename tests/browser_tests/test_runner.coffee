@@ -4,7 +4,7 @@ path = require "path"
 test = require "selenium-webdriver/testing"
 assert = require "assert"
 
-{Builder, By, Condition, Key} = webdriver
+{Builder, By, Condition, Key, until: Until} = webdriver
 
 chromeOptions = ->
   try
@@ -123,6 +123,38 @@ runTests = (driverName, driverBuilder) ->
           driver.findElement(By.css "body").sendKeys Key.ESCAPE
           driver.findElements By.id "vimiumHintMarkerContainer"
             .then (markerContainers) -> assert.equal markerContainers.length, 0
+
+        test.describe "position items correctly", ->
+          assertStartPosition = (element1, element2) ->
+            Promise.all [element1.getLocation(), element2.getLocation()]
+              .then ([el1, el2]) ->
+                assert.equal el1.x, el2.x
+                assert.equal el1.y, el2.y
+
+          test.after -> driver.executeScript -> delete document.body.style.position
+
+          testPosition = (position) ->
+            it "body {position: #{position}}", ->
+              driver.executeScript ((position) -> document.body.style.position = position), position
+
+              driver.findElement(By.css "body").sendKeys "f"
+              links = undefined
+              hints = undefined
+              driver.findElements By.css "a"
+                .then (res) ->
+                  links = res
+                  assert links.length >= 2, "too few links."
+              driver.wait Until.elementLocated By.className "vimiumHintMarker"
+              driver.findElements By.className "vimiumHintMarker"
+                .then (res) ->
+                  hints = res
+                  assert hints.length >= 2, "too few link hints."
+                .then -> assertStartPosition links[0], hints[0]
+                .then -> assertStartPosition links[1], hints[1]
+                .then -> driver.findElement(By.css "body").sendKeys Key.ESCAPE
+
+          testPosition "static"
+          testPosition "relative"
 
         abortTests = oldAbortTests
 
