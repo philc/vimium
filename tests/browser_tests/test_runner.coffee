@@ -118,6 +118,26 @@ runTests = (driverName, driverBuilder) ->
       linkHintTests false
       #linkHintTests true
 
+changeSetting = (key, value) ->
+  driver.switchTo().window harnessHandle
+  driver.executeAsyncScript (key, value, callback) ->
+    chrome.storage.onChanged.addListener (changes, areaName) ->
+      callback changes
+    chrome.runtime.getBackgroundPage (bgWindow) ->
+      value ?= undefined # Selenium converts undefined to null; convert it back.
+      bgWindow.Settings.set key, value
+      if JSON.stringify(oldValue) == JSON.stringify value
+        changes = {}
+        changes[key] = {oldValue: JSON.stringify oldValue, newValue: JSON.stringify value}
+        callback changes
+
+  , key, value
+  .then (changes) ->
+    assert changes[key], "Setting #{key} not updated."
+    if value?
+      assert.equal changes[key].newValue, JSON.stringify(value)
+    changes
+
 linkHintTests = (filterLinkHints) ->
   test.describe "Link hints", ->
     abortLinkHintTests = false
