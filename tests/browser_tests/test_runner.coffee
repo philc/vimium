@@ -139,7 +139,6 @@ runTests = (driverName, driverBuilder) ->
                 assert.equal el1.x, el2.x
                 assert.equal el1.y, el2.y
 
-          test.after -> driver.executeScript -> delete document.body.style.position
 
           testPosition = (position) ->
             it "body {position: #{position}}", ->
@@ -160,6 +159,7 @@ runTests = (driverName, driverBuilder) ->
                 .then -> assertStartPosition links[0], hints[0]
                 .then -> assertStartPosition links[1], hints[1]
                 .then -> driver.findElement(By.css "body").sendKeys Key.ESCAPE
+                .then -> driver.executeScript -> delete document.body.style.position
 
           testPosition "static"
           testPosition "relative"
