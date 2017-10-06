@@ -76,7 +76,7 @@ createGeneralHintTests = (isFilteredMode) ->
       assertStartPosition = (element1, element2) ->
         assert.equal element1.getClientRects()[0].left, element2.getClientRects()[0].left
         assert.equal element1.getClientRects()[0].top, element2.getClientRects()[0].top
-      stub document.body, "style", "static"
+      stub document.body.style, "position", "static"
       linkHints = activateLinkHintsMode()
       hintMarkers = getHintMarkers()
       assertStartPosition document.getElementsByTagName("a")[0], hintMarkers[0]
