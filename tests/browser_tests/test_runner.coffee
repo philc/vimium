@@ -146,6 +146,16 @@ setTestContent = (testContent) ->
 
 linkHintTests = (filterLinkHints) ->
   test.describe "Link hints", ->
+    settingsOld = {}
+    test.before ->
+      for key, value of {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
+        do (key, value) ->
+          changeSetting key, value, true
+          .then (changes) -> settingsOld[key] = changes[key].oldValue
+      setTestContent "<a>test</a>" + "<a>tress</a>"
+
+    test.after -> changeSetting key, value, true for key, value of settingsOld
+
     it "should open the link hints test page", ->
       findOpenTab driver, "link hints testbed", (url) -> url.match /\/link_hints.html$/
 
