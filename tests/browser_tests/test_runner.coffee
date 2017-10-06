@@ -138,6 +138,12 @@ changeSetting = (key, value) ->
       assert.equal changes[key].newValue, JSON.stringify(value)
     changes
 
+setTestContent = (testContent) ->
+  driver.switchTo().window testbedHandle
+  driver.executeScript (testContent) ->
+    document.getElementById("test-div").innerHTML = testContent
+  , testContent
+
 linkHintTests = (filterLinkHints) ->
   test.describe "Link hints", ->
     abortLinkHintTests = false
