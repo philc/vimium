@@ -115,8 +115,10 @@ runTests = (driverName, driverBuilder) ->
             abortTests = -> false
             [harnessHandle, harnessUrl] = results
 
-      linkHintTests false
-      #linkHintTests true
+      test.describe "Link hints: alphabet hints", ->
+        linkHintTests false
+      test.describe "Link hints: filter hints", ->
+        #linkHintTests true
 
 changeSetting = (key, value) ->
   driver.switchTo().window harnessHandle
@@ -145,7 +147,7 @@ setTestContent = (testContent) ->
   , testContent
 
 linkHintTests = (filterLinkHints) ->
-  test.describe "Link hints", ->
+  test.describe "", ->
     settingsOld = {}
     test.before ->
       for key, value of {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
