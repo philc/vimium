@@ -146,13 +146,8 @@ setTestContent = (testContent) ->
 
 linkHintTests = (filterLinkHints) ->
   test.describe "Link hints", ->
-    abortLinkHintTests = false
-    oldAbortTests = abortTests
-    abortTests = -> abortLinkHintTests or oldAbortTests()
     it "should open the link hints test page", ->
-      abortLinkHintTests = true
       findOpenTab driver, "link hints testbed", (url) -> url.match /\/link_hints.html$/
-        .then -> abortLinkHintTests = false
 
     it "should create hints when activated, discard them when deactivated", ->
       driver.findElement(By.css "body").sendKeys "f"
@@ -193,8 +188,6 @@ linkHintTests = (filterLinkHints) ->
 
       testPosition "static"
       testPosition "relative"
-
-    abortTests = oldAbortTests
 
 
 runTests "Chrome", buildChrome
