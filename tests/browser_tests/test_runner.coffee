@@ -194,8 +194,7 @@ linkHintTests = (filterLinkHints) ->
           .then (res) ->
             links = res
             assert links.length >= 2, "too few links."
-        driver.wait Until.elementLocated By.className "vimiumHintMarker"
-        driver.findElements By.className "vimiumHintMarker"
+        driver.wait Until.elementsLocated By.className "vimiumHintMarker"
           .then (res) ->
             hints = res
             assert hints.length >= 2, "too few link hints."
