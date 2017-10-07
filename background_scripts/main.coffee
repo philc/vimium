@@ -20,13 +20,13 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
           func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
 
 # Browser testing: Open a tab with the URL giving in the test_harness_location file, if it exists.
-testHarnessXHR = new XMLHttpRequest()
-testHarnessXHR.open "GET", chrome.runtime.getURL "tests/browser_tests/test_harness_location"
-testHarnessXHR.overrideMimeType? "text/plain"
-testHarnessXHR.addEventListener? "load", ->
-  if testHarnessXHR.readyState == XMLHttpRequest.DONE and testHarnessXHR.status = 200
-    chrome.tabs.create url: chrome.runtime.getURL testHarnessXHR.responseText
-testHarnessXHR.send()
+testsRunningXHR = new XMLHttpRequest()
+testsRunningXHR.open "GET", chrome.runtime.getURL "tests/browser_tests/run_tests"
+testsRunningXHR.overrideMimeType? "text/plain"
+testsRunningXHR.addEventListener? "load", ->
+  if testsRunningXHR.readyState == XMLHttpRequest.DONE and testsRunningXHR.status = 200
+    chrome.tabs.create url: chrome.runtime.getURL "tests/browser_tests/test_harness.html"
+testsRunningXHR.send()
 
 frameIdsForTab = {}
 portsForTab = {}

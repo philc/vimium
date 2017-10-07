@@ -47,19 +47,17 @@ buildFirefox = ->
 
 test.before (done) ->
   # Write to the test_harness_location file.
-  fs.writeFile "tests/browser_tests/test_harness_location",
-    "tests/browser_tests/test_harness.html?test_base_location=file:///#{path.resolve "tests/browser_tests"}",
-    {}, (err) ->
+  fs.writeFile "tests/browser_tests/run_tests", "", {}, (err) ->
       if err?
-        console.log "Error writing to test_harness_location file."
+        console.log "Error writing to run_tests file."
         throw err
       else
         done()
 
 test.after (done) ->
-  fs.unlink "tests/browser_tests/test_harness_location", (err) ->
+  fs.unlink "tests/browser_tests/run_tests", (err) ->
     if err?
-      console.log "Error deleting test_harness_location file."
+      console.log "Error deleting run_tests file."
       console.log err
     done()
 
