@@ -131,7 +131,7 @@ runTests = (driverName, driverBuilder) ->
       test.describe "Link hints: alphabet hints", ->
         linkHintTests false
       test.describe "Link hints: filter hints", ->
-        #linkHintTests true
+        linkHintTests true
 
 changeSetting = (key, value) ->
   driver.switchTo().window harnessHandle
@@ -171,12 +171,12 @@ linkHintTests = (filterLinkHints) ->
     test.after -> clearSetting key for key of settings
 
     it "should create hints when activated, discard them when deactivated", ->
+      markerContainer = undefined
       driver.findElement(By.css "body").sendKeys "f"
-      driver.findElements By.id "vimiumHintMarkerContainer"
-      .then (markerContainers) -> assert.equal markerContainers.length, 1
+      driver.wait Until.elementLocated By.id "vimiumHintMarkerContainer"
+      .then (res) -> markerContainer = res
       .then -> driver.findElement(By.css "body").sendKeys Key.ESCAPE
-      .then -> driver.findElements By.id "vimiumHintMarkerContainer"
-      .then (markerContainers) -> assert.equal markerContainers.length, 0
+      .then -> driver.wait Until.stalenessOf markerContainer
 
     assertStartPosition = (element1, element2) ->
       Promise.all [element1.getLocation(), element2.getLocation()]
@@ -211,4 +211,4 @@ linkHintTests = (filterLinkHints) ->
 
 runTests "Chrome", buildChrome
 # Firefox tests disabled pending a method to open the testbeds.
-#runTests "Firefox", buildFirefox
+runTests "Firefox", buildFirefox
