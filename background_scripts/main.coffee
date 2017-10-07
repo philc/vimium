@@ -25,7 +25,14 @@ testsRunningXHR.open "GET", chrome.runtime.getURL "tests/browser_tests/run_tests
 testsRunningXHR.overrideMimeType? "text/plain"
 testsRunningXHR.addEventListener? "load", ->
   if testsRunningXHR.readyState == XMLHttpRequest.DONE and testsRunningXHR.status = 200
-    chrome.tabs.create url: chrome.runtime.getURL "tests/browser_tests/test_harness.html"
+    triesLeft = 3
+    openUrl = ->
+      chrome.tabs.create url: chrome.runtime.getURL("tests/browser_tests/test_harness.html"), ->
+        if chrome.runtime.lastError and triesLeft > 0
+          # Firefox fails if we try to open a tab too early. Try again a few times.
+          triesLeft--
+          setTimeout openUrl, 50
+    openUrl()
 testsRunningXHR.send()
 
 frameIdsForTab = {}
