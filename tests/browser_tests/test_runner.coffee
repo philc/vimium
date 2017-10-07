@@ -137,30 +137,21 @@ runTests = (driverName, driverBuilder) ->
 changeSetting = (key, value) ->
   driver.switchTo().window harnessHandle
   driver.executeAsyncScript (key, value, callback) ->
-    chrome.storage.onChanged.addListener (changes, areaName) ->
-      callback changes
     chrome.runtime.getBackgroundPage (bgWindow) ->
       value ?= undefined # Selenium converts undefined to null; convert it back.
+      bgWindow.Settings.testCallback = -> chrome.storage.sync.get key, callback
       bgWindow.Settings.set key, value
-      if JSON.stringify(oldValue) == JSON.stringify value
-        changes = {}
-        changes[key] = {oldValue: JSON.stringify oldValue, newValue: JSON.stringify value}
-        callback changes
-
   , key, value
-  .then (changes) ->
-    assert changes[key], "Setting #{key} not updated."
-    if value?
-      assert.equal changes[key].newValue, JSON.stringify(value)
-    changes
-
+  .then (newValues) ->
+    assert.equal newValues[key], JSON.stringify(value)
+    newValues
 
 clearSetting = (key) ->
   driver.switchTo().window harnessHandle
   driver.executeAsyncScript (key, callback) ->
     chrome.runtime.getBackgroundPage (bgWindow) ->
+      bgWindow.Settings.testCallback = callback
       bgWindow.Settings.clear key
-      callback()
   , key
 
 setTestContent = (testContent) ->
@@ -176,7 +167,6 @@ linkHintTests = (filterLinkHints) ->
       for key, value of {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
         do (key, value) ->
           changeSetting key, value, true
-          .then (changes) -> settings[key] = changes[key].oldValue
       setTestContent "<a>test</a>" + "<a>tress</a>"
 
     test.after -> clearSetting key for key of settings
