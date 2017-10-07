@@ -154,6 +154,15 @@ changeSetting = (key, value) ->
       assert.equal changes[key].newValue, JSON.stringify(value)
     changes
 
+
+clearSetting = (key) ->
+  driver.switchTo().window harnessHandle
+  driver.executeAsyncScript (key, callback) ->
+    chrome.runtime.getBackgroundPage (bgWindow) ->
+      bgWindow.Settings.clear key
+      callback()
+  , key
+
 setTestContent = (testContent) ->
   driver.switchTo().window testbedHandle
   driver.executeScript (testContent) ->
@@ -162,15 +171,15 @@ setTestContent = (testContent) ->
 
 linkHintTests = (filterLinkHints) ->
   test.describe "", ->
-    settingsOld = {}
+    settings = {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
     test.before ->
       for key, value of {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
         do (key, value) ->
           changeSetting key, value, true
-          .then (changes) -> settingsOld[key] = changes[key].oldValue
+          .then (changes) -> settings[key] = changes[key].oldValue
       setTestContent "<a>test</a>" + "<a>tress</a>"
 
-    test.after -> changeSetting key, value, true for key, value of settingsOld
+    test.after -> clearSetting key for key of settings
 
     it "should create hints when activated, discard them when deactivated", ->
       driver.findElement(By.css "body").sendKeys "f"
