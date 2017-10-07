@@ -244,5 +244,64 @@ linkHintTests = (filterLinkHints) ->
               else
                 assert.equal clicked, null
 
+    ["click:namespace.actionName", "namespace.actionName"].map (text) ->
+      it "should match jsaction elements with jsaction=#{text}", ->
+        addClickListener()
+        setTestContent '<p id="test-paragraph" jsaction="' + text + '">clickable</p>'
+
+        Promise.all [0].map (i) ->
+          driver.findElement(By.css "body").sendKeys "f"
+          driver.wait Until.elementsLocated By.className "vimiumHintMarker"
+          .then (hints) ->
+            assert hints.length, 1, "there should be 1 hint, not #{hints.length}."
+            assert hints[i], "Can't find link #{i}."
+            hints[i].getText()
+          .then (text) -> driver.findElement(By.css "body").sendKeys text
+          .then -> driver.findElements By.id "vimiumHintMarkerContainer"
+          .then (markerContainers) ->
+            if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
+              driver.findElement(By.css "body").sendKeys Key.ENTER
+
+        .then ->
+          driver.findElement By.id "test-div"
+          .findElements By.css "*"
+          .then (children) ->
+            Promise.all children.map (child) ->
+              Promise.all [child.getText(), child.getAttribute "clicked"]
+              .then ([text, clicked]) ->
+                if text == "clickable"
+                  assert.equal clicked, 1
+                else
+                  assert.equal clicked, null
+
+    ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"].map (text) ->
+      it "should not match inactive jsaction elements with jsaction=#{text}", ->
+        addClickListener()
+        setTestContent '<a>clickable</a><p id="test-paragraph" jsaction="' + text + '">unclickable</p>'
+        Promise.all [0].map (i) ->
+          driver.findElement(By.css "body").sendKeys "f"
+          driver.wait Until.elementsLocated By.className "vimiumHintMarker"
+          .then (hints) ->
+            assert hints.length, 1, "there should be 1 hint, not #{hints.length}."
+            assert hints[i], "Can't find link #{i}."
+            hints[i].getText()
+          .then (text) -> driver.findElement(By.css "body").sendKeys text
+          .then -> driver.findElements By.id "vimiumHintMarkerContainer"
+          .then (markerContainers) ->
+            if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
+              driver.findElement(By.css "body").sendKeys Key.ENTER
+
+        .then ->
+          driver.findElement By.id "test-div"
+          .findElements By.css "*"
+          .then (children) ->
+            Promise.all children.map (child) ->
+              Promise.all [child.getText(), child.getAttribute "clicked"]
+              .then ([text, clicked]) ->
+                if text == "clickable"
+                  assert.equal clicked, 1
+                else
+                  assert.equal clicked, null
+
 runTests "Chrome", buildChrome
 runTests "Firefox", buildFirefox
