@@ -165,6 +165,7 @@ addClickListener = ->
       count = parseInt(event.target.getAttribute "clicked") || 0
       event.target.setAttribute "clicked", count + 1
     , true
+
 linkHintTests = (filterLinkHints) ->
   test.describe "", ->
     settings = {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
@@ -202,11 +203,11 @@ linkHintTests = (filterLinkHints) ->
         driver.findElements By.css "a"
           .then (res) ->
             links = res
-            assert links.length >= 2, "too few links."
+            assert.equal links.length, 2, "there should be 2 links, not #{links.length}"
         driver.wait Until.elementsLocated By.className "vimiumHintMarker"
           .then (res) ->
             hints = res
-            assert hints.length >= 2, "too few link hints."
+            assert.equal hints.length, 2, "there should be 2 hints, not #{hints.length}"
           .then -> assertStartPosition links[0], hints[0]
           .then -> assertStartPosition links[1], hints[1]
           .then -> driver.findElement(By.css "body").sendKeys Key.ESCAPE
@@ -222,6 +223,7 @@ linkHintTests = (filterLinkHints) ->
         driver.findElement(By.css "body").sendKeys "f"
         driver.wait Until.elementsLocated By.className "vimiumHintMarker"
         .then (hints) ->
+          assert.equal hints.length, 2, "There should be 2 hints, not #{hints.length}"
           assert hints[i], "Can't find link #{i}."
           hints[i].getText()
         .then (text) -> driver.findElement(By.css "body").sendKeys text
@@ -243,5 +245,4 @@ linkHintTests = (filterLinkHints) ->
                 assert.equal clicked, null
 
 runTests "Chrome", buildChrome
-# Firefox tests disabled pending a method to open the testbeds.
 runTests "Firefox", buildFirefox
