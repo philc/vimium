@@ -167,6 +167,9 @@ linkHintTests = (filterLinkHints) ->
         changeSetting key, settings[key], true
       .then ->setTestContent "<a>test</a>" + "<a>tress</a>"
 
+    test.afterEach ->
+      driver.executeScript -> window.removeEventListener "click", window.clickListener, true
+
     test.after -> Promise.all Object.keys(settings).map clearSetting
 
     it "should create hints when activated, discard them when deactivated", ->
@@ -236,7 +239,6 @@ linkHintTests = (filterLinkHints) ->
                 assert.equal clicked, 1
               else
                 assert.equal clicked, null
-        driver.executeScript -> window.removeEventListener "click", window.clickListener, true
 
 runTests "Chrome", buildChrome
 # Firefox tests disabled pending a method to open the testbeds.
