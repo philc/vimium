@@ -163,12 +163,11 @@ linkHintTests = (filterLinkHints) ->
   test.describe "", ->
     settings = {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
     test.before ->
-      for key, value of {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
-        do (key, value) ->
-          changeSetting key, value, true
-      setTestContent "<a>test</a>" + "<a>tress</a>"
+      Promise.all Object.keys(settings).map (key) ->
+        changeSetting key, settings[key], true
+      .then ->setTestContent "<a>test</a>" + "<a>tress</a>"
 
-    test.after -> clearSetting key for key of settings
+    test.after -> Promise.all Object.keys(settings).map clearSetting
 
     it "should create hints when activated, discard them when deactivated", ->
       markerContainer = undefined
