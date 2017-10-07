@@ -116,7 +116,6 @@ runTests = (driverName, driverBuilder) ->
               driver.executeScript -> location.reload()
             else
               throw err
-          .then console.log
 
         findChrome()
 
