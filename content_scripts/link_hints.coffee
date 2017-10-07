@@ -236,16 +236,8 @@ class LinkHintsMode
     previousTabCount = @tabCount
     @tabCount = 0
 
-    # NOTE(smblott) As of 1.54, the Ctrl modifier doesn't work for filtered link hints; therefore we only
-    # offer the control modifier for alphabet hints.  It is not clear whether we should fix this.  As of
-    # 16-03-28, nobody has complained.
-    modifiers =
-      if Settings.get "filterLinkHints"
-        []
-      else
-        ["Control", "Shift"]
-
-    if event.key in modifiers and
+    # NOTE(smblott) The modifier behaviour here applies only to alphabet hints.
+    if event.key in ["Control", "Shift"] and not Settings.get("filterLinkHints") and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
         @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
@@ -291,12 +283,12 @@ class LinkHintsMode
 
     else
       @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
-      keyChar =
-        if Settings.get "filterLinkHints"
-          KeyboardUtils.getKeyChar(event)
-        else
-          KeyboardUtils.getKeyChar(event).toLowerCase()
       unless event.repeat
+        keyChar =
+          if Settings.get "filterLinkHints"
+            KeyboardUtils.getKeyChar(event)
+          else
+            KeyboardUtils.getKeyChar(event).toLowerCase()
         if keyChar
           keyChar = " " if keyChar == "space"
           if keyChar.length == 1
@@ -484,7 +476,7 @@ class AlphabetHints
 # Use characters for hints, and also filter links by their text.
 class FilterHints
   constructor: ->
-    @linkHintNumbers = Settings.get "linkHintNumbers"
+    @linkHintNumbers = Settings.get("linkHintNumbers").toUpperCase()
     @hintKeystrokeQueue = []
     @linkTextKeystrokeQueue = []
     @activeHintMarker = null
@@ -534,11 +526,15 @@ class FilterHints
   pushKeyChar: (keyChar) ->
     if 0 <= @linkHintNumbers.indexOf keyChar
       @hintKeystrokeQueue.push keyChar
+    else if keyChar.toLowerCase() != keyChar and @linkHintNumbers.toLowerCase() != @linkHintNumbers.toUpperCase()
+      # The the keyChar is upper case and the link hint "numbers" contain characters (e.g. [a-zA-Z]).  We don't want
+      # some upper-case letters matching hints (above) and some matching text (below), so we ignore such keys.
+      return
     # We only accept <Space> and characters which are not used for splitting (e.g. "a", "b", etc., but not "-").
     else if keyChar == " " or not @splitRegexp.test keyChar
       # Since we might renumber the hints, we should reset the current hintKeyStrokeQueue.
       @hintKeystrokeQueue = []
-      @linkTextKeystrokeQueue.push keyChar
+      @linkTextKeystrokeQueue.push keyChar.toLowerCase()
 
   popKeyChar: ->
     @hintKeystrokeQueue.pop() or @linkTextKeystrokeQueue.pop()
