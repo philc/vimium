@@ -159,6 +159,12 @@ setTestContent = (testContent) ->
     document.getElementById("test-div").innerHTML = testContent
   , testContent
 
+addClickListener = ->
+  driver.executeScript ->
+    window.addEventListener "click", window.clickListener = (event) ->
+      count = parseInt(event.target.getAttribute "clicked") || 0
+      event.target.setAttribute "clicked", count + 1
+    , true
 linkHintTests = (filterLinkHints) ->
   test.describe "", ->
     settings = {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
@@ -211,11 +217,7 @@ linkHintTests = (filterLinkHints) ->
 
     it "should handle false positives", ->
       setTestContent '<span class="buttonWrapper">false positive<a>clickable</a></span>' + '<span class="buttonWrapper">clickable</span>'
-      driver.executeScript ->
-        window.addEventListener "click", window.clickListener = (event) ->
-          count = parseInt(event.target.getAttribute "clicked") || 0
-          event.target.setAttribute "clicked", count + 1
-        , true
+      addClickListener()
       Promise.all [0, 1].map (i) ->
         driver.findElement(By.css "body").sendKeys "f"
         driver.wait Until.elementsLocated By.className "vimiumHintMarker"
