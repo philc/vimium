@@ -184,10 +184,10 @@ linkHintTests = (filterLinkHints) ->
     it "should create hints when activated, discard them when deactivated", ->
       driver.findElement(By.css "body").sendKeys "f"
       driver.findElements By.id "vimiumHintMarkerContainer"
-        .then (markerContainers) -> assert.equal markerContainers.length, 1
-      driver.findElement(By.css "body").sendKeys Key.ESCAPE
-      driver.findElements By.id "vimiumHintMarkerContainer"
-        .then (markerContainers) -> assert.equal markerContainers.length, 0
+      .then (markerContainers) -> assert.equal markerContainers.length, 1
+      .then -> driver.findElement(By.css "body").sendKeys Key.ESCAPE
+      .then -> driver.findElements By.id "vimiumHintMarkerContainer"
+      .then (markerContainers) -> assert.equal markerContainers.length, 0
 
     assertStartPosition = (element1, element2) ->
       Promise.all [element1.getLocation(), element2.getLocation()]
