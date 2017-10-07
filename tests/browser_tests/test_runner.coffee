@@ -98,20 +98,21 @@ runTests = (driverName, driverBuilder) ->
         driverBuilder().then (newDriver) -> driver = newDriver
       test.after -> driver.quit()
 
-      it "should open the testbed", ->
-        abortTests = -> true # Don't run any later tests if the testbed doesn't open.
-        driver.get "file://" + path.resolve "./tests/browser_tests/testbed.html"
-          .then -> driver.getWindowHandle()
-          .then (handle) ->
-            abortTests = -> false
-            testbedHandle = handle
-
       it "should open the test harness page", ->
         abortTests = -> true # Don't run any later tests if the test harness doesn't open.
         findOpenTab driver, "test harness", (url) -> url.match /^(chrome|moz)-extension:\/\//
           .then (results) ->
             abortTests = -> false
             [harnessHandle, harnessUrl] = results
+
+      it "should open the testbed", ->
+        abortTests = -> true # Don't run any later tests if the testbed doesn't open.
+        findOpenTab driver, "start page", (url) -> not url.match /^(chrome|moz)-extension:\/\//
+        driver.get "file://" + path.resolve "./tests/browser_tests/testbed.html"
+          .then -> driver.getWindowHandle()
+          .then (handle) ->
+            abortTests = -> false
+            testbedHandle = handle
 
       test.describe "Link hints: alphabet hints", ->
         linkHintTests false
