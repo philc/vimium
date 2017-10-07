@@ -215,8 +215,7 @@ linkHintTests = (filterLinkHints) ->
         , true
       Promise.all [0, 1].map (i) ->
         driver.findElement(By.css "body").sendKeys "f"
-        driver.wait Until.elementLocated By.className "vimiumHintMarker"
-        driver.findElements By.className "vimiumHintMarker"
+        driver.wait Until.elementsLocated By.className "vimiumHintMarker"
         .then (hints) ->
           assert hints[i], "Can't find link #{i}."
           hints[i].getText()
