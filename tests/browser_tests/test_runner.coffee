@@ -105,6 +105,21 @@ runTests = (driverName, driverBuilder) ->
             abortTests = -> false
             [harnessHandle, harnessUrl] = results
 
+      it "should have the chrome API in the test harness page", ->
+        triesLeft = 3
+        findChrome = ->
+          driver.executeScript -> chrome
+          .catch (err) ->
+            if triesLeft > 0
+              # Firefox doesn't inject the API if we open the tab too early. Try loading again a few times.
+              triesLeft--
+              driver.executeScript -> location.reload()
+            else
+              throw err
+          .then console.log
+
+        findChrome()
+
       it "should open the testbed", ->
         abortTests = -> true # Don't run any later tests if the testbed doesn't open.
         findOpenTab driver, "start page", (url) -> not url.match /^(chrome|moz)-extension:\/\//
