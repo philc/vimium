@@ -213,7 +213,7 @@ linkHintTests = (filterLinkHints) ->
           count = parseInt(event.target.getAttribute "clicked") || 0
           event.target.setAttribute "clicked", count + 1
         , true
-      [0, 1].map (i) ->
+      Promise.all [0, 1].map (i) ->
         driver.findElement(By.css "body").sendKeys "f"
         driver.wait Until.elementLocated By.className "vimiumHintMarker"
         driver.findElements By.className "vimiumHintMarker"
@@ -226,17 +226,18 @@ linkHintTests = (filterLinkHints) ->
           if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
             driver.findElement(By.css "body").sendKeys Key.ENTER
 
-      driver.findElement By.id "test-div"
-      .findElements By.css "*"
-      .then (children) ->
-        Promise.all children.map (child) ->
-          Promise.all [child.getText(), child.getAttribute "clicked"]
-          .then ([text, clicked]) ->
-            if text == "clickable"
-              assert.equal clicked, 1
-            else
-              assert.equal clicked, null
-      driver.executeScript -> window.removeEventListener "click", window.clickListener, true
+      .then ->
+        driver.findElement By.id "test-div"
+        .findElements By.css "*"
+        .then (children) ->
+          Promise.all children.map (child) ->
+            Promise.all [child.getText(), child.getAttribute "clicked"]
+            .then ([text, clicked]) ->
+              if text == "clickable"
+                assert.equal clicked, 1
+              else
+                assert.equal clicked, null
+        driver.executeScript -> window.removeEventListener "click", window.clickListener, true
 
 runTests "Chrome", buildChrome
 # Firefox tests disabled pending a method to open the testbeds.
