@@ -484,12 +484,14 @@ class FilterHints
     # link-hint numbers.
     @splitRegexp = new RegExp "[\\W#{Utils.escapeRegexSpecialCharacters @linkHintNumbers}]+"
 
-  generateHintString: (linkHintNumber) ->
+  generateHintString: (linkHintNumber, hintLength) ->
     base = @linkHintNumbers.length
     hint = []
     while 0 < linkHintNumber
       hint.push @linkHintNumbers[Math.floor linkHintNumber % base]
       linkHintNumber = Math.floor linkHintNumber / base
+    while hint.length < hintLength
+      hint.push @linkHintNumbers[0]
     hint.reverse().join ""
 
   renderMarker: (marker) ->
@@ -555,9 +557,10 @@ class FilterHints
       @linkTextKeystrokeQueue.pop()
       @filterLinkHints hintMarkers
     else
+      hintLength = Math.ceil((Math.log 1 + matchingHintMarkers.length) / (Math.log @linkHintNumbers.length))
       linkHintNumber = 1
       for linkMarker in matchingHintMarkers
-        linkMarker.hintString = @generateHintString linkHintNumber++
+        linkMarker.hintString = @generateHintString linkHintNumber++, hintLength
         @renderMarker linkMarker
         linkMarker
 
