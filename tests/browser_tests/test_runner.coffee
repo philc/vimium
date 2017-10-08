@@ -166,6 +166,35 @@ addClickListener = ->
       event.target.setAttribute "clicked", count + 1
     , true
 
+activateLinkHint = (hintCount, hintIndex) ->
+  actualHintCount = undefined
+  driver.findElement(By.css "body").sendKeys "f"
+  driver.wait Until.elementsLocated By.className "vimiumHintMarker"
+  .then (hints) ->
+    if hintCount?
+      assert hints.length, hintCount, "there should be #{hintCount} hints, not #{hints.length}."
+    actualHintCount = hints.length
+    assert hints[hintIndex], "Can't find link #{hintIndex}."
+    hints[hintIndex].getText()
+  .then (text) -> driver.findElement(By.css "body").sendKeys text
+  .then -> driver.findElements By.id "vimiumHintMarkerContainer"
+  .then (markerContainers) ->
+    if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
+      driver.findElement(By.css "body").sendKeys Key.ENTER
+  .then -> actualHintCount
+
+activateLinkHints = (hintCount, hintStart = 0, hintEnd = hintCount - 1) ->
+  if Number.isNaN hintEnd and not hintCount?
+    activateLinkHint undefined, 0
+    .then (actualHintCount) ->
+      if hintStart + 1 < actualHintCount
+        Promise.all [hintStart + 1 .. actualHintCount - 1].map (i) -> activateLinkHint hintCont, i
+        .then (res) -> res.unshift actualHintCount
+      else
+        [actualHintCount]
+  else
+    Promise.all [hintStart .. hintEnd].map (i) -> activateLinkHint hintCount, i
+
 linkHintTests = (filterLinkHints) ->
   test.describe "", ->
     settings = {filterLinkHints, "linkHintCharacters": "ab", "linkHintNumbers": "12"}
@@ -219,19 +248,7 @@ linkHintTests = (filterLinkHints) ->
     it "should handle false positives", ->
       setTestContent '<span class="buttonWrapper">false positive<a>clickable</a></span>' + '<span class="buttonWrapper">clickable</span>'
       addClickListener()
-      Promise.all [0, 1].map (i) ->
-        driver.findElement(By.css "body").sendKeys "f"
-        driver.wait Until.elementsLocated By.className "vimiumHintMarker"
-        .then (hints) ->
-          assert.equal hints.length, 2, "There should be 2 hints, not #{hints.length}"
-          assert hints[i], "Can't find link #{i}."
-          hints[i].getText()
-        .then (text) -> driver.findElement(By.css "body").sendKeys text
-        .then -> driver.findElements By.id "vimiumHintMarkerContainer"
-        .then (markerContainers) ->
-          if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
-            driver.findElement(By.css "body").sendKeys Key.ENTER
-
+      .then -> activateLinkHints 2
       .then ->
         driver.findElement By.id "test-div"
         .findElements By.css "*"
@@ -248,20 +265,7 @@ linkHintTests = (filterLinkHints) ->
       it "should match jsaction elements with jsaction=#{text}", ->
         addClickListener()
         setTestContent '<p id="test-paragraph" jsaction="' + text + '">clickable</p>'
-
-        Promise.all [0].map (i) ->
-          driver.findElement(By.css "body").sendKeys "f"
-          driver.wait Until.elementsLocated By.className "vimiumHintMarker"
-          .then (hints) ->
-            assert hints.length, 1, "there should be 1 hint, not #{hints.length}."
-            assert hints[i], "Can't find link #{i}."
-            hints[i].getText()
-          .then (text) -> driver.findElement(By.css "body").sendKeys text
-          .then -> driver.findElements By.id "vimiumHintMarkerContainer"
-          .then (markerContainers) ->
-            if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
-              driver.findElement(By.css "body").sendKeys Key.ENTER
-
+        .then -> activateLinkHints 1
         .then ->
           driver.findElement By.id "test-div"
           .findElements By.css "*"
@@ -278,19 +282,7 @@ linkHintTests = (filterLinkHints) ->
       it "should not match inactive jsaction elements with jsaction=#{text}", ->
         addClickListener()
         setTestContent '<a>clickable</a><p id="test-paragraph" jsaction="' + text + '">unclickable</p>'
-        Promise.all [0].map (i) ->
-          driver.findElement(By.css "body").sendKeys "f"
-          driver.wait Until.elementsLocated By.className "vimiumHintMarker"
-          .then (hints) ->
-            assert hints.length, 1, "there should be 1 hint, not #{hints.length}."
-            assert hints[i], "Can't find link #{i}."
-            hints[i].getText()
-          .then (text) -> driver.findElement(By.css "body").sendKeys text
-          .then -> driver.findElements By.id "vimiumHintMarkerContainer"
-          .then (markerContainers) ->
-            if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
-              driver.findElement(By.css "body").sendKeys Key.ENTER
-
+        .then -> activateLinkHints 1
         .then ->
           driver.findElement By.id "test-div"
           .findElements By.css "*"
@@ -327,20 +319,7 @@ linkHintTests = (filterLinkHints) ->
                   event.preventDefault()
                 , true
           , type
-
-          Promise.all [0].map (i) ->
-            driver.findElement(By.css "body").sendKeys "f"
-            driver.wait Until.elementsLocated By.className "vimiumHintMarker"
-            .then (hints) ->
-              assert hints.length, 1, "there should be 1 hint, not #{hints.length}."
-              assert hints[i], "Can't find link #{i}."
-              hints[i].getText()
-            .then (text) -> driver.findElement(By.css "body").sendKeys text
-            .then -> driver.findElements By.id "vimiumHintMarkerContainer"
-            .then (markerContainers) ->
-              if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
-                driver.findElement(By.css "body").sendKeys Key.ENTER
-
+          .then -> activateLinkHints 1
           .then ->
             driver.findElement By.id "test-div"
             .findElements By.css "*"
