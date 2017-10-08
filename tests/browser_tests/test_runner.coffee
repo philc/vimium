@@ -303,5 +303,52 @@ linkHintTests = (filterLinkHints) ->
                 else
                   assert.equal clicked, null
 
+    test.describe "should select input elements correctly", ->
+      inputTypes = ["button", "color", "checkbox", "date", "datetime", "datetime-local", "email", "file",
+      "image", "month", "number", "password", "radio", "range", "reset", "search", "submit", "tel", "text",
+      "time", "url", "week"]
+
+      testSpecs = inputTypes.map (type) -> {type, name: "input type=#{type}", testContent: "<input type='#{type}' />"}
+      testSpecs.push name: "select", testContent: "<select></select>"
+
+      testSpecs.map ({type, name, testContent}) ->
+        it name, ->
+          setTestContent testContent
+          addClickListener()
+          driver.executeScript (type) ->
+            for input in document.getElementById("test-div").children
+              input.addEventListener "focus", (event) ->
+                count = parseInt(event.target.getAttribute "focused") || 0
+                event.target.setAttribute "focused", count + 1
+              , true
+              if type == "file"
+                # We have no way of shutting the dialog that <input type=file> opens, so we avoid opening it.
+                input.addEventListener "click", (event) ->
+                  event.preventDefault()
+                , true
+          , type
+
+          Promise.all [0].map (i) ->
+            driver.findElement(By.css "body").sendKeys "f"
+            driver.wait Until.elementsLocated By.className "vimiumHintMarker"
+            .then (hints) ->
+              assert hints.length, 1, "there should be 1 hint, not #{hints.length}."
+              assert hints[i], "Can't find link #{i}."
+              hints[i].getText()
+            .then (text) -> driver.findElement(By.css "body").sendKeys text
+            .then -> driver.findElements By.id "vimiumHintMarkerContainer"
+            .then (markerContainers) ->
+              if markerContainers.length > 0 # Hints haven't disappeared; need to press enter.
+                driver.findElement(By.css "body").sendKeys Key.ENTER
+
+          .then ->
+            driver.findElement By.id "test-div"
+            .findElements By.css "*"
+            .then (children) ->
+              Promise.all children.map (child) ->
+                Promise.all [child.getAttribute("clicked"), child.getAttribute "focused"]
+                .then ([clicked, focused]) ->
+                  assert clicked || focused
+
 runTests "Chrome", buildChrome
 runTests "Firefox", buildFirefox
