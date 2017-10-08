@@ -119,7 +119,18 @@ runUnitTests = (projectDir=".", testNameFilter) ->
   test_files.forEach (file) -> mocha.addFile ((if file[0] == '/' then '' else './') + file)
   return new Promise (resolve) -> mocha.run resolve
 
-runBrowserTests = ->
+runBrowserTests = (runXVFB = false) ->
+  if runXVFB
+    process.env.DISPLAY = ":99.0"
+    child_process.spawn "/sbin/start-stop-daemon", [
+      "--start",
+       "--quiet",
+       "--pidfile", "/tmp/custom_xvfb_99.pid",
+       "--make-pidfile",
+       "--background",
+       "--exec", "/usr/bin/Xvfb",
+       "--", ":99.0", "-ac", "-screen", "0", "1280x1024x16"
+    ]
   console.log "Running browser tests..."
   mocha = new Mocha {ui: "bdd", reporter: "spec", useColors: true}
   mocha.addFile "./tests/browser_tests/test_runner.js"
@@ -127,6 +138,7 @@ runBrowserTests = ->
 
 option '', '--filter-tests [string]', 'filter tests by matching string'
 option '', '--browser-tests', 'run browser tests in selenium'
+option '', '--xvfb', 'run browser tests in xvfb (headless)'
 task "test", "run all tests", (options) ->
   unitTestsFailed = runUnitTests('.', options['filter-tests'])
 
@@ -151,7 +163,7 @@ task "test", "run all tests", (options) ->
       process.exit 0
 
 task "browser-test", "run browser tests", (options) ->
-  runBrowserTests()
+  runBrowserTests(options['xvfb'])
 
 task "coverage", "generate coverage report", ->
   {Utils} = require './lib/utils'
