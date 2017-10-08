@@ -249,9 +249,22 @@ linkHintTests = (filterLinkHints) ->
       setTestContent '<span class="buttonWrapper">false positive<a>clickable</a></span>' + '<span class="buttonWrapper">clickable</span>'
       addClickListener()
       .then -> activateLinkHints 2
-      .then ->
-        driver.findElement By.id "test-div"
-        .findElements By.css "*"
+      .then -> driver.findElement(By.id "test-div").findElements By.css "*"
+      .then (children) ->
+        Promise.all children.map (child) ->
+          Promise.all [child.getText(), child.getAttribute "clicked"]
+          .then ([text, clicked]) ->
+            if text == "clickable"
+              assert.equal clicked, 1
+            else
+              assert.equal clicked, null
+
+    ["click:namespace.actionName", "namespace.actionName"].map (text) ->
+      it "should match jsaction elements with jsaction=#{text}", ->
+        addClickListener()
+        setTestContent '<p id="test-paragraph" jsaction="' + text + '">clickable</p>'
+        .then -> activateLinkHints 1
+        .then -> driver.findElement(By.id "test-div").findElements By.css "*"
         .then (children) ->
           Promise.all children.map (child) ->
             Promise.all [child.getText(), child.getAttribute "clicked"]
@@ -261,39 +274,20 @@ linkHintTests = (filterLinkHints) ->
               else
                 assert.equal clicked, null
 
-    ["click:namespace.actionName", "namespace.actionName"].map (text) ->
-      it "should match jsaction elements with jsaction=#{text}", ->
-        addClickListener()
-        setTestContent '<p id="test-paragraph" jsaction="' + text + '">clickable</p>'
-        .then -> activateLinkHints 1
-        .then ->
-          driver.findElement By.id "test-div"
-          .findElements By.css "*"
-          .then (children) ->
-            Promise.all children.map (child) ->
-              Promise.all [child.getText(), child.getAttribute "clicked"]
-              .then ([text, clicked]) ->
-                if text == "clickable"
-                  assert.equal clicked, 1
-                else
-                  assert.equal clicked, null
-
     ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"].map (text) ->
       it "should not match inactive jsaction elements with jsaction=#{text}", ->
         addClickListener()
         setTestContent '<a>clickable</a><p id="test-paragraph" jsaction="' + text + '">unclickable</p>'
         .then -> activateLinkHints 1
-        .then ->
-          driver.findElement By.id "test-div"
-          .findElements By.css "*"
-          .then (children) ->
-            Promise.all children.map (child) ->
-              Promise.all [child.getText(), child.getAttribute "clicked"]
-              .then ([text, clicked]) ->
-                if text == "clickable"
-                  assert.equal clicked, 1
-                else
-                  assert.equal clicked, null
+        .then -> driver.findElement(By.id "test-div").findElements By.css "*"
+        .then (children) ->
+          Promise.all children.map (child) ->
+            Promise.all [child.getText(), child.getAttribute "clicked"]
+            .then ([text, clicked]) ->
+              if text == "clickable"
+                assert.equal clicked, 1
+              else
+                assert.equal clicked, null
 
     test.describe "should select input elements correctly", ->
       inputTypes = ["button", "color", "checkbox", "date", "datetime", "datetime-local", "email", "file",
@@ -320,14 +314,12 @@ linkHintTests = (filterLinkHints) ->
                 , true
           , type
           .then -> activateLinkHints 1
-          .then ->
-            driver.findElement By.id "test-div"
-            .findElements By.css "*"
-            .then (children) ->
-              Promise.all children.map (child) ->
-                Promise.all [child.getAttribute("clicked"), child.getAttribute "focused"]
-                .then ([clicked, focused]) ->
-                  assert clicked || focused
+          .then -> driver.findElement(By.id "test-div").findElements By.css "*"
+          .then (children) ->
+            Promise.all children.map (child) ->
+              Promise.all [child.getAttribute("clicked"), child.getAttribute "focused"]
+              .then ([clicked, focused]) ->
+                assert clicked || focused
 
 runTests "Chrome", buildChrome
 runTests "Firefox", buildFirefox
