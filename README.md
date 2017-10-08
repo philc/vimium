@@ -168,6 +168,11 @@ PRs are welcome.
 Release Notes
 -------------
 
+In `master` (not yet released)
+
+- For *filtered hints*, you can now now use alphabetical hint characters
+  instead of digits; use `<Shift>` for hint characters.
+
 1.60 (2017-09-14)
 
 - Features:
