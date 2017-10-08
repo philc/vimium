@@ -307,8 +307,8 @@ linkHintTests = (filterLinkHints) ->
                 count = parseInt(event.target.getAttribute "focused") || 0
                 event.target.setAttribute "focused", count + 1
               , true
-              if type == "file"
-                # We have no way of shutting the dialog that <input type=file> opens, so we avoid opening it.
+              if type in ["color", "file"]
+                # We have no way of shutting the dialogs that these open, so we prevent them from opening.
                 input.addEventListener "click", (event) ->
                   event.preventDefault()
                 , true
@@ -320,6 +320,9 @@ linkHintTests = (filterLinkHints) ->
               Promise.all [child.getAttribute("clicked"), child.getAttribute "focused"]
               .then ([clicked, focused]) ->
                 assert clicked || focused
+          .then -> driver.executeScript ->
+            # We manually blur the inputs before they are removed from the DOM, to work around a FF bug.
+            document.activeElement.blur()
 
 runTests "Chrome", buildChrome
 runTests "Firefox", buildFirefox
