@@ -119,7 +119,7 @@ runUnitTests = (projectDir=".", testNameFilter) ->
   test_files.forEach (file) -> mocha.addFile ((if file[0] == '/' then '' else './') + file)
   return new Promise (resolve) -> mocha.run resolve
 
-runBrowserTests = (runXVFB = false) ->
+runBrowserTests = (runXVFB) ->
   if runXVFB
     process.env.DISPLAY = ":99.0"
     child_process.spawn "/sbin/start-stop-daemon", [
@@ -153,7 +153,7 @@ task "test", "run all tests", (options) ->
         resolve (returnCode > 0 or unitTestsFailed > 0)
   .then (failed) ->
     if options['browser-tests']
-      runBrowserTests().then -> failed
+      runBrowserTests(options['xvfb']).then -> failed
     else
       failed
   .then (failed) ->
