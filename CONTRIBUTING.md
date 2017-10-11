@@ -44,6 +44,15 @@ Our tests use [Mocha](https://mochajs.org/) and [PhantomJS](http://phantomjs.org
  1. `cake build` to compile `*.coffee` to `*.js`
  1. `cake test` to run the tests.
 
+ We also have the option to run (experimental) tests in the browser, using [Selenium](http://www.seleniumhq.org/). To run these tests:
+ 1. Ensure you have [Firefox](https://www.mozilla.org/en-US/firefox/new/), [Chrome](https://www.google.com/chrome/browser/desktop/index.html)/[Chromium](https://www.chromium.org/getting-involved/download-chromium), or both installed.
+ 1. `npm install selenium-webdriver` to install [Selenium's node module](https://www.npmjs.com/package/selenium-webdriver).
+ 1. `npm install chromedriver` to install the Selenium driver for Chrome/Chromium.
+ 1. `npm install geckodriver` to install the Selenium driver for Firefox.
+ 1. `cake build` to compile `*.coffee` to `*.js`
+ 1. **(Linux only)** install [Xvfb](https://www.x.org/releases/X11R7.7/doc/man/man1/Xvfb.1.xhtml) if you want to run the tests headless. Add the flag `--xvfb` to one of the commands below to use this.
+ 1. `cake browser-test` to run the browser tests, or `cake --browser-tests test` to run all tests including browser tests.
+
 ## Code Coverage
 
 You can find out which portions of code need them by looking at our coverage reports. To generate these
