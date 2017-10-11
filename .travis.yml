@@ -4,18 +4,18 @@ addons:
   chrome: stable
   firefox: latest
 before_install:
-  - "npm install -g coffee-script"
-  - "npm install path@0.11"
-  - "npm install util"
-  - "npm install mocha"
-  - "npm install assertion"
-  - "npm install -g phantomjs@1.9.20"
-  - "npm install mocha-phantomjs"
-  - "npm install selenium-webdriver"
-  - "npm install chromedriver"
-  - "npm install geckodriver"
-  - "cake build"
-script: "cake --xvfb --browser-tests test"
+  - npm install -g coffee-script
+  - npm install path@0.11
+  - npm install util
+  - npm install mocha
+  - npm install assertion
+  - npm install -g phantomjs@1.9.20
+  - npm install mocha-phantomjs
+  - npm install selenium-webdriver
+  - npm install chromedriver
+  - npm install geckodriver
+  - cake build
+script: cake --xvfb --browser-tests test
 notifications:
   email: false
 branches:
