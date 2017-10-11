@@ -15,7 +15,7 @@ before_install:
   - "npm install chromedriver"
   - "npm install geckodriver"
   - "cake build"
-script: "cake test"
+script: "cake --xvfb --browser-tests test"
 notifications:
   email: false
 branches:
