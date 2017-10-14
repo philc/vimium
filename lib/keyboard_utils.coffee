@@ -60,9 +60,13 @@ KeyboardUtils =
       keyChar = mapKeyRegistry[keyChar] ? keyChar
       keyChar
 
-  isEscape: (event) ->
-    # <c-[> is mapped to Escape in Vim by default.
-    event.key == "Escape" || @getKeyCharString(event) == "<c-[>"
+  isEscape: do ->
+    useVimLikeEscape = true
+    Utils.monitorChromeStorage "useVimLikeEscape", (value) -> useVimLikeEscape = value
+
+    (event) ->
+      # <c-[> is mapped to Escape in Vim by default.
+      event.key == "Escape" or (useVimLikeEscape and @getKeyCharString(event) == "<c-[>")
 
   isBackspace: (event) ->
     event.key in ["Backspace", "Delete"]

@@ -113,6 +113,9 @@ Commands =
           # We don't need these properties in the content scripts.
           delete currentMapping[key][prop] for prop in ["keySequence", "description"]
     chrome.storage.local.set normalModeKeyStateMapping: keyStateMapping
+    # Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it is by
+    # default).
+    chrome.storage.local.set useVimLikeEscape: "<c-[>" not of keyStateMapping
 
   # Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.
   prepareHelpPageData: ->
