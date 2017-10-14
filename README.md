@@ -172,6 +172,7 @@ In `master` (not yet released)
 
 - For *filtered hints*, you can now now use alphabetical hint characters
   instead of digits; use `<Shift>` for hint characters.
+- You can now map `<c-[>` to a command (in which case it will not be treated as `Escape`).
 
 1.60 (2017-09-14)
 
