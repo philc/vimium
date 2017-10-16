@@ -1,4 +1,4 @@
-Vimium - The Hacker's Browser
+Vimium - The Hacker's best Browser,
 =============================
 
 [![Build Status](https://travis-ci.org/philc/vimium.svg?branch=master)](https://travis-ci.org/philc/vimium)
