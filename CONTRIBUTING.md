@@ -11,8 +11,15 @@ respective issue so others don't duplicate your effort.
 
 Please include the following when reporting an issue:
 
- 1. Chrome and OS Version: `chrome://version`
+### Chrome/Chromium
+
+ 1. Chrome/Chromium and OS Version: `chrome://version`
  1. Vimium Version: `chrome://extensions`
+
+### Firefox
+
+ 1. Firefox and OS Version: `about:`
+ 1. Vimium Version: `about:addons`, then click on `More` below Vimium
 
 ## Installing From Source
 
