@@ -39,7 +39,8 @@ Navigating the current page:
     u       scroll up half a page
     f       open a link in the current tab
     F       open a link in a new tab
-    r       reload
+    r       reload -- browser may reload the page from its cache.
+    R       hard reload -- causes the page to always be reloaded from the server.
     gs      view source
     i       enter insert mode -- all commands will be ignored until you hit Esc to exit
     yy      copy the current url to the clipboard

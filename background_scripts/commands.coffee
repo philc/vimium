@@ -150,6 +150,7 @@ Commands =
       "scrollToLeft",
       "scrollToRight",
       "reload",
+      "hardReload",
       "copyCurrentUrl",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
@@ -249,6 +250,7 @@ defaultKeyMappings =
   "d": "scrollPageDown"
   "u": "scrollPageUp"
   "r": "reload"
+  "R": "hardReload"
   "gs": "toggleViewSource"
 
   "i": "enterInsertMode"
@@ -337,6 +339,7 @@ commandDescriptions =
   scrollFullPageUp: ["Scroll a full page up"]
 
   reload: ["Reload the page", { noRepeat: true }]
+  hardReload: ["Hard reload the page", { noRepeat: true }]
   toggleViewSource: ["View page source", { noRepeat: true }]
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }]
