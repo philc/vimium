@@ -148,7 +148,7 @@ toggleMuteTab = do ->
 #
 selectSpecificTab = (request) ->
   chrome.tabs.get(request.id, (tab) ->
-    chrome.windows.update(tab.windowId, { focused: true })
+    chrome.windows?.update(tab.windowId, { focused: true })
     chrome.tabs.update(request.id, { active: true }))
 
 moveTab = ({count, tab, registryEntry}) ->
@@ -449,7 +449,7 @@ chrome.tabs.onRemoved.addListener (tabId) ->
   delete cache[tabId] for cache in [frameIdsForTab, urlForTab, portsForTab, HintCoordinator.tabState]
   chrome.storage.local.get "findModeRawQueryListIncognito", (items) ->
     if items.findModeRawQueryListIncognito
-      chrome.windows.getAll null, (windows) ->
+      chrome.windows?.getAll null, (windows) ->
         for window in windows
           return if window.incognito
         # There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.

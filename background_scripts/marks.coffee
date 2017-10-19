@@ -82,7 +82,7 @@ Marks =
   # Given a list of tabs candidate tabs, pick one.  Prefer tabs in the current window and tabs with shorter
   # (matching) URLs.
   pickTab: (tabs, callback) ->
-    chrome.windows.getCurrent ({ id }) ->
+    tabPicker = ({ id }) ->
       # Prefer tabs in the current window, if there are any.
       tabsInWindow = tabs.filter (tab) -> tab.windowId == id
       tabs = tabsInWindow if 0 < tabsInWindow.length
@@ -92,6 +92,10 @@ Marks =
       # Prefer shorter URLs.
       tabs.sort (a,b) -> a.url.length - b.url.length
       callback tabs[0]
+    if chrome.windows?
+      chrome.windows.getCurrent tabPicker
+    else
+      tabPicker({id: undefined})
 
 root = exports ? window
 root.Marks = Marks
