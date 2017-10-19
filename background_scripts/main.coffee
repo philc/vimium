@@ -324,7 +324,7 @@ Frames =
     enabledState = Exclusions.isEnabledForUrl request.url
 
     if request.frameIsFocused
-      chrome.browserAction.setIcon tabId: tabId, imageData: do ->
+      chrome.browserAction.setIcon? tabId: tabId, imageData: do ->
         enabledStateIcon =
           if not enabledState.isEnabledForUrl
             DISABLED_ICON
