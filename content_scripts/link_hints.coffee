@@ -660,7 +660,7 @@ LocalHints =
 
     # Check for attributes that make an element clickable regardless of its tagName.
     if (element.hasAttribute("onclick") or
-        element.getAttribute("role")?.toLowerCase() in ["button", "link"] or
+        element.getAttribute("role")?.toLowerCase() in ["button" , "tab" , "link"] or
         element.getAttribute("contentEditable")?.toLowerCase() in ["", "contentEditable", "true"])
       isClickable = true
 
