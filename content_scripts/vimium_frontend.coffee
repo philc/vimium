@@ -346,7 +346,9 @@ extend window,
   scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
 
 extend window,
-  reload: -> window.location.reload()
+  reload: (count, options) ->
+    hard = options?.hard
+    window.location.reload(hard)
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
 
