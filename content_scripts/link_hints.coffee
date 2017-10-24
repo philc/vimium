@@ -322,7 +322,7 @@ class LinkHintsMode
   rotateHints: do ->
     markerOverlapsStack = (marker, stack) ->
       for otherMarker in stack
-        return true if Rect.rectsOverlap marker.markerRect, otherMarker.markerRect
+        return true if Rect.intersects marker.markerRect, otherMarker.markerRect
       false
 
     ->
@@ -608,38 +608,187 @@ spanWrap = (hintString) ->
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>")
   innerHTML.join("")
 
+cachedGet = (getter, cache, args...) ->
+  [key] = args
+  unless cache.has key
+    cache.set key, getter.apply this, args
+  cache.get key
+
+class RenderCache
+  cssStyles: null
+  overflowingDescendents: null
+  cachedViewport: null
+  constructor: ->
+    @cssStyles = new WeakMap()
+    @overflowingDescendents = new WeakMap()
+    @cachedViewport = {left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight}
+
+    # Bind functions for cached getters.
+    @getComputedStyle = cachedGet.bind(this, @getComputedStyle, new WeakMap())
+    @getClientRects = cachedGet.bind(this, @getClientRects, new WeakMap())
+    @getBoundingClientRect = cachedGet.bind(this, @getBoundingClientRect, new WeakMap())
+    @getVisibleClientRect = cachedGet.bind(this, @getVisibleClientRect, new WeakMap())
+    @isInlineZeroHeight = cachedGet.bind(this, @isInlineZeroHeight, new WeakMap())
+    @ariaHiddenOrDisabled = cachedGet.bind(this, @ariaHiddenOrDisabled, new WeakMap())
+    @hasButtonClass = cachedGet.bind(this, @hasButtonClass, new WeakMap())
+    @hasClickableTabIndex = cachedGet.bind(this, @hasClickableTabIndex, new WeakMap())
+    @getImageMap = cachedGet.bind(this, @getImageMap, new WeakMap())
+
+  getCssStyle: (element, property) ->
+    cssStyles = cachedGet (-> {}), @cssStyles, element
+    cssStyles[property] ?= @getComputedStyle(element).getPropertyValue property
+
+  inViewport: (element) ->
+    Rect.intersectsStrict (@getBoundingClientRect element), @cachedViewport
+
+  inElement: (element, containingElement) ->
+    Rect.contains (@getBoundingClientRect element), @getBoundingClientRect containingElement
+
+  setOverflowingDescendents: (element, value) ->
+    @overflowingDescendents.set element, value
+
+  hasOverflowingDescendents: (element) ->
+    @overflowingDescendents.get element
+
+  getComputedStyle: (element) -> window.getComputedStyle element, null
+  getClientRects: (element) -> element.getClientRects()
+  getBoundingClientRect: (element) -> element.getBoundingClientRect()
+
+  getVisibleClientRect: (element, firstPass) ->
+    boundingClientRect = @getBoundingClientRect element
+
+    if boundingClientRect.width == 0 or boundingClientRect.height == 0
+      return @zeroDimensionHasVisibleChildren element, (boundingClientRect.height == 0), firstPass
+
+    hasEmptyRects = false
+    elementIsZeroHeight = false
+
+    # Note: this call will be expensive if we modify the DOM in between calls.
+    clientRects = (Rect.copy clientRect for clientRect in @getClientRects element)
+
+    for clientRect in clientRects
+      if clientRect.width == 0 or clientRect.height == 0
+        hasEmptyRects = true
+        elementIsZeroHeight ||= clientRect.height == 0
+      else
+        clientRect = DomUtils.cropRectToVisible clientRect
+
+        continue if clientRect == null or clientRect.width < 3 or clientRect.height < 3
+
+        # eliminate invisible elements (see test_harnesses/visibility_test.html)
+        continue if @getCssStyle(element, 'visibility') != 'visible'
+
+        return clientRect
+
+    if hasEmptyRects
+      @zeroDimensionHasVisibleChildren element, elementIsZeroHeight, firstPass
+    else
+      null
+
+  # Inline elements with font-size: 0px; will declare a height of zero, even if a child with non-zero
+  # font-size contains text.
+  isInlineZeroHeight: (element) ->
+    (0 == @getCssStyle(element, "display").indexOf "inline") and
+      (@getCssStyle(element, "font-size") == "0px")
+
+  # If the link has zero dimensions, it may be wrapping visible but floated elements. Check for this.
+  zeroDimensionHasVisibleChildren: (element, elementIsZeroHeight, firstPass) ->
+    return null unless firstPass or @hasOverflowingDescendents element
+    for child in element.children
+      # Ignore child elements which are not floated and not absolutely positioned for parent elements with
+      # zero width/height, as long as the case described at isInlineZeroHeight does not apply.
+      # NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within inline children.
+      continue if (@getCssStyle(child, "float") == "none" and
+        not (@getCssStyle(child, "position") in ["absolute", "fixed"]) and
+        not (elementIsZeroHeight and @isInlineZeroHeight(element) and
+          0 == @getCssStyle(child, "display").indexOf "inline"))
+      childClientRect = @getVisibleClientRect child, firstPass
+      continue if childClientRect == null or childClientRect.width < 3 or childClientRect.height < 3
+      return childClientRect
+    null
+
+  ariaHiddenOrDisabled: (element) ->
+    if element.parentElement? and @ariaHiddenOrDisabled element.parentElement
+      true
+    else
+      element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
+      element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"]
+
+  getImageMap: (element) ->
+    if element.tagName.toLowerCase?() == "img"
+      mapName = element.getAttribute "usemap"
+      if mapName
+        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
+        return document.querySelector "map[name=\"#{mapName}\"]"
+    null
+
+  hasButtonClass: (element) ->
+    0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
+
+  hasClickableTabIndex: (element) ->
+    tabIndexValue = element.getAttribute "tabindex"
+    if tabIndexValue == ""
+      true
+    else
+      parseInt(tabIndexValue) >= 0
+
 LocalHints =
   #
   # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
   # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
   # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
   #
-  getVisibleClickable: (element) ->
+  getVisibleClickable: (element, renderCache, clickableProps, firstPass = false) ->
+    visibleElements = @getImageAreaRects element, renderCache
+    clickableProps ?= @isClickable element, renderCache
+
+    unless clickableProps
+      # An element with a class name containing the text "button" might be clickable.  However, real
+      # clickables are often wrapped in elements with such class names.  So, when we find clickables based
+      # only on their class name, we mark them as unreliable.
+      if renderCache.hasButtonClass element
+        possibleFalsePositive = true
+
+      # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
+      # citizens when it improves UX, so take special note of them.
+      else if renderCache.hasClickableTabIndex element
+        secondClassCitizen = true
+      else
+        return visibleElements
+
+    clientRect = renderCache.getVisibleClientRect element, firstPass
+    if clientRect != null
+      visibleElements.push {element, rect: clientRect, secondClassCitizen, possibleFalsePositive,
+      reason: clickableProps?.reason}
+
+    visibleElements
+
+  getImageAreaRects: (element, renderCache) ->
+    # Insert area elements that provide click functionality to an img.
+    imgMap = renderCache.getImageMap element
+    imgClientRects = renderCache.getBoundingClientRect element
+
+    if imgMap and imgClientRects.height > 0
+      areas = imgMap.getElementsByTagName "area"
+      return DomUtils.getClientRectsForAreas imgClientRects, areas
+    []
+
+  #
+  # Determine whether the element is clickable. Returns false when an element is not clickable, or a dict
+  # with properties used by getVisisbleClickable otherwise.
+  #
+  isClickable: (element, renderCache) ->
     # Get the tag name.  However, `element.tagName` can be an element (not a string, see #2305), so we guard
     # against that.
     tagName = element.tagName.toLowerCase?() ? ""
     isClickable = false
     onlyHasTabIndex = false
     possibleFalsePositive = false
-    visibleElements = []
     reason = null
 
-    # Insert area elements that provide click functionality to an img.
-    if tagName == "img"
-      mapName = element.getAttribute "usemap"
-      if mapName
-        imgClientRects = element.getClientRects()
-        mapName = mapName.replace(/^#/, "").replace("\"", "\\\"")
-        map = document.querySelector "map[name=\"#{mapName}\"]"
-        if map and imgClientRects.length > 0
-          areas = map.getElementsByTagName "area"
-          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
-          visibleElements.push areasAndRects...
-
     # Check aria properties to see if the element should be ignored.
-    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
-        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-      return [] # This element should never have a link hint.
+    if renderCache.ariaHiddenOrDisabled element
+      return false # This element should never have a link hint.
 
     # Check for AngularJS listeners on the element.
     @checkForAngularJs ?= do ->
@@ -691,7 +840,7 @@ LocalHints =
         isClickable ||= not element.disabled
       when "label"
         isClickable ||= element.control? and not element.control.disabled and
-                        (@getVisibleClickable element.control).length == 0
+                        (@getVisibleClickable element.control, renderCache, null, true).length == 0
       when "body"
         isClickable ||=
           if element == document.body and not windowIsFocused() and
@@ -711,26 +860,10 @@ LocalHints =
         isClickable = true
         reason = "Open."
 
-    # An element with a class name containing the text "button" might be clickable.  However, real clickables
-    # are often wrapped in elements with such class names.  So, when we find clickables based only on their
-    # class name, we mark them as unreliable.
-    if not isClickable and 0 <= element.getAttribute("class")?.toLowerCase().indexOf "button"
-      possibleFalsePositive = isClickable = true
-
-    # Elements with tabindex are sometimes useful, but usually not. We can treat them as second class
-    # citizens when it improves UX, so take special note of them.
-    tabIndexValue = element.getAttribute("tabindex")
-    tabIndex = if tabIndexValue == "" then 0 else parseInt tabIndexValue
-    unless isClickable or isNaN(tabIndex) or tabIndex < 0
-      isClickable = onlyHasTabIndex = true
-
     if isClickable
-      clientRect = DomUtils.getVisibleClientRect element, true
-      if clientRect != null
-        visibleElements.push {element: element, rect: clientRect, secondClassCitizen: onlyHasTabIndex,
-          possibleFalsePositive, reason}
-
-    visibleElements
+      {isClickable, element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason}
+    else
+      false
 
   #
   # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
@@ -743,7 +876,9 @@ LocalHints =
     # We need documentElement to be ready in order to find links.
     return [] unless document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
+    clickableElements = []
     visibleElements = []
+    renderCache = new RenderCache()
 
     # The order of elements here is important; they should appear in the order they are in the DOM, so that
     # we can work out which element is on top when multiple elements overlap. Detecting elements in this loop
@@ -751,9 +886,23 @@ LocalHints =
     # NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't provide
     # this, so it's necessary to check whether elements are clickable in order, as we do below.
     for element in elements
-      unless requireHref and not element.href
-        visibleElement = @getVisibleClickable element
-        visibleElements.push visibleElement...
+      continue if requireHref and not element.href
+      continue unless renderCache.inViewport element
+      clickableProps = @isClickable element, renderCache
+
+      if clickableProps
+        clickableElements.push {element, clickableProps}
+      else if renderCache.hasButtonClass(element) or renderCache.hasClickableTabIndex element
+        clickableElements.push {element}
+
+      containingElement = element
+      while (containingElement = containingElement.parentElement)?
+        break if renderCache.inElement element, containingElement
+        renderCache.setOverflowingDescendents containingElement, true
+
+    for {element, clickableProps} in clickableElements
+      visibleElement = @getVisibleClickable element, renderCache, clickableProps
+      visibleElements.push visibleElement...
 
     # Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
     visibleElements = visibleElements.reverse()
