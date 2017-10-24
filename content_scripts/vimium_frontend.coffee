@@ -299,19 +299,6 @@ focusThisFrame = (request) ->
   flashFrame() if request.highlight
 
 extend root,
-  passNextKey: (count, options) ->
-    if options.registryEntry.options.normal
-      enterNormalMode count
-    else
-      new PassNextKeyMode count
-
-  enterNormalMode: (count) ->
-    new NormalMode
-      indicator: "Normal mode (pass keys disabled)"
-      exitOnEscape: true
-      singleton: "enterNormalMode"
-      count: count
-
   focusInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null

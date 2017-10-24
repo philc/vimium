@@ -33,6 +33,13 @@ class NormalMode extends KeyHandlerMode
     else
       Utils.invokeCommandString registryEntry.command, count, {registryEntry}
 
+enterNormalMode = (count) ->
+  new NormalMode
+    indicator: "Normal mode (pass keys disabled)"
+    exitOnEscape: true
+    singleton: "enterNormalMode"
+    count: count
+
 NormalModeCommands =
   # Scrolling.
   scrollToBottom: ->
@@ -111,6 +118,12 @@ NormalModeCommands =
   # Misc.
   mainFrame: -> focusThisFrame highlight: true, forceFocusThisFrame: true
   showHelp: (sourceFrameId) -> HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
+
+  passNextKey: (count, options) ->
+    if options.registryEntry.options.normal
+      enterNormalMode count
+    else
+      new PassNextKeyMode count
 
 root = exports ? (window.root ?= {})
 root.NormalMode = NormalMode
