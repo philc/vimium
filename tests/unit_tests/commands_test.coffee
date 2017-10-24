@@ -11,9 +11,10 @@ context "Key mappings",
       assert.equal expectedKeyText, keySequence.join "/"
       assert.equal expectedKeyLength, keySequence.length
 
-  should "lowercase keys correctly", ->
+  should "receive case keys correctly", ->
     @testKeySequence "a", "a", 1
     @testKeySequence "A", "A", 1
+    @testKeySequence "R", "R", 1
     @testKeySequence "ab", "a/b", 2
 
   should "recognise non-alphabetic keys", ->
