@@ -60,6 +60,7 @@
              "content_scripts/mode_key_handler.js",
              "content_scripts/mode_visual.js",
              "content_scripts/hud.js",
+             "content_scripts/mode_normal.js",
              "content_scripts/vimium_frontend.js"
             ],
       "css": ["content_scripts/vimium.css"],
