@@ -219,6 +219,16 @@ class FindMode extends Mode
     document.body.classList.add("vimiumFindMode")
     FindMode.saveQuery()
 
+  @findNext: (backwards) ->
+    Marks.setPreviousPosition()
+    FindMode.query.hasResults = FindMode.execute null, {backwards}
+
+    if FindMode.query.hasResults
+      focusFoundLink()
+      new PostFindMode()
+    else
+      HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
+
   checkReturnToViewPort: ->
     window.scrollTo @scrollX, @scrollY if @options.returnToViewport
 

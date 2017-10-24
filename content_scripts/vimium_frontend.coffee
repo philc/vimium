@@ -438,18 +438,8 @@ selectFoundInputElement = ->
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
 
-findAndFocus = (backwards) ->
-  Marks.setPreviousPosition()
-  FindMode.query.hasResults = FindMode.execute null, {backwards}
-
-  if FindMode.query.hasResults
-    focusFoundLink()
-    new PostFindMode()
-  else
-    HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
-
-performFind = (count) -> findAndFocus false for [0...count] by 1
-performBackwardsFind = (count) -> findAndFocus true for [0...count] by 1
+performFind = (count) -> FindMode.findNext false for [0...count] by 1
+performBackwardsFind = (count) -> FindMode.findNext true for [0...count] by 1
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
