@@ -299,73 +299,7 @@ focusThisFrame = (request) ->
   flashFrame() if request.highlight
 
 extend root,
-  scrollToBottom: ->
-    Marks.setPreviousPosition()
-    Scroller.scrollTo "y", "max"
-  scrollToTop: (count) ->
-    Marks.setPreviousPosition()
-    Scroller.scrollTo "y", (count - 1) * Settings.get("scrollStepSize")
-  scrollToLeft: -> Scroller.scrollTo "x", 0
-  scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: (count) -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize") * count
-  scrollDown: (count) -> Scroller.scrollBy "y", Settings.get("scrollStepSize") * count
-  scrollPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1/2 * count
-  scrollPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1/2 * count
-  scrollFullPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1 * count
-  scrollFullPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1 * count
-  scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count
-  scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
-
-extend root,
-  reload: (count, options) ->
-    hard = options.registryEntry.options.hard ? false
-    window.location.reload(hard)
-  goBack: (count) -> history.go(-count)
-  goForward: (count) -> history.go(count)
-
-  goUp: (count) ->
-    url = window.location.href
-    if (url[url.length - 1] == "/")
-      url = url.substring(0, url.length - 1)
-
-    urlsplit = url.split("/")
-    # make sure we haven't hit the base domain yet
-    if (urlsplit.length > 3)
-      urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count))
-      window.location.href = urlsplit.join('/')
-
-  goToRoot: ->
-    window.location.href = window.location.origin
-
   mainFrame: -> focusThisFrame highlight: true, forceFocusThisFrame: true
-
-  toggleViewSource: ->
-    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
-      if (url.substr(0, 12) == "view-source:")
-        url = url.substr(12, url.length - 12)
-      else
-        url = "view-source:" + url
-      chrome.runtime.sendMessage {handler: "openUrlInNewTab", url}
-
-  copyCurrentUrl: ->
-    # TODO(ilya): When the following bug is fixed, revisit this approach of sending back to the background
-    # page to copy.
-    # http://code.google.com/p/chromium/issues/detail?id=55188
-    chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
-      chrome.runtime.sendMessage { handler: "copyToClipboard", data: url }
-      url = url[0..25] + "...." if 28 < url.length
-      HUD.showForDuration("Yanked #{url}", 2000)
-
-  enterInsertMode: ->
-    # If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
-    # instance to take over.
-    new InsertMode global: true, exitOnFocus: true
-
-  enterVisualMode: ->
-    new VisualMode userLaunchedMode: true
-
-  enterVisualLineMode: ->
-    new VisualLineMode userLaunchedMode: true
 
   passNextKey: (count, options) ->
     if options.registryEntry.options.normal
