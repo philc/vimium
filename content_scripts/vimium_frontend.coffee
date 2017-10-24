@@ -438,9 +438,6 @@ selectFoundInputElement = ->
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
 
-performFind = (count) -> FindMode.findNext false for [0...count] by 1
-performBackwardsFind = (count) -> FindMode.findNext true for [0...count] by 1
-
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
   while (node && node != document.body)
@@ -543,11 +540,6 @@ root.goNext = ->
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-# Enters find mode.  Returns the new find-mode instance.
-enterFindMode = ->
-  Marks.setPreviousPosition()
-  new FindMode()
-
 root.showHelp = (sourceFrameId) ->
   HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
 
@@ -575,8 +567,7 @@ root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
-extend root, {focusFoundLink, selectFoundInputElement, performFind, performBackwardsFind, enterFindMode,
-  focusThisFrame}
+extend root, {focusFoundLink, selectFoundInputElement, focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes}
 extend window, root unless exports?

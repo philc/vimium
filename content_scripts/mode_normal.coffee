@@ -100,6 +100,14 @@ NormalModeCommands =
   enterVisualLineMode: ->
     new VisualLineMode userLaunchedMode: true
 
+  enterFindMode: ->
+    Marks.setPreviousPosition()
+    new FindMode()
+
+  # Find.
+  performFind: (count) -> FindMode.findNext false for [0...count] by 1
+  performBackwardsFind: (count) -> FindMode.findNext true for [0...count] by 1
+
 root = exports ? (window.root ?= {})
 root.NormalMode = NormalMode
 root.NormalModeCommands = NormalModeCommands
