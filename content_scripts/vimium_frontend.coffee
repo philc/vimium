@@ -299,8 +299,6 @@ focusThisFrame = (request) ->
   flashFrame() if request.highlight
 
 extend root,
-  mainFrame: -> focusThisFrame highlight: true, forceFocusThisFrame: true
-
   passNextKey: (count, options) ->
     if options.registryEntry.options.normal
       enterNormalMode count
@@ -539,9 +537,6 @@ root.goNext = ->
   nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
-
-root.showHelp = (sourceFrameId) ->
-  HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
 
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 root.HelpDialog ?=

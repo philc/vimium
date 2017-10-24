@@ -108,6 +108,10 @@ NormalModeCommands =
   performFind: (count) -> FindMode.findNext false for [0...count] by 1
   performBackwardsFind: (count) -> FindMode.findNext true for [0...count] by 1
 
+  # Misc.
+  mainFrame: -> focusThisFrame highlight: true, forceFocusThisFrame: true
+  showHelp: (sourceFrameId) -> HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
+
 root = exports ? (window.root ?= {})
 root.NormalMode = NormalMode
 root.NormalModeCommands = NormalModeCommands
