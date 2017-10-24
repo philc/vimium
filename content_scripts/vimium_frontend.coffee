@@ -349,6 +349,7 @@ extend window,
   reload: -> window.location.reload()
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
+  hardReload: -> window.location.reload(true)
 
   goUp: (count) ->
     url = window.location.href
