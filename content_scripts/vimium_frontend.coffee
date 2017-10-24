@@ -423,25 +423,6 @@ checkIfEnabledForUrl = do ->
 checkEnabledAfterURLChange = forTrusted ->
   checkIfEnabledForUrl() if windowIsFocused()
 
-handleEscapeForFindMode = ->
-  document.body.classList.remove("vimiumFindMode")
-  # removing the class does not re-color existing selections. we recreate the current selection so it reverts
-  # back to the default color.
-  selection = window.getSelection()
-  unless selection.isCollapsed
-    range = window.getSelection().getRangeAt(0)
-    window.getSelection().removeAllRanges()
-    window.getSelection().addRange(range)
-  focusFoundLink() || selectFoundInputElement()
-
-# <esc> sends us into insert mode if possible, but <cr> does not.
-# <esc> corresponds approximately to 'nevermind, I have found it already' while <cr> means 'I want to save
-# this query and do more searches with it'
-handleEnterForFindMode = ->
-  focusFoundLink()
-  document.body.classList.add("vimiumFindMode")
-  FindMode.saveQuery()
-
 focusFoundLink = ->
   if (FindMode.query.hasResults)
     link = getLinkFromSelection()
@@ -604,8 +585,8 @@ root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
-extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, performBackwardsFind,
-  enterFindMode, focusThisFrame}
+extend root, {focusFoundLink, selectFoundInputElement, performFind, performBackwardsFind, enterFindMode,
+  focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes}
 extend window, root unless exports?

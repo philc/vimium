@@ -71,13 +71,13 @@ HUD =
     focusNode?.focus?()
 
     if exitEventIsEnter
-      handleEnterForFindMode()
+      FindMode.handleEnter()
       if FindMode.query.hasResults
         postExit = -> new PostFindMode
     else if exitEventIsEscape
-      # We don't want FindMode to handle the click events that handleEscapeForFindMode can generate, so we
+      # We don't want FindMode to handle the click events that FindMode.handleEscape can generate, so we
       # wait until the mode is closed before running it.
-      postExit = handleEscapeForFindMode
+      postExit = FindMode.handleEscape
 
     @findMode.exit()
     postExit?()

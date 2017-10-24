@@ -79,7 +79,7 @@ class FindMode extends Mode
 
   exit: (event) ->
     super()
-    handleEscapeForFindMode() if event
+    FindMode.handleEscape() if event
 
   restoreSelection: ->
     range = @initialRange
@@ -200,6 +200,24 @@ class FindMode extends Mode
     result
 
   @restoreDefaultSelectionHighlight: forTrusted -> document.body.classList.remove("vimiumFindMode")
+
+  # The user has found what they're looking for and is finished searching. We enter insert mode, if possible.
+  @handleEscape: ->
+    document.body.classList.remove("vimiumFindMode")
+    # Removing the class does not re-color existing selections. we recreate the current selection so it reverts
+    # back to the default color.
+    selection = window.getSelection()
+    unless selection.isCollapsed
+      range = window.getSelection().getRangeAt(0)
+      window.getSelection().removeAllRanges()
+      window.getSelection().addRange(range)
+    focusFoundLink() || selectFoundInputElement()
+
+  # Save the query so the user can do further searches with it.
+  @handleEnter: ->
+    focusFoundLink()
+    document.body.classList.add("vimiumFindMode")
+    FindMode.saveQuery()
 
   checkReturnToViewPort: ->
     window.scrollTo @scrollX, @scrollY if @options.returnToViewport
