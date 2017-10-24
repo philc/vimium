@@ -125,6 +125,63 @@ NormalModeCommands =
     else
       new PassNextKeyMode count
 
+  focusInput: (count) ->
+    # Focus the first input element on the page, and create overlays to highlight all the input elements, with
+    # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
+    # Pressing any other key will remove the overlays and the special tab behavior.
+    resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
+    visibleInputs =
+      for i in [0...resultSet.snapshotLength] by 1
+        element = resultSet.snapshotItem i
+        continue unless DomUtils.getVisibleClientRect element, true
+        { element, rect: Rect.copy element.getBoundingClientRect() }
+
+    if visibleInputs.length == 0
+      HUD.showForDuration("There are no inputs to focus.", 1000)
+      return
+
+    # This is a hack to improve usability on the Vimium options page.  We prime the recently-focused input
+    # to be the key-mappings input.  Arguably, this is the input that the user is most likely to use.
+    recentlyFocusedElement = lastFocusedInput()
+    recentlyFocusedElement ?= document.getElementById "keyMappings" if window.isVimiumOptionsPage
+
+    selectedInputIndex =
+      if count == 1
+        # As the starting index, we pick that of the most recently focused input element (or 0).
+        elements = visibleInputs.map (visibleInput) -> visibleInput.element
+        Math.max 0, elements.indexOf recentlyFocusedElement
+      else
+        Math.min(count, visibleInputs.length) - 1
+
+    hints = for tuple in visibleInputs
+      hint = DomUtils.createElement "div"
+      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
+
+      # minus 1 for the border
+      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
+      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
+      hint.style.width = tuple.rect.width + "px"
+      hint.style.height = tuple.rect.height + "px"
+
+      hint
+
+    new FocusSelector hints, visibleInputs, selectedInputIndex
+
+# The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
+# each content script. Alternatively we could calculate it once in the background page and use a request to
+# fetch it each time.
+# Should we include the HTML5 date pickers here?
+
+# The corresponding XPath for such elements.
+textInputXPath = (->
+  textInputTypes = [ "text", "search", "email", "url", "number", "password", "date", "tel" ]
+  inputElements = ["input[" +
+    "(" + textInputTypes.map((type) -> '@type="' + type + '"').join(" or ") + "or not(@type))" +
+    " and not(@disabled or @readonly)]",
+    "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]
+  DomUtils.makeXPath(inputElements)
+)()
+
 root = exports ? (window.root ?= {})
 root.NormalMode = NormalMode
 root.NormalModeCommands = NormalModeCommands

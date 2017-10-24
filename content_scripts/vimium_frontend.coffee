@@ -22,21 +22,6 @@ windowIsFocused = do ->
     windowHasFocus = false if event.target == window; true
   -> windowHasFocus
 
-# The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
-# each content script. Alternatively we could calculate it once in the background page and use a request to
-# fetch it each time.
-# Should we include the HTML5 date pickers here?
-
-# The corresponding XPath for such elements.
-textInputXPath = (->
-  textInputTypes = [ "text", "search", "email", "url", "number", "password", "date", "tel" ]
-  inputElements = ["input[" +
-    "(" + textInputTypes.map((type) -> '@type="' + type + '"').join(" or ") + "or not(@type))" +
-    " and not(@disabled or @readonly)]",
-    "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]
-  DomUtils.makeXPath(inputElements)
-)()
-
 # This is set by Frame.registerFrameId(). A frameId of 0 indicates that this is the top frame in the tab.
 frameId = null
 
@@ -299,7 +284,7 @@ focusThisFrame = (request) ->
   flashFrame() if request.highlight
 
 extend root,
-  focusInput: do ->
+  lastFocusedInput: do ->
     # Track the most recently focused input element.
     recentlyFocusedElement = null
     window.addEventListener "focus",
@@ -308,85 +293,45 @@ extend root,
         if DomUtils.isEditable event.target
           recentlyFocusedElement = event.target
     , true
+    -> recentlyFocusedElement
 
-    (count) ->
-      mode = InsertMode
-      # Focus the first input element on the page, and create overlays to highlight all the input elements, with
-      # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
-      # Pressing any other key will remove the overlays and the special tab behavior.
-      # The mode argument is the mode to enter once an input is selected.
-      resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
-      visibleInputs =
-        for i in [0...resultSet.snapshotLength] by 1
-          element = resultSet.snapshotItem i
-          continue unless DomUtils.getVisibleClientRect element, true
-          { element, rect: Rect.copy element.getBoundingClientRect() }
-
-      if visibleInputs.length == 0
-        HUD.showForDuration("There are no inputs to focus.", 1000)
-        return
-
-      # This is a hack to improve usability on the Vimium options page.  We prime the recently-focused input
-      # to be the key-mappings input.  Arguably, this is the input that the user is most likely to use.
-      recentlyFocusedElement ?= document.getElementById "keyMappings" if window.isVimiumOptionsPage
-
-      selectedInputIndex =
-        if count == 1
-          # As the starting index, we pick that of the most recently focused input element (or 0).
-          elements = visibleInputs.map (visibleInput) -> visibleInput.element
-          Math.max 0, elements.indexOf recentlyFocusedElement
-        else
-          Math.min(count, visibleInputs.length) - 1
-
-      hints = for tuple in visibleInputs
-        hint = DomUtils.createElement "div"
-        hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
-
-        # minus 1 for the border
-        hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px"
-        hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px"
-        hint.style.width = tuple.rect.width + "px"
-        hint.style.height = tuple.rect.height + "px"
-
-        hint
-
-      new class FocusSelector extends Mode
-        constructor: ->
-          super
-            name: "focus-selector"
-            exitOnClick: true
-            keydown: (event) =>
-              if event.key == "Tab"
-                hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
-                selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
-                selectedInputIndex %= hints.length
-                hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-                DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
-                @suppressEvent
-              else unless event.key == "Shift"
-                @exit()
-                # Give the new mode the opportunity to handle the event.
-                @restartBubbling
-
-          @hintContainingDiv = DomUtils.addElementList hints,
-            id: "vimiumInputMarkerContainer"
-            className: "vimiumReset"
-
+class FocusSelector extends Mode
+  constructor: (hints, visibleInputs, selectedInputIndex) ->
+    super
+      name: "focus-selector"
+      exitOnClick: true
+      keydown: (event) =>
+        if event.key == "Tab"
+          hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+          selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+          selectedInputIndex %= hints.length
+          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
           DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
-          if visibleInputs.length == 1
-            @exit()
-            return
-          else
-            hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+          @suppressEvent
+        else unless event.key == "Shift"
+          @exit()
+          # Give the new mode the opportunity to handle the event.
+          @restartBubbling
 
-        exit: ->
-          super()
-          DomUtils.removeElement @hintContainingDiv
-          if mode and document.activeElement and DomUtils.isEditable document.activeElement
-            new mode
-              singleton: "post-find-mode/focus-input"
-              targetElement: document.activeElement
-              indicator: false
+    @hintContainingDiv = DomUtils.addElementList hints,
+      id: "vimiumInputMarkerContainer"
+      className: "vimiumReset"
+
+    DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
+    if visibleInputs.length == 1
+      @exit()
+      return
+    else
+      hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+
+  exit: ->
+    super()
+    DomUtils.removeElement @hintContainingDiv
+    if document.activeElement and DomUtils.isEditable document.activeElement
+      new InsertMode
+        singleton: "post-find-mode/focus-input"
+        targetElement: document.activeElement
+        indicator: false
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL and set
@@ -549,7 +494,7 @@ root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
-extend root, {focusFoundLink, selectFoundInputElement, focusThisFrame}
+extend root, {focusFoundLink, selectFoundInputElement, focusThisFrame, FocusSelector}
 # These are exported only for the tests.
 extend root, {installModes}
 extend window, root unless exports?

@@ -4,6 +4,7 @@ extend global, require "../../background_scripts/bg_utils.js"
 global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
 global.KeyHandlerMode = {}
+global.DomUtils = {makeXPath: ->}
 {NormalModeCommands} = require "../../content_scripts/mode_normal.js"
 
 context "Key mappings",
