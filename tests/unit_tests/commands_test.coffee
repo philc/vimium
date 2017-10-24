@@ -3,6 +3,8 @@ extend global, require "./test_chrome_stubs.js"
 extend global, require "../../background_scripts/bg_utils.js"
 global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
+global.KeyHandlerMode = {}
+{NormalModeCommands} = require "../../content_scripts/mode_normal.js"
 
 context "Key mappings",
   setup ->
@@ -114,6 +116,14 @@ context "Parse commands",
     assert.equal "a", BgUtils.parseLines("  a  \n  b")[0]
     assert.equal "b", BgUtils.parseLines("  a  \n  b")[1]
 
-# TODO (smblott) More tests:
-# - Ensure each background command has an implmentation in BackgroundCommands
-# - Ensure each foreground command has an implmentation in vimium_frontent.coffee
+context "Commands implemented",
+  (for own command, options of Commands.availableCommands
+    do (command, options) ->
+      if options.background
+        should "#{command} (background command)", ->
+          # TODO: Import background_scripts/main.js and expose BackgroundCommands from there.
+          # assert.isTrue BackgroundCommands[command]
+      else
+        should "#{command} (foreground command)", ->
+          assert.isTrue NormalModeCommands[command]
+  )...
