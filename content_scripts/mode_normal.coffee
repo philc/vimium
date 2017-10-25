@@ -167,6 +167,31 @@ NormalModeCommands =
 
     new FocusSelector hints, visibleInputs, selectedInputIndex
 
+if LinkHints?
+  extend NormalModeCommands,
+    "LinkHints.activateMode": LinkHints.activateMode
+    "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab
+    "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab
+    "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue
+    "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito
+    "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink
+    "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl
+
+if Vomnibar?
+  extend NormalModeCommands,
+    "Vomnibar.activate": Vomnibar.activate
+    "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab
+    "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection
+    "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks
+    "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab
+    "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl
+    "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab
+
+if Marks?
+  extend NormalModeCommands,
+    "Marks.activateCreateMode": Marks.activateCreateMode
+    "Marks.activateGotoMode": Marks.activateGotoMode
+
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
 # fetch it each time.

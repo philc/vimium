@@ -3,8 +3,14 @@ extend global, require "./test_chrome_stubs.js"
 extend global, require "../../background_scripts/bg_utils.js"
 global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 {Commands} = require "../../background_scripts/commands.js"
-global.KeyHandlerMode = {}
+
+# Include mode_normal to check that all commands have been implemented.
+global.KeyHandlerMode = global.Mode = {}
 global.DomUtils = {makeXPath: ->}
+global.KeyboardUtils = {platform: ""}
+extend global, require "../../content_scripts/link_hints.js"
+extend global, require "../../content_scripts/marks.js"
+extend global, require "../../content_scripts/vomnibar.js"
 {NormalModeCommands} = require "../../content_scripts/mode_normal.js"
 
 context "Key mappings",
