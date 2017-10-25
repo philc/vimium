@@ -460,16 +460,6 @@ findAndFollowRel = (value) ->
         followLink(element)
         return true
 
-root.goPrevious = ->
-  previousPatterns = Settings.get("previousPatterns") || ""
-  previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
-  findAndFollowRel("prev") || findAndFollowLink(previousStrings)
-
-root.goNext = ->
-  nextPatterns = Settings.get("nextPatterns") || ""
-  nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
-  findAndFollowRel("next") || findAndFollowLink(nextStrings)
-
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 root.HelpDialog ?=
   helpUI: null
@@ -494,7 +484,8 @@ root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
-extend root, {focusFoundLink, selectFoundInputElement, focusThisFrame, FocusSelector}
+extend root, {focusFoundLink, selectFoundInputElement, focusThisFrame, FocusSelector,
+  findAndFollowRel, findAndFollowLink}
 # These are exported only for the tests.
 extend root, {installModes}
 extend window, root unless exports?

@@ -125,6 +125,16 @@ NormalModeCommands =
     else
       new PassNextKeyMode count
 
+  goPrevious: ->
+    previousPatterns = Settings.get("previousPatterns") || ""
+    previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
+    findAndFollowRel("prev") || findAndFollowLink(previousStrings)
+
+  goNext: ->
+    nextPatterns = Settings.get("nextPatterns") || ""
+    nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
+    findAndFollowRel("next") || findAndFollowLink(nextStrings)
+
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
