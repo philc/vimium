@@ -301,5 +301,6 @@ Scroller =
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.Scroller = Scroller
+extend window, root unless exports?

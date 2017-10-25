@@ -93,5 +93,6 @@ class KeyHandlerMode extends Mode
       @exit() if @options.count? and --@options.count <= 0
     @suppressEvent
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.KeyHandlerMode = KeyHandlerMode
+extend window, root unless exports?

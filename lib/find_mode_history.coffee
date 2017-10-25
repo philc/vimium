@@ -46,5 +46,6 @@ FindModeHistory =
   refreshRawQueryList: (query, rawQueryList) ->
     ([ query ].concat rawQueryList.filter (q) => q != query)[0..@max]
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.FindModeHistory = FindModeHistory
+extend window, root unless exports?

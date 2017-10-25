@@ -380,6 +380,7 @@ class CaretMode extends VisualMode
           return true
     false
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.VisualMode = VisualMode
 root.VisualLineMode = VisualLineMode
+extend window, root unless exports?

@@ -127,5 +127,6 @@ class Tween
       }
     """
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.HUD = HUD
+extend window, root unless exports?

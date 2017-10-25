@@ -209,5 +209,6 @@ class SuppressAllKeyboardEvents extends Mode
       suppressAllKeyboardEvents: true
     super extend defaults, options
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 extend root, {Mode, SuppressAllKeyboardEvents}
+extend window, root unless exports?

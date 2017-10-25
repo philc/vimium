@@ -1,4 +1,4 @@
-root = exports ? window
+root = exports ? (window.root ?= {})
 
 class HandlerStack
   constructor: ->
@@ -120,3 +120,4 @@ class HandlerStack
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()
+extend window, root unless exports?

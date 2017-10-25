@@ -215,6 +215,7 @@ getCurrentRange = ->
     selection.collapseToStart() if selection.type == "Range"
     selection.getRangeAt 0
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.PostFindMode = PostFindMode
 root.FindMode = FindMode
+extend window, root unless exports?
