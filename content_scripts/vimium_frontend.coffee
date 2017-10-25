@@ -419,7 +419,10 @@ extend root,
     # Track the most recently focused input element.
     recentlyFocusedElement = null
     window.addEventListener "focus",
-      forTrusted (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+      forTrusted (event) ->
+        DomUtils = window.DomUtils ? root.DomUtils # Workaround FF bug 1408996.
+        if DomUtils.isEditable event.target
+          recentlyFocusedElement = event.target
     , true
 
     (count) ->
