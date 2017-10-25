@@ -6,7 +6,7 @@ root = exports ? (window.root ?= {})
 # On Firefox, sometimes the variables assigned to window are lost (bug 1408996), so we reinstall them.
 # NOTE(mrmr1993): This bug leads to catastrophic failure (ie. nothing works and errors abound).
 DomUtils.documentReady ->
-  (extend ? root.extend) window, root
+  root.extend window, root unless extend?
 
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
