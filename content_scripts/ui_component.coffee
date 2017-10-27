@@ -96,5 +96,6 @@ class UIComponent
         @options = null
         @postMessage "hidden" # Inform the UI component that it is hidden.
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.UIComponent = UIComponent
+extend window, root unless exports?

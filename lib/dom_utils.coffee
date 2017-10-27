@@ -416,5 +416,6 @@ DomUtils =
       style.textContent = Settings.get "userDefinedLinkHintCss"
       document.head.appendChild style
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.DomUtils = DomUtils
+extend window, root unless exports?

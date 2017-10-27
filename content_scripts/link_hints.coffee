@@ -897,8 +897,9 @@ class WaitForEnter extends Mode
           @exit()
           callback false # false -> isSuccess.
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.LinkHints = LinkHints
 root.HintCoordinator = HintCoordinator
 # For tests:
 extend root, {LinkHintsMode, LocalHints, AlphabetHints, WaitForEnter}
+extend window, root unless exports?

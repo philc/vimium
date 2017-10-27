@@ -101,5 +101,6 @@ KeyboardUtils =
 
 KeyboardUtils.init()
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.KeyboardUtils = KeyboardUtils
+extend window, root unless exports?

@@ -129,6 +129,7 @@ class PassNextKeyMode extends Mode
               @exit()
         @passEventToPage
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.InsertMode = InsertMode
 root.PassNextKeyMode = PassNextKeyMode
+extend window, root unless exports?

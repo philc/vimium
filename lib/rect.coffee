@@ -91,5 +91,6 @@ Rect =
     (rect1, rect2) ->
       halfOverlapChecker(rect1, rect2) or halfOverlapChecker rect2, rect1
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.Rect = Rect
+extend window, root unless exports?

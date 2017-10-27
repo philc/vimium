@@ -335,8 +335,11 @@ class JobRunner
   onReady: (callback) ->
     @fetcher.use callback
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.Utils = Utils
 root.SimpleCache = SimpleCache
 root.AsyncDataFetcher = AsyncDataFetcher
 root.JobRunner = JobRunner
+unless exports?
+  root.extend = extend
+  extend window, root

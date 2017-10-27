@@ -218,5 +218,6 @@ if Utils.isBackgroundPage()
     # be removed after 1.58 has been out for sufficiently long.
     Settings.nuke "copyNonDefaultsToChromeStorage-20150717"
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.Settings = Settings
+extend window, root unless exports?

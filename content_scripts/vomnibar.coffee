@@ -58,5 +58,6 @@ Vomnibar =
     HelpDialog.abort()
     @vomnibarUI.activate extend options, { name: "activate", sourceFrameId, focus: true }
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.Vomnibar = Vomnibar
+extend window, root unless exports?

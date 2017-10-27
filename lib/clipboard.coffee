@@ -25,5 +25,6 @@ Clipboard =
     value
 
 
-root = exports ? window
+root = exports ? (window.root ?= {})
 root.Clipboard = Clipboard
+extend window, root unless exports?

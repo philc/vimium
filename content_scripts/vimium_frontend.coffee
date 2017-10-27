@@ -2,6 +2,12 @@
 # This content script must be run prior to domReady so that we perform some operations very early.
 #
 
+root = exports ? (window.root ?= {})
+# On Firefox, sometimes the variables assigned to window are lost (bug 1408996), so we reinstall them.
+# NOTE(mrmr1993): This bug leads to catastrophic failure (ie. nothing works and errors abound).
+DomUtils.documentReady ->
+  root.extend window, root unless extend?
+
 isEnabledForUrl = true
 isIncognitoMode = chrome.extension.inIncognitoContext
 normalMode = null
@@ -245,7 +251,7 @@ Frame =
   postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
   linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
   registerFrameId: ({chromeFrameId}) ->
-    frameId = window.frameId = chromeFrameId
+    frameId = root.frameId = window.frameId = chromeFrameId
     # We register a frame immediately only if it is focused or its window isn't tiny.  We register tiny
     # frames later, when necessary.  This affects focusFrame() and link hints.
     if windowIsFocused() or not DomUtils.windowIsTooSmall()
@@ -327,7 +333,7 @@ focusThisFrame = (request) ->
   document.activeElement.blur() if document.activeElement.tagName.toLowerCase() == "iframe"
   flashFrame() if request.highlight
 
-extend window,
+extend root,
   scrollToBottom: ->
     Marks.setPreviousPosition()
     Scroller.scrollTo "y", "max"
@@ -345,7 +351,7 @@ extend window,
   scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count
   scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
 
-extend window,
+extend root,
   reload: (count, options) ->
     hard = options?.hard
     window.location.reload(hard)
@@ -413,7 +419,10 @@ extend window,
     # Track the most recently focused input element.
     recentlyFocusedElement = null
     window.addEventListener "focus",
-      forTrusted (event) -> recentlyFocusedElement = event.target if DomUtils.isEditable event.target
+      forTrusted (event) ->
+        DomUtils = window.DomUtils ? root.DomUtils # Workaround FF bug 1408996.
+        if DomUtils.isEditable event.target
+          recentlyFocusedElement = event.target
     , true
 
     (count) ->
@@ -654,12 +663,12 @@ findAndFollowRel = (value) ->
         followLink(element)
         return true
 
-window.goPrevious = ->
+root.goPrevious = ->
   previousPatterns = Settings.get("previousPatterns") || ""
   previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
-window.goNext = ->
+root.goNext = ->
   nextPatterns = Settings.get("nextPatterns") || ""
   nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
   findAndFollowRel("next") || findAndFollowLink(nextStrings)
@@ -669,11 +678,11 @@ enterFindMode = ->
   Marks.setPreviousPosition()
   new FindMode()
 
-window.showHelp = (sourceFrameId) ->
+root.showHelp = (sourceFrameId) ->
   HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
 
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
-window.HelpDialog ?=
+root.HelpDialog ?=
   helpUI: null
   isShowing: -> @helpUI?.showing
   abort: -> @helpUI.hide false if @isShowing()
@@ -690,7 +699,6 @@ window.HelpDialog ?=
 initializePreDomReady()
 DomUtils.documentReady initializeOnDomReady
 
-root = exports ? window
 root.handlerStack = handlerStack
 root.frameId = frameId
 root.Frame = Frame
@@ -701,3 +709,4 @@ extend root, {handleEscapeForFindMode, handleEnterForFindMode, performFind, perf
   enterFindMode, focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes}
+extend window, root unless exports?
