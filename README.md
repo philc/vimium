@@ -175,6 +175,8 @@ Release Notes
 - With `map R reload hard`, the reload command now asks Chrome to bypass its cache.
 - You can now map `<c-[>` to a command (in which case it will not be treated as `Escape`).
 - Various bug fixes, particularly for Firefox.
+- Minor versions:
+    - 1.61.1: Fix `map R reload hard`.
 
 1.60 (2017-09-14)
 
