@@ -353,7 +353,7 @@ extend root,
 
 extend root,
   reload: (count, options) ->
-    hard = options?.hard
+    hard = options.registryEntry.options.hard ? false
     window.location.reload(hard)
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
