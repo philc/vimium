@@ -170,7 +170,7 @@ Release Notes
 
 1.61 (2017-10-27)
 
-- For *filtered hints*, you can now now use alphabetical hint characters
+- For *filtered hints*, you can now use alphabetical hint characters
   instead of digits; use `<Shift>` for hint characters.
 - With `map R reload hard`, the reload command now asks Chrome to bypass its cache.
 - You can now map `<c-[>` to a command (in which case it will not be treated as `Escape`).
