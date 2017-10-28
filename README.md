@@ -43,6 +43,7 @@ Navigating the current page:
     gs      view source
     i       enter insert mode -- all commands will be ignored until you hit Esc to exit
     yy      copy the current url to the clipboard
+    yY      copy the decoded current url to the clipboard
     yf      copy a link url to the clipboard
     gf      cycle forward to the next frame
     gF      focus the main/top frame
