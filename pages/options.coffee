@@ -333,15 +333,14 @@ DomUtils?.documentReady ->
     backup = {}
     for option in Option.all
       backup[option.field] = option.readValueFromElement()
-    blob = new Blob [ JSON.stringify backup ]
-    url =  window.URL.createObjectURL blob
-    a = document.createElement "a"
-    document.body.appendChild a
-    a.style = "display: none"
+    # Create the blob in the background page so it isn't garbage collected when the page closes in FF.
+    bgWin = chrome.extension.getBackgroundPage()
+    blob = new bgWin.Blob [ JSON.stringify backup ]
+    url =  bgWin.URL.createObjectURL blob
+    a = $ "backupLink"
     a.href = url
-    a.download = "vimium-options-#{new Date().toISOString().split("T")[0]}.json"
-    a.click()
-    document.body.removeChild a
+    a.style.display = ""
+    a.click() unless Utils.isFirefox()
 
   $("chooseFile").addEventListener "change", (event) ->
     document.activeElement?.blur()
