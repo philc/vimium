@@ -31,7 +31,7 @@ class NormalMode extends KeyHandlerMode
     else if registryEntry.background
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
     else
-      Utils.invokeCommandString registryEntry.command, count, {registryEntry}
+      NormalModeCommands[registryEntry.command] count, {registryEntry}
 
 enterNormalMode = (count) ->
   new NormalMode
