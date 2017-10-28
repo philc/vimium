@@ -179,28 +179,28 @@ NormalModeCommands =
 
 if LinkHints?
   extend NormalModeCommands,
-    "LinkHints.activateMode": LinkHints.activateMode
-    "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab
-    "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab
-    "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue
-    "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito
-    "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink
-    "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl
+    "LinkHints.activateMode": LinkHints.activateMode.bind LinkHints
+    "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab.bind LinkHints
+    "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab.bind LinkHints
+    "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue.bind LinkHints
+    "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito.bind LinkHints
+    "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind LinkHints
+    "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl.bind LinkHints
 
 if Vomnibar?
   extend NormalModeCommands,
-    "Vomnibar.activate": Vomnibar.activate
-    "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab
-    "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection
-    "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks
-    "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab
-    "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl
-    "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab
+    "Vomnibar.activate": Vomnibar.activate.bind Vomnibar
+    "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind Vomnibar
+    "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind Vomnibar
+    "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind Vomnibar
+    "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind Vomnibar
+    "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind Vomnibar
+    "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind Vomnibar
 
 if Marks?
   extend NormalModeCommands,
-    "Marks.activateCreateMode": Marks.activateCreateMode
-    "Marks.activateGotoMode": Marks.activateGotoMode
+    "Marks.activateCreateMode": Marks.activateCreateMode.bind Marks
+    "Marks.activateGotoMode": Marks.activateGotoMode.bind Marks
 
 # The types in <input type="..."> that we consider for focusInput command. Right now this is recalculated in
 # each content script. Alternatively we could calculate it once in the background page and use a request to
