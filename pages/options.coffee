@@ -42,6 +42,8 @@ class Option
   # Static method.
   @saveOptions: ->
     Option.all.map (option) -> option.save()
+    # We need to apply migrations in case we are restoring an old backup.
+    bgSettings.applyMigrations()
 
   # Abstract method; only implemented in sub-classes.
   # Populate the option's DOM element (@element) with the setting's current value.
@@ -322,6 +324,43 @@ document.addEventListener "DOMContentLoaded", ->
         when "/pages/popup.html" then initPopupPage()
 
   xhr.send()
+
+#
+# Backup and restore. "?" is for the tests."
+DomUtils?.documentReady ->
+  $("backupButton").addEventListener "click", ->
+    document.activeElement?.blur()
+    backup = {}
+    for option in Option.all
+      backup[option.field] = option.readValueFromElement()
+    blob = new Blob [ JSON.stringify backup ]
+    url =  window.URL.createObjectURL blob
+    a = document.createElement "a"
+    document.body.appendChild a
+    a.style = "display: none"
+    a.href = url
+    a.download = "vimium-options-#{new Date().toISOString().split("T")[0]}.json"
+    a.click()
+    document.body.removeChild a
+
+  $("chooseFile").addEventListener "change", (event) ->
+    document.activeElement?.blur()
+    files = event.target.files
+    if files.length == 1
+      file = files[0]
+      reader = new FileReader
+      reader.readAsText file
+      reader.onload = (event) ->
+        try
+          backup = JSON.parse reader.result
+        catch
+          alert "Failed to parse Vimium backup."
+          return
+
+        for option in Option.all
+          if option.field of backup
+            option.populateElement backup[option.field]
+            option.onUpdated()
 
 # Exported for tests.
 root = exports ? window
