@@ -220,5 +220,4 @@ textInputXPath = (->
 root = exports ? (window.root ?= {})
 root.NormalMode = NormalMode
 root.NormalModeCommands = NormalModeCommands
-extend root, NormalModeCommands
 extend window, root unless exports?
