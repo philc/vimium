@@ -353,7 +353,8 @@ DomUtils =
           keyup: (event) ->
             return handlerStack.continueBubbling unless event.code == code
             @remove()
-            handlerStack.suppressEvent
+            DomUtils.suppressEvent event
+            handlerStack.continueBubbling
           # We cannot track keyup events if we lose the focus.
           blur: (event) ->
             @remove() if event.target == window

@@ -166,7 +166,6 @@ class LinkHintsMode
       name: "hint/#{@mode.name}"
       indicator: false
       singleton: "link-hints-mode"
-      passInitialKeyupEvents: true
       suppressAllKeyboardEvents: true
       suppressTrailingKeyEvents: true
       exitOnEscape: true
