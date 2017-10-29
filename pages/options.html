@@ -315,6 +315,33 @@ b: http://b.com/?q=%s description
           </tr>
           -->
         </tbody>
+        <tbody id='backupAndRestor'>
+          <tr>
+            <td colspan="2"><header>Backup and Restore</header></td>
+          </tr>
+          <tr>
+            <td class="caption">Backup</td>
+            <td>
+                <div class="help">
+                  <div class="example">
+                  </div>
+                </div>
+              <input id="backupButton" type="button" value="Create Backup" />
+              <a id="backupLink" style="display: none" download="vimium-options.json">Download Backup</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="caption">Restore</td>
+            <td>
+                <div class="help">
+                  <div class="example">
+                    Choose file, then click <i>Save Changes</i>, below, to confirm restore.
+                  </div>
+                </div>
+              <input id="chooseFile" type="file" accept=".json" style="width: 200px;"/>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
 

@@ -1,6 +1,7 @@
 
 $ = (id) -> document.getElementById id
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
+restoreSettingsVersion = null
 
 # We have to use Settings from the background page here (not Settings, directly) to avoid a race condition for
 # the page popup.  Specifically, we must ensure that the settings have been updated on the background page
@@ -42,6 +43,12 @@ class Option
   # Static method.
   @saveOptions: ->
     Option.all.map (option) -> option.save()
+    # If we're restoring a backup, then restore the backed up settingsVersion.
+    if restoreSettingsVersion?
+      bgSettings.set "settingsVersion", restoreSettingsVersion
+      restoreSettingsVersion = null
+    # We need to apply migrations in case we are restoring an old backup.
+    bgSettings.applyMigrations()
 
   # Abstract method; only implemented in sub-classes.
   # Populate the option's DOM element (@element) with the setting's current value.
@@ -322,6 +329,43 @@ document.addEventListener "DOMContentLoaded", ->
         when "/pages/popup.html" then initPopupPage()
 
   xhr.send()
+
+#
+# Backup and restore. "?" is for the tests."
+DomUtils?.documentReady ->
+  $("backupButton").addEventListener "click", ->
+    document.activeElement?.blur()
+    backup = settingsVersion: bgSettings.get "settingsVersion"
+    for option in Option.all
+      backup[option.field] = option.readValueFromElement()
+    # Create the blob in the background page so it isn't garbage collected when the page closes in FF.
+    bgWin = chrome.extension.getBackgroundPage()
+    blob = new bgWin.Blob [ JSON.stringify backup, null, 2 ]
+    url =  bgWin.URL.createObjectURL blob
+    a = $ "backupLink"
+    a.href = url
+    a.style.display = ""
+    a.click() unless Utils.isFirefox()
+
+  $("chooseFile").addEventListener "change", (event) ->
+    document.activeElement?.blur()
+    files = event.target.files
+    if files.length == 1
+      file = files[0]
+      reader = new FileReader
+      reader.readAsText file
+      reader.onload = (event) ->
+        try
+          backup = JSON.parse reader.result
+        catch
+          alert "Failed to parse Vimium backup."
+          return
+
+        restoreSettingsVersion = backup["settingsVersion"] if "settingsVersion" of backup
+        for option in Option.all
+          if option.field of backup
+            option.populateElement backup[option.field]
+            option.onUpdated()
 
 # Exported for tests.
 root = exports ? window
