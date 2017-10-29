@@ -436,29 +436,29 @@ context "Input focus",
     document.getElementById("test-div").innerHTML = ""
 
   should "focus the first element", ->
-    focusInput 1
+    NormalModeCommands.focusInput 1
     assert.equal "first", document.activeElement.id
 
   should "focus the nth element", ->
-    focusInput 100
+    NormalModeCommands.focusInput 100
     assert.equal "third", document.activeElement.id
 
   should "activate insert mode on the first element", ->
-    focusInput 1
+    NormalModeCommands.focusInput 1
     assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "activate insert mode on the first element", ->
-    focusInput 100
+    NormalModeCommands.focusInput 100
     assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "activate the most recently-selected input if the count is 1", ->
-    focusInput 3
-    focusInput 1
+    NormalModeCommands.focusInput 3
+    NormalModeCommands.focusInput 1
     assert.equal "third", document.activeElement.id
 
   should "not trigger insert if there are no inputs", ->
     document.getElementById("test-div").innerHTML = ""
-    focusInput 1
+    NormalModeCommands.focusInput 1
     assert.isFalse InsertMode.permanentInstance.isActive()
 
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
@@ -479,7 +479,7 @@ context "Find prev / next links",
     <a href='#second'>next page</a>
     """
     stubSettings "nextPatterns", "next"
-    goNext()
+    NormalModeCommands.goNext()
     assert.equal '#second', window.location.hash
 
   should "match against non-word patterns", ->
@@ -487,7 +487,7 @@ context "Find prev / next links",
     <a href='#first'>&gt;&gt;</a>
     """
     stubSettings "nextPatterns", ">>"
-    goNext()
+    NormalModeCommands.goNext()
     assert.equal '#first', window.location.hash
 
   should "favor matches with fewer words", ->
@@ -496,14 +496,14 @@ context "Find prev / next links",
     <a href='#second'>next!</a>
     """
     stubSettings "nextPatterns", "next"
-    goNext()
+    NormalModeCommands.goNext()
     assert.equal '#second', window.location.hash
 
   should "find link relation in header", ->
     document.getElementById("test-div").innerHTML = """
     <link rel='next' href='#first'>
     """
-    goNext()
+    NormalModeCommands.goNext()
     assert.equal '#first', window.location.hash
 
   should "favor link relation to text matching", ->
@@ -511,14 +511,14 @@ context "Find prev / next links",
     <link rel='next' href='#first'>
     <a href='#second'>next</a>
     """
-    goNext()
+    NormalModeCommands.goNext()
     assert.equal '#first', window.location.hash
 
   should "match mixed case link relation", ->
     document.getElementById("test-div").innerHTML = """
     <link rel='Next' href='#first'>
     """
-    goNext()
+    NormalModeCommands.goNext()
     assert.equal '#first', window.location.hash
 
 createLinks = (n) ->
