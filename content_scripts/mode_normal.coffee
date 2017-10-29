@@ -217,6 +217,44 @@ textInputXPath = (->
   DomUtils.makeXPath(inputElements)
 )()
 
+class FocusSelector extends Mode
+  constructor: (hints, visibleInputs, selectedInputIndex) ->
+    super
+      name: "focus-selector"
+      exitOnClick: true
+      keydown: (event) =>
+        if event.key == "Tab"
+          hints[selectedInputIndex].classList.remove 'internalVimiumSelectedInputHint'
+          selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
+          selectedInputIndex %= hints.length
+          hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+          DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
+          @suppressEvent
+        else unless event.key == "Shift"
+          @exit()
+          # Give the new mode the opportunity to handle the event.
+          @restartBubbling
+
+    @hintContainingDiv = DomUtils.addElementList hints,
+      id: "vimiumInputMarkerContainer"
+      className: "vimiumReset"
+
+    DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
+    if visibleInputs.length == 1
+      @exit()
+      return
+    else
+      hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
+
+  exit: ->
+    super()
+    DomUtils.removeElement @hintContainingDiv
+    if document.activeElement and DomUtils.isEditable document.activeElement
+      new InsertMode
+        singleton: "post-find-mode/focus-input"
+        targetElement: document.activeElement
+        indicator: false
+
 root = exports ? (window.root ?= {})
 root.NormalMode = NormalMode
 root.NormalModeCommands = NormalModeCommands
