@@ -283,17 +283,17 @@ focusThisFrame = (request) ->
   document.activeElement.blur() if document.activeElement.tagName.toLowerCase() == "iframe"
   flashFrame() if request.highlight
 
-extend root,
-  lastFocusedInput: do ->
-    # Track the most recently focused input element.
-    recentlyFocusedElement = null
-    window.addEventListener "focus",
-      forTrusted (event) ->
-        DomUtils = window.DomUtils ? root.DomUtils # Workaround FF bug 1408996.
-        if DomUtils.isEditable event.target
-          recentlyFocusedElement = event.target
-    , true
-    -> recentlyFocusedElement
+# Used by focusInput command.
+root.lastFocusedInput = do ->
+  # Track the most recently focused input element.
+  recentlyFocusedElement = null
+  window.addEventListener "focus",
+    forTrusted (event) ->
+      DomUtils = window.DomUtils ? root.DomUtils # Workaround FF bug 1408996.
+      if DomUtils.isEditable event.target
+        recentlyFocusedElement = event.target
+  , true
+  -> recentlyFocusedElement
 
 # Checks if Vimium should be enabled or not in this frame.  As a side effect, it also informs the background
 # page whether this frame has the focus, allowing the background page to track the active frame's URL and set
@@ -338,7 +338,7 @@ root.frameId = frameId
 root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
-# These are exported for find mode and link-hints mode.
+# These are exported for normal mode and link-hints mode.
 extend root, {focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes}
