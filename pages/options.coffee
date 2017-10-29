@@ -47,6 +47,8 @@ class Option
     if restoreSettingsVersion?
       bgSettings.set "settingsVersion", restoreSettingsVersion
       restoreSettingsVersion = null
+    # Reset the restore-backup input.
+    $("chooseFile").value = ""
     # We need to apply migrations in case we are restoring an old backup.
     bgSettings.applyMigrations()
 
