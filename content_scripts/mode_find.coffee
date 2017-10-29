@@ -255,6 +255,16 @@ focusFoundLink = ->
     link = getLinkFromSelection()
     link.focus() if link
 
+selectFoundInputElement = ->
+  # Since the last focused element might not be the one currently pointed to by find (e.g.  the current one
+  # might be disabled and therefore unable to receive focus), we use the approximate heuristic of checking
+  # that the last anchor node is an ancestor of our element.
+  findModeAnchorNode = document.getSelection().anchorNode
+  if (FindMode.query.hasResults && document.activeElement &&
+      DomUtils.isSelectable(document.activeElement) &&
+      DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
+    DomUtils.simulateSelect(document.activeElement)
+
 root = exports ? (window.root ?= {})
 root.PostFindMode = PostFindMode
 root.FindMode = FindMode
