@@ -48,7 +48,7 @@ class PostFindMode extends SuppressPrintable
       keydown: (event) =>
         if KeyboardUtils.isEscape event
           @exit()
-          DomUtils.consumeKeyup event
+          @suppressEvent
         else
           handlerStack.remove()
           @continueBubbling
