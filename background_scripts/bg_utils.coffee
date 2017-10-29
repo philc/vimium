@@ -18,7 +18,7 @@ class TabRecency
       @deregister removedTabId
       @register addedTabId
 
-    chrome.windows.onFocusChanged.addListener (wnd) =>
+    chrome.windows?.onFocusChanged.addListener (wnd) =>
       if wnd != chrome.windows.WINDOW_ID_NONE
         chrome.tabs.query {windowId: wnd, active: true}, (tabs) =>
           @register tabs[0].id if tabs[0]
