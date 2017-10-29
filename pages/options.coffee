@@ -1,7 +1,6 @@
 
 $ = (id) -> document.getElementById id
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
-restoreSettingsVersion = null
 
 # We have to use Settings from the background page here (not Settings, directly) to avoid a race condition for
 # the page popup.  Specifically, we must ensure that the settings have been updated on the background page
@@ -40,17 +39,14 @@ class Option
     bgSettings.clear @field
     @fetch()
 
+  @onSaveCallbacks: []
+  @onSave: (callback) ->
+    @onSaveCallbacks.push callback
+
   # Static method.
   @saveOptions: ->
     Option.all.map (option) -> option.save()
-    # If we're restoring a backup, then restore the backed up settingsVersion.
-    if restoreSettingsVersion?
-      bgSettings.set "settingsVersion", restoreSettingsVersion
-      restoreSettingsVersion = null
-    # Reset the restore-backup input.
-    $("chooseFile").value = ""
-    # We need to apply migrations in case we are restoring an old backup.
-    bgSettings.applyMigrations()
+    callback() for callback in @onSaveCallbacks
 
   # Abstract method; only implemented in sub-classes.
   # Populate the option's DOM element (@element) with the setting's current value.
@@ -337,6 +333,8 @@ document.addEventListener "DOMContentLoaded", ->
 #
 # Backup and restore. "?" is for the tests."
 DomUtils?.documentReady ->
+  restoreSettingsVersion = null
+
   populateBackupLinkUrl = ->
     backup = settingsVersion: bgSettings.get "settingsVersion"
     for option in Option.all
@@ -367,6 +365,16 @@ DomUtils?.documentReady ->
           if option.field of backup
             option.populateElement backup[option.field]
             option.onUpdated()
+
+  Option.onSave ->
+    # If we're restoring a backup, then restore the backed up settingsVersion.
+    if restoreSettingsVersion?
+      bgSettings.set "settingsVersion", restoreSettingsVersion
+      restoreSettingsVersion = null
+    # Reset the restore-backup input.
+    $("chooseFile").value = ""
+    # We need to apply migrations in case we are restoring an old backup.
+    bgSettings.applyMigrations()
 
 # Exported for tests.
 root = exports ? window
