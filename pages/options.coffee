@@ -344,8 +344,12 @@ DomUtils?.documentReady ->
     url =  bgWin.URL.createObjectURL blob
     a = $ "backupLink"
     a.href = url
-    a.style.display = ""
-    a.click() unless Utils.isFirefox()
+    if Utils.isFirefox()
+      # On Firefox, the user has to click the link manually.
+      a.style.display = ""
+      a.textContent = "Click to download backup"
+    else
+      a.click()
 
   $("chooseFile").addEventListener "change", (event) ->
     document.activeElement?.blur()
