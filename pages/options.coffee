@@ -1,6 +1,7 @@
 
 $ = (id) -> document.getElementById id
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
+restoreSettingsVersion = null
 
 # We have to use Settings from the background page here (not Settings, directly) to avoid a race condition for
 # the page popup.  Specifically, we must ensure that the settings have been updated on the background page
@@ -42,6 +43,10 @@ class Option
   # Static method.
   @saveOptions: ->
     Option.all.map (option) -> option.save()
+    # If we're restoring a backup, then restore the backed up settingsVersion.
+    if restoreSettingsVersion?
+      bgSettings.set "settingsVersion", restoreSettingsVersion
+      restoreSettingsVersion = null
     # We need to apply migrations in case we are restoring an old backup.
     bgSettings.applyMigrations()
 
@@ -330,7 +335,7 @@ document.addEventListener "DOMContentLoaded", ->
 DomUtils?.documentReady ->
   $("backupButton").addEventListener "click", ->
     document.activeElement?.blur()
-    backup = {}
+    backup = settingsVersion: bgSettings.get "settingsVersion"
     for option in Option.all
       backup[option.field] = option.readValueFromElement()
     # Create the blob in the background page so it isn't garbage collected when the page closes in FF.
@@ -356,6 +361,7 @@ DomUtils?.documentReady ->
           alert "Failed to parse Vimium backup."
           return
 
+        restoreSettingsVersion = backup["settingsVersion"] if "settingsVersion" of backup
         for option in Option.all
           if option.field of backup
             option.populateElement backup[option.field]
