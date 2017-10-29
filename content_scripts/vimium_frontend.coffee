@@ -315,91 +315,6 @@ checkIfEnabledForUrl = do ->
 checkEnabledAfterURLChange = forTrusted ->
   checkIfEnabledForUrl() if windowIsFocused()
 
-# used by the findAndFollow* functions.
-followLink = (linkElement) ->
-  if (linkElement.nodeName.toLowerCase() == "link")
-    window.location.href = linkElement.href
-  else
-    # if we can click on it, don't simply set location.href: some next/prev links are meant to trigger AJAX
-    # calls, like the 'more' button on GitHub's newsfeed.
-    linkElement.scrollIntoView()
-    DomUtils.simulateClick(linkElement)
-
-#
-# Find and follow a link which matches any one of a list of strings. If there are multiple such links, they
-# are prioritized for shortness, by their position in :linkStrings, how far down the page they are located,
-# and finally by whether the match is exact. Practically speaking, this means we favor 'next page' over 'the
-# next big thing', and 'more' over 'nextcompany', even if 'next' occurs before 'more' in :linkStrings.
-#
-findAndFollowLink = (linkStrings) ->
-  linksXPath = DomUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"])
-  links = DomUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)
-  candidateLinks = []
-
-  # at the end of this loop, candidateLinks will contain all visible links that match our patterns
-  # links lower in the page are more likely to be the ones we want, so we loop through the snapshot backwards
-  for i in [(links.snapshotLength - 1)..0] by -1
-    link = links.snapshotItem(i)
-
-    # ensure link is visible (we don't mind if it is scrolled offscreen)
-    boundingClientRect = link.getBoundingClientRect()
-    if (boundingClientRect.width == 0 || boundingClientRect.height == 0)
-      continue
-    computedStyle = window.getComputedStyle(link, null)
-    if (computedStyle.getPropertyValue("visibility") != "visible" ||
-        computedStyle.getPropertyValue("display") == "none")
-      continue
-
-    linkMatches = false
-    for linkString in linkStrings
-      if link.innerText.toLowerCase().indexOf(linkString) != -1 ||
-          0 <= link.value?.indexOf? linkString
-        linkMatches = true
-        break
-    continue unless linkMatches
-
-    candidateLinks.push(link)
-
-  return if (candidateLinks.length == 0)
-
-  for link in candidateLinks
-    link.wordCount = link.innerText.trim().split(/\s+/).length
-
-  # We can use this trick to ensure that Array.sort is stable. We need this property to retain the reverse
-  # in-page order of the links.
-
-  candidateLinks.forEach((a,i) -> a.originalIndex = i)
-
-  # favor shorter links, and ignore those that are more than one word longer than the shortest link
-  candidateLinks =
-    candidateLinks
-      .sort((a, b) ->
-        if (a.wordCount == b.wordCount) then a.originalIndex - b.originalIndex else a.wordCount - b.wordCount
-      )
-      .filter((a) -> a.wordCount <= candidateLinks[0].wordCount + 1)
-
-  for linkString in linkStrings
-    exactWordRegex =
-      if /\b/.test(linkString[0]) or /\b/.test(linkString[linkString.length - 1])
-        new RegExp "\\b" + linkString + "\\b", "i"
-      else
-        new RegExp linkString, "i"
-    for candidateLink in candidateLinks
-      if exactWordRegex.test(candidateLink.innerText) ||
-          (candidateLink.value && exactWordRegex.test(candidateLink.value))
-        followLink(candidateLink)
-        return true
-  false
-
-findAndFollowRel = (value) ->
-  relTags = ["link", "a", "area"]
-  for tag in relTags
-    elements = document.getElementsByTagName(tag)
-    for element in elements
-      if (element.hasAttribute("rel") && element.rel.toLowerCase() == value)
-        followLink(element)
-        return true
-
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 root.HelpDialog ?=
   helpUI: null
@@ -424,7 +339,7 @@ root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
-extend root, {focusThisFrame, findAndFollowRel, findAndFollowLink}
+extend root, {focusThisFrame}
 # These are exported only for the tests.
 extend root, {installModes}
 extend window, root unless exports?
