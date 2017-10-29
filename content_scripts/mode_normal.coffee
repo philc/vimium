@@ -214,7 +214,7 @@ textInputXPath = (->
     "(" + textInputTypes.map((type) -> '@type="' + type + '"').join(" or ") + "or not(@type))" +
     " and not(@disabled or @readonly)]",
     "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]
-  DomUtils.makeXPath(inputElements)
+  DomUtils?.makeXPath(inputElements)
 )()
 
 # used by the findAndFollow* functions.
