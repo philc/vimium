@@ -100,8 +100,10 @@ class ExclusionRulesOption extends Option
       element
 
   populateElement: (rules) ->
-    for rule in rules
-      @appendRule rule
+    # For the case of restoring a backup, we first have to remove existing rules.
+    exclusionRules = $ "exclusionRules"
+    exclusionRules.deleteRow 1 while exclusionRules.rows[1]
+    @appendRule rule for rule in rules
 
   # Append a row for a new rule.  Return the newly-added element.
   appendRule: (rule) ->
@@ -333,23 +335,16 @@ document.addEventListener "DOMContentLoaded", ->
 #
 # Backup and restore. "?" is for the tests."
 DomUtils?.documentReady ->
-  $("backupButton").addEventListener "click", ->
-    document.activeElement?.blur()
+  populateBackupLinkUrl = ->
     backup = settingsVersion: bgSettings.get "settingsVersion"
     for option in Option.all
       backup[option.field] = option.readValueFromElement()
     # Create the blob in the background page so it isn't garbage collected when the page closes in FF.
     bgWin = chrome.extension.getBackgroundPage()
     blob = new bgWin.Blob [ JSON.stringify backup, null, 2 ]
-    url =  bgWin.URL.createObjectURL blob
-    a = $ "backupLink"
-    a.href = url
-    if Utils.isFirefox()
-      # On Firefox, the user has to click the link manually.
-      a.style.display = ""
-      a.textContent = "Click to download backup"
-    else
-      a.click()
+    $("backupLink").href = bgWin.URL.createObjectURL blob
+
+  $("backupLink").addEventListener "mousedown", populateBackupLinkUrl, true
 
   $("chooseFile").addEventListener "change", (event) ->
     document.activeElement?.blur()

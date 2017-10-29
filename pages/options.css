@@ -231,3 +231,6 @@ input.pattern, input.passKeys, .exclusionHeaderText {
   white-space: nowrap;
   width: 110px;
 }
+#backupLink {
+  cursor: pointer;
+}
