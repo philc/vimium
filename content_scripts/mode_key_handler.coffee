@@ -27,8 +27,6 @@ class KeyHandlerMode extends Mode
 
     super extend options,
       keydown: @onKeydown.bind this
-      # We cannot track keyup events if we lose the focus.
-      blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
     if options.exitOnEscape
       # If we're part way through a command's key sequence, then a first Escape should reset the key state,
