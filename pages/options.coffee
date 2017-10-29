@@ -333,8 +333,7 @@ document.addEventListener "DOMContentLoaded", ->
 #
 # Backup and restore. "?" is for the tests."
 DomUtils?.documentReady ->
-  $("backupButton").addEventListener "click", ->
-    document.activeElement?.blur()
+  populateBackupLinkUrl = ->
     backup = settingsVersion: bgSettings.get "settingsVersion"
     for option in Option.all
       backup[option.field] = option.readValueFromElement()
@@ -344,12 +343,8 @@ DomUtils?.documentReady ->
     url =  bgWin.URL.createObjectURL blob
     a = $ "backupLink"
     a.href = url
-    if Utils.isFirefox()
-      # On Firefox, the user has to click the link manually.
-      a.style.display = ""
-      a.textContent = "Click to download backup"
-    else
-      a.click()
+
+  $("backupLink").addEventListener "mousedown", populateBackupLinkUrl, true
 
   $("chooseFile").addEventListener "change", (event) ->
     document.activeElement?.blur()
