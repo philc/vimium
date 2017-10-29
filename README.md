@@ -168,6 +168,10 @@ PRs are welcome.
 Release Notes
 -------------
 
+In `master` (not yet released)
+
+- Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
+
 1.61 (2017-10-27)
 
 - For *filtered hints*, you can now use alphabetical hint characters
