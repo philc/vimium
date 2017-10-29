@@ -100,8 +100,10 @@ class ExclusionRulesOption extends Option
       element
 
   populateElement: (rules) ->
-    for rule in rules
-      @appendRule rule
+    # For the case of restoring a backup, we first have to remove existing rules.
+    exclusionRules = $ "exclusionRules"
+    exclusionRules.deleteRow 1 while exclusionRules.rows[1]
+    @appendRule rule for rule in rules
 
   # Append a row for a new rule.  Return the newly-added element.
   appendRule: (rule) ->
