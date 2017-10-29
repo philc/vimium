@@ -340,9 +340,7 @@ DomUtils?.documentReady ->
     # Create the blob in the background page so it isn't garbage collected when the page closes in FF.
     bgWin = chrome.extension.getBackgroundPage()
     blob = new bgWin.Blob [ JSON.stringify backup, null, 2 ]
-    url =  bgWin.URL.createObjectURL blob
-    a = $ "backupLink"
-    a.href = url
+    $("backupLink").href = bgWin.URL.createObjectURL blob
 
   $("backupLink").addEventListener "mousedown", populateBackupLinkUrl, true
 
