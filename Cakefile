@@ -77,6 +77,9 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
   spawn "rsync", rsyncOptions, false, true
   spawn "zip", ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"], false, true
 
+  spawn "zip", "-r -FS dist/vimium-ff-#{vimium_version}.zip background_scripts Cakefile content_scripts CONTRIBUTING.md CREDITS icons lib
+                manifest.json MIT-LICENSE.txt pages README.md -x *.coffee -x Cakefile -x CREDITS -x *.md".split(/\s+/), false, true
+
 # This builds a CRX that's distributable outside of the Chrome web store. Is this used by folks who fork
 # Vimium and want to distribute their fork?
 task "package-custom-crx", "build .crx file", ->
@@ -157,8 +160,3 @@ task "coverage", "generate coverage report", ->
           source: (Utils.escapeHtml fs.readFileSync fname, 'utf-8').split '\n'
 
       fs.writeFileSync 'jscoverage.json', JSON.stringify(result)
-
-task "zip", "build Firefox zip file in ../vimium.zip", ->
-  spawn "zip", "-r -FS ../vimium.zip background_scripts Cakefile content_scripts CONTRIBUTING.md CREDITS icons lib
-                manifest.json MIT-LICENSE.txt pages README.md -x *.coffee -x Cakefile -x CREDITS -x *.md".split /\s+/
-
