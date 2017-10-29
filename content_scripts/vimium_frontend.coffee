@@ -353,11 +353,6 @@ checkIfEnabledForUrl = do ->
 checkEnabledAfterURLChange = forTrusted ->
   checkIfEnabledForUrl() if windowIsFocused()
 
-focusFoundLink = ->
-  if (FindMode.query.hasResults)
-    link = getLinkFromSelection()
-    link.focus() if link
-
 selectFoundInputElement = ->
   # Since the last focused element might not be the one currently pointed to by find (e.g.  the current one
   # might be disabled and therefore unable to receive focus), we use the approximate heuristic of checking
@@ -367,13 +362,6 @@ selectFoundInputElement = ->
       DomUtils.isSelectable(document.activeElement) &&
       DomUtils.isDOMDescendant(findModeAnchorNode, document.activeElement))
     DomUtils.simulateSelect(document.activeElement)
-
-getLinkFromSelection = ->
-  node = window.getSelection().anchorNode
-  while (node && node != document.body)
-    return node if (node.nodeName.toLowerCase() == "a")
-    node = node.parentNode
-  null
 
 # used by the findAndFollow* functions.
 followLink = (linkElement) ->
@@ -484,8 +472,7 @@ root.Frame = Frame
 root.windowIsFocused = windowIsFocused
 root.bgLog = bgLog
 # These are exported for find mode and link-hints mode.
-extend root, {focusFoundLink, selectFoundInputElement, focusThisFrame, FocusSelector,
-  findAndFollowRel, findAndFollowLink}
+extend root, {selectFoundInputElement, focusThisFrame, FocusSelector, findAndFollowRel, findAndFollowLink}
 # These are exported only for the tests.
 extend root, {installModes}
 extend window, root unless exports?

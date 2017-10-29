@@ -243,6 +243,18 @@ getCurrentRange = ->
     selection.collapseToStart() if selection.type == "Range"
     selection.getRangeAt 0
 
+getLinkFromSelection = ->
+  node = window.getSelection().anchorNode
+  while (node && node != document.body)
+    return node if (node.nodeName.toLowerCase() == "a")
+    node = node.parentNode
+  null
+
+focusFoundLink = ->
+  if (FindMode.query.hasResults)
+    link = getLinkFromSelection()
+    link.focus() if link
+
 root = exports ? (window.root ?= {})
 root.PostFindMode = PostFindMode
 root.FindMode = FindMode
