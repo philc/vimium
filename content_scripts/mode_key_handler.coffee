@@ -27,8 +27,6 @@ class KeyHandlerMode extends Mode
 
     super extend options,
       keydown: @onKeydown.bind this
-      # We cannot track keyup events if we lose the focus.
-      blur: (event) => @alwaysContinueBubbling => @keydownEvents = {} if event.target == window
 
     if options.exitOnEscape
       # If we're part way through a command's key sequence, then a first Escape should reset the key state,
@@ -38,7 +36,7 @@ class KeyHandlerMode extends Mode
         keydown: (event) =>
           if KeyboardUtils.isEscape(event) and not @isInResetState()
             @reset()
-            DomUtils.consumeKeyup event
+            @suppressEvent
           else
             @continueBubbling
 
@@ -49,11 +47,13 @@ class KeyHandlerMode extends Mode
       DomUtils.consumeKeyup event, => @reset()
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
     else if isEscape and HelpDialog?.isShowing()
-      DomUtils.consumeKeyup event, -> HelpDialog.toggle()
+      HelpDialog.toggle()
+      @suppressEvent
     else if isEscape
       @continueBubbling
     else if @isMappedKey keyChar
-      DomUtils.consumeKeyup event, => @handleKeyChar keyChar
+      @handleKeyChar keyChar
+      @suppressEvent
     else if @isCountKey keyChar
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit

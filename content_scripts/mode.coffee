@@ -55,7 +55,7 @@ class Mode
     # the need for modes which suppress all keyboard events 1) to provide handlers for all of those events,
     # or 2) to worry about event suppression and event-handler return values.
     if @options.suppressAllKeyboardEvents
-      for type in [ "keydown", "keypress", "keyup" ]
+      for type in [ "keydown", "keypress" ]
         do (handler = @options[type]) =>
           @options[type] = (event) => @alwaysSuppressPropagation => handler? event
 
@@ -82,7 +82,7 @@ class Mode
         "keydown": (event) =>
           return @continueBubbling unless KeyboardUtils.isEscape event
           @exit event, event.target
-          DomUtils.consumeKeyup event
+          @suppressEvent
 
     # If @options.exitOnBlur is truthy, then it should be an element.  The mode will exit when that element
     # loses the focus.
@@ -120,16 +120,6 @@ class Mode
       singletons[key]?.exit()
       singletons[key] = this
 
-    # If @options.passInitialKeyupEvents is set, then we pass initial non-printable keyup events to the page
-    # or to other extensions (because the corresponding keydown events were passed).  This is used when
-    # activating link hints, see #1522.
-    if @options.passInitialKeyupEvents
-      @push
-        _name: "mode-#{@id}/passInitialKeyupEvents"
-        keydown: => @alwaysContinueBubbling -> handlerStack.remove()
-        keyup: (event) =>
-          if KeyboardUtils.isPrintable event then @suppressPropagation else @passEventToPage
-
     # if @options.suppressTrailingKeyEvents is set, then  -- on exit -- we suppress all key events until a
     # subsquent (non-repeat) keydown or keypress.  In particular, the intention is to catch keyup events for
     # keys which we have handled, but which otherwise might trigger page actions (if the page is listening for
@@ -147,7 +137,6 @@ class Mode
           name: "suppress-trailing-key-events"
           keydown: handler
           keypress: handler
-          keyup: -> handlerStack.suppressPropagation
 
     Mode.modes.push this
     @setIndicator()

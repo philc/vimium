@@ -166,7 +166,6 @@ class LinkHintsMode
       name: "hint/#{@mode.name}"
       indicator: false
       singleton: "link-hints-mode"
-      passInitialKeyupEvents: true
       suppressAllKeyboardEvents: true
       suppressTrailingKeyEvents: true
       exitOnEscape: true
@@ -294,7 +293,7 @@ class LinkHintsMode
           if keyChar.length == 1
             @markerMatcher.pushKeyChar keyChar
             @updateVisibleMarkers()
-          DomUtils.consumeKeyup event
+          handlerStack.suppressEvent
       return
 
     # We've handled the event, so suppress it and update the mode indicator.

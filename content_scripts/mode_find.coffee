@@ -16,7 +16,7 @@ class SuppressPrintable extends Mode
       keyup: (event) =>
         # If the selection type has changed (usually, no longer "Range"), then the user is interacting with
         # the input element, so we get out of the way.  See discussion of option 5c from #1415.
-        if document.getSelection().type != type then @exit() else handler event
+        @exit() if document.getSelection().type != type
 
 # When we use find, the selection/focus can land in a focusable/editable element.  In this situation, special
 # considerations apply.  We implement three special cases:
@@ -48,7 +48,7 @@ class PostFindMode extends SuppressPrintable
       keydown: (event) =>
         if KeyboardUtils.isEscape event
           @exit()
-          DomUtils.consumeKeyup event
+          @suppressEvent
         else
           handlerStack.remove()
           @continueBubbling

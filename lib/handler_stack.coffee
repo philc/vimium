@@ -65,7 +65,11 @@ class HandlerStack
           true # Do nothing, but continue bubbling.
         else
           # result is @suppressEvent or falsy.
-          DomUtils.suppressEvent event if @isChromeEvent event
+          if @isChromeEvent event
+            if type == "keydown"
+              DomUtils.consumeKeyup event
+            else
+              DomUtils.suppressEvent event
           return false
 
     # None of our handlers care about this event, so pass it to the page.
