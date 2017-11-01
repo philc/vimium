@@ -201,7 +201,7 @@ context "Rect subtraction",
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             for resultRect in resultRects
-              assert.isFalse Rect.contains subtractRect, resultRect
+              assert.isFalse Rect.intersects subtractRect, resultRect
 
   should "be contained in original rect", ->
     rect = Rect.create 0, 0, 3, 3
@@ -212,7 +212,7 @@ context "Rect subtraction",
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             for resultRect in resultRects
-              assert.isTrue Rect.contains rect, resultRect
+              assert.isTrue Rect.intersects rect, resultRect
 
   should "contain the  subtracted rect in the original minus the results", ->
     rect = Rect.create 0, 0, 3, 3
@@ -229,60 +229,60 @@ context "Rect subtraction",
             assert.isTrue (resultComplement.length == 0 or resultComplement.length == 1)
             if resultComplement.length == 1
               complementRect = resultComplement[0]
-              assert.isTrue Rect.contains subtractRect, complementRect
+              assert.isTrue Rect.intersects subtractRect, complementRect
 
 context "Rect overlaps",
   should "detect that a rect overlaps itself", ->
     rect = Rect.create 2, 2, 4, 4
-    assert.isTrue Rect.rectsOverlap rect, rect
+    assert.isTrue Rect.intersectsStrict rect, rect
 
   should "detect that non-overlapping rectangles do not overlap on the left", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 0, 2, 1, 4
-    assert.isFalse Rect.rectsOverlap rect1, rect2
+    assert.isFalse Rect.intersectsStrict rect1, rect2
 
   should "detect that non-overlapping rectangles do not overlap on the right", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 5, 2, 6, 4
-    assert.isFalse Rect.rectsOverlap rect1, rect2
+    assert.isFalse Rect.intersectsStrict rect1, rect2
 
   should "detect that non-overlapping rectangles do not overlap on the top", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 2, 0, 2, 1
-    assert.isFalse Rect.rectsOverlap rect1, rect2
+    assert.isFalse Rect.intersectsStrict rect1, rect2
 
   should "detect that non-overlapping rectangles do not overlap on the bottom", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 2, 5, 2, 6
-    assert.isFalse Rect.rectsOverlap rect1, rect2
+    assert.isFalse Rect.intersectsStrict rect1, rect2
 
   should "detect overlapping rectangles on the left", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 0, 2, 2, 4
-    assert.isTrue Rect.rectsOverlap rect1, rect2
+    assert.isTrue Rect.intersectsStrict rect1, rect2
 
   should "detect overlapping rectangles on the right", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 4, 2, 5, 4
-    assert.isTrue Rect.rectsOverlap rect1, rect2
+    assert.isTrue Rect.intersectsStrict rect1, rect2
 
   should "detect overlapping rectangles on the top", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 2, 4, 4, 5
-    assert.isTrue Rect.rectsOverlap rect1, rect2
+    assert.isTrue Rect.intersectsStrict rect1, rect2
 
   should "detect overlapping rectangles on the bottom", ->
     rect1 = Rect.create 2, 2, 4, 4
     rect2 = Rect.create 2, 0, 4, 2
-    assert.isTrue Rect.rectsOverlap rect1, rect2
+    assert.isTrue Rect.intersectsStrict rect1, rect2
 
   should "detect overlapping rectangles when second rectangle is contained in first", ->
     rect1 = Rect.create 1, 1, 4, 4
     rect2 = Rect.create 2, 2, 3, 3
-    assert.isTrue Rect.rectsOverlap rect1, rect2
+    assert.isTrue Rect.intersectsStrict rect1, rect2
 
   should "detect overlapping rectangles when first rectangle is contained in second", ->
     rect1 = Rect.create 1, 1, 4, 4
     rect2 = Rect.create 2, 2, 3, 3
-    assert.isTrue Rect.rectsOverlap rect2, rect1
+    assert.isTrue Rect.intersectsStrict rect2, rect1
 
