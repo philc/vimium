@@ -355,7 +355,7 @@ handleFrameFocused = ({tabId, frameId}) ->
 
 # Rotate through frames to the frame count places after frameId.
 cycleToFrame = (frames, frameId, count = 0) ->
-  # We can't always track which frame chrome has focussed, but here we learn that it's frameId; so add an
+  # We can't always track which frame chrome has focused, but here we learn that it's frameId; so add an
   # additional offset such that we do indeed start from frameId.
   count = (count + Math.max 0, frames.indexOf frameId) % frames.length
   [frames[count..]..., frames[0...count]...]
