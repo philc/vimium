@@ -82,6 +82,7 @@ class FindMode extends Mode
     FindMode.handleEscape() if event
 
   restoreSelection: ->
+    return unless @initialRange
     range = @initialRange
     selection = getSelection()
     selection.removeAllRanges()
@@ -241,7 +242,10 @@ getCurrentRange = ->
     range
   else
     selection.collapseToStart() if selection.type == "Range"
-    selection.getRangeAt 0
+    if selection.rangeCount > 0
+      selection.getRangeAt 0
+    else # Firefox returns a selection with no ranges and null anchor/focusNode in some situations.
+      null
 
 getLinkFromSelection = ->
   node = window.getSelection().anchorNode
