@@ -219,7 +219,7 @@ DomUtils =
       node = selection.anchorNode
       node and @isDOMDescendant element, node
     else
-      if selection.type == "Range" and selection.isCollapsed
+      if DomUtils.getSelectionType(selection) == "Range" and selection.isCollapsed
 	      # The selection is inside the Shadow DOM of a node. We can check the node it registers as being
 	      # before, since this represents the node whose Shadow DOM it's inside.
         containerNode = selection.anchorNode.childNodes[selection.anchorOffset]
@@ -364,7 +364,7 @@ DomUtils =
       handlerStack.suppressEvent
 
   # Polyfill for selection.type (which is not available in Firefox).
-  getSelectionType: (selection) ->
+  getSelectionType: (selection = document.getSelection()) ->
     selection.type or do ->
       if selection.rangeCount == 0
         "None"
@@ -377,7 +377,7 @@ DomUtils =
   # This finds the element containing the selection focus.
   getElementWithFocus: (selection, backwards) ->
     r = t = selection.getRangeAt 0
-    if selection.type == "Range"
+    if DomUtils.getSelectionType(selection) == "Range"
       r = t.cloneRange()
       r.collapse backwards
     t = r.startContainer
