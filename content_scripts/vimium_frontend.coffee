@@ -236,7 +236,7 @@ Frame =
     handlerStack.reset()
     isEnabledForUrl = false
     window.removeEventListener "focus", onFocus
-    window.removeEventListener "hashchange", onFocus
+    window.removeEventListener "hashchange", checkEnabledAfterURLChange
 
 setScrollPosition = ({ scrollX, scrollY }) ->
   DomUtils.documentReady ->
