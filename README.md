@@ -141,9 +141,10 @@ The following special keys are available for mapping:
 
 - `<c-*>`, `<a-*>`, `<m-*>` for ctrl, alt, and meta (command on Mac) respectively with any key. Replace `*`
   with the key of choice.
-- `<left>`, `<right>`, `<up>`, `<down>` for the arrow keys
-- `<space>` and `<backspace>` for the space and backspace keys
-- `<f1>` through `<f12>` for the function keys
+- `<left>`, `<right>`, `<up>`, `<down>` for the arrow keys.
+- `<f1>` through `<f12>` for the function keys.
+- `<space>` for the space key.
+- `<tab>`, `<enter>`, `<delete>`, `<backspace>`, `<insert>`, `<home>` and `<end>` for the corresponding non-printable keys (version 1.62 onwards).
 
 Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+shift+7 on an English keyboard.
 
@@ -171,6 +172,7 @@ Release Notes
 In `master` (not yet released)
 
 - Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
+- It is now possible to map `<tab>`, `<enter>`, `<delete>`, `<insert>`, `<home>` and `<end>`.
 
 1.61 (2017-10-27)
 

@@ -5,7 +5,7 @@ Utils?.monitorChromeStorage "mapKeyRegistry", (value) => mapKeyRegistry = value
 KeyboardUtils =
   # This maps event.key key names to Vimium key names.
   keyNames:
-    "ArrowLeft": "left", "ArrowUp": "up", "ArrowRight": "right", "ArrowDown": "down", " ": "space", "Backspace": "backspace"
+    "ArrowLeft": "left", "ArrowUp": "up", "ArrowRight": "right", "ArrowDown": "down", " ": "space"
 
   init: ->
     if (navigator.userAgent.indexOf("Mac") != -1)
@@ -38,10 +38,8 @@ KeyboardUtils =
       ""
     else if key.length == 1
       key
-    else if key.length == 2 and "F1" <= key <= "F9"
-      key.toLowerCase() # F1 to F9.
-    else if key.length == 3 and "F10" <= key <= "F12"
-      key.toLowerCase() # F10 to F12.
+    else if 1 < key.length
+      key.toLowerCase()
     else
       ""
 
