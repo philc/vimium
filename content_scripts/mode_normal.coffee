@@ -187,6 +187,22 @@ if LinkHints?
     "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind LinkHints
     "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl.bind LinkHints
 
+    "LinkHints.time": (count) ->
+      oldTimeStart = new Date()
+      for _ in [0 ... count] by 1
+        LocalHints.getLocalHints false, false
+      oldTimeEnd = new Date()
+
+      newTimeStart = new Date()
+      for _ in [0 ... count] by 1
+        LocalHints.getLocalHints false, true
+      newTimeEnd = new Date()
+
+      oldTime = oldTimeEnd - oldTimeStart
+      newTime = newTimeEnd - newTimeStart
+      alert """Old algorithm: #{oldTime}ms/#{count} = #{oldTime/count}ms
+New algorithm: #{newTime}ms/#{count} = #{newTime/count}ms"""
+
 if Vomnibar?
   extend NormalModeCommands,
     "Vomnibar.activate": Vomnibar.activate.bind Vomnibar
