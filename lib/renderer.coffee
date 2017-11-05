@@ -96,14 +96,14 @@ class Renderer
       elementInfo.clippedRect = Rect.intersect elementInfo.clippedRect, absClippingRect
     return
 
-  visibility: (elementInfo) ->
-    elementInfo.visibility ?= window.getComputedStyle(elementInfo.element).visibility
+  isVisible: (elementInfo) ->
+    elementInfo.visibile ?= (window.getComputedStyle(elementInfo.element).visibility == "visible")
 
   rendered: (elementInfo) ->
     elementInfo.rendered ?=
       elementInfo.clippedRect.left < elementInfo.clippedRect.right and
       elementInfo.clippedRect.top < elementInfo.clippedRect.bottom and
-      "visible" == @visibility elementInfo
+      @isVisible elementInfo
 
   # processRendered is called on each rendered element as it is found, passed Renderer's internal elementInfo
   # struct as the only argument.
@@ -120,7 +120,7 @@ class Renderer
 
         if parentInfo?
           if parentInfo.clippedRect? and Rect.contains elementInfo.clippedRect, parentInfo.clippedRect and
-              "visible" == @visibility elementInfo
+              @isVisible elementInfo
             processRendered elementInfo
             renderedElements.push elementInfo
           else
