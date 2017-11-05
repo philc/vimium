@@ -31,17 +31,15 @@ KeyboardUtils =
       else if key.length == 1 and not event.shiftKey
         key = key.toLowerCase()
 
-    if key of @keyNames
-      @keyNames[key]
     # It appears that key is not always defined (see #2453).
-    else if not key?
+    unless key
       ""
+    else if key of @keyNames
+      @keyNames[key]
     else if key.length == 1
       key
-    else if 1 < key.length
-      key.toLowerCase()
     else
-      ""
+      key.toLowerCase()
 
   getKeyCharString: (event) ->
     if keyChar = @getKeyChar event
