@@ -150,6 +150,33 @@ class Renderer
 
     renderedElements
 
+  getClientRects: (elementInfo) ->
+    elementInfo.clientRects ?= Array::map.call elementInfo.element.getClientRects(), (rect) ->
+      Rect.intersect rect, elementInfo.boundingRect
+
+  # `exceptionFilter elem = true` should always imply `outputFilter elem = true`
+  renderElements: (elements, outputFilter = (-> true), exceptionFilter = (-> false)) ->
+    elements = elements.reverse()
+    renderedElements = []
+    while elementInfo = elements.pop()
+      continue unless outputFilter elementInfo
+      {clippedRect} = elementInfo
+      rects = undefined
+      for negativeElement in elements
+        if Rect.intersects clippedRect, negativeElement.clippedRect
+          rects ?= @getClientRects elementInfo
+          for negativeRect in @getClientRects negativeElement
+            # Subtract negativeRect from every rect in rects, and concatenate the resulting arrays.
+            rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
+      if rects and rects.length > 0
+        elementInfo.renderedRects = rects ? @getClientRects elementInfo
+        renderedElements.push elementInfo
+      else if exceptionFilter elementInfo
+        elementInfo.renderedRects = @getClientRects elementInfo
+        renderedElements.push elementInfo
+
+    renderedElements
+
   getImageMapRects: (elementInfo) ->
     element = elementInfo.element
     if element.tagName.toLowerCase?() == "img"
@@ -162,11 +189,10 @@ class Renderer
           DomUtils.getClientRectsForAreas elementInfo.clippedRect, areas, elementInfo.clippedRect
 
   #
-  # Determine whether the element is visible and clickable. If it is, find the rect bounding the element in
-  # the viewport.  There may be more than one part of element which is clickable (for example, if it's an
-  # image), therefore we always return a array of element/rect pairs (which may also be a singleton or empty).
+  # Determine whether the element is clickable.
   #
-  isVisibleClickable: (elementInfo) ->
+  isClickable: (elementInfo) ->
+    return elementInfo.clickable if elementInfo.clickable?
     # Get the tag name.  However, `element.tagName` can be an element (not a string, see #2305), so we guard
     # against that.
     element = elementInfo.element
@@ -180,7 +206,7 @@ class Renderer
     # Check aria properties to see if the element should be ignored.
     if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
         element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
-      return false # This element should never have a link hint.
+      return elementInfo.clickable = false # This element should never have a link hint.
 
     # Check for AngularJS listeners on the element.
     @checkForAngularJs ?= do ->
@@ -235,7 +261,7 @@ class Renderer
         isClickable ||= not element.disabled
       when "label"
         isClickable ||= element.control? and not element.control.disabled and
-                        not @getVisibleClickable element.control
+                        true # @getVisibleClickable element.control # TODO(mrmr1993): Fix this.
       when "body"
         isClickable ||=
           if element == document.body and not windowIsFocused() and
@@ -269,11 +295,55 @@ class Renderer
       isClickable = onlyHasTabIndex = true
 
     if isClickable
-      {element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason}
+      elementInfo.clickable = {element, secondClassCitizen: onlyHasTabIndex, possibleFalsePositive, reason}
     else
-      false
+      elementInfo.clickable = false
 
-  getLinkHint
+  isClickableOrDeferring: (elementInfo) ->
+    isClickable = @isClickable elementInfo
+    return isClickable if isClickable and not isClickable.secondClassCitizen
+
+    isDeferring = @isClickableOrDeferring elementInfo.parentElement if elementInfo.parentElement?
+    if isDeferring
+      if isClickable and isDeferring.secondClassCitizen
+        isClickable
+      else
+        elementInfo.defersTo = isDeferring
+    else if isClickable
+      isClickable
+    else
+      isDeferring
+
+  getLinksForHints: ->
+    renderedElements = @getRenderedElements document.documentElement
+    , (elementInfo) =>
+      @isClickableOrDeferring elementInfo
+    , (elementInfo) =>
+      return # Looks like this should be unnecessary.
+      for overflowingElementInfo in elementInfo.overflowingElements
+        @isClickableOrDeferring overflowingElementInfo
+
+    renderedClickableElements = @renderElements renderedElements
+    , (elementInfo) ->
+      elementInfo.clickable or elementInfo.defersTo
+    , (elementInfo) ->
+      not (elementInfo.clickable or elementInfo.defersTo).secondClassCitizen
+
+    # Position the rects within the window.
+    {top, left} = DomUtils.getViewportTopLeft()
+    hints = []
+    for elementInfo in renderedClickableElements
+      for rect in elementInfo.renderedRects
+        continue if rect.width < 4 or rect.height < 4
+        hint = extend {}, (elementInfo.clickable or elementInfo.defersTo)
+        hint.element = elementInfo.element
+        hint.rect = Rect.translate rect, left, top
+        hints.push hint
+
+    if Settings.get "filterLinkHints"
+      LocalHints.withLabelMap (labelMap) =>
+        extend hint, LocalHints.generateLinkText labelMap, hint for hint in hints
+    hints
 
 root = exports ? (window.root ?= {})
 root.Renderer = Renderer
