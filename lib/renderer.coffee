@@ -96,14 +96,19 @@ class Renderer
       elementInfo.clippedRect = Rect.intersect elementInfo.clippedRect, absClippingRect
     return
 
+  visibility: (elementInfo) ->
+    elementInfo.visibility ?= window.getComputedStyle(elementInfo.element).visibility
+
   rendered: (elementInfo) ->
     elementInfo.rendered ?=
       elementInfo.clippedRect.left < elementInfo.clippedRect.right and
-      elementInfo.clippedRect.top < elementInfo.clippedRect.bottom
+      elementInfo.clippedRect.top < elementInfo.clippedRect.bottom and
+      "visible" == @visibility elementInfo
 
   setOverflowingElement: (elementInfo, ancestorInfo, checkBounds) ->
-    if not checkBounds or Rect.contains elementInfo.clippedRect, ancestorInfo.clippedRect
-      (ancestorInfo.overflowingElements ?= []).push elementsInfo
+    if not checkBounds or not ancestorInfo.clippedRect or
+        Rect.contains elementInfo.clippedRect, ancestorInfo.clippedRect
+      (ancestorInfo.overflowingElements ?= []).push elementInfo
       @setOverflowingElement elementInfo, ancestorInfo.parentInfo, true if ancestorInfo.parentInfo?
 
   # - processRendered is called on each rendered element as it is found
@@ -122,7 +127,8 @@ class Renderer
         elementInfo.clippedRect = Rect.intersect elementInfo.boundingRect, @viewport
 
         if parentInfo?
-          if parentInfo.clippedRect? and Rect.contains elementInfo.clippedRect, parentInfo.clippedRect
+          if parentInfo.clippedRect? and Rect.contains elementInfo.clippedRect, parentInfo.clippedRect and
+              "visible" == @visibility elementInfo
             processRendered elementInfo
             renderedElements.push elementInfo
           else
