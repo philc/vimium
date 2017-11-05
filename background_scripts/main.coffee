@@ -382,10 +382,10 @@ HintCoordinator =
     for own frameId, port of @tabState[tabId].ports
       @postMessage tabId, parseInt(frameId), messageType, port, request
 
-  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, isVimiumHelpDialog}) ->
+  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, isVimiumHelpDialog, options}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex}
     @tabState[tabId].ports = extend {}, portsForTab[tabId]
-    @sendMessage "getHintDescriptors", tabId, {modeIndex, isVimiumHelpDialog}
+    @sendMessage "getHintDescriptors", tabId, {modeIndex, isVimiumHelpDialog, options}
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->

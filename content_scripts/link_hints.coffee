@@ -57,7 +57,7 @@ HintCoordinator =
   sendMessage: (messageType, request = {}) ->
     Frame.postMessage "linkHintsMessage", extend request, {messageType}
 
-  prepareToActivateMode: (mode, onExit) ->
+  prepareToActivateMode: (mode, options, onExit) ->
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
     # prevent other Vimium commands from being triggered before link-hints mode is launched, we install a
     # temporary mode to block keyboard events.
@@ -71,14 +71,14 @@ HintCoordinator =
     Utils.setTimeout 1000, -> suppressKeyboardEvents.exit() if suppressKeyboardEvents?.modeIsActive
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode",
-      modeIndex: availableModes.indexOf(mode), isVimiumHelpDialog: window.isVimiumHelpDialog
+      modeIndex: availableModes.indexOf(mode), isVimiumHelpDialog: window.isVimiumHelpDialog, options: options?.registryEntry.options
 
   # Hint descriptors are global.  They include all of the information necessary for each frame to determine
   # whether and when a hint from *any* frame is selected.  They include the following properties:
   #   frameId: the frame id of this hint's local frame
   #   localIndex: the index in @localHints for the full hint descriptor for this hint
   #   linkText: the link's text for filtered hints (this is null for alphabet hints)
-  getHintDescriptors: ({modeIndex, isVimiumHelpDialog}) ->
+  getHintDescriptors: ({modeIndex, isVimiumHelpDialog, options}) ->
     # Ensure that the document is ready and that the settings are loaded.
     DomUtils.documentReady => Settings.onLoaded =>
       requireHref = availableModes[modeIndex] in [COPY_LINK_URL, OPEN_INCOGNITO]
@@ -89,7 +89,7 @@ HintCoordinator =
         if isVimiumHelpDialog and not window.isVimiumHelpDialog
           []
         else
-          LocalHints.getLocalHints requireHref
+          LocalHints.getLocalHints requireHref, options?.useNew
       @localHintDescriptors = @localHints.map ({linkText}, localIndex) -> {frameId, localIndex, linkText}
       @sendMessage "postHintDescriptors", hintDescriptors: @localHintDescriptors
 
@@ -121,21 +121,21 @@ HintCoordinator =
     @linkHintsMode = @localHints = null
 
 LinkHints =
-  activateMode: (count = 1, {mode}) ->
-    mode ?= OPEN_IN_CURRENT_TAB
+  activateMode: (count = 1, options) ->
+    mode = options.mode ? OPEN_IN_CURRENT_TAB
     if 0 < count or mode is OPEN_WITH_QUEUE
-      HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
+      HintCoordinator.prepareToActivateMode mode, options, (isSuccess) ->
         if isSuccess
           # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
           # which would cause our new mode to exit immediately.
-          Utils.nextTick -> LinkHints.activateMode count-1, {mode}
+          Utils.nextTick -> LinkHints.activateMode count-1, options, {mode}
 
-  activateModeToOpenInNewTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_BG_TAB
-  activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_FG_TAB
-  activateModeToCopyLinkUrl: (count) -> @activateMode count, mode: COPY_LINK_URL
-  activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
-  activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
-  activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToOpenInNewTab: (count, options) -> @activateMode count, (extend options, mode: OPEN_IN_NEW_BG_TAB)
+  activateModeToOpenInNewForegroundTab: (count, options) -> @activateMode count, (extend options, mode: OPEN_IN_NEW_FG_TAB)
+  activateModeToCopyLinkUrl: (count, options) -> @activateMode count, (extend options, mode: COPY_LINK_URL)
+  activateModeWithQueue: (_, options) -> @activateMode 1, (extend options, mode: OPEN_WITH_QUEUE)
+  activateModeToOpenIncognito: (count, options) -> @activateMode count, (extend options, mode: OPEN_INCOGNITO)
+  activateModeToDownloadLink: (count, options) -> @activateMode count, (extend options, mode: DOWNLOAD_LINK_URL)
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -741,7 +741,8 @@ LocalHints =
   # Because of this, the rects returned will frequently *NOT* be equivalent to the rects for the whole
   # element.
   #
-  getLocalHints: (requireHref) ->
+  getLocalHints: (requireHref, useNew) ->
+    return new Renderer().getLinksForHints() if useNew
     # We need documentElement to be ready in order to find links.
     return [] unless document.documentElement
     elements = document.documentElement.getElementsByTagName "*"
