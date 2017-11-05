@@ -102,8 +102,7 @@ class Renderer
   rendered: (elementInfo) ->
     elementInfo.rendered ?=
       elementInfo.clippedRect.left < elementInfo.clippedRect.right and
-      elementInfo.clippedRect.top < elementInfo.clippedRect.bottom and
-      @isVisible elementInfo
+      elementInfo.clippedRect.top < elementInfo.clippedRect.bottom
 
   # processRendered is called on each rendered element as it is found, passed Renderer's internal elementInfo
   # struct as the only argument.
@@ -118,16 +117,18 @@ class Renderer
       if @inViewport elementInfo
         elementInfo.clippedRect = Rect.intersect elementInfo.boundingRect, @viewport
 
-        if parentInfo?
-          if parentInfo.clippedRect? and Rect.contains elementInfo.clippedRect, parentInfo.clippedRect and
-              @isVisible elementInfo
-            processRendered elementInfo
-            renderedElements.push elementInfo
-          else
-            @clipBy elementInfo, parentInfo
-            if @rendered elementInfo
+        if @isVisible elementInfo
+          if parentInfo?
+            if parentInfo.clippedRect? and Rect.contains elementInfo.clippedRect, parentInfo.clippedRect
               processRendered elementInfo
               renderedElements.push elementInfo
+            else
+              @clipBy elementInfo, parentInfo
+              if @rendered elementInfo
+                processRendered elementInfo
+                renderedElements.push elementInfo
+        else
+          elementInfo.rendered = false
       else
         elementInfo.rendered = false
 
