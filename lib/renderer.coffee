@@ -20,10 +20,10 @@ class Renderer
       elementInfo.overflowY = computedStyle.overflowY
 
     if elementInfo.overflow == "visible"
-      element.clips = elementInfo.clipsX = elementInfo.clipsY = false
+      elementInfo.clips = elementInfo.clipsX = elementInfo.clipsY = false
     else if elementInfo.overflowX == "visible"
       elementInfo.clipsX = false
-      element.clips = elementInfo.clipsY = true
+      elementInfo.clips = elementInfo.clipsY = true
     else if elementInfo.overflowY == "visible"
       elementInfo.clipsY = false
       elementInfo.clips = elementInfo.clipsX = true
@@ -76,6 +76,8 @@ class Renderer
         else
          elementInfo.clippingRect = @viewport
 
+    elementInfo.clippingRect
+
   getAbsClippingRect: (elementInfo) ->
     # This is called after getClippingRect, which computes elementInfo.absClippingRect for us if relevant.
     return elementInfo.absClippingRect if elementInfo.absClippingRect?
@@ -90,7 +92,7 @@ class Renderer
     if "absolute" != @position elementInfo
       elementInfo.clippedRect = Rect.intersect elementInfo.clippedRect, clippingRect
     else
-      absClippingRect = @getAbsClippingRect parentInfo
+      absClippingRect = @getAbsClippingRect clippingElementInfo
       elementInfo.clippedRect = Rect.intersect elementInfo.clippedRect, absClippingRect
     return
 
@@ -114,7 +116,7 @@ class Renderer
     renderedElements = []
     elementIndex = 0
     while element
-      parentInfo = parentStack[parentStack - 1]
+      parentInfo = parentStack[parentStack.length - 1]
       elementInfo = {element, parentInfo, elementIndex: elementIndex++}
       if @inViewport elementInfo
         elementInfo.clippedRect = Rect.intersect elementInfo.boundingRect, @viewport
@@ -132,17 +134,18 @@ class Renderer
       else
         elementInfo.rendered = false
 
-      currentElement = element
-      element = currentElement.firstElementChild
+      currentElement = elementInfo
+      element = currentElement.element.firstElementChild
       if element
         parentStack.push currentElement
       else
-        element = currentElement.nextElementSibling
+        element = currentElement.element.nextElementSibling
 
         while currentElement and not element
           currentElement = parentStack.pop()
+          break unless currentElement
           if not currentElement.rendered and currentElement.overflowingElements
-            processRenderedDecendents condition elementInfo
+            processRenderedDecendents elementInfo
           element = currentElement.element.nextElementSibling
 
     renderedElements
