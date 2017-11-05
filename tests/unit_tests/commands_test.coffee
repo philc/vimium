@@ -7,6 +7,7 @@ global.Settings = {postUpdateHooks: {}, get: (-> ""), set: ->}
 # Include mode_normal to check that all commands have been implemented.
 global.KeyHandlerMode = global.Mode = {}
 global.KeyboardUtils = {platform: ""}
+extend global, require "../../lib/renderer.js"
 extend global, require "../../content_scripts/link_hints.js"
 extend global, require "../../content_scripts/marks.js"
 extend global, require "../../content_scripts/vomnibar.js"

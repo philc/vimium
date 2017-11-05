@@ -49,6 +49,7 @@
              "lib/handler_stack.js",
              "lib/settings.js",
              "lib/find_mode_history.js",
+             "lib/renderer.js",
              "content_scripts/mode.js",
              "content_scripts/ui_component.js",
              "content_scripts/link_hints.js",
