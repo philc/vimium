@@ -105,17 +105,9 @@ class Renderer
       elementInfo.clippedRect.top < elementInfo.clippedRect.bottom and
       "visible" == @visibility elementInfo
 
-  setOverflowingElement: (elementInfo, ancestorInfo, checkBounds) ->
-    if not checkBounds or not ancestorInfo.clippedRect or
-        Rect.contains elementInfo.clippedRect, ancestorInfo.clippedRect
-      (ancestorInfo.overflowingElements ?= []).push elementInfo
-      @setOverflowingElement elementInfo, ancestorInfo.parentInfo, true if ancestorInfo.parentInfo?
-
-  # - processRendered is called on each rendered element as it is found
-  # - processRenderedDescendents is called on each unrendered element with rendered children *after*
-  #   every child has been processed, but before any outer ancestors are processed
-  # Both of these are passed the elementInfo struct used internally by renderer as their only argument.
-  getRenderedElements: (root, processRendered = (->), processRenderedDecendents = (->)) ->
+  # processRendered is called on each rendered element as it is found, passed Renderer's internal elementInfo
+  # struct as the only argument.
+  getRenderedElements: (root, processRendered = (->)) ->
     element = root
     parentStack = []
     renderedElements = []
@@ -136,7 +128,6 @@ class Renderer
             if @rendered elementInfo
               processRendered elementInfo
               renderedElements.push elementInfo
-              @setOverflowingElement elementInfo, parentInfo
       else
         elementInfo.rendered = false
 
@@ -150,8 +141,6 @@ class Renderer
         while currentElement and not element
           currentElement = parentStack.pop()
           break unless currentElement
-          if not currentElement.rendered and currentElement.overflowingElements
-            processRenderedDecendents elementInfo
           element = currentElement.element.nextElementSibling
 
     renderedElements
@@ -324,10 +313,6 @@ class Renderer
     renderedElements = @getRenderedElements document.documentElement
     , (elementInfo) =>
       @isClickableOrDeferring elementInfo
-    , (elementInfo) =>
-      return # Looks like this should be unnecessary.
-      for overflowingElementInfo in elementInfo.overflowingElements
-        @isClickableOrDeferring overflowingElementInfo
 
     renderedClickableElements = @renderElements renderedElements
     , (elementInfo) ->
