@@ -152,13 +152,13 @@ class Renderer
 
   # `exceptionFilter elem = true` should always imply `outputFilter elem = true`
   renderElements: (elements, outputFilter = (-> true), exceptionFilter = (-> false)) ->
-    elements = elements.reverse()
     renderedElements = []
-    while elementInfo = elements.pop()
+    for elementInfo, index in elements
       continue unless outputFilter elementInfo
       {clippedRect} = elementInfo
       rects = undefined
-      for negativeElement in elements
+      for i in [index+1 ... elements.length] by 1
+        negativeElement = elements[i]
         if Rect.intersects clippedRect, negativeElement.clippedRect
           rects ?= @getClientRects elementInfo
           for negativeRect in @getClientRects negativeElement
