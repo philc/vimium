@@ -146,9 +146,9 @@ class Renderer
     elementInfo.clientRects ?= Array::map.call elementInfo.element.getClientRects(), (rect) ->
       Rect.intersect rect, elementInfo.boundingRect
 
-  # `exceptionFilter elem = true` should always imply `outputFilter elem = true`
-  renderElements: (elements, outputFilter = (-> true), exceptionFilter = (-> false), process = (->)) ->
+  renderElements: (elements, outputFilter = (-> true), process = (->)) ->
     renderedElements = []
+    unrenderedAccepted = []
     for elementInfo, index in elements
       continue unless outputFilter elementInfo
       {clippedRect} = elementInfo
@@ -165,12 +165,10 @@ class Renderer
         elementInfo.renderedRects = rects
         process elementInfo
         renderedElements.push elementInfo
-      else if exceptionFilter elementInfo
-        elementInfo.renderedRects = @getClientRects elementInfo
-        process elementInfo
-        renderedElements.push elementInfo
+      else
+        unrenderedAccepted.push elementInfo
 
-    renderedElements
+    [renderedElements, unrenderedAccepted]
 
   getImageMapRects: (elementInfo) ->
     element = elementInfo.element
@@ -313,13 +311,17 @@ class Renderer
     renderedElements = @getRenderedElements document.documentElement
     renderedElements.map @isClickableOrDeferring.bind this
 
-    renderedClickableElements = @renderElements renderedElements
+    [renderedClickableElements, unrenderedClickableElements] = @renderElements renderedElements
     , (elementInfo) ->
       elementInfo.clickable or elementInfo.defersTo and not elementInfo.defersTo.resolvedBy
     , (elementInfo) ->
-      not (elementInfo.clickable or elementInfo.defersTo).secondClassCitizen
-    , (elementInfo) ->
       (elementInfo.clickable or elementInfo.defersTo).resolvedBy = elementInfo
+
+    unrenderedClickableElements.map (elementInfo) ->
+      clickableRef = elementInfo.clickable or elementInfo.defersTo
+      unless clickableRef.secondClassCitizen or clickableRef.resolvedBy
+        clickableRef.resolvedBy = elementInfo
+        renderedClickableElements.push elementInfo
 
     # Position the rects within the window.
     {top, left} = DomUtils.getViewportTopLeft()
