@@ -147,7 +147,7 @@ class Renderer
       Rect.intersect rect, elementInfo.boundingRect
 
   # `exceptionFilter elem = true` should always imply `outputFilter elem = true`
-  renderElements: (elements, outputFilter = (-> true), exceptionFilter = (-> false)) ->
+  renderElements: (elements, outputFilter = (-> true), exceptionFilter = (-> false), process = (->)) ->
     renderedElements = []
     for elementInfo, index in elements
       continue unless outputFilter elementInfo
@@ -162,9 +162,11 @@ class Renderer
             rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
       if rects and rects.length > 0
         elementInfo.renderedRects = rects ? @getClientRects elementInfo
+        process elementInfo
         renderedElements.push elementInfo
       else if exceptionFilter elementInfo
         elementInfo.renderedRects = @getClientRects elementInfo
+        process elementInfo
         renderedElements.push elementInfo
 
     renderedElements
@@ -312,9 +314,11 @@ class Renderer
 
     renderedClickableElements = @renderElements renderedElements
     , (elementInfo) ->
-      elementInfo.clickable or elementInfo.defersTo
+      elementInfo.clickable or elementInfo.defersTo and not elementInfo.defersTo.resolvedBy
     , (elementInfo) ->
       not (elementInfo.clickable or elementInfo.defersTo).secondClassCitizen
+    , (elementInfo) ->
+      (elementInfo.clickable or elementInfo.defersTo).resolvedBy = elementInfo
 
     # Position the rects within the window.
     {top, left} = DomUtils.getViewportTopLeft()
