@@ -160,8 +160,9 @@ class Renderer
           for negativeRect in @getClientRects negativeElement
             # Subtract negativeRect from every rect in rects, and concatenate the resulting arrays.
             rects = [].concat (rects.map (rect) -> Rect.subtract rect, negativeRect)...
-      if rects and rects.length > 0
-        elementInfo.renderedRects = rects ? @getClientRects elementInfo
+      rects ?= @getClientRects elementInfo
+      if rects.length > 0
+        elementInfo.renderedRects = rects
         process elementInfo
         renderedElements.push elementInfo
       else if exceptionFilter elementInfo
