@@ -104,9 +104,7 @@ class Renderer
       elementInfo.clippedRect.left < elementInfo.clippedRect.right and
       elementInfo.clippedRect.top < elementInfo.clippedRect.bottom
 
-  # processRendered is called on each rendered element as it is found, passed Renderer's internal elementInfo
-  # struct as the only argument.
-  getRenderedElements: (root, processRendered = (->)) ->
+  getRenderedElements: (root) ->
     element = root
     parentStack = []
     renderedElements = []
@@ -120,12 +118,10 @@ class Renderer
         if @isVisible elementInfo
           if parentInfo?
             if parentInfo.clippedRect? and Rect.contains elementInfo.clippedRect, parentInfo.clippedRect
-              processRendered elementInfo
               renderedElements.push elementInfo
             else
               @clipBy elementInfo, parentInfo
               if @rendered elementInfo
-                processRendered elementInfo
                 renderedElements.push elementInfo
         else
           elementInfo.rendered = false
@@ -312,8 +308,7 @@ class Renderer
 
   getLinksForHints: ->
     renderedElements = @getRenderedElements document.documentElement
-    , (elementInfo) =>
-      @isClickableOrDeferring elementInfo
+    renderedElements.map @isClickableOrDeferring.bind this
 
     renderedClickableElements = @renderElements renderedElements
     , (elementInfo) ->
