@@ -146,11 +146,11 @@ class Renderer
     elementInfo.clientRects ?= Array::map.call elementInfo.element.getClientRects(), (rect) ->
       Rect.intersect rect, elementInfo.boundingRect
 
-  renderElements: (elements, outputFilter = (-> true), process = (->)) ->
+  renderElements: (elements, preFilter = (-> true), postFilter = (-> true), process = (->)) ->
     renderedElements = []
     unrenderedAccepted = []
     for elementInfo, index in elements
-      continue unless outputFilter elementInfo
+      continue unless preFilter elementInfo
       {clippedRect} = elementInfo
       rects = undefined
       for i in [index+1 ... elements.length] by 1
@@ -163,8 +163,9 @@ class Renderer
       rects ?= @getClientRects elementInfo
       if rects.length > 0
         elementInfo.renderedRects = rects
-        process elementInfo
-        renderedElements.push elementInfo
+        if postFilter elementInfo
+          process elementInfo
+          renderedElements.push elementInfo
       else
         unrenderedAccepted.push elementInfo
 
@@ -307,33 +308,36 @@ class Renderer
     else
       isDeferring
 
+  isLinkVisible: (top, left) -> (elementInfo) ->
+    for rect in elementInfo.renderedRects
+      continue if rect.width < 4 or rect.height < 4
+      clickableRef = (elementInfo.clickable or elementInfo.defersTo)
+      clickableRef.element = elementInfo.element
+      clickableRef.rect = Rect.translate rect, left, top
+      return true
+    return false
+
   getLinksForHints: ->
     renderedElements = @getRenderedElements document.documentElement
     renderedElements.map @isClickableOrDeferring.bind this
 
+    {top, left} = DomUtils.getViewportTopLeft()
+    isLinkVisible = @isLinkVisible top, left
+
     [renderedClickableElements, unrenderedClickableElements] = @renderElements renderedElements
     , (elementInfo) ->
       elementInfo.clickable or elementInfo.defersTo and not elementInfo.defersTo.resolvedBy
+    , isLinkVisible
     , (elementInfo) ->
       (elementInfo.clickable or elementInfo.defersTo).resolvedBy = elementInfo
 
     unrenderedClickableElements.map (elementInfo) ->
       clickableRef = elementInfo.clickable or elementInfo.defersTo
-      unless clickableRef.secondClassCitizen or clickableRef.resolvedBy
-        clickableRef.resolvedBy = elementInfo
-        renderedClickableElements.push elementInfo
+      if not (clickableRef.secondClassCitizen or clickableRef.resolvedBy) and isLinkVisible elementInfo
+          clickableRef.resolvedBy = elementInfo
+          renderedClickableElements.push elementInfo
 
-    # Position the rects within the window.
-    {top, left} = DomUtils.getViewportTopLeft()
-    hints = []
-    for elementInfo in renderedClickableElements
-      for rect in elementInfo.renderedRects
-        continue if rect.width < 4 or rect.height < 4
-        hint = extend {}, (elementInfo.clickable or elementInfo.defersTo)
-        hint.element = elementInfo.element
-        hint.rect = Rect.translate rect, left, top
-        hints.push hint
-
+    hints = renderedClickableElements.map (elementInfo) -> elementInfo.clickable or elementInfo.defersTo
     if Settings.get "filterLinkHints"
       LocalHints.withLabelMap (labelMap) =>
         extend hint, LocalHints.generateLinkText labelMap, hint for hint in hints
