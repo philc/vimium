@@ -294,11 +294,14 @@ class Renderer
 
   isClickableOrDeferring: (elementInfo) ->
     isClickable = @isClickable elementInfo
-    return isClickable if isClickable and not isClickable.secondClassCitizen
+    isDeferring = @isClickableOrDeferring elementInfo.parentInfo if elementInfo.parentInfo?
+    if isClickable and not isClickable.possibleFalsePositive
+      if isDeferring and isDeferring.possibleFalsePositive
+        isDeferring.resolvedBy = elementInfo.element
+      return isClickable
 
-    isDeferring = @isClickableOrDeferring elementInfo.parentElement if elementInfo.parentElement?
     if isDeferring
-      if isClickable and isDeferring.secondClassCitizen
+      if isClickable and isDeferring.possibleFalsePositive
         isClickable
       else
         elementInfo.defersTo = isDeferring
@@ -325,7 +328,8 @@ class Renderer
 
     [renderedClickableElements, unrenderedClickableElements] = @renderElements renderedElements
     , (elementInfo) ->
-      elementInfo.clickable or elementInfo.defersTo and not elementInfo.defersTo.resolvedBy
+      clickableRef = elementInfo.clickable or elementInfo.defersTo
+      clickableRef and not clickableRef.resolvedBy
     , isLinkVisible
     , (elementInfo) ->
       (elementInfo.clickable or elementInfo.defersTo).resolvedBy = elementInfo
