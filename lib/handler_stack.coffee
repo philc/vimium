@@ -57,7 +57,10 @@ class HandlerStack
         if result == @passEventToPage
           return true
         else if result == @suppressPropagation
-          DomUtils.suppressPropagation event
+          if type == "keydown"
+            DomUtils.consumeKeyup event, null, true
+          else
+            DomUtils.suppressPropagation event
           return false
         else if result == @restartBubbling
           return @bubbleEvent type, event

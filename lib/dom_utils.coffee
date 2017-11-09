@@ -344,7 +344,7 @@ DomUtils =
   consumeKeyup: do ->
     handlerId = null
 
-    (event, callback = null) ->
+    (event, callback = null, suppressPropagation) ->
       unless event.repeat
         handlerStack.remove handlerId if handlerId?
         code = event.code
@@ -353,7 +353,10 @@ DomUtils =
           keyup: (event) ->
             return handlerStack.continueBubbling unless event.code == code
             @remove()
-            DomUtils.suppressEvent event
+            if suppressPropagation
+              DomUtils.suppressPropagation event
+            else
+              DomUtils.suppressEvent event
             handlerStack.continueBubbling
           # We cannot track keyup events if we lose the focus.
           blur: (event) ->
