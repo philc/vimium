@@ -814,25 +814,10 @@ LocalHints =
       hint.rect.left += left
 
     if Settings.get "filterLinkHints"
-      @withLabelMap (labelMap) =>
-        extend hint, @generateLinkText labelMap, hint for hint in localHints
+      extend hint, @generateLinkText hint for hint in localHints
     localHints
 
-  # Generate a map of input element => label text, call a callback with it.
-  withLabelMap: (callback) ->
-    labelMap = {}
-    labels = document.querySelectorAll "label"
-    for label in labels
-      forElement = label.getAttribute "for"
-      if forElement
-        labelText = label.textContent.trim()
-        # Remove trailing ":" commonly found in labels.
-        if labelText[labelText.length-1] == ":"
-          labelText = labelText.substr 0, labelText.length-1
-        labelMap[forElement] = labelText
-    callback labelMap
-
-  generateLinkText: (labelMap, hint) ->
+  generateLinkText: (hint) ->
     element = hint.element
     linkText = ""
     showLinkText = false
@@ -840,8 +825,11 @@ LocalHints =
     nodeName = element.nodeName.toLowerCase()
 
     if nodeName == "input"
-      if labelMap[element.id]
-        linkText = labelMap[element.id]
+      if element.labels?.length > 0
+        linkText = element.labels[0].textContent.trim()
+        # Remove trailing ":" commonly found in labels.
+        if linkText[linkText.length-1] == ":"
+          linkText = linkText.substr 0, linkText.length-1
         showLinkText = true
       else if element.getAttribute("type")?.toLowerCase() == "file"
         linkText = "Choose File"
