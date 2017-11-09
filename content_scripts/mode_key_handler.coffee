@@ -59,7 +59,7 @@ class KeyHandlerMode extends Mode
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
       @suppressEvent
     else
-      @reset() if keyChar
+      @reset() unless event.key in ["Control", "Shift", "Alt", "OS", "AltGraph"]
       @continueBubbling
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
