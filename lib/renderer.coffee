@@ -3,9 +3,14 @@ class Renderer
     @viewport = {left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight}
 
   inViewport: (elementInfo) ->
-    elementInfo.boundingRect = elementInfo.element.getBoundingClientRect()
+    elementInfo.rawClientRects = clientRects = elementInfo.element.getClientRects()
+    if clientRects.length == 0
+      return false # This element is display: none.
+    else if clientRects.length == 1
+      elementInfo.boundingRect = clientRects[0]
+    else
+      elementInfo.boundingRect = elementInfo.element.getBoundingClientRect()
     # Don't need to use intersectsStrict here, since we don't care about 0-width intersections.
-    # NOTE(mrmr1993): This also excluded display: none; elements, which have {left: 0, right: 0, ...}
     Rect.intersects elementInfo.boundingRect, @viewport
 
   isClipping: (elementInfo) ->
@@ -143,7 +148,7 @@ class Renderer
     renderedElements
 
   getClientRects: (elementInfo) ->
-    elementInfo.clientRects ?= Array::map.call elementInfo.element.getClientRects(), (rect) ->
+    elementInfo.clientRects ?= Array::map.call elementInfo.rawClientRects, (rect) ->
       Rect.intersect rect, elementInfo.boundingRect
 
   renderElements: (elements, preFilter = (-> true), postFilter = (-> true), process = (->)) ->
