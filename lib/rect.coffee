@@ -88,6 +88,21 @@ Rect =
     @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
         (Math.min rect1.right, rect2.right), (Math.min rect1.bottom, rect2.bottom)
 
+  # Determine whether innerRect is contained by outerRect.
+  contains: (innerRect, outerRect) ->
+    innerRect.left >= outerRect.left and
+    innerRect.right <= outerRect.right and
+    innerRect.top >= outerRect.top and
+    innerRect.bottom <= outerRect.bottom
+
+  containsX: (innerRect, outerRect) ->
+    innerRect.left >= outerRect.left and
+    innerRect.right <= outerRect.right
+
+  containsY: (innerRect, outerRect) ->
+    innerRect.top >= outerRect.top and
+    innerRect.bottom <= outerRect.bottom
+
 root = exports ? (window.root ?= {})
 root.Rect = Rect
 extend window, root unless exports?
