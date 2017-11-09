@@ -9,6 +9,8 @@ class Renderer
     else if clientRects.length == 1
       elementInfo.boundingRect = clientRects[0]
     else
+      # This element is inline, so it can't clip overflow.
+      elementInfo.clips = elementInfo.clipsX = elementInfo.clipsY = false
       elementInfo.boundingRect = elementInfo.element.getBoundingClientRect()
     # Don't need to use intersectsStrict here, since we don't care about 0-width intersections.
     Rect.intersects elementInfo.boundingRect, @viewport
