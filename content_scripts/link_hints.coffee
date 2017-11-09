@@ -293,11 +293,10 @@ class LinkHintsMode
           if keyChar.length == 1
             @markerMatcher.pushKeyChar keyChar
             @updateVisibleMarkers()
-          handlerStack.suppressEvent
-      return
+          else
+            return
 
-    # We've handled the event, so suppress it and update the mode indicator.
-    DomUtils.suppressEvent event
+    handlerStack.suppressEvent
 
   updateVisibleMarkers: (tabCount = 0) ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
