@@ -70,6 +70,9 @@ KeyboardUtils =
   isPrintable: (event) ->
     @getKeyCharString(event)?.length == 1
 
+  isModifier: (event) ->
+    event.key in ["Control", "Shift", "Alt", "OS", "AltGraph", "Meta"]
+
   enUsTranslations:
     "Backquote":     ["`", "~"]
     "Minus":         ["-", "_"]
