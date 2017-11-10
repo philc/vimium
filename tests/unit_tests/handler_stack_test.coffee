@@ -4,6 +4,7 @@ extend(global, require "../../lib/handler_stack.js")
 context "handlerStack",
   setup ->
     stub global, "DomUtils", {}
+    stub DomUtils, "consumeKeyup", ->
     stub DomUtils, "suppressEvent", ->
     stub DomUtils, "suppressPropagation", ->
     @handlerStack = new HandlerStack
