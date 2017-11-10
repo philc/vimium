@@ -52,7 +52,7 @@ class KeyHandlerMode extends Mode
     else if isEscape
       @continueBubbling
     else if @isMappedKey keyChar
-      @handleKeyChar keyChar
+      @handleKeyChar keyChar, KeyboardUtils.isModifier event
       @suppressEvent
     else if @isCountKey keyChar
       digit = parseInt keyChar
@@ -78,12 +78,15 @@ class KeyHandlerMode extends Mode
   isInResetState: ->
     @countPrefix == 0 and @keyState.length == 1
 
-  handleKeyChar: (keyChar) ->
+  handleKeyChar: (keyChar, maySkipKey) ->
     bgLog "handle key #{keyChar} (#{@name})"
     # A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     @countPrefix = 0 unless keyChar of @keyState[0]
     # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
-    @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
+    oldKeyState = @keyState
+    @keyState = (mapping[keyChar] for mapping in @keyState when keyChar of mapping)
+    @keyState = @keyState.concat oldKeyState if maySkipKey
+    @keyState.push @keyMapping
     if @keyState[0].command?
       command = @keyState[0]
       count = if 0 < @countPrefix then @countPrefix else 1
