@@ -996,33 +996,6 @@ context "PostFindMode",
     sendKeyboardEvent "Escape", "keydown"
     assert.isTrue @postFindMode.modeIsActive
 
-context "WaitForEnter",
-  setup ->
-    initializeModeState()
-    @isSuccess = null
-    @waitForEnter = new WaitForEnter (isSuccess) => @isSuccess = isSuccess
-
-  should "exit with success on Enter", ->
-    assert.isTrue @waitForEnter.modeIsActive
-    assert.isFalse @isSuccess?
-    sendKeyboardEvent "Enter", "keydown"
-    assert.isFalse @waitForEnter.modeIsActive
-    assert.isTrue @isSuccess? and @isSuccess == true
-
-  should "exit without success on Escape", ->
-    assert.isTrue @waitForEnter.modeIsActive
-    assert.isFalse @isSuccess?
-    sendKeyboardEvent "Escape", "keydown"
-    assert.isFalse @waitForEnter.modeIsActive
-    assert.isTrue @isSuccess? and @isSuccess == false
-
-  should "not exit on other keyboard events", ->
-    assert.isTrue @waitForEnter.modeIsActive
-    assert.isFalse @isSuccess?
-    sendKeyboardEvents "abc"
-    assert.isTrue @waitForEnter.modeIsActive
-    assert.isFalse @isSuccess?
-
 context "GrabBackFocus",
   setup ->
     testContent = "<input type='text' value='some value' id='input'/>"

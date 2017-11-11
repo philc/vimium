@@ -874,26 +874,9 @@ class TypingProtector extends Mode
 
     @onExit ->
       callback true # true -> isSuccess.
-
-class WaitForEnter extends Mode
-  constructor: (callback) ->
-    super
-      name: "hint/wait-for-enter"
-      suppressAllKeyboardEvents: true
-      indicator: "Hit <Enter> to proceed..."
-
-    @push
-      keydown: (event) =>
-        if event.key == "Enter"
-          @exit()
-          callback true # true -> isSuccess.
-        else if KeyboardUtils.isEscape event
-          @exit()
-          callback false # false -> isSuccess.
-
 root = exports ? (window.root ?= {})
 root.LinkHints = LinkHints
 root.HintCoordinator = HintCoordinator
 # For tests:
-extend root, {LinkHintsMode, LocalHints, AlphabetHints, WaitForEnter}
+extend root, {LinkHintsMode, LocalHints, AlphabetHints}
 extend window, root unless exports?
