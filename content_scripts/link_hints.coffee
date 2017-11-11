@@ -271,7 +271,7 @@ class LinkHintsMode
 
     else if event.key == "Tab"
       if event.shiftKey then @tabCount-- else @tabCount++
-      @updateVisibleMarkers @tabCount
+      @updateVisibleMarkers()
 
     else if event.key == " " and @markerMatcher.shouldRotateHints event
       HintCoordinator.sendMessage "rotateHints"
@@ -294,9 +294,10 @@ class LinkHintsMode
 
     handlerStack.suppressEvent
 
-  updateVisibleMarkers: (tabCount = 0) ->
+  updateVisibleMarkers: ->
     {hintKeystrokeQueue, linkTextKeystrokeQueue} = @markerMatcher
-    HintCoordinator.sendMessage "updateKeyState", {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}
+    HintCoordinator.sendMessage "updateKeyState",
+      {hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount: @tabCount}
 
   updateKeyState: ({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) ->
     extend @markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue}
