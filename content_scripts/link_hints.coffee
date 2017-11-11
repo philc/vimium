@@ -232,13 +232,9 @@ class LinkHintsMode
   onKeyDownInMode: (event) ->
     return if event.repeat
 
-    previousTabCount = @tabCount
-    @tabCount = 0
-
     # NOTE(smblott) The modifier behaviour here applies only to alphabet hints.
     if event.key in ["Control", "Shift"] and not Settings.get("filterLinkHints") and
       @mode in [ OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB ]
-        @tabCount = previousTabCount
         # Toggle whether to open the link in a new or current tab.
         previousMode = @mode
         key = event.key
@@ -262,6 +258,7 @@ class LinkHintsMode
 
     else if KeyboardUtils.isBackspace event
       if @markerMatcher.popKeyChar()
+        @tabCount = 0
         @updateVisibleMarkers()
       else
         # Exit via @hintMode.exit(), so that the LinkHints.activate() "onExit" callback sees the key event and
@@ -273,15 +270,14 @@ class LinkHintsMode
       HintCoordinator.sendMessage "activateActiveHintMarker" if @markerMatcher.activeHintMarker
 
     else if event.key == "Tab"
-      @tabCount = previousTabCount + (if event.shiftKey then -1 else 1)
+      if event.shiftKey then @tabCount-- else @tabCount++
       @updateVisibleMarkers @tabCount
 
     else if event.key == " " and @markerMatcher.shouldRotateHints event
-      @tabCount = previousTabCount
       HintCoordinator.sendMessage "rotateHints"
 
     else
-      @tabCount = previousTabCount if event.ctrlKey or event.metaKey or event.altKey
+      @tabCount = 0 unless event.ctrlKey or event.metaKey or event.altKey
       unless event.repeat
         keyChar =
           if Settings.get "filterLinkHints"
