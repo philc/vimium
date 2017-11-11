@@ -395,11 +395,8 @@ class LinkHintsMode
 
     if linkMatched.isLocalMarker
       {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
-      flashElements = for rect in clickEl.getClientRects()
+      for rect in clickEl.getClientRects()
         DomUtils.flashRect Rect.translate rect, viewportLeft, viewportTop
-
-    # The frame with the matched link sends the "exit" message.
-    if linkMatched.isLocalMarker
       HintCoordinator.sendMessage "exit", isSuccess: true
 
   #
