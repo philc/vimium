@@ -388,9 +388,8 @@ class LinkHintsMode
     installKeyboardBlocker = (startKeyboardBlocker) ->
       if linkMatched.isLocalMarker
         {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
-        for rect in (Rect.copy rect for rect in clickEl.getClientRects())
-          extend rect, top: rect.top + viewportTop, left: rect.left + viewportLeft
-          flashEl = DomUtils.addFlashRect rect
+        for rect in clickEl.getClientRects()
+          flashEl = DomUtils.addFlashRect Rect.translate rect, viewportLeft, viewportTop
           do (flashEl) -> HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
 
       if windowIsFocused()
