@@ -36,6 +36,8 @@ KeyboardUtils =
       ""
     else if key of @keyNames
       @keyNames[key]
+    else if @isModifier event
+      "" # Don't resolve modifier keys.
     else if key.length == 1
       key
     else
@@ -69,6 +71,9 @@ KeyboardUtils =
 
   isPrintable: (event) ->
     @getKeyCharString(event)?.length == 1
+
+  isModifier: (event) ->
+    event.key in ["Control", "Shift", "Alt", "OS", "AltGraph", "Meta"]
 
   enUsTranslations:
     "Backquote":     ["`", "~"]
