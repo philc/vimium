@@ -424,7 +424,7 @@ context "Filtered link hints",
       sendKeyboardEvent "Tab", "keydown"
       assert.equal "9", @getActiveHintMarker()
 
-  context "Wait for enter setting",
+  context "Wait for enter setting enabled",
     setup ->
       stubSettings "waitForEnterForFilteredHints", true
       initializeModeState()
@@ -436,11 +436,27 @@ context "Filtered link hints",
       document.getElementById("test-div").innerHTML = ""
       @linkHints.deactivateMode()
 
-    should "require enter when the setting is enabled", ->
+    should "require enter before exiting the mode", ->
       sendKeyboardEvents "test"
       assert.isTrue @linkHints.hintMode.modeIsActive
       sendKeyboardEvent "Enter"
       assert.isFalse @linkHints.hintMode.modeIsActive
+
+  context "Wait for enter setting disabled",
+    setup ->
+      stubSettings "waitForEnterForFilteredHints", false
+      initializeModeState()
+      testContent = "<a>test</a>"
+      document.getElementById("test-div").innerHTML = testContent
+      handlerStack.push keydown: (event) -> assert.isFalse event.key
+      @linkHints = activateLinkHintsMode()
+
+    tearDown ->
+      document.getElementById("test-div").innerHTML = ""
+      @linkHints.deactivateMode()
+
+    should "not leak filtering keys", ->
+      sendKeyboardEvents "test"
 
 context "Input focus",
 
