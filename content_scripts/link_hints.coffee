@@ -385,15 +385,15 @@ class LinkHintsMode
               clickEl.focus()
             linkActivator clickEl
 
+    if linkMatched.isLocalMarker
+      {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
+      for rect in clickEl.getClientRects()
+        flashEl = DomUtils.addFlashRect Rect.translate rect, viewportLeft, viewportTop
+        do (flashEl) -> HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
+
     # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
     # frame containing the matched link does.
     if userMightOverType
-      if linkMatched.isLocalMarker
-        {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
-        for rect in clickEl.getClientRects()
-          flashEl = DomUtils.addFlashRect Rect.translate rect, viewportLeft, viewportTop
-          do (flashEl) -> HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
-
       if windowIsFocused()
         callback = (isSuccess) -> HintCoordinator.sendMessage "exit", {isSuccess}
         if Settings.get "waitForEnterForFilteredHints"
@@ -401,7 +401,6 @@ class LinkHintsMode
         else
           new TypingProtector 200, callback
     else if linkMatched.isLocalMarker
-      DomUtils.flashRect linkMatched.rect
       HintCoordinator.sendMessage "exit", isSuccess: true
 
   #
