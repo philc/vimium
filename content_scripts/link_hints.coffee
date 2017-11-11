@@ -305,7 +305,7 @@ class LinkHintsMode
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
-      @activateLink linksMatched[0], userMightOverType ? false
+      @activateLink linksMatched[0], userMightOverType
     else
       @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
@@ -359,7 +359,7 @@ class LinkHintsMode
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
   # selectively pushing the appropriate HintCoordinator.onExit handlers.
-  activateLink: (linkMatched, userMightOverType=false) ->
+  activateLink: (linkMatched, userMightOverType) ->
     @removeHintMarkers()
 
     if linkMatched.isLocalMarker
@@ -397,10 +397,11 @@ class LinkHintsMode
 
     # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
     # frame containing the matched link does.
-    if userMightOverType and Settings.get "waitForEnterForFilteredHints"
-      installKeyboardBlocker (callback) -> new WaitForEnter callback
-    else if userMightOverType
-      installKeyboardBlocker (callback) -> new TypingProtector 200, callback
+    if userMightOverType
+      if Settings.get "waitForEnterForFilteredHints"
+        installKeyboardBlocker (callback) -> new WaitForEnter callback
+      else
+        installKeyboardBlocker (callback) -> new TypingProtector 200, callback
     else if linkMatched.isLocalMarker
       DomUtils.flashRect linkMatched.rect
       HintCoordinator.sendMessage "exit", isSuccess: true
