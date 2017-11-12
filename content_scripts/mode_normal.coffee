@@ -144,7 +144,23 @@ NormalModeCommands =
       for i in [0...resultSet.snapshotLength] by 1
         element = resultSet.snapshotItem i
         continue unless DomUtils.getVisibleClientRect element, true
-        { element, rect: Rect.copy element.getBoundingClientRect() }
+        { element, index: i, rect: Rect.copy element.getBoundingClientRect() }
+
+    visibleInputs.sort ({element: element1, index: i1}, {element: element2, index: i2}) ->
+      # Put elements with a lower positive tabIndex first, keeping elements in DOM order.
+      if element1.tabIndex > 0
+        if element2.tabIndex > 0
+          tabDifference = element1.tabIndex - element2.tabIndex
+          if tabDifference != 0
+            tabDifference
+          else
+            i1 - i2
+        else
+          -1
+      else if element2.tabIndex > 0
+        1
+      else
+        i1 - i2
 
     if visibleInputs.length == 0
       HUD.showForDuration("There are no inputs to focus.", 1000)
@@ -153,7 +169,6 @@ NormalModeCommands =
     # This is a hack to improve usability on the Vimium options page.  We prime the recently-focused input
     # to be the key-mappings input.  Arguably, this is the input that the user is most likely to use.
     recentlyFocusedElement = lastFocusedInput()
-    recentlyFocusedElement ?= document.getElementById "keyMappings" if window.isVimiumOptionsPage
 
     selectedInputIndex =
       if count == 1
