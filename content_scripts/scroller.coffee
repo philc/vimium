@@ -95,7 +95,14 @@ findScrollableElement = (element, direction, amount, factor) ->
 # On some pages, the scrolling element is not actually scrollable.  Here, we search the document for the
 # largest visible element which does scroll vertically. This is used to initialize activatedElement. See
 # #1358.
-firstScrollableElement = (element=getScrollingElement()) ->
+firstScrollableElement = (element) ->
+  unless element
+    scrollingElement = getScrollingElement()
+    if doesScroll(scrollingElement, "y", 1, 1) or doesScroll(scrollingElement, "y", -1, 1)
+      return scrollingElement
+    else
+      element = document.body ? getScrollingElement()
+
   if doesScroll(element, "y", 1, 1) or doesScroll(element, "y", -1, 1)
     element
   else
