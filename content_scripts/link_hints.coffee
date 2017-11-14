@@ -294,7 +294,7 @@ class LinkHintsMode
             @markerMatcher.pushKeyChar keyChar
             @updateVisibleMarkers()
           else
-            return
+            return handlerStack.suppressPropagation
 
     handlerStack.suppressEvent
 
