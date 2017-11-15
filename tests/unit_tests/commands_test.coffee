@@ -30,6 +30,12 @@ context "Key mappings",
     @testKeySequence "##", "#/#", 2
     @testKeySequence "..", "./.", 2
 
+  should "recognize extra angle brackets", ->
+    @testKeySequence "<", "<", 1
+    @testKeySequence ">", ">", 1
+    @testKeySequence "<c-\\>>", "<c->>", 1
+    @testKeySequence "<c-\\<>", "<c-<>", 1
+
   should "parse keys with modifiers", ->
     @testKeySequence "<c-a>", "<c-a>", 1
     @testKeySequence "<c-A>", "<c-A>", 1
