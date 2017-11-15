@@ -64,7 +64,8 @@ Commands =
   parseKeySequence: do ->
     modifier = "(?:[acm]-)"                             # E.g. "a-", "c-", "m-".
     namedKey = "(?:[a-z][a-z0-9]+)"                     # E.g. "left" or "f12" (always two characters or more).
-    modifiedKey = "(?:#{modifier}+(?:.|#{namedKey}))"   # E.g. "c-*" or "c-left".
+    escapedKey = "(?:\\\\[<>])"                           # Escaped < or >
+    modifiedKey = "(?:#{modifier}+(?:#{namedKey}|#{escapedKey}|.))"   # E.g. "c-*" or "c-left".
     specialKeyRegexp = new RegExp "^<(#{namedKey}|#{modifiedKey})>(.*)", "i"
     (key) ->
       if key.length == 0
@@ -73,6 +74,7 @@ Commands =
       else if 0 == key.search specialKeyRegexp
         [modifiers..., keyChar] = RegExp.$1.split "-"
         keyChar = keyChar.toLowerCase() unless keyChar.length == 1
+        keyChar = keyChar.replace("\\", "")
         modifiers = (modifier.toLowerCase() for modifier in modifiers)
         modifiers.sort()
         ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
