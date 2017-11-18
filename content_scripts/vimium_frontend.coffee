@@ -157,7 +157,7 @@ initializePreDomReady = ->
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
   element.addEventListener(event, forTrusted(->
-    root.extend window, root unless extend?
+    root.extend window, root unless extend? # See #2800.
     if isEnabledForUrl then callback.apply(this, arguments) else true
   ), true)
 
