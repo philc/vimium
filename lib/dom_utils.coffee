@@ -363,8 +363,12 @@ DomUtils =
             @remove() if event.target == window
             handlerStack.continueBubbling
       callback?()
-      @suppressEvent event
-      handlerStack.suppressEvent
+      if suppressPropagation
+        DomUtils.suppressPropagation event
+        handlerStack.suppressPropagation
+      else
+        DomUtils.suppressEvent event
+        handlerStack.suppressEvent
 
   # Polyfill for selection.type (which is not available in Firefox).
   getSelectionType: (selection = document.getSelection()) ->
