@@ -9,33 +9,10 @@ compareKeys = (a,b) ->
   if a < b then -1 else if b < a then 1 else 0
 
 window.showTable = (helpPageData) ->
-  article = document.getElementsByTagName("article")[0]
-  article.innerHTML = ""
   for own group, commands of helpPageData
-    groupSection = document.createElement "section"
-    groupSection.className = "group-#{group}"
-
-    groupHeader = document.createElement "h2"
-    groupHeader.appendChild document.createTextNode group
-    groupSection.appendChild groupHeader
-
     for command in commands
-      commandSection = document.createElement "section"
-      commandSection.className = "command-#{command.command}"
-      commandHeader = document.createElement "h3"
-      keysSpan = document.createElement "span"
-      keysSpan.className = "keys"
-      descriptionParagraph = document.createElement "p"
-      descriptionParagraph.className = "description"
+      commandSection = document.getElementsByClassName("command-#{command.command}")[0]
+      keysSpan = commandSection.getElementsByClassName("keys")[0]
 
-      commandHeader.appendChild document.createTextNode command.command + " "
+      keysSpan.innerHTML = ""
       keysSpan.appendChild document.createTextNode (command.keys.join ", ")
-      commandHeader.appendChild keysSpan
-      descriptionParagraph.appendChild document.createTextNode command.description
-
-      commandSection.appendChild commandHeader
-      commandSection.appendChild descriptionParagraph
-
-      groupSection.appendChild commandSection
-
-    article.appendChild groupSection
