@@ -9,39 +9,33 @@ compareKeys = (a,b) ->
   if a < b then -1 else if b < a then 1 else 0
 
 window.showTable = (helpPageData) ->
-  table = document.getElementById "command-table"
-  table.innerHTML = ""
+  article = document.getElementsByTagName("article")[0]
+  article.innerHTML = ""
   for own group, commands of helpPageData
-    tbody = document.createElement "tbody"
+    groupSection = document.createElement "section"
+    groupSection.className = "group-#{group}"
 
-    headerRow = document.createElement "tr"
-    headerCell = document.createElement "th"
-    headerCell.appendChild document.createTextNode group
-    headerRow.appendChild headerCell
-    tbody.appendChild headerRow
+    groupHeader = document.createElement "h2"
+    groupHeader.appendChild document.createTextNode group
+    groupSection.appendChild groupHeader
 
     for command in commands
-      commandBody = document.createElement "tbody"
-      commandRow = document.createElement "tr"
-      commandCell = document.createElement "th"
-      keysCell = document.createElement "td"
+      commandSection = document.createElement "section"
+      commandSection.className = "command-#{command.command}"
+      commandHeader = document.createElement "h3"
+      keysSpan = document.createElement "span"
+      keysSpan.className = "keys"
+      descriptionParagraph = document.createElement "p"
+      descriptionParagraph.className = "description"
 
-      commandCell.appendChild document.createTextNode command.command
-      keysCell.appendChild document.createTextNode command.keys.join ", "
+      commandHeader.appendChild document.createTextNode command.command + " "
+      keysSpan.appendChild document.createTextNode (command.keys.join ", ")
+      commandHeader.appendChild keysSpan
+      descriptionParagraph.appendChild document.createTextNode command.description
 
-      commandRow.appendChild commandCell
-      commandRow.appendChild keysCell
-      commandBody.appendChild commandRow
+      commandSection.appendChild commandHeader
+      commandSection.appendChild descriptionParagraph
 
-      descriptionRow = document.createElement "tr"
-      descriptionCell = document.createElement "td"
-      descriptionCell.colspan = 2
+      groupSection.appendChild commandSection
 
-      descriptionCell.appendChild document.createTextNode command.description
-
-      descriptionRow.appendChild descriptionCell
-      commandBody.appendChild descriptionRow
-
-      tbody.appendChild commandBody
-
-    table.appendChild tbody
+    article.appendChild groupSection
