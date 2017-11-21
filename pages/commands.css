@@ -1,0 +1,27 @@
+body {
+  background: #f4f4f4;
+  color: black;
+}
+
+section.group > h2 {
+  font-weight: 350;
+}
+
+section.command {
+  background: white;
+  box-shadow: 0 -1px 0 rgba(0,0,0,.05),0 0 2px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.2);
+}
+
+section.command > * {
+  padding: 16px 16px 0;
+}
+
+section.command span.keys {
+  float: right;
+  display: inline-block;
+  min-width: 50px;
+}
+
+section.command > p.description {
+  padding: 16px;
+}
