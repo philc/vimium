@@ -29,6 +29,292 @@
   <body>
     <h1>Vimium command listing</h1>
     <article>
+      <section class="group-findCommands">
+        <h2>findCommands</h2>
+        <section class="command-enterFindMode">
+          <h3>enterFindMode <span class="keys"></span></h3>
+          <p class="description">Enter find mode</p>
+        </section>
+        <section class="command-performFind">
+          <h3>performFind <span class="keys"></span></h3>
+          <p class="description">Cycle forward to the next find match</p>
+        </section>
+        <section class="command-performBackwardsFind">
+          <h3>performBackwardsFind <span class="keys"></span></h3>
+          <p class="description">Cycle backward to the previous find match</p>
+        </section>
+      </section>
+      <section class="group-historyNavigation">
+        <h2>historyNavigation</h2>
+        <section class="command-goBack">
+          <h3>goBack <span class="keys"></span></h3>
+          <p class="description">Go back in history</p>
+        </section>
+        <section class="command-goForward">
+          <h3>goForward <span class="keys"></span></h3>
+          <p class="description">Go forward in history</p>
+        </section>
+      </section>
+      <section class="group-misc">
+        <h2>misc</h2>
+        <section class="command-showHelp">
+          <h3>showHelp <span class="keys"></span></h3>
+          <p class="description">Show help</p>
+        </section>
+        <section class="command-toggleViewSource">
+          <h3>toggleViewSource <span class="keys"></span></h3>
+          <p class="description">View page source</p>
+        </section>
+      </section>
+      <section class="group-pageNavigation">
+        <h2>pageNavigation</h2>
+        <section class="command-scrollDown">
+          <h3>scrollDown <span class="keys"></span></h3>
+          <p class="description">Scroll down</p>
+        </section>
+        <section class="command-scrollUp">
+          <h3>scrollUp <span class="keys"></span></h3>
+          <p class="description">Scroll up</p>
+        </section>
+        <section class="command-scrollToTop">
+          <h3>scrollToTop <span class="keys"></span></h3>
+          <p class="description">Scroll to the top of the page</p>
+        </section>
+        <section class="command-scrollToBottom">
+          <h3>scrollToBottom <span class="keys"></span></h3>
+          <p class="description">Scroll to the bottom of the page</p>
+        </section>
+        <section class="command-scrollPageDown">
+          <h3>scrollPageDown <span class="keys"></span></h3>
+          <p class="description">Scroll a half page down</p>
+        </section>
+        <section class="command-scrollPageUp">
+          <h3>scrollPageUp <span class="keys"></span></h3>
+          <p class="description">Scroll a half page up</p>
+        </section>
+        <section class="command-scrollFullPageDown">
+          <h3>scrollFullPageDown <span class="keys"></span></h3>
+          <p class="description">Scroll a full page down</p>
+        </section>
+        <section class="command-scrollFullPageUp">
+          <h3>scrollFullPageUp <span class="keys"></span></h3>
+          <p class="description">Scroll a full page up</p>
+        </section>
+        <section class="command-scrollLeft">
+          <h3>scrollLeft <span class="keys"></span></h3>
+          <p class="description">Scroll left</p>
+        </section>
+        <section class="command-scrollRight">
+          <h3>scrollRight <span class="keys"></span></h3>
+          <p class="description">Scroll right</p>
+        </section>
+        <section class="command-scrollToLeft">
+          <h3>scrollToLeft <span class="keys"></span></h3>
+          <p class="description">Scroll all the way to the left</p>
+        </section>
+        <section class="command-scrollToRight">
+          <h3>scrollToRight <span class="keys"></span></h3>
+          <p class="description">Scroll all the way to the right</p>
+        </section>
+        <section class="command-reload">
+          <h3>reload <span class="keys"></span></h3>
+          <p class="description">Reload the page</p>
+        </section>
+        <section class="command-copyCurrentUrl">
+          <h3>copyCurrentUrl <span class="keys"></span></h3>
+          <p class="description">Copy the current URL to the clipboard</p>
+        </section>
+        <section class="command-openCopiedUrlInCurrentTab">
+          <h3>openCopiedUrlInCurrentTab <span class="keys"></span></h3>
+          <p class="description">Open the clipboard's URL in the current tab</p>
+        </section>
+        <section class="command-openCopiedUrlInNewTab">
+          <h3>openCopiedUrlInNewTab <span class="keys"></span></h3>
+          <p class="description">Open the clipboard's URL in a new tab</p>
+        </section>
+        <section class="command-goUp">
+          <h3>goUp <span class="keys"></span></h3>
+          <p class="description">Go up the URL hierarchy</p>
+        </section>
+        <section class="command-goToRoot">
+          <h3>goToRoot <span class="keys"></span></h3>
+          <p class="description">Go to root of current URL hierarchy</p>
+        </section>
+        <section class="command-enterInsertMode">
+          <h3>enterInsertMode <span class="keys"></span></h3>
+          <p class="description">Enter insert mode</p>
+        </section>
+        <section class="command-enterVisualMode">
+          <h3>enterVisualMode <span class="keys"></span></h3>
+          <p class="description">Enter visual mode</p>
+        </section>
+        <section class="command-enterVisualLineMode">
+          <h3>enterVisualLineMode <span class="keys"></span></h3>
+          <p class="description">Enter visual line mode</p>
+        </section>
+        <section class="command-passNextKey">
+          <h3>passNextKey <span class="keys"></span></h3>
+          <p class="description">Pass the next key to the page</p>
+        </section>
+        <section class="command-focusInput">
+          <h3>focusInput <span class="keys"></span></h3>
+          <p class="description">Focus the first text input on the page</p>
+        </section>
+        <section class="command-LinkHints.activateMode">
+          <h3>LinkHints.activateMode <span class="keys"></span></h3>
+          <p class="description">Open a link in the current tab</p>
+        </section>
+        <section class="command-LinkHints.activateModeToOpenInNewTab">
+          <h3>LinkHints.activateModeToOpenInNewTab <span class="keys"></span></h3>
+          <p class="description">Open a link in a new tab</p>
+        </section>
+        <section class="command-LinkHints.activateModeToOpenInNewForegroundTab">
+          <h3>LinkHints.activateModeToOpenInNewForegroundTab <span class="keys"></span></h3>
+          <p class="description">Open a link in a new tab &amp; switch to it</p>
+        </section>
+        <section class="command-LinkHints.activateModeWithQueue">
+          <h3>LinkHints.activateModeWithQueue <span class="keys"></span></h3>
+          <p class="description">Open multiple links in a new tab</p>
+        </section>
+        <section class="command-LinkHints.activateModeToDownloadLink">
+          <h3>LinkHints.activateModeToDownloadLink <span class="keys"></span></h3>
+          <p class="description">Download link url</p>
+        </section>
+        <section class="command-LinkHints.activateModeToOpenIncognito">
+          <h3>LinkHints.activateModeToOpenIncognito <span class="keys"></span></h3>
+          <p class="description">Open a link in incognito window</p>
+        </section>
+        <section class="command-LinkHints.activateModeToCopyLinkUrl">
+          <h3>LinkHints.activateModeToCopyLinkUrl <span class="keys"></span></h3>
+          <p class="description">Copy a link URL to the clipboard</p>
+        </section>
+        <section class="command-goPrevious">
+          <h3>goPrevious <span class="keys"></span></h3>
+          <p class="description">Follow the link labeled previous or &lt;</p>
+        </section>
+        <section class="command-goNext">
+          <h3>goNext <span class="keys"></span></h3>
+          <p class="description">Follow the link labeled next or &gt;</p>
+        </section>
+        <section class="command-nextFrame">
+          <h3>nextFrame <span class="keys"></span></h3>
+          <p class="description">Select the next frame on the page</p>
+        </section>
+        <section class="command-mainFrame">
+          <h3>mainFrame <span class="keys"></span></h3>
+          <p class="description">Select the page's main/top frame</p>
+        </section>
+        <section class="command-Marks.activateCreateMode">
+          <h3>Marks.activateCreateMode <span class="keys"></span></h3>
+          <p class="description">Create a new mark</p>
+        </section>
+        <section class="command-Marks.activateGotoMode">
+          <h3>Marks.activateGotoMode <span class="keys"></span></h3>
+          <p class="description">Go to a mark</p>
+        </section>
+      </section>
+      <section class="group-tabManipulation">
+        <h2>tabManipulation</h2>
+        <section class="command-createTab">
+          <h3>createTab <span class="keys"></span></h3>
+          <p class="description">Create new tab</p>
+        </section>
+        <section class="command-previousTab">
+          <h3>previousTab <span class="keys"></span></h3>
+          <p class="description">Go one tab left</p>
+        </section>
+        <section class="command-nextTab">
+          <h3>nextTab <span class="keys"></span></h3>
+          <p class="description">Go one tab right</p>
+        </section>
+        <section class="command-visitPreviousTab">
+          <h3>visitPreviousTab <span class="keys"></span></h3>
+          <p class="description">Go to previously-visited tab</p>
+        </section>
+        <section class="command-firstTab">
+          <h3>firstTab <span class="keys"></span></h3>
+          <p class="description">Go to the first tab</p>
+        </section>
+        <section class="command-lastTab">
+          <h3>lastTab <span class="keys"></span></h3>
+          <p class="description">Go to the last tab</p>
+        </section>
+        <section class="command-duplicateTab">
+          <h3>duplicateTab <span class="keys"></span></h3>
+          <p class="description">Duplicate current tab</p>
+        </section>
+        <section class="command-togglePinTab">
+          <h3>togglePinTab <span class="keys"></span></h3>
+          <p class="description">Pin or unpin current tab</p>
+        </section>
+        <section class="command-toggleMuteTab">
+          <h3>toggleMuteTab <span class="keys"></span></h3>
+          <p class="description">Mute or unmute current tab</p>
+        </section>
+        <section class="command-removeTab">
+          <h3>removeTab <span class="keys"></span></h3>
+          <p class="description">Close current tab</p>
+        </section>
+        <section class="command-restoreTab">
+          <h3>restoreTab <span class="keys"></span></h3>
+          <p class="description">Restore closed tab</p>
+        </section>
+        <section class="command-moveTabToNewWindow">
+          <h3>moveTabToNewWindow <span class="keys"></span></h3>
+          <p class="description">Move tab to new window</p>
+        </section>
+        <section class="command-closeTabsOnLeft">
+          <h3>closeTabsOnLeft <span class="keys"></span></h3>
+          <p class="description">Close tabs on the left</p>
+        </section>
+        <section class="command-closeTabsOnRight">
+          <h3>closeTabsOnRight <span class="keys"></span></h3>
+          <p class="description">Close tabs on the right</p>
+        </section>
+        <section class="command-closeOtherTabs">
+          <h3>closeOtherTabs <span class="keys"></span></h3>
+          <p class="description">Close all other tabs</p>
+        </section>
+        <section class="command-moveTabLeft">
+          <h3>moveTabLeft <span class="keys"></span></h3>
+          <p class="description">Move tab to the left</p>
+        </section>
+        <section class="command-moveTabRight">
+          <h3>moveTabRight <span class="keys"></span></h3>
+          <p class="description">Move tab to the right</p>
+        </section>
+      </section>
+      <section class="group-vomnibarCommands">
+        <h2>vomnibarCommands</h2>
+        <section class="command-Vomnibar.activate">
+          <h3>Vomnibar.activate <span class="keys"></span></h3>
+          <p class="description">Open URL, bookmark or history entry</p>
+        </section>
+        <section class="command-Vomnibar.activateInNewTab">
+          <h3>Vomnibar.activateInNewTab <span class="keys"></span></h3>
+          <p class="description">Open URL, bookmark or history entry in a new tab</p>
+        </section>
+        <section class="command-Vomnibar.activateBookmarks">
+          <h3>Vomnibar.activateBookmarks <span class="keys"></span></h3>
+          <p class="description">Open a bookmark</p>
+        </section>
+        <section class="command-Vomnibar.activateBookmarksInNewTab">
+          <h3>Vomnibar.activateBookmarksInNewTab <span class="keys"></span></h3>
+          <p class="description">Open a bookmark in a new tab</p>
+        </section>
+        <section class="command-Vomnibar.activateTabSelection">
+          <h3>Vomnibar.activateTabSelection <span class="keys"></span></h3>
+          <p class="description">Search through your open tabs</p>
+        </section>
+        <section class="command-Vomnibar.activateEditUrl">
+          <h3>Vomnibar.activateEditUrl <span class="keys"></span></h3>
+          <p class="description">Edit the current URL</p>
+        </section>
+        <section class="command-Vomnibar.activateEditUrlInNewTab">
+          <h3>Vomnibar.activateEditUrlInNewTab <span class="keys"></span></h3>
+          <p class="description">Edit the current URL and open in a new tab</p>
+        </section>
+      </section>
     </article>
   </body>
 </html>
