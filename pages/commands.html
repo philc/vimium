@@ -30,45 +30,8 @@
   <body>
     <h1>Vimium command listing</h1>
     <article>
-      <section class="group group-findCommands">
-        <h2>findCommands</h2>
-        <section class="command command-enterFindMode">
-          <h3>enterFindMode <span class="keys"></span></h3>
-          <p class="description">Enter find mode</p>
-        </section>
-        <section class="command command-performFind">
-          <h3>performFind <span class="keys"></span></h3>
-          <p class="description">Cycle forward to the next find match</p>
-        </section>
-        <section class="command command-performBackwardsFind">
-          <h3>performBackwardsFind <span class="keys"></span></h3>
-          <p class="description">Cycle backward to the previous find match</p>
-        </section>
-      </section>
-      <section class="group group-historyNavigation">
-        <h2>historyNavigation</h2>
-        <section class="command command-goBack">
-          <h3>goBack <span class="keys"></span></h3>
-          <p class="description">Go back in history</p>
-        </section>
-        <section class="command command-goForward">
-          <h3>goForward <span class="keys"></span></h3>
-          <p class="description">Go forward in history</p>
-        </section>
-      </section>
-      <section class="group group-misc">
-        <h2>misc</h2>
-        <section class="command command-showHelp">
-          <h3>showHelp <span class="keys"></span></h3>
-          <p class="description">Show help</p>
-        </section>
-        <section class="command command-toggleViewSource">
-          <h3>toggleViewSource <span class="keys"></span></h3>
-          <p class="description">View page source</p>
-        </section>
-      </section>
-      <section class="group group-pageNavigation">
-        <h2>pageNavigation</h2>
+      <section class="group group-scrolling">
+        <h2>Scrolling</h2>
         <section class="command command-scrollDown">
           <h3>scrollDown <span class="keys"></span></h3>
           <p class="description">Scroll down</p>
@@ -117,50 +80,9 @@
           <h3>scrollToRight <span class="keys"></span></h3>
           <p class="description">Scroll all the way to the right</p>
         </section>
-        <section class="command command-reload">
-          <h3>reload <span class="keys"></span></h3>
-          <p class="description">Reload the page</p>
-        </section>
-        <section class="command command-copyCurrentUrl">
-          <h3>copyCurrentUrl <span class="keys"></span></h3>
-          <p class="description">Copy the current URL to the clipboard</p>
-        </section>
-        <section class="command command-openCopiedUrlInCurrentTab">
-          <h3>openCopiedUrlInCurrentTab <span class="keys"></span></h3>
-          <p class="description">Open the clipboard's URL in the current tab</p>
-        </section>
-        <section class="command command-openCopiedUrlInNewTab">
-          <h3>openCopiedUrlInNewTab <span class="keys"></span></h3>
-          <p class="description">Open the clipboard's URL in a new tab</p>
-        </section>
-        <section class="command command-goUp">
-          <h3>goUp <span class="keys"></span></h3>
-          <p class="description">Go up the URL hierarchy</p>
-        </section>
-        <section class="command command-goToRoot">
-          <h3>goToRoot <span class="keys"></span></h3>
-          <p class="description">Go to root of current URL hierarchy</p>
-        </section>
-        <section class="command command-enterInsertMode">
-          <h3>enterInsertMode <span class="keys"></span></h3>
-          <p class="description">Enter insert mode</p>
-        </section>
-        <section class="command command-enterVisualMode">
-          <h3>enterVisualMode <span class="keys"></span></h3>
-          <p class="description">Enter visual mode</p>
-        </section>
-        <section class="command command-enterVisualLineMode">
-          <h3>enterVisualLineMode <span class="keys"></span></h3>
-          <p class="description">Enter visual line mode</p>
-        </section>
-        <section class="command command-passNextKey">
-          <h3>passNextKey <span class="keys"></span></h3>
-          <p class="description">Pass the next key to the page</p>
-        </section>
-        <section class="command command-focusInput">
-          <h3>focusInput <span class="keys"></span></h3>
-          <p class="description">Focus the first text input on the page</p>
-        </section>
+      </section>
+      <section class="group group-link-hints">
+        <h2>Link hints</h2>
         <section class="command command-LinkHints.activateMode">
           <h3>LinkHints.activateMode <span class="keys"></span></h3>
           <p class="description">Open a link in the current tab</p>
@@ -189,6 +111,82 @@
           <h3>LinkHints.activateModeToCopyLinkUrl <span class="keys"></span></h3>
           <p class="description">Copy a link URL to the clipboard</p>
         </section>
+      </section>
+      <section class="group group-searching">
+        <h2>Searching</h2>
+        <section class="command command-enterFindMode">
+          <h3>enterFindMode <span class="keys"></span></h3>
+          <p class="description">Enter find mode</p>
+        </section>
+        <section class="command command-performFind">
+          <h3>performFind <span class="keys"></span></h3>
+          <p class="description">Cycle forward to the next find match</p>
+        </section>
+        <section class="command command-performBackwardsFind">
+          <h3>performBackwardsFind <span class="keys"></span></h3>
+          <p class="description">Cycle backward to the previous find match</p>
+        </section>
+      </section>
+      <section class="group group-modes">
+        <h2>Modes</h2>
+        <section class="command command-enterInsertMode">
+          <h3>enterInsertMode <span class="keys"></span></h3>
+          <p class="description">Enter insert mode</p>
+        </section>
+        <section class="command command-enterVisualMode">
+          <h3>enterVisualMode <span class="keys"></span></h3>
+          <p class="description">Enter visual mode</p>
+        </section>
+        <section class="command command-enterVisualLineMode">
+          <h3>enterVisualLineMode <span class="keys"></span></h3>
+          <p class="description">Enter visual line mode</p>
+        </section>
+        <section class="command command-passNextKey">
+          <h3>passNextKey <span class="keys"></span></h3>
+          <p class="description">Pass the next key to the page</p>
+        </section>
+      </section>
+      <section class="group group-history">
+        <h2>History</h2>
+        <section class="command command-goBack">
+          <h3>goBack <span class="keys"></span></h3>
+          <p class="description">Go back in history</p>
+        </section>
+        <section class="command command-goForward">
+          <h3>goForward <span class="keys"></span></h3>
+          <p class="description">Go forward in history</p>
+        </section>
+      </section>
+      <section class="group group-page">
+        <h2>Page</h2>
+        <section class="command command-reload">
+          <h3>reload <span class="keys"></span></h3>
+          <p class="description">Reload the page</p>
+        </section>
+        <section class="command command-copyCurrentUrl">
+          <h3>copyCurrentUrl <span class="keys"></span></h3>
+          <p class="description">Copy the current URL to the clipboard</p>
+        </section>
+        <section class="command command-openCopiedUrlInCurrentTab">
+          <h3>openCopiedUrlInCurrentTab <span class="keys"></span></h3>
+          <p class="description">Open the clipboard's URL in the current tab</p>
+        </section>
+        <section class="command command-openCopiedUrlInNewTab">
+          <h3>openCopiedUrlInNewTab <span class="keys"></span></h3>
+          <p class="description">Open the clipboard's URL in a new tab</p>
+        </section>
+        <section class="command command-goUp">
+          <h3>goUp <span class="keys"></span></h3>
+          <p class="description">Go up the URL hierarchy</p>
+        </section>
+        <section class="command command-goToRoot">
+          <h3>goToRoot <span class="keys"></span></h3>
+          <p class="description">Go to root of current URL hierarchy</p>
+        </section>
+        <section class="command command-focusInput">
+          <h3>focusInput <span class="keys"></span></h3>
+          <p class="description">Focus the first text input on the page</p>
+        </section>
         <section class="command command-goPrevious">
           <h3>goPrevious <span class="keys"></span></h3>
           <p class="description">Follow the link labeled previous or &lt;</p>
@@ -214,8 +212,8 @@
           <p class="description">Go to a mark</p>
         </section>
       </section>
-      <section class="group group-tabManipulation">
-        <h2>tabManipulation</h2>
+      <section class="group group-tabs">
+        <h2>Tabs</h2>
         <section class="command command-createTab">
           <h3>createTab <span class="keys"></span></h3>
           <p class="description">Create new tab</p>
@@ -285,8 +283,8 @@
           <p class="description">Move tab to the right</p>
         </section>
       </section>
-      <section class="group group-vomnibarCommands">
-        <h2>vomnibarCommands</h2>
+      <section class="group group-vomnibar">
+        <h2>Vomnibar</h2>
         <section class="command command-Vomnibar.activate">
           <h3>Vomnibar.activate <span class="keys"></span></h3>
           <p class="description">Open URL, bookmark or history entry</p>
@@ -314,6 +312,17 @@
         <section class="command command-Vomnibar.activateEditUrlInNewTab">
           <h3>Vomnibar.activateEditUrlInNewTab <span class="keys"></span></h3>
           <p class="description">Edit the current URL and open in a new tab</p>
+        </section>
+      </section>
+      <section class="group group-misc">
+        <h2>Miscellaneous</h2>
+        <section class="command command-showHelp">
+          <h3>showHelp <span class="keys"></span></h3>
+          <p class="description">Show help</p>
+        </section>
+        <section class="command command-toggleViewSource">
+          <h3>toggleViewSource <span class="keys"></span></h3>
+          <p class="description">View page source</p>
         </section>
       </section>
     </article>
