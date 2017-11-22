@@ -221,7 +221,7 @@ Frame =
     @port = chrome.runtime.connect name: "frames"
 
     @port.onMessage.addListener (request) =>
-      root.extend window, root unless extend?
+      root.extend window, root unless extend? # See #2800 and #2831.
       (@listeners[request.handler] ? this[request.handler]) request
 
     # We disable the content scripts when we lose contact with the background page, or on unload.
