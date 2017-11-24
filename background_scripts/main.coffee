@@ -188,13 +188,20 @@ BackgroundCommands =
             [if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl]
           else
             [newTabUrl]
-    urls = request.urls[..].reverse()
-    do openNextUrl = (request) ->
-      if 0 < urls.length
-        TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), (tab) ->
-          openNextUrl extend request, {tab, tabId: tab.id}
-      else
-        callback request
+    if request.registryEntry.options.incognito or request.registryEntry.options.window
+      windowConfig =
+        url: request.urls
+        focused: true
+        incognito: request.registryEntry.options.incognito ? false
+      chrome.windows.create windowConfig, -> callback request
+    else
+      urls = request.urls[..].reverse()
+      do openNextUrl = (request) ->
+        if 0 < urls.length
+          TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), (tab) ->
+            openNextUrl extend request, {tab, tabId: tab.id}
+        else
+          callback request
   duplicateTab: mkRepeatCommand (request, callback) ->
     chrome.tabs.duplicate request.tabId, (tab) -> callback extend request, {tab, tabId: tab.id}
   moveTabToNewWindow: ({count, tab}) ->
