@@ -311,7 +311,7 @@ DomUtils =
     flashEl
 
   # momentarily flash a rectangular border to give user some visual feedback
-  flashRect: (rect, callback) ->
+  flashRect: (rect) ->
     flashEl = @addFlashRect rect
     setTimeout((-> DomUtils.removeElement flashEl), 400)
 
