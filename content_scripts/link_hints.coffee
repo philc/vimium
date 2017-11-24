@@ -359,7 +359,7 @@ class LinkHintsMode
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
   # selectively pushing the appropriate HintCoordinator.onExit handlers.
-  activateLink: (linkMatched, userMightOverType) ->
+  activateLink: (linkMatched, userMightOverType = false) ->
     @removeHintMarkers()
 
     if linkMatched.isLocalMarker
