@@ -1,6 +1,6 @@
 Clipboard =
-  _createTextArea: ->
-    textArea = document.createElement "textarea"
+  _createTextArea: (tagName = "textarea") ->
+    textArea = document.createElement tagName
     textArea.style.position = "absolute"
     textArea.style.left = "-100%"
     textArea.contentEditable = "true"
@@ -17,11 +17,11 @@ Clipboard =
     document.body.removeChild(textArea)
 
   paste: ->
-    textArea = @_createTextArea()
+    textArea = @_createTextArea "div" # Use a <div> so Firefox pastes rich text.
     document.body.appendChild(textArea)
     textArea.focus()
     document.execCommand("Paste")
-    value = textArea.value
+    value = textArea.innerText
     document.body.removeChild(textArea)
     value
 
