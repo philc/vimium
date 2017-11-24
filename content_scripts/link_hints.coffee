@@ -302,7 +302,7 @@ class LinkHintsMode
     if linksMatched.length == 0
       @deactivateMode()
     else if linksMatched.length == 1
-      @activateLink linksMatched[0], userMightOverType ? false
+      @activateLink linksMatched[0], userMightOverType
     else
       @hideMarker marker for marker in @hintMarkers
       @showMarker matched, @markerMatcher.hintKeystrokeQueue.length for matched in linksMatched
@@ -356,7 +356,7 @@ class LinkHintsMode
   # When only one hint remains, activate it in the appropriate way.  The current frame may or may not contain
   # the matched link, and may or may not have the focus.  The resulting four cases are accounted for here by
   # selectively pushing the appropriate HintCoordinator.onExit handlers.
-  activateLink: (linkMatched, userMightOverType=false) ->
+  activateLink: (linkMatched, userMightOverType = false) ->
     @removeHintMarkers()
 
     if linkMatched.isLocalMarker
@@ -382,25 +382,26 @@ class LinkHintsMode
               clickEl.focus()
             linkActivator clickEl
 
-    installKeyboardBlocker = (startKeyboardBlocker) ->
-      if linkMatched.isLocalMarker
-        {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
-        for rect in (Rect.copy rect for rect in clickEl.getClientRects())
-          extend rect, top: rect.top + viewportTop, left: rect.left + viewportLeft
-          flashEl = DomUtils.addFlashRect rect
-          do (flashEl) -> HintCoordinator.onExit.push -> DomUtils.removeElement flashEl
-
-      if windowIsFocused()
-        startKeyboardBlocker (isSuccess) -> HintCoordinator.sendMessage "exit", {isSuccess}
+    # If flash elements are created, then this function can be used later to remove them.
+    removeFlashElements = ->
+    if linkMatched.isLocalMarker
+      {top: viewportTop, left: viewportLeft} = DomUtils.getViewportTopLeft()
+      flashElements = for rect in clickEl.getClientRects()
+        DomUtils.addFlashRect Rect.translate rect, viewportLeft, viewportTop
+      removeFlashElements = -> DomUtils.removeElement flashEl for flashEl in flashElements
 
     # If we're using a keyboard blocker, then the frame with the focus sends the "exit" message, otherwise the
     # frame containing the matched link does.
-    if userMightOverType and Settings.get "waitForEnterForFilteredHints"
-      installKeyboardBlocker (callback) -> new WaitForEnter callback
-    else if userMightOverType
-      installKeyboardBlocker (callback) -> new TypingProtector 200, callback
+    if userMightOverType
+      HintCoordinator.onExit.push removeFlashElements
+      if windowIsFocused()
+        callback = (isSuccess) -> HintCoordinator.sendMessage "exit", {isSuccess}
+        if Settings.get "waitForEnterForFilteredHints"
+          new WaitForEnter callback
+        else
+          new TypingProtector 200, callback
     else if linkMatched.isLocalMarker
-      DomUtils.flashRect linkMatched.rect
+      Utils.setTimeout 400, removeFlashElements
       HintCoordinator.sendMessage "exit", isSuccess: true
 
   #
