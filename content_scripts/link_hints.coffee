@@ -277,7 +277,6 @@ class LinkHintsMode
       HintCoordinator.sendMessage "rotateHints"
 
     else
-      @tabCount = 0 unless event.ctrlKey or event.metaKey or event.altKey
       unless event.repeat
         keyChar =
           if Settings.get "filterLinkHints"
@@ -287,6 +286,7 @@ class LinkHintsMode
         if keyChar
           keyChar = " " if keyChar == "space"
           if keyChar.length == 1
+            @tabCount = 0
             @markerMatcher.pushKeyChar keyChar
             @updateVisibleMarkers()
           else
