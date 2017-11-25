@@ -221,8 +221,6 @@ BackgroundCommands =
       startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
       chrome.tabs.remove (tab.id for tab in tabs[startTabIndex...startTabIndex + count])
   restoreTab: mkRepeatCommand (request, callback) -> chrome.sessions.restore null, callback request
-  openCopiedUrlInCurrentTab: (request) -> TabOperations.openUrlInCurrentTab extend request, url: Clipboard.paste()
-  openCopiedUrlInNewTab: (request) -> @createTab extend request, url: Clipboard.paste()
   togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
   toggleMuteTab: toggleMuteTab
   moveTabLeft: moveTab
@@ -438,8 +436,6 @@ sendRequestHandlers =
     chrome.tabs.create url: chrome.runtime.getURL("pages/options.html"), index: request.tab.index + 1
   frameFocused: handleFrameFocused
   nextFrame: BackgroundCommands.nextFrame
-  copyToClipboard: Clipboard.copy.bind Clipboard
-  pasteFromClipboard: Clipboard.paste.bind Clipboard
   selectSpecificTab: selectSpecificTab
   createMark: Marks.create.bind(Marks)
   gotoMark: Marks.goto.bind(Marks)
