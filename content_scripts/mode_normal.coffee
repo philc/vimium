@@ -97,8 +97,7 @@ NormalModeCommands =
 
   openCopiedUrlInNewTab: (count) ->
     HUD.pasteFromClipboard (url) ->
-      for i in [0...count] by 1
-        chrome.runtime.sendMessage { handler: "openUrlInNewTab", url }
+      chrome.runtime.sendMessage { handler: "openUrlInNewTab", url, count }
 
   openCopiedUrlInCurrentTab: ->
     HUD.pasteFromClipboard (url) ->

@@ -114,7 +114,7 @@ TabOperations =
     canUseOpenerTabId = not (Utils.isFirefox() and Utils.compareVersions(Utils.firefoxVersion(), "57") < 0)
     tabConfig.openerTabId = request.tab.id if canUseOpenerTabId
 
-    chrome.tabs.create tabConfig, callback
+    chrome.tabs.create tabConfig, -> callback request
 
   # Opens request.url in new window and switches to it.
   openUrlInNewWindow: (request, callback = (->)) ->
@@ -430,7 +430,7 @@ sendRequestHandlers =
   # getCurrentTabUrl is used by the content scripts to get their full URL, because window.location cannot help
   # with Chrome-specific URLs like "view-source:http:..".
   getCurrentTabUrl: ({tab}) -> tab.url
-  openUrlInNewTab: (request) -> TabOperations.openUrlInNewTab request
+  openUrlInNewTab: mkRepeatCommand (request, callback) -> TabOperations.openUrlInNewTab request, callback
   openUrlInNewWindow: (request) -> TabOperations.openUrlInNewWindow request
   openUrlInIncognito: (request) -> chrome.windows.create incognito: true, url: Utils.convertToUrl request.url
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab
