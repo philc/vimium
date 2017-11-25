@@ -818,11 +818,11 @@ LocalHints =
     nodeName = element.nodeName.toLowerCase()
 
     if nodeName == "input"
-      if element.labels?.length > 0
+      if element.labels? and element.labels.length > 0
         linkText = element.labels[0].textContent.trim()
         # Remove trailing ":" commonly found in labels.
         if linkText[linkText.length-1] == ":"
-          linkText = linkText.substr 0, linkText.length-1
+          linkText = linkText[...linkText.length-1]
         showLinkText = true
       else if element.getAttribute("type")?.toLowerCase() == "file"
         linkText = "Choose File"
