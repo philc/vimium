@@ -100,7 +100,7 @@ handlers =
     Clipboard.copy data
     focusedElement?.focus()
     window.parent.focus()
-    UIComponentServer.postMessage {name: "unfocusIfFocused", data}
+    UIComponentServer.postMessage {name: "unfocusIfFocused"}
 
   pasteFromClipboard: ->
     focusedElement = document.activeElement
