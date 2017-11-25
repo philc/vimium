@@ -83,7 +83,7 @@ HelpDialog =
               commandNameElement.textContent = command.command
               commandNameElement.title = "Click to copy \"#{command.command}\" to clipboard."
               commandNameElement.addEventListener "click", ->
-                chrome.runtime.sendMessage handler: "copyToClipboard", data: commandNameElement.textContent
+                HUD.copyToClipboard commandNameElement.textContent
                 HUD.showForDuration("Yanked #{commandNameElement.textContent}.", 2000)
 
       @showAdvancedCommands(@getShowAdvancedCommands())

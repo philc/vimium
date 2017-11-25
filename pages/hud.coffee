@@ -95,5 +95,19 @@ handlers =
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
 
+  copyToClipboard: (data) ->
+    focusedElement = document.activeElement
+    Clipboard.copy data
+    focusedElement?.focus()
+    window.parent.focus()
+    UIComponentServer.postMessage {name: "unfocusIfFocused", data}
+
+  pasteFromClipboard: ->
+    focusedElement = document.activeElement
+    data = Clipboard.paste()
+    focusedElement?.focus()
+    window.parent.focus()
+    UIComponentServer.postMessage {name: "pasteResponse", data}
+
 UIComponentServer.registerHandler ({data}) -> handlers[data.name ? data]? data
 FindModeHistory.init()

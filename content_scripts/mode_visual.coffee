@@ -312,7 +312,7 @@ class VisualMode extends KeyHandlerMode
   yank: (args = {}) ->
     @yankedText = @selection.toString()
     @exit()
-    chrome.runtime.sendMessage handler: "copyToClipboard", data: @yankedText
+    HUD.copyToClipboard @yankedText
 
     message = @yankedText.replace /\s+/g, " "
     message = message[...12] + "..." if 15 < @yankedText.length

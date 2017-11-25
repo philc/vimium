@@ -9,6 +9,8 @@ HUD =
   findMode: null
   abandon: -> @hudUI?.hide false
 
+  pasteListener: null # Set by @pasteFromClipboard to handle the value returned by pasteResponse
+
   # This HUD is styled to precisely mimick the chrome HUD on Mac. Use the "has_popup_and_link_hud.html"
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
@@ -81,6 +83,33 @@ HUD =
 
     @findMode.exit()
     postExit?()
+
+  # These commands manage copying and pasting from the clipboard in the HUD frame.
+  # NOTE(mrmr1993): We need this to copy and paste on Firefox:
+  # * an element can't be focused in the background page, so copying/pasting doesn't work
+  # * we don't want to disrupt the focus in the page, in case the page is listening for focus/blur events.
+  # * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
+  copyToClipboard: (text) ->
+    DomUtils.documentComplete =>
+      @init()
+      @hudUI?.postMessage {name: "copyToClipboard", data: text}
+
+  pasteFromClipboard: (@pasteListener) ->
+    DomUtils.documentComplete =>
+      @init()
+      # Show the HUD frame, so Firefox will actually perform the paste.
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
+      @tween.fade 0, 0
+      @hudUI.postMessage {name: "pasteFromClipboard"}
+
+  pasteResponse: ({data}) ->
+    # Hide the HUD frame again.
+    @hudUI.toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
+    @unfocusIfFocused()
+    @pasteListener data
+
+  unfocusIfFocused: ->
+    document.activeElement.blur() if document.activeElement == @hudUI?.iframeElement
 
 class Tween
   opacity: 0
