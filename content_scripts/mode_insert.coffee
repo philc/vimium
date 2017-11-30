@@ -10,23 +10,23 @@ class InsertMode extends Mode
 
     handleKeyEvent = (event) =>
       return @continueBubbling unless @isActive event
-      return @passEventToPage if @insertModeLock is document.body
+
+      # See comment here: https://github.com/philc/vimium/commit/48c169bd5a61685bb4e67b1e76c939dbf360a658.
+      activeElement = @getActiveElement()
+      return @passEventToPage if activeElement == document.body and activeElement.isContentEditable
 
       # Check for a pass-next-key key.
       if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
         new PassNextKeyMode
-        return @suppressEvent
 
-      return @passEventToPage unless event.type == 'keydown' and KeyboardUtils.isEscape event
-      target = event.target
-      if target and DomUtils.isFocusable target
-        # Remove the focus, so the user can't just get back into insert mode by typing in the same input box.
-        target.blur()
-      else if target?.shadowRoot and @insertModeLock
-        # An editable element in a shadow DOM is focused; blur it.
-        @insertModeLock.blur()
-      @exit event, event.target
-      @suppressEvent
+      else if event.type == 'keydown' and KeyboardUtils.isEscape(event)
+        activeElement.blur() if DomUtils.isFocusable activeElement
+        @exit() unless @permanent
+
+      else
+        return @passEventToPage
+
+      return @suppressEvent
 
     defaults =
       name: "insert"
@@ -36,67 +36,16 @@ class InsertMode extends Mode
 
     super extend defaults, options
 
-    @insertModeLock =
-      if options.targetElement and DomUtils.isEditable options.targetElement
-        # The caller has told us which element to activate on.
-        options.targetElement
-      else if document.activeElement and DomUtils.isEditable document.activeElement
-        # An input element is already active, so use it.
-        document.activeElement
-      else
-        null
-
-    @push
-      _name: "mode-#{@id}-focus"
-      "blur": (event) => @alwaysContinueBubbling =>
-        target = event.target
-        # We can't rely on focus and blur events arriving in the expected order.  When the active element
-        # changes, we might get "focus" before "blur".  We track the active element in @insertModeLock, and
-        # exit only when that element blurs.
-        @exit event, target if @insertModeLock and target == @insertModeLock
-      "focus": (event) => @alwaysContinueBubbling =>
-        if @insertModeLock != event.target and DomUtils.isFocusable event.target
-          @activateOnElement event.target
-        else if event.target.shadowRoot
-          # A focusable element inside the shadow DOM might have been selected. If so, we can catch the focus
-          # event inside the shadow DOM. This fixes #853.
-          shadowRoot = event.target.shadowRoot
-          eventListeners = {}
-          for type in [ "focus", "blur" ]
-            eventListeners[type] = do (type) ->
-              forTrusted (event) -> handlerStack.bubbleEvent type, event
-            shadowRoot.addEventListener type, eventListeners[type], true
-
-          handlerStack.push
-            _name: "shadow-DOM-input-mode"
-            blur: (event) ->
-              if event.target.shadowRoot == shadowRoot
-                handlerStack.remove()
-                for own type, listener of eventListeners
-                  shadowRoot.removeEventListener type, listener, true
-
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = this if @permanent
 
   isActive: (event) ->
     return false if event == InsertMode.suppressedEvent
-    return true if @insertModeLock or @global
-    # Some sites (e.g. inbox.google.com) change the contentEditable property on the fly (see #1245); and
-    # unfortunately, the focus event fires *before* the change.  Therefore, we need to re-check whether the
-    # active element is contentEditable.
-    @activateOnElement document.activeElement if document.activeElement?.isContentEditable
-    @insertModeLock != null
+    return true if @global
+    DomUtils.isFocusable @getActiveElement()
 
-  activateOnElement: (element) ->
-    @log "#{@id}: activating (permanent)" if @debug and @permanent
-    @insertModeLock = element
-
-  exit: (_, target)  ->
-    if (target and target == @insertModeLock) or @global or target == undefined
-      @log "#{@id}: deactivating (permanent)" if @debug and @permanent and @insertModeLock
-      @insertModeLock = null
-      # Exit, but only if this isn't the permanently-installed instance.
-      super() unless @permanent
+  getActiveElement: ->
+    document.activeElement?.shadowRoot?.activeElement ? document.activeElement
 
   # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.
   @suppressedEvent: null
