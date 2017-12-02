@@ -303,6 +303,7 @@ Frames =
     [tabId, frameId] = [sender.tab.id, sender.frameId]
     port.onDisconnect.addListener -> Frames.unregisterFrame {tabId, frameId}
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
+    (portsForTab[tabId] ?= {})[frameId] = port
 
     # Return our onMessage handler for this port.
     (request, port) =>
@@ -310,7 +311,6 @@ Frames =
 
   registerFrame: ({tabId, frameId, port}) ->
     frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
-    (portsForTab[tabId] ?= {})[frameId] = port
 
   unregisterFrame: ({tabId, frameId}) ->
     # FrameId 0 is the top/main frame.  We never unregister that frame.  If the tab is closing, then we tidy
@@ -389,7 +389,7 @@ HintCoordinator =
 
   prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, isVimiumHelpDialog}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex}
-    @tabState[tabId].ports = extend {}, portsForTab[tabId]
+    @tabState[tabId].ports = [tabId].map (frameId) -> portsForTab[tabId][frameId]
     @sendMessage "getHintDescriptors", tabId, {modeIndex, isVimiumHelpDialog}
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
