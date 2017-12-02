@@ -75,6 +75,7 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
     blacklist.map((item) -> ["--exclude", "#{item}"]))
 
   spawn "rsync", rsyncOptions, false, true
+  spawn "sed", "-i /clipboardWrite/d dist/vimium/manifest.json".split /\s+/
   spawn "zip", ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"], false, true
 
   spawn "zip", "-r -FS dist/vimium-ff-#{vimium_version}.zip background_scripts Cakefile content_scripts CONTRIBUTING.md CREDITS icons lib
