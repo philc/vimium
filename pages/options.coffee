@@ -277,9 +277,27 @@ initPopupPage = ->
     exclusions = null
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
 
-    # As the active URL, we choose the most recently registered URL from a frame in the tab, or the tab's own
-    # URL.
-    url = chrome.extension.getBackgroundPage().urlForTab[tab.id] || tab.url
+    # As the active URL, we choose the most recently registered URL from a frame in the tab.
+    url = chrome.extension.getBackgroundPage().urlForTab[tab.id]
+
+    unless url
+      # The browser has disabled Vimium on this page. Place a message explaining this into the popup.
+      document.body.innerHTML = """
+        <div style="width: 400px; margin: 5px;">
+          <p style="margin-bottom: 5px;">
+            Vimium is not running on this page.
+          </p>
+          <p style="margin-bottom: 5px;">
+            Your browser does not run web extensions like Vimium on certain pages,
+            usually for security reasons.
+          </p>
+          <p>
+            Unless your browser's developers change their policy, then unfortunately it is not possible to make Vimium (or any other
+            web extension, for that matter) work on this page.
+          </p>
+        </div>
+      """
+      return
 
     updateState = ->
       rule = bgExclusions.getRule url, exclusions.readValueFromElement()
