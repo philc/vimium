@@ -20,7 +20,7 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
           func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
 
 frameIdsForTab = {}
-portsForTab = {}
+root.portsForTab = {}
 root.urlForTab = {}
 
 # This is exported for use by "marks.coffee".
