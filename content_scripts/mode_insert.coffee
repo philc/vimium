@@ -45,7 +45,10 @@ class InsertMode extends Mode
     DomUtils.isFocusable @getActiveElement()
 
   getActiveElement: ->
-    document.activeElement?.shadowRoot?.activeElement ? document.activeElement
+    activeElement = document.activeElement
+    while activeElement?.shadowRoot?.activeElement
+      activeElement = activeElement.shadowRoot.activeElement
+    activeElement
 
   # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.
   @suppressedEvent: null
