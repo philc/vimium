@@ -333,6 +333,9 @@ document.addEventListener "DOMContentLoaded", ->
 #
 # Backup and restore. "?" is for the tests."
 DomUtils?.documentReady ->
+  # Only initialize backup/restore on the options page (not the popup).
+  return unless location.pathname == "/pages/options.html"
+
   restoreSettingsVersion = null
 
   populateBackupLinkUrl = ->
