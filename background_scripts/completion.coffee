@@ -358,7 +358,9 @@ class DomainCompleter
 
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
-  filter: ({ queryTerms }, onComplete) ->
+  filter: ({ name, queryTerms }, onComplete) ->
+    if name != "tabs" && queryTerms.length == 0
+      return onComplete []
     # NOTE(philc): We search all tabs, not just those in the current window. I'm not sure if this is the
     # correct UX.
     chrome.tabs.query {}, (tabs) =>
@@ -374,12 +376,22 @@ class TabCompleter
         suggestion.relevancy = @computeRelevancy suggestion
         suggestion
       .sort (a,b) -> b.relevancy - a.relevancy
-      suggestions.forEach( (sugg,i) -> sugg.relevancy /= ( i / 4 + 1 ) )
+      # Boost relevancy with a multiplier so a relevant tab doesn't
+      # get crowded out by results from competing completers. To
+      # prevent tabs from crowding out everything else in turn,
+      # penalize them for being further down the results list by
+      # scaling on a hyperbola starting at 1 and approaching 0
+      # asymptotically for higher indexes. The multiplier and the
+      # curve fall-off were objectively chosen on the grounds that
+      # they seem to work pretty well.
+      suggestions.forEach (suggestion,i) ->
+        suggestion.relevancy *= 8
+        suggestion.relevancy /= ( i / 4 + 1 )
       onComplete suggestions
 
   computeRelevancy: (suggestion) ->
     if suggestion.queryTerms.length
-      RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title) * 8.0
+      RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title)
     else
       BgUtils.tabRecency.recencyScore(suggestion.tabId)
 
