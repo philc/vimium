@@ -277,11 +277,8 @@ initPopupPage = ->
     exclusions = null
     document.getElementById("optionsLink").setAttribute "href", chrome.runtime.getURL("pages/options.html")
 
-    # As the active URL, we choose the most recently registered URL from a frame in the tab, or the tab's own
-    # URL.
-    url = chrome.extension.getBackgroundPage().urlForTab[tab.id] || tab.url
-
-    unless chrome.extension.getBackgroundPage().portsForTab[tab.id]
+    tabPorts = chrome.extension.getBackgroundPage().portsForTab[tab.id]
+    unless tabPorts and Object.keys(tabPorts).length > 0
       # The browser has disabled Vimium on this page. Place a message explaining this into the popup.
       document.body.innerHTML = """
         <div style="width: 400px; margin: 5px;">
@@ -299,6 +296,10 @@ initPopupPage = ->
         </div>
       """
       return
+
+    # As the active URL, we choose the most recently registered URL from a frame in the tab, or the tab's own
+    # URL.
+    url = chrome.extension.getBackgroundPage().urlForTab[tab.id] || tab.url
 
     updateState = ->
       rule = bgExclusions.getRule url, exclusions.readValueFromElement()

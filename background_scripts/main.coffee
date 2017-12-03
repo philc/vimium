@@ -301,7 +301,7 @@ for icon in [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]
 Frames =
   onConnect: (sender, port) ->
     [tabId, frameId] = [sender.tab.id, sender.frameId]
-    port.onDisconnect.addListener -> Frames.unregisterFrame {tabId, frameId}
+    port.onDisconnect.addListener -> Frames.unregisterFrame {tabId, frameId, port}
     port.postMessage handler: "registerFrameId", chromeFrameId: frameId
     (portsForTab[tabId] ?= {})[frameId] = port
 
@@ -312,11 +312,11 @@ Frames =
   registerFrame: ({tabId, frameId, port}) ->
     frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
 
-  unregisterFrame: ({tabId, frameId}) ->
-    # FrameId 0 is the top/main frame.  We never unregister that frame.  If the tab is closing, then we tidy
-    # up elsewhere.  If the tab is navigating to a new page, then a new top frame will be along soon.
-    # This mitigates against the unregister and register messages arriving out of order. See #2125.
-    if 0 < frameId
+  unregisterFrame: ({tabId, frameId, port}) ->
+    # Check that the port trying to unregister the frame hasn't already been replaced by a new frame
+    # registering. See #2125.
+    registeredPort = portsForTab[tabId]?[frameId]
+    if registeredPort == port or not registeredPort
       if tabId of frameIdsForTab
         frameIdsForTab[tabId] = (fId for fId in frameIdsForTab[tabId] when fId != frameId)
       if tabId of portsForTab
@@ -389,7 +389,8 @@ HintCoordinator =
 
   prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, isVimiumHelpDialog}) ->
     @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex}
-    @tabState[tabId].ports = extend {}, portsForTab[tabId]
+    @tabState[tabId].ports = {}
+    frameIdsForTab[tabId].map (frameId) => @tabState[tabId].ports[frameId] = portsForTab[tabId][frameId]
     @sendMessage "getHintDescriptors", tabId, {modeIndex, isVimiumHelpDialog}
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
