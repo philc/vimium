@@ -169,15 +169,16 @@ PRs are welcome.
 Release Notes
 -------------
 
-In `master` (not yet released)
+1.62 (2017-12-09)
 
 - Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
 - It is now possible to map `<tab>`, `<enter>`, `<delete>`, `<insert>`, `<home>` and `<end>`.
 - New command options for `createTab` to create create new normal and incognito windows
   ([examples](https://github.com/philc/vimium/wiki/Tips-and-Tricks#creating-tabs-with-urls-and-windows)).
-- When upgrading, you will be asked to re-validate permissions.  The only new
+- Firefox only. When upgrading, you will be asked to re-validate permissions.  The only new
   permission is "copy and paste to/from clipboard" (the `clipboardWrite`
   permission).  This is necessary to support copy/paste on Firefox.
+- Various bug fixes.
 
 1.61 (2017-10-27)
 
