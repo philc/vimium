@@ -173,7 +173,7 @@ Release Notes
 
 - Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
 - It is now possible to map `<tab>`, `<enter>`, `<delete>`, `<insert>`, `<home>` and `<end>`.
-- New command options for `createTab` to create create new normal and incognito windows
+- New command options for `createTab` to create new normal and incognito windows
   ([examples](https://github.com/philc/vimium/wiki/Tips-and-Tricks#creating-tabs-with-urls-and-windows)).
 - Firefox only:
     - Fix copy and paste commands.
