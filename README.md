@@ -171,7 +171,7 @@ Release Notes
 
 In `master`, but not yet released:
 
-- (1.62.1) Swap global and local marks.
+- Swap global and local marks (1.62.1).
   In a browser, some people find global marks more useful than local marks.
   Example:
 
