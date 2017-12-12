@@ -231,7 +231,8 @@ Commands =
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
-    "passNextKey"]
+    "passNextKey",
+    "openBookmarkFromBar"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -314,6 +315,8 @@ defaultKeyMappings =
 
   "m": "Marks.activateCreateMode"
   "`": "Marks.activateGotoMode"
+
+  "gb": "openBookmarkFromBar"
 
 
 # This is a mapping of: commandIdentifier => [description, options].
@@ -409,6 +412,8 @@ commandDescriptions =
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+
+  "openBookmarkFromBar": ["Open the bookmark from Bookmarks Bar", { background: true }]
 
 Commands.init()
 

@@ -235,6 +235,13 @@ BackgroundCommands =
     tabIds = BgUtils.tabRecency.getTabsByRecency().filter (tabId) -> tabId != tab.id
     if 0 < tabIds.length
       selectSpecificTab id: tabIds[(count-1) % tabIds.length]
+  openBookmarkFromBar: ({count, tab}) -> 
+    if count > 0
+      barId = if Utils.isFirefox() then 'toolbar_____' else '1'
+      chrome.bookmarks.getChildren barId, (bookmarks) ->
+        bookmark = bookmarks[count - 1]
+        if bookmark?.url? 
+          chrome.tabs.update tab.id, url: bookmark.url  
 
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction, {tab: activeTab}) ->
