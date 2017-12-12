@@ -103,7 +103,6 @@ TabOperations =
   openUrlInNewTab: (request, callback = (->)) ->
     tabConfig =
       url: Utils.convertToUrl request.url
-      index: request.tab.index + 1
       active: true
       windowId: request.tab.windowId
     tabConfig.active = request.active if request.active?
