@@ -175,8 +175,10 @@ In `master`, but not yet released:
   In a browser, some people find global marks more useful than local marks.
   Example:
 
-    map X Marks.activateCreateMode swap
-    map Y Marks.activateGotoMode swap
+```
+map X Marks.activateCreateMode swap
+map Y Marks.activateGotoMode swap
+```
 
 1.62 (2017-12-09)
 
