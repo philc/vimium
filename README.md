@@ -169,6 +169,12 @@ PRs are welcome.
 Release Notes
 -------------
 
+In `master`, but not yet released:
+
+- Swap global and local marks; for example, `map m Marks.activateCreateMode
+  swap` and `map ' Marks.activateGotoMode swap`.  In a browser, some people
+  find global marks more useful than local marks.
+
 1.62 (2017-12-09)
 
 - Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
