@@ -171,10 +171,12 @@ Release Notes
 
 In `master`, but not yet released:
 
-- Swap global and local marks; for example:
-    - `map X Marks.activateCreateMode swap`, and
-    - `map Y Marks.activateGotoMode swap`.
-  In a browser, some people find global marks more useful than local marks. (1.62.1)
+- (1.62.1) Swap global and local marks.
+  In a browser, some people find global marks more useful than local marks.
+  Example:
+
+    map X Marks.activateCreateMode swap
+    map Y Marks.activateGotoMode swap
 
 1.62 (2017-12-09)
 
