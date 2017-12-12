@@ -75,9 +75,22 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
     blacklist.map((item) -> ["--exclude", "#{item}"]))
 
   spawn "rsync", rsyncOptions, false, true
-  spawn "sed", "-i /clipboardWrite/d dist/vimium/manifest.json".split /\s+/
+
+  distManifest = "dist/vimium/manifest.json"
+  manifest = JSON.parse fs.readFileSync(distManifest).toString()
+
+  # Build the Chrome Store package; this does not require the clipboardWrite permission.
+  manifest.permissions = (permission for permission in manifest.permissions when permission != "clipboardWrite")
+  fs.writeFileSync distManifest, JSON.stringify manifest, null, 2
   spawn "zip", ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"], false, true
 
+  # Build the Chrome Store dev package.
+  manifest.name = "Vimium-Dev"
+  manifest.description = "This is the development branch of Vimium (it is beta software)."
+  fs.writeFileSync distManifest, JSON.stringify manifest, null, 2
+  spawn "zip", ["-r", "dist/vimium-dev-#{vimium_version}.zip", "dist/vimium"], false, true
+
+  # Build Firefox release.
   spawn "zip", "-r -FS dist/vimium-ff-#{vimium_version}.zip background_scripts Cakefile content_scripts CONTRIBUTING.md CREDITS icons lib
                 manifest.json MIT-LICENSE.txt pages README.md -x *.coffee -x Cakefile -x CREDITS -x *.md".split(/\s+/), false, true
 
