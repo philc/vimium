@@ -413,7 +413,7 @@ commandDescriptions =
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
 
-  "openBookmarkFromBar": ["Open the bookmark from Bookmarks Bar", { background: true }]
+  "openBookmarkFromBar": ["Open the bookmark from the Bookmarks Bar", { background: true }]
 
 Commands.init()
 
