@@ -146,6 +146,7 @@ initializePreDomReady = ->
     linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
+    request.isTrusted = true
     # Some requests intended for the background page are delivered to the options page too; ignore them.
     unless request.handler and not request.name
       # Some request are handled elsewhere; ignore them too.
