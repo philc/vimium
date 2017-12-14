@@ -85,7 +85,7 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
   spawn "zip", ["-r", "dist/vimium-#{vimium_version}.zip", "dist/vimium"], false, true
 
   # Build the Chrome Store dev package.
-  manifest.name = "Vimium Dev"
+  manifest.name = "Vimium Canary"
   manifest.description = "This is the development branch of Vimium (it is beta software)."
   fs.writeFileSync distManifest, JSON.stringify manifest, null, 2
   spawn "zip", ["-r", "dist/vimium-dev-#{vimium_version}.zip", "dist/vimium"], false, true
