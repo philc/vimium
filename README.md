@@ -169,17 +169,6 @@ PRs are welcome.
 Release Notes
 -------------
 
-In `master`, but not yet released:
-
-- Swap global and local marks (1.62.1).
-  In a browser, some people find global marks more useful than local marks.
-  Example:
-
-```
-map X Marks.activateCreateMode swap
-map Y Marks.activateGotoMode swap
-```
-
 1.62 (2017-12-09)
 
 - Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
@@ -193,6 +182,17 @@ map Y Marks.activateGotoMode swap
       `clipboardWrite` permission).  This is necessary to support copy/paste on
       Firefox.
 - Various bug fixes.
+- 1.62.1: Swap global and local marks (1.62.1).
+  In a browser, some people find global marks more useful than local marks.
+  Example:
+
+```
+map X Marks.activateCreateMode swap
+map Y Marks.activateGotoMode swap
+```
+
+- Other minor versions:
+    - 1.62.2: Fixes [#2868](https://github.com/philc/vimium/issues/2868) (`createTab` with multiple URLs).
 
 1.61 (2017-10-27)
 
