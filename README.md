@@ -193,6 +193,7 @@ map Y Marks.activateGotoMode swap
 
 - Other minor versions:
     - 1.62.2: Fixes [#2868](https://github.com/philc/vimium/issues/2868) (`createTab` with multiple URLs).
+    - 1.62.4: Fixes bug affecting the enabled state, and really fix `createTab`.
 
 1.61 (2017-10-27)
 
