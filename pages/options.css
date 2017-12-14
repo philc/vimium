@@ -221,7 +221,7 @@ input.pattern, input.passKeys, .exclusionHeaderText {
   min-height: 30px;
   max-height: 30px;
 }
-#helpText {
+#helpText, #versionAndOptions {
   font-size: 12px;
 }
 #saveOptionsTableData {
