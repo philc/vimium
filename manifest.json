@@ -70,6 +70,12 @@
       "match_about_blank": true
     },
     {
+      "matches": ["<all_urls>"],
+      "js": ["content_scripts/injected.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
       "matches": ["file:///", "file:///*/"],
       "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start",
