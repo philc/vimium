@@ -114,7 +114,8 @@ TabOperations =
     canUseOpenerTabId = not (Utils.isFirefox() and Utils.compareVersions(Utils.firefoxVersion(), "57") < 0)
     tabConfig.openerTabId = request.tab.id if canUseOpenerTabId
 
-    chrome.tabs.create tabConfig, -> callback request
+    chrome.tabs.create tabConfig, (tab) ->
+      callback extend request, {tab, tabId: tab.id}
 
   # Opens request.url in new window and switches to it.
   openUrlInNewWindow: (request, callback = (->)) ->
@@ -198,8 +199,7 @@ BackgroundCommands =
       urls = request.urls[..].reverse()
       do openNextUrl = (request) ->
         if 0 < urls.length
-          TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), (tab) ->
-            openNextUrl extend request, {tab, tabId: tab.id}
+          TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), openNextUrl
         else
           callback request
   duplicateTab: mkRepeatCommand (request, callback) ->
