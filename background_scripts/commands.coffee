@@ -20,7 +20,7 @@ Commands =
     unmapAll = false
     for line in configLines.reverse()
       tokens = line.split /\s+/
-      switch tokens[0]
+      switch tokens[0].toLowerCase()
         when "map"
           if 3 <= tokens.length and not unmapAll
             [_, key, command, optionList...] = tokens
@@ -32,7 +32,7 @@ Commands =
         when "unmap"
           if tokens.length == 2
             seen[tokens[1]] = true
-        when "unmapAll"
+        when "unmapall"
           unmapAll = true
         when "mapkey"
           if tokens.length == 3
