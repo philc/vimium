@@ -169,6 +169,11 @@ PRs are welcome.
 Release Notes
 -------------
 
+Not yet released
+
+- Better detection of click listeners for link hints.
+- Display version number in page popup.
+
 1.62 (2017-12-09)
 
 - Backup and restore Vimium options (see the very bottom of the options page, below *Advanced Options*).
