@@ -267,7 +267,12 @@ Scroller =
     unless CoreScroller.wouldNotInitiateScroll()
       element = findScrollableElement activatedElement, direction, amount, factor
       elementAmount = factor * getDimension element, direction, amount
-      CoreScroller.scroll element, direction, elementAmount, continuous
+      if not DomUtils.isTopFrame() and element == document.documentElement
+        # If this is not the top frame, and we can't scroll it, then bounce the focus to the top frame.
+        chrome.runtime.sendMessage
+          handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId: frameId, registryEntry: command: "mainFrame"}
+      else
+        CoreScroller.scroll element, direction, elementAmount, continuous
 
   scrollTo: (direction, pos) ->
     activatedElement ||= (getScrollingElement() and firstScrollableElement()) or getScrollingElement()
