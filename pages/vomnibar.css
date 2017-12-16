@@ -85,10 +85,8 @@
 }
 
 #vomnibar li .vomnibarIcon {
-  background-position-y: center;
-  background-size: 16px;
-  background-repeat: no-repeat;
-  padding-left: 20px;
+  padding: 0 13px 0 6px;
+  vertical-align: bottom;
 }
 
 #vomnibar li .vomnibarSource {
