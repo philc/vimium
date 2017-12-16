@@ -85,6 +85,9 @@ BgUtils =
       continue if line[0] in '#"'
       line
 
+  escapedEntities: '"': "&quots;", '&': "&amp;", "'": "&apos;", "<": "&lt;", ">": "&gt;"
+  escapeAttribute: (string) -> string.replace /["&'<>]/g, (char) -> BgUtils.escapedEntities[char]
+
 # Utility for parsing and using the custom search-engine configuration.  We re-use the previous parse if the
 # search-engine configuration is unchanged.
 SearchEngines =

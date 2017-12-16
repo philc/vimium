@@ -50,6 +50,11 @@ class Suggestion
     insertTextIndicator = "&#8618;" # A right hooked arrow.
     @title = @insertText if @insertText and request.isCustomSearch
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
+    favIcon =
+      if @type == "tab"
+        """<img class="vimiumReset vomnibarIcon" src="chrome://favicon/size/16/#{BgUtils.escapeAttribute @url}" />"""
+      else
+        ""
     @html =
       if request.isCustomSearch
         """
@@ -66,7 +71,7 @@ class Suggestion
            <span class="vimiumReset vomnibarTitle">#{@highlightQueryTerms Utils.escapeHtml @title}</span>
          </div>
          <div class="vimiumReset vomnibarBottomHalf">
-          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span><span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
+          <span class="vimiumReset vomnibarSource vomnibarNoInsertText">#{insertTextIndicator}</span>#{favIcon}<span class="vimiumReset vomnibarUrl">#{@highlightUrlTerms Utils.escapeHtml @shortenUrl()}</span>
           #{relevancyHtml}
         </div>
         """
