@@ -250,7 +250,7 @@ DomUtils =
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
       defaultActionShouldTrigger = @simulateMouseEvent event, element, modifiers
-      if event == "click" and defaultActionShouldTrigger and Utils.isFirefox()
+      if event == "click" and defaultActionShouldTrigger and Utils.isFirefox() and element.target != "_blank"
         # Firefox doesn't (currently) trigger the default action for modified keys.
         DomUtils.simulateClickDefaultAction element, modifiers
       defaultActionShouldTrigger # return the values returned by each @simulateMouseEvent call.
