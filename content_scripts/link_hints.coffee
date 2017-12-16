@@ -589,7 +589,7 @@ class FilterHints
 
   # For filtered hints, we require a modifier (because <Space> on its own is a token separator).
   shouldRotateHints: (event) ->
-    event.ctrlKey or event.altKey or event.metaKey
+    event.ctrlKey or event.altKey or event.metaKey or event.shiftKey
 
 #
 # Make each hint character a span, so that we can highlight the typed characters as you type them.
