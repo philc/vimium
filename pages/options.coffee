@@ -206,7 +206,7 @@ Options =
   grabBackFocus: CheckBoxOption
   searchEngines: TextOption
   searchUrl: NonEmptyTextOption
-  userDefinedLinkHintCss: TextOption
+  userDefinedLinkHintCss: NonEmptyTextOption
 
 initOptionsPage = ->
   onUpdated = ->
