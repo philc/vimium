@@ -10,8 +10,9 @@ injectedCode = (vimiumOnClickAttributeName) ->
   _addEventListener = Element::addEventListener
 
   Element::addEventListener = (type, listener, useCapture) ->
-    @setAttribute vimiumOnClickAttributeName, "" if type == "click"
-    _addEventListener.apply this, arguments
+    if type == "click"
+      try @setAttribute vimiumOnClickAttributeName, ""
+    _addEventListener?.apply this, arguments
 
 script = document.createElement "script"
 script.textContent = "(#{injectedCode.toString()})('#{vimiumOnClickAttributeName}')"
