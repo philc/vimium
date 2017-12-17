@@ -267,7 +267,7 @@ context "suggestions",
   should "shorten urls", ->
     suggestion = new Suggestion
       queryTerms: ["queryterm"]
-      type: "tab"
+      type: "history"
       url: "http://ninjawords.com"
       title: "ninjawords"
       relevancyFunction: returns 1
