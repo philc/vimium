@@ -707,7 +707,7 @@ LocalHints =
         reason = "Open."
 
     # Detect elements with "click" listeners installed with `addEventListener()`.
-    isClickable ||= element.hasAttribute vimiumOnClickAttributeName
+    isClickable ||= element.hasAttribute "_vimium-has-onclick-listener"
 
     # An element with a class name containing the text "button" might be clickable.  However, real clickables
     # are often wrapped in elements with such class names.  So, when we find clickables based only on their
