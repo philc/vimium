@@ -571,9 +571,9 @@ class FilterHints
               if position < 0
                 0 # No match.
               else if position == 0 and searchWord.length == linkWord.length
-                if idx == 0 then 8 else 6 # Whole-word match.
+                if idx == 0 then 8 else 4 # Whole-word match.
               else if position == 0
-                if idx == 0 then 4 else 2 # Match at the start of a word.
+                if idx == 0 then 6 else 2 # Match at the start of a word.
               else
                 1 # 0 < position; other match.
           Math.max linkWordScores...
