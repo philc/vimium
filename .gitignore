@@ -9,3 +9,5 @@ dist
 jscoverage.json
 tags
 .cake_task_cache
+pack.ps1
+.nvimrc
