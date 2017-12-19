@@ -37,6 +37,14 @@ COPY_LINK_URL =
       HUD.showForDuration "Yanked #{url}", 2000
     else
       HUD.showForDuration "No link to yank.", 2000
+COPY_LINK_TEXT =
+  name: "text"
+  indicator: "Copy link text to Clipboard"
+  linkActivator: (link) ->
+    text = link.textContent
+    HUD.copyToClipboard text
+    text = text[0..25] + "...." if 28 < text.length
+    HUD.showForDuration "Yanked #{text}", 2000
 OPEN_INCOGNITO =
   name: "incognito"
   indicator: "Open link in incognito window"
@@ -46,8 +54,37 @@ DOWNLOAD_LINK_URL =
   indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
 
+
+[HOVER_LINK, UNHOVER_LINK] = do ->
+  hoverElement = null
+
+  # From @mrmr1993: https://github.com/philc/vimium/pull/1032.
+  simulateHover = (element, modifiers = {}) ->
+    DomUtils.simulateMouseEvent "mouseover", element, modifiers
+
+  simulateUnhover = (element, modifiers = {}) ->
+    DomUtils.simulateMouseEvent "mouseout", element, modifiers
+
+  HOVER_LINK =
+    name: "hover"
+    indicator: "Hover over link"
+    linkActivator: (element) ->
+      simulateUnhover hoverElement if hoverElement
+      simulateHover element
+      hoverElement = element
+
+  UNHOVER_LINK =
+    name: "unhover"
+    indicator: "Unhover link"
+    linkActivator: (element) ->
+      simulateUnhover hoverElement if hoverElement
+      simulateUnhover element
+      hoverElement = null
+
+  [HOVER_LINK, UNHOVER_LINK]
+
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, HOVER_LINK, UNHOVER_LINK, COPY_LINK_TEXT]
 
 HintCoordinator =
   onExit: []
@@ -121,21 +158,27 @@ HintCoordinator =
     @linkHintsMode = @localHints = null
 
 LinkHints =
-  activateMode: (count = 1, {mode}) ->
-    mode ?= OPEN_IN_CURRENT_TAB
+  activateMode: (count = 1, {mode, registryEntry}) ->
+    mode ?=
+      switch registryEntry.options.action
+        when "hover" then HOVER_LINK
+        when "unhover" then UNHOVER_LINK
+        when "text" then COPY_LINK_TEXT
+        else OPEN_IN_CURRENT_TAB
+
     if 0 < count or mode is OPEN_WITH_QUEUE
       HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
         if isSuccess
           # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
           # which would cause our new mode to exit immediately.
-          Utils.nextTick -> LinkHints.activateMode count-1, {mode}
+          Utils.nextTick -> LinkHints.activateMode count-1, {mode, registryEntry}
 
-  activateModeToOpenInNewTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_BG_TAB
-  activateModeToOpenInNewForegroundTab: (count) -> @activateMode count, mode: OPEN_IN_NEW_FG_TAB
-  activateModeToCopyLinkUrl: (count) -> @activateMode count, mode: COPY_LINK_URL
-  activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
-  activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
-  activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToOpenInNewTab: (count, {registryEntry}) -> @activateMode count, {mode: OPEN_IN_NEW_BG_TAB, registryEntry}
+  activateModeToOpenInNewForegroundTab: (count, {registryEntry}) -> @activateMode count, {mode: OPEN_IN_NEW_FG_TAB, registryEntry}
+  activateModeToCopyLinkUrl: (count, {registryEntry}) -> @activateMode count, {mode: COPY_LINK_URL, registryEntry}
+  activateModeWithQueue: (count, {registryEntry}) -> @activateMode 1, {mode: OPEN_WITH_QUEUE, registryEntry}
+  activateModeToOpenIncognito: (count, {registryEntry}) -> @activateMode count, {mode: OPEN_INCOGNITO, registryEntry}
+  activateModeToDownloadLink: (count, {registryEntry}) -> @activateMode count, {mode: DOWNLOAD_LINK_URL, registryEntry}
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
