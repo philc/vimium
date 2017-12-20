@@ -261,7 +261,7 @@ class LinkHintsMode
         # knows not to restart hints mode.
         @hintMode.exit event
 
-    else if event.key == "Enter"
+    else if event.key == "Enter" || KeyboardUtils.isEnterMap event
       # Activate the active hint, if there is one.  Only FilterHints uses an active hint.
       HintCoordinator.sendMessage "activateActiveHintMarker" if @markerMatcher.activeHintMarker
 
@@ -878,7 +878,7 @@ class WaitForEnter extends Mode
 
     @push
       keydown: (event) =>
-        if event.key == "Enter"
+        if event.key == "Enter" || KeyboardUtils.isEnterMap event
           @exit()
           callback true # true -> isSuccess.
         else if KeyboardUtils.isEscape event
