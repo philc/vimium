@@ -105,8 +105,6 @@ class VomnibarUI
     key = KeyboardUtils.getKeyChar(event)
     if (KeyboardUtils.isEscape(event))
       return "dismiss"
-    else if (KeyboardUtils.isEnterMap(event))
-      return "enter"
     else if (key == "up" ||
         (event.shiftKey && event.key == "Tab") ||
         (event.ctrlKey && (key == "k" || key == "p")))
@@ -116,7 +114,7 @@ class VomnibarUI
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event.key == "Enter")
+    else if (event.key == "Enter" || KeyboardUtils.isEnterMap(event))
       return "enter"
     else if KeyboardUtils.isBackspace event
       return "delete"
