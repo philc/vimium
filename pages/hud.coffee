@@ -20,7 +20,7 @@ document.addEventListener "keydown", (event) ->
   return unless inputElement? # Don't do anything if we're not in find mode.
 
   if (KeyboardUtils.isBackspace(event) and inputElement.textContent.length == 0) or
-     event.key == "Enter" or KeyboardUtils.isEnterMap event or
+     event.key == "Enter" or KeyboardUtils.isEnterMap(event) or
      KeyboardUtils.isEscape event
 
     UIComponentServer.postMessage
