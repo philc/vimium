@@ -51,10 +51,6 @@ class KeyHandlerMode extends Mode
       @suppressEvent
     else if isEscape
       @continueBubbling
-    else if KeyboardUtils.isEnter(event) and event.key != "Enter"
-      element = DomUtils.getSelectionFocusElement()
-      DomUtils.simulateClick(element) if element?
-      @supressEvent
     else if @isMappedKey keyChar
       @handleKeyChar keyChar
       @suppressEvent
@@ -62,6 +58,10 @@ class KeyHandlerMode extends Mode
       digit = parseInt keyChar
       @reset if @keyState.length == 1 then @countPrefix * 10 + digit else digit
       @suppressEvent
+    else if KeyboardUtils.isEnter(event) and event.key != "Enter"
+      element = DomUtils.getSelectionFocusElement()
+      DomUtils.simulateClick(element) if element?
+      @supressEvent
     else
       @reset() if keyChar
       @continueBubbling
