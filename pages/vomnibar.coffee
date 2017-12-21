@@ -125,7 +125,6 @@ class VomnibarUI
     @lastAction = action = @actionFromKeyEvent event
     return true unless action # pass through
 
-    openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
     if (action == "dismiss")
       @hide()
     else if action in [ "tab", "down" ]
@@ -144,6 +143,8 @@ class VomnibarUI
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
     else if (action == "enter")
+      openInNewTab = @forceNewTab || (KeyboardUtils.getKeyCharString(event) != "<c-]>" &&
+        (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey))
       isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl?
       if @selection == -1 or isCustomSearchPrimarySuggestion
         query = @input.value.trim()
