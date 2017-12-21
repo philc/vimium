@@ -220,8 +220,8 @@ DomUtils =
       node and @isDOMDescendant element, node
     else
       if DomUtils.getSelectionType(selection) == "Range" and selection.isCollapsed
-	      # The selection is inside the Shadow DOM of a node. We can check the node it registers as being
-	      # before, since this represents the node whose Shadow DOM it's inside.
+        # The selection is inside the Shadow DOM of a node. We can check the node it registers as being
+        # before, since this represents the node whose Shadow DOM it's inside.
         containerNode = selection.anchorNode.childNodes[selection.anchorOffset]
         element == containerNode # True if the selection is inside the Shadow DOM of our element.
       else
