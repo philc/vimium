@@ -229,6 +229,7 @@ class VisualMode extends KeyHandlerMode
       "W": keyMapping.w
       "<c-e>": command: (count) -> Scroller.scrollBy "y", count * Settings.get("scrollStepSize"), 1, false
       "<c-y>": command: (count) -> Scroller.scrollBy "y", -count * Settings.get("scrollStepSize"), 1, false
+      "<c-]>": command: () => @yank()
 
     super extend options,
       name: options.name ? "visual"
