@@ -116,6 +116,8 @@ Commands =
     # Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it is by
     # default).
     chrome.storage.local.set useVimLikeEscape: "<c-[>" not of keyStateMapping
+    # Same for `KeyboardUtils.isEnter()` of `<c-]>`.
+    chrome.storage.local.set useVimAdjacentEnter: "<c-]>" not of keyStateMapping
 
   # Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.
   prepareHelpPageData: ->
