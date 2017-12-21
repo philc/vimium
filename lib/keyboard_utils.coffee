@@ -68,8 +68,8 @@ KeyboardUtils =
       # <c-[> is mapped to Escape in Vim by default.
       event.key == "Escape" or (useVimLikeEscape and @getKeyCharString(event) == "<c-[>")
 
-  isEnterMap: (event) ->
-    @getKeyCharString(event) == "<c-]>"
+  isEnter: (event) ->
+    event.key == "Enter" or @getKeyCharString(event) == "<c-]>"
 
   isBackspace: (event) ->
     event.key in ["Backspace", "Delete"]

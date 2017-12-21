@@ -43,7 +43,6 @@ class KeyHandlerMode extends Mode
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
     isEscape = KeyboardUtils.isEscape event
-    isEnterMap = KeyboardUtils.isEnterMap event
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       DomUtils.consumeKeyup event, => @reset()
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
@@ -52,7 +51,7 @@ class KeyHandlerMode extends Mode
       @suppressEvent
     else if isEscape
       @continueBubbling
-    else if isEnterMap
+    else if KeyboardUtils.isEnter(event) and event != "Enter"
       # XXX NormalMode.simulateClick on a clickable element here?
       @continueBubbling
     else if @isMappedKey keyChar

@@ -23,7 +23,7 @@ class InsertMode extends Mode
         activeElement.blur() if DomUtils.isFocusable activeElement
         @exit() unless @permanent
 
-      else if event.type == 'keydown' and KeyboardUtils.isEnterMap(event)
+      else if event.type == 'keydown' and (KeyboardUtils.isEnter(event) and event.key != "Enter")
         if DomUtils.isFocusable activeElement
             activeElement.form.submit() if activeElement.form?
             activeElement.blur()

@@ -114,7 +114,7 @@ class VomnibarUI
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event.key == "Enter" || KeyboardUtils.isEnterMap(event))
+    else if KeyboardUtils.isEnter event
       return "enter"
     else if KeyboardUtils.isBackspace event
       return "delete"
