@@ -51,7 +51,7 @@ class KeyHandlerMode extends Mode
       @suppressEvent
     else if isEscape
       @continueBubbling
-    else if KeyboardUtils.isEnter(event) and event != "Enter"
+    else if KeyboardUtils.isEnter(event) and event.key != "Enter"
       element = DomUtils.getSelectionFocusElement()
       DomUtils.simulateClick(element) if element?
       @supressEvent
