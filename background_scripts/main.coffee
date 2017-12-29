@@ -103,9 +103,15 @@ TabOperations =
   openUrlInNewTab: (request, callback = (->)) ->
     tabConfig =
       url: Utils.convertToUrl request.url
-      index: request.tab.index + 1
       active: true
       windowId: request.tab.windowId
+    { position } = request
+    unless position == "end"
+      tabConfig.index =
+        if position == "start"
+          0
+        else
+          request.tab.index + if position == "before" then 0 else 1
     tabConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
     delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
@@ -197,9 +203,10 @@ BackgroundCommands =
       chrome.windows.create windowConfig, -> callback request
     else
       urls = request.urls[..].reverse()
+      position = request.registryEntry.options.position
       do openNextUrl = (request) ->
         if 0 < urls.length
-          TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), openNextUrl
+          TabOperations.openUrlInNewTab (extend request, {url: urls.pop(), position}), openNextUrl
         else
           callback request
   duplicateTab: mkRepeatCommand (request, callback) ->
