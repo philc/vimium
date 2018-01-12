@@ -120,8 +120,7 @@ DomUtils =
 
       else
         clientRect = @cropRectToVisible clientRect
-
-        continue if clientRect == null or clientRect.width < 3 or clientRect.height < 3
+        continue unless clientRect
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
         computedStyle = window.getComputedStyle(element, null)
@@ -131,21 +130,24 @@ DomUtils =
 
     null
 
-  #
-  # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a height or width < 3
-  # then null is returned instead of a rect.
-  #
+  # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a visible height or
+  # width <= 3 then null is returned instead of a rect.
   cropRectToVisible: (rect) ->
-    boundedRect = Rect.create(
-      Math.max(rect.left, 0)
-      Math.max(rect.top, 0)
-      rect.right
-      rect.bottom
-    )
-    if boundedRect.top >= window.innerHeight - 4 or boundedRect.left >= window.innerWidth - 4
+    if rect.bottom <= 4 or rect.right <= 4
+      null
+    else if rect.top >= window.innerHeight - 4 or rect.left >= window.innerWidth - 4
       null
     else
-      boundedRect
+      boundedRect = Rect.create(
+        Math.max rect.left, 0
+        Math.max rect.top, 0
+        Math.min rect.right, window.innerWidth
+        Math.min rect.bottom, window.innerHeight
+      )
+      if boundedRect.width <= 3 or boundedRect.height <= 3
+        null
+      else
+        boundedRect
 
   #
   # Get the client rects for the <area> elements in a <map> based on the position of the <img> element using
