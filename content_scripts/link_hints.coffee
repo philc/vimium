@@ -740,6 +740,8 @@ LocalHints =
   getLocalHints: (requireHref) ->
     # We need documentElement to be ready in order to find links.
     return [] unless document.documentElement
+    # If the current frame is outside of the viewport, then skip it entirely.
+    return [] unless 0 < DomUtils.Viewport.getVisibleArea()
     elements = document.documentElement.getElementsByTagName "*"
     visibleElements = []
 

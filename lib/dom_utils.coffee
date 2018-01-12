@@ -119,7 +119,7 @@ DomUtils =
           return childClientRect
 
       else
-        clientRect = @cropRectToVisible clientRect
+        clientRect = @Viewport.cropRectToVisible clientRect
         continue unless clientRect
 
         # eliminate invisible elements (see test_harnesses/visibility_test.html)
@@ -132,13 +132,54 @@ DomUtils =
 
   # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a visible height or
   # width <= 3 then null is returned instead of a rect.
-  cropRectToVisible: do ->
+  Viewport: do ->
+    callbacks = []
+
     getMinX = -> 0
     getMinY = -> 0
     getMaxX = -> window.innerWidth
     getMaxY = -> window.innerHeight
 
-    (rect) ->
+    # Inform frames and iframes of the visible portion of their window; for example, an iframe may be
+    # partially or wholly outside of the viewport.
+    postTimer = null
+    onScroll = (event) ->
+      clearTimeout postTimer if postTimer
+      postTimer = Utils.setTimeout 50, ->
+        postTimer = null
+        chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
+          elements = []
+          elements.push element for element in document.documentElement.getElementsByTagName "iframe"
+          elements.push element for element in document.documentElement.getElementsByTagName "frame"
+          for element in elements
+            rect = do ->
+              rect = element.getClientRects()[0]
+              left = Math.max 0, -rect.left
+              top = Math.max 0, -rect.top
+              right = Math.max 0, Math.min rect.width, window.innerWidth - rect.left
+              bottom = Math.max 0, Math.min rect.height, window.innerHeight - rect.top
+              right = left if right < left
+              bottom = top if bottom < top
+              Rect.create left, top, right, bottom
+            element.contentWindow.postMessage {name: "vimiumRegisterFrameViewport", rect, secret}, "*"
+
+    window.addEventListener "load", onScroll
+    window.addEventListener "scroll", onScroll
+
+    window.addEventListener "message", (event) ->
+      chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
+        data = event.data
+        if data?.secret == secret and data?.name == "vimiumRegisterFrameViewport"
+          rect = data.rect
+          getMinX = -> rect.left
+          getMinY = -> rect.top
+          getMaxX = -> rect.right
+          getMaxY = -> rect.bottom
+
+    getVisibleArea: ->
+      (getMaxX() - getMinX()) * (getMaxY() * getMinY())
+
+    cropRectToVisible: (rect) ->
       if rect.bottom <= getMinY() + 4 or rect.right <= getMinX() + 4
         null
       else if rect.top >= getMaxY() - 4 or rect.left >= getMaxX() - 4
@@ -181,7 +222,7 @@ DomUtils =
         [x1, y1, x2, y2] = coords
 
       rect = Rect.translate (Rect.create x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
-      rect = @cropRectToVisible rect
+      rect = @Viewport.cropRectToVisible rect
 
       rects.push {element: area, rect: rect} if rect and not isNaN rect.top
     rects

@@ -39,6 +39,9 @@ Utils.nextTick = (func) -> func()
 getHintMarkers = ->
   Array::slice.call document.getElementsByClassName("vimiumHintMarker"), 0
 
+# Stub this (otherwise it produces 0 for the tests).
+DomUtils.Viewport.getVisibleArea = -> 1
+
 stubSettings = (key, value) -> stub Settings.cache, key, JSON.stringify value
 
 HintCoordinator.sendMessage = (name, request = {}) -> HintCoordinator[name]? request; request
