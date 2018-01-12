@@ -132,22 +132,28 @@ DomUtils =
 
   # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a visible height or
   # width <= 3 then null is returned instead of a rect.
-  cropRectToVisible: (rect) ->
-    if rect.bottom <= 4 or rect.right <= 4
-      null
-    else if rect.top >= window.innerHeight - 4 or rect.left >= window.innerWidth - 4
-      null
-    else
-      boundedRect = Rect.create(
-        Math.max rect.left, 0
-        Math.max rect.top, 0
-        Math.min rect.right, window.innerWidth
-        Math.min rect.bottom, window.innerHeight
-      )
-      if boundedRect.width <= 3 or boundedRect.height <= 3
+  cropRectToVisible: do ->
+    getMinX = -> 0
+    getMinY = -> 0
+    getMaxX = -> window.innerWidth
+    getMaxY = -> window.innerHeight
+
+    (rect) ->
+      if rect.bottom <= getMinY() + 4 or rect.right <= getMinX() + 4
+        null
+      else if rect.top >= getMaxY() - 4 or rect.left >= getMaxX() - 4
         null
       else
-        boundedRect
+        boundedRect = Rect.create(
+          Math.max rect.left, getMinX()
+          Math.max rect.top, getMinY()
+          Math.min rect.right, getMaxX()
+          Math.min rect.bottom, getMaxY()
+        )
+        if boundedRect.width <= 3 or boundedRect.height <= 3
+          null
+        else
+          boundedRect
 
   #
   # Get the client rects for the <area> elements in a <map> based on the position of the <img> element using
