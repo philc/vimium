@@ -133,8 +133,6 @@ DomUtils =
   # Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a visible height or
   # width <= 3 then null is returned instead of a rect.
   Viewport: do ->
-    callbacks = []
-
     getMinX = -> 0
     getMinY = -> 0
     getMaxX = -> window.innerWidth
