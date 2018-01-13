@@ -153,7 +153,7 @@ DomUtils =
           elements.push element for element in document.documentElement.getElementsByTagName "frame"
           for element in elements
             rect = do ->
-              rect = element.getClientRects()[0]
+              rect = element.getBoundingClientRect()
               left = Math.max 0, -rect.left
               top = Math.max 0, -rect.top
               right = Math.max 0, Math.min rect.width, window.innerWidth - rect.left
@@ -177,7 +177,7 @@ DomUtils =
           getMaxY = -> rect.bottom
 
     getVisibleArea: ->
-      (getMaxX() - getMinX()) * (getMaxY() * getMinY())
+      (getMaxX() - getMinX()) * (getMaxY() - getMinY())
 
     cropRectToVisible: (rect) ->
       if rect.bottom <= getMinY() + 4 or rect.right <= getMinX() + 4
