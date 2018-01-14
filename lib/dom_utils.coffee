@@ -163,8 +163,8 @@ DomUtils =
             Rect.create left, top, right, bottom
           element.contentWindow.postMessage {name: messageName, rect}, "*"
 
-    window.addEventListener "load", registerFrameViewports
-    window.addEventListener "scroll", registerFrameViewports
+    window.addEventListener "load", forTrusted registerFrameViewports
+    window.addEventListener "scroll", forTrusted registerFrameViewports
 
     window.addEventListener "message", ({data}) ->
       if data?.name == messageName and data.rect?
