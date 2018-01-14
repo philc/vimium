@@ -138,41 +138,42 @@ DomUtils =
     getMaxX = -> window.innerWidth
     getMaxY = -> window.innerHeight
 
+    messageName = "vimiumRegisterFrameViewport"
+
     # Inform frames and iframes of the visible portion of their window; for example, an iframe may be
     # partially or wholly outside of the viewport.
+    # FIXME(smblott) Handle frames nested within frames correctly.
     postTimer = null
-    onScroll = (event) ->
+    registerFrameViewports = (event) ->
       clearTimeout postTimer if postTimer
       postTimer = Utils.setTimeout 50, ->
         postTimer = null
-        chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
-          elements = []
-          elements.push element for element in document.documentElement.getElementsByTagName "iframe"
-          elements.push element for element in document.documentElement.getElementsByTagName "frame"
-          for element in elements
-            rect = do ->
-              rect = element.getBoundingClientRect()
-              left = Math.max 0, -rect.left
-              top = Math.max 0, -rect.top
-              right = Math.max 0, Math.min rect.width, window.innerWidth - rect.left
-              bottom = Math.max 0, Math.min rect.height, window.innerHeight - rect.top
-              right = left if right < left
-              bottom = top if bottom < top
-              Rect.create left, top, right, bottom
-            element.contentWindow.postMessage {name: "vimiumRegisterFrameViewport", rect, secret}, "*"
+        elements = []
+        elements.push element for element in document.documentElement.getElementsByTagName "iframe"
+        elements.push element for element in document.documentElement.getElementsByTagName "frame"
+        for element in elements
+          rect = do ->
+            rect = element.getBoundingClientRect()
+            left = Math.max 0, -rect.left
+            top = Math.max 0, -rect.top
+            right = Math.max 0, Math.min rect.width, window.innerWidth - rect.left
+            bottom = Math.max 0, Math.min rect.height, window.innerHeight - rect.top
+            right = left if right < left
+            bottom = top if bottom < top
+            Rect.create left, top, right, bottom
+          element.contentWindow.postMessage {name: messageName, rect}, "*"
 
-    window.addEventListener "load", onScroll
-    window.addEventListener "scroll", onScroll
+    window.addEventListener "load", registerFrameViewports
+    window.addEventListener "scroll", registerFrameViewports
 
-    window.addEventListener "message", (event) ->
-      chrome.storage.local.get "vimiumSecret", ({vimiumSecret: secret}) ->
-        data = event.data
-        if data?.secret == secret and data?.name == "vimiumRegisterFrameViewport"
-          rect = data.rect
-          getMinX = -> rect.left
-          getMinY = -> rect.top
-          getMaxX = -> rect.right
-          getMaxY = -> rect.bottom
+    window.addEventListener "message", ({data}) ->
+      if data?.name == messageName and data.rect?
+        {left, right, top, bottom} = data.rect
+        if left? and right? and top? and bottom?
+          getMinX = -> left
+          getMinY = -> top
+          getMaxX = -> right
+          getMaxY = -> bottom
 
     getVisibleArea: ->
       (getMaxX() - getMinX()) * (getMaxY() - getMinY())
