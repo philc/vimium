@@ -57,6 +57,7 @@ class VomnibarUI
   # This ensures that the vomnibar is actually hidden before any new tab is created, and avoids flicker after
   # opening a link in a new tab then returning to the original tab (see #1485).
   hide: (@onHiddenCallback = null) ->
+    @input.blur()
     UIComponentServer.postMessage "hide"
     @reset()
 
