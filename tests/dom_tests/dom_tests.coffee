@@ -51,7 +51,6 @@ activateLinkHintsMode = ->
 # link hinting modes.
 #
 createGeneralHintTests = (isFilteredMode) ->
-  window.vimiumOnClickAttributeName = "does-not-matter"
 
   context "Link hints",
 
