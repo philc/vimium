@@ -115,9 +115,6 @@ class VomnibarUI
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event == "keydown")
-      if (event.key == "Enter")
-        return "enterDown"
     else if (event.type == "keypress")
       if (event.key == "Enter")
         return "enterPress"
@@ -128,7 +125,7 @@ class VomnibarUI
 
   onKeypress: (event) =>
     action = @actionFromKeyEvent event
-    return true unless action # pass throug
+    return true unless action # pass through
 
     openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
     if (action == "enterPress")
@@ -268,6 +265,7 @@ class VomnibarUI
     @input = @box.querySelector("input")
     @input.addEventListener "input", @onInput
     @input.addEventListener "keydown", @onKeydown
+    @input.addEventListener "keypress", @onKeypress
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
 
