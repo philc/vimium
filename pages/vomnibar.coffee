@@ -117,7 +117,7 @@ class VomnibarUI
       return "down"
     else if (event.type == "keypress")
       if (event.key == "Enter")
-        return "enterPress"
+        return "enter"
     else if KeyboardUtils.isBackspace event
       return "delete"
 
@@ -128,7 +128,7 @@ class VomnibarUI
     return true unless action # pass through
 
     openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
-    if (action == "enterPress")
+    if (action == "enter")
       isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl?
       if @selection == -1 or isCustomSearchPrimarySuggestion
         query = @input.value.trim()
