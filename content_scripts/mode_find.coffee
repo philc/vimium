@@ -104,7 +104,6 @@ class FindMode extends Mode
     # escape sequences. '\' is the escape character and needs to be escaped itself to be used as a normal
     # character. here we grep for the relevant escape sequences.
     @query.isRegex = Settings.get 'regexFindMode'
-    hasNoIgnoreCaseFlag = false
     @query.parsedQuery = @query.rawQuery.replace /(\\{1,2})([rRI]?)/g, (match, slashes, flag) =>
       return match if flag == "" or slashes.length != 1
       switch (flag)
@@ -112,12 +111,10 @@ class FindMode extends Mode
           @query.isRegex = true
         when "R"
           @query.isRegex = false
-        when "I"
-          hasNoIgnoreCaseFlag = true
       ""
 
-    # default to 'smartcase' mode, unless noIgnoreCase is explicitly specified
-    @query.ignoreCase = !hasNoIgnoreCaseFlag && !Utils.hasUpperCase(@query.parsedQuery)
+    # Implement smartcase.
+    @query.ignoreCase = not Utils.hasUpperCase(@query.parsedQuery)
 
     regexPattern = if @query.isRegex
       @query.parsedQuery
