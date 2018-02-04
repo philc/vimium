@@ -13,9 +13,8 @@ injectedCode = () ->
 
   addEventListener = (type, listener, useCapture) ->
     if type == "click" and this instanceof EL
-      try
-        unless this instanceof Anchor # just skip <a>
-          @setAttribute "_vimium-has-onclick-listener", ""
+      unless this instanceof Anchor # Just skip <a>.
+        try @setAttribute "_vimium-has-onclick-listener", ""
     _addEventListener?.apply this, arguments
 
   newToString = () ->
@@ -28,7 +27,7 @@ injectedCode = () ->
   # Libraries like Angular/Zone and CKEditor check if element.addEventListener is native,
   # so here we hook it to tell outsides it is exactly native.
   # This idea is from https://github.com/angular/zone.js/pull/686,
-  # and see more discussions in https://github.com/ckeditor/ckeditor5-build-classic/issues/34
+  # and see more discussions in https://github.com/ckeditor/ckeditor5-build-classic/issues/34.
   Function::toString = newToString
 
 script = document.createElement "script"
