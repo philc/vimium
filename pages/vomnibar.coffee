@@ -115,36 +115,20 @@ class VomnibarUI
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
-    else if (event.key == "Enter")
-      return "enter"
+    else if (event.type == "keypress")
+      if (event.key == "Enter")
+        return "enter"
     else if KeyboardUtils.isBackspace event
       return "delete"
 
     null
 
-  onKeydown: (event) =>
-    @lastAction = action = @actionFromKeyEvent event
+  onKeypress: (event) =>
+    action = @actionFromKeyEvent event
     return true unless action # pass through
 
     openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
-    if (action == "dismiss")
-      @hide()
-    else if action in [ "tab", "down" ]
-      if action == "tab" and
-        @completer.name == "omni" and
-        not @seenTabToOpenCompletionList and
-        @input.value.trim().length == 0
-          @seenTabToOpenCompletionList = true
-          @update true
-      else if 0 < @completions.length
-        @selection += 1
-        @selection = @initialSelectionValue if @selection == @completions.length
-        @updateSelection()
-    else if (action == "up")
-      @selection -= 1
-      @selection = @completions.length - 1 if @selection < @initialSelectionValue
-      @updateSelection()
-    else if (action == "enter")
+    if (action == "enter")
       isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl?
       if @selection == -1 or isCustomSearchPrimarySuggestion
         query = @input.value.trim()
@@ -169,6 +153,36 @@ class VomnibarUI
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
+    else
+      return true # Do not suppress event.
+
+    # It seems like we have to manually suppress the event here and still return true.
+    event.stopImmediatePropagation()
+    event.preventDefault()
+    true
+
+  onKeydown: (event) =>
+    @lastAction = action = @actionFromKeyEvent event
+    return true unless action # pass through
+
+    openInNewTab = @forceNewTab || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
+    if (action == "dismiss")
+      @hide()
+    else if action in [ "tab", "down" ]
+      if action == "tab" and
+        @completer.name == "omni" and
+        not @seenTabToOpenCompletionList and
+        @input.value.trim().length == 0
+          @seenTabToOpenCompletionList = true
+          @update true
+      else if 0 < @completions.length
+        @selection += 1
+        @selection = @initialSelectionValue if @selection == @completions.length
+        @updateSelection()
+    else if (action == "up")
+      @selection -= 1
+      @selection = @completions.length - 1 if @selection < @initialSelectionValue
+      @updateSelection()
     else if action == "delete"
       if @customSearchMode? and @input.selectionEnd == 0
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
@@ -251,6 +265,7 @@ class VomnibarUI
     @input = @box.querySelector("input")
     @input.addEventListener "input", @onInput
     @input.addEventListener "keydown", @onKeydown
+    @input.addEventListener "keypress", @onKeypress
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
 

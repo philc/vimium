@@ -15,16 +15,30 @@ setTextInInputElement = (inputElement, text) ->
 document.addEventListener "DOMContentLoaded", ->
   DomUtils.injectUserCss() # Manually inject custom user styles.
 
+document.addEventListener "keypress", (event) ->
+  inputElement = document.getElementById "hud-find-input"
+  return unless inputElement?
+
+  if event.key == "Enter"
+    UIComponentServer.postMessage
+      name: "hideFindMode"
+      exitEventIsEnter: event.key == "Enter"
+      exitEventIsEscape: false
+  else
+    return
+
+  DomUtils.suppressEvent event
+  false
+
 document.addEventListener "keydown", (event) ->
   inputElement = document.getElementById "hud-find-input"
   return unless inputElement? # Don't do anything if we're not in find mode.
 
-  if (KeyboardUtils.isBackspace(event) and inputElement.textContent.length == 0) or
-     event.key == "Enter" or KeyboardUtils.isEscape event
+  if (KeyboardUtils.isBackspace(event) and inputElement.textContent.length == 0) or KeyboardUtils.isEscape event
 
     UIComponentServer.postMessage
       name: "hideFindMode"
-      exitEventIsEnter: event.key == "Enter"
+      exitEventIsEnter: false
       exitEventIsEscape: KeyboardUtils.isEscape event
 
   else if event.key == "ArrowUp"
