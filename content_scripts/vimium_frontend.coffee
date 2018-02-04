@@ -113,19 +113,6 @@ installModes = ->
   new GrabBackFocus if isEnabledForUrl
   normalMode # Return the normalMode object (for the tests).
 
-initializeOnEnabledStateKnown = (isEnabledForUrl) ->
-  installModes() unless normalMode
-  if isEnabledForUrl
-    unless Utils.isFirefox() and document.documentElement.namespaceURI != "http://www.w3.org/1999/xhtml"
-      # We only initialize (and activate) the Vomnibar in the top frame.  Also, we do not initialize the
-      # Vomnibar until we know that Vimium is enabled.  Thereafter, there's no more initialization to do.
-      #
-      # NOTE(mrmr1993): In XML documents on Firefox, injecting HTML into the DOM breaks the rendering, so we
-      # lazy load the Vomnibar. This comes with the expected issues, but is better than breaking all XML
-      # documents.
-      DomUtils.documentComplete Vomnibar.init.bind Vomnibar if DomUtils.isTopFrame()
-    initializeOnEnabledStateKnown = ->
-
 #
 # Complete initialization work that should be done prior to DOMReady.
 #
@@ -305,7 +292,7 @@ checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
     {isEnabledForUrl, passKeys, frameIsFocused, isFirefox} = response
     Utils.isFirefox = -> isFirefox
-    initializeOnEnabledStateKnown isEnabledForUrl
+    installModes() unless normalMode
     normalMode.setPassKeys passKeys
     # Hide the HUD if we're not enabled.
     HUD.hide true, false unless isEnabledForUrl
