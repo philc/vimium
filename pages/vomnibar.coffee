@@ -104,6 +104,10 @@ class VomnibarUI
   # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
   actionFromKeyEvent: (event) ->
     key = KeyboardUtils.getKeyChar(event)
+    # Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK translation
+    # (see #2915 and #2934).
+    return null if event.type == "keypress" and key != "enter"
+    return null if event.type == "keydown" and key == "enter"
     if (KeyboardUtils.isEscape(event))
       return "dismiss"
     else if (key == "up" ||
@@ -122,7 +126,7 @@ class VomnibarUI
 
     null
 
-  onKeydown: (event) =>
+  onKeyEvent: (event) =>
     @lastAction = action = @actionFromKeyEvent event
     return true unless action # pass through
 
@@ -250,7 +254,8 @@ class VomnibarUI
 
     @input = @box.querySelector("input")
     @input.addEventListener "input", @onInput
-    @input.addEventListener "keydown", @onKeydown
+    @input.addEventListener "keydown", @onKeyEvent
+    @input.addEventListener "keypress", @onKeyEvent
     @completionList = @box.querySelector("ul")
     @completionList.style.display = ""
 
