@@ -237,25 +237,29 @@ setScrollPosition = ({ scrollX, scrollY }) ->
         Marks.setPreviousPosition()
         window.scrollTo scrollX, scrollY
 
-flashFrame = ->
-DomUtils.documentReady ->
-  # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
-  highlightedFrameElement = DomUtils.createElement "div"
-  # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
-  _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
+flashFrame = do ->
+  highlightedFrameElement = null
 
-  # Inject stylesheet.
-  _styleSheet = DomUtils.createElement "style"
-  _styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
-  _shadowDOM.appendChild _styleSheet
+  ->
+    highlightedFrameElement ?= do ->
+      # Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
+      highlightedFrameElement = DomUtils.createElement "div"
+      # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
+      _shadowDOM = highlightedFrameElement.createShadowRoot?() ? highlightedFrameElement
 
-  _frameEl = DomUtils.createElement "div"
-  _frameEl.className = "vimiumReset vimiumHighlightedFrame"
-  _shadowDOM.appendChild _frameEl
+      # Inject stylesheet.
+      _styleSheet = DomUtils.createElement "style"
+      _styleSheet.innerHTML = "@import url(\"#{chrome.runtime.getURL("content_scripts/vimium.css")}\");"
+      _shadowDOM.appendChild _styleSheet
 
-  flashFrame = ->
+      _frameEl = DomUtils.createElement "div"
+      _frameEl.className = "vimiumReset vimiumHighlightedFrame"
+      _shadowDOM.appendChild _frameEl
+
+      highlightedFrameElement
+
     document.documentElement.appendChild highlightedFrameElement
-    setTimeout (-> highlightedFrameElement.remove()), 200
+    Utils.setTimeout 200, -> highlightedFrameElement.remove()
 
 #
 # Called from the backend in order to change frame focus.
