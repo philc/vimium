@@ -74,7 +74,7 @@ context "Keep selection within bounds",
     @completions = [{html:'foo',type:'tab',url:'http://example.com'}]
     ui.update(true)
     stub ui, "actionFromKeyEvent", -> "down"
-    ui.onKeydown eventMock
+    ui.onKeyEvent eventMock
     assert.equal 0, ui.selection
 
     @completions = []
