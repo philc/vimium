@@ -124,7 +124,7 @@ TabOperations =
       active: true
     winConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
-    delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
+    delete winConfig["url"] if winConfig["url"] == Settings.defaults.newTabUrl
     chrome.windows.create winConfig, callback
 
 toggleMuteTab = do ->
