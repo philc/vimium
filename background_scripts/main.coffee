@@ -235,6 +235,15 @@ BackgroundCommands =
     tabIds = BgUtils.tabRecency.getTabsByRecency().filter (tabId) -> tabId != tab.id
     if 0 < tabIds.length
       selectSpecificTab id: tabIds[(count-1) % tabIds.length]
+  reload: ({count, tabId, registryEntry, tab: {windowId}})->
+    bypassCache = registryEntry.options.hard ? false
+    chrome.tabs.query {windowId}, (tabs) ->
+      position = do ->
+        for tab, index in tabs
+          return index if tab.id == tabId
+      tabs = [tabs[position...]..., tabs[...position]...]
+      count = Math.min count, tabs.length
+      chrome.tabs.reload tab.id, {bypassCache} for tab in tabs[...count]
 
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction, {tab: activeTab}) ->
