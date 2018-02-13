@@ -172,7 +172,9 @@ Release Notes
 Not yet released
 
 - Better detection of click listeners for link hints.
+- The Vomnibar is now loaded on demand (not preloaded).  This should fix some issues with the dev console.
 - Display version number in page popup.
+- Various bug fixes.
 
 1.62 (2017-12-09)
 
