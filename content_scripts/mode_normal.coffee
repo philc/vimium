@@ -59,10 +59,7 @@ NormalModeCommands =
   scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count
   scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
 
-  # Page state.
-  reload: (count, options) ->
-    hard = options.registryEntry.options.hard ? false
-    window.location.reload(hard)
+  # Tab navigation: back, forward.
   goBack: (count) -> history.go(-count)
   goForward: (count) -> history.go(count)
 
