@@ -171,6 +171,7 @@ Release Notes
 
 Not yet released
 
+- The `reload` command now accepts a count prefix; so `999r` reloads all tabs (in the current window).
 - Better detection of click listeners for link hints.
 - Display version number in page popup.
 - The Vomnibar is now loaded on demand (not preloaded).  This should fix some issues with the dev console.
