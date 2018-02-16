@@ -192,7 +192,6 @@ BackgroundCommands =
     if request.registryEntry.options.incognito or request.registryEntry.options.window
       windowConfig =
         url: request.urls
-        focused: true
         incognito: request.registryEntry.options.incognito ? false
       chrome.windows.create windowConfig, -> callback request
     else
