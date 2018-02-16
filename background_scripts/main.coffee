@@ -184,7 +184,11 @@ BackgroundCommands =
         else
           # Otherwise, just create a new tab.
           newTabUrl = Settings.get "newTabUrl"
-          if newTabUrl == "pages/blank.html"
+          if Utils.isFirefox() && newTabUrl == "about:newtab"
+            # For security reasons, in Firefox, this may not be a privileged URL.
+            # The New Tab page (about:newtab) can be opened if no value for URL is provided.
+            undefined
+          else if newTabUrl == "pages/blank.html"
             # "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
             [if request.tab.incognito then "chrome://newtab" else chrome.runtime.getURL newTabUrl]
           else
@@ -193,6 +197,10 @@ BackgroundCommands =
       windowConfig =
         url: request.urls
         incognito: request.registryEntry.options.incognito ? false
+      if Utils.isFirefox()
+        # Firefox fails with error if 'focused' property is specified.
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1253129 for details.
+        delete windowConfig["focused"]  
       chrome.windows.create windowConfig, -> callback request
     else
       urls = request.urls[..].reverse()
