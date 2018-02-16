@@ -169,7 +169,7 @@ PRs are welcome.
 Release Notes
 -------------
 
-Not yet released
+1.63 (2018-02-16)
 
 - The `reload` command now accepts a count prefix; so `999r` reloads all tabs (in the current window).
 - Better detection of click listeners for link hints.
