@@ -159,6 +159,7 @@ DomUtils =
 
     window.addEventListener "load", forTrusted registerFrameViewports
     window.addEventListener "scroll", forTrusted registerFrameViewports
+    window.addEventListener "resize", forTrusted registerFrameViewports
 
     window.addEventListener "message", ({data}) ->
       if data?.name == messageName and data.rect?
