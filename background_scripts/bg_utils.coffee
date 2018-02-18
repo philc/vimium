@@ -102,7 +102,8 @@ SearchEngines =
             keyword = tokens[0].split(":")[0]
             searchUrl = tokens[1]
             description = tokens[2..].join(" ") || "search (#{keyword})"
-            engines[keyword] = {keyword, searchUrl, description} if Utils.hasFullUrlPrefix searchUrl
+            if Utils.hasFullUrlPrefix(searchUrl) or Utils.hasJavascriptPrefix searchUrl
+              engines[keyword] = {keyword, searchUrl, description}
 
         callback engines
 
