@@ -85,7 +85,11 @@ Rect =
     true
 
   intersect: (rect1, rect2) ->
-    @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
+    if rect1.right <= rect2.left or rect2.right <= rect1.left or
+        rect1.bottom <= rect2.top or rect2.bottom <= rect1.top
+      @create rect1.left, rect1.top, rect1.left, rect1.top
+    else
+      @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
         (Math.min rect1.right, rect2.right), (Math.min rect1.bottom, rect2.bottom)
 
 root = exports ? (window.root ?= {})
