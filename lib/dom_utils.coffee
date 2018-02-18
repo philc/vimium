@@ -151,16 +151,10 @@ DomUtils =
         elements = []
         elements.push element for element in document.documentElement.getElementsByTagName "iframe"
         elements.push element for element in document.documentElement.getElementsByTagName "frame"
+        windowRect = Rect.create 0, 0, window.innerWidth, window.innerHeight
         for element in elements
-          rect = do ->
-            rect = element.getBoundingClientRect()
-            left = Math.max 0, -rect.left
-            top = Math.max 0, -rect.top
-            right = Math.max 0, Math.min rect.width, window.innerWidth - rect.left
-            bottom = Math.max 0, Math.min rect.height, window.innerHeight - rect.top
-            right = left if right < left
-            bottom = top if bottom < top
-            Rect.create left, top, right, bottom
+          rect = element.getBoundingClientRect()
+          rect = Rect.translate Rect.intersect(rect, windowRect), -rect.left, -rect.top
           element.contentWindow.postMessage {name: messageName, rect}, "*"
 
     window.addEventListener "load", forTrusted registerFrameViewports

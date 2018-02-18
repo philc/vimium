@@ -88,6 +88,9 @@ Rect =
     @create (Math.max rect1.left, rect2.left), (Math.max rect1.top, rect2.top),
         (Math.min rect1.right, rect2.right), (Math.min rect1.bottom, rect2.bottom)
 
+  area: (rect) ->
+    Math.max(0, rect.width) * Math.max 0, rect.height
+
 root = exports ? (window.root ?= {})
 root.Rect = Rect
 extend window, root unless exports?
