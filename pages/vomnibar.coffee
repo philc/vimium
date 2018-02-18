@@ -166,11 +166,7 @@ class VomnibarUI
         # text than that which is included in the URL associated with the primary suggestion.  Therefore, to
         # avoid a race condition, we construct the query from the actual contents of the input (query).
         query = Utils.createSearchUrl query, @lastReponse.engine.searchUrl if isCustomSearchPrimarySuggestion
-        @hide ->
-          openInNewTab &&= not Utils.hasJavascriptPrefix query
-          chrome.runtime.sendMessage
-            handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-            url: query
+        @hide -> Vomnibar.getCompleter().launchUrl query, openInNewTab
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
@@ -326,15 +322,18 @@ class BackgroundCompleter
   # These are the actions we can perform when the user selects a result.
   completionActions:
     navigateToUrl: (url) -> (openInNewTab) ->
-      # If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the current
-      # tab.
-      openInNewTab &&= not Utils.hasJavascriptPrefix url
-      chrome.runtime.sendMessage
-        handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
-        url: url
+      Vomnibar.getCompleter().launchUrl url, openInNewTab
 
     switchToTab: (tabId) -> ->
       chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
+
+  launchUrl: (url, openInNewTab) ->
+    # If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the current
+    # tab.
+    openInNewTab &&= not Utils.hasJavascriptPrefix url
+    chrome.runtime.sendMessage
+      handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
+      url: url
 
 UIComponentServer.registerHandler (event) ->
   switch event.data.name ? event.data
