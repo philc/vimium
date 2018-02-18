@@ -177,6 +177,8 @@ Release Notes
 - The Vomnibar is now loaded on demand (not preloaded).  This should fix some issues with the dev console.
 - The `\I` control (case sensitivity) for find mode has been removed.  Find mode uses smartcase.
 - Various bug fixes.
+- 1.63.1 (Firefox only):
+    - Fix [#2958](https://github.com/philc/vimium/issues/2958#issuecomment-366488659), link hints broken for `target="_blank"` links.
 
 1.62 (2017-12-09)
 
