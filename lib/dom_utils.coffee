@@ -246,13 +246,22 @@ DomUtils =
           if element.selectionStart == 0 and element.selectionEnd == 0
             element.setSelectionRange element.value.length, element.value.length
 
-  simulateClick: (element, modifiers) ->
+  simulateClick: (element, modifiers = {}) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
-      defaultActionShouldTrigger = @simulateMouseEvent event, element, modifiers
-      if event == "click" and defaultActionShouldTrigger and Utils.isFirefox() and element.target != "_blank"
+      defaultActionShouldTrigger =
+        if Utils.isFirefox() and Object.keys(modifiers).length == 0 and event == "click" and
+            element.target == "_blank" and element.href and
+            not element.hasAttribute("onclick") and not element.hasAttribute("_vimium-has-onclick-listener")
+          # Simulating a click on a target "_blank" element triggers the Firefox popup blocker.
+          # Note(smblott) This will be incorrect if there is a click listener on the element.
+          true
+        else
+          @simulateMouseEvent event, element, modifiers
+      if event == "click" and defaultActionShouldTrigger and Utils.isFirefox()
         # Firefox doesn't (currently) trigger the default action for modified keys.
-        DomUtils.simulateClickDefaultAction element, modifiers
+        if 0 < Object.keys(modifiers).length or element.target == "_blank"
+          DomUtils.simulateClickDefaultAction element, modifiers
       defaultActionShouldTrigger # return the values returned by each @simulateMouseEvent call.
 
   simulateMouseEvent: do ->
