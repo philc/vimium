@@ -167,6 +167,7 @@ class VomnibarUI
         # avoid a race condition, we construct the query from the actual contents of the input (query).
         query = Utils.createSearchUrl query, @lastReponse.engine.searchUrl if isCustomSearchPrimarySuggestion
         @hide ->
+          openInNewTab &&= not Utils.hasJavascriptPrefix query
           chrome.runtime.sendMessage
             handler: if openInNewTab then "openUrlInNewTab" else "openUrlInCurrentTab"
             url: query
