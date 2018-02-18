@@ -142,16 +142,15 @@ DomUtils =
 
     # Inform frames and iframes of the visible portion of their window; for example, an iframe may be
     # partially or wholly outside of the viewport.
-    # FIXME(smblott) Handle frames nested within frames correctly.
     postTimer = null
-    registerFrameViewports = (event) ->
+    registerFrameViewports = (event = null) ->
       clearTimeout postTimer if postTimer
       postTimer = Utils.setTimeout 50, ->
         postTimer = null
         elements = []
         elements.push element for element in document.documentElement.getElementsByTagName "iframe"
         elements.push element for element in document.documentElement.getElementsByTagName "frame"
-        windowRect = Rect.create 0, 0, window.innerWidth, window.innerHeight
+        windowRect = Rect.create getMinX(), getMinY(), getMaxX(), getMaxY()
         for element in elements
           rect = element.getBoundingClientRect()
           rect = Rect.translate Rect.intersect(rect, windowRect), -rect.left, -rect.top
@@ -169,6 +168,7 @@ DomUtils =
           getMinY = -> top
           getMaxX = -> right
           getMaxY = -> bottom
+          registerFrameViewports()
 
     getVisibleArea: ->
       (getMaxX() - getMinX()) * (getMaxY() - getMinY())
