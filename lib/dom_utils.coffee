@@ -171,7 +171,7 @@ DomUtils =
           registerFrameViewports()
 
     getVisibleArea: ->
-      (getMaxX() - getMinX()) * (getMaxY() - getMinY())
+      (Math.max 0, getMaxX() - getMinX()) * (Math.max 0, getMaxY() - getMinY())
 
     cropRectToVisible: (rect) ->
       if rect.bottom <= getMinY() + 4 or rect.right <= getMinX() + 4
@@ -466,7 +466,7 @@ DomUtils =
 
   # This tests whether a window is too small to be useful.
   windowIsTooSmall: ->
-    return window.innerWidth < 3 or window.innerHeight < 3
+    DomUtils.Viewport.getVisibleArea() < 10
 
   # Inject user styles manually. This is only necessary for our chrome-extension:// pages and frames.
   injectUserCss: ->
