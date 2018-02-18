@@ -11,7 +11,8 @@
 # In all cases except Settings.defaults, values are stored as jsonified strings.
 
 # If the current frame is the Vomnibar or the HUD, then we'll need our Chrome stubs for the tests.
-window.chrome ?= window.top?.chrome
+# We use "try" because this fails within iframes on Firefox (where failure doesn't actually matter).
+try window.chrome ?= window.top?.chrome
 
 storageArea = if chrome.storage.sync? then "sync" else "local"
 
