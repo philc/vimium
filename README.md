@@ -169,6 +169,10 @@ PRs are welcome.
 Release Notes
 -------------
 
+In `master` (not yet released)
+
+- Custom search engines can now be `javascript:` URLs (eg., search the current [site](https://github.com/philc/vimium/issues/2956#issuecomment-366509915)).
+
 1.63 (2018-02-16)
 
 - The `reload` command now accepts a count prefix; so `999r` reloads all tabs (in the current window).
