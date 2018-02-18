@@ -247,8 +247,6 @@ DomUtils =
             element.setSelectionRange element.value.length, element.value.length
 
   simulateClick: (element, modifiers = {}) ->
-    console.log modifiers
-    console.log Object.keys(modifiers).length
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
       defaultActionShouldTrigger =
