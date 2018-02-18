@@ -151,11 +151,7 @@ DomUtils =
         elements = []
         elements.push element for element in document.documentElement.getElementsByTagName "iframe"
         elements.push element for element in document.documentElement.getElementsByTagName "frame"
-        try
-          windowRect = Rect.create 0, 0, window.innerWidth, window.innerHeight
-        catch
-          console.log location.toString()
-          return
+        windowRect = Rect.create 0, 0, window.innerWidth, window.innerHeight
         for element in elements
           rect = element.getBoundingClientRect()
           rect = Rect.translate Rect.intersect(rect, windowRect), -rect.left, -rect.top
