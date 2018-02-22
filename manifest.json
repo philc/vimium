@@ -40,8 +40,6 @@
   ],
   "content_scripts": [
     {
-      "_comment":
-        "IMPORTANT: All resources listed here must also be listed with the others -- in order -- in ./pages/*.html",
       "matches": ["<all_urls>"],
       "js": ["lib/utils.js",
              "lib/keyboard_utils.js",
