@@ -27,6 +27,7 @@ onKeyEvent = (event) ->
   if (KeyboardUtils.isBackspace(event) and inputElement.textContent.length == 0) or
      event.key == "Enter" or KeyboardUtils.isEscape event
 
+    inputElement.blur()
     UIComponentServer.postMessage
       name: "hideFindMode"
       exitEventIsEnter: event.key == "Enter"
