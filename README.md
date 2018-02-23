@@ -183,6 +183,8 @@ In `master` (not yet released)
 - Various bug fixes.
 - 1.63.1 (Firefox only):
     - Fix [#2958](https://github.com/philc/vimium/issues/2958#issuecomment-366488659), link hints broken for `target="_blank"` links.
+- 1.63.2 (Firefox only):
+    - Fix [#2962](https://github.com/philc/vimium/issues/2962), find mode broken on Firefox Quantum.
 
 1.62 (2017-12-09)
 
