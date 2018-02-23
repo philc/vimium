@@ -177,7 +177,7 @@ class FindMode extends Mode
       document.removeEventListener("selectionchange", @restoreDefaultSelectionHighlight, true)
 
     try
-      result = window.find(query, options.caseSensitive, options.backwards, true, false, true, false)
+      result = window.find(query, options.caseSensitive, options.backwards, true, false, false, false)
     catch # Failed searches throw on Firefox.
 
     # window.find focuses the |window| that it is called on. This gives us an opportunity to (re-)focus
