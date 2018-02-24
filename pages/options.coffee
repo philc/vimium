@@ -181,7 +181,9 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
     if /^https?:\/\/./.test @url
       # The common use case is to disable Vimium at the domain level.
       # Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
-      "https?:/" + @url.split("/",3)[1..].join("/") + "/*"
+      # Note: IPV6 host addresses will contain "[" and "]" (which must be escaped).
+      hostname = @url.split("/",3)[1..].join("/").replace("[", "\\[").replace "]", "\\]"
+      "https?:/" + hostname + "/*"
     else if /^[a-z]{3,}:\/\/./.test @url
       # Anything else which seems to be a URL.
       @url.split("/",3).join("/") + "/*"
