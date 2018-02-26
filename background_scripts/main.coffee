@@ -245,18 +245,18 @@ BackgroundCommands =
       chrome.tabs.reload tab.id, {bypassCache} for tab in tabs[...count]
 
 # Remove tabs before, after, or either side of the currently active tab
-removeTabsRelative = (direction, {tab: activeTab}) ->
+removeTabsRelative = (direction, {count, tab}) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
     shouldDelete =
       switch direction
         when "before"
-          (index) -> index < activeTab.index
+          (index) -> 0 < tab.index - index <= count
         when "after"
-          (index) -> index > activeTab.index
+          (index) -> 0 < index - tab.index <= count
         when "both"
-          (index) -> index != activeTab.index
+          (index) -> 0 < Math.abs(tab.index - index) <= count
 
-    chrome.tabs.remove (tab.id for tab in tabs when not tab.pinned and shouldDelete tab.index)
+    chrome.tabs.remove (t.id for t in tabs when not t.pinned and shouldDelete t.index)
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
