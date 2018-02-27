@@ -227,7 +227,7 @@ DomUtils =
       else
         false
 
-  simulateSelect: (element) ->
+  simulateSelect: (element, selectionType = null) ->
     # If element is already active, then we don't move the selection.  However, we also won't get a new focus
     # event.  So, instead we pretend (to any active modes which care, e.g. PostFindMode) that element has been
     # clicked.
@@ -235,7 +235,7 @@ DomUtils =
       handlerStack.bubbleEvent "click", target: element
     else
       element.focus()
-      if element.tagName.toLowerCase() != "textarea"
+      if element.tagName.toLowerCase() != "textarea" and not selectionType?
         # If the cursor is at the start of the (non-textarea) element's contents, send it to the end. Motivation:
         # * the end is a more useful place to focus than the start,
         # * this way preserves the last used position (except when it's at the beginning), so the user can
@@ -245,6 +245,23 @@ DomUtils =
         try
           if element.selectionStart == 0 and element.selectionEnd == 0
             element.setSelectionRange element.value.length, element.value.length
+
+    if selectionType? and selectionType in ["all", "start", "end"]
+      @selectAll element
+      switch selectionType
+        when "end" then window.getSelection().collapseToEnd()
+        when "start" then window.getSelection().collapseToStart()
+
+  # Select all of the text within an element.
+  selectAll: (element) ->
+    if element.select?
+      element.select()
+    else
+      range = document.createRange()
+      range.selectNodeContents element
+      sel = window.getSelection()
+      sel.removeAllRanges()
+      sel.addRange range
 
   simulateClick: (element, modifiers = {}) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]

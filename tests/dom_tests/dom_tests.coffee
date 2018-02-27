@@ -437,29 +437,29 @@ context "Input focus",
     document.getElementById("test-div").innerHTML = ""
 
   should "focus the first element", ->
-    NormalModeCommands.focusInput 1
+    NormalModeCommands.focusInput 1, registryEntry: options: {}
     assert.equal "first", document.activeElement.id
 
   should "focus the nth element", ->
-    NormalModeCommands.focusInput 100
+    NormalModeCommands.focusInput 100, registryEntry: options: {}
     assert.equal "third", document.activeElement.id
 
   should "activate insert mode on the first element", ->
-    NormalModeCommands.focusInput 1
+    NormalModeCommands.focusInput 1, registryEntry: options: {}
     assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "activate insert mode on the first element", ->
-    NormalModeCommands.focusInput 100
+    NormalModeCommands.focusInput 100, registryEntry: options: {}
     assert.isTrue InsertMode.permanentInstance.isActive()
 
   should "activate the most recently-selected input if the count is 1", ->
-    NormalModeCommands.focusInput 3
-    NormalModeCommands.focusInput 1
+    NormalModeCommands.focusInput 3, registryEntry: options: {}
+    NormalModeCommands.focusInput 1, registryEntry: options: {}
     assert.equal "third", document.activeElement.id
 
   should "not trigger insert if there are no inputs", ->
     document.getElementById("test-div").innerHTML = ""
-    NormalModeCommands.focusInput 1
+    NormalModeCommands.focusInput 1, registryEntry: options: {}
     assert.isFalse InsertMode.permanentInstance.isActive()
 
 # TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has

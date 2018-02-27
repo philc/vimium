@@ -140,7 +140,7 @@ NormalModeCommands =
     nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
     findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
-  focusInput: (count) ->
+  focusInput: (count, {registryEntry}) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
     # Pressing any other key will remove the overlays and the special tab behavior.
@@ -195,7 +195,7 @@ NormalModeCommands =
 
       hint
 
-    new FocusSelector hints, visibleInputs, selectedInputIndex
+    new FocusSelector hints, visibleInputs, selectedInputIndex, registryEntry.options
 
 if LinkHints?
   extend NormalModeCommands,
@@ -323,7 +323,7 @@ findAndFollowRel = (value) ->
         return true
 
 class FocusSelector extends Mode
-  constructor: (hints, visibleInputs, selectedInputIndex) ->
+  constructor: (hints, visibleInputs, selectedInputIndex, options) ->
     super
       name: "focus-selector"
       exitOnClick: true
@@ -333,7 +333,7 @@ class FocusSelector extends Mode
           selectedInputIndex += hints.length + (if event.shiftKey then -1 else 1)
           selectedInputIndex %= hints.length
           hints[selectedInputIndex].classList.add 'internalVimiumSelectedInputHint'
-          DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
+          DomUtils.simulateSelect visibleInputs[selectedInputIndex].element, options.select ? null
           @suppressEvent
         else unless event.key == "Shift"
           @exit()
@@ -344,7 +344,7 @@ class FocusSelector extends Mode
       id: "vimiumInputMarkerContainer"
       className: "vimiumReset"
 
-    DomUtils.simulateSelect visibleInputs[selectedInputIndex].element
+    DomUtils.simulateSelect visibleInputs[selectedInputIndex].element, options.select ? null
     if visibleInputs.length == 1
       @exit()
       return
