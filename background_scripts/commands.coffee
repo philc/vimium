@@ -172,7 +172,8 @@ Commands =
       "nextFrame",
       "mainFrame",
       "Marks.activateCreateMode",
-      "Marks.activateGotoMode"]
+      "Marks.activateGotoMode",
+      "zoom"]
     vomnibarCommands:
       ["Vomnibar.activate",
       "Vomnibar.activateInNewTab",
@@ -231,7 +232,8 @@ Commands =
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
-    "passNextKey"]
+    "passNextKey",
+    "zoom"]
 
 defaultKeyMappings =
   "?": "showHelp"
@@ -409,6 +411,8 @@ commandDescriptions =
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }]
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+
+  zoom: ["Zoom in or out"]
 
 Commands.init()
 

@@ -140,6 +140,13 @@ NormalModeCommands =
     nextStrings = nextPatterns.split(",").filter( (s) -> s.trim().length )
     findAndFollowRel("next") || findAndFollowLink(nextStrings)
 
+  zoom: (count, options) ->
+    factor = parseFloat options.registryEntry.options.factor ? "1.1"
+    factor = Math.pow factor, count
+    factor = 1.0 / factor unless options.registryEntry.options.out
+    document.body.style.zoom = "#{parseFloat(document.body.style.zoom or 1.0) / factor}"
+    HUD.showForDuration "Zoom: #{Math.round(100 * parseFloat document.body.style.zoom) / 100}", 1500
+
   focusInput: (count) ->
     # Focus the first input element on the page, and create overlays to highlight all the input elements, with
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
