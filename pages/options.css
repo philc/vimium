@@ -153,6 +153,7 @@ input[type="text"], textarea {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
   color: #444;
+  background-color: white;
   font: inherit;
   padding: 3px;
 }
