@@ -114,6 +114,8 @@ class VomnibarUI
     else if (key == "down" ||
         (event.ctrlKey && (key == "j" || key == "n")))
       return "down"
+    else if (event.ctrlKey && event.key == "Enter")
+      return "ctrlenter"
     else if (event.key == "Enter")
       return "enter"
     else if KeyboardUtils.isBackspace event
@@ -181,6 +183,11 @@ class VomnibarUI
         @update true
       else
         return true # Do not suppress event.
+    else if action == "ctrlenter"
+        if not @customSearchMode? and @selection >= 0
+            @previousInputValue ?= @input.value
+            @input.value = @completions[@selection]?.url
+            @input.scrollLeft = @input.scrollWidth
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
