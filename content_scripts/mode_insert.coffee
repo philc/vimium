@@ -20,8 +20,13 @@ class InsertMode extends Mode
         new PassNextKeyMode
 
       else if event.type == 'keydown' and KeyboardUtils.isEscape(event)
-        activeElement.blur() if DomUtils.isFocusable activeElement
-        @exit() unless @permanent
+        # Special-case so that CodeMirror's Vim keyMap and Vimium can co-exist on one page.
+        # Without this, Vimium would never let a CodeMirror's editor return to Normal mode.
+        if DomUtils.isCodeMirror activeElement
+          return @passEventToPage
+        else
+          activeElement.blur() if DomUtils.isFocusable activeElement
+          @exit() unless @permanent
 
       else
         return @passEventToPage
