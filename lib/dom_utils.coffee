@@ -206,7 +206,7 @@ DomUtils =
     element and (@isEditable(element) or @isEmbed element)
 
   isCodeMirror: (element) ->
-    if element.classList.contains('CodeMirror')
+    if element.className.split(" ").indexOf("CodeMirror") >= 0
       return true
     else
       return element.parentNode && DomUtils.isCodeMirror element.parentNode
