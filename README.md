@@ -185,6 +185,8 @@ In `master` (not yet released)
     - Fix [#2958](https://github.com/philc/vimium/issues/2958#issuecomment-366488659), link hints broken for `target="_blank"` links.
 - 1.63.2 (Firefox only):
     - Fix [#2962](https://github.com/philc/vimium/issues/2962), find mode broken on Firefox Quantum.
+- 1.63.3:
+    - Fix [#2997](https://github.com/philc/vimium/issues/2997), Vimium's DOM injection breaks Google Pay site.
 
 1.62 (2017-12-09)
 

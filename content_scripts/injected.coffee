@@ -1,3 +1,6 @@
+# NOTE(smblott) Disabled pending resolution of #2997.
+return
+
 # The code in `injectedCode()`, below, is injected into the page's own execution context.
 #
 # This is based on method 2b here: http://stackoverflow.com/a/9517879, and
