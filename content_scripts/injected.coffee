@@ -1,6 +1,3 @@
-# NOTE(smblott) Disabled pending resolution of #2997.
-return
-
 # The code in `injectedCode()`, below, is injected into the page's own execution context.
 #
 # This is based on method 2b here: http://stackoverflow.com/a/9517879, and
@@ -17,7 +14,7 @@ injectedCode = () ->
   addEventListener = (type, listener, useCapture) ->
     if type == "click" and this instanceof EL
       unless this instanceof Anchor # Just skip <a>.
-        try @setAttribute "_vimium-has-onclick-listener", ""
+        this.classList.add "__vimiumPageClickListenerDetected"
     _addEventListener?.apply this, arguments
 
   newToString = () ->
