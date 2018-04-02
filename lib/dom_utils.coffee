@@ -205,6 +205,12 @@ DomUtils =
   isFocusable: (element) ->
     element and (@isEditable(element) or @isEmbed element)
 
+  isCodeMirror: (element) ->
+    if element.className.split(" ").indexOf("CodeMirror") >= 0
+      return true
+    else
+      return element.parentNode && DomUtils.isCodeMirror element.parentNode
+
   isDOMDescendant: (parent, child) ->
     node = child
     while (node != null)
