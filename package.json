@@ -3,7 +3,11 @@
     "scripts": {
         "build": "cake build",
         "autobuild": "cake autobuild",
-        "test": "cake test"
+        "clean": "cake clean",
+        "test": "cake test",
+        "coverage": "cake coverage",
+        "package": "cake package",
+        "package-custom-crx": "cake package-custom-crx"
     },
     "devDependencies": {
         "coffeescript": "^1.12.7",
