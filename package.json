@@ -1,5 +1,6 @@
 {
     "name": "vimium",
+    "version": "1.63.3",
     "scripts": {
         "build": "cake build",
         "autobuild": "cake autobuild",
