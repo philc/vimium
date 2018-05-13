@@ -69,7 +69,7 @@ task "package", "Builds a zip file for submission to the Chrome store. The outpu
   spawn "mkdir", ["-p", "dist/vimium"], false, true
 
   blacklist = [".*", "*.coffee", "*.md", "reference", "test_harnesses", "tests", "dist", "git_hooks",
-               "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile"]
+               "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile", "package.json", "package-lock.json"]
   rsyncOptions = [].concat.apply(
     ["-r", ".", "dist/vimium"],
     blacklist.map((item) -> ["--exclude", "#{item}"]))
