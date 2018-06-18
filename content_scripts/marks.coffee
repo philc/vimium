@@ -15,7 +15,7 @@ Marks =
     "vimiumMark|#{window.location.href.split('#')[0]}|#{keyChar}"
 
   getMarkString: ->
-    JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY
+    JSON.stringify scrollX: window.scrollX, scrollY: window.scrollY, hash: window.location.hash
 
   setPreviousPosition: ->
     markString = @getMarkString()
@@ -84,7 +84,10 @@ Marks =
               if markString?
                 @setPreviousPosition()
                 position = JSON.parse markString
-                window.scrollTo position.scrollX, position.scrollY
+                if position.hash and position.scrollX == 0 and position.scrollY == 0
+                  window.location.hash = position.hash
+                else
+                  window.scrollTo position.scrollX, position.scrollY
                 @showMessage "Jumped to local mark", keyChar
               else
                 @showMessage "Local mark not set", keyChar
