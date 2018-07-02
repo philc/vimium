@@ -262,7 +262,7 @@ class VomnibarUI
       @input.focus()
       event.stopImmediatePropagation()
     # A click anywhere else hides the vomnibar.
-    document.body.addEventListener "click", => @hide()
+    document.addEventListener "click", => @hide()
 
 #
 # Sends requests to a Vomnibox completer on the background page.
