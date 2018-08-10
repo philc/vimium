@@ -66,7 +66,10 @@ KeyboardUtils =
 
     (event) ->
       # <c-[> is mapped to Escape in Vim by default.
-      event.key == "Escape" or (useVimLikeEscape and @getKeyCharString(event) == "<c-[>")
+      # Escape with a keyCode 229 means that this event comes from IME, and should not be treat as a directly/normal ESC press.
+      # In this case, IME will take care of the ESC press event, not vimium.
+      # See https://lists.w3.org/Archives/Public/www-dom/2010JulSep/att-0182/keyCode-spec.html
+      (event.key == "Escape" and event.keyCode != 229) or (useVimLikeEscape and @getKeyCharString(event) == "<c-[>")
 
   isBackspace: (event) ->
     event.key in ["Backspace", "Delete"]
