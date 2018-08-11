@@ -45,9 +45,13 @@ DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
+FOCUS_LINK =
+  name: "focus"
+  indicator: "Focus link"
+  linkActivator: (link) -> link.focus()
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, FOCUS_LINK]
 
 HintCoordinator =
   onExit: []
@@ -136,6 +140,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
   activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToFocus: (count) -> @activateMode count, mode: FOCUS_LINK
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
