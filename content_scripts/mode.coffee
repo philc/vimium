@@ -198,6 +198,17 @@ class SuppressAllKeyboardEvents extends Mode
       suppressAllKeyboardEvents: true
     super extend defaults, options
 
+class CacheAllKeydownEvents extends SuppressAllKeyboardEvents
+  constructor: (options = {}) ->
+    @keydownEvents = keydownEvents = []
+    defaults =
+      name: "cacheAllKeydownEvents"
+      keydown: (event) -> keydownEvents.push event
+    super extend defaults, options
+
+  replayKeydownEvents: ->
+    handlerStack.bubbleEvent "keydown", event for event in @keydownEvents
+
 root = exports ? (window.root ?= {})
-extend root, {Mode, SuppressAllKeyboardEvents}
+extend root, {Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents}
 extend window, root unless exports?
