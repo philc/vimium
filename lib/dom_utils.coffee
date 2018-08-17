@@ -308,6 +308,12 @@ DomUtils =
 
     return
 
+  simulateHover: (element, modifiers = {}) ->
+    @simulateMouseEvent "mouseover", element, modifiers
+
+  simulateUnhover: (element, modifiers = {}) ->
+    @simulateMouseEvent "mouseout", element, modifiers
+
   addFlashRect: (rect) ->
     flashEl = @createElement "div"
     flashEl.classList.add "vimiumReset"
