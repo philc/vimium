@@ -46,9 +46,28 @@ DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
   clickModifiers: altKey: true, ctrlKey: false, metaKey: false
+COPY_LINK_TEXT =
+  name: "copy-link-text"
+  indicator: "Copy link text"
+  linkActivator: (link) ->
+    text = link.textContent
+    if 0 < text.length
+      HUD.copyToClipboard text
+      text = text[0..25] + "...." if 28 < text.length
+      HUD.showForDuration "Yanked #{text}", 2000
+    else
+      HUD.showForDuration "No text to yank.", 2000
+HOVER_LINK =
+  name: "hover"
+  indicator: "Hover link"
+  linkActivator: (link) -> new HoverMode link
+FOCUS_LINK =
+  name: "focus"
+  indicator: "Focus link"
+  linkActivator: (link) -> link.focus()
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, COPY_LINK_TEXT, HOVER_LINK, FOCUS_LINK]
 
 HintCoordinator =
   onExit: []
@@ -125,8 +144,14 @@ HintCoordinator =
     @linkHintsMode = @localHints = null
 
 LinkHints =
-  activateMode: (count = 1, {mode}) ->
+  activateMode: (count = 1, {mode, registryEntry}) ->
     mode ?= OPEN_IN_CURRENT_TAB
+    # Handle modes which are only accessible via command options.
+    switch registryEntry?.options.action
+      when "copy-text" then mode = COPY_LINK_TEXT
+      when "hover" then mode = HOVER_LINK
+      when "focus" then mode = FOCUS_LINK
+    #
     if 0 < count or mode is OPEN_WITH_QUEUE
       HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
         if isSuccess
@@ -927,6 +952,12 @@ class WaitForEnter extends Mode
         else if KeyboardUtils.isEscape event
           @exit()
           callback false # false -> isSuccess.
+
+class HoverMode extends Mode
+  constructor: (@link) ->
+    DomUtils.simulateHover @link
+    super name: "hover-mode", singleton: "hover-mode", exitOnEscape: true
+    @onExit => DomUtils.simulateUnhover @link
 
 root = exports ? (window.root ?= {})
 root.LinkHints = LinkHints
