@@ -216,7 +216,7 @@ BackgroundCommands =
   lastTab: (request) -> selectTab "last", request
   removeTab: ({count, tab}) -> forCountTabs count, tab, (tab) -> chrome.tabs.remove tab.id
   restoreTab: mkRepeatCommand (request, callback) -> chrome.sessions.restore null, callback request
-  togglePinTab: ({tab}) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
+  togglePinTab: ({count, tab}) -> forCountTabs count, tab, (tab) -> chrome.tabs.update tab.id, {pinned: !tab.pinned}
   toggleMuteTab: toggleMuteTab
   moveTabLeft: moveTab
   moveTabRight: moveTab
