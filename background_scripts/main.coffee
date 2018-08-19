@@ -397,8 +397,8 @@ HintCoordinator =
     for own frameId, port of @tabState[tabId].ports
       @postMessage tabId, parseInt(frameId), messageType, port, request
 
-  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, isVimiumHelpDialog}) ->
-    @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex}
+  prepareToActivateMode: (tabId, originatingFrameId, {modeIndex, action, isVimiumHelpDialog}) ->
+    @tabState[tabId] = {frameIds: frameIdsForTab[tabId][..], hintDescriptors: {}, originatingFrameId, modeIndex, action}
     @tabState[tabId].ports = {}
     frameIdsForTab[tabId].map (frameId) => @tabState[tabId].ports[frameId] = portsForTab[tabId][frameId]
     @sendMessage "getHintDescriptors", tabId, {modeIndex, isVimiumHelpDialog}
@@ -419,6 +419,7 @@ HintCoordinator =
               originatingFrameId: @tabState[tabId].originatingFrameId
               hintDescriptors: hintDescriptors
               modeIndex: @tabState[tabId].modeIndex
+              action: @tabState[tabId].action
 
   # If an unregistering frame is participating in link-hints mode, then we need to tidy up after it.
   unregisterFrame: (tabId, frameId) ->

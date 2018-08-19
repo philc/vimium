@@ -49,6 +49,19 @@ DOWNLOAD_LINK_URL =
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
   OPEN_INCOGNITO, DOWNLOAD_LINK_URL]
 
+availableActions =
+  focus: (link) -> link.focus()
+  hover: (link) -> DomUtils.simulateHover link
+  unhover: (link) -> DomUtils.simulateUnhover link
+  "yank-text": (link) ->
+    if link.text?
+      HUD.copyToClipboard link.text
+      text = link.text
+      text = text[0..25] + "...." if 28 < text.length
+      HUD.showForDuration "Yanked #{text}", 2000
+    else
+      HUD.showForDuration "No text to yank.", 2000
+
 HintCoordinator =
   onExit: []
   localHints: null
@@ -57,7 +70,7 @@ HintCoordinator =
   sendMessage: (messageType, request = {}) ->
     Frame.postMessage "linkHintsMessage", extend request, {messageType}
 
-  prepareToActivateMode: (mode, onExit) ->
+  prepareToActivateMode: (mode, action, onExit) ->
     # We need to communicate with the background page (and other frames) to initiate link-hints mode.  To
     # prevent other Vimium commands from being triggered before link-hints mode is launched, we install a
     # temporary mode to block (and cache) keyboard events.
@@ -71,7 +84,7 @@ HintCoordinator =
     Utils.setTimeout 1000, -> cacheAllKeydownEvents.exit() if cacheAllKeydownEvents?.modeIsActive
     @onExit = [onExit]
     @sendMessage "prepareToActivateMode",
-      modeIndex: availableModes.indexOf(mode), isVimiumHelpDialog: window.isVimiumHelpDialog
+      {modeIndex: availableModes.indexOf(mode), action, isVimiumHelpDialog: window.isVimiumHelpDialog}
 
   # Hint descriptors are global.  They include all of the information necessary for each frame to determine
   # whether and when a hint from *any* frame is selected.  They include the following properties:
@@ -96,7 +109,7 @@ HintCoordinator =
   # We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint descriptors.
   # We also propagate the key state between frames.  Therefore, the hint-selection process proceeds in lock
   # step in every frame, and @linkHintsMode is in the same state in every frame.
-  activateMode: ({hintDescriptors, modeIndex, originatingFrameId}) ->
+  activateMode: ({hintDescriptors, modeIndex, action, originatingFrameId}) ->
     # We do not receive the frame's own hint descritors back from the background page.  Instead, we merge them
     # with the hint descriptors from other frames here.
     [hintDescriptors[frameId], @localHintDescriptors] = [@localHintDescriptors, null]
@@ -105,7 +118,7 @@ HintCoordinator =
     DomUtils.documentReady => Settings.onLoaded =>
       @cacheAllKeydownEvents.exit() if @cacheAllKeydownEvents?.modeIsActive
       @onExit = [] unless frameId == originatingFrameId
-      @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex]
+      @linkHintsMode = new LinkHintsMode hintDescriptors, availableModes[modeIndex], action
       # Replay keydown events which we missed (but for filtered hints only).
       @cacheAllKeydownEvents?.replayKeydownEvents() if Settings.get "filterLinkHints"
       @cacheAllKeydownEvents = null
@@ -124,10 +137,11 @@ HintCoordinator =
     @linkHintsMode = @localHints = null
 
 LinkHints =
-  activateMode: (count = 1, {mode}) ->
+  activateMode: (count = 1, {mode, registryEntry}) ->
     mode ?= OPEN_IN_CURRENT_TAB
+    action = registryEntry?.options?.action
     if 0 < count or mode is OPEN_WITH_QUEUE
-      HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
+      HintCoordinator.prepareToActivateMode mode, action, (isSuccess) ->
         if isSuccess
           # Wait for the next tick to allow the previous mode to exit.  It might yet generate a click event,
           # which would cause our new mode to exit immediately.
@@ -144,6 +158,8 @@ class LinkHintsMode
   hintMarkerContainingDiv: null
   # One of the enums listed at the top of this file.
   mode: undefined
+  # Value of command option with key named "action".
+  action: undefined
   # Function that does the appropriate action on the selected link.
   linkActivator: undefined
   # The link-hints "mode" (in the key-handler, indicator sense).
@@ -151,7 +167,7 @@ class LinkHintsMode
   # A count of the number of Tab presses since the last non-Tab keyboard event.
   tabCount: 0
 
-  constructor: (hintDescriptors, @mode = OPEN_IN_CURRENT_TAB) ->
+  constructor: (hintDescriptors, @mode = OPEN_IN_CURRENT_TAB, @action) ->
     # We need documentElement to be ready in order to append links.
     return unless document.documentElement
 
@@ -377,6 +393,8 @@ class LinkHintsMode
           else if DomUtils.isSelectable clickEl
             window.focus()
             DomUtils.simulateSelect clickEl
+          else if availableActions?[@action]
+            availableActions[@action] clickEl
           else
             clickActivator = (modifiers) -> (link) -> DomUtils.simulateClick link, modifiers
             linkActivator = @mode.linkActivator ? clickActivator @mode.clickModifiers

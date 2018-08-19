@@ -246,6 +246,13 @@ DomUtils =
           if element.selectionStart == 0 and element.selectionEnd == 0
             element.setSelectionRange element.value.length, element.value.length
 
+  # From @smblott-github: https://github.com/philc/vimium/pull/1948.
+  simulateHover: (element, modifiers = {}) ->
+    @simulateMouseEvent "mouseover", element, modifiers
+
+  simulateUnhover: (element, modifiers = {}) ->
+    @simulateMouseEvent "mouseout", element, modifiers
+
   simulateClick: (element, modifiers = {}) ->
     eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
     for event in eventSequence
