@@ -8,7 +8,8 @@ activatedElement = null
 # is enabled, then we need to use document.scrollingElement instead.  There's an explanation in #2168:
 # https://github.com/philc/vimium/pull/2168#issuecomment-236488091
 
-getScrollingElement = -> document.scrollingElement ? document.body
+getScrollingElement = ->
+  document.scrollingElement ? document.body
 
 # Return 0, -1 or 1: the sign of the argument.
 # NOTE(smblott; 2014/12/17) We would like to use Math.sign().  However, according to this site
@@ -307,6 +308,16 @@ Scroller =
         amount = rect.left + Math.min(rect.width - window.innerWidth, 0)
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
+
+# Hack to make expanded tweets scrollable on Twitter (See #3045).
+if DomUtils.isTopFrame() and window.location.host == "twitter.com"
+  for method in ["scrollTo", "scrollBy"]
+    do ->
+      func = Scroller[method]
+      Scroller[method] = ->
+        element = document.querySelector "#permalink-overlay-body div.permalink-container div[role=main]"
+        activatedElement = element ? getScrollingElement()
+        func arguments...
 
 root = exports ? (window.root ?= {})
 root.Scroller = Scroller
