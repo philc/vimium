@@ -315,7 +315,7 @@ if DomUtils.isTopFrame() and window.location.host == "twitter.com"
     do ->
       func = Scroller[method]
       Scroller[method] = ->
-        element = document.querySelector "#permalink-overlay-body div.permalink-container div[role=main]"
+        element = document.querySelector "div.permalink-container div.permalink[role=main]"
         activatedElement = element ? getScrollingElement()
         func arguments...
 
