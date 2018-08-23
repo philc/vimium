@@ -174,6 +174,7 @@ In `master` (not yet released)
 - Custom search engines can now be `javascript:` URLs (eg., search the current [site](https://github.com/philc/vimium/issues/2956#issuecomment-366509915)).
 - You can now using local marks to mark a hash/anchor.  This is particularly useful for marking labels on GMail.
 - For filtered hints, you can now start typing the link text before the hints have been generated.
+- On Twitter, expanded tweets are now scrollable.
 - Various minor bug fixes.
 
 1.63 (2018-02-16)
