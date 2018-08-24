@@ -206,6 +206,7 @@ if LinkHints?
     "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito.bind LinkHints
     "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind LinkHints
     "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl.bind LinkHints
+    "LinkHints.activateModeToFocus": LinkHints.activateModeToFocus.bind LinkHints
 
 if Vomnibar?
   extend NormalModeCommands,

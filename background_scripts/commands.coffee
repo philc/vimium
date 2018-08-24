@@ -167,6 +167,7 @@ Commands =
       "LinkHints.activateModeToDownloadLink",
       "LinkHints.activateModeToOpenIncognito",
       "LinkHints.activateModeToCopyLinkUrl",
+      "LinkHints.activateModeToFocus",
       "goPrevious",
       "goNext",
       "nextFrame",
@@ -220,6 +221,7 @@ Commands =
     "Vomnibar.activateEditUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito",
     "LinkHints.activateModeToCopyLinkUrl",
+    "LinkHints.activateModeToFocus",
     "goNext",
     "goPrevious",
     "Marks.activateCreateMode",
@@ -266,6 +268,7 @@ defaultKeyMappings =
   "F": "LinkHints.activateModeToOpenInNewTab"
   "<a-f>": "LinkHints.activateModeWithQueue"
   "yf": "LinkHints.activateModeToCopyLinkUrl"
+  "ef": "LinkHints.activateModeToFocus"
 
   "/": "enterFindMode"
   "n": "performFind"
@@ -357,6 +360,7 @@ commandDescriptions =
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
   "LinkHints.activateModeToDownloadLink": ["Download link url"]
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
+  "LinkHints.activateModeToFocus": ["Focus a link"]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]
