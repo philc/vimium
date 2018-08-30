@@ -175,6 +175,7 @@ In `master` (not yet released)
 - You can now using local marks to mark a hash/anchor.  This is particularly useful for marking labels on GMail.
 - For filtered hints, you can now start typing the link text before the hints have been generated.
 - On Twitter, expanded tweets are now scrollable.
+- Fix bug whereby `<Enter>` wasn't recognised in the Vomnibar in some circumstances.
 - Various minor bug fixes.
 
 1.63 (2018-02-16)
