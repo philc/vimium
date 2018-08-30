@@ -19,7 +19,7 @@ KeyboardUtils =
     unless Settings.get "ignoreKeyboardLayout"
       key = event.key
     else unless event.code
-      key = ""
+      key = event.key ? "" # Fall back to event.key (see #3099).
     else if event.code[...6] == "Numpad"
       # We cannot correctly emulate the numpad, so fall back to event.key; see #2626.
       key = event.key
