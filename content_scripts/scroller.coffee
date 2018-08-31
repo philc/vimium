@@ -319,6 +319,15 @@ if DomUtils.isTopFrame() and window.location.host == "twitter.com"
         activatedElement = element ? getScrollingElement()
         func arguments...
 
+if DomUtils.isTopFrame() and window.location.host in ["reddit.com", "new.reddit.com"]
+  for method in ["scrollTo", "scrollBy"]
+    do ->
+      func = Scroller[method]
+      Scroller[method] = ->
+        element = document.getElementById "overlayScrollContainer"
+        activatedElement = element ? getScrollingElement()
+        func arguments...
+
 root = exports ? (window.root ?= {})
 root.Scroller = Scroller
 extend window, root unless exports?
