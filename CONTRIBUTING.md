@@ -28,10 +28,20 @@ install Vimium from source:
 
  1. Install [Coffeescript v1](http://coffeescript.org/#installation) (`npm install --global coffeescript@~1`).
  1. Run `cake build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+
+### Chrome/Chromium
+
  1. Navigate to `chrome://extensions`
  1. Toggle into Developer Mode
  1. Click on "Load Unpacked Extension..."
  1. Select the Vimium directory.
+
+### Firefox
+
+ 1. Open Firefox
+ 1. Enter "about:debugging" in the URL bar
+ 1. Click "Load Temporary Add-on"
+ 1. Open the Vimium directory and select any file inside.
 
 ## Development tips
 
