@@ -176,7 +176,7 @@ onFocus = forTrusted (event) ->
 # We install these listeners directly (that is, we don't use installListener) because we still need to receive
 # events when Vimium is not enabled.
 window.addEventListener "focus", onFocus
-window.addEventListener "hashchange", -> checkEnabledAfterURLChange()
+window.addEventListener "hashchange", checkEnabledAfterURLChange
 
 initializeOnDomReady = ->
   # Tell the background page we're in the domReady state.
