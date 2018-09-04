@@ -169,8 +169,11 @@ PRs are welcome.
 Release Notes
 -------------
 
-1.64 (2018-08-30)
+1.64.1 (2018-09-04, not yet released)
 
+- Better scrolling on new Reddit and GMail.
+
+1.64 (2018-08-30)
 
 - Custom search engines can now be `javascript:` URLs (eg., search the current [site](https://github.com/philc/vimium/issues/2956#issuecomment-366509915)).
 - You can now using local marks to mark a hash/anchor.  This is particularly useful for marking labels on GMail.
