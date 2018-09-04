@@ -9,7 +9,7 @@ activatedElement = null
 # https://github.com/philc/vimium/pull/2168#issuecomment-236488091
 
 getScrollingElement = ->
-  specialScrollingElement() ? document.scrollingElement ? document.body
+  getSpecialScrollingElement() ? document.scrollingElement ? document.body
 
 # Return 0, -1 or 1: the sign of the argument.
 # NOTE(smblott; 2014/12/17) We would like to use Math.sign().  However, according to this site
@@ -239,7 +239,6 @@ CoreScroller =
 # Scroller contains the two main scroll functions which are used by clients.
 Scroller =
   init: ->
-    activatedElement = null
     handlerStack.push
       _name: 'scroller/active-element'
       DOMActivate: (event) -> handlerStack.alwaysContinueBubbling ->
@@ -249,6 +248,10 @@ Scroller =
         # yet implemented by Chrome.
         activatedElement = event.deepPath?[0] ? event.path?[0] ? event.target
     CoreScroller.init()
+    @reset()
+
+  reset: ->
+    activatedElement = null
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -310,7 +313,7 @@ Scroller =
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
 
-specialScrollingElement = ->
+getSpecialScrollingElement = ->
   selector = specialScrollingElementMap[window.location.host]
   if selector
     document.querySelector selector

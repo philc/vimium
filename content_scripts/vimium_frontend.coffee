@@ -297,7 +297,6 @@ checkIfEnabledForUrl = do ->
     {isEnabledForUrl, passKeys, frameIsFocused, isFirefox} = response
     Utils.isFirefox = -> isFirefox
     installModes() unless normalMode
-    Scroller.init() # TODO hack to bust Scroller.activatedElement caching
     normalMode.setPassKeys passKeys
     # Hide the HUD if we're not enabled.
     HUD.hide true, false unless isEnabledForUrl
@@ -308,6 +307,7 @@ checkIfEnabledForUrl = do ->
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
 # correct enabled state (but only if this frame has the focus).
 checkEnabledAfterURLChange = forTrusted ->
+  Scroller.reset() # The URL changing feels like navigation to the user, so reset the scroller (see #3119).
   checkIfEnabledForUrl() if windowIsFocused()
 
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
