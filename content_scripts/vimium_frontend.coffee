@@ -297,6 +297,7 @@ checkIfEnabledForUrl = do ->
     {isEnabledForUrl, passKeys, frameIsFocused, isFirefox} = response
     Utils.isFirefox = -> isFirefox
     installModes() unless normalMode
+    Scroller.init() # TODO hack to bust Scroller.activatedElement caching
     normalMode.setPassKeys passKeys
     # Hide the HUD if we're not enabled.
     HUD.hide true, false unless isEnabledForUrl
