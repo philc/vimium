@@ -9,7 +9,7 @@ activatedElement = null
 # https://github.com/philc/vimium/pull/2168#issuecomment-236488091
 
 getScrollingElement = ->
-  document.scrollingElement ? document.body
+  getSpecialScrollingElement() ? document.scrollingElement ? document.body
 
 # Return 0, -1 or 1: the sign of the argument.
 # NOTE(smblott; 2014/12/17) We would like to use Math.sign().  However, according to this site
@@ -248,6 +248,10 @@ Scroller =
         # yet implemented by Chrome.
         activatedElement = event.deepPath?[0] ? event.path?[0] ? event.target
     CoreScroller.init()
+    @reset()
+
+  reset: ->
+    activatedElement = null
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -309,15 +313,15 @@ Scroller =
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
 
-# Hack to make expanded tweets scrollable on Twitter (See #3045).
-if DomUtils.isTopFrame() and window.location.host == "twitter.com"
-  for method in ["scrollTo", "scrollBy"]
-    do ->
-      func = Scroller[method]
-      Scroller[method] = ->
-        element = document.querySelector "div.permalink-container div.permalink[role=main]"
-        activatedElement = element ? getScrollingElement()
-        func arguments...
+getSpecialScrollingElement = ->
+  selector = specialScrollingElementMap[window.location.host]
+  if selector
+    document.querySelector selector
+
+specialScrollingElementMap =
+  'twitter.com': 'div.permalink-container div.permalink[role=main]'
+  'reddit.com': '#overlayScrollContainer'
+  'new.reddit.com': '#overlayScrollContainer'
 
 root = exports ? (window.root ?= {})
 root.Scroller = Scroller

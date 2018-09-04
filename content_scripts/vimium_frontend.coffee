@@ -307,6 +307,7 @@ checkIfEnabledForUrl = do ->
 # When we're informed by the background page that a URL in this tab has changed, we check if we have the
 # correct enabled state (but only if this frame has the focus).
 checkEnabledAfterURLChange = forTrusted ->
+  Scroller.reset() # The URL changing feels like navigation to the user, so reset the scroller (see #3119).
   checkIfEnabledForUrl() if windowIsFocused()
 
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
