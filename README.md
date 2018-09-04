@@ -171,7 +171,7 @@ Release Notes
 
 1.64.1 (2018-09-04, not yet released)
 
-- Better scrolling on new Reddit and GMail.
+- Better scrolling on new Reddit ~and GMail~.
 
 1.64 (2018-08-30)
 
