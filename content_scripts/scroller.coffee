@@ -89,9 +89,8 @@ isScrollableElement = (element, direction = "y", amount = 1, factor = 1) ->
 
 # From element and its parents, find the first which we should scroll and which does scroll.
 findScrollableElement = (element, direction, amount, factor) ->
-  while not isScrollableElement element, direction, amount, factor
+  while element != getScrollingElement() and not isScrollableElement element, direction, amount, factor
     element = DomUtils.getContainingElement(element) ? getScrollingElement()
-    return element if element == getScrollingElement() # Prevent infinite loop.
   element
 
 # On some pages, the scrolling element is not actually scrollable.  Here, we search the document for the
@@ -103,7 +102,7 @@ firstScrollableElement = (element = null) ->
     if doesScroll(scrollingElement, "y", 1, 1) or doesScroll(scrollingElement, "y", -1, 1)
       return scrollingElement
     else
-      element = getScrollingElement() ? document.body
+      element = document.body ? getScrollingElement()
 
   if doesScroll(element, "y", 1, 1) or doesScroll(element, "y", -1, 1)
     element
@@ -323,7 +322,6 @@ specialScrollingElementMap =
   'twitter.com': 'div.permalink-container div.permalink[role=main]'
   'reddit.com': '#overlayScrollContainer'
   'new.reddit.com': '#overlayScrollContainer'
-  'mail.google.com': 'table[role="presentation"]'
 
 root = exports ? (window.root ?= {})
 root.Scroller = Scroller
