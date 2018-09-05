@@ -31,8 +31,9 @@ COPY_LINK_URL =
   indicator: "Copy link URL to Clipboard"
   linkActivator: (link) ->
     if link.href?
-      HUD.copyToClipboard link.href
       url = link.href
+      url = url[7..] if url[...7] == "mailto:"
+      HUD.copyToClipboard url
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration "Yanked #{url}", 2000
     else
