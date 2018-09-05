@@ -169,6 +169,10 @@ PRs are welcome.
 Release Notes
 -------------
 
+Not yet released
+
+- When yanking email addresses with `yf`, Vimium now strips the leading `mailto:`.
+
 1.64.1 (2018-09-04, not yet released)
 
 - Better scrolling on new Reddit ~and GMail~.
