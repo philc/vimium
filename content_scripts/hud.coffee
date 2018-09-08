@@ -31,6 +31,9 @@ HUD =
       @tween.fade 1.0, 150
 
   showFindMode: (@findMode = null) ->
+    # On Firefox, we can only steal focus from the main document if nothing is focused.
+    document.activeElement?.blur() if Utils.isFirefox()
+
     DomUtils.documentComplete =>
       @init()
       @hudUI.activate name: "showFindMode"
