@@ -50,18 +50,16 @@ context "convertToUrl",
     assert.equal "https://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com")
     assert.equal "https://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter")
 
+context "createSearchUrl",
+  should "replace %S without encoding", ->
+    assert.equal "https://www.github.com/philc/vimium/pulls", Utils.createSearchUrl "vimium/pulls", "https://www.github.com/philc/%S"
+
 context "extractQuery",
   should "extract queries from search URLs", ->
     assert.equal "bbc sport 1", Utils.extractQuery "https://www.google.ie/search?q=%s", "https://www.google.ie/search?q=bbc+sport+1"
     assert.equal "bbc sport 2", Utils.extractQuery "http://www.google.ie/search?q=%s", "https://www.google.ie/search?q=bbc+sport+2"
     assert.equal "bbc sport 3", Utils.extractQuery "https://www.google.ie/search?q=%s", "http://www.google.ie/search?q=bbc+sport+3"
     assert.equal "bbc sport 4", Utils.extractQuery "https://www.google.ie/search?q=%s", "http://www.google.ie/search?q=bbc+sport+4&blah"
-
-  should "replace %S without encoding", ->
-    assert.equal "vimium/pulls", Utils.extractQuery "https://www.github.com/philc/%S", "https://www.github.com/philc/vimium/pulls"
-
-  should "extract not queries from incorrect search URLs", ->
-    assert.isFalse Utils.extractQuery "https://www.google.ie/search?q=%s&foo=bar", "https://www.google.ie/search?q=bbc+sport"
 
 context "hasChromePrefix",
   should "detect chrome prefixes of URLs", ->
