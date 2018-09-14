@@ -57,6 +57,9 @@ context "extractQuery",
     assert.equal "bbc sport 3", Utils.extractQuery "https://www.google.ie/search?q=%s", "http://www.google.ie/search?q=bbc+sport+3"
     assert.equal "bbc sport 4", Utils.extractQuery "https://www.google.ie/search?q=%s", "http://www.google.ie/search?q=bbc+sport+4&blah"
 
+  should "replace %S without encoding", ->
+    assert.equal "vimium/pulls", Utils.extractQuery "https://www.github.com/philc/%S", "https://www.github.com/philc/vimium/pulls"
+
   should "extract not queries from incorrect search URLs", ->
     assert.isFalse Utils.extractQuery "https://www.google.ie/search?q=%s&foo=bar", "https://www.google.ie/search?q=bbc+sport"
 
