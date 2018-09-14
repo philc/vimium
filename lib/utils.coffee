@@ -131,7 +131,7 @@ Utils =
   # It would be better to pull the default search engine from chrome itself.  However, chrome does not provide
   # an API for doing so.
   createSearchUrl: (query, searchUrl = Settings.get("searchUrl")) ->
-    searchUrl += "%s" if -1 == searchUrl.indexOf("%s") + searchUrl.indexOf("%S")
+    searchUrl += "%s" unless ['%s', '%S'].some (token) -> searchUrl.indexOf(token) >= 0
     searchUrl = searchUrl.replace /%S/g, query
     searchUrl.replace /%s/g, @createSearchQuery query
 
