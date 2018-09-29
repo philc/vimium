@@ -56,7 +56,12 @@ getDimension = (el, direction, amount) ->
 performScroll = (element, direction, amount) ->
   axisName = scrollProperties[direction].axisName
   before = element[axisName]
-  element[axisName] += amount
+  if typeof element.scrollBy is "function"
+    scrollArg = behavior: "instant"
+    scrollArg[if axisName is "x" then "left" else "top"] = amount
+    element.scrollBy scrollArg
+  else
+    element[axisName] += amount
   element[axisName] != before
 
 # Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
