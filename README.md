@@ -172,6 +172,7 @@ Release Notes
 Not yet released
 
 - When yanking email addresses with `yf`, Vimium now strips the leading `mailto:`.
+- For custom search engines, if you use `%S` (instead of `%s`), then your search terms are not URI encoded.
 
 1.64.1 (2018-09-04, not yet released)
 
