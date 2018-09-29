@@ -179,9 +179,7 @@ Not yet released
 
 1.64 (2018-08-30)
 
-- Custom search engines:
-    - You can now use `javascript:` URLs (eg., search the current [site](https://github.com/philc/vimium/issues/2956#issuecomment-366509915)).
-    - If you use `%S` (instead of `%s`), then your search terms are _not_ URI encoded.
+- Custom search engines can now be `javascript:` URLs (eg., search the current [site](https://github.com/philc/vimium/issues/2956#issuecomment-366509915)).
 - You can now using local marks to mark a hash/anchor.  This is particularly useful for marking labels on GMail.
 - For filtered hints, you can now start typing the link text before the hints have been generated.
 - On Twitter, expanded tweets are now scrollable.
