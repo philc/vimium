@@ -218,6 +218,11 @@ class FindMode extends Mode
     FindMode.saveQuery()
 
   @findNext: (backwards) ->
+    # Bail out if we don't have any query text.
+    unless FindMode.query.rawQuery and 0 < FindMode.query.rawQuery.length
+      HUD.showForDuration "No query to find.", 1000
+      return
+
     Marks.setPreviousPosition()
     FindMode.query.hasResults = FindMode.execute null, {backwards}
 
