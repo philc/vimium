@@ -18,7 +18,7 @@ Please include the following when reporting an issue:
 
 ### Firefox
 
- 1. Firefox and OS Version: `about:`
+ 1. Firefox and OS Version: `about:support`
  1. Vimium Version: `about:addons`, then click on `More` below Vimium
 
 ## Installing From Source
