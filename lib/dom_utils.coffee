@@ -286,7 +286,7 @@ DomUtils =
       element.dispatchEvent(mouseEvent)
 
   simulateClickDefaultAction: (element, modifiers = {}) ->
-    return unless element.tagName?.toLowerCase() == "a" and element.href?
+    return unless element.tagName?.toLowerCase() == "a" and element.href
 
     {ctrlKey, shiftKey, metaKey, altKey} = modifiers
 
