@@ -328,19 +328,22 @@ DomUtils =
     box = document.documentElement
     style = getComputedStyle box
     rect = box.getBoundingClientRect()
-    if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
-      # The margin is included in the client rect, so we need to subtract it back out.
-      marginTop = parseInt style.marginTop
-      marginLeft = parseInt style.marginLeft
-      top: -rect.top + marginTop, left: -rect.left + marginLeft
+    if style == null
+      top: 0, left: 0
     else
-      if Utils.isFirefox()
-        # These are always 0 for documentElement on Firefox, so we derive them from CSS border.
-        clientTop = parseInt style.borderTopWidth
-        clientLeft = parseInt style.borderLeftWidth
+      if style.position == "static" and not /content|paint|strict/.test(style.contain or "")
+        # The margin is included in the client rect, so we need to subtract it back out.
+        marginTop = parseInt style.marginTop
+        marginLeft = parseInt style.marginLeft
+        top: -rect.top + marginTop, left: -rect.left + marginLeft
       else
-        {clientTop, clientLeft} = box
-      top: -rect.top - clientTop, left: -rect.left - clientLeft
+        if Utils.isFirefox()
+          # These are always 0 for documentElement on Firefox, so we derive them from CSS border.
+          clientTop = parseInt style.borderTopWidth
+          clientLeft = parseInt style.borderLeftWidth
+        else
+          {clientTop, clientLeft} = box
+        top: -rect.top - clientTop, left: -rect.left - clientLeft
 
 
   suppressPropagation: (event) ->
