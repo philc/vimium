@@ -58,7 +58,7 @@ performScroll = (element, direction, amount) ->
   before = element[axisName]
   if typeof element.scrollBy is "function"
     scrollArg = behavior: "instant"
-    scrollArg[if axisName is "x" then "left" else "top"] = amount
+    scrollArg[if direction is "x" then "left" else "top"] = amount
     element.scrollBy scrollArg
   else
     element[axisName] += amount
