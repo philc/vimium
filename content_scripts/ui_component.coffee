@@ -27,7 +27,8 @@ class UIComponent
         seamless: "seamless"
       shadowWrapper = DomUtils.createElement "div"
       # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
-      @shadowDOM = shadowWrapper.createShadowRoot?() ? shadowWrapper
+      @shadowDOM = shadowWrapper.attachShadow?( mode: "open" ) ?
+        shadowWrapper.createShadowRoot?() ? shadowWrapper
       @shadowDOM.appendChild styleSheet
       @shadowDOM.appendChild @iframeElement
       @toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
