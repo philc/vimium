@@ -167,6 +167,7 @@ Settings =
     previousPatterns: "prev,previous,back,older,<,\u2039,\u2190,\xab,\u226a,<<"
     # "\bnext\b,\bmore\b,>,›,→,»,≫,>>"
     nextPatterns: "next,more,newer,>,\u203a,\u2192,\xbb,\u226b,>>"
+    bookmarksBlacklist: ""
     # default/fall back search engine
     searchUrl: "https://www.google.com/search?q="
     # put in an example search engine

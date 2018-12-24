@@ -244,13 +244,14 @@ class BookmarkCompleter
 
   # Recursive helper for `traverseBookmarks`.
   traverseBookmarksRecursive: (bookmark, results, parent={pathAndTitle:""}) ->
-    bookmark.pathAndTitle =
-      if bookmark.title and not (parent.pathAndTitle == "" and @ignoreTopLevel[bookmark.title])
-        parent.pathAndTitle + @folderSeparator + bookmark.title
-      else
-        parent.pathAndTitle
-    results.push bookmark
-    bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
+    if bookmark.title not in Settings.get("bookmarksBlacklist").split(",").filter( (s) -> s.trim().length )
+      bookmark.pathAndTitle =
+        if bookmark.title and not (parent.pathAndTitle == "" and @ignoreTopLevel[bookmark.title])
+          parent.pathAndTitle + @folderSeparator + bookmark.title
+        else
+          parent.pathAndTitle
+      results.push bookmark
+      bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
 
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.shortUrl ? suggestion.url, suggestion.title)

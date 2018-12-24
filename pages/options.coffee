@@ -201,6 +201,7 @@ Options =
   newTabUrl: NonEmptyTextOption
   nextPatterns: NonEmptyTextOption
   previousPatterns: NonEmptyTextOption
+  bookmarksBlacklist: TextOption
   regexFindMode: CheckBoxOption
   ignoreKeyboardLayout: CheckBoxOption
   scrollStepSize: NumberOption

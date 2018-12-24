@@ -117,7 +117,7 @@ textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
   min-height: 140px;
   white-space: pre;
 }
-input#previousPatterns, input#nextPatterns {
+input#previousPatterns, input#nextPatterns, input#bookmarksBlacklist {
   width: 100%;
 }
 input#newTabUrl {
