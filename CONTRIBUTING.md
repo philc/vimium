@@ -38,6 +38,18 @@ install Vimium from source:
 
 ### Firefox
 
+For 'local storage' to work while using the temporary addon, you need to add an
+'application' section to the manifest with an arbitrary ID that is unique for
+you, for example:
+
+    "applications": {
+      "gecko": {
+        "id": "vimium@example.net"
+      }
+    },
+
+After that:
+
  1. Open Firefox
  1. Enter "about:debugging" in the URL bar
  1. Click "Load Temporary Add-on"
