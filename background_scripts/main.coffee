@@ -98,7 +98,11 @@ TabOperations =
   # Opens the url in the current tab.
   openUrlInCurrentTab: (request) ->
     if Utils.hasJavascriptPrefix request.url
-      chrome.tabs.executeScript request.tabId, {code: request.url}
+      if Settings.get "allowJavascriptURLs"
+        chrome.tabs.executeScript request.tabId, {code: request.url}
+      else
+        {tabId, frameId} = request
+        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Javascript disabled (see the options page)."}
     else
       chrome.tabs.update request.tabId, url: Utils.convertToUrl request.url
 

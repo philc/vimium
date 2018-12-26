@@ -198,6 +198,7 @@ Settings =
     optionsPage_showAdvancedOptions: false
     passNextKeyKeys: []
     ignoreKeyboardLayout: false
+    allowJavascriptURLs: false
 
 Settings.init()
 
