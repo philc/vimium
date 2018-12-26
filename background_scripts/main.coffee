@@ -130,7 +130,7 @@ TabOperations =
 toggleMuteTab = do ->
   muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
 
-  ({tab: currentTab, registryEntry}) ->
+  ({tab: currentTab, registryEntry, tabId, frameId}) ->
     if registryEntry.options.all? or registryEntry.options.other?
       # If there are any audible, unmuted tabs, then we mute them; otherwise we unmute any muted tabs.
       chrome.tabs.query {audible: true}, (tabs) ->
