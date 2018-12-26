@@ -138,10 +138,16 @@ toggleMuteTab = do ->
           tabs = (tab for tab in tabs when tab.id != currentTab.id)
         audibleUnmutedTabs = (tab for tab in tabs when tab.audible and not tab.mutedInfo.muted)
         if 0 < audibleUnmutedTabs.length
+          chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Muting #{audibleUnmutedTabs.length} tab(s)."}
           muteTab tab for tab in audibleUnmutedTabs
         else
+          chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Unmuting all muted tabs."}
           muteTab tab for tab in tabs when tab.mutedInfo.muted
     else
+      if currentTab.mutedInfo.muted
+        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Unmuted tab."}
+      else
+        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Muted tab."}
       muteTab currentTab
 
 #
