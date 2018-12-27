@@ -433,6 +433,13 @@ DomUtils =
       style.textContent = Settings.get "userDefinedLinkHintCss"
       document.head.appendChild style
 
+  # Inject user Javascript.
+  injectUserScript: (text) ->
+    text = text[11..] if text[...11] == "javascript:"
+    script = document.createElement "script"
+    script.textContent = text
+    document.head.appendChild script
+
 root = exports ? (window.root ?= {})
 root.DomUtils = DomUtils
 extend window, root unless exports?

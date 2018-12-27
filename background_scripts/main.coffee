@@ -97,7 +97,11 @@ do ->
 TabOperations =
   # Opens the url in the current tab.
   openUrlInCurrentTab: (request) ->
-    chrome.tabs.update request.tabId, url: Utils.convertToUrl request.url
+    if Utils.hasJavascriptPrefix request.url
+      {tabId, frameId} = request
+      chrome.tabs.sendMessage tabId, {frameId, name: "executeScript", script: request.url}
+    else
+      chrome.tabs.update request.tabId, url: Utils.convertToUrl request.url
 
   # Opens request.url in new tab and switches to it.
   openUrlInNewTab: (request, callback = (->)) ->

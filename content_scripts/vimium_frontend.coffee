@@ -132,6 +132,7 @@ initializePreDomReady = ->
       NormalModeCommands[registryEntry.command] sourceFrameId, registryEntry if DomUtils.isTopFrame()
     linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
     showMessage: (request) -> HUD.showForDuration request.message, 2000
+    executeScript: (request) -> DomUtils.injectUserScript request.script
 
   chrome.runtime.onMessage.addListener (request, sender, sendResponse) ->
     request.isTrusted = true
