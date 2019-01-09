@@ -300,7 +300,11 @@ class VisualMode extends KeyHandlerMode
   find: (count, backwards) =>
     initialRange = @selection.getRangeAt(0).cloneRange()
     for [0...count] by 1
-      unless FindMode.execute null, {colorSelection: false, backwards}
+      nextQuery = FindMode.getQuery backwards
+      unless nextQuery
+        HUD.showForDuration "No query to find.", 1000
+        return
+      unless FindMode.execute nextQuery, {colorSelection: false, backwards}
         @movement.setSelectionRange initialRange
         HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
         return
