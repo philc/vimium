@@ -15,7 +15,8 @@
   "private": true,
   "scripts": {
     "test": "cake test",
-    "build": "cake build"
+    "build": "cake build",
+    "autobuild": "cake autobuild"
   },
   "repository": {
     "type": "git",
