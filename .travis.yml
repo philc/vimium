@@ -1,13 +1,11 @@
 sudo: false
 language: node_js
-node_js: "8"
-before_install:
-  - npm install -g coffee-script
-  - npm install path@0.11
-  - npm install util
-  - npm install -g phantomjs@1.9.20
+cache: yarn
+node_js: '8'
+before_script:
   - cake build
-script: cake test
+script:
+  - cake test
 notifications:
   email: false
 branches:

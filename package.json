@@ -1,0 +1,30 @@
+{
+  "dependencies": {},
+  "devDependencies": {
+    "coffee-script": "1",
+    "phantomjs": "1.9.20"
+  },
+  "name": "vimium",
+  "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
+  "version": "0.0.0",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "private": true,
+  "scripts": {
+    "test": "cake test",
+    "build": "cake build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philc/vimium.git"
+  },
+  "author": "Phil Crosby, Ilya Sukhar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/philc/vimium/issues"
+  },
+  "homepage": "https://github.com/philc/vimium#readme"
+}
