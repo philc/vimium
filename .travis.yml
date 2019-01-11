@@ -3,9 +3,9 @@ language: node_js
 cache: yarn
 node_js: '8'
 before_script:
-  - cake build
+  - yarn build
 script:
-  - cake test
+  - yarn test
 notifications:
   email: false
 branches:
