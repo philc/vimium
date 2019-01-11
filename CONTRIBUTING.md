@@ -64,10 +64,7 @@ After that:
 
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run the tests:
 
- 1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
- 1. Install [PhantomJS](http://phantomjs.org/download.html).
- 1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
- 1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
+ 1. Install dependencies using [Yarn](https://yarnpkg.com/en/) (`yarn install`). This will automatically install `shoulda.js` and `phantomjs` locally.
  1. `yarn build` to compile `*.coffee` to `*.js`
  1. `yarn test` to run the tests.
 
