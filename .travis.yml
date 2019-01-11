@@ -4,8 +4,6 @@ cache: yarn
 node_js: '8'
 before_script:
   - yarn build
-script:
-  - yarn test
 notifications:
   email: false
 branches:
