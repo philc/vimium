@@ -65,6 +65,7 @@ After that:
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](http://phantomjs.org/). To run the tests:
 
  1. Install dependencies using [Yarn](https://yarnpkg.com/en/) (`yarn install`). This will automatically install `shoulda.js` and `phantomjs` locally.
+ 1. Install PhantomJS 1.9.20 **globally** (`npm install -g phantomjs@1.9.20`).
  1. `yarn build` to compile `*.coffee` to `*.js`
  1. `yarn test` to run the tests.
 
