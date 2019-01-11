@@ -1,8 +1,11 @@
 {
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
     "coffee-script": "1",
-    "phantomjs": "1.9.20"
+    "path": "^0.11",
+    "phantomjs": "1.9.20",
+    "util": "^0.11.1"
   },
   "name": "vimium",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
@@ -16,7 +19,8 @@
   "scripts": {
     "test": "cake test",
     "build": "cake build",
-    "autobuild": "cake autobuild"
+    "autobuild": "cake autobuild",
+    "postinstall": "git submodule update --init --recursive"
   },
   "repository": {
     "type": "git",
