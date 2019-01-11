@@ -57,7 +57,7 @@ After that:
 
 ## Development tips
 
- 1. Run `cake autobuild` to watch for changes to coffee files, and have the .js files automatically
+ 1. Run `yarn cake autobuild` to watch for changes to coffee files, and have the .js files automatically
     regenerated
 
 ## Running the tests
@@ -68,8 +68,8 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
  1. Install [PhantomJS](http://phantomjs.org/download.html).
  1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
  1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
- 1. `cake build` to compile `*.coffee` to `*.js`
- 1. `cake test` to run the tests.
+ 1. `yarn build` to compile `*.coffee` to `*.js`
+ 1. `yarn test` to run the tests.
 
 ## Code Coverage
 
@@ -78,7 +78,7 @@ reports:
 
  1. Download [JSCoverage](https://siliconforks.com/jscoverage/download.html) or `brew install jscoverage`
  1. `npm install temp`
- 1. `cake coverage` will generate a coverage report in the form of a JSON file (`jscoverage.json`), which can
+ 1. `yarn cake coverage` will generate a coverage report in the form of a JSON file (`jscoverage.json`), which can
     then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).  See
     jscoverage-report's [README](https://github.com/int3/jscoverage-report#jscoverage-report) for more details.
 
