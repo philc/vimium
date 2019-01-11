@@ -26,8 +26,8 @@ Please include the following when reporting an issue:
 Vimium is written in Coffeescript, which compiles to Javascript. To
 install Vimium from source:
 
- 1. Install [Coffeescript v1](http://coffeescript.org/#installation) (`npm install --global coffeescript@~1`).
- 1. Run `cake build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+ 1. Install dependencies using [Yarn](https://yarnpkg.com/en/) (`yarn install`).
+ 1. Run `yarn build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
 
 ### Chrome/Chromium
 
