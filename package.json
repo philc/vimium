@@ -17,7 +17,7 @@
   "private": true,
   "scripts": {
     "test": "cake test",
-    "build": "cake build",
+    "prepare": "cake build",
     "autobuild": "cake autobuild",
     "postinstall": "git submodule update --init --recursive"
   },

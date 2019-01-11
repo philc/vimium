@@ -27,7 +27,7 @@ Vimium is written in Coffeescript, which compiles to Javascript. To
 install Vimium from source:
 
  1. Install dependencies using [Yarn](https://yarnpkg.com/en/) (`yarn install`).
- 1. Run `yarn build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+ 1. Run `yarn prepare` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
 
 ### Chrome/Chromium
 
@@ -66,7 +66,7 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
 
  1. Install dependencies using [Yarn](https://yarnpkg.com/en/) (`yarn install`). This will automatically install `shoulda.js` and `phantomjs` locally.
  1. Install PhantomJS 1.9.20 **globally** (`npm install -g phantomjs@1.9.20`).
- 1. `yarn build` to compile `*.coffee` to `*.js`
+ 1. `yarn prepare` to compile `*.coffee` to `*.js`
  1. `yarn test` to run the tests.
 
 ## Code Coverage
