@@ -137,7 +137,16 @@ input#searchUrl {
 }
 #buttonsPanel { width: 100%; }
 #advancedOptions { display: none; }
-#advancedOptionsButton { width: 170px; }
+#advancedOptionsButton {
+  width: 170px;
+  box-shadow: none;
+  text-shadow: none;
+  background-image: none;
+  background-color: #0069d9;
+  color: white;
+  border-color: #0062cc;
+  border-radius: .25rem;
+}
 .help {
   position: absolute;
   right: -320px;
