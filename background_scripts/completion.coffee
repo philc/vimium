@@ -52,7 +52,7 @@ class Suggestion
     # NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     favIcon =
       if @type == "tab" and not Utils.isFirefox()
-        """<img class="vimiumReset vomnibarIcon" src="chrome://favicon/size/16/#{BgUtils.escapeAttribute @url}" />"""
+        """<img class="vimiumReset vomnibarIcon" src="chrome://favicon/size/16@1x/#{BgUtils.escapeAttribute @url}" />"""
       else
         ""
     @html =
