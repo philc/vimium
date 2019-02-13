@@ -22,8 +22,12 @@
     <script src="../content_scripts/mode_normal.js"></script>
     <script src="../content_scripts/vimium_frontend.js"></script>
     <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
-
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        DomUtils.injectUserCss();
+      });
+    </script>
   </head>
-  <body>
+  <body id="vimiumNewTabPage">
   </body>
 </html>
