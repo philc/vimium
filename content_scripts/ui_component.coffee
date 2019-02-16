@@ -93,7 +93,7 @@ class UIComponent
                 handler: "sendMessageToFrames",
                 message: name: "focusFrame", frameId: @options.sourceFrameId, forceFocusThisFrame: true
             else
-              Utils.setTimeout 0, -> window.focus()
+              Utils.nextTick -> window.focus()
         @options = null
         @postMessage "hidden" # Inform the UI component that it is hidden.
 

@@ -232,7 +232,7 @@ Frame =
 setScrollPosition = ({ scrollX, scrollY }) ->
   DomUtils.documentReady ->
     if DomUtils.isTopFrame()
-      Utils.setTimeout 0, ->
+      Utils.nextTick ->
         window.focus()
         document.body.focus()
         if 0 < scrollX or 0 < scrollY
@@ -276,7 +276,7 @@ focusThisFrame = (request) ->
       # next frame instead.  This affects sites like Google Inbox, which have many tiny iframes. See #1317.
       chrome.runtime.sendMessage handler: "nextFrame"
       return
-  Utils.setTimeout 0, ->
+  Utils.nextTick ->
     window.focus()
     # On Firefox, window.focus doesn't always draw focus back from a child frame (bug 554039).
     # We blur the active element if it is an iframe, which gives the window back focus as intended.
