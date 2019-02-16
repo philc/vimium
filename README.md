@@ -169,6 +169,10 @@ PRs are welcome.
 Release Notes
 -------------
 
+1.64.4 (2018-02-16)
+
+- Fix [Vomnibar focus issue](https://github.com/philc/vimium/issues/3242).
+
 1.64.3 (2018-12-26)
 
 - When yanking email addresses with `yf`, Vimium now strips the leading `mailto:`.
