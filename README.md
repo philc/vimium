@@ -169,6 +169,10 @@ PRs are welcome.
 Release Notes
 -------------
 
+1.64.5 (2018-02-16)
+
+- Fix error in Chrome Store distribution.
+
 1.64.4 (2018-02-16)
 
 - Fix [Vomnibar focus issue](https://github.com/philc/vimium/issues/3242).
