@@ -121,6 +121,8 @@ class VomnibarUI
       return "down"
     else if (event.key == "Enter")
       return "enter"
+    else if event.key == "Delete" and event.shiftKey and not event.ctrlKey and not event.altKey
+      return "remove"
     else if KeyboardUtils.isBackspace event
       return "delete"
 
@@ -183,6 +185,9 @@ class VomnibarUI
         @update true
       else
         return true # Do not suppress event.
+    else if action == "remove" and 0 <= @selection
+      completion = @completions[@selection]
+      console.log completion
 
     # It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation()
