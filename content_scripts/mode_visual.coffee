@@ -195,6 +195,7 @@ class VisualMode extends KeyHandlerMode
     "Y": (count) -> @movement.selectLine count; @yank()
     "p": -> chrome.runtime.sendMessage handler: "openUrlInCurrentTab", url: @yank()
     "P": -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: @yank()
+    "T": -> chrome.runtime.sendMessage handler: "openUrlInNewTab", url: "https://translate.google.com/?q=" + @yank()
     "v": -> new VisualMode
     "V": -> new VisualLineMode
     "c": ->
