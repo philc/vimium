@@ -73,7 +73,11 @@ class KeyHandlerMode extends Mode
   # Keystrokes are *never* considered pass keys if the user has begun entering a command.  So, for example, if
   # 't' is a passKey, then the "t"-s of 'gt' and '99t' are neverthless handled as regular keys.
   isPassKey: (keyChar) ->
-    @isInResetState() and keyChar in (@passKeys ? "")
+    # Find all *continuation* mappings for keyChar in the current key state (i.e. not the full key mapping).
+    mappings = (mapping for mapping in @keyState when keyChar of mapping and mapping != @keyMapping)
+    # If there are no continuation mappings, and there's no count prefix, and keyChar is a pass key, then
+    # it's a pass key.
+    mappings.length == 0 and @countPrefix == 0 and keyChar in (@passKeys ? "")
 
   isInResetState: ->
     @countPrefix == 0 and @keyState.length == 1
