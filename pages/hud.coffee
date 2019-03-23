@@ -86,7 +86,7 @@ handlers =
     countElement.id = "hud-match-count"
     countElement.style.float = "right"
     hud.appendChild countElement
-    inputElement.focus()
+    Utils.setTimeout 0, -> inputElement.focus()
 
     findMode =
       historyIndex: -1
@@ -104,14 +104,14 @@ handlers =
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
 
-  copyToClipboard: (data) ->
+  copyToClipboard: (data) -> Utils.setTimeout 0, ->
     focusedElement = document.activeElement
     Clipboard.copy data
     focusedElement?.focus()
     window.parent.focus()
     UIComponentServer.postMessage {name: "unfocusIfFocused"}
 
-  pasteFromClipboard: ->
+  pasteFromClipboard: -> Utils.setTimeout 0, ->
     focusedElement = document.activeElement
     data = Clipboard.paste()
     focusedElement?.focus()
