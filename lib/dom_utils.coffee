@@ -247,7 +247,7 @@ DomUtils =
             element.setSelectionRange element.value.length, element.value.length
 
   simulateClick: (element, modifiers = {}) ->
-    eventSequence = ["mouseover", "mousedown", "mouseup", "click"]
+    eventSequence = ["mouseover", "mousedown", "mouseup", "click", "dblclick"]
     for event in eventSequence
       defaultActionShouldTrigger =
         if Utils.isFirefox() and Object.keys(modifiers).length == 0 and event == "click" and
