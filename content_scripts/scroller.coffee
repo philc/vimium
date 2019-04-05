@@ -244,14 +244,15 @@ CoreScroller =
 # Scroller contains the two main scroll functions which are used by clients.
 Scroller =
   init: ->
-    handlerStack.push
-      _name: 'scroller/active-element'
-      DOMActivate: (event) -> handlerStack.alwaysContinueBubbling ->
+    handler = _name: 'scroller/active-element'
+    eventName = if Utils.isFirefox() then "click" else "DOMActivate"
+    handler[eventName] = (event) -> handlerStack.alwaysContinueBubbling ->
         # If event.path is present, the true event taget (potentially inside a Shadow DOM inside
         # event.target) can be found as its first element.
         # NOTE(mrmr1993): event.path has been renamed to event.deepPath in the spec, but this change is not
         # yet implemented by Chrome.
         activatedElement = event.deepPath?[0] ? event.path?[0] ? event.target
+    handlerStack.push handler
     CoreScroller.init()
     @reset()
 
