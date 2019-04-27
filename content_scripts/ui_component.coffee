@@ -8,7 +8,10 @@ class UIComponent
 
   toggleIframeElementClasses: (removeClass, addClass) ->
     @iframeElement.classList.remove removeClass
-    @iframeElement.classList.add addClass
+    unless @iframeElement.classList.contains addClass
+      @iframeElement.classList.add addClass
+      if addClass == "vimiumUIComponentVisible"
+        getComputedStyle(@iframeElement).display
 
   constructor: (iframeUrl, className, @handleMessage) ->
     DomUtils.documentReady =>

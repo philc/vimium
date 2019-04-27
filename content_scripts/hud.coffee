@@ -33,6 +33,7 @@ HUD =
   showFindMode: (@findMode = null) ->
     DomUtils.documentComplete =>
       @init()
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @hudUI.activate name: "showFindMode"
       @tween.fade 1.0, 150
 
@@ -92,7 +93,8 @@ HUD =
   copyToClipboard: (text) ->
     DomUtils.documentComplete =>
       @init()
-      @hudUI?.postMessage {name: "copyToClipboard", data: text}
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
+      @hudUI.postMessage {name: "copyToClipboard", data: text}
 
   pasteFromClipboard: (@pasteListener) ->
     DomUtils.documentComplete =>
