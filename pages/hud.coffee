@@ -86,7 +86,7 @@ handlers =
     countElement.id = "hud-match-count"
     countElement.style.float = "right"
     hud.appendChild countElement
-    inputElement.focus()
+    Utils.setTimeout 0, -> inputElement.focus()
 
     findMode =
       historyIndex: -1
