@@ -93,6 +93,7 @@ HUD =
   copyToClipboard: (text) ->
     DomUtils.documentComplete =>
       @init()
+      # Chrome 74 only acknowledges text selection when a frame has been visible. See more in #3277 .
       @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @hudUI.postMessage {name: "copyToClipboard", data: text}
 
