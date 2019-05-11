@@ -1,5 +1,11 @@
 findMode = null
 
+# Chrome creates a unique port for each MessageChannel,
+# so there's a race condition between JavaScript messages of Vimium and browser messages during style recomputation.
+# This constant is to ensure all messages have been received and handled
+# See more in https://github.com/philc/vimium/pull/3277#discussion_r283080348
+TIME_TO_WAIT_FOR_IPC_MESSAGES = 17
+
 # Set the input element's text, and move the cursor to the end.
 setTextInInputElement = (inputElement, text) ->
   inputElement.textContent = text
@@ -86,7 +92,7 @@ handlers =
     countElement.id = "hud-match-count"
     countElement.style.float = "right"
     hud.appendChild countElement
-    Utils.setTimeout 17, -> inputElement.focus()
+    Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, -> inputElement.focus()
 
     findMode =
       historyIndex: -1
@@ -104,14 +110,14 @@ handlers =
       " (No matches)"
     countElement.textContent = if showMatchText then countText else ""
 
-  copyToClipboard: (data) -> Utils.setTimeout 17, ->
+  copyToClipboard: (data) -> Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, ->
     focusedElement = document.activeElement
     Clipboard.copy data
     focusedElement?.focus()
     window.parent.focus()
     UIComponentServer.postMessage {name: "unfocusIfFocused"}
 
-  pasteFromClipboard: -> Utils.setTimeout 17, ->
+  pasteFromClipboard: -> Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, ->
     focusedElement = document.activeElement
     data = Clipboard.paste()
     focusedElement?.focus()
