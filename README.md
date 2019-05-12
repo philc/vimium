@@ -169,6 +169,10 @@ PRs are welcome.
 Release Notes
 -------------
 
+1.64.6 (2019-05-12)
+
+- Fix the find mode, and copying the page's URL to the clipboard, which were broken by Chrome 74+. ([#3260](https://github.com/philc/vimium/issues/3260))
+
 1.64.5 (2019-02-16)
 
 - Fix error in Chrome Store distribution.
