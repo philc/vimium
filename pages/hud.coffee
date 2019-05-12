@@ -1,9 +1,8 @@
 findMode = null
 
-# Chrome creates a unique port for each MessageChannel,
-# so there's a race condition between JavaScript messages of Vimium and browser messages during style recomputation.
-# This constant is to ensure all messages have been received and handled
-# See more in https://github.com/philc/vimium/pull/3277#discussion_r283080348
+# Chrome creates a unique port for each MessageChannel, so there's a race condition between JavaScript
+# messages of Vimium and browser messages during style recomputation. This duration was determined
+# empirically. See https://github.com/philc/vimium/pull/3277#discussion_r283080348
 TIME_TO_WAIT_FOR_IPC_MESSAGES = 17
 
 # Set the input element's text, and move the cursor to the end.
