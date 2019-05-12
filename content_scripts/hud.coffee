@@ -33,6 +33,7 @@ HUD =
   showFindMode: (@findMode = null) ->
     DomUtils.documentComplete =>
       @init()
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @hudUI.activate name: "showFindMode"
       @tween.fade 1.0, 150
 
@@ -92,7 +93,9 @@ HUD =
   copyToClipboard: (text) ->
     DomUtils.documentComplete =>
       @init()
-      @hudUI?.postMessage {name: "copyToClipboard", data: text}
+      # Chrome 74 only acknowledges text selection when a frame has been visible. See more in #3277 .
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
+      @hudUI.postMessage {name: "copyToClipboard", data: text}
 
   pasteFromClipboard: (@pasteListener) ->
     DomUtils.documentComplete =>
