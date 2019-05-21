@@ -1,6 +1,6 @@
 # Contributing to Vimium
 
-You'd like to fix a bug or implement a feature? Great! Check out the bugs on our issues tracker, or implement
+You'd like to fix a bug or implement a feature? Great! Check out the bugs on our [issues tracker](https://github.com/philc/vimium/issues),  or implement
 one of the suggestions there that have been tagged "help wanted". If you have a suggestion of your own, start
 a discussion on the issues tracker or on the
 [mailing list](https://groups.google.com/group/vimium-dev?hl=en). If it mirrors a similar feature in another
