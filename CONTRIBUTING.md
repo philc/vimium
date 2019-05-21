@@ -103,6 +103,7 @@ reports:
 
 When you're done with your changes, send us a pull request on Github. Feel free to include a change to the
 CREDITS file with your patch.
+Unfamiliar with GitHub pull requests?  No problem, see this Github [Guide](https://guides.github.com/activities/hello-world/#pr). 
 
 Vimium design goals
 -------------------
