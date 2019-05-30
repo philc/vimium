@@ -528,7 +528,7 @@ class SearchEngineCompleter
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
 class MultiCompleter
-  maxResults: 10
+  maxResults: 100
   filterInProgress: false
   mostRecentQuery: null
 

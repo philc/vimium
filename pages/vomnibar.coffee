@@ -96,9 +96,25 @@ class VomnibarUI
       @input.value = @previousInputValue
       @previousInputValue = null
 
-    # Highlight the selected entry, and only the selected entry.
+    # Highlight the selected entry, and only the selected entry, and hide the entries too far away from the
+    # selected
+    [lowest, highest] = @calcRangeForVisibleChildren()
     for i in [0...@completionList.children.length]
-      @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
+      className = (if i == @selection then "vomnibarSelected" else if (lowest <= i < highest) then "" else "vomnibarHided")
+      @completionList.children[i].className = className
+
+  calcRangeForVisibleChildren: () ->
+    visibleRange = 10
+    if @completionList.children.length <= visibleRange
+      highest = @completionList.children.length
+      lowest = 0
+    else
+      highest = @selection+visibleRange//2+1
+      lowest = @selection-visibleRange//2+1
+      lowest -= Math.max highest - @completionList.children.length, 0
+      highest -= Math.min lowest, 0
+    return [lowest, highest]
+
 
   # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
   # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
