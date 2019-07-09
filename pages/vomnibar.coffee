@@ -100,6 +100,10 @@ class VomnibarUI
     for i in [0...@completionList.children.length]
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
 
+  copyLink: ->
+    if 0 <= @selection
+      Clipboard.copy {data: @completions[@selection].url}
+
   # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
   # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
   actionFromKeyEvent: (event) ->
@@ -123,6 +127,8 @@ class VomnibarUI
       return "enter"
     else if event.key == "Delete" and event.shiftKey and not event.ctrlKey and not event.altKey
       return "remove"
+    else if key == "c" and event.ctrlKey and not event.shiftKey and not event.altKey
+      return "copy"
     else if KeyboardUtils.isBackspace event
       return "delete"
 
@@ -150,6 +156,8 @@ class VomnibarUI
       @selection -= 1
       @selection = @completions.length - 1 if @selection < @initialSelectionValue
       @updateSelection()
+    else if (action == "copy")
+      @copyLink()
     else if (action == "enter")
       isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl?
       if @selection == -1 or isCustomSearchPrimarySuggestion
