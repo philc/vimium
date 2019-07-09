@@ -103,6 +103,8 @@ class VomnibarUI
   copyLink: ->
     if 0 <= @selection
       Clipboard.copy {data: @completions[@selection].url}
+      @input.focus()
+
 
   # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
   # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
