@@ -48,12 +48,19 @@ CompletionSearch =
     xhr = new XMLHttpRequest()
     xhr.open "GET", url, true
     xhr.timeout = 2500
-    xhr.ontimeout = xhr.onerror = -> callback null
-    xhr.send()
+    finished = 0
+    # Note(gdh1995): Maybe the 2 events below are not needed, but I just leave it unchanged for robustness
+    xhr.ontimeout = xhr.onerror = ->
+      finished++
+      if finished == 1
+        callback null
 
     xhr.onreadystatechange = ->
       if xhr.readyState == 4
-        callback if xhr.status == 200 then xhr else null
+        finished++
+        if finished == 1
+          callback if xhr.status == 200 then xhr else null
+    xhr.send()
 
   # Look up the completion engine for this searchUrl.  Because of DummyCompletionEngine, we know there will
   # always be a match.
