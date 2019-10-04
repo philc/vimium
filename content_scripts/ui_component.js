@@ -37,6 +37,7 @@ class UIComponent {
 
       this.shadowDOM.appendChild(styleSheet);
       this.shadowDOM.appendChild(this.iframeElement);
+      this.handleDarkReaderFilter();
       this.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
 
       // Open a port and pass it to the iframe via window.postMessage.  We use an AsyncDataFetcher to handle
@@ -97,6 +98,28 @@ class UIComponent {
       }
     });
   }
+
+  handleDarkReaderFilter() {
+    const reverseFilterClass = "reverseDarkReaderFilter";
+
+    const reverseFilterIfExists = (() => {
+      const darkReaderElement = document.getElementById("dark-reader-style");
+      if (darkReaderElement && darkReaderElement.innerHTML.includes("filter")) {
+       if (!this.iframeElement.classList.contains(reverseFilterClass)) {
+          this.iframeElement.classList.add(reverseFilterClass);
+          console.log('added');
+       }
+      } else {
+        this.iframeElement.classList.remove(reverseFilterClass);
+          console.log('removed');
+      }
+    }).bind(this);
+
+    reverseFilterIfExists();
+
+    const observer = new MutationObserver(reverseFilterIfExists);
+    observer.observe(document.head, { characterData: true, subtree: true, childList: true });
+  };
 
   toggleIframeElementClasses(removeClass, addClass) {
     this.iframeElement.classList.remove(removeClass);

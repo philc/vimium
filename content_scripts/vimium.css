@@ -434,3 +434,80 @@ iframe.vimiumUIComponentReactivated {
 iframe.vimiumNonClickable {
   pointer-events: none;
 }
+
+@media (prefers-color-scheme: dark) {
+  /* This cancels out the filter on <html>, applied by Dark Reader's Filter and Filter+ modes */
+  iframe.reverseDarkReaderFilter {
+    -webkit-filter: invert(100%) hue-rotate(180deg) !important;
+    filter: invert(100%) hue-rotate(180deg) !important;
+  }
+
+  /* Dark mode CSS for options page and exclusions */
+
+  body.vimiumBody {
+    background-color: #292a2d;
+    color: white;
+  }
+
+  body.vimiumBody a,
+  body.vimiumBody a:visited {
+    color: #8ab4f8;
+  }
+
+  body.vimiumBody textarea,
+  body.vimiumBody input {
+    background-color: #1d1d1f;
+    border-color: #1d1d1f;
+    color: #e8eaed;
+  }
+
+  body.vimiumBody div.example {
+    color: #9aa0a6;
+  }
+
+  body.vimiumBody div#state,
+  body.vimiumBody div#footer {
+    background-color: #202124;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Dark Mode CSS for Help Dialog */
+
+  div#vimiumHelpDialogContainer {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: #202124;
+  }
+
+  div#vimiumHelpDialog {
+    background-color: #292a2d;
+    color: white;
+  }
+
+  div#vimiumHelpDialog td.vimiumHelpDescription {
+    color: #c9cccf;
+  }
+
+  span#vimiumTitle,
+  div#vimiumHelpDialog td.vimiumHelpSectionTitle {
+    color: white;
+  }
+
+  #vimiumTitle > span:first-child {
+    color: #8ab4f8 !important;
+  }
+
+  div#vimiumHelpDialog a {
+    color: #8ab4f8;
+  }
+
+  div#vimiumHelpDialog div.vimiumDivider {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  span.vimiumHelpDialogKey {
+    background-color: #1d1d1f;
+    border: solid 1px black;
+    box-shadow: none;
+    color: white;
+  }
+}
