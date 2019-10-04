@@ -430,3 +430,29 @@ iframe.vimiumUIComponentVisible {
 iframe.vimiumUIComponentReactivated {
   border: 5px solid yellow;
 }
+
+/* Dark mode CSS */
+
+@media (prefers-color-scheme: dark) {
+  body {
+    filter: sepia(5%) invert(90%);
+  }
+
+  body.themedBackground {
+    background-color: #242424;
+  }
+
+  div#vomnibar, div#vimiumHelpDialogContainer, div.vimiumHUD {
+    box-shadow: 0px 2px 10px white;
+  }
+
+  @-moz-document url-prefix() {
+    div.vimiumHUD {
+      position: inherit;
+    }
+  }
+
+  img.vomnibarIcon {
+    filter: invert(100%);
+  }
+}
