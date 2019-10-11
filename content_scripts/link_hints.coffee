@@ -745,7 +745,14 @@ LocalHints =
   getLocalHints: (requireHref) ->
     # We need documentElement to be ready in order to find links.
     return [] unless document.documentElement
-    elements = document.documentElement.getElementsByTagName "*"
+    # Find all elements, recursing into shadow DOM if the browser supports it.
+    getAllElements = (root, elements = []) ->
+      for element in root.querySelectorAll "*"
+        elements.push element
+        if element.shadowRoot
+          getAllElements(element.shadowRoot, elements)
+      elements
+    elements = getAllElements document.documentElement
     visibleElements = []
 
     # The order of elements here is important; they should appear in the order they are in the DOM, so that
