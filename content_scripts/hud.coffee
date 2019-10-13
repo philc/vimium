@@ -5,7 +5,6 @@
 HUD =
   tween: null
   hudUI: null
-  _displayElement: null
   findMode: null
   abandon: -> @hudUI?.hide false
 
@@ -113,6 +112,11 @@ HUD =
 
   unfocusIfFocused: ->
     document.activeElement.blur() if document.activeElement == @hudUI?.iframeElement
+
+  clearFocus: ->
+    if @hudUI?.showing
+      @hudUI.iframeElement.blur()
+      window.focus()
 
 class Tween
   opacity: 0
