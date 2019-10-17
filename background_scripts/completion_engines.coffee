@@ -142,14 +142,15 @@ class DuckDuckGo extends BaseEngine
 class Webster extends BaseEngine
   constructor: ->
     super
-      engineUrl: "https://www.merriam-webster.com/autocomplete?query=%s"
+      engineUrl: "https://www.merriam-webster.com/lapi/v1/mwol-search/autocomplete?search=%s"
       regexps: "^https?://www.merriam-webster.com/dictionary/"
       example:
         searchUrl: "https://www.merriam-webster.com/dictionary/%s"
         keyword: "dw"
         description: "Dictionary"
 
-  parse: (xhr) -> JSON.parse(xhr.responseText).suggestions
+  parse: (xhr) ->
+    suggestion.word for suggestion in JSON.parse(xhr.responseText).docs
 
 class Qwant extends BaseEngine
   constructor: ->
