@@ -169,7 +169,7 @@ PRs are welcome.
 Release Notes
 -------------
 
-[see here relative link](release_notes/README.md)
+[See Here](release_notes/README.md)
 
 License
 -------
