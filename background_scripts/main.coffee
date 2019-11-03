@@ -284,10 +284,12 @@ selectTab = (direction, {count, tab}) ->
       chrome.tabs.update tabs[toSelect].id, active: true
 
 chrome.webNavigation.onCommitted.addListener ({tabId, frameId}) ->
+  # use "document_end" to work around a race condition
+  # See https://github.com/philc/vimium/issues/3418#issuecomment-549160351
   cssConf =
     frameId: frameId
     code: Settings.get("userDefinedLinkHintCss")
-    runAt: "document_start"
+    runAt: "document_end"
   chrome.tabs.insertCSS tabId, cssConf, -> chrome.runtime.lastError
 
 # Symbolic names for the three browser-action icons.
