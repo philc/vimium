@@ -435,7 +435,10 @@ DomUtils =
 
   # Inject user Javascript.
   injectUserScript: (text) ->
-    text = text[11..] if text[...11] == "javascript:"
+    if text[...11] == "javascript:"
+      text = text[11..].trim()
+      if text.indexOf " " < 0
+        try text = decodeURIComponent text
     script = document.createElement "script"
     script.textContent = text
     document.head.appendChild script
