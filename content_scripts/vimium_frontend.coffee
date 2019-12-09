@@ -16,10 +16,12 @@ normalMode = null
 windowIsFocused = do ->
   windowHasFocus = null
   DomUtils.documentReady -> windowHasFocus = document.hasFocus()
-  window.addEventListener "focus", forTrusted (event) ->
+  window.addEventListener "focus", (forTrusted (event) ->
     windowHasFocus = true if event.target == window; true
-  window.addEventListener "blur", forTrusted (event) ->
+  ), true
+  window.addEventListener "blur", (forTrusted (event) ->
     windowHasFocus = false if event.target == window; true
+  ), true
   -> windowHasFocus
 
 # This is set by Frame.registerFrameId(). A frameId of 0 indicates that this is the top frame in the tab.
@@ -176,8 +178,8 @@ onFocus = forTrusted (event) ->
 
 # We install these listeners directly (that is, we don't use installListener) because we still need to receive
 # events when Vimium is not enabled.
-window.addEventListener "focus", onFocus
-window.addEventListener "hashchange", checkEnabledAfterURLChange
+window.addEventListener "focus", onFocus, true
+window.addEventListener "hashchange", checkEnabledAfterURLChange, true
 
 initializeOnDomReady = ->
   # Tell the background page we're in the domReady state.
@@ -198,13 +200,15 @@ Frame =
       Frame.postMessage "registerFrame"
     else
       postRegisterFrame = ->
-        window.removeEventListener "focus", focusHandler
-        window.removeEventListener "resize", resizeHandler
+        window.removeEventListener "focus", focusHandler, true
+        window.removeEventListener "resize", resizeHandler, true
         Frame.postMessage "registerFrame"
-      window.addEventListener "focus", focusHandler = forTrusted (event) ->
+      window.addEventListener "focus", (focusHandler = forTrusted (event) ->
         postRegisterFrame() if event.target == window
-      window.addEventListener "resize", resizeHandler = forTrusted (event) ->
+      ), true
+      window.addEventListener "resize", (resizeHandler = forTrusted (event) ->
         postRegisterFrame() unless DomUtils.windowIsTooSmall()
+      ), true
 
   init: ->
     @port = chrome.runtime.connect name: "frames"
@@ -215,7 +219,9 @@ Frame =
 
     # We disable the content scripts when we lose contact with the background page, or on unload.
     @port.onDisconnect.addListener disconnect = Utils.makeIdempotent => @disconnect()
-    window.addEventListener "unload", forTrusted disconnect
+    window.addEventListener "unload", (forTrusted (event) ->
+      disconnect() if event.target == window
+    ), true
 
   disconnect: ->
     try @postMessage "unregisterFrame"
@@ -226,8 +232,8 @@ Frame =
     HintCoordinator.exit isSuccess: false
     handlerStack.reset()
     isEnabledForUrl = false
-    window.removeEventListener "focus", onFocus
-    window.removeEventListener "hashchange", checkEnabledAfterURLChange
+    window.removeEventListener "focus", onFocus, true
+    window.removeEventListener "hashchange", checkEnabledAfterURLChange, true
 
 setScrollPosition = ({ scrollX, scrollY }) ->
   DomUtils.documentReady ->
