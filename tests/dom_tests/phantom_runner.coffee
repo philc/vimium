@@ -21,7 +21,7 @@ page.onError = (msg, trace) ->
 page.onResourceError = (resourceError) ->
   console.log(resourceError.errorString)
 
-testfile = path.join(path.dirname(system.args[0]), 'dom_tests.html')
+testfile = path.dirname(system.args[0]) + '/dom_tests.html'
 page.open testfile, (status) ->
   if status != 'success'
     console.log 'Unable to load tests.'
