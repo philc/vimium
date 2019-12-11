@@ -8,6 +8,7 @@ assignees: ''
 ---
 
 **Describe the bug**
+Include a clear bug description.
 
 **To Reproduce**
 Steps to reproduce the behavior:
@@ -18,6 +19,6 @@ Include a screenshot if applicable.
 
 **Browser and Vimium version**
 
-If you're using Chrome, include the Chrome and OSS version found at chrome://version. Also include the Vimium version at chrome://extensions.
+If you're using Chrome, include the Chrome and OSS version found at chrome://version. Also include the Vimium version found at chrome://extensions.
 
-If you're using Firefox, report the FIrefox and OS version found at about:. Also include the Vimium version, show at about:adons (click "More" below Vimium).
+If you're using Firefox, report the Firefox and OS version found at about:. Also include the Vimium version found at about:addons.
