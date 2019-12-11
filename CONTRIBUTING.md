@@ -21,35 +21,38 @@ reviews say this -- and most people have strong web browsing habits forged from 
 it's a great experience when Vimium feels like a natural addition to Chrome which augments, but doesn't break,
 the user's current browsing habits.
 
-**Design principles**
+**Principles:**
 
 1. **Easy to understand**. Even if you're not very familiar with Vim. The Vimium video shows you all you need
    to know to start using Vimium and feel awesome.
-2. **Reliable**. The core feature set works on almost all sites.
-3. **Easy to start**. Vimium doesn't require any configuration or doc-reading before it's useful. Just watch the
-   video or hit `?`.
-4. **Feels native**. Vimium doesn't drastically change the way Chrome looks or behaves. You can transition
-   into using Vimium piecemeal; you don't need to jump in whole-hog from the start.
-5. **Simple**. The core feature set isn't overwhelming. This principle is particularly easy to compromise as
-   we evolve Vimium, so it requires active effort to maintain this simplicity.
+2. **Reliable**. The core feature set works on most sites on the web.
+3. **Immediately useful**. Vimium doesn't require any configuration or doc-reading before it's useful. Just
+   watch the video or hit `?`. You can transition into using Vimium piecemeal; you don't need to jump in
+   whole-hog from the start.
+4. **Feels native**. Vimium doesn't drastically change the way Chrome looks or behaves.
+5. **Simple**. The core feature set isn't overwhelming. This principle is particularly vulnerable as we add to
+   Vimium, so it requires our active effort to maintain this simplicity.
 6. **Code simplicity**. Developers find the Vimium codebase relatively simple and easy to jump into. This
    provides us an active dev community.
 
 ### Which pull requests get merged?
 
+**Goals of the maintainers**
+
 The maintainers of Vimium are @smblott-github and @philc. We have limited bandwidth, which influences which
 PRs we can review and merge.
 
-We generally optimize towards keeping Vimium small and maintainable, rather than having complicated or niche
-features.
+Our goals are generally to keep Vimium small, maintainable, and really nail the broad appeal use cases. This
+is in contract to adding and maintaining an increasing number of complex or niche features. We recommend those
+live in forked repos rather than the mainline Vimium repo.
 
-Good features:
+PRs we'll likely merge:
 
 * Reflect all of the Vimium design principles.
 * Are useful for lots of Vimium users.
 * Have simple implementations (straightforward code, few lines of code).
 
-Bad features:
+PRs we likely won't:
 
 * Violate one or more of our design principles.
 * Are niche.
@@ -58,7 +61,7 @@ Bad features:
 Tips for preparing a PR:
 
 * If you want to check with us first before implementing something big, open an issue proposing the idea.
-  You'll get feedback from the maintainers as to whether it's something we're likely to merge.
+  You'll get feedback from the maintainers as to whether it's something we'll likely merge.
 * Try to keep PRs around 50 LOC or less. Bigger PRs create inertia for review.
 
 ### Installing From Source
