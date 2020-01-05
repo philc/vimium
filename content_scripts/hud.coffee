@@ -113,8 +113,8 @@ HUD =
   unfocusIfFocused: ->
     document.activeElement.blur() if document.activeElement == @hudUI?.iframeElement
 
-  clearFocus: ->
-    if @hudUI?.showing
+  giveUpFocus: ->
+    if @hudUI.showing
       @hudUI.iframeElement.blur()
       window.focus()
 
