@@ -114,7 +114,9 @@ HUD =
     document.activeElement.blur() if document.activeElement == @hudUI?.iframeElement
 
   giveUpFocus: ->
-    if @hudUI.showing
+    # On Firefox, if an <iframe> disappears when it's focused, then it will keep "focused",
+    # which means keyboard events will always be dispatched to the HUD iframe
+    if @hudUI?.showing
       @hudUI.iframeElement.blur()
       window.focus()
 
