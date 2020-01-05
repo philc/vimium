@@ -13,7 +13,7 @@ Include a clear bug description.
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to URL '...'
-2. Click on '....' 
+2. Click on '....'
 
 Include a screenshot if applicable.
 
@@ -21,4 +21,4 @@ Include a screenshot if applicable.
 
 If you're using Chrome, include the Chrome and OSS version found at chrome://version. Also include the Vimium version found at chrome://extensions.
 
-If you're using Firefox, report the Firefox and OS version found at about:. Also include the Vimium version found at about:addons.
+If you're using Firefox, report the Firefox and OS version found at about:support. Also include the Vimium version found at about:addons.
