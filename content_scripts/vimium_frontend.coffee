@@ -34,6 +34,7 @@ bgLog = (args...) ->
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
 class GrabBackFocus extends Mode
+  # console.log when we grab focus back from the page, so web devs using Vimium don't get confused.
   logged: false
 
   constructor: ->
@@ -76,7 +77,7 @@ class GrabBackFocus extends Mode
     return @continueBubbling unless DomUtils.isFocusable element
     unless @logged or element == document.body
       @logged = true
-      console.log "An auto-focusing action is blocked by Vimium"
+      console.log "An auto-focusing action on this page was blocked by Vimium."
     element.blur()
     @suppressEvent
 
