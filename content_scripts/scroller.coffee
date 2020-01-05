@@ -245,6 +245,7 @@ CoreScroller =
 Scroller =
   init: ->
     handler = _name: 'scroller/active-element'
+    # Only Chrome has a DOMActivate event. On Firefox, we must listen for click. See #3287.
     eventName = if Utils.isFirefox() then "click" else "DOMActivate"
     handler[eventName] = (event) -> handlerStack.alwaysContinueBubbling ->
         # If event.path is present, the true event taget (potentially inside a Shadow DOM inside
