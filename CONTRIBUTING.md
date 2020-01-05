@@ -43,7 +43,7 @@ The maintainers of Vimium are @smblott-github and @philc. We have limited bandwi
 PRs we can review and merge.
 
 Our goals are generally to keep Vimium small, maintainable, and really nail the broad appeal use cases. This
-is in contract to adding and maintaining an increasing number of complex or niche features. We recommend those
+is in contrast to adding and maintaining an increasing number of complex or niche features. We recommend those
 live in forked repos rather than the mainline Vimium repo.
 
 PRs we'll likely merge:
