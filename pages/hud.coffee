@@ -91,7 +91,9 @@ handlers =
     countElement.id = "hud-match-count"
     countElement.style.float = "right"
     hud.appendChild countElement
-    Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, -> inputElement.focus()
+    Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, ->
+      window.focus() # on Firefox this line grabs focus back to this HUD
+      inputElement.focus()
 
     findMode =
       historyIndex: -1
