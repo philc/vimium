@@ -79,7 +79,7 @@ class FindMode extends Mode
     HUD.showFindMode this
 
   exit: (event) ->
-    HUD.giveUpFocus()
+    HUD.unfocusIfFocused()
     super()
     FindMode.handleEscape() if event
 
