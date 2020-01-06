@@ -92,7 +92,8 @@ handlers =
     countElement.style.float = "right"
     hud.appendChild countElement
     Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, ->
-      window.focus() # on Firefox this line grabs focus back to this HUD
+      # On Firefox, the page must first be focused before the HUD input element can be focused. #3460.
+      window.focus() if Utils.isFirefox()
       inputElement.focus()
 
     findMode =
