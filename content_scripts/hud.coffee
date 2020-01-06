@@ -111,9 +111,6 @@ HUD =
     @pasteListener data
 
   unfocusIfFocused: ->
-    document.activeElement.blur() if document.activeElement == @hudUI?.iframeElement
-
-  giveUpFocus: ->
     # On Firefox, if an <iframe> disappears when it's focused, then it will keep "focused",
     # which means keyboard events will always be dispatched to the HUD iframe
     if @hudUI?.showing
