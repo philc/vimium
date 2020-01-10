@@ -116,7 +116,7 @@ TabOperations =
     switch position
       when "start" then tabIndex = 0
       when "before" then tabIndex = request.tab.index
-      when "end" then tabIndex = null
+      when "end" then tabIndex = (if Utils.isFirefox() then 9999 else null)
       # "after" is the default case when there are no options.
       else tabIndex = request.tab.index + 1
     tabConfig.index = tabIndex
