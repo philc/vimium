@@ -130,7 +130,7 @@ TabOperations =
     tabConfig.openerTabId = request.tab.id if canUseOpenerTabId
 
     chrome.tabs.create tabConfig, (tab) ->
-      callback extend request, {tab, tabId: tab.id}
+      callback extend request, {tab, tabId: tab.id, position: "", active: false}
 
   # Opens request.url in new window and switches to it.
   openUrlInNewWindow: (request, callback = (->)) ->
@@ -217,10 +217,10 @@ BackgroundCommands =
       chrome.windows.create windowConfig, -> callback request
     else
       urls = request.urls[..].reverse()
-      position = request.registryEntry.options.position
+      request.position ?= request.registryEntry.options.position
       do openNextUrl = (request) ->
         if 0 < urls.length
-          TabOperations.openUrlInNewTab (extend request, {url: urls.pop(), position}), openNextUrl
+          TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), openNextUrl
         else
           callback request
   duplicateTab: mkRepeatCommand (request, callback) ->
