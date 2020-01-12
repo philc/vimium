@@ -307,7 +307,6 @@ div.vimiumHUD {
   width: calc(100% - 20px);
   bottom: 8px;
   left: 8px;
-  font-family: sans-serif;
   background: #F1F1F1;
   text-align: left;
   border-radius: 4px;
@@ -329,7 +328,6 @@ iframe.vimiumHUDFrame {
   right: 20px;
   margin: 0 0 0 -40%;
   border: none;
-  font-family: sans-serif;
   z-index: 2149999998; /* Two less than the reference value. */
   opacity: 0;
 }
