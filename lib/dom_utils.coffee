@@ -18,7 +18,8 @@ DomUtils =
     [isComplete, callbacks] = [document.readyState == "complete", []]
     unless isComplete
       window.addEventListener "load", (onLoad = forTrusted (event) ->
-        return unless event.target == window
+        # The target is ensured to be on document. See https://w3c.github.io/uievents/#event-type-load
+        return unless event.target == document
         window.removeEventListener "load", onLoad, true
         isComplete = true
         callback() for callback in callbacks
