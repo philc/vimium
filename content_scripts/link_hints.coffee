@@ -398,7 +398,7 @@ class LinkHintsMode
             #     focus it to let user press space to activate the popup menu
             # <object> & <embed>: for Flash games which have their own key event handlers
             #     since we have been able to blur them by pressing `Escape` 
-            if clickEl.nodeName.toLowerCase() in ["input", "select", "object", "embed"] or clickEl.tabIndex >= 0
+            if clickEl.nodeName.toLowerCase() in ["input", "select", "object", "embed"]
               clickEl.focus()
             linkActivator clickEl
 
