@@ -116,6 +116,8 @@ TabOperations =
     switch position
       when "start" then tabIndex = 0
       when "before" then tabIndex = request.tab.index
+      # if on Chrome or on Firefox but without openerTabId, `tabs.create` opens a tab at the end.
+      # but on Firefox and with openerTabId, it opens a new tab next to the opener tab
       when "end" then tabIndex = (if Utils.isFirefox() then 9999 else null)
       # "after" is the default case when there are no options.
       else tabIndex = request.tab.index + 1
@@ -130,6 +132,7 @@ TabOperations =
     tabConfig.openerTabId = request.tab.id if canUseOpenerTabId
 
     chrome.tabs.create tabConfig, (tab) ->
+      # clean position and active, so following `openUrlInNewTab(request)` will create a tab just next to this new tab
       callback extend request, {tab, tabId: tab.id, position: "", active: false}
 
   # Opens request.url in new window and switches to it.
