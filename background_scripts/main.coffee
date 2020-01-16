@@ -343,6 +343,7 @@ Frames =
 
   registerFrame: ({tabId, frameId, port}) ->
     frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
+    (portsForTab[tabId] ?= {})[frameId] = port
 
   unregisterFrame: ({tabId, frameId, port}) ->
     # Check that the port trying to unregister the frame hasn't already been replaced by a new frame
