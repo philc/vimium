@@ -742,6 +742,19 @@ LocalHints =
     visibleElements
 
   #
+  # Returns element at a given (x,y) with an optional root element.
+  # If the returned element is a shadow root, call the function use that recursively 
+  # until we hit an actual element.
+  #
+  getElementFromPoint: (x, y, root = document) ->
+    element = root.elementFromPoint(x, y)
+    
+    if element and element.shadowRoot 
+      return LocalHints.getElementFromPoint(x, y, element.shadowRoot)
+    
+    return element;
+  
+  #
   # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
   # at which (parts of) the elements are displayed.
   # In the process, we try to find rects where elements do not overlap so that link hints are unambiguous.
@@ -796,6 +809,7 @@ LocalHints =
     # document.elementFromPoint will find an element at a x,y location.
     # Node.contain checks to see if an element contains another. note: someNode.contains(someNode) === true
     # If we do not find our element as a descendant of any element we find, assume it's completely covered.
+
     localHints = nonOverlappingElements = []
     while visibleElement = visibleElements.pop()
       if visibleElement.secondClassCitizen
@@ -805,7 +819,7 @@ LocalHints =
       element = visibleElement.element
 
       # Check middle of element first, as this is perhaps most likely to return true.
-      elementFromMiddlePoint = document.elementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
+      elementFromMiddlePoint = LocalHints.getElementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
       if elementFromMiddlePoint && (element.contains(elementFromMiddlePoint) or elementFromMiddlePoint.contains(element))
         nonOverlappingElements.push visibleElement
         continue
@@ -819,7 +833,7 @@ LocalHints =
       foundElement = false
       for verticalCoordinate in verticalCoordinates
         for horizontalCoordinate in horizontalCoordinates
-          elementFromPoint = document.elementFromPoint(verticalCoordinate, horizontalCoordinate)
+          elementFromPoint = LocalHints.getElementFromPoint(verticalCoordinate, horizontalCoordinate)
           if elementFromPoint && (element.contains(elementFromPoint) or elementFromPoint.contains(element))
             foundElement = true
             break
