@@ -746,11 +746,16 @@ LocalHints =
   # If the returned element is a shadow root, call the function use that recursively 
   # until we hit an actual element.
   #
-  getElementFromPoint: (x, y, root = document) ->
+  getElementFromPoint: (x, y, root = document, stack = []) ->
     element = root.elementFromPoint(x, y)
+
+    if stack.includes(element)
+      return element;
+    
+    stack.push(element);
     
     if element and element.shadowRoot 
-      return LocalHints.getElementFromPoint(x, y, element.shadowRoot)
+      return LocalHints.getElementFromPoint(x, y, element.shadowRoot, stack)
     
     return element;
   
