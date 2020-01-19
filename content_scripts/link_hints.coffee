@@ -749,7 +749,7 @@ LocalHints =
   getElementFromPoint: (x, y, root = document, stack = []) ->
     element = root.elementFromPoint(x, y)
 
-    if stack.includes(element)
+    if stack.indexOf(element) != -1
       return element;
     
     stack.push(element);
