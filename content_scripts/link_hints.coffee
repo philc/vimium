@@ -747,7 +747,7 @@ LocalHints =
   # until we hit an actual element.
   #
   getElementFromPoint: (x, y, root = document, stack = []) ->
-    element = root.elementsFromPoint(x, y)[0]
+    element = if root.elementsFromPoint then root.elementsFromPoint(x, y)[0] else root.elementFromPoint(x, y)
 
     if stack.indexOf(element) != -1
       return element
