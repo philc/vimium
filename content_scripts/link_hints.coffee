@@ -747,17 +747,17 @@ LocalHints =
   # until we hit an actual element.
   #
   getElementFromPoint: (x, y, root = document, stack = []) ->
-    element = root.elementFromPoint(x, y)
+    element = root.elementsFromPoint(x, y)[0]
 
     if stack.indexOf(element) != -1
-      return element;
+      return element
     
-    stack.push(element);
+    stack.push(element)
     
     if element and element.shadowRoot 
       return LocalHints.getElementFromPoint(x, y, element.shadowRoot, stack)
     
-    return element;
+    return element
   
   #
   # Returns all clickable elements that are not hidden and are in the current viewport, along with rectangles
