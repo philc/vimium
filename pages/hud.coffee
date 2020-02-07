@@ -84,6 +84,12 @@ handlers =
     hud.appendChild inputElement
 
     inputElement.addEventListener "input", executeQuery = (event) ->
+      # On Chrome when IME is on, the order of events is:
+      #   keydown, input.isComposing=true, keydown, input.true, ..., keydown, input.true, compositionend;
+      # while on Firefox, the order is: keydown, input.true, ..., input.true, keydown, compositionend, input.false.
+      # Therefore, check event.isComposing here, to avoid window focus changes during typing with IME,
+      # since such changes will prevent normal typing on Firefox (see #3480)
+      return if Utils.isFirefox() and event.isComposing
       # Replace \u00A0 (&nbsp;) with a normal space.
       findMode.rawQuery = inputElement.textContent.replace "\u00A0", " "
       UIComponentServer.postMessage {name: "search", query: findMode.rawQuery}
