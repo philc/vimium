@@ -72,6 +72,8 @@ class UIComponent
                 when "setIframeFrameId" then @iframeFrameId = event.data.iframeFrameId
                 when "hide" then @hide()
                 else @handleMessage event
+      if Utils.isFirefox()
+          @postMessage name: "settings", isFirefox: true
 
   # Post a message (if provided), then call continuation (if provided).  We wait for documentReady() to ensure
   # that the @iframePort set (so that we can use @iframePort.use()).

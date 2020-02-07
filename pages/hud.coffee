@@ -127,5 +127,7 @@ handlers =
     window.parent.focus()
     UIComponentServer.postMessage {name: "pasteResponse", data}
 
+  settings: ({ isFirefox }) -> Utils.isFirefox = -> isFirefox
+
 UIComponentServer.registerHandler ({data}) -> handlers[data.name ? data]? data
 FindModeHistory.init()

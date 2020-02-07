@@ -372,7 +372,7 @@ class LinkHintsMode
             Utils.nextTick -> focusThisFrame highlight: true
           else if localHintDescriptor.reason == "Scroll."
             # Tell the scroller that this is the activated element.
-            handlerStack.bubbleEvent "DOMActivate", target: clickEl
+            handlerStack.bubbleEvent (if Utils.isFirefox() then "click" else "DOMActivate"), target: clickEl
           else if localHintDescriptor.reason == "Open."
             clickEl.open = !clickEl.open
           else if DomUtils.isSelectable clickEl

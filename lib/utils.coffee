@@ -11,7 +11,7 @@ browserInfo = browser?.runtime?.getBrowserInfo?()
 Utils =
   isFirefox: do ->
     # NOTE(mrmr1993): This test only works in the background page, this is overwritten by isEnabledForUrl for
-    # content scripts.
+    # content scripts, and the "settings" message from UIComponent is for pages like HUD.
     isFirefox = false
     browserInfo?.then? (browserInfo) ->
       isFirefox = browserInfo?.name == "Firefox"
