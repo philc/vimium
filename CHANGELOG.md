@@ -1,3 +1,18 @@
+1.65 (unreleased)
+
+- Many fixes for Firefox ([#3483](https://github.com/philc/vimium/pull/3483),
+  [#2893](https://github.com/philc/vimium/issues/2893), [#3106](https://github.com/philc/vimium/issues/3106),
+  [#3409](https://github.com/philc/vimium/pull/3409), [#3288](https://github.com/philc/vimium/pull/3288))
+- Fix javascript bookmarks, broken by Chrome 71+ [(#3473)](https://github.com/philc/vimium/pull/3437)
+- Improved link hints: show hints on sites with shadow DOM
+  [(#3406)](https://github.com/philc/vimium/pull/3406), don't show hints for obstructed/invisible links ([#2251](https://github.com/philc/vimium/pull/2251))
+- Fix scrolling on Reddit.com ([#3327](https://github.com/philc/vimium/pull/3327))
+- Show favicons when using the tab switcher ([#2878](https://github.com/philc/vimium/pull/2878))
+- The createTab command can now take arguments (start, end, before, after)
+  ([#2895](https://github.com/philc/vimium/pull/2895))
+- When using the Vomnibar, you can manually edit the suggested URL by typing ctrl-enter [(#2464)](https://github.com/philc/vimium/pull/2914)
+- Other fixes
+
 1.64.6 (2019-05-12)
 
 - Fix the find mode, and copying the page's URL to the clipboard, which were broken by Chrome 74+. ([#3260](https://github.com/philc/vimium/issues/3260))
