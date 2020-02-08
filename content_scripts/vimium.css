@@ -261,6 +261,7 @@ div#vimiumHelpDialog a.closeButton {
   position: relative;
   top: 3px;
   padding-left: 5px;
+  cursor: pointer;
 }
 div#vimiumHelpDialog a {
   text-decoration: underline;
@@ -297,6 +298,7 @@ a:link.vimiumHelDialogLink, a:visited.vimiumHelDialogLink,
   a:hover.vimiumHelDialogLink, a:active.vimiumHelDialogLink, a#toggleAdvancedCommands {
     color:#2f508e;
     text-decoration: underline;
+    cursor: pointer;
 }
 
 /* Vimium HUD CSS */
