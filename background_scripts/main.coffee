@@ -531,7 +531,7 @@ do showUpgradeMessage = ->
             chrome.notifications.onClicked.addListener (id) ->
               if id == notificationId
                 chrome.tabs.query { active: true, currentWindow: true }, ([tab]) ->
-                  TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium#release-notes"}
+                  TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md"}
       else
         # We need to wait for the user to accept the "notifications" permission.
         chrome.permissions.onAdded.addListener showUpgradeMessage
