@@ -1,4 +1,4 @@
-1.65 (unreleased)
+1.65 (2020-02-08)
 
 - Many fixes for Firefox ([#3483](https://github.com/philc/vimium/pull/3483),
   [#2893](https://github.com/philc/vimium/issues/2893), [#3106](https://github.com/philc/vimium/issues/3106),
