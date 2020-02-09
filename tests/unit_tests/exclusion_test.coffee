@@ -1,4 +1,3 @@
-
 require "./test_helper.js"
 extend global, require "./test_chrome_stubs.js"
 
@@ -41,38 +40,46 @@ context "Excluded URLs and pass keys",
         { pattern: "http*://www.duplicate.com/*", passKeys: "bdf" }
       ]
     Exclusions.postUpdateHook()
+    return null
 
   should "be disabled for excluded sites", ->
     rule = isEnabledForUrl({ url: 'http://mail.google.com/calendar/page' })
     assert.isFalse rule.isEnabledForUrl
     assert.isFalse rule.passKeys
+    return null
 
   should "be disabled for excluded sites, one exclusion", ->
     rule = isEnabledForUrl({ url: 'http://www.bbc.com/calendar/page' })
     assert.isFalse rule.isEnabledForUrl
     assert.isFalse rule.passKeys
+    return null
 
   should "be enabled, but with pass keys", ->
     rule = isEnabledForUrl({ url: 'https://www.facebook.com/something' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal rule.passKeys, 'abcd'
+    return null
 
   should "be enabled", ->
     rule = isEnabledForUrl({ url: 'http://www.twitter.com/pages' })
     assert.isTrue rule.isEnabledForUrl
     assert.isFalse rule.passKeys
+    return null
 
   should "handle spaces and duplicates in passkeys", ->
     rule = isEnabledForUrl({ url: 'http://www.example.com/pages' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal "abc", rule.passKeys
+    return null
 
   should "handle multiple passkeys rules", ->
     rule = isEnabledForUrl({ url: 'http://www.duplicate.com/pages' })
     assert.isTrue rule.isEnabledForUrl
     assert.equal "abcdef", rule.passKeys
+    return null
 
   should "be enabled for malformed regular expressions", ->
     Exclusions.postUpdateHook [ { pattern: "http*://www.bad-regexp.com/*[a-", passKeys: "" } ]
     rule = isEnabledForUrl({ url: 'http://www.bad-regexp.com/pages' })
     assert.isTrue rule.isEnabledForUrl
+    return null

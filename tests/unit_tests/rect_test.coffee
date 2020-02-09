@@ -194,32 +194,34 @@ context "Rect subtraction",
 
   should "not overlap subtracted rect", ->
     rect = Rect.create 0, 0, 3, 3
-    for x in [-2..2]
-      for y in [-2..2]
-        for width in [1..3]
-          for height in [1..3]
+    for x in [-2..2] by 1
+      for y in [-2..2] by 1
+        for width in [1..3] by 1
+          for height in [1..3] by 1
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             for resultRect in resultRects
               assert.isFalse Rect.intersects subtractRect, resultRect
+    return null
 
   should "be contained in original rect", ->
     rect = Rect.create 0, 0, 3, 3
-    for x in [-2..2]
-      for y in [-2..2]
-        for width in [1..3]
-          for height in [1..3]
+    for x in [-2..2] by 1
+      for y in [-2..2] by 1
+        for width in [1..3] by 1
+          for height in [1..3] by 1
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             for resultRect in resultRects
               assert.isTrue Rect.intersects rect, resultRect
+    return null
 
   should "contain the  subtracted rect in the original minus the results", ->
     rect = Rect.create 0, 0, 3, 3
-    for x in [-2..2]
-      for y in [-2..2]
-        for width in [1..3]
-          for height in [1..3]
+    for x in [-2..2] by 1
+      for y in [-2..2] by 1
+        for width in [1..3] by 1
+          for height in [1..3] by 1
             subtractRect = Rect.create x, y, (x + width), (y + height)
             resultRects = Rect.subtract rect, subtractRect
             resultComplement = [Rect.copy rect]
@@ -230,6 +232,7 @@ context "Rect subtraction",
             if resultComplement.length == 1
               complementRect = resultComplement[0]
               assert.isTrue Rect.intersects subtractRect, complementRect
+    return null
 
 context "Rect overlaps",
   should "detect that a rect overlaps itself", ->
@@ -285,4 +288,3 @@ context "Rect overlaps",
     rect1 = Rect.create 1, 1, 4, 4
     rect2 = Rect.create 2, 2, 3, 3
     assert.isTrue Rect.intersectsStrict rect2, rect1
-

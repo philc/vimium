@@ -18,17 +18,21 @@ context "Key mappings",
       keySequence = Commands.parseKeySequence key
       assert.equal expectedKeyText, keySequence.join "/"
       assert.equal expectedKeyLength, keySequence.length
+      return null
+    return null
 
   should "lowercase keys correctly", ->
     @testKeySequence "a", "a", 1
     @testKeySequence "A", "A", 1
     @testKeySequence "ab", "a/b", 2
+    return null
 
   should "recognise non-alphabetic keys", ->
     @testKeySequence "#", "#", 1
     @testKeySequence ".", ".", 1
     @testKeySequence "##", "#/#", 2
     @testKeySequence "..", "./.", 2
+    return null
 
   should "parse keys with modifiers", ->
     @testKeySequence "<c-a>", "<c-a>", 1
@@ -37,10 +41,12 @@ context "Key mappings",
     @testKeySequence "<c-a><a-b>", "<c-a>/<a-b>", 2
     @testKeySequence "<m-a>", "<m-a>", 1
     @testKeySequence "z<m-a>", "z/<m-a>", 2
+    return null
 
   should "normalize with modifiers", ->
     # Modifiers should be in alphabetical order.
     @testKeySequence "<m-c-a-A>", "<a-c-m-A>", 1
+    return null
 
   should "parse and normalize named keys", ->
     @testKeySequence "<space>", "<space>", 1
@@ -48,6 +54,7 @@ context "Key mappings",
     @testKeySequence "<C-Space>", "<c-space>", 1
     @testKeySequence "<f12>", "<f12>", 1
     @testKeySequence "<F12>", "<f12>", 1
+    return null
 
   should "handle angle brackets which are part of not modifiers", ->
     @testKeySequence "<", "<", 1
@@ -64,10 +71,13 @@ context "Key mappings",
 
     @testKeySequence "<a>", "</a/>", 3
 
+    return null
+
   should "negative tests", ->
     # These should not be parsed as modifiers.
     @testKeySequence "<b-a>", "</b/-/a/>", 5
     @testKeySequence "<c-@@>", "</c/-/@/@/>", 6
+    return null
 
 context "Validate commands and options",
   should "have either noRepeat or repeatLimit, but not both", ->
@@ -75,61 +85,75 @@ context "Validate commands and options",
     # of the offending command appears in the output, if the test fails?
     for own command, options of Commands.availableCommands
       assert.isTrue not (options.noRepeat and options.repeatLimit)
+    return null
 
   should "describe each command", ->
     for own command, options of Commands.availableCommands
-      assert.equal 'string', typeof options.description
+      assert.equal "string", typeof options.description
+    return null
 
   should "define each command in each command group", ->
     for own group, commands of Commands.commandGroups
       for command in commands
-        assert.equal 'string', typeof command
+        assert.equal "string", typeof command
         assert.isTrue Commands.availableCommands[command]
+    return null
 
   should "have valid commands for each advanced command", ->
     for command in Commands.advancedCommands
-      assert.equal 'string', typeof command
+      assert.equal "string", typeof command
       assert.isTrue Commands.availableCommands[command]
+    return null
 
   should "have valid commands for each default key mapping", ->
     count = Object.keys(Commands.keyToCommandRegistry).length
     assert.isTrue (0 < count)
     for own key, command of Commands.keyToCommandRegistry
-      assert.equal 'object', typeof command
+      assert.equal "object", typeof command
       assert.isTrue Commands.availableCommands[command.command]
+    return null
 
 context "Validate advanced commands",
   setup ->
-    @allCommands = [].concat.apply [], (commands for own group, commands of Commands.commandGroups)
+    @allCommands = []
+    for own _, commands of Commands.commandGroups
+      @allCommands = @allCommands.concat(commands)
+    return null
 
   should "include each advanced command in a command group", ->
     for command in Commands.advancedCommands
       assert.isTrue 0 <= @allCommands.indexOf command
+    return null
 
 context "Parse commands",
   should "omit whitespace", ->
     assert.equal 0, BgUtils.parseLines("    \n    \n   ").length
+    return null
 
   should "omit comments", ->
     assert.equal 0, BgUtils.parseLines(" # comment   \n \" comment   \n   ").length
+    return null
 
   should "join lines", ->
     assert.equal 1, BgUtils.parseLines("a\\\nb").length
     assert.equal "ab", BgUtils.parseLines("a\\\nb")[0]
+    return null
 
   should "trim lines", ->
     assert.equal 2, BgUtils.parseLines("  a  \n  b").length
     assert.equal "a", BgUtils.parseLines("  a  \n  b")[0]
     assert.equal "b", BgUtils.parseLines("  a  \n  b")[1]
+    return null
 
-context "Commands implemented",
-  (for own command, options of Commands.availableCommands
-    do (command, options) ->
-      if options.background
-        should "#{command} (background command)", ->
-          # TODO: Import background_scripts/main.js and expose BackgroundCommands from there.
-          # assert.isTrue BackgroundCommands[command]
-      else
-        should "#{command} (foreground command)", ->
-          assert.isTrue NormalModeCommands[command]
-  )...
+# NOTE(philc): Disabling this weird test.
+# context "Commands implemented",
+#   (for own command, options of Commands.availableCommands
+#     do (command, options) ->
+#       if options.background
+#         should "#{command} (background command)", ->
+#           # TODO: Import background_scripts/main.js and expose BackgroundCommands from there.
+#           # assert.isTrue BackgroundCommands[command]
+#       else
+#         should "#{command} (foreground command)", ->
+#           assert.isTrue NormalModeCommands[command]
+#   )...

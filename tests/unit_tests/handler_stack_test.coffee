@@ -10,6 +10,7 @@ context "handlerStack",
     @handlerStack = new HandlerStack
     @handler1Called = false
     @handler2Called = false
+    return null
 
   should "bubble events", ->
     @handlerStack.push { keydown: => @handler1Called = true }
@@ -17,6 +18,7 @@ context "handlerStack",
     @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isTrue @handler1Called
+    return null
 
   should "terminate bubbling on falsy return value", ->
     @handlerStack.push { keydown: => @handler1Called = true }
@@ -24,6 +26,7 @@ context "handlerStack",
     @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
+    return null
 
   should "terminate bubbling on passEventToPage, and be true", ->
     @handlerStack.push { keydown: => @handler1Called = true }
@@ -31,6 +34,7 @@ context "handlerStack",
     assert.isTrue @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
+    return null
 
   should "terminate bubbling on passEventToPage, and be false", ->
     @handlerStack.push { keydown: => @handler1Called = true }
@@ -38,6 +42,7 @@ context "handlerStack",
     assert.isFalse @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
+    return null
 
   should "restart bubbling on restartBubbling", ->
     @handler1Called = 0
@@ -47,6 +52,7 @@ context "handlerStack",
     assert.isTrue @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler1Called == 1
     assert.isTrue @handler2Called == 2
+    return null
 
   should "remove handlers correctly", ->
     @handlerStack.push { keydown: => @handler1Called = true }
@@ -55,6 +61,7 @@ context "handlerStack",
     @handlerStack.bubbleEvent 'keydown', {}
     assert.isFalse @handler2Called
     assert.isTrue @handler1Called
+    return null
 
   should "remove handlers correctly", ->
     handlerId = @handlerStack.push { keydown: => @handler1Called = true }
@@ -63,6 +70,7 @@ context "handlerStack",
     @handlerStack.bubbleEvent 'keydown', {}
     assert.isTrue @handler2Called
     assert.isFalse @handler1Called
+    return null
 
   should "handle self-removing handlers correctly", ->
     ctx = this
@@ -75,3 +83,4 @@ context "handlerStack",
     assert.isTrue @handler2Called
     assert.isTrue @handler1Called
     assert.equal @handlerStack.stack.length, 1
+    return null

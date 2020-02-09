@@ -81,7 +81,9 @@ exports.chrome =
 
     # chrome.storage.onChanged
     onChanged:
-      addListener: (func) -> @func = func
+      addListener: (func) ->
+        @func = func
+        return null
 
       # Fake a callback from chrome.storage.sync.
       call: (key, value) ->
@@ -96,6 +98,7 @@ exports.chrome =
           items = {}
           items[key] = {}
           @func(items,'sync')
+        return null
 
     session:
       MAX_SESSION_RESULTS: 25
@@ -112,6 +115,7 @@ exports.chrome =
         # Now, generate (supposedly asynchronous) notifications for listeners.
         for own key, value of items
           global.chrome.storage.onChanged.call(key,value)
+        return null
 
       get: (keys, callback) ->
         chrome.runtime.lastError = undefined
@@ -132,3 +136,4 @@ exports.chrome =
         callback() if callback
         # Now, generate (supposedly asynchronous) notification for listeners.
         global.chrome.storage.onChanged.callEmpty(key)
+        return null
