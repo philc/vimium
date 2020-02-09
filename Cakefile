@@ -136,6 +136,12 @@ runUnitTests = (projectDir=".", testNameFilter) ->
   return Tests.testsFailed
 
 option '', '--filter-tests [string]', 'filter tests by matching string'
+task "test-unit", "run unit tests", (options) ->
+  unitTestsFailed = runUnitTests('.', options['filter-tests'])
+  if unitTestsFailed > 0
+      process.exit 1
+
+option '', '--filter-tests [string]', 'filter tests by matching string'
 task "test", "run all tests", (options) ->
   unitTestsFailed = runUnitTests('.', options['filter-tests'])
 
