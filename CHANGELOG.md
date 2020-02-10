@@ -1,3 +1,7 @@
+1.65.1 (2020-02-09)
+
+- Fix an issue with the HUD preventing some link hints from being shown (#3486).
+
 1.65 (2020-02-08)
 
 - Many fixes for Firefox ([#3483](https://github.com/philc/vimium/pull/3483),
