@@ -70,7 +70,8 @@ Vimium is written in Coffeescript, which compiles to Javascript. To
 install Vimium from source:
 
  1. Install [Coffeescript v1](http://coffeescript.org/#installation) (`npm install --global coffeescript@~1`).
- 1. Run `cake build` from within your vimium directory. Any coffeescript files you change will now be automatically compiled to Javascript.
+ 1. Run `./make.js build` from within your vimium directory. Any coffeescript files you change will now be
+    automatically compiled to Javascript.
 
 **On Chrome/Chromium:**
 
@@ -99,7 +100,7 @@ After that:
 
 ### Development tips
 
- 1. Run `cake autobuild` to watch for changes to coffee files, and have the .js files automatically
+ 1. Run `./make.js autobuild` to watch for changes to coffee files, and have the .js files automatically
     regenerated
 
 ### Running the tests
@@ -110,19 +111,8 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and [PhantomJS](
  1. Install [PhantomJS](http://phantomjs.org/download.html).
  1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by the test runner.
  1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
- 1. `cake build` to compile `*.coffee` to `*.js`
- 1. `cake test` to run the tests.
-
-### Code Coverage
-
-You can find out which portions of code need them by looking at our coverage reports. To generate these
-reports:
-
- 1. Download [JSCoverage](https://siliconforks.com/jscoverage/download.html) or `brew install jscoverage`
- 1. `npm install temp`
- 1. `cake coverage` will generate a coverage report in the form of a JSON file (`jscoverage.json`), which can
-    then be viewed using [jscoverage-report](https://github.com/int3/jscoverage-report).  See
-    jscoverage-report's [README](https://github.com/int3/jscoverage-report#jscoverage-report) for more details.
+ 1. `./make.js build` to compile `*.coffee` to `*.js`
+ 1. `./make.js test` to run the tests.
 
 ### Coding Style
 

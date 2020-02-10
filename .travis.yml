@@ -6,8 +6,8 @@ before_install:
   - npm install path@0.11
   - npm install util
   - npm install -g phantomjs@1.9.20
-  - cake build
-script: cake test
+  - ./make.js build
+script: ./make.js test
 notifications:
   email: false
 branches:
