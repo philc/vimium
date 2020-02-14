@@ -14,9 +14,20 @@ HUD =
   # test harness to tweak these styles to match Chrome's. One limitation of our HUD display is that
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
-  init: ->
+  init: (focusable = true) ->
     @hudUI ?= new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) => this[data.name]? data
     @tween ?= new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
+    if focusable
+      @hudUI.toggleIframeElementClasses "vimiumNonClickable", "vimiumClickable"
+      # Note(gdh1995): Chrome 74 only acknowledges text selection when a frame has been visible. See more in #3277.
+      # Note(mrmr1993): Show the HUD frame, so Firefox will actually perform the paste.
+      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
+      # Force the re-computation of styles, so Chrome sends a visibility change message to the child frame.
+      # See https://github.com/philc/vimium/pull/3277#issuecomment-487363284
+      getComputedStyle(@hudUI.iframeElement).display
+    else
+      @hudUI.toggleIframeElementClasses "vimiumClickable", "vimiumNonClickable"
+
 
   showForDuration: (text, duration) ->
     @show(text)
@@ -24,7 +35,8 @@ HUD =
 
   show: (text) ->
     DomUtils.documentComplete =>
-      @init()
+      # @hudUI.activate will take charge of making it visible
+      @init false
       clearTimeout(@_showForDurationTimerId)
       @hudUI.activate {name: "show", text}
       @tween.fade 1.0, 150
@@ -32,7 +44,6 @@ HUD =
   showFindMode: (@findMode = null) ->
     DomUtils.documentComplete =>
       @init()
-      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @hudUI.activate name: "showFindMode"
       @tween.fade 1.0, 150
 
@@ -92,15 +103,11 @@ HUD =
   copyToClipboard: (text) ->
     DomUtils.documentComplete =>
       @init()
-      # Chrome 74 only acknowledges text selection when a frame has been visible. See more in #3277 .
-      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @hudUI.postMessage {name: "copyToClipboard", data: text}
 
   pasteFromClipboard: (@pasteListener) ->
     DomUtils.documentComplete =>
       @init()
-      # Show the HUD frame, so Firefox will actually perform the paste.
-      @hudUI.toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
       @tween.fade 0, 0
       @hudUI.postMessage {name: "pasteFromClipboard"}
 
