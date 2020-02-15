@@ -6,7 +6,6 @@
 content_scripts/*.js
 background_scripts/*.js
 lib/*.js
-tests/dom_tests/*.js
 pages/*.js
 options/*.js
 node_modules/*
