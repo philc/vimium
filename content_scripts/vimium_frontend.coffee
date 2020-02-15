@@ -79,7 +79,8 @@ class GrabBackFocus extends Mode
     return @continueBubbling unless DomUtils.isFocusable element
     unless @logged or element == document.body
       @logged = true
-      console.log "An auto-focusing action on this page was blocked by Vimium."
+      unless window.vimiumDomTestsAreRunning
+        console.log "An auto-focusing action on this page was blocked by Vimium."
     element.blur()
     @suppressEvent
 
