@@ -31,8 +31,11 @@ function spawn(procName, optArray, silent = false, sync = false) {
 
 // Compile coffeescript into javascript.
 function build() {
-  coffee = spawn("coffee", ["-c", __dirname])
-  coffee.on("exit", (exitCode) => process.exit(exitCode))
+  coffee = spawn("coffee", ["-c", __dirname], false, true)
+  if (coffee.status != 0) {
+    console.log("Build failed. Coffee exited with status", coffee.status);
+    process.exit(coffee.status);
+  }
 }
 
 // Builds a zip file for submission to the Chrome store. The output is in dist/.
