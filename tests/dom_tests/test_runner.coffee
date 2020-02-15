@@ -7,8 +7,9 @@ Tests.outputMethod = (args...) ->
   document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>"
   console.log.apply console, args
 
-# PhantomJS will call the tests manually
-unless navigator.userAgent == 'phantom'
+# Puppeteer will call the tests manually
+unless navigator.userAgent.includes("HeadlessChrome")
+  console.log "we're not in headless chrome"
   # ensure the extension has time to load before commencing the tests
   document.addEventListener "DOMContentLoaded", ->
     setTimeout Tests.run, 200

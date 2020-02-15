@@ -89,17 +89,28 @@ function runUnitTests() {
   return Tests.run();
 }
 
-// Requires running phantomjs. Returns true if all tests pass; false otherwise.
-// TODO(philc): return a promise.
+// Returns how many tests fail.
 function runDomTests() {
-  console.log("Running DOM tests...")
-  phantom = spawn("phantomjs", ["./tests/dom_tests/phantom_runner.js"]);
-  phantom.on("exit", (returnCode) => {
-    if (returnCode > 0)
-      process.exit(1)
-    else
-      process.exit(0)
-  });
+  const puppeteer = require("puppeteer");
+
+  const testFile = path.join(__dirname, "tests/dom_tests/dom_tests.html");
+
+  (async () => {
+    const browser = await puppeteer.launch({
+      // NOTE(philc): "Disabling web security" is required for vomnibar_test.js, because we have a file://
+      // page accessing an iframe, and Chrome prevents this because it's a cross-origin request.
+      args: ['--disable-web-security']
+    });
+    const page = await browser.newPage();
+    page.on("console", msg => console.log(msg.text()));
+    await page.goto("file://" + testFile);
+    const testsFailed = await page.evaluate(() => {
+      Tests.run();
+      return Tests.testsFailed;
+    });
+    await browser.close();
+    return testsFailed;
+  })();
 }
 
 // Prints the list of valid commands.
@@ -125,8 +136,9 @@ command(
   "test",
   "Run all tests",
   () => {
-    const failed = runUnitTests() > 0;
-    runDomTests();
+    build();
+    let failed = runUnitTests();
+    failed += runDomTests();
     if (failed > 0)
       Process.exit(1);
   });
@@ -135,6 +147,7 @@ command(
   "test-unit",
   "Run unit tests",
   () => {
+    build();
     const failed = runUnitTests() > 0;
     if (failed > 0)
       Process.exit(1);
@@ -143,7 +156,12 @@ command(
 command(
   "test-dom",
   "Run DOM tests",
-  runDomTests);
+  () => {
+    build();
+    const failed = runDomTests();
+    if (failed > 0)
+      Process.exit(1);
+  });
 
 command(
   "autobuild",
