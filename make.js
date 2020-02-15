@@ -3,7 +3,6 @@
 // This is a set of tasks for building and testing Vimium in development.
 
 fs = require("fs");
-path = require("path");
 child_process = require("child_process");
 
 // Spawns a new process and returns it.
@@ -79,7 +78,7 @@ function buildStorePackage() {
 function runUnitTests() {
   console.log("Running unit tests...")
   projectDir = "."
-  basedir = path.join(projectDir, "/tests/unit_tests/")
+  basedir = projectDir + "/tests/unit_tests/";
   test_files = fs.readdirSync(basedir).filter((filename) => filename.indexOf("_test.js") > 0)
   test_files = test_files.map((filename) => basedir + filename)
   test_files.forEach((file) => {
@@ -93,7 +92,7 @@ function runUnitTests() {
 function runDomTests() {
   const puppeteer = require("puppeteer");
 
-  const testFile = path.join(__dirname, "tests/dom_tests/dom_tests.html");
+  const testFile = __dirname + "/tests/dom_tests/dom_tests.html";
 
   (async () => {
     const browser = await puppeteer.launch({

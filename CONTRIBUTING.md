@@ -110,11 +110,8 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 
  1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. Install [Puppeteer](https://github.com/puppeteer/puppeteer)
- 1. `npm install path@0.11` to install the [Node.js Path module](https://nodejs.org/api/path.html), used by
-    the test runner.
  1. `npm install util` to install the [util module](https://www.npmjs.com/package/util), used by the tests.
- 1. `./make.js build` to compile `*.coffee` to `*.js`
- 1. `./make.js test` to run the tests.
+ 1. `./make.js test` to build the code and run the tests.
 
 ### Coding Style
 
