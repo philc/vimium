@@ -1,12 +1,3 @@
-window.vimiumDomTestsAreRunning = true
-
-# Install frontend event handlers.
-HUD.init()
-Frame.registerFrameId chromeFrameId: 0
-
-getSelection = ->
-  window.getSelection().toString()
-
 commandName = commandCount = null
 
 # Some tests have side effects on the handler stack and the active mode, so these are reset on setup.  Also,
@@ -29,9 +20,6 @@ initializeModeState = ->
 
 # Tell Settings that it's been loaded.
 Settings.isLoaded = true
-
-# Shoulda.js doesn't support async code, so we try not to use any.
-Utils.nextTick = (func) -> func()
 
 #
 # Retrieve the hint markers as an array object.
