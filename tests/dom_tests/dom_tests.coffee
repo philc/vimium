@@ -330,8 +330,10 @@ context "Filtered link hints",
 
     setup ->
       initializeModeState()
-      testContent = "<a><img alt='alt text'/></a><a><img alt='alt text' title='some title'/></a>
-        <a><img title='some title'/></a>" + "<a><img src='' width='320px' height='100px'/></a>"
+      testContent = "<a><img alt='alt text' width='10px' height='10px'/></a>" +
+        "<a><img alt='alt text' title='some title' width='10px' height='10px'/></a>" +
+        "<a><img title='some title' width='10px' height='10px'/></a>" +
+        "<a><img src='' width='320px' height='100px'/></a>"
       document.getElementById("test-div").innerHTML = testContent
       @linkHints = activateLinkHintsMode()
 
