@@ -78,7 +78,7 @@ function buildStorePackage() {
 function runUnitTests() {
   console.log("Running unit tests...")
   projectDir = "."
-  basedir = projectDir + "/tests/unit_tests/";
+  basedir = __dirname + "/tests/unit_tests/";
   test_files = fs.readdirSync(basedir).filter((filename) => filename.indexOf("_test.js") > 0)
   test_files = test_files.map((filename) => basedir + filename)
   test_files.forEach((file) => {
