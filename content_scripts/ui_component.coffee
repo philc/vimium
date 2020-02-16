@@ -32,7 +32,9 @@ class UIComponent
         className: className
         seamless: "seamless"
       shadowWrapper = DomUtils.createElement "div"
-      # PhantomJS doesn't support createShadowRoot, so guard against its non-existance.
+      # Firefox doesn't support createShadowRoot, so guard against its non-existance.
+      # https://hacks.mozilla.org/2018/10/firefox-63-tricks-and-treats/ says
+      # Firefox 63 has enabled Shadow DOM v1 by default
       @shadowDOM = shadowWrapper.attachShadow?( mode: "open" ) ?
         shadowWrapper.createShadowRoot?() ? shadowWrapper
       @shadowDOM.appendChild styleSheet
