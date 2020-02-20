@@ -41,48 +41,48 @@
           <table>
             <tr>
               <td>
-                <span id="vimiumTitle" class="vimiumReset"><span class="vimiumReset" style="color:#2f508e">Vim</span>ium <span id="help-dialog-title"></span></span>
+                <span id="vimiumTitle"><span style="color:#2f508e">Vim</span>ium <span id="help-dialog-title"></span></span>
               </td>
               <td class="vimiumHelpDialogTopButtons">
-                <a class="vimiumReset vimiumHelDialogLink" id="helpDialogOptionsPage" href="#">Options</a>
-                <a class="vimiumReset vimiumHelDialogLink" id="helpDialogWikiPage" href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
-                <a class="vimiumReset closeButton" href="#">&times;</a>
+                <a class="vimiumHelDialogLink" id="helpDialogOptionsPage" href="#">Options</a>
+                <a class="vimiumHelDialogLink" id="helpDialogWikiPage" href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
+                <a class="closeButton" href="#">&times;</a>
               </td>
             </tr>
           </table>
         </div>
-        <div class="vimiumReset vimiumDivider"></div>
-        <div class="vimiumReset vimiumColumn">
-          <table class="vimiumReset">
-            <thead class="vimiumReset">
-              <tr class="vimiumReset" ><td class="vimiumReset"></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating the page</td></tr>
+        <div class="vimiumDivider"></div>
+        <div class="vimiumColumn">
+          <table>
+            <thead>
+              <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating the page</td></tr>
             </thead>
-            <tbody id="help-dialog-pageNavigation" class="vimiumReset">
+            <tbody id="help-dialog-pageNavigation">
             </tbody>
           </table>
         </div>
-        <div class="vimiumReset vimiumColumn">
-          <table class="vimiumReset" >
-            <thead class="vimiumReset">
-            <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using the vomnibar</td></tr>
+        <div class="vimiumColumn">
+          <table >
+            <thead>
+            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Using the vomnibar</td></tr>
             </thead>
-            <tbody class="vimiumReset" id="help-dialog-vomnibarCommands"></tbody>
-            <thead class="vimiumReset">
-            <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Using find</td></tr>
+            <tbody id="help-dialog-vomnibarCommands"></tbody>
+            <thead>
+            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Using find</td></tr>
             </thead>
-            <tbody class="vimiumReset" id="help-dialog-findCommands"></tbody>
-            <thead class="vimiumReset">
-            <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Navigating history</td></tr>
+            <tbody id="help-dialog-findCommands"></tbody>
+            <thead>
+            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating history</td></tr>
             </thead>
-            <tbody class="vimiumReset" id="help-dialog-historyNavigation"></tbody>
-            <thead class="vimiumReset">
-            <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Manipulating tabs</td></tr>
+            <tbody id="help-dialog-historyNavigation"></tbody>
+            <thead>
+            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Manipulating tabs</td></tr>
             </thead>
-            <tbody class="vimiumReset" id="help-dialog-tabManipulation"></tbody>
-            <thead class="vimiumReset">
-            <tr class="vimiumReset" ><td class="vimiumReset" ></td><td class="vimiumReset" ></td><td class="vimiumReset vimiumHelpSectionTitle">Miscellaneous</td></tr>
+            <tbody id="help-dialog-tabManipulation"></tbody>
+            <thead>
+            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Miscellaneous</td></tr>
             </thead>
-            <tbody class="vimiumReset" id="help-dialog-misc"></tbody>
+            <tbody id="help-dialog-misc"></tbody>
           </table>
         </div>
 
@@ -100,18 +100,18 @@
         </div>
 
         <br clear="both"/>
-        <div class="vimiumReset vimiumDivider"></div>
+        <div class="vimiumDivider"></div>
 
-        <div id="vimiumHelpDialogFooter" class="vimiumReset">
-          <div class="vimiumReset vimiumColumn">
+        <div id="vimiumHelpDialogFooter">
+          <div class="vimiumColumn">
             Enjoying Vimium?
             <a class="vimiumHelDialogLink" target="_blank"
               href="https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb/reviews">Leave us
                   feedback</a>.<br/>
             Found a bug? <a class="vimiumHelDialogLink" target="_blank" href="https://github.com/philc/vimium/issues">Report it here</a>.
           </div>
-          <div class="vimiumReset vimiumColumn" style="text-align:right">
-            <span class="vimiumReset">Version <span id="help-dialog-version"></span></span><br/>
+          <div class="vimiumColumn" style="text-align:right">
+            <span>Version <span id="help-dialog-version"></span></span><br/>
             <a href="https://github.com/philc/vimium/blob/master/CHANGELOG.md" target="_blank" class="vimiumHelDialogLink">What's new?</a>
           </div>
         </div>
@@ -120,23 +120,23 @@
 
 
     <template id="helpDialogEntry">
-      <tr class="vimiumReset">
-        <td class="vimiumReset vimiumKeyBindings"></td>
-        <td class="vimiumReset"></td>
-        <td class="vimiumReset vimiumHelpDescription"></td>
+      <tr>
+        <td class="vimiumKeyBindings"></td>
+        <td></td>
+        <td class="vimiumHelpDescription"></td>
       </tr>
     </template>
 
     <template id="helpDialogEntryBindingsOnly">
       <tr>
-        <td class="vimiumReset vimiumKeyBindings" colspan="3" style="text-align: left"></td>
+        <td class="vimiumKeyBindings" colspan="3" style="text-align: left"></td>
       </tr>
     </template>
 
     <template id="keysTemplate"><span><span class="vimiumHelpDialogKey"></span><span class="commaSeparator">, </span></span></template>
 
     <template id="commandNameTemplate">
-      <span class="vimiumReset vimiumCopyCommandName">(<span class="vimiumCopyCommandNameName" role="link"></span>)</span>
+      <span class="vimiumCopyCommandName">(<span class="vimiumCopyCommandNameName" role="link"></span>)</span>
     </template>
   </body>
 </html>
