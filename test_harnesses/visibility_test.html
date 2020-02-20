@@ -54,7 +54,7 @@
         'description': 'Is visible and displayed',
         'test': function(element) {
           var computedStyle = window.getComputedStyle(element, null);
-          if (computedStyle.getPropertyValue('visibility') != 'visible' || 
+          if (computedStyle.getPropertyValue('visibility') != 'visible' ||
               computedStyle.getPropertyValue('display') == 'none')
               return false;
            return true;
@@ -99,7 +99,7 @@
       td.innerHTML = text;
       return td;
     }
-    
+
     function checkDivsForVisibility() {
       var table = document.getElementById("resultsDisplay");
       var tr = document.getElementsByTagName("tr")[0];
@@ -142,7 +142,7 @@
 
   <div id='testContainer' style='position: absolute; top: 0; left:0'>
     <span class='testElement' data-expectedresult=1 data-comment="default">test</span>
-    
+
     <span class='testElement' data-expectedresult=0 style="visibility:hidden" data-comment="visibility: hidden">test</span>
 
     <div style="visibility:hidden">
@@ -163,10 +163,10 @@
     <div class='testElement' data-expectedresult=1 data-comment="Contains only a floated span. We must recurse into the div to find it.">
       <span style="float: left">test</span>
     </div>
-    <svg> 
+    <svg>
       <a class='testElement' data-expectedresult=1 xlink:href='http://www.example.com/' data-comment="This link is contained within an SVG.">
         <text x='0' y='68'>test</text>
-      </a> 
+      </a>
     </svg>
   </div>
 </html>
