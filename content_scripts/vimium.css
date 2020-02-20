@@ -330,7 +330,7 @@ iframe.vimiumHUDFrame {
   right: 20px;
   margin: 0 0 0 -40%;
   border: none;
-  z-index: 2149999998; /* Two less than the reference value. */
+  z-index: 2139999998; /* Two less than the reference value. */
   opacity: 0;
 }
 
@@ -407,7 +407,7 @@ iframe.vomnibarFrame {
   margin: 0 0 0 -40%;
   border: none;
   font-family: sans-serif;
-  z-index: 2149999998; /* Two less than the reference value. */
+  z-index: 2139999998; /* Two less than the reference value. */
 }
 
 div.vimiumFlash {
@@ -429,4 +429,8 @@ iframe.vimiumUIComponentVisible {
 
 iframe.vimiumUIComponentReactivated {
   border: 5px solid yellow;
+}
+
+iframe.vimiumNonClickable {
+  pointer-events: none;
 }

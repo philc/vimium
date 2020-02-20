@@ -10,11 +10,6 @@ class UIComponent
     @iframeElement.classList.remove removeClass
     unless @iframeElement.classList.contains addClass
       @iframeElement.classList.add addClass
-      if addClass == "vimiumUIComponentVisible"
-        # Force the re-computation of styles, so Chrome sends a visibility change message to the child frame.
-        # This is required to solve focusing issues since Chrome 74. See
-        # https://github.com/philc/vimium/pull/3277#issuecomment-487363284
-        getComputedStyle(@iframeElement).display
 
   constructor: (iframeUrl, className, @handleMessage) ->
     DomUtils.documentReady =>

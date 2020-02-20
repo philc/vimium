@@ -413,8 +413,9 @@ DomUtils =
     if not node?
       return null
     if node == sel.anchorNode and sel.focusOffset == sel.anchorOffset
-      # The selection either *is* an element, or is inside an opaque element (eg. <input>).
-      node = node.childNodes[sel.focusOffset]
+      # If the selection is not a caret inside a `#text`, which has no child nodes,
+      # then it either *is* an element, or is inside an opaque element (eg. <input>).
+      node = node.childNodes[sel.focusOffset] || node
     if node.nodeType != Node.ELEMENT_NODE then node.parentElement else node
 
   # Get the element in the DOM hierachy that contains `element`.
