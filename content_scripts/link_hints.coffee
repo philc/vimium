@@ -637,8 +637,8 @@ LocalHints =
           visibleElements.push areasAndRects...
 
     # Check aria properties to see if the element should be ignored.
-    if (element.getAttribute("aria-hidden")?.toLowerCase() in ["", "true"] or
-        element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
+    # Note that we're showing hints for elements with aria-hidden=true. See #3501 for discussion.
+    if (element.getAttribute("aria-disabled")?.toLowerCase() in ["", "true"])
       return [] # This element should never have a link hint.
 
     # Check for AngularJS listeners on the element.
