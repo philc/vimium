@@ -1,10 +1,10 @@
 1.65.2 (2020-02-10)
 
-- No code changes; trying to debug a permissions issue as shown in the chrome store (#3489).
+- No code changes; trying to debug a permissions issue as shown in the chrome store ([#3489](https://github.com/philc/vimium/issues/3489)).
 
 1.65.1 (2020-02-09)
 
-- Fix an issue with the HUD preventing some link hints from being shown (#3486).
+- Fix an issue with the HUD preventing some link hints from being shown ([#3486](https://github.com/philc/vimium/issues/3486)).
 
 1.65 (2020-02-08)
 
