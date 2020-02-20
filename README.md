@@ -3,20 +3,19 @@ Vimium - The Hacker's Browser
 
 [![Build Status](https://travis-ci.org/philc/vimium.svg?branch=master)](https://travis-ci.org/philc/vimium)
 
-Vimium is a Chrome extension that provides keyboard-based navigation and control of the web in the spirit of
+Vimium is a browser extension that provides keyboard-based navigation and control of the web in the spirit of
 the Vim editor.
 
 __Installation instructions:__
 
-You can install the stable version of Vimium from the
-[Chrome Extensions Gallery](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb).
+Install via the
+[Chrome web store](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb) or
+the [Firefox Addons site](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ff/).
 
-Please see
-[CONTRIBUTING.md](CONTRIBUTING.md#installing-from-source)
-for instructions on how you can install Vimium from source.
+To install from source, see [here](CONTRIBUTING.md#installing-from-source).
 
-The Options page can be reached via a link on the help dialog (type `?`) or via the button next to Vimium on
-the Chrome Extensions page (`chrome://extensions`).
+Vimium's Options page can be reached via a link on the help dialog (type `?`) or via the button next to Vimium
+on the extension pages of Chrome (`chrome://extensions`) or Firefox (`about:addons`).
 
 Keyboard Bindings
 -----------------
@@ -157,20 +156,12 @@ see the [FAQ](https://github.com/philc/vimium/wiki/FAQ).
 
 Contributing
 ------------
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-Firefox Support
----------------
-
-There is an *experimental* port of Vimium on Firefox [here](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ff/).
-This is very much experimental: most features work, although some bugs and issues remain.
-
-PRs are welcome.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 Release Notes
 -------------
 
-Read about the major changes in each release [here](CHANGELOG.md).
+See [CHANGELOG](CHANGELOG.md) for the major changes in each release.
 
 License
 -------
