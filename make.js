@@ -49,8 +49,8 @@ function buildStorePackage() {
   spawn("mkdir", ["-p", "dist/chrome-canary"], false, true);
   spawn("mkdir", ["-p", "dist/firefox"], false, true);
 
-  const blacklist = [".*", "*.coffee", "*.md", "reference", "test_harnesses", "tests", "dist", "git_hooks",
-                     "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile"];
+  const blacklist = [".*", "*.coffee", "*.md", "test_harnesses", "tests", "dist", "CREDITS", "node_modules",
+                     "MIT-LICENSE.txt", "package-lock.json", "make.js"];
   const rsyncOptions = [].concat.apply(
     ["-r", ".", "dist/vimium"],
     blacklist.map((item) => ["--exclude", item]));
