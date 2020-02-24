@@ -44,6 +44,9 @@ function buildStorePackage() {
 
   spawn("rm", ["-rf", "dist/vimium"], false, true);
   spawn("mkdir", ["-p", "dist/vimium"], false, true);
+  spawn("mkdir", ["-p", "dist/chrome-store"], false, true);
+  spawn("mkdir", ["-p", "dist/chrome-canary"], false, true);
+  spawn("mkdir", ["-p", "dist/firefox"], false, true);
 
   const blacklist = [".*", "*.coffee", "*.md", "reference", "test_harnesses", "tests", "dist", "git_hooks",
                      "CREDITS", "node_modules", "MIT-LICENSE.txt", "Cakefile"];
@@ -59,18 +62,18 @@ function buildStorePackage() {
   // Build the Chrome Store package; this does not require the clipboardWrite permission.
   manifest.permissions = manifest.permissions.filter((p) => p != "clipboardWrite");
   fs.writeFileSync(distManifest, JSON.stringify(manifest, null, 2));
-  spawn("zip", ["-r", `dist/vimium-chrome-store-${vimiumVersion}.zip`, "dist/vimium"], false, true);
+  spawn("zip", ["-r", `dist/chrome-store/vimium-chrome-store-${vimiumVersion}.zip`, "dist/vimium"], false, true);
 
   // Build the Chrome Store dev package.
   manifest.name = "Vimium Canary";
   manifest.description = "This is the development branch of Vimium (it is beta software).";
   fs.writeFileSync(distManifest, JSON.stringify(manifest, null, 2));
-  spawn("zip", ["-r", `dist/vimium-canary-${vimiumVersion}.zip`, "dist/vimium"], false, true);
+  spawn("zip", ["-r", `dist/chrome-canary/vimium-canary-${vimiumVersion}.zip`, "dist/vimium"], false, true);
 
   // Build Firefox release.
-  const args = "-r -FS dist/vimium-ff-${vimium_version}.zip background_scripts Cakefile " +
-        "content_scripts CONTRIBUTING.md CREDITS icons lib manifest.json MIT-LICENSE.txt pages README.md" +
-        "-x *.coffee -x Cakefile -x CREDITS -x *.md";
+  const args = `-r -FS dist/firefox/vimium-firefox-${vimiumVersion}.zip background_scripts Cakefile ` +
+        `content_scripts CONTRIBUTING.md CREDITS icons lib manifest.json MIT-LICENSE.txt pages README.md` +
+        `-x *.coffee -x Cakefile -x CREDITS -x *.md`;
   spawn("zip", args.split(/\s+/), false, true);
 }
 
