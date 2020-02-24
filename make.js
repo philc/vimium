@@ -39,8 +39,9 @@ function build() {
 
 // Builds a zip file for submission to the Chrome store. The output is in dist/.
 function buildStorePackage() {
-  const vimiumVersion = JSON.parse(fs.readFileSync("manifest.json").toString())["version"]
   build();
+
+  const vimiumVersion = JSON.parse(fs.readFileSync("manifest.json").toString())["version"]
 
   spawn("rm", ["-rf", "dist/vimium"], false, true);
   spawn("mkdir", ["-p", "dist/vimium"], false, true);
@@ -59,23 +60,27 @@ function buildStorePackage() {
   const distManifest = "dist/vimium/manifest.json";
   const manifest = JSON.parse(fs.readFileSync(distManifest).toString());
 
+  // cd into "dist/vimium" before building the zip, so that the files in the zip don't each have the
+  // path prefix "dist/vimium".
+  // --filesync ensures that files in the archive which are no longer on disk are deleted. It's equivalent to
+  // removing the zip file before the build.
+  const zipCommand = "cd dist/vimium && zip -r --filesync ";
+
+  // Build the Firefox package first, because afterwards, we modify the manifest.json for the Chrome packages.
+  spawn("bash", ["-c", zipCommand + `../firefox/vimium-firefox-${vimiumVersion}.zip .`], false, true);
+
   // Build the Chrome Store package; this does not require the clipboardWrite permission.
   manifest.permissions = manifest.permissions.filter((p) => p != "clipboardWrite");
   fs.writeFileSync(distManifest, JSON.stringify(manifest, null, 2));
-  spawn("zip", ["-r", `dist/chrome-store/vimium-chrome-store-${vimiumVersion}.zip`, "dist/vimium"], false, true);
+  spawn("bash", ["-c", zipCommand + `../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`], false, true);
 
   // Build the Chrome Store dev package.
   manifest.name = "Vimium Canary";
   manifest.description = "This is the development branch of Vimium (it is beta software).";
   fs.writeFileSync(distManifest, JSON.stringify(manifest, null, 2));
-  spawn("zip", ["-r", `dist/chrome-canary/vimium-canary-${vimiumVersion}.zip`, "dist/vimium"], false, true);
-
-  // Build Firefox release.
-  const args = `-r -FS dist/firefox/vimium-firefox-${vimiumVersion}.zip background_scripts Cakefile ` +
-        `content_scripts CONTRIBUTING.md CREDITS icons lib manifest.json MIT-LICENSE.txt pages README.md` +
-        `-x *.coffee -x Cakefile -x CREDITS -x *.md`;
-  spawn("zip", args.split(/\s+/), false, true);
+  spawn("bash", ["-c", zipCommand + `../chrome-canary/vimium-canary-${vimiumVersion}.zip .`], false, true);
 }
+
 
 // Returns how many tests failed.
 function runUnitTests() {
