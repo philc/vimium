@@ -54,6 +54,7 @@ KeyboardUtils =
       modifiers.push "a" if event.altKey
       modifiers.push "c" if event.ctrlKey
       modifiers.push "m" if event.metaKey
+      modifiers.push "s" if event.shiftKey and keyChar.length > 1
 
       keyChar = [modifiers..., keyChar].join "-"
       keyChar = "<#{keyChar}>" if 1 < keyChar.length

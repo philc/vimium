@@ -62,7 +62,7 @@ Commands =
   # We sort modifiers here to match the order used in keyboard_utils.coffee.
   # The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
   parseKeySequence: do ->
-    modifier = "(?:[acm]-)"                             # E.g. "a-", "c-", "m-".
+    modifier = "(?:[acms]-)"                            # E.g. "a-", "c-", "m-", "s-".
     namedKey = "(?:[a-z][a-z0-9]+)"                     # E.g. "left" or "f12" (always two characters or more).
     modifiedKey = "(?:#{modifier}+(?:.|#{namedKey}))"   # E.g. "c-*" or "c-left".
     specialKeyRegexp = new RegExp "^<(#{namedKey}|#{modifiedKey})>(.*)", "i"
