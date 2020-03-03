@@ -1,7 +1,7 @@
 1.66 (2020-03-02)
 
 - Show tabs in the Vomnibar bar search results ('o') ([#2656](https://github.com/philc/vimium/pull/2656))
-- Add commands to hover or focus a link ([#3097](https://github.com/philc/vimium/pull/3097))
+- Add commands to hover or focus a link ([#3097](https://github.com/philc/vimium/pull/3097)) (see [wiki)](https://github.com/philc/vimium/wiki/Tips-and-Tricks#hovering-over-links-using-linkhints)
 - Allow shift as a modifier for keybindings (e.g. `<s-left>`) ([#2388](https://github.com/philc/vimium/pull/2388))
 - Fix some issues with link hints [(#3499](https://github.com/philc/vimium/pull/3499),
   [#3505](https://github.com/philc/vimium/pull/3505), [#3509](https://github.com/philc/vimium/pull/3509))
