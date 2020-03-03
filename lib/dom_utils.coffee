@@ -155,7 +155,7 @@ DomUtils =
   # Get the client rects for the <area> elements in a <map> based on the position of the <img> element using
   # the map. Returns an array of rects.
   #
-  getClientRectsForAreas: (imgClientRect, areas) ->
+  getClientRectsForAreas: (imgClientRect, areas, imgElement) ->
     rects = []
     for area in areas
       coords = area.coords.split(",").map((coord) -> parseInt(coord, 10))
@@ -179,7 +179,7 @@ DomUtils =
       rect = Rect.translate (Rect.create x1, y1, x2, y2), imgClientRect.left, imgClientRect.top
       rect = @cropRectToVisible rect
 
-      rects.push {element: area, rect: rect} if rect and not isNaN rect.top
+      rects.push {element: area, rect: rect, image: imgElement} if rect and not isNaN rect.top
     rects
 
   #

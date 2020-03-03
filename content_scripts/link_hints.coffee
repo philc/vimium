@@ -658,7 +658,7 @@ LocalHints =
         map = document.querySelector "map[name=\"#{mapName}\"]"
         if map and imgClientRects.length > 0
           areas = map.getElementsByTagName "area"
-          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas
+          areasAndRects = DomUtils.getClientRectsForAreas imgClientRects[0], areas, element
           visibleElements.push areasAndRects...
 
     # Check aria properties to see if the element should be ignored.
@@ -851,6 +851,11 @@ LocalHints =
       # Check middle of element first, as this is perhaps most likely to return true.
       elementFromMiddlePoint = LocalHints.getElementFromPoint(rect.left + (rect.width * 0.5), rect.top + (rect.height * 0.5))
       if elementFromMiddlePoint && (element.contains(elementFromMiddlePoint) or elementFromMiddlePoint.contains(element))
+        nonOverlappingElements.push visibleElement
+        continue
+      if elementFromMiddlePoint && element.localName == "area" && elementFromMiddlePoint == visibleElement.image
+        # Sometimes root.elementsFromPoint returns the bound <img> instead of an <area>, see #3493
+        # Note: This ignores covering among a group of <area>s, which should have very little impact
         nonOverlappingElements.push visibleElement
         continue
 
