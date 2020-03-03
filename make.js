@@ -110,6 +110,8 @@ function runDomTests() {
     });
     const page = await browser.newPage();
     page.on("console", msg => console.log(msg.text()));
+    page.on("error", (err) => console.log(err));
+    page.on("pageerror", (err) => console.log(err));
     await page.goto("file://" + testFile);
     const testsFailed = await page.evaluate(() => {
       Tests.run();
