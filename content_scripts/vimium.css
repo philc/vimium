@@ -434,33 +434,3 @@ iframe.vimiumUIComponentReactivated {
 iframe.vimiumNonClickable {
   pointer-events: none;
 }
-
-/* Dark mode CSS.
- * This is activated when the user's system theme is set to dark. */
-@media (prefers-color-scheme: dark) {
-  body.themedBackground {
-    background-color: #242424;
-    filter: sepia(5%) invert(90%);
-  }
-
-  iframe.vomnibarFrame, iframe.vimiumHelpDialogFrame, iframe.vimiumHUDFrame {
-    filter: sepia(5%) invert(90%);
-  }
-
-  div#vomnibar, div#vimiumHelpDialogContainer, div.vimiumHUD {
-    box-shadow: 0px 2px 10px white;
-  }
-
-  img.vomnibarIcon {
-    filter: invert(100%);
-  }
-
-  /* Workaround a disapearing HUD when dark mode is enabled. See
-   * https://github.com/philc/vimium/pull/3402#issuecomment-586647791 */
-  @-moz-document url-prefix() {
-    div.vimiumHUD {
-      position: inherit;
-    }
-  }
-
-}
