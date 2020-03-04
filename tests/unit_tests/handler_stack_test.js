@@ -81,8 +81,8 @@ context("handlerStack",
   }),
 
   should("remove handlers correctly", () => {
-    this.handlerStack.push({ keydown: () => { return this.handler1Called = true; } });
-    const handlerId = this.handlerStack.push({ keydown: () => { return this.handler2Called = true; } });
+    this.handlerStack.push({ keydown: () => { this.handler1Called = true; } });
+    const handlerId = this.handlerStack.push({ keydown: () => { this.handler2Called = true; } });
     this.handlerStack.remove(handlerId);
     this.handlerStack.bubbleEvent('keydown', {});
     assert.isFalse(this.handler2Called);
@@ -90,8 +90,8 @@ context("handlerStack",
   }),
 
   should("remove handlers correctly", () => {
-    const handlerId = this.handlerStack.push({ keydown: () => { return this.handler1Called = true; } });
-    this.handlerStack.push({ keydown: () => { return this.handler2Called = true; } });
+    const handlerId = this.handlerStack.push({ keydown: () => { this.handler1Called = true; } });
+    this.handlerStack.push({ keydown: () => { this.handler2Called = true; } });
     this.handlerStack.remove(handlerId);
     this.handlerStack.bubbleEvent('keydown', {});
     assert.isTrue(this.handler2Called);
@@ -100,10 +100,11 @@ context("handlerStack",
 
   should("handle self-removing handlers correctly", () => {
     const ctx = this;
-    this.handlerStack.push({ keydown: () => { return this.handler1Called = true; } });
+    this.handlerStack.push({ keydown: () => { this.handler1Called = true; } });
     this.handlerStack.push({ keydown() {
       ctx.handler2Called = true;
-      return this.remove();
+      this.remove();
+      return true;
     }
     });
     this.handlerStack.bubbleEvent('keydown', {});

@@ -86,6 +86,7 @@ class HandlerStack
         handler.id = null
         @stack.splice(i, 1)
         break
+    return
 
   # The handler stack handles chrome events (which may need to be suppressed) and internal (pseudo) events.
   # This checks whether the event at hand is a chrome event.
@@ -115,15 +116,18 @@ class HandlerStack
           when true then "continue"
       label ||= if result then "continue/truthy" else "suppress"
       console.log "#{eventNumber}", type, handler._name, label
+    return
 
   show: ->
     console.log "#{@eventNumber}:"
     for handler in @stack[..].reverse()
       console.log "  ", handler._name
+    return
 
   # For tests only.
   reset: ->
     @stack = []
+    return
 
 root.HandlerStack = HandlerStack
 root.handlerStack = new HandlerStack()
