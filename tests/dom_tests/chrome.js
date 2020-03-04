@@ -8,7 +8,7 @@
 // Mock the Chrome extension API.
 //
 
-const root = typeof exports !== 'undefined' && exports !== null ? exports : window;
+let root = typeof exports !== 'undefined' && exports !== null ? exports : window;
 root.chromeMessages = [];
 
 document.hasFocus = () => true;
