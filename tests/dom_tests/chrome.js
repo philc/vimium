@@ -54,6 +54,7 @@ root.chrome = {
   },
   extension: {
     inIncognitoContext: false,
-    getURL(url) { return chrome.runtime.getURL(url); }
+    getURL(url) { return chrome.runtime.getURL(url); },
+    getBackgroundPage() { return null; }
   }
 };

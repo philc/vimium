@@ -1,36 +1,47 @@
 # Only pass events to the handler if they are marked as trusted by the browser.
 # This is kept in the global namespace for brevity and ease of use.
 window.forTrusted ?= (handler) -> (event) ->
-  if event?.isTrusted
-    handler.apply this, arguments
+  if event && event.isTrusted
+    return handler.apply this, arguments
   else
-    true
+    return true
+  return
 
-browserInfo = browser?.runtime?.getBrowserInfo?()
+# TODO(philc): The comment below about its usage doesn't make sense to me. Can we replace this with
+# window.navigator?
+browserInfo = null
+if window.browser && browser.runtime && browser.runtime.getBrowserInfo
+  browserInfo = browser.runtime.getBrowserInfo()
+
 
 Utils =
   isFirefox: do ->
     # NOTE(mrmr1993): This test only works in the background page, this is overwritten by isEnabledForUrl for
     # content scripts, and the "settings" message from UIComponent is for pages like HUD.
     isFirefox = false
-    browserInfo?.then? (browserInfo) ->
-      isFirefox = browserInfo?.name == "Firefox"
+    if browserInfo
+      browserInfo.then (browserInfo) ->
+        isFirefox = browserInfo.name == "Firefox"
     -> isFirefox
   firefoxVersion: do ->
     # NOTE(mrmr1993): This only works in the background page.
     ffVersion = undefined
-    browserInfo?.then? (browserInfo) ->
-      ffVersion = browserInfo?.version
+    if browserInfo
+      browserInfo.then (browserInfo) ->
+        ffVersion = browserInfo?.version
     -> ffVersion
   getCurrentVersion: ->
     chrome.runtime.getManifest().version
 
   # Returns true whenever the current page (or the page supplied as an argument) is from the extension's
   # origin (and thus can access the extension's localStorage).
-  isExtensionPage: (win = window) -> try win.document.location?.origin + "/" == chrome.extension.getURL ""
+  isExtensionPage: (win = window) ->
+    try
+      win.document.location?.origin + "/" == chrome.extension.getURL("")
 
   # Returns true whenever the current page is the extension's background page.
-  isBackgroundPage: -> @isExtensionPage() and chrome.extension.getBackgroundPage?() == window
+  isBackgroundPage: ->
+    @isBackgroundPage && chrome.extension.getBackgroundPage() == window
 
   # Escape all special characters, so RegExp will parse the string 'as is'.
   # Taken from http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
@@ -46,11 +57,8 @@ Utils =
     -> id += 1
 
   hasChromePrefix: do ->
-    chromePrefixes = [ "about:", "view-source:", "extension:", "chrome-extension:", "data:" ]
-    (url) ->
-      for prefix in chromePrefixes
-        return true if url.startsWith prefix
-      false
+    chromePrefixes = ["about:", "view-source:", "extension:", "chrome-extension:", "data:"]
+    (url) -> return chromePrefixes.some((prefix) => url.startsWith(prefix))
 
   hasJavascriptPrefix: (url) ->
     url.startsWith "javascript:"
@@ -151,7 +159,7 @@ Utils =
         return null unless 0 <= url.indexOf suffix
       # We use try/catch because decodeURIComponent can throw an exception.
       try
-          url[searchUrl.length..].split(queryTerminator)[0].split("+").map(decodeURIComponent).join " "
+        url[searchUrl.length..].split(queryTerminator)[0].split("+").map(decodeURIComponent).join " "
       catch
         null
 
@@ -176,15 +184,15 @@ Utils =
 
   # Transform "zjkjkabz" into "abjkz".
   distinctCharacters: (str) ->
-    chars = str.split("").sort()
-    (ch for ch, index in chars when index == 0 or ch != chars[index-1]).join ""
+    chars = str.split("")
+    Array.from(new Set(chars)).sort().join("")
 
   # Compares two version strings (e.g. "1.1" and "1.5") and returns
   # -1 if versionA is < versionB, 0 if they're equal, and 1 if versionA is > versionB.
   compareVersions: (versionA, versionB) ->
     versionA = versionA.split(".")
     versionB = versionB.split(".")
-    for i in [0...(Math.max(versionA.length, versionB.length))]
+    for i in [0...(Math.max(versionA.length, versionB.length))] by 1
       a = parseInt(versionA[i] || 0, 10)
       b = parseInt(versionB[i] || 0, 10)
       if (a < b)
@@ -195,8 +203,9 @@ Utils =
 
   # True if the current Chrome version is at least the required version.
   haveChromeVersion: (required) ->
-    chromeVersion = navigator.appVersion.match(/Chrom(e|ium)\/(.*?) /)?[2]
-    chromeVersion and 0 <= Utils.compareVersions chromeVersion, required
+    match = navigator.appVersion.match(/Chrom(e|ium)\/(.*?) /)
+    chromeVersion = if match then match[2] else null
+    return chromeVersion and 0 <= Utils.compareVersions(chromeVersion, required)
 
   # Zip two (or more) arrays:
   #   - Utils.zip([ [a,b], [1,2] ]) returns [ [a,1], [b,2] ]
@@ -204,7 +213,7 @@ Utils =
   #   - Adapted from: http://stackoverflow.com/questions/4856717/javascript-equivalent-of-pythons-zip-function
   zip: (arrays) ->
     arrays[0].map (_,i) ->
-      arrays.map( (array) -> array[i] )
+      arrays.map((array) -> array[i])
 
   # locale-sensitive uppercase detection
   hasUpperCase: (s) -> s.toLowerCase() != s
@@ -223,14 +232,17 @@ Utils =
 
   # Make an idempotent function.
   makeIdempotent: (func) ->
-    (args...) -> ([previousFunc, func] = [func, null])[0]? args...
+    (args...) ->
+      result = ([previousFunc, func] = [func, null])[0]
+      if result
+        result(args...)
 
   monitorChromeStorage: (key, setter) ->
-    # NOTE: "?" here for the tests.
-    chrome?.storage.local.get key, (obj) =>
+    chrome.storage.local.get key, (obj) =>
       setter obj[key] if obj[key]?
       chrome.storage.onChanged.addListener (changes, area) =>
-        setter changes[key].newValue if changes[key]?.newValue?
+        if changes[key] && changes[key].newValue != undefined
+          setter changes[key].newValue
 
 # This creates a new function out of an existing function, where the new function takes fewer arguments. This
 # allows us to pass around functions instead of functions + a partial list of arguments.
@@ -241,8 +253,9 @@ Function::curry = ->
 
 Array.copy = (array) -> Array.prototype.slice.call(array, 0)
 
-String::startsWith = (str) -> @indexOf(str) == 0
+# TODO(philc): Replace everywhere with string.trimStart
 String::ltrim = -> @replace /^\s+/, ""
+# TODO(philc): Replace everywhere with string.trimEnd
 String::rtrim = -> @replace /\s+$/, ""
 String::reverse = -> @split("").reverse().join ""
 
@@ -293,6 +306,7 @@ class SimpleCache
         @lastRotation = new Date()
         @previous = @cache
         @cache = {}
+    return
 
   clear: ->
     @rotate true
@@ -309,6 +323,7 @@ class AsyncDataFetcher
       fetch (@data) =>
         callback @data for callback in @queue
         @queue = null
+    return
 
   use: (callback) ->
     if @data? then callback @data else @queue.push callback
@@ -324,6 +339,8 @@ class JobRunner
             job =>
               @jobs = @jobs.filter (j) -> j != job
               callback true if @jobs.length == 0
+          null
+    return
 
   onReady: (callback) ->
     @fetcher.use callback
