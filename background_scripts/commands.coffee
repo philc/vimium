@@ -5,7 +5,7 @@ Commands =
 
   init: ->
     for own command, [description, options] of commandDescriptions
-      @availableCommands[command] = extend (options ? {}), description: description
+      @availableCommands[command] = extend (options || {}), description: description
 
     Settings.postUpdateHooks["keyMappings"] = @loadKeyMappings.bind this
     @loadKeyMappings Settings.get "keyMappings"
@@ -14,8 +14,10 @@ Commands =
     @keyToCommandRegistry = {}
     @mapKeyRegistry = {}
 
+    # TODO(philc):
     configLines = ("map #{key} #{command}" for own key, command of defaultKeyMappings)
     configLines.push BgUtils.parseLines(customKeyMappings)...
+
     seen = {}
     unmapAll = false
     for line in configLines.reverse()
@@ -48,8 +50,10 @@ Commands =
     # mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
     # in insert mode they expect the character to be input, not to be droppped into some special Vimium
     # mode.
-    Settings.set "passNextKeyKeys",
-      (key for own key of @keyToCommandRegistry when @keyToCommandRegistry[key].command == "passNextKey" and 1 < key.length)
+    passNextKeys = Object.keys(@keyToCommandRegistry)
+      .filter((key) => @keyToCommandRegistry[key].command == "passNextKey" && key.length > 1)
+    Settings.set "passNextKeyKeys", passNextKeys
+    return
 
   # Lower-case the appropriate portions of named keys.
   #
@@ -73,9 +77,9 @@ Commands =
       else if 0 == key.search specialKeyRegexp
         [modifiers..., keyChar] = RegExp.$1.split "-"
         keyChar = keyChar.toLowerCase() unless keyChar.length == 1
-        modifiers = (modifier.toLowerCase() for modifier in modifiers)
+        modifiers = modifiers.map((m) => m.toLowerCase())
         modifiers.sort()
-        ["<#{[modifiers..., keyChar].join '-'}>", @parseKeySequence(RegExp.$2)...]
+        ["<" + modifiers.concat([keyChar]).join("-") + ">", @parseKeySequence(RegExp.$2)...]
       else
         [key[0], @parseKeySequence(key[1..])...]
 
@@ -116,6 +120,7 @@ Commands =
     # Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it is by
     # default).
     chrome.storage.local.set useVimLikeEscape: "<c-[>" not of keyStateMapping
+    return
 
   # Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.
   prepareHelpPageData: ->
@@ -132,6 +137,7 @@ Commands =
           keys: commandToKey[command] ? []
           advanced: command in @advancedCommands
     chrome.storage.local.set helpPageData: commandGroups
+    return
 
   # An ordered listing of all available commands, grouped by type. This is the order they will
   # be shown in the help page.
