@@ -1,43 +1,51 @@
 root = exports ? window
 
+TIME_DELTA = 500 # Milliseconds.
+
 # TabRecency associates a logical timestamp with each tab id.  These are used to provide an initial
 # recency-based ordering in the tabs vomnibar (which allows jumping quickly between recently-visited tabs).
 class TabRecency
-  timestamp: 1
-  current: -1
-  cache: {}
-  lastVisited: null
-  lastVisitedTime: null
-  timeDelta: 500 # Milliseconds.
 
   constructor: ->
+    @timestamp = 1
+    @current = -1
+    @cache = {}
+    @lastVisited = null
+    @lastVisitedTime = null
+
     chrome.tabs.onActivated.addListener (activeInfo) => @register activeInfo.tabId
     chrome.tabs.onRemoved.addListener (tabId) => @deregister tabId
 
     chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) =>
       @deregister removedTabId
       @register addedTabId
+      return
 
     chrome.windows?.onFocusChanged.addListener (wnd) =>
       if wnd != chrome.windows.WINDOW_ID_NONE
         chrome.tabs.query {windowId: wnd, active: true}, (tabs) =>
           @register tabs[0].id if tabs[0]
+          return
+       return
+    return
 
   register: (tabId) ->
     currentTime = new Date()
     # Register tabId if it has been visited for at least @timeDelta ms.  Tabs which are visited only for a
     # very-short time (e.g. those passed through with `5J`) aren't registered as visited at all.
-    if @lastVisitedTime? and @timeDelta <= currentTime - @lastVisitedTime
+    if @lastVisitedTime? and TIME_DELTA <= currentTime - @lastVisitedTime
       @cache[@lastVisited] = ++@timestamp
 
     @current = @lastVisited = tabId
     @lastVisitedTime = currentTime
+    return
 
   deregister: (tabId) ->
     if tabId == @lastVisited
       # Ensure we don't register this tab, since it's going away.
       @lastVisited = @lastVisitedTime = null
     delete @cache[tabId]
+    return
 
   # Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore: (tabId) ->
@@ -46,7 +54,7 @@ class TabRecency
 
   # Returns a list of tab Ids sorted by recency, most recent tab first.
   getTabsByRecency: ->
-    tabIds = (tId for own tId of @cache)
+    tabIds = Object.keys(this.cache || {})
     tabIds.sort (a,b) => @cache[b] - @cache[a]
     tabIds.map (tId) -> parseInt tId
 
@@ -59,7 +67,7 @@ BgUtils =
     console.log "Vimium logging URL:\n  #{loggingPageUrl}" if loggingPageUrl? # Do not output URL for tests.
     # For development, it's sometimes useful to automatically launch the logging page on reload.
     chrome.windows.create url: loggingPageUrl, focused: false if localStorage.autoLaunchLoggingPage
-    (message, sender = null) ->
+    return (message, sender = null) ->
       for viewWindow in chrome.extension.getViews {type: "tab"}
         if viewWindow.location.pathname == "/pages/logging.html"
           # Don't log messages from the logging page itself.  We do this check late because most of the time
@@ -76,14 +84,15 @@ BgUtils =
             logElement = viewWindow.document.getElementById "log-text"
             logElement.value += "#{dateString}: #{message}\n"
             logElement.scrollTop = 2000000000
+      return
 
   # Remove comments and leading/trailing whitespace from a list of lines, and merge lines where the last
   # character on the preceding line is "\".
   parseLines: (text) ->
-    for line in text.replace(/\\\n/g, "").split("\n").map((line) -> line.trim())
-      continue if line.length == 0
-      continue if line[0] in '#"'
-      line
+    text.replace(/\\\n/g, "")
+      .split("\n")
+      .map((line) -> line.trim())
+      .filter((line) -> line.length > 0 && !(line[0] in '#"'))
 
   escapedEntities: '"': "&quots;", '&': "&amp;", "'": "&apos;", "<": "&lt;", ">": "&gt;"
   escapeAttribute: (string) -> string.replace /["&'<>]/g, (char) -> BgUtils.escapedEntities[char]
@@ -109,15 +118,21 @@ SearchEngines =
               engines[keyword] = {keyword, searchUrl, description}
 
         callback engines
+        return
+    return
 
   # Use the parsed search-engine configuration, possibly asynchronously.
   use: (callback) ->
     @searchEngines.use callback
+    return
 
   # Both set (refresh) the search-engine configuration and use it at the same time.
   refreshAndUse: (searchEngines, callback) ->
     @refresh searchEngines
     @use callback
+    return
+
+BgUtils.TIME_DELTA = TIME_DELTA # Referenced by our tests.
 
 root.SearchEngines = SearchEngines
 root.BgUtils = BgUtils

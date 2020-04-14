@@ -537,7 +537,7 @@ context("TabRecency",
 
     fakeTimeDeltaElapsing = () => {
       if (this.tabRecency.lastVisitedTime != null) {
-        this.tabRecency.lastVisitedTime = new Date(this.tabRecency.lastVisitedTime - this.tabRecency.timeDelta);
+        this.tabRecency.lastVisitedTime = new Date(this.tabRecency.lastVisitedTime - BgUtils.TIME_DELTA);
       }
     };
 
