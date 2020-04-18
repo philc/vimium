@@ -9,9 +9,10 @@
 #  - filter(query, onComplete): "query" will be whatever the user typed into the Vomnibox.
 #  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of bookmarks).
 #  - cancel(): (optional) cancels any pending, cancelable action.
-class Suggestion
-  showRelevancy: false # Set this to true to render relevancy when debugging the ranking scores.
 
+showRelevancy = false # Set this to true to render relevancy when debugging the ranking scores.
+
+class Suggestion
   constructor: (@options) ->
     # Required options.
     @queryTerms = null
@@ -35,17 +36,19 @@ class Suggestion
     # Other options set by individual completers include:
     # - tabId (TabCompleter)
     # - isSearchSuggestion, customSearchMode (SearchEngineCompleter)
-
     extend this, @options
 
+  # Returns the relevancy score.
   computeRelevancy: ->
     # We assume that, once the relevancy has been set, it won't change.  Completers must set either @relevancy
     # or @relevancyFunction.
-    @relevancy ?= @relevancyFunction this
+    unless @relevancy?
+      @relevancy = @relevancyFunction(this)
+    return @relevancy
 
   generateHtml: (request) ->
     return @html if @html
-    relevancyHtml = if @showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
+    relevancyHtml = if showRelevancy then "<span class='relevancy'>#{@computeRelevancy()}</span>" else ""
     insertTextClass = if @insertText then "vomnibarInsertText" else "vomnibarNoInsertText"
     insertTextIndicator = "&#8618;" # A right hooked arrow.
     @title = @insertText if @insertText and request.isCustomSearch
@@ -75,6 +78,7 @@ class Suggestion
           #{relevancyHtml}
         </div>
         """
+    return @html
 
   # Use neat trick to snatch a domain (http://stackoverflow.com/a/8498668).
   getUrlRoot: (url) ->
@@ -92,7 +96,7 @@ class Suggestion
     url
 
   # Push the ranges within `string` which match `term` onto `ranges`.
-  pushMatchingRanges: (string,term,ranges) ->
+  pushMatchingRanges: (string ,term ,ranges) ->
     textPosition = 0
     # Split `string` into a (flat) list of pairs:
     #   - for i=0,2,4,6,...
@@ -112,6 +116,7 @@ class Suggestion
       textPosition += unmatchedText.length
       ranges.push([textPosition, textPosition + matchedText.length])
       textPosition += matchedText.length
+    return
 
   # Wraps each occurence of the query terms in the given string in a <span>.
   highlightQueryTerms: (string) ->
@@ -154,34 +159,12 @@ class Suggestion
     return @shortUrl if @shortUrl?
     # We get easier-to-read shortened URLs if we URI-decode them.
     url = (Utils.decodeURIByParts(@url) || @url).toLowerCase()
-    for [ filter, replacements ] in @stripPatterns
+    for [ filter, replacements ] in Suggestion.stripPatterns
       if new RegExp(filter).test url
         for replace in replacements
           url = url.replace replace, ""
     @shortUrl = url
-
-  # Patterns to strip from URLs; of the form [ [ filter, replacements ], [ filter, replacements ], ... ]
-  #   - filter is a regexp string; a URL must match this regexp first.
-  #   - replacements (itself a list) is a list of regexp objects, each of which is removed from URLs matching
-  #     the filter.
-  #
-  # Note. This includes site-specific patterns for very-popular sites with URLs which don't work well in the
-  # vomnibar.
-  #
-  stripPatterns: [
-    # Google search specific replacements; this replaces query parameters which are known to not be helpful.
-    # There's some additional information here: http://www.teknoids.net/content/google-search-parameters-2012
-    [ "^https?://www\\.google\\.(com|ca|com\\.au|co\\.uk|ie)/.*[&?]q="
-      "ei gws_rd url ved usg sa usg sig2 bih biw cd aqs ie sourceid es_sm"
-        .split(/\s+/).map (param) -> new RegExp "\&#{param}=[^&]+" ]
-
-    # On Google maps, we get a new history entry for every pan and zoom event.
-    [ "^https?://www\\.google\\.(com|ca|com\\.au|co\\.uk|ie)/maps/place/.*/@"
-      [ new RegExp "/@.*" ] ]
-
-    # General replacements; replaces leading and trailing fluff.
-    [ '.', [ "^https?://", "\\W+$" ].map (re) -> new RegExp re ]
-  ]
+    return @shortUrl
 
   # Boost a relevancy score by a factor (in the range (0,1.0)), while keeping the score in the range [0,1].
   # This makes greater adjustments to scores near the middle of the range (so, very poor relevancy scores
@@ -189,32 +172,62 @@ class Suggestion
   @boostRelevancyScore: (factor, score) ->
     score + if score < 0.5 then score * factor else (1.0 - score) * factor
 
+# Patterns to strip from URLs; of the form [ [ filter, replacements ], [ filter, replacements ], ... ]
+#   - filter is a regexp string; a URL must match this regexp first.
+#   - replacements (itself a list) is a list of regexp objects, each of which is removed from URLs matching
+#     the filter.
+#
+# Note. This includes site-specific patterns for very-popular sites with URLs which don't work well in the
+# vomnibar.
+#
+Suggestion.stripPatterns = [
+  # Google search specific replacements; this replaces query parameters which are known to not be helpful.
+  # There's some additional information here: http://www.teknoids.net/content/google-search-parameters-2012
+  [ "^https?://www\\.google\\.(com|ca|com\\.au|co\\.uk|ie)/.*[&?]q="
+    "ei gws_rd url ved usg sa usg sig2 bih biw cd aqs ie sourceid es_sm"
+      .split(/\s+/).map (param) -> new RegExp "\&#{param}=[^&]+" ]
+
+  # On Google maps, we get a new history entry for every pan and zoom event.
+  [ "^https?://www\\.google\\.(com|ca|com\\.au|co\\.uk|ie)/maps/place/.*/@"
+    [ new RegExp "/@.*" ] ]
+
+  # General replacements; replaces leading and trailing fluff.
+  [ '.', [ "^https?://", "\\W+$" ].map (re) -> new RegExp re ]
+]
+
+
+folderSeparator= "/"
+
+# If these names occur as top-level bookmark names, then they are not included in the names of bookmark folders.
+ignoredTopLevelBookmarks =
+  'Other Bookmarks': true
+  'Mobile Bookmarks': true
+  'Bookmarks Bar': true
+
+# this.bookmarks are loaded asynchronously when refresh() is called.
 class BookmarkCompleter
-  folderSeparator: "/"
-  currentSearch: null
-  # These bookmarks are loaded asynchronously when refresh() is called.
-  bookmarks: null
 
   filter: ({ @queryTerms }, @onComplete) ->
     @currentSearch = { queryTerms: @queryTerms, onComplete: @onComplete }
     @performSearch() if @bookmarks
 
-  onBookmarksLoaded: -> @performSearch() if @currentSearch
+  onBookmarksLoaded: ->
+    @performSearch() if @currentSearch
+    return
 
   performSearch: ->
-    # If the folder separator character the first character in any query term, then we'll use the bookmark's full path as its title.
-    # Otherwise, we'll just use the its regular title.
-    usePathAndTitle = @currentSearch.queryTerms.reduce ((prev,term) => prev || term.indexOf(@folderSeparator) == 0), false
-    results =
-      if @currentSearch.queryTerms.length > 0
-        @bookmarks.filter (bookmark) =>
-          suggestionTitle = if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
-          bookmark.hasJavascriptPrefix ?= Utils.hasJavascriptPrefix bookmark.url
-          bookmark.shortUrl ?= "javascript:..." if bookmark.hasJavascriptPrefix
-          suggestionUrl = bookmark.shortUrl ? bookmark.url
-          RankingUtils.matches(@currentSearch.queryTerms, suggestionUrl, suggestionTitle)
-      else
-        []
+    # If the folder separator character the first character in any query term, then we'll use the bookmark's
+    # full path as its title. Otherwise, we'll just use the its regular title.
+    usePathAndTitle = @currentSearch.queryTerms.reduce ((prev,term) => prev || term.startsWith(folderSeparator)), false
+    if @currentSearch.queryTerms.length > 0
+      results = @bookmarks.filter (bookmark) =>
+        suggestionTitle = if usePathAndTitle then bookmark.pathAndTitle else bookmark.title
+        bookmark.hasJavascriptPrefix ?= Utils.hasJavascriptPrefix bookmark.url
+        bookmark.shortUrl ?= "javascript:..." if bookmark.hasJavascriptPrefix
+        suggestionUrl = bookmark.shortUrl ? bookmark.url
+        RankingUtils.matches(@currentSearch.queryTerms, suggestionUrl, suggestionTitle)
+    else
+      results = []
     suggestions = results.map (bookmark) =>
       new Suggestion
         queryTerms: @currentSearch.queryTerms
@@ -226,19 +239,15 @@ class BookmarkCompleter
         deDuplicate: not bookmark.shortUrl?
     onComplete = @currentSearch.onComplete
     @currentSearch = null
-    onComplete suggestions
+    onComplete(suggestions)
+    return
 
   refresh: ->
     @bookmarks = null
     chrome.bookmarks.getTree (bookmarks) =>
       @bookmarks = @traverseBookmarks(bookmarks).filter((bookmark) -> bookmark.url?)
       @onBookmarksLoaded()
-
-  # If these names occur as top-level bookmark names, then they are not included in the names of bookmark folders.
-  ignoreTopLevel:
-    'Other Bookmarks': true
-    'Mobile Bookmarks': true
-    'Bookmarks Bar': true
+    return
 
   # Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
   traverseBookmarks: (bookmarks) ->
@@ -249,13 +258,13 @@ class BookmarkCompleter
 
   # Recursive helper for `traverseBookmarks`.
   traverseBookmarksRecursive: (bookmark, results, parent={pathAndTitle:""}) ->
-    bookmark.pathAndTitle =
-      if bookmark.title and not (parent.pathAndTitle == "" and @ignoreTopLevel[bookmark.title])
-        parent.pathAndTitle + @folderSeparator + bookmark.title
-      else
-        parent.pathAndTitle
+    if bookmark.title and not (parent.pathAndTitle == "" and ignoredTopLevelBookmarks[bookmark.title])
+      bookmark.pathAndTitle = parent.pathAndTitle + folderSeparator + bookmark.title
+    else
+      bookmark.pathAndTitle = parent.pathAndTitle
     results.push bookmark
     bookmark.children.forEach((child) => @traverseBookmarksRecursive child, results, bookmark) if bookmark.children
+    return
 
   computeRelevancy: (suggestion) ->
     RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.shortUrl ? suggestion.url, suggestion.title)
@@ -268,12 +277,11 @@ class HistoryCompleter
       Utils.nextTick -> HistoryCache.use ->
     else
       HistoryCache.use (history) =>
-        results =
-          if 0 < queryTerms.length
-            history.filter (entry) -> RankingUtils.matches queryTerms, entry.url, entry.title
-          else
-            # The user has typed <Tab> to open the entire history (sorted by recency).
-            history
+        if 0 < queryTerms.length
+          results = history.filter (entry) -> RankingUtils.matches queryTerms, entry.url, entry.title
+        else
+          # The user has typed <Tab> to open the entire history (sorted by recency).
+          results = history
         onComplete results.map (entry) =>
           new Suggestion
             queryTerms: queryTerms
@@ -282,6 +290,8 @@ class HistoryCompleter
             title: entry.title
             relevancyFunction: @computeRelevancy
             relevancyData: entry
+        return
+    return
 
   computeRelevancy: (suggestion) ->
     historyEntry = suggestion.relevancyData
@@ -295,11 +305,12 @@ class HistoryCompleter
 # The domain completer is designed to match a single-word query which looks like it is a domain. This supports
 # the user experience where they quickly type a partial domain, hit tab -> enter, and expect to arrive there.
 class DomainCompleter
-  # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
-  #  - `entry` is the most recently accessed page in the History within this domain.
-  #  - `referenceCount` is a count of the number of History entries within this domain.
-  #     If `referenceCount` goes to zero, the domain entry can and should be deleted.
-  domains: null
+  constructor: () ->
+    # A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
+    # - `entry` is the most recently accessed page in the History within this domain.
+    # - `referenceCount` is a count of the number of History entries within this domain.
+    #    If `referenceCount` goes to zero, the domain entry can and should be deleted.
+    @domains = null
 
   filter: ({ queryTerms, query }, onComplete) ->
     # Do not offer completions if the query is empty, or if the user has finished typing the first word.
@@ -308,10 +319,11 @@ class DomainCompleter
       @performSearch(queryTerms, onComplete)
     else
       @populateDomains => @performSearch(queryTerms, onComplete)
+    return
 
   performSearch: (queryTerms, onComplete) ->
     query = queryTerms[0]
-    domains = (domain for own domain of @domains when 0 <= domain.indexOf query)
+    domains = Object.keys(@domains || []).filter((d) => d.includes(query))
     domains = @sortDomainsByRelevancy queryTerms, domains
     onComplete [
       new Suggestion
@@ -320,15 +332,16 @@ class DomainCompleter
         url: domains[0]?[0] ? "" # This is the URL or an empty string, but not null.
         relevancy: 2.0
       ].filter (s) -> 0 < s.url.length
+    return
 
   # Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy: (queryTerms, domainCandidates) ->
-    results =
-      for domain in domainCandidates
-        recencyScore = RankingUtils.recencyScore(@domains[domain].entry.lastVisitTime || 0)
-        wordRelevancy = RankingUtils.wordRelevancy queryTerms, domain, null
-        score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
-        [domain, score]
+    results = []
+    for domain in domainCandidates
+      recencyScore = RankingUtils.recencyScore(@domains[domain].entry.lastVisitTime || 0)
+      wordRelevancy = RankingUtils.wordRelevancy queryTerms, domain, null
+      score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2
+      results.push [domain, score]
     results.sort (a, b) -> b[1] - a[1]
     results
 
@@ -339,6 +352,7 @@ class DomainCompleter
       chrome.history.onVisited.addListener(@onPageVisited.bind(this))
       chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       onComplete()
+    return
 
   onPageVisited: (newPage) ->
     domain = @parseDomainAndScheme newPage.url
@@ -347,6 +361,7 @@ class DomainCompleter
       # We want each entry in our domains hash to point to the most recent History entry for that domain.
       slot.entry = newPage if slot.entry.lastVisitTime < newPage.lastVisitTime
       slot.referenceCount += 1
+    return
 
   onVisitRemoved: (toRemove) ->
     if toRemove.allHistory
@@ -356,10 +371,11 @@ class DomainCompleter
         domain = @parseDomainAndScheme url
         if domain and @domains[domain] and ( @domains[domain].referenceCount -= 1 ) == 0
           delete @domains[domain]
+    return
 
   # Return something like "http://www.example.com" or false.
   parseDomainAndScheme: (url) ->
-      Utils.hasFullUrlPrefix(url) and not Utils.hasChromePrefix(url) and url.split("/",3).join "/"
+    Utils.hasFullUrlPrefix(url) and not Utils.hasChromePrefix(url) and url.split("/",3).join "/"
 
 # Searches through all open tabs, matching on title and URL.
 class TabCompleter
@@ -392,7 +408,9 @@ class TabCompleter
       suggestions.forEach (suggestion,i) ->
         suggestion.relevancy *= 8
         suggestion.relevancy /= ( i / 4 + 1 )
-      onComplete suggestions
+      onComplete(suggestions)
+      return
+    return
 
   computeRelevancy: (suggestion) ->
     if suggestion.queryTerms.length
@@ -401,18 +419,21 @@ class TabCompleter
       BgUtils.tabRecency.recencyScore(suggestion.tabId)
 
 class SearchEngineCompleter
-  @debug: false
   previousSuggestions: null
+
+  constructor: ->
+    @previousSuggestions = null
 
   cancel: ->
     CompletionSearch.cancel()
+    return
 
   # This looks up the custom search engine and, if one is found, notes it and removes its keyword from the
   # query terms.
   preprocessRequest: (request) ->
     SearchEngines.use (engines) =>
       { queryTerms, query } = request
-      extend request, searchEngines: engines, keywords: key for own key of engines
+      extend request, searchEngines: engines, keywords: Object.keys(engines)
       keyword = queryTerms[0]
       # Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
       if keyword and engines[keyword] and (1 < queryTerms.length or /\S\s/.test query)
@@ -421,6 +442,7 @@ class SearchEngineCompleter
           keyword: keyword
           engine: engines[keyword]
           isCustomSearch: true
+    return
 
   refresh: (port) ->
     @previousSuggestions = {}
@@ -430,7 +452,9 @@ class SearchEngineCompleter
       # avoids an ugly delay/flicker).
       port.postMessage
         handler: "keywords"
-        keywords: key for own key of engines
+        keywords: Object.keys(engines)
+      return
+    return
 
   filter: (request, onComplete) ->
     { queryTerms, query, engine } = request
@@ -447,6 +471,7 @@ class SearchEngineCompleter
     filter = (suggestions) ->
       # We only keep suggestions which either *were* generated by this search engine, or *could have
       # been* generated by this search engine (and match the current query).
+      # TODO(philc): convert to map
       for suggestion in suggestions
         if suggestion.isSearchSuggestion or suggestion.isCustomSearch
           suggestion
@@ -460,10 +485,10 @@ class SearchEngineCompleter
     # return it for the current query).  This allows the user to pick suggestions that they've previously seen
     # by typing fragments of their text, without regard to whether the completion engine can continue to
     # complete the actual text of the query.
-    previousSuggestions =
-      if queryTerms.length == 0
-        []
-      else
+    if queryTerms.length == 0
+      previousSuggestions = []
+    else
+      previousSuggestions =
         for own _, suggestion of @previousSuggestions[searchUrl]
           continue unless RankingUtils.matches queryTerms, suggestion.title
           # Reset various fields, they may not be correct wrt. the current query.
@@ -515,12 +540,14 @@ class SearchEngineCompleter
     else
       # Post the initial suggestions, but then deliver any further completions asynchronously, as a
       # continuation.
+      # TODO(philc): remove some returns
       onComplete suggestions,
         filter: filter
         continuation: (onComplete) =>
           CompletionSearch.complete searchUrl, queryTerms, (suggestions = []) =>
             console.log "fetched suggestions:", suggestions.length, query if SearchEngineCompleter.debug
             onComplete suggestions.map mkSuggestion
+    return
 
   computeRelevancy: ({ relevancyData, queryTerms, title }) ->
     # Tweaks:
@@ -532,7 +559,7 @@ class SearchEngineCompleter
 
   postProcessSuggestions: (request, suggestions) ->
     return unless request.searchEngines
-    engines = (engine for own _, engine of request.searchEngines)
+    engines = Object.values(request.searchEngines)
     engines.sort (a,b) -> b.searchUrl.length - a.searchUrl.length
     engines.push keyword: null, description: "search history", searchUrl: Settings.get "searchUrl"
     for suggestion in suggestions
@@ -544,15 +571,20 @@ class SearchEngineCompleter
             suggestion.customSearchMode = engine.keyword
             suggestion.title ||= suggestion.insertText
             break
+    return
+
+SearchEngineCompleter.debug = false
 
 # A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 # 10. All queries from the vomnibar come through a multi completer.
-class MultiCompleter
-  maxResults: 10
-  filterInProgress: false
-  mostRecentQuery: null
+maxResults = 10
 
+class MultiCompleter
   constructor: (@completers) ->
+    @filterInProgress = false
+    @mostRecentQuery = null
+
+  # TODO(philc): Make into map
   refresh: (port) -> completer.refresh? port for completer in @completers
   cancel: (port) -> completer.cancel? port for completer in @completers
 
@@ -567,8 +599,11 @@ class MultiCompleter
     RegexpCache.clear()
     { queryTerms } = request
 
-    [ @mostRecentQuery, @filterInProgress ] = [ null, true ]
-    [ suggestions, continuations, filters ] = [ [], [], [] ]
+    @mostRecentQuery = null
+    @filterInProgress = true
+    suggestions = []
+    continuations = []
+    filters = []
 
     # Run each of the completers (asynchronously).
     jobs = new JobRunner @completers.map (completer) ->
@@ -578,11 +613,12 @@ class MultiCompleter
           continuations.push continuation if continuation?
           filters.push filter if filter?
           callback()
+          return
 
     # Once all completers have finished, process the results and post them, and run any continuations or a
     # pending query.
     jobs.onReady =>
-      suggestions = filter suggestions for filter in filters
+      suggestions = filter(suggestions) for filter in filters
       shouldRunContinuations = 0 < continuations.length and not @mostRecentQuery?
 
       # Post results, unless there are none and we will be running a continuation.  This avoids
@@ -600,16 +636,20 @@ class MultiCompleter
             continuation (newSuggestions) ->
               suggestions.push newSuggestions...
               callback()
+              return
+            return
 
         jobs.onReady =>
           suggestions = filter suggestions for filter in filters
           suggestions = @prepareSuggestions request, queryTerms, suggestions
           onComplete results: suggestions
+          return
 
       # Admit subsequent queries and launch any pending query.
       @filterInProgress = false
       if @mostRecentQuery
         @filter @mostRecentQuery...
+    return
 
   prepareSuggestions: (request, queryTerms, suggestions) ->
     # Compute suggestion relevancies and sort.
@@ -623,7 +663,7 @@ class MultiCompleter
       for suggestion in suggestions
         url = suggestion.shortenUrl()
         continue if suggestion.deDuplicate and seenUrls[url]
-        break if count++ == @maxResults
+        break if count++ == maxResults
         seenUrls[url] = suggestion
 
     # Give each completer the opportunity to tweak the suggestions.
@@ -747,7 +787,9 @@ RegexpCache =
     @initialized = true
     @clear()
 
-  clear: -> @cache = {}
+  clear: ->
+    @cache = {}
+    return
 
   # Get rexexp for `string` from cache, creating it if necessary.
   # Regexp meta-characters in `string` are escaped.
@@ -780,7 +822,9 @@ HistoryCache =
     if @history? then callback @history else @fetchHistory callback
 
   fetchHistory: (callback) ->
-    return @callbacks.push(callback) if @callbacks
+    if @callbacks
+      @callbacks.push(callback)
+      return
     @callbacks = [callback]
     chrome.history.search { text: "", maxResults: @size, startTime: 0 }, (history) =>
       # On Firefox, some history entries do not have titles.
@@ -791,6 +835,7 @@ HistoryCache =
       chrome.history.onVisitRemoved.addListener(@onVisitRemoved.bind(this))
       callback(@history) for callback in @callbacks
       @callbacks = null
+      return
 
   compareHistoryByUrl: (a, b) ->
     return 0 if a.url == b.url
@@ -808,6 +853,7 @@ HistoryCache =
       @history[i] = newPage
     else
       @history.splice(i, 0, newPage)
+    return
 
   # When a page is removed from the chrome history, remove it from the vimium history too.
   onVisitRemoved: (toRemove) ->
@@ -818,6 +864,7 @@ HistoryCache =
         i = HistoryCache.binarySearch({url:url}, @history, @compareHistoryByUrl)
         if i < @history.length and @history[i].url == url
           @history.splice(i, 1)
+    return
 
 # Returns the matching index or the closest matching index if the element is not found. That means you
 # must check the element at the returned index to know whether the element was actually found.

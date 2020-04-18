@@ -167,6 +167,7 @@ CompletionSearch =
     if @mostRecentHandler?
       @mostRecentHandler = null
       console.log "cancel (user is typing)" if @debug
+    return
 
 root = exports ? window
 root.CompletionSearch = CompletionSearch
