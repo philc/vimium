@@ -60,7 +60,8 @@
              "content_scripts/mode_visual.js",
              "content_scripts/hud.js",
              "content_scripts/mode_normal.js",
-             "content_scripts/vimium_frontend.js"
+             "content_scripts/vimium_frontend.js",
+             "content_scripts/api.js"
             ],
       "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
