@@ -6,7 +6,7 @@ extend(global, require("./test_chrome_stubs.js"));
 // extend(global, require "../../background_scripts/marks.js")
 // But it looks like marks.coffee has never been included in a test before!
 // Temporary fix...
-root.Marks = {
+global.Marks = {
   create() { return true; },
   goto: {
     bind() { return true; }
