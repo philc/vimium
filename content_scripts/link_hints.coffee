@@ -65,9 +65,13 @@ FOCUS_LINK =
   name: "focus"
   indicator: "Focus link"
   linkActivator: (link) -> link.focus()
+OPEN_WINDOW =
+  name: "window"
+  indicator: "Open link in a new window"
+  linkActivator: (link) -> chrome.runtime.sendMessage handler: 'openUrlInNewWindow', url: link.href
 
 availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, COPY_LINK_TEXT, HOVER_LINK, FOCUS_LINK]
+  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, COPY_LINK_TEXT, HOVER_LINK, FOCUS_LINK, OPEN_WINDOW]
 
 HintCoordinator =
   onExit: []
@@ -165,6 +169,7 @@ LinkHints =
   activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
   activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
   activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToOpenInNewWindow: (count) -> @activateMode count, mode: OPEN_WINDOW
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
