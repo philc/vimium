@@ -136,15 +136,9 @@ TabOperations =
       # clean position and active, so following `openUrlInNewTab(request)` will create a tab just next to this new tab
       callback extend request, {tab, tabId: tab.id, position: "", active: false}
 
-  # Opens request.url in new window and switches to it.
+  # Opens request.url in new window
   openUrlInNewWindow: (request, callback = (->)) ->
-    winConfig =
-      url: Utils.convertToUrl request.url
-      active: true
-    winConfig.active = request.active if request.active?
-    # Firefox does not support "about:newtab" in chrome.tabs.create.
-    delete winConfig["url"] if winConfig["url"] == Settings.defaults.newTabUrl
-    chrome.windows.create winConfig, callback
+    chrome.windows.create url: Utils.convertToUrl request.url
 
 toggleMuteTab = do ->
   muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}

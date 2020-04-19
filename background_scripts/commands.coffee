@@ -220,6 +220,7 @@ Commands =
     "Vomnibar.activateEditUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito",
     "LinkHints.activateModeToCopyLinkUrl",
+    "LinkHints.activateModeToOpenInNewWindow",
     "goNext",
     "goPrevious",
     "Marks.activateCreateMode",
@@ -357,6 +358,7 @@ commandDescriptions =
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"]
   "LinkHints.activateModeToDownloadLink": ["Download link url"]
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"]
+  "LinkHints.activateModeToOpenInNewWindow": ["Open in a new window"]
 
   enterFindMode: ["Enter find mode", { noRepeat: true }]
   performFind: ["Cycle forward to the next find match"]
