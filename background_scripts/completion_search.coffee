@@ -21,11 +21,8 @@ class EnginePrefixWrapper
       queryTerms = [ terms.split(" ")..., queryTerms... ]
       prefix = "#{terms} "
 
-      @postprocessSuggestions =
-        (suggestions) ->
-          for suggestion in suggestions
-            continue unless suggestion.startsWith prefix
-            suggestion[prefix.length..]
+      @postprocessSuggestions = (suggestions) ->
+        suggestions.filter((s) => s.startsWith(prefix)).map((s) => s[prefix.length..])
 
     @engine.getUrl queryTerms
 
@@ -64,7 +61,8 @@ CompletionSearch =
     else
       for engine in CompletionEngines
         engine = new engine()
-        return @engineCache.set searchUrl, engine if engine.match searchUrl
+        if engine.match searchUrl
+          return @engineCache.set searchUrl, engine
 
   # True if we have a completion engine for this search URL, false otherwise.
   haveCompletionEngine: (searchUrl) ->
@@ -88,15 +86,18 @@ CompletionSearch =
     callback ?= (suggestions) -> suggestions
 
     # We don't complete queries which are too short: the results are usually useless.
-    return callback [] unless 3 < query.length
+    return callback [] unless query.length >= 3
 
     # We don't complete regular URLs or Javascript URLs.
-    return callback [] if 1 == queryTerms.length and Utils.isUrl query
-    return callback [] if Utils.hasJavascriptPrefix query
+    if queryTerms.length == 1 and Utils.isUrl query
+      return callback []
+    if Utils.hasJavascriptPrefix query
+      return callback []
 
     completionCacheKey = JSON.stringify [ searchUrl, queryTerms ]
     if @completionCache.has completionCacheKey
-      console.log "hit", completionCacheKey if @debug
+      if @debug
+        console.log "hit", completionCacheKey
       return callback @completionCache.get completionCacheKey
 
     # If the user appears to be typing a continuation of the characters of the most recent query, then we can
@@ -111,7 +112,7 @@ CompletionSearch =
           # previous queries with no suggestions suppress subsequent no-hope HTTP requests as the user continues
           # to type.
           for suggestion in @mostRecentSuggestions
-            return false unless 0 <= suggestion.indexOf query
+            return false unless suggestion.includes(query)
           # Ok. Re-use the suggestion.
           true
 
@@ -125,41 +126,46 @@ CompletionSearch =
 
     # We pause in case the user is still typing.
     Utils.setTimeout @delay, handler = @mostRecentHandler = =>
-      if handler == @mostRecentHandler
-        @mostRecentHandler = null
+      return unless handler == @mostRecentHandler
+      @mostRecentHandler = null
 
-        # Elide duplicate requests. First fetch the suggestions...
-        @inTransit[completionCacheKey] ?= new AsyncDataFetcher (callback) =>
-          engine = new EnginePrefixWrapper searchUrl, @lookupEngine searchUrl
-          url = engine.getUrl queryTerms
+      # Elide duplicate requests. First fetch the suggestions...
+      @inTransit[completionCacheKey] ?= new AsyncDataFetcher (callback) =>
+        engine = new EnginePrefixWrapper searchUrl, @lookupEngine searchUrl
+        url = engine.getUrl queryTerms
 
-          @get searchUrl, url, (xhr = null) =>
-            # Parsing the response may fail if we receive an unexpected or an unexpectedly-formatted response.
-            # In all cases, we fall back to the catch clause, below.  Therefore, we "fail safe" in the case of
-            # incorrect or out-of-date completion engines.
-            try
-              suggestions = engine.parse xhr
-              # Make all suggestions lower case.  It looks odd when suggestions from one completion engine are
-              # upper case, and those from another are lower case.
-              suggestions = (suggestion.toLowerCase() for suggestion in suggestions)
-              # Filter out the query itself. It's not adding anything.
-              suggestions = (suggestion for suggestion in suggestions when suggestion != query)
-              console.log "GET", url if @debug
-            catch
-              suggestions = []
-              # We allow failures to be cached too, but remove them after just thirty seconds.
-              Utils.setTimeout 30 * 1000, => @completionCache.set completionCacheKey, null
-              console.log "fail", url if @debug
+        # TODO(philc): Do we need to return the result of this.get here, or can we remove this return statement?
+        @get searchUrl, url, (xhr = null) =>
+          # Parsing the response may fail if we receive an unexpected or an unexpectedly-formatted response.
+          # In all cases, we fall back to the catch clause, below.  Therefore, we "fail safe" in the case of
+          # incorrect or out-of-date completion engines.
+          try
+            suggestions = engine.parse(xhr)
+            # Make all suggestions lower case.  It looks odd when suggestions from one completion engine are
+            # upper case, and those from another are lower case.
+            .map((s) => s.toLowerCase())
+            # suggestions = (suggestion.toLowerCase() for suggestion in suggestions)
+            # Filter out the query itself. It's not adding anything.
+            .filter((s) => s != query)
+            # suggestions = (suggestion for suggestion in suggestions when suggestion != query)
+            console.log "GET", url if @debug
+          catch
+            suggestions = []
+            # We allow failures to be cached too, but remove them after just thirty seconds.
+            Utils.setTimeout 30 * 1000, => @completionCache.set completionCacheKey, null
+            console.log "fail", url if @debug
 
-            callback suggestions
-            delete @inTransit[completionCacheKey]
+          callback suggestions
+          delete @inTransit[completionCacheKey]
 
-        # ... then use the suggestions.
-        @inTransit[completionCacheKey].use (suggestions) =>
-          @mostRecentSearchUrl = searchUrl
-          @mostRecentQuery = query
-          @mostRecentSuggestions = suggestions
-          callback @completionCache.set completionCacheKey, suggestions
+      # ... then use the suggestions.
+      @inTransit[completionCacheKey].use (suggestions) =>
+        @mostRecentSearchUrl = searchUrl
+        @mostRecentQuery = query
+        @mostRecentSuggestions = suggestions
+        callback @completionCache.set completionCacheKey, suggestions
+      return
+    return
 
   # Cancel any pending (ie. blocked on @delay) queries.  Does not cancel in-flight queries.  This is called
   # whenever the user is typing.
