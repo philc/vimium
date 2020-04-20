@@ -45,7 +45,7 @@ OPEN_INCOGNITO =
 DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
-  clickModifiers: altKey: true, ctrlKey: false, metaKey: false
+  linkActivator: (link, options) -> chrome.runtime.sendMessage handler: 'downloadUrl', url: link.href, options: options
 COPY_LINK_TEXT =
   name: "copy-link-text"
   indicator: "Copy link text"
@@ -152,6 +152,7 @@ LinkHints =
       when "hover" then mode = HOVER_LINK
       when "focus" then mode = FOCUS_LINK
     #
+    mode.options = registryEntry?.options
     if 0 < count or mode is OPEN_WITH_QUEUE
       HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
         if isSuccess
@@ -164,7 +165,7 @@ LinkHints =
   activateModeToCopyLinkUrl: (count) -> @activateMode count, mode: COPY_LINK_URL
   activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
   activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
-  activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToDownloadLink: (count, {registryEntry}) -> @activateMode count, mode: DOWNLOAD_LINK_URL, registryEntry: registryEntry
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
@@ -413,7 +414,7 @@ class LinkHintsMode
             #     since we have been able to blur them by pressing `Escape`
             if clickEl.nodeName.toLowerCase() in ["input", "select", "object", "embed"]
               clickEl.focus()
-            linkActivator clickEl
+            linkActivator clickEl, @mode.options
 
     # If flash elements are created, then this function can be used later to remove them.
     removeFlashElements = ->
