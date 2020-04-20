@@ -45,7 +45,7 @@ OPEN_INCOGNITO =
 DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
-  linkActivator: (link) -> chrome.runtime.sendMessage handler: 'downloadUrl', url: link.href
+  linkActivator: (link, options) -> chrome.runtime.sendMessage handler: 'downloadUrl', url: link.href, options: options
 COPY_LINK_TEXT =
   name: "copy-link-text"
   indicator: "Copy link text"
@@ -165,7 +165,7 @@ LinkHints =
   activateModeToCopyLinkUrl: (count) -> @activateMode count, mode: COPY_LINK_URL
   activateModeWithQueue: -> @activateMode 1, mode: OPEN_WITH_QUEUE
   activateModeToOpenIncognito: (count) -> @activateMode count, mode: OPEN_INCOGNITO
-  activateModeToDownloadLink: (count) -> @activateMode count, mode: DOWNLOAD_LINK_URL
+  activateModeToDownloadLink: (count, {registryEntry}) -> @activateMode count, mode: DOWNLOAD_LINK_URL, registryEntry: registryEntry
 
 class LinkHintsMode
   hintMarkerContainingDiv: null
