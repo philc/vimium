@@ -31,6 +31,7 @@
 class BaseEngine
   constructor: (options) ->
     extend this, options
+    # TODO(philc): Remove this implicit array weirdness. Just make child classes define this an array.
     @regexps = [ @regexps ] if "string" == typeof @regexps
     @regexps = @regexps.map (regexp) -> new RegExp regexp
 
@@ -40,9 +41,9 @@ class BaseEngine
 # Several Google completion engines package responses as XML. This parses such XML.
 class GoogleXMLBaseEngine extends BaseEngine
   parse: (xhr) ->
-    for suggestion in xhr.responseXML.getElementsByTagName "suggestion"
-      continue unless suggestion = suggestion.getAttribute "data"
-      suggestion
+    Array.from(xhr.responseXML.getElementsByTagName("suggestion"))
+    .map((e) => suggestion.getAttribute("data"))
+    .filter((e) => e)
 
 class Google extends GoogleXMLBaseEngine
   constructor: () ->
@@ -70,9 +71,9 @@ class GoogleMaps extends GoogleXMLBaseEngine
           """
 
   parse: (xhr) ->
-    for suggestion in super xhr
-      continue unless suggestion.startsWith @prefix
-      suggestion[@prefix.length..]
+    Array.from(super(xhr))
+    .filter((suggestion) => suggestion.startsWith(@prefix))
+    .map((suggestion) => suggestion[@prefix.length..])
 
 class Youtube extends GoogleXMLBaseEngine
   constructor: ->
