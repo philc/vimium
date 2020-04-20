@@ -31,8 +31,6 @@
 class BaseEngine
   constructor: (options) ->
     extend this, options
-    # TODO(philc): Remove this implicit array weirdness. Just make child classes define this an array.
-    @regexps = [ @regexps ] if "string" == typeof @regexps
     @regexps = @regexps.map (regexp) -> new RegExp regexp
 
   match: (searchUrl) -> Utils.matchesAnyRegexp @regexps, searchUrl
@@ -49,7 +47,7 @@ class Google extends GoogleXMLBaseEngine
   constructor: () ->
     super
       engineUrl: "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s"
-      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/"
+      regexps: ["^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/"]
       example:
         searchUrl: "https://www.google.com/search?q=%s"
         keyword: "g"
@@ -59,7 +57,7 @@ class GoogleMaps extends GoogleXMLBaseEngine
   constructor: () ->
     super
       engineUrl: "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=#{@prefix.split(' ').join '+'}%s"
-      regexps: "^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/maps"
+      regexps: ["^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/maps"]
       example:
         searchUrl: "https://www.google.com/maps?q=%s"
         keyword: "m"
@@ -79,7 +77,7 @@ class Youtube extends GoogleXMLBaseEngine
   constructor: ->
     super
       engineUrl: "https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s"
-      regexps: "^https?://[a-z]+\\.youtube\\.com/results"
+      regexps: ["^https?://[a-z]+\\.youtube\\.com/results"]
       example:
         searchUrl: "https://www.youtube.com/results?search_query=%s"
         keyword: "y"
@@ -88,7 +86,7 @@ class Wikipedia extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=%s"
-      regexps: "^https?://[a-z]+\\.wikipedia\\.org/"
+      regexps: ["^https?://[a-z]+\\.wikipedia\\.org/"]
       example:
         searchUrl: "https://www.wikipedia.org/w/index.php?title=Special:Search&search=%s"
         keyword: "w"
@@ -99,7 +97,7 @@ class Bing extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://api.bing.com/osjson.aspx?query=%s"
-      regexps: "^https?://www\\.bing\\.com/search"
+      regexps: ["^https?://www\\.bing\\.com/search"]
       example:
         searchUrl: "https://www.bing.com/search?q=%s"
         keyword: "b"
@@ -110,7 +108,7 @@ class Amazon extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s"
-      regexps: "^https?://www\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"
+      regexps: ["^https?://www\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"]
       example:
         searchUrl: "https://www.amazon.com/s/?field-keywords=%s"
         keyword: "a"
@@ -121,7 +119,7 @@ class AmazonJapan extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://completion.amazon.co.jp/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=6&q=%s"
-      regexps: "^https?://www\\.amazon\\.co\\.jp/(s/|gp/search)"
+      regexps: ["^https?://www\\.amazon\\.co\\.jp/(s/|gp/search)"]
       example:
         searchUrl: "https://www.amazon.co.jp/s/?field-keywords=%s"
         keyword: "aj"
@@ -132,7 +130,7 @@ class DuckDuckGo extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://duckduckgo.com/ac/?q=%s"
-      regexps: "^https?://([a-z]+\\.)?duckduckgo\\.com/"
+      regexps: ["^https?://([a-z]+\\.)?duckduckgo\\.com/"]
       example:
         searchUrl: "https://duckduckgo.com/?q=%s"
         keyword: "d"
@@ -144,7 +142,7 @@ class Webster extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://www.merriam-webster.com/lapi/v1/mwol-search/autocomplete?search=%s"
-      regexps: "^https?://www.merriam-webster.com/dictionary/"
+      regexps: ["^https?://www.merriam-webster.com/dictionary/"]
       example:
         searchUrl: "https://www.merriam-webster.com/dictionary/%s"
         keyword: "dw"
@@ -157,7 +155,7 @@ class Qwant extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://api.qwant.com/api/suggest?q=%s"
-      regexps: "^https?://www\\.qwant\\.com/"
+      regexps: ["^https?://www\\.qwant\\.com/"]
       example:
         searchUrl: "https://www.qwant.com/?q=%s"
         keyword: "qw"
@@ -169,7 +167,7 @@ class UpToDate extends BaseEngine
   constructor: ->
     super
       engineUrl: "https://www.uptodate.com/services/app/contents/search/autocomplete/json?term=%s&limit=10"
-      regexps: "^https?://www\\.uptodate\\.com/"
+      regexps: ["^https?://www\\.uptodate\\.com/"]
       example:
         searchUrl: "https://www.uptodate.com/contents/search?search=%s&searchType=PLAIN_TEXT&source=USER_INPUT&searchControl=TOP_PULLDOWN&autoComplete=false"
         keyword: "upto"
@@ -181,7 +179,7 @@ class UpToDate extends BaseEngine
 class DummyCompletionEngine extends BaseEngine
   constructor: ->
     super
-      regexps: "."
+      regexps: ["."]
       dummy: true
 
 # Note: Order matters here.
