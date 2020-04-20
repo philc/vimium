@@ -152,6 +152,7 @@ LinkHints =
       when "hover" then mode = HOVER_LINK
       when "focus" then mode = FOCUS_LINK
     #
+    mode.options = registryEntry?.options
     if 0 < count or mode is OPEN_WITH_QUEUE
       HintCoordinator.prepareToActivateMode mode, (isSuccess) ->
         if isSuccess
@@ -413,7 +414,7 @@ class LinkHintsMode
             #     since we have been able to blur them by pressing `Escape`
             if clickEl.nodeName.toLowerCase() in ["input", "select", "object", "embed"]
               clickEl.focus()
-            linkActivator clickEl
+            linkActivator clickEl, @mode.options
 
     # If flash elements are created, then this function can be used later to remove them.
     removeFlashElements = ->
