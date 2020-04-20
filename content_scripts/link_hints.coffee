@@ -45,7 +45,7 @@ OPEN_INCOGNITO =
 DOWNLOAD_LINK_URL =
   name: "download"
   indicator: "Download link URL"
-  clickModifiers: altKey: true, ctrlKey: false, metaKey: false
+  linkActivator: (link) -> chrome.runtime.sendMessage handler: 'downloadUrl', url: link.href
 COPY_LINK_TEXT =
   name: "copy-link-text"
   indicator: "Copy link text"

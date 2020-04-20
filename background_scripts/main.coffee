@@ -479,6 +479,7 @@ sendRequestHandlers =
   gotoMark: Marks.goto.bind(Marks)
   # Send a message to all frames in the current tab.
   sendMessageToFrames: (request, sender) -> chrome.tabs.sendMessage sender.tab.id, request.message
+  downloadUrl: (request) -> chrome.downloads.download { url: request.url }
 
 # We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
 chrome.storage.local.remove "findModeRawQueryListIncognito"

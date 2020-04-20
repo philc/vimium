@@ -36,6 +36,7 @@
     "sessions",
     "notifications",
     "webNavigation",
+    "downloads",
     "<all_urls>"
   ],
   "content_scripts": [
