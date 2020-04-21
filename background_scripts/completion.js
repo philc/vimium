@@ -952,7 +952,7 @@ var RankingUtils = {
 
 // We cache regexps because we use them frequently when comparing a query to history entries and bookmarks,
 // and we don't want to create fresh objects for every comparison.
-var RegexpCache = {
+const RegexpCache = {
   init() {
     this.initialized = true;
     this.clear();
