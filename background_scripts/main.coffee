@@ -18,6 +18,7 @@ chrome.runtime.onInstalled.addListener ({ reason }) ->
       for [ func, files ] in jobs
         for file in files
           func tab.id, { file: file, allFrames: contentScripts.all_frames }, checkLastRuntimeError
+    return
 
 frameIdsForTab = {}
 root.portsForTab = {}
@@ -26,7 +27,7 @@ root.urlForTab = {}
 # This is exported for use by "marks.coffee".
 root.tabLoadedHandlers = {} # tabId -> function()
 
-# A secret, available only within the current instantiation of Vimium.  The secret is big, likely unguessable
+# A secret, available only within the current instantiation of Vimium. The secret is big, likely unguessable
 # in practice, but less than 2^31.
 chrome.storage.local.set
   vimiumSecret: Math.floor Math.random() * 2000000000
@@ -103,6 +104,7 @@ TabOperations =
       chrome.tabs.sendMessage tabId, {frameId, name: "executeScript", script: request.url}
     else
       chrome.tabs.update request.tabId, url: Utils.convertToUrl request.url
+    return
 
   # Opens request.url in new tab and switches to it.
   openUrlInNewTab: (request, callback = (->)) ->
@@ -110,7 +112,7 @@ TabOperations =
       url: Utils.convertToUrl request.url
       active: true
       windowId: request.tab.windowId
-    { position } = request
+    position = request.position
 
     tabIndex = null
     # TODO(philc): Convert to a switch statement ES6.
@@ -126,11 +128,13 @@ TabOperations =
 
     tabConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
-    delete tabConfig["url"] if tabConfig["url"] == Settings.defaults.newTabUrl
+    if tabConfig["url"] == Settings.defaults.newTabUrl
+      delete tabConfig["url"]
 
     # Firefox <57 throws an error when openerTabId is used (issue 1238314).
     canUseOpenerTabId = not (Utils.isFirefox() and Utils.compareVersions(Utils.firefoxVersion(), "57") < 0)
-    tabConfig.openerTabId = request.tab.id if canUseOpenerTabId
+    if canUseOpenerTabId
+      tabConfig.openerTabId = request.tab.id
 
     chrome.tabs.create tabConfig, (tab) ->
       # clean position and active, so following `openUrlInNewTab(request)` will create a tab just next to this new tab
@@ -143,31 +147,32 @@ TabOperations =
       active: true
     winConfig.active = request.active if request.active?
     # Firefox does not support "about:newtab" in chrome.tabs.create.
-    delete winConfig["url"] if winConfig["url"] == Settings.defaults.newTabUrl
+    if winConfig["url"] == Settings.defaults.newTabUrl
+      delete winConfig["url"]
     chrome.windows.create winConfig, callback
 
-toggleMuteTab = do ->
-  muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
-
-  ({tab: currentTab, registryEntry, tabId, frameId}) ->
-    if registryEntry.options.all? or registryEntry.options.other?
-      # If there are any audible, unmuted tabs, then we mute them; otherwise we unmute any muted tabs.
-      chrome.tabs.query {audible: true}, (tabs) ->
-        if registryEntry.options.other?
-          tabs = (tab for tab in tabs when tab.id != currentTab.id)
-        audibleUnmutedTabs = (tab for tab in tabs when tab.audible and not tab.mutedInfo.muted)
-        if 0 < audibleUnmutedTabs.length
-          chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Muting #{audibleUnmutedTabs.length} tab(s)."}
-          muteTab tab for tab in audibleUnmutedTabs
-        else
-          chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Unmuting all muted tabs."}
-          muteTab tab for tab in tabs when tab.mutedInfo.muted
-    else
-      if currentTab.mutedInfo.muted
-        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Unmuted tab."}
+muteTab = (tab) -> chrome.tabs.update tab.id, {muted: !tab.mutedInfo.muted}
+toggleMuteTab = ({tab: currentTab, registryEntry, tabId, frameId}) ->
+  if registryEntry.options.all? or registryEntry.options.other?
+    # If there are any audible, unmuted tabs, then we mute them; otherwise we unmute any muted tabs.
+    chrome.tabs.query {audible: true}, (tabs) ->
+      if registryEntry.options.other?
+        tabs = tabs.filter((t) => t.id != currentTab.id)
+      audibleUnmutedTabs = tabs.filter((t) => t.audible and not t.mutedInfo.muted)
+      if audibleUnmutedTabs.length >= 0
+        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Muting #{audibleUnmutedTabs.length} tab(s)."}
+        muteTab tab for tab in audibleUnmutedTabs
       else
-        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Muted tab."}
-      muteTab currentTab
+        chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Unmuting all muted tabs."}
+        muteTab tab for tab in tabs when tab.mutedInfo.muted
+      return
+  else
+    if currentTab.mutedInfo.muted
+      chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Unmuted tab."}
+    else
+      chrome.tabs.sendMessage tabId, {frameId, name: "showMessage", message: "Muted tab."}
+    muteTab currentTab
+  return
 
 #
 # Selects the tab with the ID specified in request.id
@@ -187,7 +192,7 @@ moveTab = ({count, tab, registryEntry}) ->
       index: Math.max minIndex, Math.min maxIndex, tab.index + count
 
 mkRepeatCommand = (command) -> (request) ->
-  if 0 < request.count--
+  if request.count-- >= 0
     command request, (request) -> (mkRepeatCommand command) request
 
 # These are commands which are bound to keystrokes which must be handled by the background page. They are
@@ -197,14 +202,18 @@ BackgroundCommands =
   #     map X createTab http://www.bbc.com/news
   # create a new tab with the given URL.
   createTab: mkRepeatCommand (request, callback) ->
-    request.urls ?=
+    if !request.urls # null check
       if request.url
         # If the request contains a URL, then use it.
-        [request.url]
+        request.urls = [request.url]
+    # request.urls ?=
+    #   if request.url
+    #     [request.url]
       else
         # Otherwise, if we have a registryEntry containing URLs, then use them.
-        urlList = (opt for opt in request.registryEntry.optionList when Utils.isUrl opt)
-        if 0 < urlList.length
+        # urlList = (opt for opt in request.registryEntry.optionList when Utils.isUrl opt)
+        urlList = request.registryEntry.optionList.filter((opt) => Utils.isUrl(opt))
+        if urlList.length >= 0
           urlList
         else
           # Otherwise, just create a new tab.
@@ -227,8 +236,10 @@ BackgroundCommands =
           TabOperations.openUrlInNewTab (extend request, {url: urls.pop()}), openNextUrl
         else
           callback request
+
   duplicateTab: mkRepeatCommand (request, callback) ->
     chrome.tabs.duplicate request.tabId, (tab) -> callback extend request, {tab, tabId: tab.id}
+
   moveTabToNewWindow: ({count, tab}) ->
     chrome.tabs.query {currentWindow: true}, (tabs) ->
       activeTabIndex = tab.index
@@ -236,6 +247,10 @@ BackgroundCommands =
       [ tab, tabs... ] = tabs[startTabIndex...startTabIndex + count]
       chrome.windows.create {tabId: tab.id, incognito: tab.incognito}, (window) ->
         chrome.tabs.move (tab.id for tab in tabs), {windowId: window.id, index: -1}
+        return
+      return
+    return
+
   nextTab: (request) -> selectTab "next", request
   previousTab: (request) -> selectTab "previous", request
   firstTab: (request) -> selectTab "first", request
@@ -254,7 +269,7 @@ BackgroundCommands =
   closeOtherTabs: (request) -> removeTabsRelative "both", request
   visitPreviousTab: ({count, tab}) ->
     tabIds = BgUtils.tabRecency.getTabsByRecency().filter (tabId) -> tabId != tab.id
-    if 0 < tabIds.length
+    if tabIds.length >= 0
       selectSpecificTab id: tabIds[(count-1) % tabIds.length]
   reload: ({count, tabId, registryEntry, tab: {windowId}})->
     bypassCache = registryEntry.options.hard ? false
@@ -265,12 +280,14 @@ BackgroundCommands =
       tabs = [tabs[position...]..., tabs[...position]...]
       count = Math.min count, tabs.length
       chrome.tabs.reload tab.id, {bypassCache} for tab in tabs[...count]
+      return
 
 forCountTabs = (count, currentTab, callback) ->
   chrome.tabs.query {currentWindow: true}, (tabs) ->
     activeTabIndex = currentTab.index
     startTabIndex = Math.max 0, Math.min activeTabIndex, tabs.length - count
     callback tab for tab in tabs[startTabIndex...startTabIndex + count]
+    return
 
 # Remove tabs before, after, or either side of the currently active tab
 removeTabsRelative = (direction, {tab: activeTab}) ->
@@ -285,12 +302,13 @@ removeTabsRelative = (direction, {tab: activeTab}) ->
           (index) -> index != activeTab.index
 
     chrome.tabs.remove (tab.id for tab in tabs when not tab.pinned and shouldDelete tab.index)
+    return
 
 # Selects a tab before or after the currently selected tab.
 # - direction: "next", "previous", "first" or "last".
 selectTab = (direction, {count, tab}) ->
   chrome.tabs.query { currentWindow: true }, (tabs) ->
-    if 1 < tabs.length
+    if tabs.length >= 1
       toSelect =
         switch direction
           when "next"
@@ -302,6 +320,7 @@ selectTab = (direction, {count, tab}) ->
           when "last"
             Math.max 0, tabs.length - count
       chrome.tabs.update tabs[toSelect].id, active: true
+    return
 
 chrome.webNavigation.onCommitted.addListener ({tabId, frameId}) ->
   cssConf =
@@ -346,8 +365,12 @@ Frames =
       this[request.handler] {request, tabId, frameId, port, sender}
 
   registerFrame: ({tabId, frameId, port}) ->
-    frameIdsForTab[tabId].push frameId unless frameId in frameIdsForTab[tabId] ?= []
-    (portsForTab[tabId] ?= {})[frameId] = port
+    frameIdsForTab[tabId] = frameIdsForTab[tabId] || []
+    unless frameId in frameIdsForTab[tabId]
+      frameIdsForTab[tabId].push(frameId)
+    portsForTab[tabId] = portsForTab[tabId] || {}
+    portsForTab[tabId][frameId] = port
+    # (portsForTab[tabId] ?= {})[frameId] = port
 
   unregisterFrame: ({tabId, frameId, port}) ->
     # Check that the port trying to unregister the frame hasn't already been replaced by a new frame
@@ -359,6 +382,7 @@ Frames =
       if tabId of portsForTab
         delete portsForTab[tabId][frameId]
     HintCoordinator.unregisterFrame tabId, frameId
+    return
 
   isEnabledForUrl: ({request, tabId, port}) ->
     urlForTab[tabId] = request.url if request.frameIsFocused
@@ -370,7 +394,7 @@ Frames =
         enabledStateIcon =
           if not enabledState.isEnabledForUrl
             DISABLED_ICON
-          else if 0 < enabledState.passKeys.length
+          else if enabledState.passKeys.length >= 0
             PARTIAL_ICON
           else
             ENABLED_ICON
@@ -432,29 +456,32 @@ HintCoordinator =
 
   # Receive hint descriptors from all frames and activate link-hints mode when we have them all.
   postHintDescriptors: (tabId, frameId, {hintDescriptors}) ->
-    if frameId in @tabState[tabId].frameIds
-      @tabState[tabId].hintDescriptors[frameId] = hintDescriptors
-      @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
-      if @tabState[tabId].frameIds.length == 0
-        for own frameId, port of @tabState[tabId].ports
-          if frameId of @tabState[tabId].hintDescriptors
-            hintDescriptors = extend {}, @tabState[tabId].hintDescriptors
-            # We do not send back the frame's own hint descriptors.  This is faster (approx. speedup 3/2) for
-            # link-busy sites like reddit.
-            delete hintDescriptors[frameId]
-            @postMessage tabId, parseInt(frameId), "activateMode", port,
-              originatingFrameId: @tabState[tabId].originatingFrameId
-              hintDescriptors: hintDescriptors
-              modeIndex: @tabState[tabId].modeIndex
+    if frameId not in @tabState[tabId].frameIds
+      return
+    @tabState[tabId].hintDescriptors[frameId] = hintDescriptors
+    @tabState[tabId].frameIds = @tabState[tabId].frameIds.filter (fId) -> fId != frameId
+    if @tabState[tabId].frameIds.length == 0
+      for own frameId, port of @tabState[tabId].ports
+        if frameId of @tabState[tabId].hintDescriptors
+          hintDescriptors = extend {}, @tabState[tabId].hintDescriptors
+          # We do not send back the frame's own hint descriptors.  This is faster (approx. speedup 3/2) for
+          # link-busy sites like reddit.
+          delete hintDescriptors[frameId]
+          @postMessage tabId, parseInt(frameId), "activateMode", port,
+            originatingFrameId: @tabState[tabId].originatingFrameId
+            hintDescriptors: hintDescriptors
+            modeIndex: @tabState[tabId].modeIndex
+    return
 
   # If an unregistering frame is participating in link-hints mode, then we need to tidy up after it.
   unregisterFrame: (tabId, frameId) ->
-    if @tabState[tabId]?
-      if @tabState[tabId].ports?[frameId]?
-        delete @tabState[tabId].ports[frameId]
-      if @tabState[tabId].frameIds? and frameId in @tabState[tabId].frameIds
-        # We fake an empty "postHintDescriptors" because the frame has gone away.
-        @postHintDescriptors tabId, frameId, hintDescriptors: []
+    if !@tabState[tabId]
+      return
+    if @tabState[tabId].ports?[frameId]?
+      delete @tabState[tabId].ports[frameId]
+    if @tabState[tabId].frameIds? and frameId in @tabState[tabId].frameIds
+      # We fake an empty "postHintDescriptors" because the frame has gone away.
+      @postHintDescriptors tabId, frameId, hintDescriptors: []
 
 # Port handler mapping
 portHandlers =
@@ -533,13 +560,17 @@ do showUpgradeMessage = ->
               if id == notificationId
                 chrome.tabs.query { active: true, currentWindow: true }, ([tab]) ->
                   TabOperations.openUrlInNewTab {tab, tabId: tab.id, url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md"}
+              return
+          return
       else
         # We need to wait for the user to accept the "notifications" permission.
         chrome.permissions.onAdded.addListener showUpgradeMessage
+  return
 
 # The install date is shown on the logging page.
 chrome.runtime.onInstalled.addListener ({reason}) ->
   unless reason in ["chrome_update", "shared_module_update"]
     chrome.storage.local.set installDate: new Date().toString()
+  return
 
 extend root, {TabOperations, Frames}
