@@ -26,6 +26,7 @@ Marks =
         # tab).  We need to ask the top frame what its scroll position is.
         chrome.tabs.sendMessage sender.tab.id, name: "getScrollPosition", (response) =>
           @saveMark extend markInfo, scrollX: response.scrollX, scrollY: response.scrollY
+    return
 
   saveMark: (markInfo) ->
     item = {}
@@ -45,20 +46,23 @@ Marks =
           # This is a different Vimium instantiation, so markInfo.tabId is definitely out of date.
           @focusOrLaunch markInfo, req
         else
-          # Check whether markInfo.tabId still exists.  According to here (https://developer.chrome.com/extensions/tabs),
-          # tab Ids are unqiue within a Chrome session.  So, if we find a match, we can use it.
+          # Check whether markInfo.tabId still exists. According to
+          # https://developer.chrome.com/extensions/tabs, tab Ids are unqiue within a Chrome session. So, if
+          # we find a match, we can use it.
           chrome.tabs.get markInfo.tabId, (tab) =>
-            if not chrome.runtime.lastError and tab?.url and markInfo.url == @getBaseUrl tab.url
+            if not chrome.runtime.lastError and tab and tab.url and markInfo.url == @getBaseUrl(tab.url)
               # The original tab still exists.
               @gotoPositionInTab markInfo
             else
               # The original tab no longer exists.
               @focusOrLaunch markInfo, req
+    return
 
   # Focus an existing tab and scroll to the given position within it.
   gotoPositionInTab: ({ tabId, scrollX, scrollY, markName }) ->
     chrome.tabs.update tabId, { active: true }, ->
       chrome.tabs.sendMessage tabId, {name: "setScrollPosition", scrollX, scrollY}
+    return
 
   # The tab we're trying to find no longer exists.  We either find another tab with a matching URL and use it,
   # or we create a new tab.
@@ -68,7 +72,7 @@ Marks =
     # unless there's an exact URL match).
     query = if markInfo.scrollX == markInfo.scrollY == 0 then "#{markInfo.url}*" else markInfo.url
     chrome.tabs.query { url: query }, (tabs) =>
-      if 0 < tabs.length
+      if tabs.length >= 0
         # We have at least one matching tab.  Pick one and go to it.
         @pickTab tabs, (tab) =>
           @gotoPositionInTab extend markInfo, tabId: tab.id
