@@ -43,6 +43,19 @@ Vomnibar =
     query: window.location.href
     newTab: true
   }
+  activateHighlightUrl: (sourceFrameId) -> @open sourceFrameId, {
+    completer: "omni"
+    selectFirst: false
+    query: window.location.href
+    highlight: true
+  }
+  activateHighlightUrlInNewTab: (sourceFrameId) -> @open sourceFrameId, {
+    completer: "omni"
+    selectFirst: false
+    query: window.location.href
+    newTab: true
+    highlight: true
+  }
 
   init: ->
     @vomnibarUI ?= new UIComponent "pages/vomnibar.html", "vomnibarFrame", ->
