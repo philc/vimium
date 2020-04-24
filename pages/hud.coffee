@@ -16,6 +16,7 @@ setTextInInputElement = (inputElement, text) ->
   selection = window.getSelection()
   selection.removeAllRanges()
   selection.addRange range
+  return
 
 document.addEventListener "DOMContentLoaded", ->
   DomUtils.injectUserCss() # Manually inject custom user styles.
@@ -23,11 +24,14 @@ document.addEventListener "DOMContentLoaded", ->
 onKeyEvent = (event) ->
   # Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK translation
   # (see #2915 and #2934).
-  return null if event.type == "keypress" and event.key != "Enter"
-  return null if event.type == "keydown" and event.key == "Enter"
+  if event.type == "keypress" and event.key != "Enter"
+    return null
+  if event.type == "keydown" and event.key == "Enter"
+    return null
 
   inputElement = document.getElementById "hud-find-input"
-  return unless inputElement? # Don't do anything if we're not in find mode.
+  unless inputElement? # Don't do anything if we're not in find mode.
+    return
 
   if (KeyboardUtils.isBackspace(event) and inputElement.textContent.length == 0) or
      event.key == "Enter" or KeyboardUtils.isEscape event
@@ -41,7 +45,8 @@ onKeyEvent = (event) ->
   else if event.key == "ArrowUp"
     if rawQuery = FindModeHistory.getQuery findMode.historyIndex + 1
       findMode.historyIndex += 1
-      findMode.partialQuery = findMode.rawQuery if findMode.historyIndex == 0
+      if findMode.historyIndex == 0
+        findMode.partialQuery = findMode.rawQuery
       setTextInInputElement inputElement, rawQuery
       findMode.executeQuery()
   else if event.key == "ArrowDown"
@@ -64,12 +69,14 @@ handlers =
     document.getElementById("hud").classList.add "vimiumUIComponentVisible"
     document.getElementById("hud").classList.remove "vimiumUIComponentHidden"
     document.getElementById("hud").classList.remove "hud-find"
+    return
   hidden: ->
     # We get a flicker when the HUD later becomes visible again (with new text) unless we reset its contents
     # here.
     document.getElementById("hud").innerText = ""
     document.getElementById("hud").classList.add "vimiumUIComponentHidden"
     document.getElementById("hud").classList.remove "vimiumUIComponentVisible"
+    return
 
   showFindMode: (data) ->
     hud = document.getElementById "hud"
@@ -100,14 +107,17 @@ handlers =
     hud.appendChild countElement
     Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, ->
       # On Firefox, the page must first be focused before the HUD input element can be focused. #3460.
-      window.focus() if Utils.isFirefox()
+      if Utils.isFirefox()
+        window.focus()
       inputElement.focus()
+      return
 
     findMode =
       historyIndex: -1
       partialQuery: ""
       rawQuery: ""
       executeQuery: executeQuery
+    return
 
   updateMatchesCount: ({matchCount, showMatchText}) ->
     countElement = document.getElementById "hud-match-count"
@@ -125,6 +135,7 @@ handlers =
     focusedElement?.focus()
     window.parent.focus()
     UIComponentServer.postMessage {name: "unfocusIfFocused"}
+    return
 
   pasteFromClipboard: -> Utils.setTimeout TIME_TO_WAIT_FOR_IPC_MESSAGES, ->
     focusedElement = document.activeElement
@@ -132,8 +143,13 @@ handlers =
     focusedElement?.focus()
     window.parent.focus()
     UIComponentServer.postMessage {name: "pasteResponse", data}
+    return
 
-  settings: ({ isFirefox }) -> Utils.isFirefox = -> isFirefox
+  settings: ({ isFirefox }) ->
+     Utils.isFirefox = -> isFirefox
 
-UIComponentServer.registerHandler ({data}) -> handlers[data.name ? data]? data
+UIComponentServer.registerHandler ({data}) ->
+  handler = handlers[data.name || data]
+  if handler
+    handler(data)
 FindModeHistory.init()
