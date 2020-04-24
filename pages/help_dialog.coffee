@@ -33,13 +33,16 @@ HelpDialog =
 
     document.documentElement.addEventListener "click", (event) =>
       @hide() unless @dialogElement.contains event.target
+      return
     , false
+    return
 
   instantiateHtmlTemplate: (parentNode, templateId, callback) ->
     templateContent = document.querySelector(templateId).content
     node = document.importNode templateContent, true
     parentNode.appendChild node
     callback parentNode.lastElementChild
+    return
 
   show: ({showAllCommandDetails}) ->
     $("help-dialog-title").textContent = if showAllCommandDetails then "Command Listing" else "Help"
@@ -53,18 +56,21 @@ HelpDialog =
           keysElement = null
           descriptionElement = null
 
-          useTwoRows = 12 <= command.keys.join(", ").length
+          useTwoRows = command.keys.join(", ").length >= 12
           unless useTwoRows
             @instantiateHtmlTemplate container, "#helpDialogEntry", (element) ->
               element.classList.add "advanced" if command.advanced
               keysElement = descriptionElement = element
+              return
           else
             @instantiateHtmlTemplate container, "#helpDialogEntryBindingsOnly", (element) ->
               element.classList.add "advanced" if command.advanced
               keysElement = element
+              return
             @instantiateHtmlTemplate container, "#helpDialogEntry", (element) ->
               element.classList.add "advanced" if command.advanced
               descriptionElement = element
+              return
 
           $$(descriptionElement, ".vimiumHelpDescription").textContent = command.description
 
@@ -90,9 +96,16 @@ HelpDialog =
 
       # "Click" the dialog element (so that it becomes scrollable).
       DomUtils.simulateClick @dialogElement
+      return
+    return
 
-  hide: -> UIComponentServer.hide()
-  toggle: -> @hide()
+  hide: ->
+    UIComponentServer.hide()
+    return
+
+  toggle: ->
+    @hide()
+    return
 
   #
   # Advanced commands are hidden by default so they don't overwhelm new and casual users.
@@ -106,7 +119,7 @@ HelpDialog =
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced)
     # Try to keep the "show advanced commands" button in the same scroll position.
     scrollHeightDelta = vimiumHelpDialogContainer.scrollHeight - scrollHeightBefore
-    vimiumHelpDialogContainer.scrollTop += scrollHeightDelta if 0 < scrollHeightDelta
+    vimiumHelpDialogContainer.scrollTop += scrollHeightDelta if scrollHeightDelta > 0
 
   showAdvancedCommands: (visible) ->
     document.getElementById("toggleAdvancedCommands").textContent =
@@ -130,9 +143,11 @@ UIComponentServer.registerHandler (event) ->
       Frame.postMessage "unregisterFrame"
       # Abandon any HUD which might be showing within the help dialog.
       HUD.abandon()
+  return
 
 document.addEventListener "DOMContentLoaded", ->
   DomUtils.injectUserCss() # Manually inject custom user styles.
+  return
 
 root = exports ? window
 root.HelpDialog = HelpDialog
