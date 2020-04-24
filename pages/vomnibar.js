@@ -201,8 +201,8 @@ class VomnibarUI {
         this.selection = this.completions.length - 1;
       this.updateSelection();
     } else if (action === "enter") {
-      const completion = this.completions[this.selection];
-      const isCustomSearchPrimarySuggestion = completion && completion.isCustomSearchPrimarySuggestion &&
+      const c = this.completions[this.selection];
+      const isCustomSearchPrimarySuggestion = c && c.isCustomSearchPrimarySuggestion &&
             this.lastResponse.engine && this.lastResponse.engine.searchUrl;
       if ((this.selection === -1) || isCustomSearchPrimarySuggestion) {
         let query = this.input.value.trim();
