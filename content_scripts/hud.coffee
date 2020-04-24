@@ -6,7 +6,9 @@ HUD =
   tween: null
   hudUI: null
   findMode: null
-  abandon: -> @hudUI?.hide false
+  abandon: ->
+    if @hudUI
+      @hudUI.hide(false)
 
   pasteListener: null # Set by @pasteFromClipboard to handle the value returned by pasteResponse
 
@@ -15,7 +17,10 @@ HUD =
   # it doesn't sit on top of horizontal scrollbars like Chrome's HUD does.
 
   init: (focusable = true) ->
-    @hudUI ?= new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) => this[data.name]? data
+    @hudUI ?= new UIComponent "pages/hud.html", "vimiumHUDFrame", ({data}) =>
+      if (this[data.name])
+        this[data.name](data)
+      # this[data.name]? data
     @tween ?= new Tween "iframe.vimiumHUDFrame.vimiumUIComponentVisible", @hudUI.shadowDOM
     if focusable
       @hudUI.toggleIframeElementClasses "vimiumNonClickable", "vimiumClickable"
@@ -27,11 +32,13 @@ HUD =
       getComputedStyle(@hudUI.iframeElement).display
     else
       @hudUI.toggleIframeElementClasses "vimiumClickable", "vimiumNonClickable"
+    return
 
 
   showForDuration: (text, duration) ->
     @show(text)
     @_showForDurationTimerId = setTimeout((=> @hide()), duration)
+    return
 
   show: (text) ->
     DomUtils.documentComplete =>
@@ -40,12 +47,16 @@ HUD =
       clearTimeout(@_showForDurationTimerId)
       @hudUI.activate {name: "show", text}
       @tween.fade 1.0, 150
+      return
+    return
 
   showFindMode: (@findMode = null) ->
     DomUtils.documentComplete =>
       @init()
       @hudUI.activate name: "showFindMode"
       @tween.fade 1.0, 150
+      return
+    return
 
   search: (data) ->
     # NOTE(mrmr1993): On Firefox, window.find moves the window focus away from the HUD. We use postFindFocus
@@ -56,6 +67,7 @@ HUD =
     matchCount = if FindMode.query.parsedQuery.length > 0 then FindMode.query.matchCount else 0
     showMatchText = FindMode.query.rawQuery.length > 0
     @hudUI.postMessage {name: "updateMatchesCount", matchCount, showMatchText}
+    return
 
   # Hide the HUD.
   # If :immediate is falsy, then the HUD is faded out smoothly (otherwise it is hidden immediately).
@@ -66,9 +78,13 @@ HUD =
       clearTimeout @_showForDurationTimerId
       @tween.stop()
       if immediate
-        if updateIndicator then Mode.setIndicator() else @hudUI.hide()
+        if updateIndicator
+           Mode.setIndicator()
+        else
+           @hudUI.hide()
       else
         @tween.fade 0, 150, => @hide true, updateIndicator
+      return
 
   # These parameters describe the reason find mode is exiting, and come from the HUD UI component.
   hideFindMode: ({exitEventIsEnter, exitEventIsEscape}) ->
@@ -81,7 +97,9 @@ HUD =
 
     focusNode = DomUtils.getSelectionFocusElement()
     document.activeElement?.blur()
-    focusNode?.focus?()
+
+    if focusNode and focusNode.focus
+      focusNode.focus()
 
     if exitEventIsEnter
       FindMode.handleEnter()
@@ -93,7 +111,9 @@ HUD =
       postExit = FindMode.handleEscape
 
     @findMode.exit()
-    postExit?()
+    if postExit
+      postExit()
+    return
 
   # These commands manage copying and pasting from the clipboard in the HUD frame.
   # NOTE(mrmr1993): We need this to copy and paste on Firefox:
@@ -104,25 +124,31 @@ HUD =
     DomUtils.documentComplete =>
       @init()
       @hudUI.postMessage {name: "copyToClipboard", data: text}
+      return
+    return
 
   pasteFromClipboard: (@pasteListener) ->
     DomUtils.documentComplete =>
       @init()
       @tween.fade 0, 0
       @hudUI.postMessage {name: "pasteFromClipboard"}
+      return
+    return
 
   pasteResponse: ({data}) ->
     # Hide the HUD frame again.
     @hudUI.toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
     @unfocusIfFocused()
     @pasteListener data
+    return
 
   unfocusIfFocused: ->
     # On Firefox, if an <iframe> disappears when it's focused, then it will keep "focused",
     # which means keyboard events will always be dispatched to the HUD iframe
-    if @hudUI?.showing
+    if @hudUI && @hudUI.showing
       @hudUI.iframeElement.blur()
       window.focus()
+    return
 
 class Tween
   opacity: 0
@@ -152,15 +178,20 @@ class Tween
       if (elapsed >= duration)
         clearInterval @intervalId
         @updateStyle toAlpha
-        onComplete?()
+        if onComplete
+          onComplete()
       else
         value = (elapsed / duration) * alphaStep + fromAlpha
         @updateStyle value
+      return
 
     @updateStyle @opacity
     @intervalId = setInterval performStep, 50
+    return
 
-  stop: -> clearInterval @intervalId
+  stop: ->
+    clearInterval @intervalId
+    return
 
   updateStyle: (@opacity) ->
     @styleElement.innerHTML = """
@@ -168,6 +199,7 @@ class Tween
         opacity: #{@opacity};
       }
     """
+    return
 
 root = exports ? (window.root ?= {})
 root.HUD = HUD
