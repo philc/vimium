@@ -4,7 +4,6 @@
 *.crx
 *.sublime*
 content_scripts/*.js
-pages/*.js
 options/*.js
 node_modules/*
 dist
