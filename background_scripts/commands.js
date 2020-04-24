@@ -222,7 +222,9 @@ const Commands = {
       "Vomnibar.activateBookmarksInNewTab",
       "Vomnibar.activateTabSelection",
       "Vomnibar.activateEditUrl",
-      "Vomnibar.activateEditUrlInNewTab"],
+      "Vomnibar.activateEditUrlInNewTab",
+      "Vomnibar.activateHighlightUrl",
+      "Vomnibar.activateHighlightUrlInNewTab"],
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
     historyNavigation:
       ["goBack", "goForward"],
@@ -261,6 +263,8 @@ const Commands = {
     "LinkHints.activateModeToDownloadLink",
     "Vomnibar.activateEditUrl",
     "Vomnibar.activateEditUrlInNewTab",
+    "Vomnibar.activateHighlightUrl",
+    "Vomnibar.activateHighlightUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito",
     "LinkHints.activateModeToCopyLinkUrl",
     "goNext",
@@ -449,6 +453,8 @@ const commandDescriptions = {
   "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { topFrame: true }],
   "Vomnibar.activateEditUrl": ["Edit the current URL", { topFrame: true }],
   "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { topFrame: true }],
+  "Vomnibar.activateHighlightUrl": ["Edit or replace the current URL", { topFrame: true }],
+  "Vomnibar.activateHighlightUrlInNewTab": ["Edit or replace the current URL and open in a new tab", { topFrame: true }],
 
   nextFrame: ["Select the next frame on the page", { background: true }],
   mainFrame: ["Select the page's main/top frame", { topFrame: true, noRepeat: true }],

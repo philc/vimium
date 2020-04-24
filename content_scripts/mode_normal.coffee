@@ -216,6 +216,8 @@ if Vomnibar?
     "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind Vomnibar
     "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind Vomnibar
     "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind Vomnibar
+    "Vomnibar.activateHighlightUrl": Vomnibar.activateHighlightUrl.bind Vomnibar
+    "Vomnibar.activateHighlightUrlInNewTab": Vomnibar.activateHighlightUrlInNewTab.bind Vomnibar
 
 if Marks?
   extend NormalModeCommands,
