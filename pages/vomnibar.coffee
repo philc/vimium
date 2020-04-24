@@ -9,7 +9,9 @@ Vomnibar =
   completers: {}
 
   getCompleter: (name) ->
-    @completers[name] ?= new BackgroundCompleter name
+    if !@completers[name]
+      @completers[name] = new BackgroundCompleter(name)
+    return @completers[name]
 
   activate: (userOptions) ->
     options =
@@ -77,6 +79,7 @@ class VomnibarUI
     @keywords = []
     @seenTabToOpenCompletionList = false
     @completer?.reset()
+    return
 
   updateSelection: ->
     # For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
@@ -97,8 +100,9 @@ class VomnibarUI
       @previousInputValue = null
 
     # Highlight the selected entry, and only the selected entry.
-    for i in [0...@completionList.children.length]
+    for i in [0...@completionList.children.length] by 1
       @completionList.children[i].className = (if i == @selection then "vomnibarSelected" else "")
+    return
 
   # Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress.  We support the
   # arrow keys and various other shortcuts, and this function hides the event-decoding complexity.
@@ -146,18 +150,21 @@ class VomnibarUI
           @update true
       else if 0 < @completions.length
         @selection += 1
-        @selection = @initialSelectionValue if @selection == @completions.length
+        if @selection == @completions.length
+          @selection = @initialSelectionValue
         @updateSelection()
     else if (action == "up")
       @selection -= 1
-      @selection = @completions.length - 1 if @selection < @initialSelectionValue
+      if @selection < @initialSelectionValue
+        @selection = @completions.length - 1
       @updateSelection()
     else if (action == "enter")
-      isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl?
+      isCustomSearchPrimarySuggestion = @completions[@selection]?.isPrimarySuggestion and @lastReponse.engine?.searchUrl
       if @selection == -1 or isCustomSearchPrimarySuggestion
         query = @input.value.trim()
         # <Enter> on an empty query is a no-op.
-        return unless 0 < query.length
+        unless query.length > 0
+          return
         # First case (@selection == -1).
         # If the user types something and hits enter without selecting a completion from the list, then:
         #   - If a search URL has been provided, then use it.  This is custom search engine request.
@@ -169,19 +176,20 @@ class VomnibarUI
         # Because the the suggestions are updated asynchronously in omni mode, the user may have typed more
         # text than that which is included in the URL associated with the primary suggestion.  Therefore, to
         # avoid a race condition, we construct the query from the actual contents of the input (query).
-        query = Utils.createSearchUrl query, @lastReponse.engine.searchUrl if isCustomSearchPrimarySuggestion
+        if isCustomSearchPrimarySuggestion
+          query = Utils.createSearchUrl query, @lastReponse.engine.searchUrl
         @hide -> Vomnibar.getCompleter().launchUrl query, openInNewTab
       else
         completion = @completions[@selection]
         @hide -> completion.performAction openInNewTab
     else if action == "ctrl-enter"
       # Populate the vomnibar with the current selection's URL.
-      if not @customSearchMode? and @selection >= 0
+      if not @customSearchMode and @selection >= 0
           @previousInputValue ?= @input.value
           @input.value = @completions[@selection]?.url
           @input.scrollLeft = @input.scrollWidth
     else if action == "delete"
-      if @customSearchMode? and @input.selectionEnd == 0
+      if @customSearchMode and @input.selectionEnd == 0
         # Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
         # If the cursor is at the start of the input, then reinstate the keyword (the "w").
         @input.value = @customSearchMode + @input.value.ltrim()
@@ -238,6 +246,7 @@ class VomnibarUI
     if @updateTimer?
       window.clearTimeout @updateTimer
       @updateTimer = null
+    return
 
   shouldActivateCustomSearchMode: ->
     queryTerms = @input.value.ltrim().split /\s+/
@@ -283,6 +292,14 @@ class VomnibarUI
 class BackgroundCompleter
   # The "name" is the background-page completer to connect to: "omni", "tabs", or "bookmarks".
   constructor: (@name) ->
+
+    # These are the actions we can perform when the user selects a result.
+    @completionActions =
+      navigateToUrl: (url) -> (openInNewTab) ->
+        Vomnibar.getCompleter().launchUrl url, openInNewTab
+      switchToTab: (tabId) -> ->
+        chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
+
     @port = chrome.runtime.connect name: "completions"
     @messageId = null
     @reset()
@@ -332,14 +349,6 @@ class BackgroundCompleter
     # (because the user is typing, and there will be another query along soon).
     @port.postMessage name: @name, handler: "cancel"
 
-  # These are the actions we can perform when the user selects a result.
-  completionActions:
-    navigateToUrl: (url) -> (openInNewTab) ->
-      Vomnibar.getCompleter().launchUrl url, openInNewTab
-
-    switchToTab: (tabId) -> ->
-      chrome.runtime.sendMessage handler: "selectSpecificTab", id: tabId
-
   launchUrl: (url, openInNewTab) ->
     # If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the current
     # tab.
@@ -353,9 +362,12 @@ UIComponentServer.registerHandler (event) ->
     when "hide" then Vomnibar.hide()
     when "hidden" then Vomnibar.onHidden()
     when "activate" then Vomnibar.activate event.data
+  return
 
 document.addEventListener "DOMContentLoaded", ->
   DomUtils.injectUserCss() # Manually inject custom user styles.
+  return
 
 root = exports ? window
+
 root.Vomnibar = Vomnibar
