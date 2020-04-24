@@ -1,4 +1,3 @@
-
 $ = (id) -> document.getElementById id
 bgExclusions = chrome.extension.getBackgroundPage().Exclusions
 
@@ -14,10 +13,7 @@ class Option
   # Base class for all option classes.
   # Abstract. Option does not define @populateElement or @readValueFromElement.
 
-  # Static. Array of all options.
-  @all = []
-
-  constructor: (@field,@onUpdated) ->
+  constructor: (@field, @onUpdated) ->
     @element = $(@field)
     @element.addEventListener "change", @onUpdated
     @fetch()
@@ -34,12 +30,12 @@ class Option
     value = @readValueFromElement()
     if JSON.stringify(value) != JSON.stringify @previous
       bgSettings.set @field, @previous = value
+    return
 
   restoreToDefault: ->
     bgSettings.clear @field
     @fetch()
 
-  @onSaveCallbacks: []
   @onSave: (callback) ->
     @onSaveCallbacks.push callback
 
@@ -56,15 +52,22 @@ class Option
   # Extract the setting's new value from the option's DOM element (@element).
   # readValueFromElement: -> RETURN_SOMETHING
 
+Option.all = [] # Static. Array of all options.
+Option.onSaveCallbacks = []
+
 class NumberOption extends Option
-  populateElement: (value) -> @element.value = value
+  populateElement: (value) ->
+    @element.value = value
+    return
   readValueFromElement: -> parseFloat @element.value
 
 class TextOption extends Option
   constructor: (args...) ->
     super(args...)
     @element.addEventListener "input", @onUpdated
-  populateElement: (value) -> @element.value = value
+  populateElement: (value) ->
+    @element.value = value
+    return
   readValueFromElement: -> @element.value.trim()
 
 class NonEmptyTextOption extends Option
@@ -72,12 +75,20 @@ class NonEmptyTextOption extends Option
     super(args...)
     @element.addEventListener "input", @onUpdated
 
-  populateElement: (value) -> @element.value = value
+  populateElement: (value) ->
+     @element.value = value
+     return
   # If the new value is not empty, then return it. Otherwise, restore the default value.
-  readValueFromElement: -> if value = @element.value.trim() then value else @restoreToDefault()
+  readValueFromElement: ->
+    if value = @element.value.trim()
+      return value
+    else
+      @restoreToDefault()
 
 class CheckBoxOption extends Option
-  populateElement: (value) -> @element.checked = value
+  populateElement: (value) ->
+    @element.checked = value
+    return
   readValueFromElement: -> @element.checked
 
 class ExclusionRulesOption extends Option
@@ -90,18 +101,19 @@ class ExclusionRulesOption extends Option
   # options page, there is no current URL, so there is no initial pattern.  This is the default.  On the popup
   # page (see ExclusionRulesOnPopupOption), the pattern is pre-populated based on the current tab's URL.
   addRule: (pattern="") ->
-      element = @appendRule { pattern: pattern, passKeys: "" }
-      @getPattern(element).focus()
-      exclusionScrollBox = $("exclusionScrollBox")
-      exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
-      @onUpdated()
-      element
+    element = @appendRule { pattern: pattern, passKeys: "" }
+    @getPattern(element).focus()
+    exclusionScrollBox = $("exclusionScrollBox")
+    exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight
+    @onUpdated()
+    element
 
   populateElement: (rules) ->
     # For the case of restoring a backup, we first have to remove existing rules.
     exclusionRules = $ "exclusionRules"
     exclusionRules.deleteRow 1 while exclusionRules.rows[1]
     @appendRule rule for rule in rules
+    return
 
   # Append a row for a new rule.  Return the newly-added element.
   appendRule: (rule) ->
@@ -120,7 +132,7 @@ class ExclusionRulesOption extends Option
       @onUpdated()
 
     @element.appendChild row
-    @element.children[@element.children.length-1]
+    return @element.children[@element.children.length-1]
 
   readValueFromElement: ->
     rules =
@@ -138,8 +150,9 @@ class ExclusionRulesOption extends Option
 # page popup.  This also differs from ExclusionRulesOption in that, on the page popup, there is always a URL
 # (@url) associated with the current tab.
 class ExclusionRulesOnPopupOption extends ExclusionRulesOption
-  constructor: (@url, args...) ->
+  constructor: (url, args...) ->
     super(args...)
+    @url = url
 
   addRule: ->
     element = super @generateDefaultPattern()
@@ -174,6 +187,8 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption
       else
         patternElement.style.color = "red"
         patternElement.title = "Red text means that the pattern does not\nmatch the current URL."
+      return
+    return
 
   # Generate a default exclusion-rule pattern from a URL.  This is then used to pre-populate the pattern on
   # the page popup.
@@ -214,6 +229,7 @@ initOptionsPage = ->
   onUpdated = ->
     $("saveOptions").removeAttribute "disabled"
     $("saveOptions").textContent = "Save Changes"
+    return
 
   # Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
   maintainLinkHintsView = ->
@@ -227,6 +243,7 @@ initOptionsPage = ->
       show $("linkHintCharactersContainer")
       hide $("linkHintNumbersContainer")
       hide $("waitForEnterForFilteredHintsContainer")
+    return
 
   maintainAdvancedOptions = ->
     if bgSettings.get "optionsPage_showAdvancedOptions"
@@ -242,15 +259,18 @@ initOptionsPage = ->
     maintainAdvancedOptions()
     $("advancedOptionsButton").blur()
     event.preventDefault()
+    return
 
   activateHelpDialog = ->
     HelpDialog.toggle showAllCommandDetails: true
+    return
 
   saveOptions = ->
     $("linkHintCharacters").value = $("linkHintCharacters").value.toLowerCase()
     Option.saveOptions()
     $("saveOptions").disabled = true
     $("saveOptions").textContent = "Saved"
+    return
 
   $("saveOptions").addEventListener "click", saveOptions
   $("advancedOptionsButton").addEventListener "click", toggleAdvancedOptions
@@ -261,18 +281,23 @@ initOptionsPage = ->
     element.className = element.className + " example info"
     element.textContent = "Leave empty to reset this option."
 
-  window.onbeforeunload = -> "You have unsaved changes to options." unless $("saveOptions").disabled
+  window.onbeforeunload = ->
+    unless $("saveOptions").disabled
+      return "You have unsaved changes to options."
+    return
 
   document.addEventListener "keyup", (event) ->
     if event.ctrlKey and event.keyCode == 13
-      document.activeElement.blur() if document?.activeElement?.blur
-      saveOptions()
+      if document && document.activeElement && document.activeElement.blur
+        document.activeElement.blur()
+        saveOptions()
 
   # Populate options. The constructor adds each new object to "Option.all".
   for own name, type of Options
     new type(name,onUpdated)
 
   maintainLinkHintsView()
+  return
 
 initPopupPage = ->
   chrome.tabs.query { active: true, currentWindow: true }, ([tab]) ->
@@ -312,6 +337,7 @@ initPopupPage = ->
           "be disabled"
         else
           "be enabled"
+      return
 
     onUpdated = ->
       $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close."
@@ -330,6 +356,7 @@ initPopupPage = ->
       if event.ctrlKey and event.keyCode == 13
         saveOptions()
         window.close()
+      return
 
     # Populate options. Just one, here.
     exclusions = new ExclusionRulesOnPopupOption url, "exclusionRules", onUpdated
@@ -354,6 +381,7 @@ document.addEventListener "DOMContentLoaded", ->
       switch location.pathname
         when "/pages/options.html" then initOptionsPage()
         when "/pages/popup.html" then initPopupPage()
+    return
 
   xhr.send()
 
@@ -377,7 +405,9 @@ DomUtils?.documentReady ->
   $("backupLink").addEventListener "mousedown", populateBackupLinkUrl, true
 
   $("chooseFile").addEventListener "change", (event) ->
-    document.activeElement?.blur()
+    if document.activeElement
+      document.activeElement.blur()
+
     files = event.target.files
     if files.length == 1
       file = files[0]
@@ -395,6 +425,8 @@ DomUtils?.documentReady ->
           if option.field of backup
             option.populateElement backup[option.field]
             option.onUpdated()
+        return
+      return
 
   Option.onSave ->
     # If we're restoring a backup, then restore the backed up settingsVersion.
@@ -405,6 +437,8 @@ DomUtils?.documentReady ->
     $("chooseFile").value = ""
     # We need to apply migrations in case we are restoring an old backup.
     bgSettings.applyMigrations()
+    return
+  return
 
 # Exported for tests.
 root = exports ? window
