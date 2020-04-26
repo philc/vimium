@@ -3,7 +3,6 @@
 *.swp
 *.crx
 *.sublime*
-content_scripts/*.js
 options/*.js
 node_modules/*
 dist
