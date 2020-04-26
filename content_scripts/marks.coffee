@@ -1,4 +1,3 @@
-
 Marks =
   previousPositionRegisters: [ "`", "'" ]
   localRegisters: {}
@@ -57,7 +56,9 @@ Marks =
             else
               localStorage[@getLocationKey keyChar] = @getMarkString()
               @showMessage "Created local mark", keyChar
-          handlerStack.suppressEvent
+            return
+          return handlerStack.suppressEvent
+    return
 
   activateGotoMode: (count, {registryEntry}) ->
     @currentRegistryEntry = registryEntry
@@ -79,6 +80,7 @@ Marks =
                   HUD.showForDuration "Jumped to global mark '#{keyChar}'", 1000
                 else
                   HUD.showForDuration "Global mark not set '#{keyChar}'", 1000
+                return
             else
               markString = @localRegisters[keyChar] ? localStorage[@getLocationKey keyChar]
               if markString?
@@ -91,7 +93,8 @@ Marks =
                 @showMessage "Jumped to local mark", keyChar
               else
                 @showMessage "Local mark not set", keyChar
-          handlerStack.suppressEvent
+            return
+          return handlerStack.suppressEvent
 
 root = exports ? (window.root ?= {})
 root.Marks =  Marks
