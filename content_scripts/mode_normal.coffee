@@ -1,4 +1,4 @@
-class NormalMode extends KeyHandlerMode
+class NormalMode extends (window.KeyHandlerMode || global.KeyHandlerMode)
   constructor: (options = {}) ->
     defaults =
       name: "normal"

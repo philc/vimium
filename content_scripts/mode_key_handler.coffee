@@ -11,7 +11,7 @@
 # Observe that @keyMapping["g"] is itself also a valid key mapping.  At any point, the key state (@keyState)
 # consists of a (non-empty) list of such mappings.
 
-class KeyHandlerMode extends Mode
+class KeyHandlerMode extends (window.Mode || global.Mode)
   setKeyMapping: (@keyMapping) -> @reset()
   setPassKeys: (@passKeys) -> @reset()
   # Only for tests.
