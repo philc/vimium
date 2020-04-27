@@ -26,21 +26,18 @@
 count = 0
 
 class Mode
-  # If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console.
-  @debug: false
-  @modes: []
-
-  # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent.
-  continueBubbling: handlerStack.continueBubbling
-  suppressEvent: handlerStack.suppressEvent
-  passEventToPage: handlerStack.passEventToPage
-  suppressPropagation: handlerStack.suppressPropagation
-  restartBubbling: handlerStack.restartBubbling
-
-  alwaysContinueBubbling: handlerStack.alwaysContinueBubbling
-  alwaysSuppressPropagation: handlerStack.alwaysSuppressPropagation
-
   constructor: (@options = {}) ->
+    # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent, used here
+    # and by subclasses.
+    @continueBubbling = handlerStack.continueBubbling
+    @suppressEvent = handlerStack.suppressEvent
+    @passEventToPage = handlerStack.passEventToPage
+    @suppressPropagation = handlerStack.suppressPropagation
+    @restartBubbling = handlerStack.restartBubbling
+
+    @alwaysContinueBubbling = handlerStack.alwaysContinueBubbling
+    @alwaysSuppressPropagation = handlerStack.alwaysSuppressPropagation
+
     @handlers = []
     @exitHandlers = []
     @modeIsActive = true
@@ -55,9 +52,11 @@ class Mode
     # the need for modes which suppress all keyboard events 1) to provide handlers for all of those events,
     # or 2) to worry about event suppression and event-handler return values.
     if @options.suppressAllKeyboardEvents
-      for type in [ "keydown", "keypress" ]
-        do (handler = @options[type]) =>
-          @options[type] = (event) => @alwaysSuppressPropagation => handler? event
+      # TODO(philc): Make a let statement.
+      downHanlder = @options["keydown"]
+      @options["keydown"] = (event) => @alwaysSuppressPropagation => if downHanlder then downHanlder(event)
+      pressHandler = @options["keypress"]
+      @options["keypress"] = (event) => @alwaysSuppressPropagation => if pressHandler then pressHandler(event)
 
     @push
       keydown: @options.keydown || null
@@ -157,9 +156,11 @@ class Mode
   unshift: (handlers) ->
     handlers._name ||= "mode-#{@id}"
     @handlers.push handlerStack.unshift handlers
+    return
 
   onExit: (handler) ->
     @exitHandlers.push handler
+    return
 
   exit: (args...) ->
     return if @modeIsExiting or not @modeIsActive
@@ -178,9 +179,11 @@ class Mode
     if Mode.debug
       @log "active modes (top to bottom):"
       @log " ", mode.id for mode in Mode.modes[..].reverse()
+    return
 
   log: (args...) ->
     console.log args... if Mode.debug
+    return
 
   # For tests only.
   @top: ->
@@ -190,6 +193,11 @@ class Mode
   @reset: ->
     mode.exit() for mode in @modes
     @modes = []
+    return
+
+# If Mode.debug is true, then we generate a trace of modes being activated and deactivated on the console.
+Mode.debug = false
+Mode.modes = []
 
 class SuppressAllKeyboardEvents extends Mode
   constructor: (options = {}) ->
@@ -200,11 +208,12 @@ class SuppressAllKeyboardEvents extends Mode
 
 class CacheAllKeydownEvents extends SuppressAllKeyboardEvents
   constructor: (options = {}) ->
-    @keydownEvents = keydownEvents = []
+    keydownEvents = []
     defaults =
       name: "cacheAllKeydownEvents"
       keydown: (event) -> keydownEvents.push event
     super extend defaults, options
+    @keydownEvents = []
 
   replayKeydownEvents: ->
     handlerStack.bubbleEvent "keydown", event for event in @keydownEvents
