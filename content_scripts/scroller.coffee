@@ -9,13 +9,14 @@ activatedElement = null
 # https://github.com/philc/vimium/pull/2168#issuecomment-236488091
 
 getScrollingElement = ->
-  getSpecialScrollingElement() ? document.scrollingElement ? document.body
+  return getSpecialScrollingElement() || document.scrollingElement || document.body
 
 # Return 0, -1 or 1: the sign of the argument.
 # NOTE(smblott; 2014/12/17) We would like to use Math.sign().  However, according to this site
 # (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign) Math.sign() was
 # only introduced in Chrome 38.  This caused problems in R1.48 for users with old Chrome installations.  We
 # can replace this with Math.sign() at some point.
+# TODO(philc): 2020-04-28: now we can make this replacement.
 getSign = (val) ->
   if not val
     0
@@ -68,11 +69,14 @@ performScroll = (element, direction, amount) ->
 shouldScroll = (element, direction) ->
   computedStyle = window.getComputedStyle(element)
   # Elements with `overflow: hidden` must not be scrolled.
-  return false if computedStyle.getPropertyValue("overflow-#{direction}") == "hidden"
+  if computedStyle.getPropertyValue("overflow-#{direction}") == "hidden"
+    return false
   # Elements which are not visible should not be scrolled.
-  return false if computedStyle.getPropertyValue("visibility") in ["hidden", "collapse"]
-  return false if computedStyle.getPropertyValue("display") == "none"
-  true
+  if ["hidden", "collapse"].includes(computedStyle.getPropertyValue("visibility"))
+    return false
+  if computedStyle.getPropertyValue("display") == "none"
+    return false
+  return true
 
 # Test whether element does actually scroll in the direction required when asked to do so.  Due to chrome bug
 # 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an element will scroll.
@@ -107,13 +111,16 @@ firstScrollableElement = (element = null) ->
     if doesScroll(scrollingElement, "y", 1, 1) or doesScroll(scrollingElement, "y", -1, 1)
       return scrollingElement
     else
-      element = document.body ? getScrollingElement()
+      element = document.body || getScrollingElement()
 
   if doesScroll(element, "y", 1, 1) or doesScroll(element, "y", -1, 1)
     element
   else
+
     children = ({element: child, rect: DomUtils.getVisibleClientRect(child)} for child in element.children)
     children = children.filter (child) -> child.rect # Filter out non-visible elements.
+    # children = Array.from(element.children).map((c) => return { element: c, rect: DomUtils.getVisibleClientRect(c) })
+    # children = children.filter (c) -> c.rect # Filter out non-visible elements.
     children.map (child) -> child.area = child.rect.width * child.rect.height
     for child in children.sort((a,b) -> b.area - a.area) # Largest to smallest by visible area.
       return ele if ele = firstScrollableElement child.element
@@ -143,6 +150,7 @@ CoreScroller =
     @time = 0
     @lastEvent = @keyIsDown = null
     @installCanceEventListener()
+    return
 
   # This installs listeners for events which should cancel smooth scrolling.
   installCanceEventListener: ->
@@ -156,16 +164,20 @@ CoreScroller =
           @keyIsDown = true
           @time += 1 unless event.repeat
           @lastEvent = event
+          return
       keyup: (event) =>
         handlerStack.alwaysContinueBubbling =>
           @keyIsDown = false
           @time += 1
+          return
       blur: (event) =>
         handlerStack.alwaysContinueBubbling =>
           @time += 1 if event.target == window
+          return
 
   # Return true if CoreScroller would not initiate a new scroll right now.
-  wouldNotInitiateScroll: -> @lastEvent?.repeat and Settings.get "smoothScroll"
+  wouldNotInitiateScroll: ->
+    @lastEvent and @lastEvent.repeat and Settings.get "smoothScroll"
 
   # Calibration fudge factors for continuous scrolling.  The calibration value starts at 1.0.  We then
   # increase it (until it exceeds @maxCalibration) if we guess that the scroll is too slow, or decrease it
@@ -177,7 +189,8 @@ CoreScroller =
 
   # Scroll element by a relative amount (a number) in some direction.
   scroll: (element, direction, amount, continuous = true) ->
-    return unless amount
+    unless amount
+      return
 
     unless Settings.get "smoothScroll"
       # Jump scrolling.
@@ -187,10 +200,11 @@ CoreScroller =
 
     # We don't activate new animators on keyboard repeats; rather, the most-recently activated animator
     # continues scrolling.
-    return if @lastEvent?.repeat
+    if @lastEvent?.repeat
+      return
 
     activationTime = ++@time
-    myKeyIsStillDown = => @time == activationTime and @keyIsDown ? true
+    myKeyIsStillDown = => @time == activationTime and @keyIsDown
 
     # Store amount's sign and make amount positive; the arithmetic is clearer when amount is positive.
     sign = getSign amount
@@ -207,7 +221,8 @@ CoreScroller =
 
     animate = (timestamp) =>
       previousTimestamp ?= timestamp
-      return requestAnimationFrame(animate) if timestamp == previousTimestamp
+      if timestamp == previousTimestamp
+        return requestAnimationFrame(animate)
 
       # The elapsed time is typically about 16ms.
       elapsed = timestamp - previousTimestamp
@@ -236,10 +251,12 @@ CoreScroller =
 
     # If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test always
     # fails.
-    ++@time unless continuous
+    unless continuous
+      ++@time
 
     # Start scrolling.
     requestAnimationFrame animate
+    return
 
 # Scroller contains the two main scroll functions which are used by clients.
 Scroller =
@@ -252,13 +269,16 @@ Scroller =
         # event.target) can be found as its first element.
         # NOTE(mrmr1993): event.path has been renamed to event.deepPath in the spec, but this change is not
         # yet implemented by Chrome.
-        activatedElement = event.deepPath?[0] ? event.path?[0] ? event.target
+        path = event.deepPath || event.path
+        activatedElement = if path then path[0] else event.target
     handlerStack.push handler
     CoreScroller.init()
     @reset()
+    return
 
   reset: ->
     activatedElement = null
+    return
 
   # scroll the active element in :direction by :amount * :factor.
   # :factor is needed because :amount can take on string values, which scrollBy converts to element dimensions.
@@ -298,8 +318,9 @@ Scroller =
   # focus remains visible.
   scrollIntoView: (element) ->
     activatedElement ||= getScrollingElement() and firstScrollableElement()
-    rect = element. getClientRects()?[0]
-    if rect?
+    rects = element.getClientRects()
+    rect = if rects then rects[0]
+    if rect
       # Scroll y axis.
       if rect.bottom < 0
         amount = rect.bottom - Math.min(rect.height, window.innerHeight)
@@ -319,6 +340,7 @@ Scroller =
         amount = rect.left + Math.min(rect.width - window.innerWidth, 0)
         element = findScrollableElement element, "x", amount, 1
         CoreScroller.scroll element, "x", amount, false
+    return
 
 getSpecialScrollingElement = ->
   selector = specialScrollingElementMap[window.location.host]
