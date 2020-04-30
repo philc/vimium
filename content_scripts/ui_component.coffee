@@ -1,17 +1,14 @@
 class UIComponent
-  iframeElement: null
-  iframePort: null
-  showing: false
-  iframeFrameId: null
-  options: null
-  shadowDOM: null
-
-  toggleIframeElementClasses: (removeClass, addClass) ->
-    @iframeElement.classList.remove removeClass
-    unless @iframeElement.classList.contains addClass
-      @iframeElement.classList.add addClass
 
   constructor: (iframeUrl, className, @handleMessage) ->
+    @iframeElement = null
+    @iframePort = null
+    @showing = false
+    @iframeFrameId = null
+    # TODO(philc): Make the @options object default to {} and remove the null checks.
+    @options = null
+    @shadowDOM = null
+
     DomUtils.documentReady =>
       styleSheet = DomUtils.createElement "style"
       styleSheet.type = "text/css"
@@ -30,8 +27,10 @@ class UIComponent
       # Firefox doesn't support createShadowRoot, so guard against its non-existance.
       # https://hacks.mozilla.org/2018/10/firefox-63-tricks-and-treats/ says
       # Firefox 63 has enabled Shadow DOM v1 by default
-      @shadowDOM = shadowWrapper.attachShadow?( mode: "open" ) ?
-        shadowWrapper.createShadowRoot?() ? shadowWrapper
+      if shadowWrapper.attachShadow
+        @shadowDOM = shadowWrapper.attachShadow(mode: "open")
+      else
+        @shadowArrwap = shadowWrapper
       @shadowDOM.appendChild styleSheet
       @shadowDOM.appendChild @iframeElement
       @toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
@@ -51,16 +50,20 @@ class UIComponent
             { port1, port2 } = new MessageChannel
             @iframeElement.contentWindow.postMessage vimiumSecret, chrome.runtime.getURL(""), [ port2 ]
             port1.onmessage = (event) =>
-              switch event?.data?.name ? event?.data
+              eventName = null
+              if event
+                eventName = (if event.data then event.data.name) || event.data
+              switch eventName
                 when "uiComponentIsReady"
                   # If any other frame receives the focus, then hide the UI component.
                   chrome.runtime.onMessage.addListener ({name, focusFrameId}) =>
-                    if name == "frameFocused" and @options?.focus and focusFrameId not in [frameId, @iframeFrameId]
+                    if name == "frameFocused" and @options and @options.focus and
+                        not [frameId, @iframeFrameId].includes(focusFrameId)
                       @hide false
                     false # We will not be calling sendResponse.
                   # If this frame receives the focus, then hide the UI component.
                   window.addEventListener "focus", (forTrusted (event) =>
-                    if event.target == window and @options?.focus
+                    if event.target == window and @options and @options.focus
                       @hide false
                     true # Continue propagating the event.
                   ), true
@@ -69,39 +72,56 @@ class UIComponent
                 when "setIframeFrameId" then @iframeFrameId = event.data.iframeFrameId
                 when "hide" then @hide()
                 else @handleMessage event
+            return
+          return
+        return
       if Utils.isFirefox()
           @postMessage name: "settings", isFirefox: true
+      return
+
+  toggleIframeElementClasses: (removeClass, addClass) ->
+    @iframeElement.classList.remove removeClass
+    @iframeElement.classList.add addClass
+    return
 
   # Post a message (if provided), then call continuation (if provided).  We wait for documentReady() to ensure
   # that the @iframePort set (so that we can use @iframePort.use()).
   postMessage: (message = null, continuation = null) ->
-    @iframePort?.use (port) ->
-      port.postMessage message if message?
-      continuation?()
+    if @iframePort
+      @iframePort.use (port) ->
+        port.postMessage message if message?
+        if continuation
+          continuation()
+        return
+    return
 
   activate: (@options = null) ->
     @postMessage @options, =>
       @toggleIframeElementClasses "vimiumUIComponentHidden", "vimiumUIComponentVisible"
-      @iframeElement.focus() if @options?.focus
+      if @options && @options.focus
+        @iframeElement.focus()
       @showing = true
+    return
 
   hide: (shouldRefocusOriginalFrame = true) ->
     # We post a non-message (null) to ensure that hide() requests cannot overtake activate() requests.
     @postMessage null, =>
-      if @showing
-        @showing = false
-        @toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
-        if @options?.focus
-          @iframeElement.blur()
-          if shouldRefocusOriginalFrame
-            if @options?.sourceFrameId?
-              chrome.runtime.sendMessage
-                handler: "sendMessageToFrames",
-                message: name: "focusFrame", frameId: @options.sourceFrameId, forceFocusThisFrame: true
-            else
-              Utils.nextTick -> window.focus()
-        @options = null
-        @postMessage "hidden" # Inform the UI component that it is hidden.
+      return unless @showing
+      @showing = false
+      @toggleIframeElementClasses "vimiumUIComponentVisible", "vimiumUIComponentHidden"
+      if @options && @options.focus
+        @iframeElement.blur()
+        if shouldRefocusOriginalFrame
+          if @options && @options.sourceFrameId?
+            chrome.runtime.sendMessage
+              handler: "sendMessageToFrames",
+              message: name: "focusFrame", frameId: @options.sourceFrameId, forceFocusThisFrame: true
+          else
+            Utils.nextTick -> window.focus()
+      @options = null
+      @postMessage "hidden" # Inform the UI component that it is hidden.
+      return
+    return
 
 root = exports ? (window.root ?= {})
 root.UIComponent = UIComponent
