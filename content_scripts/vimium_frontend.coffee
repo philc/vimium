@@ -17,10 +17,14 @@ windowIsFocused = do ->
   windowHasFocus = null
   DomUtils.documentReady -> windowHasFocus = document.hasFocus()
   window.addEventListener "focus", (forTrusted (event) ->
-    windowHasFocus = true if event.target == window; true
+    if event.target == window
+      windowHasFocus = true
+    return true
   ), true
   window.addEventListener "blur", (forTrusted (event) ->
-    windowHasFocus = false if event.target == window; true
+    if event.target == window
+      windowHasFocus = false
+    return true
   ), true
   -> windowHasFocus
 
@@ -30,24 +34,27 @@ frameId = null
 # For debugging only. This writes to the Vimium log page, the URL of whichis shown on the console on the
 # background page.
 bgLog = (args...) ->
-  args = (arg.toString() for arg in args)
+  args = args.map((a) => a.toString())
   Frame.postMessage "log", message: args.join " "
+  return
 
 # If an input grabs the focus before the user has interacted with the page, then grab it back (if the
 # grabBackFocus option is set).
 class GrabBackFocus extends Mode
-  # console.log when we grab focus back from the page, so web devs using Vimium don't get confused.
-  logged: false
-
   constructor: ->
     exitEventHandler = =>
       @alwaysContinueBubbling =>
         @exit()
         chrome.runtime.sendMessage handler: "sendMessageToFrames", message: name: "userIsInteractingWithThePage"
+        return
 
     super
       name: "grab-back-focus"
       keydown: exitEventHandler
+
+    # True after we've grabbed back focus to the page and logged it via console.log , so web devs using Vimium
+    # don't get confused.
+    @logged = false
 
     @push
       _name: "grab-back-focus-mousedown"
@@ -62,9 +69,11 @@ class GrabBackFocus extends Mode
             _name: "grab-back-focus-focus"
             focus: (event) => @grabBackFocus event.target
           # An input may already be focused. If so, grab back the focus.
-          @grabBackFocus document.activeElement if document.activeElement
+          if document.activeElement
+            @grabBackFocus document.activeElement
         else
           @exit()
+      return
 
     # This mode is active in all frames.  A user might have begun interacting with one frame without other
     # frames detecting this.  When one GrabBackFocus mode exits, we broadcast a message to inform all
@@ -72,11 +81,14 @@ class GrabBackFocus extends Mode
     chrome.runtime.onMessage.addListener listener = ({name}) =>
       if name == "userIsInteractingWithThePage"
         chrome.runtime.onMessage.removeListener listener
-        @exit() if @modeIsActive
-      false # We will not be calling sendResponse.
+        if @modeIsActive
+          @exit()
+      # We will not be calling sendResponse.
+      return false
 
   grabBackFocus: (element) ->
-    return @continueBubbling unless DomUtils.isFocusable element
+    unless DomUtils.isFocusable element
+      return @continueBubbling
     unless @logged or element == document.body
       @logged = true
       unless window.vimiumDomTestsAreRunning
@@ -91,7 +103,8 @@ handlerStack.push
   _name: "GrabBackFocus-pushState-monitor"
   click: (event) ->
     # If a focusable element is focused, the user must have clicked on it. Retain focus and bail.
-    return true if DomUtils.isFocusable document.activeElement
+    if DomUtils.isFocusable document.activeElement
+      return true
 
     target = event.target
     while target
@@ -108,7 +121,7 @@ handlerStack.push
         return new GrabBackFocus()
       else
         target = target.parentElement
-    true
+    return true
 
 installModes = ->
   # Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
@@ -118,8 +131,10 @@ installModes = ->
   Scroller.init()
   FindModeHistory.init()
   new InsertMode permanent: true
-  new GrabBackFocus if isEnabledForUrl
-  normalMode # Return the normalMode object (for the tests).
+  if isEnabledForUrl
+    new GrabBackFocus
+  # Return the normalMode object (for the tests).
+  normalMode
 
 #
 # Complete initialization work that should be done prior to DOMReady.
@@ -132,12 +147,14 @@ initializePreDomReady = ->
   requestHandlers =
     focusFrame: (request) -> if (frameId == request.frameId) then focusThisFrame request
     getScrollPosition: (ignoredA, ignoredB, sendResponse) ->
-      sendResponse scrollX: window.scrollX, scrollY: window.scrollY if frameId == 0
+      if frameId == 0
+        sendResponse scrollX: window.scrollX, scrollY: window.scrollY
     setScrollPosition: setScrollPosition
     frameFocused: -> # A frame has received the focus; we don't care here (UI components handle this).
     checkEnabledAfterURLChange: checkEnabledAfterURLChange
     runInTopFrame: ({sourceFrameId, registryEntry}) ->
-      NormalModeCommands[registryEntry.command] sourceFrameId, registryEntry if DomUtils.isTopFrame()
+      if DomUtils.isTopFrame()
+        NormalModeCommands[registryEntry.command] sourceFrameId, registryEntry
     linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
     showMessage: (request) -> HUD.showForDuration request.message, 2000
     executeScript: (request) -> DomUtils.injectUserScript request.script
@@ -147,15 +164,17 @@ initializePreDomReady = ->
     # Some requests intended for the background page are delivered to the options page too; ignore them.
     unless request.handler and not request.name
       # Some request are handled elsewhere; ignore them too.
-      unless request.name in ["userIsInteractingWithThePage"]
-        if isEnabledForUrl or request.name in ["checkEnabledAfterURLChange", "runInTopFrame"]
+      unless request.name == "userIsInteractingWithThePage"
+        if isEnabledForUrl or ["checkEnabledAfterURLChange", "runInTopFrame"].includes(request.name)
           requestHandlers[request.name] request, sender, sendResponse
-    false # Ensure that the sendResponse callback is freed.
+    # Ensure that the sendResponse callback is freed.
+    false
 
 # Wrapper to install event listeners.  Syntactic sugar.
 installListener = (element, event, callback) ->
   element.addEventListener(event, forTrusted(->
-    root.extend window, root unless extend? # See #2800.
+    unless extend? # See #2800.
+      root.extend window, root
     if isEnabledForUrl then callback.apply(this, arguments) else true
   ), true)
 
@@ -163,7 +182,7 @@ installListener = (element, event, callback) ->
 # Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl each time so
 # we know whether the listener should run or not.
 # Run this as early as possible, so the page can't register any event handlers before us.
-# Note: We install the listeners even if Vimium is disabled.  See comment in commit
+# Note: We install the listeners even if Vimium is disabled. See comment in commit
 # 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
 #
 installListeners = Utils.makeIdempotent ->
@@ -173,15 +192,14 @@ installListeners = Utils.makeIdempotent ->
     do (type) -> installListener window, type, (event) -> handlerStack.bubbleEvent type, event
   installListener document, "DOMActivate", (event) -> handlerStack.bubbleEvent 'DOMActivate', event
 
-#
 # Whenever we get the focus:
 # - Tell the background page this frame's URL.
 # - Check if we should be enabled.
-#
 onFocus = forTrusted (event) ->
   if event.target == window
     chrome.runtime.sendMessage handler: "frameFocused"
     checkIfEnabledForUrl true
+  return
 
 # We install these listeners directly (that is, we don't use installListener) because we still need to receive
 # events when Vimium is not enabled.
@@ -196,9 +214,17 @@ Frame =
   port: null
   listeners: {}
 
-  addEventListener: (handler, callback) -> @listeners[handler] = callback
-  postMessage: (handler, request = {}) -> @port.postMessage extend request, {handler}
-  linkHintsMessage: (request) -> HintCoordinator[request.messageType] request
+  addEventListener: (handler, callback) ->
+    @listeners[handler] = callback
+    return
+
+  postMessage: (handler, request = {}) ->
+    @port.postMessage extend request, {handler}
+    return
+
+  linkHintsMessage: (request) ->
+    HintCoordinator[request.messageType] request
+
   registerFrameId: ({chromeFrameId}) ->
     frameId = root.frameId = window.frameId = chromeFrameId
     # We register a frame immediately only if it is focused or its window isn't tiny.  We register tiny
@@ -211,23 +237,29 @@ Frame =
         window.removeEventListener "resize", resizeHandler, true
         Frame.postMessage "registerFrame"
       window.addEventListener "focus", (focusHandler = forTrusted (event) ->
-        postRegisterFrame() if event.target == window
+        if event.target == window
+          postRegisterFrame()
+        return
       ), true
       window.addEventListener "resize", (resizeHandler = forTrusted (event) ->
-        postRegisterFrame() unless DomUtils.windowIsTooSmall()
+        unless DomUtils.windowIsTooSmall()
+          postRegisterFrame()
+        return
       ), true
 
   init: ->
     @port = chrome.runtime.connect name: "frames"
 
     @port.onMessage.addListener (request) =>
-      root.extend window, root unless extend? # See #2800 and #2831.
+      unless extend? # See #2800 and #2831.
+        root.extend window, root
       (@listeners[request.handler] ? this[request.handler]) request
 
     # We disable the content scripts when we lose contact with the background page, or on unload.
     @port.onDisconnect.addListener disconnect = Utils.makeIdempotent => @disconnect()
     window.addEventListener "unload", (forTrusted (event) ->
-      disconnect() if event.target == window
+      if event.target == window
+        disconnect()
     ), true
 
   disconnect: ->
@@ -248,9 +280,10 @@ setScrollPosition = ({ scrollX, scrollY }) ->
       Utils.nextTick ->
         window.focus()
         document.body.focus()
-        if 0 < scrollX or 0 < scrollY
+        if scrollX > 0 or scrollY > 0
           Marks.setPreviousPosition()
           window.scrollTo scrollX, scrollY
+        return
 
 flashFrame = do ->
   highlightedFrameElement = null
@@ -278,6 +311,7 @@ flashFrame = do ->
 
     document.documentElement.appendChild highlightedFrameElement
     Utils.setTimeout 200, -> highlightedFrameElement.remove()
+    return
 
 #
 # Called from the backend in order to change frame focus.
@@ -293,8 +327,12 @@ focusThisFrame = (request) ->
     window.focus()
     # On Firefox, window.focus doesn't always draw focus back from a child frame (bug 554039).
     # We blur the active element if it is an iframe, which gives the window back focus as intended.
-    document.activeElement.blur() if document.activeElement.tagName.toLowerCase() == "iframe"
-    flashFrame() if request.highlight
+    if document.activeElement.tagName.toLowerCase() == "iframe"
+      document.activeElement.blur()
+    if request.highlight
+      flashFrame()
+    return
+  return
 
 # Used by focusInput command.
 root.lastFocusedInput = do ->
@@ -305,6 +343,7 @@ root.lastFocusedInput = do ->
       DomUtils = window.DomUtils ? root.DomUtils # Workaround FF bug 1408996.
       if DomUtils.isEditable event.target
         recentlyFocusedElement = event.target
+      return
   , true
   -> recentlyFocusedElement
 
@@ -315,10 +354,12 @@ checkIfEnabledForUrl = do ->
   Frame.addEventListener "isEnabledForUrl", (response) ->
     {isEnabledForUrl, passKeys, frameIsFocused, isFirefox} = response
     Utils.isFirefox = -> isFirefox
-    installModes() unless normalMode
+    unless normalMode
+      installModes()
     normalMode.setPassKeys passKeys
     # Hide the HUD if we're not enabled.
-    HUD.hide true, false unless isEnabledForUrl
+    unless isEnabledForUrl
+      HUD.hide true, false
 
   (frameIsFocused = windowIsFocused()) ->
     Frame.postMessage "isEnabledForUrl", {frameIsFocused, url: window.location.toString()}
@@ -327,13 +368,18 @@ checkIfEnabledForUrl = do ->
 # correct enabled state (but only if this frame has the focus).
 checkEnabledAfterURLChange = forTrusted ->
   Scroller.reset() # The URL changing feels like navigation to the user, so reset the scroller (see #3119).
-  checkIfEnabledForUrl() if windowIsFocused()
+  if windowIsFocused()
+    checkIfEnabledForUrl()
+  return
 
 # If we are in the help dialog iframe, then HelpDialog is already defined with the necessary functions.
 root.HelpDialog ?=
   helpUI: null
-  isShowing: -> @helpUI?.showing
-  abort: -> @helpUI.hide false if @isShowing()
+  isShowing: ->
+    return @helpUI && @helpUI.showing
+  abort: ->
+    if @isShowing()
+      @helpUI.hide false
 
   toggle: (request) ->
     DomUtils.documentComplete =>
