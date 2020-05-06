@@ -208,7 +208,7 @@ class VisualMode extends KeyHandlerMode
       new CaretMode
     "o": -> @movement.reverseSelection()
 
-  constructor: (options = {}) ->
+  init: (options = {}) ->
     @movement = new Movement options.alterMethod ? "extend"
     @selection = @movement.selection
 
@@ -230,14 +230,14 @@ class VisualMode extends KeyHandlerMode
       "<c-e>": command: (count) -> Scroller.scrollBy "y", count * Settings.get("scrollStepSize"), 1, false
       "<c-y>": command: (count) -> Scroller.scrollBy "y", -count * Settings.get("scrollStepSize"), 1, false
 
-    super extend options,
+    super.init(extend(options,
       name: options.name ? "visual"
       indicator: options.indicator ? "Visual mode"
       singleton: "visual-mode-group" # Visual mode, visual-line mode and caret mode each displace each other.
       exitOnEscape: true
       suppressAllKeyboardEvents: true
       keyMapping: keyMapping
-      commandHandler: @commandHandler.bind this
+      commandHandler: @commandHandler.bind this))
 
     # If there was a range selection when the user lanuched visual mode, then we retain the selection on exit.
     @shouldRetainSelectionOnExit = @options.userLaunchedMode and DomUtils.getSelectionType(@selection) == "Range"
@@ -297,7 +297,8 @@ class VisualMode extends KeyHandlerMode
         command count
     @movement.scrollIntoView()
 
-  find: (count, backwards) =>
+  # find: (count, backwards) =>
+  find: (count, backwards) ->
     initialRange = @selection.getRangeAt(0).cloneRange()
     for [0...count] by 1
       nextQuery = FindMode.getQuery backwards
@@ -308,9 +309,13 @@ class VisualMode extends KeyHandlerMode
         @movement.setSelectionRange initialRange
         HUD.showForDuration("No matches for '#{FindMode.query.rawQuery}'", 1000)
         return
+
     # The find was successfull. If we're in caret mode, then we should now have a selection, so we can
     # drop back into visual mode.
-    new VisualMode if @name == "caret" and 0 < @selection.toString().length
+    if @name == "caret" and @selection.toString().length > 0
+      mode = new VisualMode()
+      mode.init()
+      return mode
 
   # Yank the selection; always exits; collapses the selection; set @yankedText and return it.
   yank: (args = {}) ->
@@ -326,8 +331,8 @@ class VisualMode extends KeyHandlerMode
     @yankedText
 
 class VisualLineMode extends VisualMode
-  constructor: (options = {}) ->
-    super extend options, name: "visual/line", indicator: "Visual mode (line)"
+  init: (options = {}) ->
+    super.init(extend(options, name: "visual/line", indicator: "Visual mode (line)"))
     @extendSelection()
 
   commandHandler: ({command: {command}, count}) ->
@@ -358,8 +363,8 @@ class VisualLineMode extends VisualMode
       @movement.reverseSelection()
 
 class CaretMode extends VisualMode
-  constructor: (options = {}) ->
-    super extend options, name: "caret", indicator: "Caret mode", alterMethod: "move"
+  init: (options = {}) ->
+    super.init(extend(options, name: "caret", indicator: "Caret mode", alterMethod: "move"))
 
     # Establish the initial caret.
     switch DomUtils.getSelectionType(@selection)

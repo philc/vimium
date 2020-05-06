@@ -1,6 +1,7 @@
 
 class InsertMode extends Mode
   constructor: (options = {}) ->
+    super()
     # There is one permanently-installed instance of InsertMode.  It tracks focus changes and
     # activates/deactivates itself (by setting @insertModeLock) accordingly.
     @permanent = options.permanent
@@ -34,7 +35,7 @@ class InsertMode extends Mode
       keypress: handleKeyEvent
       keydown: handleKeyEvent
 
-    super extend defaults, options
+    super.init(extend(defaults, options))
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     InsertMode.permanentInstance = this if @permanent
@@ -57,10 +58,11 @@ class InsertMode extends Mode
 # This implements the pasNexKey command.
 class PassNextKeyMode extends Mode
   constructor: (count = 1) ->
+    super()
     seenKeyDown = false
     keyDownCount = 0
 
-    super
+    super.init
       name: "pass-next-key"
       indicator: "Pass next key."
       # We exit on blur because, once we lose the focus, we can no longer track key events.

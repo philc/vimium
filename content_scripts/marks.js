@@ -44,7 +44,8 @@ const Marks = {
 
   activateCreateMode(count, {registryEntry}) {
     this.currentRegistryEntry = registryEntry;
-    this.mode = new Mode({
+    this.mode = new Mode()
+    this.mode.init({
       name: "create-mark",
       indicator: "Create mark...",
       exitOnEscape: true,
@@ -78,7 +79,8 @@ const Marks = {
 
   activateGotoMode(count, {registryEntry}) {
     this.currentRegistryEntry = registryEntry;
-    this.mode = new Mode({
+    this.mode = new Mode()
+    this.mode.init({
       name: "goto-mark",
       indicator: "Go to mark...",
       exitOnEscape: true,

@@ -1,11 +1,11 @@
 class NormalMode extends (window.KeyHandlerMode || global.KeyHandlerMode)
-  constructor: (options = {}) ->
+  init: (options = {}) ->
     defaults =
       name: "normal"
       indicator: false # There is normally no mode indicator in normal mode.
       commandHandler: @commandHandler.bind this
 
-    super extend defaults, options
+    super.init(extend(defaults, options))
 
     chrome.storage.local.get "normalModeKeyStateMapping", (items) =>
       @setKeyMapping items.normalModeKeyStateMapping
@@ -34,11 +34,13 @@ class NormalMode extends (window.KeyHandlerMode || global.KeyHandlerMode)
       NormalModeCommands[registryEntry.command] count, {registryEntry}
 
 enterNormalMode = (count) ->
-  new NormalMode
+  mode = new NormalMode()
+  mode.init(
     indicator: "Normal mode (pass keys disabled)"
     exitOnEscape: true
     singleton: "enterNormalMode"
-    count: count
+    count: count)
+  mode
 
 NormalModeCommands =
   # Scrolling.
@@ -107,10 +109,14 @@ NormalModeCommands =
     new InsertMode global: true, exitOnFocus: true
 
   enterVisualMode: ->
-    new VisualMode userLaunchedMode: true
+    mode = new VisualMode()
+    mode.init(userLaunchedMode: true)
+    mode
 
   enterVisualLineMode: ->
-    new VisualLineMode userLaunchedMode: true
+    mode = new VisualLineMode()
+    mode.init(userLaunchedMode: true)
+    mode
 
   enterFindMode: ->
     Marks.setPreviousPosition()
@@ -325,6 +331,7 @@ findAndFollowRel = (value) ->
 class FocusSelector extends Mode
   constructor: (hints, visibleInputs, selectedInputIndex) ->
     super
+    super.init(
       name: "focus-selector"
       exitOnClick: true
       keydown: (event) =>
@@ -338,7 +345,7 @@ class FocusSelector extends Mode
         else unless event.key == "Shift"
           @exit()
           # Give the new mode the opportunity to handle the event.
-          @restartBubbling
+          @restartBubbling)
 
     @hintContainingDiv = DomUtils.addElementList hints,
       id: "vimiumInputMarkerContainer"

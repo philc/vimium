@@ -281,7 +281,8 @@ class LinkHintsMode {
     this.markerMatcher = Settings.get("filterLinkHints") ? new FilterHints : new AlphabetHints;
     this.markerMatcher.fillInMarkers(this.hintMarkers, this.getNextZIndex.bind(this));
 
-    this.hintMode = new Mode({
+    this.hintMode = new Mode();
+    this.hintMode.init({
       name: `hint/${this.mode.name}`,
       indicator: false,
       singleton: "link-hints-mode",
@@ -1213,7 +1214,8 @@ var LocalHints = {
 // Suppress all keyboard events until the user stops typing for sufficiently long.
 class TypingProtector extends Mode {
   constructor(delay, callback) {
-    super({
+    super();
+    this.init({
       name: "hint/typing-protector",
       suppressAllKeyboardEvents: true,
       keydown: resetExitTimer,
@@ -1233,7 +1235,8 @@ class TypingProtector extends Mode {
 
 class WaitForEnter extends Mode {
   constructor(callback) {
-    super({
+    super();
+    this.init({
       name: "hint/wait-for-enter",
       suppressAllKeyboardEvents: true,
       indicator: "Hit <Enter> to proceed..."
@@ -1255,7 +1258,8 @@ class WaitForEnter extends Mode {
 
 class HoverMode extends Mode {
   constructor(link) {
-    super({name: "hover-mode", singleton: "hover-mode", exitOnEscape: true});
+    super();
+    super.init({name: "hover-mode", singleton: "hover-mode", exitOnEscape: true});
     this.link = link;
     DomUtils.simulateHover(this.link);
     this.onExit(() => DomUtils.simulateUnhover(this.link));

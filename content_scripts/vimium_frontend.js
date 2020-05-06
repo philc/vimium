@@ -44,6 +44,7 @@ const bgLog = function(...args) {
 // grabBackFocus option is set).
 class GrabBackFocus extends Mode {
   constructor() {
+    super();
     let listener;
     const exitEventHandler = () => {
       return this.alwaysContinueBubbling(() => {
@@ -53,7 +54,7 @@ class GrabBackFocus extends Mode {
       });
     };
 
-    super({
+    super.init({
       name: "grab-back-focus",
       keydown: exitEventHandler
     });
@@ -148,7 +149,8 @@ handlerStack.push({
 const installModes = function() {
   // Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
   // activates/deactivates itself accordingly.
-  normalMode = new NormalMode;
+  normalMode = new NormalMode();
+  normalMode.init();
   // Initialize components upon which normal mode depends.
   Scroller.init();
   FindModeHistory.init();

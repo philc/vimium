@@ -1063,6 +1063,12 @@ context("Triggering insert mode",
 //   })
 // );
 
+const createMode = (options) => {
+  const mode = new Mode();
+  mode.init(options);
+  return mode;
+};
+
 context("Mode utilities",
   setup(() => {
     initializeModeState();
@@ -1079,7 +1085,11 @@ context("Mode utilities",
     let mode;
     let count = 0;
     class Test extends Mode {
-      constructor() { count += 1; super({singleton: "test"}); }
+      constructor() {
+        count += 1;
+        super();
+        super.init({singleton: "test"});
+      }
       exit() { count -= 1; return super.exit(); }
     }
     assert.isTrue(count === 0);
@@ -1092,14 +1102,14 @@ context("Mode utilities",
   }),
 
   should("exit on escape", () => {
-    const test = new Mode({exitOnEscape: true});
+    const test = createMode({exitOnEscape: true});
     assert.isTrue(test.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
     assert.isFalse(test.modeIsActive);
   }),
 
   should("not exit on escape if not enabled", () => {
-    const test = new Mode({exitOnEscape: false});
+    const test = createMode({exitOnEscape: false});
     assert.isTrue(test.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
     assert.isTrue(test.modeIsActive);
@@ -1108,7 +1118,7 @@ context("Mode utilities",
   should("exit on blur", () => {
     const element = document.getElementById("first");
     element.focus();
-    const test = new Mode({exitOnBlur: element});
+    const test = createMode({exitOnBlur: element});
     assert.isTrue(test.modeIsActive);
     element.blur();
     assert.isFalse(test.modeIsActive);
@@ -1117,7 +1127,7 @@ context("Mode utilities",
   should("not exit on blur if not enabled", () => {
     const element = document.getElementById("first");
     element.focus();
-    const test = new Mode({exitOnBlur: false});
+    const test = createMode({exitOnBlur: false});
     assert.isTrue(test.modeIsActive);
     element.blur();
     assert.isTrue(test.modeIsActive);
@@ -1130,14 +1140,14 @@ context("PostFindMode",
     const testContent = "<input type='text' id='first'/>";
     document.getElementById("test-div").innerHTML = testContent;
     document.getElementById("first").focus();
-    this.postFindMode = new PostFindMode;
+    this.postFindMode = new PostFindMode();
   }),
 
   tearDown(() => document.getElementById("test-div").innerHTML = ""),
 
   should("be a singleton", () => {
     assert.isTrue(this.postFindMode.modeIsActive);
-    new PostFindMode;
+    new PostFindMode();
     assert.isFalse(this.postFindMode.modeIsActive);
   }),
 

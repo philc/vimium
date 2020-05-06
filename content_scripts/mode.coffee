@@ -26,7 +26,10 @@
 count = 0
 
 class Mode
-  constructor: (@options = {}) ->
+  # This is a function rather than a constructor, becausae often subclasses need to reference `this` when
+  # setting up the options argument. `this` can't be referenced in subclasses prior to calling their
+  # superclass constructor.
+  init: (@options = {}) ->
     # Constants; short, readable names for the return values expected by handlerStack.bubbleEvent, used here
     # and by subclasses.
     @continueBubbling = handlerStack.continueBubbling
@@ -201,10 +204,11 @@ Mode.modes = []
 
 class SuppressAllKeyboardEvents extends Mode
   constructor: (options = {}) ->
+    super()
     defaults =
       name: "suppressAllKeyboardEvents"
       suppressAllKeyboardEvents: true
-    super extend defaults, options
+    super.init(extend(defaults, options))
 
 class CacheAllKeydownEvents extends SuppressAllKeyboardEvents
   constructor: (options = {}) ->

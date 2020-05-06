@@ -21,12 +21,12 @@ class KeyHandlerMode extends (window.Mode || global.Mode)
   reset: (@countPrefix = 0) ->
     @keyState = [@keyMapping]
 
-  constructor: (options) ->
+  init: (options) ->
+    args = extend(options, keydown: @onKeydown.bind(this))
+    super.init(args)
+
     @commandHandler = options.commandHandler ? (->)
     @setKeyMapping options.keyMapping ? {}
-
-    super extend options,
-      keydown: @onKeydown.bind this
 
     if options.exitOnEscape
       # If we're part way through a command's key sequence, then a first Escape should reset the key state,

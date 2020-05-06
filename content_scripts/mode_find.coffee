@@ -4,7 +4,8 @@
 # used by PostFindMode, below.
 class SuppressPrintable extends Mode
   constructor: (options) ->
-    super options
+    super()
+    super.init(options)
     handler = (event) => if KeyboardUtils.isPrintable event then @suppressEvent else @continueBubbling
     type = DomUtils.getSelectionType()
 
@@ -61,13 +62,14 @@ class FindMode extends Mode
     hasResults: false
 
   constructor: (options = {}) ->
+    super()
     # Save the selection, so findInPlace can restore it.
     @initialRange = getCurrentRange()
     FindMode.query = rawQuery: ""
     if options.returnToViewport
       @scrollX = window.scrollX
       @scrollY = window.scrollY
-    super extend options,
+    super.init extend options,
       name: "find"
       indicator: false
       exitOnClick: true
