@@ -57,9 +57,13 @@ class Mode
     if @options.suppressAllKeyboardEvents
       # TODO(philc): Make a let statement.
       downHanlder = @options["keydown"]
-      @options["keydown"] = (event) => @alwaysSuppressPropagation => if downHanlder then downHanlder(event)
+      @options["keydown"] = (event) => @alwaysSuppressPropagation =>
+        if downHanlder
+          downHanlder(event)
       pressHandler = @options["keypress"]
-      @options["keypress"] = (event) => @alwaysSuppressPropagation => if pressHandler then pressHandler(event)
+      @options["keypress"] = (event) => @alwaysSuppressPropagation =>
+        if pressHandler
+          pressHandler(event)
 
     @push
       keydown: @options.keydown || null
@@ -71,9 +75,13 @@ class Mode
         # undefined, then the request propagates to the next mode.
         # The active indicator can also be changed with @setIndicator().
         if @options.indicator?
-          if @options.indicator then HUD.show @options.indicator else HUD.hide true, false
+          if @options.indicator
+            HUD.show @options.indicator
+          else
+            HUD.hide true, false
           @passEventToPage
-        else @continueBubbling
+        else
+          @continueBubbling
 
     # If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
     if @options.exitOnEscape
@@ -82,7 +90,8 @@ class Mode
       @push
         _name: "mode-#{@id}/exitOnEscape"
         "keydown": (event) =>
-          return @continueBubbling unless KeyboardUtils.isEscape event
+          unless KeyboardUtils.isEscape event
+            return @continueBubbling
           @exit event, event.target
           @suppressEvent
 
@@ -91,7 +100,9 @@ class Mode
     if @options.exitOnBlur
       @push
         _name: "mode-#{@id}/exitOnBlur"
-        "blur": (event) => @alwaysContinueBubbling => @exit event if event.target == @options.exitOnBlur
+        "blur": (event) => @alwaysContinueBubbling =>
+          if event.target == @options.exitOnBlur
+            @exit event
 
     # If @options.exitOnClick is truthy, then the mode will exit on any click event.
     if @options.exitOnClick
@@ -143,6 +154,7 @@ class Mode
     Mode.modes.push this
     @setIndicator()
     @logModes()
+    return
     # End of Mode constructor.
 
   setIndicator: (indicator = @options.indicator) ->
@@ -166,12 +178,15 @@ class Mode
     return
 
   exit: (args...) ->
-    return if @modeIsExiting or not @modeIsActive
+    if @modeIsExiting or not @modeIsActive
+      return
     @log "deactivate:", @id
     @modeIsExiting = true
 
-    handler args... for handler in @exitHandlers
-    handlerStack.remove handlerId for handlerId in @handlers
+    for handler in @exitHandlers
+      handler args...
+    for handlerId in @handlers
+      handlerStack.remove handlerId
     Mode.modes = Mode.modes.filter (mode) => mode != this
 
     @modeIsActive = false
@@ -181,11 +196,13 @@ class Mode
   logModes: ->
     if Mode.debug
       @log "active modes (top to bottom):"
-      @log " ", mode.id for mode in Mode.modes[..].reverse()
+      for mode in Mode.modes[..].reverse()
+        @log " ", mode.id
     return
 
   log: (args...) ->
-    console.log args... if Mode.debug
+    if Mode.debug
+      console.log args...
     return
 
   # For tests only.
@@ -194,7 +211,8 @@ class Mode
 
   # For tests only.
   @reset: ->
-    mode.exit() for mode in @modes
+    for mode in @modes
+      mode.exit()
     @modes = []
     return
 
