@@ -11,17 +11,20 @@ class NormalMode extends (window.KeyHandlerMode || global.KeyHandlerMode)
       @setKeyMapping items.normalModeKeyStateMapping
 
     chrome.storage.onChanged.addListener (changes, area) =>
-      if area == "local" and changes.normalModeKeyStateMapping?.newValue
+      if area == "local" and changes.normalModeKeyStateMapping and changes.normalModeKeyStateMapping.newValue
         @setKeyMapping changes.normalModeKeyStateMapping.newValue
+    return
 
   commandHandler: ({command: registryEntry, count}) ->
     count *= registryEntry.options.count ? 1
-    count = 1 if registryEntry.noRepeat
+    if registryEntry.noRepeat
+      count = 1
 
     if registryEntry.repeatLimit? and registryEntry.repeatLimit < count
-      return unless confirm """
+      result = confirm """
         You have asked Vimium to perform #{count} repetitions of the command: #{registryEntry.description}.\n
         Are you sure you want to continue?"""
+      return unless result
 
     if registryEntry.topFrame
       # We never return to a UI-component frame (e.g. the help dialog), it might have lost the focus.
@@ -32,6 +35,7 @@ class NormalMode extends (window.KeyHandlerMode || global.KeyHandlerMode)
       chrome.runtime.sendMessage {handler: "runBackgroundCommand", registryEntry, count}
     else
       NormalModeCommands[registryEntry.command] count, {registryEntry}
+    return
 
 enterNormalMode = (count) ->
   mode = new NormalMode()
@@ -47,28 +51,30 @@ NormalModeCommands =
   scrollToBottom: ->
     Marks.setPreviousPosition()
     Scroller.scrollTo "y", "max"
+    return
   scrollToTop: (count) ->
     Marks.setPreviousPosition()
     Scroller.scrollTo "y", (count - 1) * Settings.get("scrollStepSize")
-  scrollToLeft: -> Scroller.scrollTo "x", 0
-  scrollToRight: -> Scroller.scrollTo "x", "max"
-  scrollUp: (count) -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize") * count
-  scrollDown: (count) -> Scroller.scrollBy "y", Settings.get("scrollStepSize") * count
-  scrollPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1/2 * count
-  scrollPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1/2 * count
-  scrollFullPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1 * count
-  scrollFullPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1 * count
-  scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count
-  scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count
+    return
+  scrollToLeft: -> Scroller.scrollTo "x", 0; return
+  scrollToRight: -> Scroller.scrollTo "x", "max"; return
+  scrollUp: (count) -> Scroller.scrollBy "y", -1 * Settings.get("scrollStepSize") * count; return
+  scrollDown: (count) -> Scroller.scrollBy "y", Settings.get("scrollStepSize") * count; return
+  scrollPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1/2 * count; return
+  scrollPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1/2 * count; return
+  scrollFullPageUp: (count) -> Scroller.scrollBy "y", "viewSize", -1 * count; return
+  scrollFullPageDown: (count) -> Scroller.scrollBy "y", "viewSize", 1 * count; return
+  scrollLeft: (count) -> Scroller.scrollBy "x", -1 * Settings.get("scrollStepSize") * count; return
+  scrollRight: (count) -> Scroller.scrollBy "x", Settings.get("scrollStepSize") * count; return
 
   # Tab navigation: back, forward.
-  goBack: (count) -> history.go(-count)
-  goForward: (count) -> history.go(count)
+  goBack: (count) -> history.go(-count); return
+  goForward: (count) -> history.go(count); return
 
   # Url manipulation.
   goUp: (count) ->
     url = window.location.href
-    if (url[url.length - 1] == "/")
+    if (url.endsWith("/"))
       url = url.substring(0, url.length - 1)
 
     urlsplit = url.split("/")
@@ -87,20 +93,24 @@ NormalModeCommands =
       else
         url = "view-source:" + url
       chrome.runtime.sendMessage {handler: "openUrlInNewTab", url}
+    return
 
   copyCurrentUrl: ->
     chrome.runtime.sendMessage { handler: "getCurrentTabUrl" }, (url) ->
       HUD.copyToClipboard url
       url = url[0..25] + "...." if 28 < url.length
       HUD.showForDuration("Yanked #{url}", 2000)
+    return
 
   openCopiedUrlInNewTab: (count) ->
     HUD.pasteFromClipboard (url) ->
       chrome.runtime.sendMessage { handler: "openUrlInNewTab", url, count }
+    return
 
   openCopiedUrlInCurrentTab: ->
     HUD.pasteFromClipboard (url) ->
       chrome.runtime.sendMessage { handler: "openUrlInCurrentTab", url }
+    return
 
   # Mode changes.
   enterInsertMode: ->
@@ -123,14 +133,22 @@ NormalModeCommands =
     new FindMode()
 
   # Find.
-  performFind: (count) -> FindMode.findNext false for [0...count] by 1
-  performBackwardsFind: (count) -> FindMode.findNext true for [0...count] by 1
+  performFind: (count) ->
+    for [0...count] by 1
+      FindMode.findNext false
+    return
+
+  performBackwardsFind: (count) ->
+    for [0...count] by 1
+      FindMode.findNext true
+    return
 
   # Misc.
   mainFrame: -> focusThisFrame highlight: true, forceFocusThisFrame: true
   showHelp: (sourceFrameId) -> HelpDialog.toggle {sourceFrameId, showAllCommandDetails: false}
 
   passNextKey: (count, options) ->
+    # TODO(philc): OK to remove return statement?
     if options.registryEntry.options.normal
       enterNormalMode count
     else
@@ -138,7 +156,7 @@ NormalModeCommands =
 
   goPrevious: ->
     previousPatterns = Settings.get("previousPatterns") || ""
-    previousStrings = previousPatterns.split(",").filter( (s) -> s.trim().length )
+    previousStrings = previousPatterns.split(",").filter((s) -> s.trim().length)
     findAndFollowRel("prev") || findAndFollowLink(previousStrings)
 
   goNext: ->
@@ -151,11 +169,13 @@ NormalModeCommands =
     # the currently-focused element highlighted specially. Tabbing will shift focus to the next input element.
     # Pressing any other key will remove the overlays and the special tab behavior.
     resultSet = DomUtils.evaluateXPath textInputXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
-    visibleInputs =
-      for i in [0...resultSet.snapshotLength] by 1
-        element = resultSet.snapshotItem i
-        continue unless DomUtils.getVisibleClientRect element, true
-        { element, index: i, rect: Rect.copy element.getBoundingClientRect() }
+    visibleInputs = []
+
+    for i in [0...resultSet.snapshotLength] by 1
+      element = resultSet.snapshotItem i
+      unless DomUtils.getVisibleClientRect element, true
+        continue
+      visibleInputs.push({ element, index: i, rect: Rect.copy element.getBoundingClientRect() })
 
     visibleInputs.sort ({element: element1, index: i1}, {element: element2, index: i2}) ->
       # Put elements with a lower positive tabIndex first, keeping elements in DOM order.
@@ -181,15 +201,15 @@ NormalModeCommands =
     # to be the key-mappings input.  Arguably, this is the input that the user is most likely to use.
     recentlyFocusedElement = lastFocusedInput()
 
-    selectedInputIndex =
-      if count == 1
-        # As the starting index, we pick that of the most recently focused input element (or 0).
-        elements = visibleInputs.map (visibleInput) -> visibleInput.element
-        Math.max 0, elements.indexOf recentlyFocusedElement
-      else
-        Math.min(count, visibleInputs.length) - 1
 
-    hints = for tuple in visibleInputs
+    if count == 1
+      # As the starting index, we pick that of the most recently focused input element (or 0).
+      elements = visibleInputs.map (visibleInput) -> visibleInput.element
+      selectedInputIndex = Math.max 0, elements.indexOf recentlyFocusedElement
+    else
+      selectedInputIndex = Math.min(count, visibleInputs.length) - 1
+
+    hints = visibleInputs.map((tuple) =>
       hint = DomUtils.createElement "div"
       hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint"
 
@@ -199,7 +219,7 @@ NormalModeCommands =
       hint.style.width = tuple.rect.width + "px"
       hint.style.height = tuple.rect.height + "px"
 
-      hint
+      hint)
 
     new FocusSelector hints, visibleInputs, selectedInputIndex
 
@@ -240,7 +260,8 @@ textInputXPath = (->
     "(" + textInputTypes.map((type) -> '@type="' + type + '"').join(" or ") + "or not(@type))" +
     " and not(@disabled or @readonly)]",
     "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"]
-  DomUtils?.makeXPath(inputElements)
+  if DomUtils?
+    DomUtils.makeXPath(inputElements)
 )()
 
 # used by the findAndFollow* functions.
@@ -281,14 +302,16 @@ findAndFollowLink = (linkStrings) ->
     linkMatches = false
     for linkString in linkStrings
       if link.innerText.toLowerCase().indexOf(linkString) != -1 ||
-          0 <= link.value?.indexOf? linkString
+          (link.value && link.value.includes && link.value.includes(linkString))
         linkMatches = true
         break
-    continue unless linkMatches
+    unless linkMatches
+      continue
 
     candidateLinks.push(link)
 
-  return if (candidateLinks.length == 0)
+  if (candidateLinks.length == 0)
+    return
 
   for link in candidateLinks
     link.wordCount = link.innerText.trim().split(/\s+/).length
@@ -327,6 +350,7 @@ findAndFollowRel = (value) ->
       if (element.hasAttribute("rel") && element.rel.toLowerCase() == value)
         followLink(element)
         return true
+  return
 
 class FocusSelector extends Mode
   constructor: (hints, visibleInputs, selectedInputIndex) ->
