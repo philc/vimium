@@ -10,19 +10,23 @@ class InsertMode extends Mode
     @global = options.global
 
     handleKeyEvent = (event) =>
-      return @continueBubbling unless @isActive event
+      unless @isActive event
+        return @continueBubbling
 
       # See comment here: https://github.com/philc/vimium/commit/48c169bd5a61685bb4e67b1e76c939dbf360a658.
       activeElement = @getActiveElement()
-      return @passEventToPage if activeElement == document.body and activeElement.isContentEditable
+      if activeElement == document.body and activeElement.isContentEditable
+        return @passEventToPage
 
       # Check for a pass-next-key key.
-      if KeyboardUtils.getKeyCharString(event) in Settings.get "passNextKeyKeys"
+      keyString = KeyboardUtils.getKeyCharString(event)
+      if keyString in Settings.get "passNextKeyKeys"
         new PassNextKeyMode
 
       else if event.type == 'keydown' and KeyboardUtils.isEscape(event)
         activeElement.blur() if DomUtils.isFocusable activeElement
-        @exit() unless @permanent
+        unless @permanent
+          @exit()
 
       else
         return @passEventToPage
@@ -38,22 +42,26 @@ class InsertMode extends Mode
     super.init(extend(defaults, options))
 
     # Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
-    InsertMode.permanentInstance = this if @permanent
+    if @permanent
+      InsertMode.permanentInstance = this
 
   isActive: (event) ->
-    return false if event == InsertMode.suppressedEvent
-    return true if @global
+    if event == InsertMode.suppressedEvent
+      return false
+    if @global
+      return true
     DomUtils.isFocusable @getActiveElement()
 
   getActiveElement: ->
     activeElement = document.activeElement
-    while activeElement?.shadowRoot?.activeElement
+    while activeElement && activeElement.shadowRoot && activeElement.shadowRoot.activeElement
       activeElement = activeElement.shadowRoot.activeElement
     activeElement
 
-  # Static stuff. This allows PostFindMode to suppress the permanently-installed InsertMode instance.
-  @suppressedEvent: null
-  @suppressEvent: (event) -> @suppressedEvent = event
+  @suppressEvent: (event) -> @suppressedEvent = event; return
+
+# This allows PostFindMode to suppress the permanently-installed InsertMode instance.
+InsertMode.suppressedEvent = null
 
 # This implements the pasNexKey command.
 class PassNextKeyMode extends Mode
@@ -77,8 +85,8 @@ class PassNextKeyMode extends Mode
 
       keyup: =>
         if seenKeyDown
-          unless 0 < --keyDownCount
-            unless 0 < --count
+          unless --keyDownCount > 0
+            unless --count > 0
               @exit()
         @passEventToPage
 
