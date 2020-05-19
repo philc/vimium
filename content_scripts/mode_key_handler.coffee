@@ -12,21 +12,23 @@
 # consists of a (non-empty) list of such mappings.
 
 class KeyHandlerMode extends (window.Mode || global.Mode)
-  setKeyMapping: (@keyMapping) -> @reset()
-  setPassKeys: (@passKeys) -> @reset()
+  setKeyMapping: (@keyMapping) -> @reset(); return
+  setPassKeys: (@passKeys) -> @reset(); return
+
   # Only for tests.
   setCommandHandler: (@commandHandler) ->
 
   # Reset the key state, optionally retaining the count provided.
   reset: (@countPrefix = 0) ->
     @keyState = [@keyMapping]
+    return
 
   init: (options) ->
     args = extend(options, keydown: @onKeydown.bind(this))
     super.init(args)
 
-    @commandHandler = options.commandHandler ? (->)
-    @setKeyMapping options.keyMapping ? {}
+    @commandHandler = options.commandHandler || (->)
+    @setKeyMapping options.keyMapping || {}
 
     if options.exitOnEscape
       # If we're part way through a command's key sequence, then a first Escape should reset the key state,
@@ -39,6 +41,7 @@ class KeyHandlerMode extends (window.Mode || global.Mode)
             @suppressEvent
           else
             @continueBubbling
+    return
 
   onKeydown: (event) ->
     keyChar = KeyboardUtils.getKeyCharString event
@@ -46,7 +49,7 @@ class KeyHandlerMode extends (window.Mode || global.Mode)
     if isEscape and (@countPrefix != 0 or @keyState.length != 1)
       DomUtils.consumeKeyup event, => @reset()
     # If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
-    else if isEscape and HelpDialog?.isShowing()
+    else if isEscape and HelpDialog and HelpDialog.isShowing()
       HelpDialog.toggle()
       @suppressEvent
     else if isEscape
@@ -64,11 +67,12 @@ class KeyHandlerMode extends (window.Mode || global.Mode)
 
   # This tests whether there is a mapping of keyChar in the current key state (and accounts for pass keys).
   isMappedKey: (keyChar) ->
+    # TODO(philc): tweak the generated js.
     (mapping for mapping in @keyState when keyChar of mapping)[0]? and not @isPassKey keyChar
 
   # This tests whether keyChar is a digit (and accounts for pass keys).
   isCountKey: (keyChar) ->
-    keyChar and (if 0 < @countPrefix then '0' else '1') <= keyChar <= '9' and not @isPassKey keyChar
+    keyChar and (if @countPrefix > 0 then '0' else '1') <= keyChar <= '9' and not @isPassKey keyChar
 
   # Keystrokes are *never* considered pass keys if the user has begun entering a command.  So, for example, if
   # 't' is a passKey, then the "t"-s of 'gt' and '99t' are neverthless handled as regular keys.
@@ -85,16 +89,21 @@ class KeyHandlerMode extends (window.Mode || global.Mode)
   handleKeyChar: (keyChar) ->
     bgLog "handle key #{keyChar} (#{@name})"
     # A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
-    @countPrefix = 0 unless keyChar of @keyState[0]
-    # Advance the key state.  The new key state is the current mappings of keyChar, plus @keyMapping.
-    @keyState = [(mapping[keyChar] for mapping in @keyState when keyChar of mapping)..., @keyMapping]
+    unless keyChar of @keyState[0]
+      @countPrefix = 0
+    # Advance the key state. The new key state is the current mappings of keyChar, plus @keyMapping.
+    state = (mapping[keyChar] for mapping in @keyState when keyChar of mapping)
+    state.push(@keyMapping)
+    @keyState = state
+
     if @keyState[0].command?
       command = @keyState[0]
-      count = if 0 < @countPrefix then @countPrefix else 1
+      count = if @countPrefix > 0 then @countPrefix else 1
       bgLog "  invoke #{command.command} count=#{count} "
       @reset()
       @commandHandler {command, count}
-      @exit() if @options.count? and --@options.count <= 0
+      if @options.count? and --@options.count <= 0
+        @exit()
     @suppressEvent
 
 root = exports ? (window.root ?= {})
