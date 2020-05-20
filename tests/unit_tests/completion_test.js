@@ -368,8 +368,8 @@ context("RankingUtils.wordRelevancy",
   }),
 
   should("score higher in shorter titles", () => {
-    const highScore = RankingUtils.wordRelevancy(["coffee"], "a-url", "Coffeescript");
-    const lowScore  = RankingUtils.wordRelevancy(["coffee"], "a-url", "Coffeescript rocks");
+    const highScore = RankingUtils.wordRelevancy(["milk"], "a-url", "Milkshakes");
+    const lowScore  = RankingUtils.wordRelevancy(["milk"], "a-url", "Milkshakes rocks");
     assert.isTrue(highScore > lowScore);
   }),
 
