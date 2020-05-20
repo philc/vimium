@@ -5,8 +5,8 @@
 //
 
 let XMLHttpRequest;
-exports.window = {};
-exports.localStorage = {};
+global.window = {};
+global.localStorage = {};
 
 global.navigator =
   {appVersion: "5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36"};
@@ -23,7 +23,7 @@ global.XMLHttpRequest =
     send() {}
   });
 
-exports.chrome = {
+global.chrome = {
   areRunningVimiumTests: true,
 
   runtime: {

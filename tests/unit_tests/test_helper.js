@@ -1,7 +1,8 @@
 require("../shoulda.js/shoulda.js");
-global.extend = function(hash1, hash2) {
-  for (let key of Object.keys(hash2)) {
-    hash1[key] = hash2[key];
-  }
-  return hash1;
-};
+
+// In a nodejs environment, stub out some essential DOM properties which are required before any of our code
+// can be loaded.
+if (typeof(window) == "undefined")
+  require("./test_chrome_stubs.js")
+
+require("../../lib/utils.js");
