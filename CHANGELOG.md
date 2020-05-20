@@ -1,3 +1,9 @@
+(unreleased)
+
+- Converted the code base from coffeescript to Javascript, to allow more developers to work on Vimium. This
+  has likely introduced small bugs, so if you see one, please file them
+  [here](https://github.com/philc/vimium/issues).
+
 1.66 (2020-03-02)
 
 - Show tabs in the Vomnibar bar search results ('o') ([#2656](https://github.com/philc/vimium/pull/2656))
