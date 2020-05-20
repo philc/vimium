@@ -9,7 +9,7 @@ child_process = require("child_process");
 function spawn(procName, optArray, silent = false, sync = false) {
   if (process.platform == "win32") {
     // if win32, prefix arguments with "/c {original command}"
-    // e.g. "coffee -c c:\git\vimium" becomes "cmd.exe /c coffee -c c:\git\vimium"
+    // e.g. "mkdir c:\git\vimium" becomes "cmd.exe /c mkdir c:\git\vimium"
     optArray.unshift("/c", procName)
     procName = "cmd.exe"
   }
@@ -28,19 +28,8 @@ function spawn(procName, optArray, silent = false, sync = false) {
   return proc;
 }
 
-// Compile coffeescript into javascript.
-function build() {
-  coffee = spawn("coffee", ["-c", __dirname], false, true)
-  if (coffee.status != 0) {
-    console.log("Build failed. Coffee exited with status", coffee.status);
-    process.exit(coffee.status);
-  }
-}
-
 // Builds a zip file for submission to the Chrome store. The output is in dist/.
 function buildStorePackage() {
-  build();
-
   const vimiumVersion = JSON.parse(fs.readFileSync("manifest.json").toString())["version"]
 
   spawn("rm", ["-rf", "dist/vimium"], false, true);
@@ -49,7 +38,7 @@ function buildStorePackage() {
   spawn("mkdir", ["-p", "dist/chrome-canary"], false, true);
   spawn("mkdir", ["-p", "dist/firefox"], false, true);
 
-  const blacklist = [".*", "*.coffee", "*.md", "test_harnesses", "tests", "dist", "CREDITS", "node_modules",
+  const blacklist = [".*", "*.md", "test_harnesses", "tests", "dist", "CREDITS", "node_modules",
                      "MIT-LICENSE.txt", "package-lock.json", "make.js"];
   const rsyncOptions = [].concat.apply(
     ["-r", ".", "dist/vimium"],
@@ -137,15 +126,9 @@ function command(name, helpString, fn) {
 }
 
 command(
-  "build",
-  "compile all coffeescript files to javascript",
-  build);
-
-command(
   "test",
   "Run all tests",
   () => {
-    build();
     let failed = runUnitTests();
     failed += runDomTests();
     if (failed > 0)
@@ -156,7 +139,6 @@ command(
   "test-unit",
   "Run unit tests",
   () => {
-    build();
     const failed = runUnitTests() > 0;
     if (failed > 0)
       Process.exit(1);
@@ -166,17 +148,9 @@ command(
   "test-dom",
   "Run DOM tests",
   () => {
-    build();
     const failed = runDomTests();
     if (failed > 0)
       Process.exit(1);
-  });
-
-command(
-  "autobuild",
-  "continually rebuild coffeescript files using coffee --watch",
-  () => {
-    spawn("coffee", ["-cw", __dirname]);
   });
 
 command(
