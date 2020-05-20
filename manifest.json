@@ -6,7 +6,7 @@
   "icons": {  "16": "icons/icon16.png",
               "48": "icons/icon48.png",
              "128": "icons/icon128.png" },
-  "minimum_chrome_version": "51.0",
+  "minimum_chrome_version": "69.0",
   "background": {
     "scripts": [
       "lib/utils.js",

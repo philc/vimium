@@ -116,3 +116,6 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
             return;
 
           ...
+  * We're currently using Javascript language features from ES2018 or earlier. If we desire to use something
+    introduced in a later version of Javascript, we need to remember to update the minimum Chrome and Firefox
+    versions required.
