@@ -66,19 +66,14 @@ Tips for preparing a PR:
 
 ### Installing From Source
 
-Vimium is written in Coffeescript, which compiles to Javascript. To
-install Vimium from source:
-
- 1. Install [Coffeescript v1](http://coffeescript.org/#installation) (`npm install --global coffeescript@~1`).
- 1. Run `./make.js build` from within your vimium directory. Any coffeescript files you change will now be
-    automatically compiled to Javascript.
+Vimium is written in Javascript. To install Vimium from source:
 
 **On Chrome/Chromium:**
 
  1. Navigate to `chrome://extensions`
  1. Toggle into Developer Mode
  1. Click on "Load Unpacked Extension..."
- 1. Select the Vimium directory.
+ 1. Select the Vimium directory you've cloned from Github.
 
 **On Firefox:**
 
@@ -96,17 +91,12 @@ After that:
  1. Open Firefox
  1. Enter "about:debugging" in the URL bar
  1. Click "Load Temporary Add-on"
- 1. Open the Vimium directory and select any file inside.
-
-### Development tips
-
- 1. Run `./make.js autobuild` to watch for changes to coffee files, and have the .js files automatically
-    regenerated
+ 1. Open the Vimium directory you've cloned from Github, and select any file inside.
 
 ### Running the tests
 
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
-[Puppeteer](https://github.com/puppeteer/puppeteer) To run the tests:
+[Puppeteer](https://github.com/puppeteer/puppeteer). To run the tests:
 
  1. `git submodule update --init --recursive` -- this pulls in shoulda.js.
  1. Install [Puppeteer](https://github.com/puppeteer/puppeteer)
@@ -115,17 +105,14 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 
 ### Coding Style
 
-  * We follow the recommendations from
-    [this style guide](https://github.com/polarmobile/coffeescript-style-guide).
-  * We follow two major differences from this style guide:
-    * Wrap lines at 110 characters instead of 80.
-    * Use double-quoted strings by default.
+  * We follow the recommendations from the [Airbnb Javascript style guide](https://github.com/airbnb/javascript).
   * When writing comments, uppercase the first letter of your sentence, and put a period at the end.
-  * If you have a short conditional, feel free to put it on one line:
+  * We follow two major differences from this style guide:
+    * Wrap lines at 110 characters instead of 100, for historical reasons.
+    * We use double-quoted strings by default, for historical reasons.
+    * We allow short, simple if statements to be used without braces, like so:
 
-        # No
-        if i < 10
-          return
+          if (string.length == 0)
+            return;
 
-        # Yes
-        return if i < 10
+          ...
