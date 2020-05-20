@@ -46,8 +46,12 @@ function buildStorePackage() {
 
   spawn("rsync", rsyncOptions, false, true);
 
-  const distManifest = "dist/vimium/manifest.json";
-  const manifest = JSON.parse(fs.readFileSync(distManifest).toString());
+  const manifestContents = fs.readFileSync("dist/vimium/manifest.json").toString();
+  const chromeManifest = JSON.parse(manifestContents);
+  const firefoxManifest = JSON.parse(manifestContents);
+  const writeDistManifest = (manifestObject) => {
+    fs.writeFileSync("dist/vimium/manifest.json", JSON.stringify(manifestObject, null, 2));
+  };
 
   // cd into "dist/vimium" before building the zip, so that the files in the zip don't each have the
   // path prefix "dist/vimium".
@@ -55,18 +59,25 @@ function buildStorePackage() {
   // removing the zip file before the build.
   const zipCommand = "cd dist/vimium && zip -r --filesync ";
 
-  // Build the Firefox package first, because afterwards, we modify the manifest.json for the Chrome packages.
+  // Chrome considers this key invalid in manifest.json, so we add it during the build phase.
+  firefoxManifest["browser_specific_settings"] = {
+    gecko: {
+      "strict_min_version": "62.0"
+    }
+  };
+
+  writeDistManifest(firefoxManifest);
   spawn("bash", ["-c", zipCommand + `../firefox/vimium-firefox-${vimiumVersion}.zip .`], false, true);
 
-  // Build the Chrome Store package; this does not require the clipboardWrite permission.
-  manifest.permissions = manifest.permissions.filter((p) => p != "clipboardWrite");
-  fs.writeFileSync(distManifest, JSON.stringify(manifest, null, 2));
+  // Build the Chrome Store package. Chrome does not require the clipboardWrite permission.
+  chromeManifest.permissions = chromeManifest.permissions.filter((p) => p != "clipboardWrite");
+  writeDistManifest(chromeManifest);
   spawn("bash", ["-c", zipCommand + `../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`], false, true);
 
   // Build the Chrome Store dev package.
-  manifest.name = "Vimium Canary";
-  manifest.description = "This is the development branch of Vimium (it is beta software).";
-  fs.writeFileSync(distManifest, JSON.stringify(manifest, null, 2));
+  chromeManifest.name = "Vimium Canary";
+  chromeManifest.description = "This is the development branch of Vimium (it is beta software).";
+  writeDistManifest(chromeManifest);
   spawn("bash", ["-c", zipCommand + `../chrome-canary/vimium-canary-${vimiumVersion}.zip .`], false, true);
 }
 
