@@ -5,7 +5,6 @@ global.Settings = {postUpdateHooks: {}, get() { return ""; }, set() {}};
 const {Commands} = require("../../background_scripts/commands.js");
 
 // Include mode_normal to check that all commands have been implemented.
-// global.KeyHandlerMode = (global.Mode = {}); // TODO(philc): Pretty sure this can be deleted.
 global.KeyboardUtils = {platform: ""};
 extend(global, require("../../content_scripts/mode.js"));
 extend(global, require("../../content_scripts/mode_key_handler.js"));
