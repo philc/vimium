@@ -76,7 +76,7 @@ const Commands = {
   // humans may prefer other forms <Left> or <C-a>.
   // On the other hand, <c-a> and <c-A> are different named keys - for one of
   // them you have to press "shift" as well.
-  // We sort modifiers here to match the order used in keyboard_utils.coffee.
+  // We sort modifiers here to match the order used in keyboard_utils.js.
   // The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
   parseKeySequence: (function() {
     const modifier = "(?:[acms]-)";                            // E.g. "a-", "c-", "m-", "s-".
@@ -124,7 +124,7 @@ const Commands = {
   },
 
   // This generates and installs a nested key-to-command mapping structure. There is an example in
-  // mode_key_handler.coffee.
+  // mode_key_handler.js.
   installKeyStateMapping() {
     const keyStateMapping = {};
     for (let keys of Object.keys(this.keyToCommandRegistry || {})) {

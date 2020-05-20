@@ -4,7 +4,7 @@ extend(global, require("./test_chrome_stubs.js"));
 // FIXME:
 // Would like to do:
 // extend(global, require "../../background_scripts/marks.js")
-// But it looks like marks.coffee has never been included in a test before!
+// But it looks like marks.js has never been included in a test before!
 // Temporary fix...
 global.Marks = {
   create() { return true; },

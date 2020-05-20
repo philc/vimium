@@ -21,7 +21,7 @@ const compareKeys = function(a,b) {
     return 0;
 };
 
-// This overrides the HelpDialog implementation in vimium_frontend.coffee.  We provide aliases for the two
+// This overrides the HelpDialog implementation in vimium_frontend.js.  We provide aliases for the two
 // HelpDialog methods required by normalMode (isShowing() and toggle()).
 var HelpDialog = {
   dialogElement: null,

@@ -20,7 +20,7 @@
 //
 // Each new completion engine must be added to the list "CompletionEngines" at the bottom of this file.
 //
-// The lookup logic which uses these completion engines is in "./completion_search.coffee".
+// The lookup logic which uses these completion engines is in "./completion_search.js".
 //
 
 // A base class for common regexp-based matching engines. "options" must define:

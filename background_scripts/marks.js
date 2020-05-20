@@ -90,7 +90,7 @@ const Marks = {
       } else {
         // There is no existing matching tab, we'll have to create one.
         return TabOperations.openUrlInNewTab((extend(req, {url: this.getBaseUrl(markInfo.url)})), tab => {
-          // Note. tabLoadedHandlers is defined in "main.coffee".  The handler below will be called when the tab
+          // Note. tabLoadedHandlers is defined in "main.js".  The handler below will be called when the tab
           // is loaded, its DOM is ready and it registers with the background page.
           return tabLoadedHandlers[tab.id] = () => this.gotoPositionInTab(extend(markInfo, {tabId: tab.id}));
         });
