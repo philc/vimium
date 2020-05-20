@@ -1,8 +1,6 @@
 require("./test_helper.js");
-extend(global, require("./test_chrome_stubs.js"));
-extend(global, require("../../lib/utils.js"));
 Utils.getCurrentVersion = () => '1.43';
-extend(global, require("../../lib/settings.js"));
+require("../../lib/settings.js");
 
 context("isUrl",
   should("accept valid URLs", () => {

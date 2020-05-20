@@ -153,6 +153,4 @@ class UIComponent {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.UIComponent = UIComponent;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.UIComponent = UIComponent;

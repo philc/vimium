@@ -1,13 +1,11 @@
 require("./test_helper.js");
-extend(global, require("./test_chrome_stubs.js"));
 
-extend(global, require("../../lib/utils.js"));
 Utils.getCurrentVersion = () => '1.44';
 Utils.isBackgroundPage = () => true;
 Utils.isExtensionPage = () => true;
 global.localStorage = {};
-extend(global,require("../../lib/settings.js"));
-extend(global,require("../../pages/options.js"));
+require("../../lib/settings.js");
+require("../../pages/options.js");
 
 context("settings",
   setup(() => {

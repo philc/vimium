@@ -255,5 +255,4 @@ const CompletionEngines = [
   DummyCompletionEngine
 ];
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.CompletionEngines = CompletionEngines;
+global.CompletionEngines = CompletionEngines;

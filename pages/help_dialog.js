@@ -192,6 +192,5 @@ document.addEventListener("DOMContentLoaded", function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-const root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.HelpDialog = HelpDialog;
-root.isVimiumHelpDialog = true;
+global.HelpDialog = HelpDialog;
+global.isVimiumHelpDialog = true;

@@ -1,17 +1,16 @@
 require("./test_helper.js");
-extend(global, require("./test_chrome_stubs.js"));
-extend(global, require("../../background_scripts/bg_utils.js"));
+require("../../background_scripts/bg_utils.js");
 global.Settings = {postUpdateHooks: {}, get() { return ""; }, set() {}};
-const {Commands} = require("../../background_scripts/commands.js");
+require("../../background_scripts/commands.js");
 
 // Include mode_normal to check that all commands have been implemented.
 global.KeyboardUtils = {platform: ""};
-extend(global, require("../../content_scripts/mode.js"));
-extend(global, require("../../content_scripts/mode_key_handler.js"));
-const {NormalModeCommands} = require("../../content_scripts/mode_normal.js");
-extend(global, require("../../content_scripts/link_hints.js"));
-extend(global, require("../../content_scripts/marks.js"));
-extend(global, require("../../content_scripts/vomnibar.js"));
+require("../../content_scripts/mode.js");
+require("../../content_scripts/mode_key_handler.js");
+require("../../content_scripts/mode_normal.js");
+require("../../content_scripts/link_hints.js");
+require("../../content_scripts/marks.js");
+require("../../content_scripts/vomnibar.js");
 
 context("Key mappings",
   setup(() => {

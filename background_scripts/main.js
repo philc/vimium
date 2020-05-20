@@ -3,7 +3,6 @@
 // track down precisely which return statements could be removed when I was doing the conversion.
 
 let showUpgradeMessage;
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
 
 // The browser may have tabs already open. We inject the content scripts immediately so that they work straight
 // away.
@@ -27,11 +26,11 @@ chrome.runtime.onInstalled.addListener(function({ reason }) {
 });
 
 const frameIdsForTab = {};
-root.portsForTab = {};
-root.urlForTab = {};
+global.portsForTab = {};
+global.urlForTab = {};
 
-// This is exported for use by "marks.coffee".
-root.tabLoadedHandlers = {}; // tabId -> function()
+// This is exported for use by "marks.js".
+global.tabLoadedHandlers = {}; // tabId -> function()
 
 // A secret, available only within the current instantiation of Vimium. The secret is big, likely unguessable
 // in practice, but less than 2^31.
@@ -710,4 +709,4 @@ chrome.runtime.onInstalled.addListener(function({reason}) {
     chrome.storage.local.set({installDate: new Date().toString()});
 });
 
-extend(root, {TabOperations, Frames});
+extend(global, {TabOperations, Frames});

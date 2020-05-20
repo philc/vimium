@@ -536,7 +536,5 @@ class CaretMode extends VisualMode {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.VisualMode = VisualMode;
-root.VisualLineMode = VisualLineMode;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.VisualMode = VisualMode;
+global.VisualLineMode = VisualLineMode;

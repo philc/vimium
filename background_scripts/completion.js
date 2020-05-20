@@ -1084,14 +1084,15 @@ HistoryCache.binarySearch = function(targetElement, array, compareFunction) {
     return middle;
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.Suggestion = Suggestion;
-root.BookmarkCompleter = BookmarkCompleter;
-root.MultiCompleter = MultiCompleter;
-root.HistoryCompleter = HistoryCompleter;
-root.DomainCompleter = DomainCompleter;
-root.TabCompleter = TabCompleter;
-root.SearchEngineCompleter = SearchEngineCompleter;
-root.HistoryCache = HistoryCache;
-root.RankingUtils = RankingUtils;
-root.RegexpCache = RegexpCache;
+extend(global, {
+  Suggestion,
+  BookmarkCompleter,
+  MultiCompleter,
+  HistoryCompleter,
+  DomainCompleter,
+  TabCompleter,
+  SearchEngineCompleter,
+  HistoryCache,
+  RankingUtils,
+  RegexpCache
+});

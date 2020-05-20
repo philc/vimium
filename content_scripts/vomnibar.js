@@ -81,6 +81,4 @@ const Vomnibar = {
   }
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.Vomnibar = Vomnibar;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.Vomnibar = Vomnibar;

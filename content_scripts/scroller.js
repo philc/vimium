@@ -416,6 +416,4 @@ var specialScrollingElementMap = {
   'www.reddit.com': '#overlayScrollContainer'
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.Scroller = Scroller;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.Scroller = Scroller;

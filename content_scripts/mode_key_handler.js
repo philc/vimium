@@ -129,6 +129,4 @@ class KeyHandlerMode extends (window.Mode || global.Mode) {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.KeyHandlerMode = KeyHandlerMode;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.KeyHandlerMode = KeyHandlerMode;

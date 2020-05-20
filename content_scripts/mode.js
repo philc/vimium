@@ -296,6 +296,4 @@ class CacheAllKeydownEvents extends SuppressAllKeyboardEvents {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-extend(root, {Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents});
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+extend(global, {Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents});

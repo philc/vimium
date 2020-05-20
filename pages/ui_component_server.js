@@ -58,6 +58,4 @@ var UIComponentServer = {
   })()
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.UIComponentServer = UIComponentServer;
-root.isVimiumUIComponent = true;
+global.UIComponentServer = UIComponentServer;

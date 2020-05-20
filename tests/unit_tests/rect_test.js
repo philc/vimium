@@ -1,5 +1,5 @@
 require("./test_helper.js");
-extend(global, require("../../lib/rect.js"));
+require("../../lib/rect.js");
 
 context("Rect",
   should("set rect properties correctly", () => {

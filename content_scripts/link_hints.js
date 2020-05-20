@@ -1266,8 +1266,12 @@ class HoverMode extends Mode {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.LinkHints = LinkHints;
-root.HintCoordinator = HintCoordinator;
-// For tests:
-extend(root, {LinkHintsMode, LocalHints, AlphabetHints, WaitForEnter});
+extend(global, {
+  LinkHints,
+  HintCoordinator,
+  // Exported for tests.
+  LinkHintsMode,
+  LocalHints,
+  AlphabetHints,
+  WaitForEnter
+});

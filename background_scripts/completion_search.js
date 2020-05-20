@@ -213,5 +213,4 @@ const CompletionSearch = {
   }
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.CompletionSearch = CompletionSearch;
+global.CompletionSearch = CompletionSearch;

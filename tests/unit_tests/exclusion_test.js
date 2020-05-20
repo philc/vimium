@@ -1,9 +1,8 @@
 require("./test_helper.js");
-extend(global, require("./test_chrome_stubs.js"));
 
 // FIXME:
 // Would like to do:
-// extend(global, require "../../background_scripts/marks.js")
+// require("../../background_scripts/marks.js");
 // But it looks like marks.js has never been included in a test before!
 // Temporary fix...
 global.Marks = {
@@ -13,14 +12,13 @@ global.Marks = {
   }
 };
 
-extend(global, require("../../lib/utils.js"));
 Utils.getCurrentVersion = () => '1.44';
-extend(global,require("../../lib/settings.js"));
-extend(global,require("../../lib/clipboard.js"));
-extend(global, require("../../background_scripts/bg_utils.js"));
-extend(global, require("../../background_scripts/exclusions.js"));
-extend(global, require("../../background_scripts/commands.js"));
-extend(global, require("../../background_scripts/main.js"));
+require("../../lib/settings.js");
+require("../../lib/clipboard.js");
+require("../../background_scripts/bg_utils.js");
+require("../../background_scripts/exclusions.js");
+require("../../background_scripts/commands.js");
+require("../../background_scripts/main.js");
 
 const isEnabledForUrl = request => Exclusions.isEnabledForUrl(request.url);
 

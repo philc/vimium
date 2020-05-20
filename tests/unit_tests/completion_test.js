@@ -1,9 +1,7 @@
 require("./test_helper.js");
-extend(global, require("../../lib/utils.js"));
-extend(global, require("../../background_scripts/bg_utils.js"));
-extend(global, require("../../background_scripts/completion_engines.js"));
-extend(global, require("../../background_scripts/completion.js"));
-extend(global, require("./test_chrome_stubs.js"));
+require("../../background_scripts/bg_utils.js");
+require("../../background_scripts/completion_engines.js");
+require("../../background_scripts/completion.js");
 
 context("bookmark completer",
   setup(() => {

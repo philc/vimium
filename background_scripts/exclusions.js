@@ -74,5 +74,4 @@ var Exclusions = {
 // Register postUpdateHook for exclusionRules setting.
 Settings.postUpdateHooks["exclusionRules"] = Exclusions.postUpdateHook.bind(Exclusions);
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-extend(root, {Exclusions});
+global.Exclusions = Exclusions;

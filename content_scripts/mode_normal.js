@@ -457,7 +457,5 @@ class FocusSelector extends Mode {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.NormalMode = NormalMode;
-root.NormalModeCommands = NormalModeCommands;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.NormalMode = NormalMode;
+global.NormalModeCommands = NormalModeCommands;

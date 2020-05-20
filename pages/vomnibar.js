@@ -453,5 +453,4 @@ document.addEventListener("DOMContentLoaded", function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-const root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.Vomnibar = Vomnibar
+global.Vomnibar = Vomnibar;

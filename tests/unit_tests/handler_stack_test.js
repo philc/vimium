@@ -1,5 +1,5 @@
 require("./test_helper.js");
-extend(global, require("../../lib/handler_stack.js"));
+require("../../lib/handler_stack.js");
 
 context("handlerStack",
   setup(() => {

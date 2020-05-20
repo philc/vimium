@@ -459,5 +459,4 @@ const commandDescriptions = {
 
 Commands.init();
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.Commands = Commands;
+global.Commands = Commands;

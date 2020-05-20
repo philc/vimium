@@ -343,7 +343,5 @@ var selectFoundInputElement = function() {
   }
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.PostFindMode = PostFindMode;
-root.FindMode = FindMode;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.PostFindMode = PostFindMode;
+global.FindMode = FindMode;

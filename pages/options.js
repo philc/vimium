@@ -504,5 +504,5 @@ if (typeof DomUtils !== 'undefined' && DomUtils !== null) {
 }
 
 // Exported for tests.
-const root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-extend(root, {Options, isVimiumOptionsPage: true});
+global.Options = Options
+global.isVimiumOptionsPage = true

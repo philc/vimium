@@ -122,5 +122,4 @@ const Marks = {
   }
 };
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.Marks = Marks;
+global.Marks = Marks;

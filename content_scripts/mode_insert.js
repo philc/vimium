@@ -111,7 +111,5 @@ class PassNextKeyMode extends Mode {
   }
 }
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
-root.InsertMode = InsertMode;
-root.PassNextKeyMode = PassNextKeyMode;
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+global.InsertMode = InsertMode;
+global.PassNextKeyMode = PassNextKeyMode;

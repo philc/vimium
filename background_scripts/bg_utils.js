@@ -162,6 +162,5 @@ const SearchEngines = {
 
 BgUtils.TIME_DELTA = TIME_DELTA; // Referenced by our tests.
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : window;
-root.SearchEngines = SearchEngines;
-root.BgUtils = BgUtils;
+global.SearchEngines = SearchEngines;
+global.BgUtils = BgUtils;
