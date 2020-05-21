@@ -29,7 +29,7 @@
 //   options.example: an example object containing at least "keyword" and "searchUrl", and optional "description".
 class BaseEngine {
   constructor(options) {
-    extend(this, options);
+    Object.assign(this, options);
     this.regexps = this.regexps.map(regexp => new RegExp(regexp));
   }
 

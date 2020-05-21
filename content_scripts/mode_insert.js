@@ -45,7 +45,7 @@ class InsertMode extends Mode {
       keydown: handleKeyEvent
     };
 
-    super.init(extend(defaults, options));
+    super.init(Object.assign(defaults, options));
 
     // Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     if (this.permanent)

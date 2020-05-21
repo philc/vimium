@@ -90,7 +90,7 @@ class FindMode extends Mode {
       this.scrollY = window.scrollY;
     }
 
-    super.init(extend(options, {
+    super.init(Object.assign(options, {
       name: "find",
       indicator: false,
       exitOnClick: true,
@@ -211,7 +211,7 @@ class FindMode extends Mode {
   // :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
   static execute(query, options) {
     let result = null;
-    options = extend({
+    options = Object.assign({
       backwards: false,
       caseSensitive: !this.query.ignoreCase,
       colorSelection: true

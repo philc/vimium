@@ -6,7 +6,7 @@ const Commands = {
   init() {
     for (let command of Object.keys(commandDescriptions)) {
       const [description, options] = commandDescriptions[command];
-      this.availableCommands[command] = extend((options || {}), {description});
+      this.availableCommands[command] = Object.assign((options || {}), {description});
     }
 
     Settings.postUpdateHooks["keyMappings"] = this.loadKeyMappings.bind(this);
@@ -34,7 +34,8 @@ const Commands = {
               seen[key] = true;
               const keySequence = this.parseKeySequence(key);
               const options = this.parseCommandOptions(command, optionList);
-              this.keyToCommandRegistry[key] = extend({keySequence, command, options, optionList}, this.availableCommands[command]);
+              this.keyToCommandRegistry[key] =
+                Object.assign({keySequence, command, options, optionList}, this.availableCommands[command]);
             }
           }
           break;
@@ -139,7 +140,7 @@ const Commands = {
         } else if (index < (registryEntry.keySequence.length - 1)) {
           currentMapping = currentMapping[key] != null ? currentMapping[key] : (currentMapping[key] = {});
         } else {
-          currentMapping[key] = extend({}, registryEntry);
+          currentMapping[key] = Object.assign({}, registryEntry);
           // We don't need these properties in the content scripts.
           for (let prop of ["keySequence", "description"])
             delete currentMapping[key][prop];

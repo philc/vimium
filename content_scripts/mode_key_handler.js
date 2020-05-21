@@ -28,7 +28,7 @@ class KeyHandlerMode extends Mode {
   }
 
   init(options) {
-    const args = extend(options, {keydown: this.onKeydown.bind(this)});
+    const args = Object.assign(options, {keydown: this.onKeydown.bind(this)});
     super.init(args);
 
     this.commandHandler = options.commandHandler || (function() {});

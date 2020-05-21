@@ -37,7 +37,7 @@ class Suggestion {
     // Other options set by individual completers include:
     // - tabId (TabCompleter)
     // - isSearchSuggestion, customSearchMode (SearchEngineCompleter)
-    extend(this, this.options);
+    Object.assign(this, this.options);
   }
 
   // Returns the relevancy score.
@@ -504,11 +504,11 @@ class SearchEngineCompleter {
   preprocessRequest(request) {
     SearchEngines.use(engines => {
       const { queryTerms, query } = request;
-      extend(request, {searchEngines: engines, keywords: Object.keys(engines)});
+      Object.assign(request, {searchEngines: engines, keywords: Object.keys(engines)});
       const keyword = queryTerms[0];
       // Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
       if (keyword && engines[keyword] && ((1 < queryTerms.length) || /\S\s/.test(query))) {
-        extend(request, {
+        Object.assign(request, {
           queryTerms: queryTerms.slice(1),
           keyword,
           engine: engines[keyword],
@@ -538,7 +538,7 @@ class SearchEngineCompleter {
     if (!engine) { return onComplete([]); }
 
     const { keyword, searchUrl, description } = engine;
-    extend(request, searchUrl, {customSearchMode: true});
+    Object.assign(request, searchUrl, {customSearchMode: true});
 
     if (this.previousSuggestions[searchUrl] == null)
       this.previousSuggestions[searchUrl] = [];
@@ -578,7 +578,7 @@ class SearchEngineCompleter {
         if (!RankingUtils.matches(queryTerms, suggestion.title))
           continue;
         // Reset various fields, they may not be correct wrt. the current query.
-        extend(suggestion, {relevancy: null, html: null, queryTerms});
+        Object.assign(suggestion, {relevancy: null, html: null, queryTerms});
         suggestion.relevancy = null;
         previousSuggestions.push(suggestion);
       }
@@ -1084,7 +1084,7 @@ HistoryCache.binarySearch = function(targetElement, array, compareFunction) {
     return middle;
 };
 
-extend(global, {
+Object.assign(global, {
   Suggestion,
   BookmarkCompleter,
   MultiCompleter,

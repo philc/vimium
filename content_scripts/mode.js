@@ -274,7 +274,7 @@ class SuppressAllKeyboardEvents extends Mode {
       name: "suppressAllKeyboardEvents",
       suppressAllKeyboardEvents: true
     };
-    super.init(extend(defaults, options));
+    super.init(Object.assign(defaults, options));
   }
 }
 
@@ -287,7 +287,7 @@ class CacheAllKeydownEvents extends SuppressAllKeyboardEvents {
       name: "cacheAllKeydownEvents",
       keydown(event) { return keydownEvents.push(event); }
     };
-    super(extend(defaults, options));
+    super(Object.assign(defaults, options));
     this.keydownEvents = [];
   }
 
@@ -296,4 +296,4 @@ class CacheAllKeydownEvents extends SuppressAllKeyboardEvents {
   }
 }
 
-extend(global, {Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents});
+Object.assign(global, {Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents});

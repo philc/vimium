@@ -100,7 +100,7 @@ const HintCoordinator = {
 
   sendMessage(messageType, request) {
     if (request == null) { request = {}; }
-    Frame.postMessage("linkHintsMessage", extend(request, {messageType}));
+    Frame.postMessage("linkHintsMessage", Object.assign(request, {messageType}));
   },
 
   prepareToActivateMode(mode, onExit) {
@@ -343,7 +343,7 @@ class LinkHintsMode {
       el.style.top = el.rect.top  + "px";
       // Each hint marker is assigned a different z-index.
       el.style.zIndex = this.getNextZIndex();
-      marker = extend(el, {
+      marker = Object.assign(el, {
         className: "vimiumReset internalVimiumHintMarker vimiumHintMarker",
         showLinkText: localHintDescriptor.showLinkText,
         localHintDescriptor
@@ -352,7 +352,7 @@ class LinkHintsMode {
       marker = {};
     }
 
-    return extend(marker, {
+    return Object.assign(marker, {
       hintDescriptor: desc,
       isLocalMarker: desc.frameId === frameId,
       linkText: desc.linkText,
@@ -446,7 +446,7 @@ class LinkHintsMode {
   }
 
   updateKeyState({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) {
-    extend(this.markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue});
+    Object.assign(this.markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue});
 
     const {linksMatched, userMightOverType} =
           this.markerMatcher.getMatchingHints(this.hintMarkers, tabCount, this.getNextZIndex.bind(this));
@@ -1163,7 +1163,7 @@ var LocalHints = {
 
     if (Settings.get("filterLinkHints")) {
       for (hint of localHints)
-        extend(hint, this.generateLinkText(hint));
+        Object.assign(hint, this.generateLinkText(hint));
     }
     return localHints;
   },
@@ -1266,7 +1266,7 @@ class HoverMode extends Mode {
   }
 }
 
-extend(global, {
+Object.assign(global, {
   LinkHints,
   HintCoordinator,
   // Exported for tests.

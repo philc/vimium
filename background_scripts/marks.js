@@ -25,7 +25,8 @@ const Marks = {
         // The front-end frame hasn't provided the scroll position (because it's not the top frame within its
         // tab).  We need to ask the top frame what its scroll position is.
         return chrome.tabs.sendMessage(sender.tab.id, {name: "getScrollPosition"}, response => {
-          return this.saveMark(extend(markInfo, {scrollX: response.scrollX, scrollY: response.scrollY}));
+          return this.saveMark(Object.assign(markInfo,
+                                             {scrollX: response.scrollX, scrollY: response.scrollY}));
         });
       }
     });
@@ -85,14 +86,15 @@ const Marks = {
       if (tabs.length > 0) {
         // We have at least one matching tab.  Pick one and go to it.
         return this.pickTab(tabs, tab => {
-          return this.gotoPositionInTab(extend(markInfo, {tabId: tab.id}));
+          return this.gotoPositionInTab(Object.assign(markInfo, {tabId: tab.id}));
         });
       } else {
         // There is no existing matching tab, we'll have to create one.
-        return TabOperations.openUrlInNewTab((extend(req, {url: this.getBaseUrl(markInfo.url)})), tab => {
+        return TabOperations.openUrlInNewTab(Object.assign(req, {url: this.getBaseUrl(markInfo.url)}), tab => {
           // Note. tabLoadedHandlers is defined in "main.js".  The handler below will be called when the tab
           // is loaded, its DOM is ready and it registers with the background page.
-          return tabLoadedHandlers[tab.id] = () => this.gotoPositionInTab(extend(markInfo, {tabId: tab.id}));
+          return tabLoadedHandlers[tab.id] =
+            () => this.gotoPositionInTab(Object.assign(markInfo, {tabId: tab.id}));
         });
       }
     });

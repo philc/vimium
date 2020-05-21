@@ -21,7 +21,7 @@ class UIComponent {
                                items => styleSheet.innerHTML = items.vimiumCSSInChromeStorage);
 
       this.iframeElement = DomUtils.createElement("iframe");
-      extend(this.iframeElement, {
+      Object.assign(this.iframeElement, {
         className,
         seamless: "seamless"
       });

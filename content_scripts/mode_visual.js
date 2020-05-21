@@ -225,12 +225,12 @@ class VisualMode extends KeyHandlerMode {
       } else { // keys.length == 2
         if (keyMapping[keys[0]] == null)
           keyMapping[keys[0]] = {};
-        extend(keyMapping[keys[0]], {[keys[1]]: {command: movement}});
+        Object.assign(keyMapping[keys[0]], {[keys[1]]: {command: movement}});
       }
     }
 
     // Aliases and complex bindings.
-    extend(keyMapping, {
+    Object.assign(keyMapping, {
       "B": keyMapping.b,
       "W": keyMapping.w,
       "<c-e>": {
@@ -245,7 +245,7 @@ class VisualMode extends KeyHandlerMode {
       }
     });
 
-    super.init(extend(options, {
+    super.init(Object.assign(options, {
       name: options.name != null ? options.name : "visual",
       indicator: options.indicator != null ? options.indicator : "Visual mode",
       singleton: "visual-mode-group", // Visual mode, visual-line mode and caret mode each displace each other.
@@ -431,7 +431,7 @@ class VisualLineMode extends VisualMode {
   init(options) {
     if (options == null)
       options = {};
-    super.init(extend(options, {name: "visual/line", indicator: "Visual mode (line)"}));
+    super.init(Object.assign(options, {name: "visual/line", indicator: "Visual mode (line)"}));
     return this.extendSelection();
   }
 
@@ -481,7 +481,7 @@ class CaretMode extends VisualMode {
   init(options) {
     if (options == null)
       options = {};
-    super.init(extend(options, {name: "caret", indicator: "Caret mode", alterMethod: "move"}));
+    super.init(Object.assign(options, {name: "caret", indicator: "Caret mode", alterMethod: "move"}));
 
     // Establish the initial caret.
     switch (DomUtils.getSelectionType(this.selection)) {

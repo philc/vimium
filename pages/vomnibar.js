@@ -22,8 +22,8 @@ const Vomnibar = {
       selectFirst: false,
       keyword: null
     };
-    extend(options, userOptions);
-    extend(options, {refreshInterval: options.completer === "omni" ? 150 : 0});
+    Object.assign(options, userOptions);
+    Object.assign(options, {refreshInterval: options.completer === "omni" ? 150 : 0});
 
     const completer = this.getCompleter(options.completer);
     if (this.vomnibarUI == null)
@@ -383,7 +383,7 @@ class BackgroundCompleter {
           //   { html: "", type: "", url: "", ... }
           // Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
           for (let result of msg.results) {
-            extend(result, {
+            Object.assign(result, {
               performAction:
               result.type === "tab" ?
                 this.completionActions.switchToTab(result.tabId) :
@@ -403,7 +403,7 @@ class BackgroundCompleter {
     const { query, callback } = request;
     this.mostRecentCallback = callback;
 
-    this.port.postMessage(extend(request, {
+    this.port.postMessage(Object.assign(request, {
       handler: "filter",
       name: this.name,
       id: (this.messageId = Utils.createUniqueId()),

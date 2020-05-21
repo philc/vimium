@@ -9,7 +9,7 @@ class NormalMode extends KeyHandlerMode {
       commandHandler: this.commandHandler.bind(this)
     };
 
-    super.init(extend(defaults, options));
+    super.init(Object.assign(defaults, options));
 
     chrome.storage.local.get("normalModeKeyStateMapping",
                              (items) => this.setKeyMapping(items.normalModeKeyStateMapping));
@@ -258,7 +258,7 @@ var NormalModeCommands = {
 };
 
 if (typeof LinkHints !== 'undefined') {
-  extend(NormalModeCommands, {
+  Object.assign(NormalModeCommands, {
     "LinkHints.activateMode": LinkHints.activateMode.bind(LinkHints),
     "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab.bind(LinkHints),
     "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab.bind(LinkHints),
@@ -270,7 +270,7 @@ if (typeof LinkHints !== 'undefined') {
 }
 
 if (typeof Vomnibar !== 'undefined') {
-  extend(NormalModeCommands, {
+  Object.assign(NormalModeCommands, {
     "Vomnibar.activate": Vomnibar.activate.bind(Vomnibar),
     "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind(Vomnibar),
     "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
@@ -282,7 +282,7 @@ if (typeof Vomnibar !== 'undefined') {
 }
 
 if (typeof Marks !== 'undefined') {
-  extend(NormalModeCommands, {
+  Object.assign(NormalModeCommands, {
     "Marks.activateCreateMode": Marks.activateCreateMode.bind(Marks),
     "Marks.activateGotoMode": Marks.activateGotoMode.bind(Marks)
   });

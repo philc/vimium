@@ -68,7 +68,7 @@ const completionHandlers = {
       // This can happen, for example, when posting completion suggestions from the SearchEngineCompleter
       // (which is done asynchronously).
       try {
-        return port.postMessage(extend(request, extend(response, {handler: "completions"})));
+        return port.postMessage(Object.assign(request, response, {handler: "completions"}));
       } catch (error) {}
     });
   },
@@ -86,7 +86,9 @@ chrome.runtime.onConnect.addListener(function(port) {
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  request = extend({count: 1, frameId: sender.frameId}, extend(request, {tab: sender.tab, tabId: sender.tab.id}));
+  request = Object.assign({count: 1, frameId: sender.frameId},
+                          request,
+                          {tab: sender.tab, tabId: sender.tab.id});
   if (sendRequestHandlers[request.handler]) {
     sendResponse(sendRequestHandlers[request.handler](request, sender));
   }
@@ -163,7 +165,7 @@ const TabOperations = {
 
     // clean position and active, so following `openUrlInNewTab(request)` will create a tab just next to this new tab
     return chrome.tabs.create(tabConfig, tab =>
-      callback(extend(request, {tab, tabId: tab.id, position: "", active: false})));
+      callback(Object.assign(request, {tab, tabId: tab.id, position: "", active: false})));
   },
 
   // Opens request.url in new window and switches to it.
@@ -281,14 +283,17 @@ const BackgroundCommands = {
         request.position = request.registryEntry.options.position;
       return (openNextUrl = function(request) {
         if (urls.length > 0)
-          return TabOperations.openUrlInNewTab((extend(request, {url: urls.pop()})), openNextUrl);
+          return TabOperations.openUrlInNewTab((Object.assign(request, {url: urls.pop()})), openNextUrl);
         else
           return callback(request);
       })(request);
     }
   }),
 
-  duplicateTab: mkRepeatCommand((request, callback) => chrome.tabs.duplicate(request.tabId, tab => callback(extend(request, {tab, tabId: tab.id})))),
+  duplicateTab: mkRepeatCommand((request, callback) => {
+    return chrome.tabs.duplicate(request.tabId,
+                                 tab => callback(Object.assign(request, {tab, tabId: tab.id})))
+  }),
 
   moveTabToNewWindow({count, tab}) {
     chrome.tabs.query({currentWindow: true}, function(tabs) {
@@ -481,7 +486,7 @@ var Frames = {
       }
     }
 
-    return port.postMessage(extend(request, enabledState));
+    return port.postMessage(Object.assign(request, enabledState));
   },
 
   domReady({tabId, frameId}) {
@@ -537,7 +542,7 @@ var HintCoordinator = {
     if (request == null)
       request = {};
     try {
-      return port.postMessage(extend(request, {handler: "linkHintsMessage", messageType}));
+      return port.postMessage(Object.assign(request, {handler: "linkHintsMessage", messageType}));
     } catch (error) {
       return this.unregisterFrame(tabId, frameId);
     }
@@ -574,7 +579,7 @@ var HintCoordinator = {
       for (frameId of Object.keys(this.tabState[tabId].ports || {})) {
         const port = this.tabState[tabId].ports[frameId];
         if (frameId in this.tabState[tabId].hintDescriptors) {
-          hintDescriptors = extend({}, this.tabState[tabId].hintDescriptors);
+          hintDescriptors = Object.assign({}, this.tabState[tabId].hintDescriptors);
           // We do not send back the frame's own hint descriptors.  This is faster (approx. speedup 3/2) for
           // link-busy sites like reddit.
           delete hintDescriptors[frameId];
@@ -709,4 +714,4 @@ chrome.runtime.onInstalled.addListener(function({reason}) {
     chrome.storage.local.set({installDate: new Date().toString()});
 });
 
-extend(global, {TabOperations, Frames});
+Object.assign(global, {TabOperations, Frames});

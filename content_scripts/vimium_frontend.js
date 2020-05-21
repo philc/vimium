@@ -6,7 +6,7 @@ root = typeof exports !== 'undefined' && exports !== null ? exports : (window.ro
 // On Firefox, sometimes the variables assigned to window are lost (bug 1408996), so we reinstall them.
 // NOTE(mrmr1993): This bug leads to catastrophic failure (ie. nothing works and errors abound).
 DomUtils.documentReady(function() {
-  if (typeof extend === 'undefined' || extend === null) { return root.extend(window, root); }
+  if (typeof global === 'undefined' || global === null) { return Object.assign(window, root); }
 });
 
 let isEnabledForUrl = true;
@@ -207,8 +207,8 @@ const initializePreDomReady = function() {
 
 // Wrapper to install event listeners.  Syntactic sugar.
 const installListener = (element, event, callback) => element.addEventListener(event, forTrusted(function() {
-  if (typeof extend === 'undefined' || extend === null) { // See #2800.
-    root.extend(window, root);
+  if (typeof global === 'undefined' || global === null) { // See #2800.
+    Object.assign(window, root);
   }
   if (isEnabledForUrl)
     return callback.apply(this, arguments);
@@ -262,7 +262,7 @@ var Frame = {
   postMessage(handler, request) {
     if (request == null)
       request = {};
-    this.port.postMessage(extend(request, {handler}));
+    this.port.postMessage(Object.assign(request, {handler}));
   },
 
   linkHintsMessage(request) {
@@ -298,8 +298,8 @@ var Frame = {
     this.port = chrome.runtime.connect({name: "frames"});
 
     this.port.onMessage.addListener(request => {
-      if (typeof extend === 'undefined' || extend === null) { // See #2800 and #2831.
-        root.extend(window, root);
+      if (typeof global === 'undefined' || global === null) { // See #2800 and #2831.
+        Object.assign(window, root);
       }
       const handler = this.listeners[request.handler] || this[request.handler];
       handler(request);
@@ -468,7 +468,7 @@ if (root.HelpDialog == null) {
       if ((this.helpUI != null) && this.isShowing())
         return this.helpUI.hide();
       else if (this.helpUI != null)
-        return this.helpUI.activate(extend(request, {name: "activate", focus: true}));
+        return this.helpUI.activate(Object.assign(request, {name: "activate", focus: true}));
     }
   };
 }
@@ -476,7 +476,7 @@ if (root.HelpDialog == null) {
 initializePreDomReady();
 DomUtils.documentReady(initializeOnDomReady);
 
-extend(root, {
+Object.assign(root, {
   handlerStack,
   frameId,
   Frame,
@@ -488,4 +488,4 @@ extend(root, {
   installModes
 });
 
-extend(window, root);
+Object.assign(window, root);

@@ -6,7 +6,7 @@ const Vomnibar = {
 
   // Extract any additional options from the command's registry entry.
   extractOptionsFromRegistryEntry(registryEntry, callback) {
-    return callback ? callback(extend({}, registryEntry.options)) : null;
+    return callback ? callback(Object.assign({}, registryEntry.options)) : null;
   },
 
   // sourceFrameId here (and below) is the ID of the frame from which this request originates, which may be
@@ -14,13 +14,13 @@ const Vomnibar = {
 
   activate(sourceFrameId, registryEntry) {
     return this.extractOptionsFromRegistryEntry(registryEntry, options => {
-      return this.open(sourceFrameId, extend(options, {completer:"omni"}));
+      return this.open(sourceFrameId, Object.assign(options, {completer:"omni"}));
     });
   },
 
   activateInNewTab(sourceFrameId, registryEntry) {
     return this.extractOptionsFromRegistryEntry(registryEntry, options => {
-      return this.open(sourceFrameId, extend(options, {completer:"omni", newTab: true}));
+      return this.open(sourceFrameId, Object.assign(options, {completer:"omni", newTab: true}));
     });
   },
 
@@ -77,7 +77,7 @@ const Vomnibar = {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
-    return this.vomnibarUI.activate(extend(options, { name: "activate", sourceFrameId, focus: true }));
+    return this.vomnibarUI.activate(Object.assign(options, { name: "activate", sourceFrameId, focus: true }));
   }
 };
 

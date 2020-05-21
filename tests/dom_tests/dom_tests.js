@@ -159,7 +159,7 @@ context("jsaction matching",
 const sendKeyboardEvent = (key, type, extra) => {
   if (type == null) { type = "keydown"; }
   if (extra == null) { extra = {}; }
-  handlerStack.bubbleEvent(type, extend(extra, {
+  handlerStack.bubbleEvent(type, Object.assign(extra, {
     type,
     key,
     preventDefault() {},
