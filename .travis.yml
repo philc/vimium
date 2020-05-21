@@ -2,10 +2,8 @@ sudo: false
 language: node_js
 node_js: "8"
 before_install:
-  - npm install -g coffee-script
   - npm install util
   - npm install puppeteer
-  - ./make.js build
 script: ./make.js test
 notifications:
   email: false
