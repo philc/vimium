@@ -238,7 +238,7 @@ class VomnibarUI {
       if (this.customSearchMode && (this.input.selectionEnd === 0)) {
         // Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is suppressed.
         // If the cursor is at the start of the input, then reinstate the keyword (the "w").
-        this.input.value = this.customSearchMode + this.input.value.ltrim();
+        this.input.value = this.customSearchMode + this.input.value.trimStart();
         this.input.selectionStart = (this.input.selectionEnd = this.customSearchMode.length);
         this.customSearchMode = null;
         this.update(true);
@@ -309,7 +309,7 @@ class VomnibarUI {
   }
 
   shouldActivateCustomSearchMode() {
-    const queryTerms = this.input.value.ltrim().split(/\s+/);
+    const queryTerms = this.input.value.trimStart().split(/\s+/);
     return (1 < queryTerms.length) && Array.from(this.keywords).includes(queryTerms[0]) && !this.customSearchMode;
   }
 
