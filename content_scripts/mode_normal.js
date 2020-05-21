@@ -1,4 +1,4 @@
-class NormalMode extends (window.KeyHandlerMode || global.KeyHandlerMode) {
+class NormalMode extends KeyHandlerMode {
   init(options) {
     if (options == null)
       options = {};
