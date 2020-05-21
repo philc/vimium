@@ -318,7 +318,7 @@ class VisualMode extends KeyHandlerMode {
       }
 
       if ((DomUtils.getSelectionType(this.selection) !== "Range") && (this.name !== "caret")) {
-        new CaretMode();
+        new CaretMode().init();
         return HUD.showForDuration("No usable selection, entering caret mode...", 2500);
       }
     }
