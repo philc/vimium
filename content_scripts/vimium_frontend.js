@@ -476,13 +476,16 @@ if (root.HelpDialog == null) {
 initializePreDomReady();
 DomUtils.documentReady(initializeOnDomReady);
 
-root.handlerStack = handlerStack;
-root.frameId = frameId;
-root.Frame = Frame;
-root.windowIsFocused = windowIsFocused;
-root.bgLog = bgLog;
-// These are exported for normal mode and link-hints mode.
-extend(root, {focusThisFrame});
-// These are exported only for the tests.
-extend(root, {installModes});
-if (typeof exports === 'undefined' || exports === null) { extend(window, root); }
+extend(root, {
+  handlerStack,
+  frameId,
+  Frame,
+  windowIsFocused,
+  bgLog,
+  // These are exported for normal mode and link-hints mode.
+  focusThisFrame,
+  // Exported only for tests.
+  installModes
+});
+
+extend(window, root);
