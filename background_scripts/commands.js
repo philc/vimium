@@ -26,33 +26,36 @@ const Commands = {
     for (let line of configLines.reverse()) {
       const tokens = line.split(/\s+/);
       switch (tokens[0].toLowerCase()) {
-        case "map":
-          if ((3 <= tokens.length) && !unmapAll) {
-            var _, optionList, registryEntry;
-            [_, key, command, ...optionList] = tokens;
-            if (!seen[key] && (registryEntry = this.availableCommands[command])) {
-              seen[key] = true;
-              const keySequence = this.parseKeySequence(key);
-              const options = this.parseCommandOptions(command, optionList);
-              this.keyToCommandRegistry[key] =
-                Object.assign({keySequence, command, options, optionList}, this.availableCommands[command]);
-            }
+      case "map":
+        if ((3 <= tokens.length) && !unmapAll) {
+          var _, optionList, registryEntry;
+          [_, key, command, ...optionList] = tokens;
+          if (!seen[key] && (registryEntry = this.availableCommands[command])) {
+            seen[key] = true;
+            const keySequence = this.parseKeySequence(key);
+            const options = this.parseCommandOptions(command, optionList);
+            this.keyToCommandRegistry[key] =
+              Object.assign({keySequence, command, options, optionList}, this.availableCommands[command]);
           }
-          break;
-        case "unmap":
-          if (tokens.length == 2)
-            seen[tokens[1]] = true;
-          break;
-        case "unmapall":
-          unmapAll = true;
-          break;
-        case "mapkey":
-          if (tokens.length === 3) {
-            const fromChar = this.parseKeySequence(tokens[1]);
-            const toChar = this.parseKeySequence(tokens[2]);
-            if (fromChar.length === toChar.length && toChar.length === 1) { if (this.mapKeyRegistry[fromChar[0]] == null) { this.mapKeyRegistry[fromChar[0]] = toChar[0]; } }
+        }
+        break;
+      case "unmap":
+        if (tokens.length == 2)
+          seen[tokens[1]] = true;
+        break;
+      case "unmapall":
+        unmapAll = true;
+        break;
+      case "mapkey":
+        if (tokens.length === 3) {
+          const fromChar = this.parseKeySequence(tokens[1]);
+          const toChar = this.parseKeySequence(tokens[2]);
+          if ((fromChar.length === toChar.length && toChar.length === 1)
+              && this.mapKeyRegistry[fromChar[0]] == null) {
+            this.mapKeyRegistry[fromChar[0]] = toChar[0];
           }
-          break;
+        }
+        break;
       }
     }
 
