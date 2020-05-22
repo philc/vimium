@@ -438,14 +438,14 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 //
-// Backup and restore. "?" is for the tests."
-if (typeof DomUtils !== 'undefined' && DomUtils !== null) {
+// Backup and restore.
+if (global.DomUtils) { // global.DomUtils is not defined when running our tests.
   DomUtils.documentReady(function() {
-  // Only initialize backup/restore on the options page (not the popup).
+    // Only initialize backup/restore on the options page (not the popup).
     if (location.pathname !== "/pages/options.html")
       return;
 
-  let restoreSettingsVersion = null;
+    let restoreSettingsVersion = null;
 
   const populateBackupLinkUrl = function() {
     const backup = {settingsVersion: bgSettings.get("settingsVersion")};
@@ -504,6 +504,6 @@ if (typeof DomUtils !== 'undefined' && DomUtils !== null) {
 });
 }
 
-// Exported for tests.
+// Exported for use by our tests.
 global.Options = Options
 global.isVimiumOptionsPage = true
