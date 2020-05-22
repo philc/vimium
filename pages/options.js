@@ -9,16 +9,15 @@ const bgSettings = chrome.extension.getBackgroundPage().Settings;
 
 //
 // Class hierarchy for various types of option.
+// Call "fetch" after constructing an Option object, to fetch it from localStorage.
 class Option {
   // Base class for all option classes.
   // Abstract. Option does not define @populateElement or @readValueFromElement.
-
   constructor(field, onUpdated) {
     this.field = field;
     this.onUpdated = onUpdated;
     this.element = $(this.field);
     this.element.addEventListener("change", this.onUpdated);
-    this.fetch();
     Option.all.push(this);
   }
 
@@ -336,7 +335,8 @@ const initOptionsPage = function() {
   // Populate options. The constructor adds each new object to "Option.all".
   for (let name of Object.keys(Options)) {
     const type = Options[name];
-    new type(name,onUpdated);
+    const option = new type(name, onUpdated);
+    option.fetch();
   }
 
   maintainLinkHintsView();
@@ -406,6 +406,7 @@ const initPopupPage = function() {
 
     // Populate options. Just one, here.
     exclusions = new ExclusionRulesOnPopupOption(url, "exclusionRules", onUpdated);
+    exclusions.fetch();
 
     updateState();
     document.addEventListener("keyup", updateState);
