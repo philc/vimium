@@ -16,19 +16,19 @@ context("bookmark completer",
 
   should("flatten a list of bookmarks with inorder traversal", () => {
     const result = this.completer.traverseBookmarks([this.bookmark1, this.bookmark3]);
-    assert.arrayEqual([this.bookmark1, this.bookmark2, this.bookmark3], result);
+    assert.equal([this.bookmark1, this.bookmark2, this.bookmark3], result);
   }),
 
   should("return matching bookmarks when searching", () => {
     this.completer.refresh();
     const results = filterCompleter(this.completer, ["mark2"]);
-    assert.arrayEqual([this.bookmark2.url], results.map(suggestion => suggestion.url));
+    assert.equal([this.bookmark2.url], results.map(suggestion => suggestion.url));
   }),
 
   should("return *no* matching bookmarks when there is no match", () => {
     this.completer.refresh();
     const results = filterCompleter(this.completer, ["does-not-match"]);
-    assert.arrayEqual([], results.map(suggestion => suggestion.url));
+    assert.equal([], results.map(suggestion => suggestion.url));
   }),
 
   should("construct bookmark paths correctly", () => {
@@ -40,13 +40,13 @@ context("bookmark completer",
   should("return matching bookmark *titles* when searching *without* the folder separator character", () => {
     this.completer.refresh();
     const results = filterCompleter(this.completer, ["mark2"]);
-    assert.arrayEqual(["bookmark2"], results.map(suggestion => suggestion.title));
+    assert.equal(["bookmark2"], results.map(suggestion => suggestion.title));
   }),
 
   should("return matching bookmark *paths* when searching with the folder separator character", () => {
     this.completer.refresh();
     const results = filterCompleter(this.completer, ["/bookmark1", "mark2"]);
-    assert.arrayEqual(["/bookmark1/bookmark2"], results.map(suggestion => suggestion.title));
+    assert.equal(["/bookmark1/bookmark2"], results.map(suggestion => suggestion.title));
   })
 );
 
@@ -107,7 +107,7 @@ context("HistoryCache",
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, this.history1], this.results);
+      assert.equal([this.history2, this.history1], this.results);
     }),
 
     should("add new visits to the history", () => {
@@ -117,59 +117,59 @@ context("HistoryCache",
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, newSite, this.history1], this.results);
+      assert.equal([this.history2, newSite, this.history1], this.results);
     }),
 
     should("replace new visits in the history", () => {
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, this.history1], this.results);
+      assert.equal([this.history2, this.history1], this.results);
       const newSite = { url: "a.com", lastVisitTime: 15 };
       this.onVisitedListener(newSite);
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([newSite, this.history1], this.results);
+      assert.equal([newSite, this.history1], this.results);
     }),
 
     should("(not) remove page from the history, when page is not in history (it should be a no-op)", () => {
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, this.history1], this.results);
+      assert.equal([this.history2, this.history1], this.results);
       const toRemove = { urls: [ "x.com" ], allHistory: false };
       this.onVisitRemovedListener(toRemove);
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, this.history1], this.results);
+      assert.equal([this.history2, this.history1], this.results);
     }),
 
     should("remove pages from the history", () => {
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, this.history1], this.results);
+      assert.equal([this.history2, this.history1], this.results);
       const toRemove = { urls: [ "a.com" ], allHistory: false };
       this.onVisitRemovedListener(toRemove);
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history1], this.results);
+      assert.equal([this.history1], this.results);
     }),
 
     should("remove all pages from the history", () => {
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([this.history2, this.history1], this.results);
+      assert.equal([this.history2, this.history1], this.results);
       const toRemove = { allHistory: true };
       this.onVisitRemovedListener(toRemove);
       HistoryCache.use(results => {
         this.results = results;
       });
-      assert.arrayEqual([], this.results);
+      assert.equal([], this.results);
     })
   )
 );
@@ -189,7 +189,7 @@ context("history completer",
   }),
 
   should("return matching history entries when searching", () => {
-    assert.arrayEqual([this.history1.url], filterCompleter(this.completer, ["story1"]).map(entry => entry.url));
+    assert.equal([this.history1.url], filterCompleter(this.completer, ["story1"]).map(entry => entry.url));
   }),
 
   should("rank recent results higher than nonrecent results", () => {
@@ -197,7 +197,7 @@ context("history completer",
     const results = filterCompleter(this.completer, ["hist"]);
     results.forEach(result => result.computeRelevancy());
     results.sort((a, b) => b.relevancy - a.relevancy);
-    assert.arrayEqual([this.history2.url, this.history1.url], results.map(result => result.url));
+    assert.equal([this.history2.url, this.history1.url], results.map(result => result.url));
   })
 );
 
@@ -219,7 +219,7 @@ context("domain completer",
 
   should("return only a single matching domain", () => {
     const results = filterCompleter(this.completer, ["story"]);
-    assert.arrayEqual(["http://history1.com"], results.map(result => result.url));
+    assert.equal(["http://history1.com"], results.map(result => result.url));
   }),
 
   should("pick domains which are more recent", () => {
@@ -230,11 +230,11 @@ context("domain completer",
   }),
 
   should("returns no results when there's more than one query term, because clearly it's not a domain", () => {
-    assert.arrayEqual([], filterCompleter(this.completer, ["his", "tory"]));
+    assert.equal([], filterCompleter(this.completer, ["his", "tory"]));
   }),
 
   should("not return any results for empty queries", () => {
-    assert.arrayEqual([], filterCompleter(this.completer, []));
+    assert.equal([], filterCompleter(this.completer, []));
   })
 );
 
@@ -305,8 +305,8 @@ context("tab completer",
 
   should("return matching tabs", () => {
     const results = filterCompleter(this.completer, ["tab2"]);
-    assert.arrayEqual(["tab2.com"], results.map(tab => tab.url));
-    assert.arrayEqual([2], results.map(tab => tab.tabId));
+    assert.equal(["tab2.com"], results.map(tab => tab.url));
+    assert.equal([2], results.map(tab => tab.tabId));
   })
 );
 
