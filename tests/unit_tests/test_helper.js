@@ -1,4 +1,4 @@
-require("../shoulda.js/shoulda.js");
+require("../vendor/shoulda.js");
 
 // In a nodejs environment, stub out some essential DOM properties which are required before any of our code
 // can be loaded.
