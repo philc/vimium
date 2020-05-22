@@ -98,7 +98,6 @@ After that:
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 [Puppeteer](https://github.com/puppeteer/puppeteer). To run the tests:
 
- 1. `git submodule update --init --recursive` to fetch shoulda.js.
  1. Install [nodejs](https://nodejs.org/) if you don't have it already.
  1. `npm install puppeteer` to install [Puppeteer](https://github.com/puppeteer/puppeteer).
  1. `./make.js test` to build the code and run the tests.
