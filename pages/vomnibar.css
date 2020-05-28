@@ -148,3 +148,59 @@
 .vomnibarNoInsertText {
   visibility: hidden;
 }
+
+/* Dark Vomnibar */
+
+
+@media (prefers-color-scheme: dark) {
+  #vomnibar {
+    border: 1px solid rgba(0, 0, 0, 0.7);
+    border-radius: 6px;
+  }
+
+  #vomnibar .vomnibarSearchArea {
+    background-color: #35363a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  #vomnibar input {
+    background-color: #202124;
+    color: white;
+    border: none;
+  }
+
+  #vomnibar ul {
+    background-color: #202124;
+  }
+
+  #vomnibar li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  #vomnibar li.vomnibarSelected {
+    background-color: #37383a;
+  }
+
+  #vomnibar li .vomnibarUrl {
+    white-space: nowrap;
+    color: #5ca1f7;
+  }
+
+  #vomnibar li em,
+  #vomnibar li .vomnibarTitle {
+    color: white;
+  }
+
+  #vomnibar li .vomnibarSource {
+    color: #9aa0a6;
+  }
+
+  #vomnibar li .vomnibarMatch {
+    color: white;
+  }
+
+  #vomnibar li em .vomnibarMatch,
+  #vomnibar li .vomnibarTitle .vomnibarMatch {
+    color: white;
+  }
+}
