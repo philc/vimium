@@ -431,28 +431,33 @@ iframe.vimiumUIComponentReactivated {
   border: 5px solid yellow;
 }
 
-/* Dark mode CSS */
+/* Dark mode CSS for options page and exclusions */
 
 @media (prefers-color-scheme: dark) {
-  body {
-    filter: sepia(5%) invert(90%);
+  body.vimiumBody {
+    background-color: #292a2d;
+    color: white;
   }
 
-  body.themedBackground {
-    background-color: #242424;
+  body.vimiumBody a,
+  body.vimiumBody a:visited {
+    color: #8ab4f8;
   }
 
-  div#vomnibar, div#vimiumHelpDialogContainer, div.vimiumHUD {
-    box-shadow: 0px 2px 10px white;
+  body.vimiumBody textarea,
+  body.vimiumBody input {
+    background-color: #1d1d1f;
+    border-color: #1d1d1f;
+    color: #e8eaed;
   }
 
-  @-moz-document url-prefix() {
-    div.vimiumHUD {
-      position: inherit;
-    }
+  body.vimiumBody div.example {
+    color: #9aa0a6;
   }
 
-  img.vomnibarIcon {
-    filter: invert(100%);
+  body.vimiumBody div#state,
+  body.vimiumBody div#footer {
+    background-color: #202124;
+    border-color: rgba(255, 255, 255, 0.1);
   }
 }
