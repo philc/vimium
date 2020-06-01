@@ -58,7 +58,7 @@ context("createSearchUrl",
   should("replace %S without encoding", () => {
     assert.equal("https://www.github.com/philc/vimium/pulls", Utils.createSearchUrl("vimium/pulls", "https://www.github.com/philc/%S"))
   }),
-  should("replace %su with %20", () => {
+  should("replace %su with %20 for space", () => {
     assert.equal("https://www.rottentomatoes.com/search?search=alice%20in%20wonderland",
     Utils.createSearchUrl("alice in wonderland", "https://www.rottentomatoes.com/search?search=%su"))
   })
