@@ -282,6 +282,7 @@ const Commands = {
 };
 
 const defaultKeyMappings = {
+  //navigating the current page
   "?": "showHelp",
   "j": "scrollDown",
   "k": "scrollUp",
@@ -293,16 +294,18 @@ const defaultKeyMappings = {
   "zL": "scrollToRight",
   "<c-e>": "scrollDown",
   "<c-y>": "scrollUp",
-
+  
   "d": "scrollPageDown",
   "u": "scrollPageUp",
   "r": "reload",
   "gs": "toggleViewSource",
 
+  //mode selection
   "i": "enterInsertMode",
   "v": "enterVisualMode",
   "V": "enterVisualLineMode",
 
+  //Navigating history
   "H": "goBack",
   "L": "goForward",
   "gu": "goUp",
@@ -310,6 +313,7 @@ const defaultKeyMappings = {
 
   "gi": "focusInput",
 
+  //link hints
   "f": "LinkHints.activateMode",
   "F": "LinkHints.activateModeToOpenInNewTab",
   "<a-f>": "LinkHints.activateModeWithQueue",
@@ -326,7 +330,8 @@ const defaultKeyMappings = {
 
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
-
+  
+//Manipulating tabs
   "K": "nextTab",
   "J": "previousTab",
   "gt": "nextTab",
@@ -360,6 +365,7 @@ const defaultKeyMappings = {
   "gf": "nextFrame",
   "gF": "mainFrame",
 
+  //using marks
   "m": "Marks.activateCreateMode",
   "`": "Marks.activateGotoMode"
 };
