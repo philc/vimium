@@ -39,7 +39,7 @@ const Marks = {
     let shiftKey = event.shiftKey;
     if (this.currentRegistryEntry.options.swap)
       shiftKey = !shiftKey;
-    return shiftKey && this.previousPositionRegisters.includes(keyChar);
+    return shiftKey && !this.previousPositionRegisters.includes(keyChar);
   },
 
   activateCreateMode(count, {registryEntry}) {
