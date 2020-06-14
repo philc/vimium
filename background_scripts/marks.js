@@ -71,8 +71,11 @@ const Marks = {
   },
 
   // Focus an existing tab and scroll to the given position within it.
-  gotoPositionInTab({ tabId, scrollX, scrollY, markName }) {
-    chrome.tabs.update(tabId, { active: true }, () => chrome.tabs.sendMessage(tabId, {name: "setScrollPosition", scrollX, scrollY}));
+  gotoPositionInTab({ tabId, scrollX, scrollY }) {
+    chrome.tabs.update(tabId, { active: true }, (tab) => {
+      chrome.windows.update(tab.windowId, { focused: true });
+      chrome.tabs.sendMessage(tabId, {name: "setScrollPosition", scrollX, scrollY});
+    });
   },
 
   // The tab we're trying to find no longer exists.  We either find another tab with a matching URL and use it,
