@@ -436,7 +436,9 @@ iframe.vimiumNonClickable {
 }
 
 @media (prefers-color-scheme: dark) {
-  /* This cancels out the filter on <html>, applied by Dark Reader's Filter and Filter+ modes */
+  /* DarkReader is a popular dark mode browser extension. It can apply an invert filter to the whole page to
+   * make the page dark, when used in Filter and Filter+ modes. We want to reverse/invert that filter again
+   * for Vimium's UI elements, because Vimium is already dark mode aware. */
   iframe.reverseDarkReaderFilter {
     -webkit-filter: invert(100%) hue-rotate(180deg) !important;
     filter: invert(100%) hue-rotate(180deg) !important;
@@ -470,7 +472,7 @@ iframe.vimiumNonClickable {
     background-color: #202124;
     border-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   /* Dark Mode CSS for Help Dialog */
 
   div#vimiumHelpDialogContainer {

@@ -99,21 +99,20 @@ class UIComponent {
     });
   }
 
+  // This ensures that Vimium's UI elements (HUD, Vomnibar) honor the browser's light/dark theme preference,
+  // even when the user is also using the DarkReader extension. DarkReader is the most popular dark mode
+  // Chrome extension in use as of 2020.
   handleDarkReaderFilter() {
     const reverseFilterClass = "reverseDarkReaderFilter";
 
-    const reverseFilterIfExists = (() => {
+    const reverseFilterIfExists = () => {
+      // The DarkReader extension creates this element if it's actively modifying the current page.
       const darkReaderElement = document.getElementById("dark-reader-style");
-      if (darkReaderElement && darkReaderElement.innerHTML.includes("filter")) {
-       if (!this.iframeElement.classList.contains(reverseFilterClass)) {
-          this.iframeElement.classList.add(reverseFilterClass);
-          console.log('added');
-       }
-      } else {
+      if (darkReaderElement && darkReaderElement.innerHTML.includes("filter"))
+        this.iframeElement.classList.add(reverseFilterClass);
+      else
         this.iframeElement.classList.remove(reverseFilterClass);
-          console.log('removed');
-      }
-    }).bind(this);
+    };
 
     reverseFilterIfExists();
 

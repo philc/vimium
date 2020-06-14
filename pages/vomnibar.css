@@ -151,7 +151,6 @@
 
 /* Dark Vomnibar */
 
-
 @media (prefers-color-scheme: dark) {
   #vomnibar {
     border: 1px solid rgba(0, 0, 0, 0.7);
@@ -169,7 +168,7 @@
     border: none;
   }
 
-  #vomnibar ul { 
+  #vomnibar ul {
     background-color: #202124;
   }
 
