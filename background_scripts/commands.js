@@ -282,7 +282,7 @@ const Commands = {
 };
 
 const defaultKeyMappings = {
-  "?": "showHelp",
+  // Navigating the current page
   "j": "scrollDown",
   "k": "scrollUp",
   "h": "scrollLeft",
@@ -293,40 +293,48 @@ const defaultKeyMappings = {
   "zL": "scrollToRight",
   "<c-e>": "scrollDown",
   "<c-y>": "scrollUp",
-
   "d": "scrollPageDown",
   "u": "scrollPageUp",
   "r": "reload",
-  "gs": "toggleViewSource",
-
+  "yy": "copyCurrentUrl",
+  "p": "openCopiedUrlInCurrentTab",
+  "P": "openCopiedUrlInNewTab",
+  "gi": "focusInput",
+  "[[": "goPrevious",
+  "]]": "goNext",
+  "gf": "nextFrame",
+  "gF": "mainFrame",
+  "gu": "goUp",
+  "gU": "goToRoot",
   "i": "enterInsertMode",
   "v": "enterVisualMode",
   "V": "enterVisualLineMode",
 
-  "H": "goBack",
-  "L": "goForward",
-  "gu": "goUp",
-  "gU": "goToRoot",
-
-  "gi": "focusInput",
-
+  // Link hints
   "f": "LinkHints.activateMode",
   "F": "LinkHints.activateModeToOpenInNewTab",
   "<a-f>": "LinkHints.activateModeWithQueue",
   "yf": "LinkHints.activateModeToCopyLinkUrl",
 
+  // Using find
   "/": "enterFindMode",
   "n": "performFind",
   "N": "performBackwardsFind",
 
-  "[[": "goPrevious",
-  "]]": "goNext",
+  // Vomnibar
+  "o": "Vomnibar.activate",
+  "O": "Vomnibar.activateInNewTab",
+  "T": "Vomnibar.activateTabSelection",
+  "b": "Vomnibar.activateBookmarks",
+  "B": "Vomnibar.activateBookmarksInNewTab",
+  "ge": "Vomnibar.activateEditUrl",
+  "gE": "Vomnibar.activateEditUrlInNewTab",
 
-  "yy": "copyCurrentUrl",
+  // Navigating history
+  "H": "goBack",
+  "L": "goForward",
 
-  "p": "openCopiedUrlInCurrentTab",
-  "P": "openCopiedUrlInNewTab",
-
+  // Manipulating tabs
   "K": "nextTab",
   "J": "previousTab",
   "gt": "nextTab",
@@ -336,32 +344,21 @@ const defaultKeyMappings = {
   ">>": "moveTabRight",
   "g0": "firstTab",
   "g$": "lastTab",
-
   "W": "moveTabToNewWindow",
   "t": "createTab",
   "yt": "duplicateTab",
   "x": "removeTab",
   "X": "restoreTab",
-
   "<a-p>": "togglePinTab",
   "<a-m>": "toggleMuteTab",
 
-  "o": "Vomnibar.activate",
-  "O": "Vomnibar.activateInNewTab",
-
-  "T": "Vomnibar.activateTabSelection",
-
-  "b": "Vomnibar.activateBookmarks",
-  "B": "Vomnibar.activateBookmarksInNewTab",
-
-  "ge": "Vomnibar.activateEditUrl",
-  "gE": "Vomnibar.activateEditUrlInNewTab",
-
-  "gf": "nextFrame",
-  "gF": "mainFrame",
-
+  // Marks
   "m": "Marks.activateCreateMode",
-  "`": "Marks.activateGotoMode"
+  "`": "Marks.activateGotoMode",
+
+  // Misc
+  "?": "showHelp",
+  "gs": "toggleViewSource"
 };
 
 
