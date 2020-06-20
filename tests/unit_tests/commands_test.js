@@ -13,15 +13,11 @@ require("../../content_scripts/marks.js");
 require("../../content_scripts/vomnibar.js");
 
 context("Key mappings", () => {
-  let testKeySequence;
-
-  setup(() => {
-    testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
-      const keySequence = Commands.parseKeySequence(key);
-      assert.equal(expectedKeyText, keySequence.join("/"));
-      assert.equal(expectedKeyLength, keySequence.length);
-    };
-  });
+  const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
+    const keySequence = Commands.parseKeySequence(key);
+    assert.equal(expectedKeyText, keySequence.join("/"));
+    assert.equal(expectedKeyLength, keySequence.length);
+  };
 
   should("lowercase keys correctly", () => {
     testKeySequence("a", "a", 1);
@@ -83,9 +79,9 @@ context("Key mappings", () => {
 
 
 context("Validate commands and options", () => {
+  // TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
+  // of the offending command appears in the output, if the test fails?
   should("have either noRepeat or repeatLimit, but not both", () => {
-    // TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
-    // of the offending command appears in the output, if the test fails?
     for (let command of Object.keys(Commands.availableCommands)) {
       const options = Commands.availableCommands[command];
       assert.isTrue(!(options.noRepeat && options.repeatLimit));
@@ -128,20 +124,10 @@ context("Validate commands and options", () => {
 });
 
 context("Validate advanced commands", () => {
-  let allCommands;
-
-  setup(() => {
-    allCommands = [];
-    for (let _ of Object.keys(Commands.commandGroups)) {
-      const commands = Commands.commandGroups[_];
-      allCommands = allCommands.concat(commands);
-    }
-  });
-
   should("include each advanced command in a command group", () => {
-    for (let command of Commands.advancedCommands) {
-      assert.isTrue(0 <= allCommands.indexOf(command));
-    }
+    let allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k]).flat(1);
+    for (let command of Commands.advancedCommands)
+      assert.isTrue(allCommands.includes(command));
   })
 });
 
