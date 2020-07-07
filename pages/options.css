@@ -107,7 +107,8 @@ input#linkHintNumbers {
 input#linkHintCharacters {
   width: 100%;
 }
-input#scrollStepSize {
+input#scrollStepSize,
+input#pageOverlap {
   width: 50px;
   margin-right: 3px;
   padding-left: 3px;

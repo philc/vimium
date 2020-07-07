@@ -346,7 +346,11 @@ const Scroller = {
     // continuous scrolls, and is just an optimization.
     if (!CoreScroller.wouldNotInitiateScroll()) {
       const element = findScrollableElement(activatedElement, direction, amount, factor);
-      const elementAmount = factor * getDimension(element, direction, amount);
+      let elementAmount = factor * getDimension(element, direction, amount);
+      const pageOverlap = Settings.get('pageOverlap');
+      if (direction === "y" && elementAmount > 3 * pageOverlap) {
+        elementAmount -= pageOverlap;
+      }
       return CoreScroller.scroll(element, direction, elementAmount, continuous);
     }
   },
