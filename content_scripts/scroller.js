@@ -348,8 +348,9 @@ const Scroller = {
       const element = findScrollableElement(activatedElement, direction, amount, factor);
       let elementAmount = factor * getDimension(element, direction, amount);
       const pageOverlap = Settings.get('pageOverlap');
-      if (direction === "y" && elementAmount > 3 * pageOverlap) {
-        elementAmount -= pageOverlap;
+      if (direction === "y" && Math.abs(elementAmount) > 3 * pageOverlap) {
+        const sign = getSign(elementAmount);
+        elementAmount -= sign * pageOverlap;
       }
       return CoreScroller.scroll(element, direction, elementAmount, continuous);
     }
