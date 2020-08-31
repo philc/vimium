@@ -47,8 +47,10 @@ class PostFindMode extends SuppressPrintable {
       keyup(event) { return InsertMode.suppressEvent(event); }
     });
 
-    if (!document.activeElement || !DomUtils.isEditable(document.activeElement))
+    if (!element || !DomUtils.isEditable(element)) {
+      this.exit();
       return;
+    }
 
     // If the very-next keydown is Escape, then exit immediately, thereby passing subsequent keys to the
     // underlying insert-mode instance.
