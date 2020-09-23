@@ -454,7 +454,7 @@ if (global.DomUtils) { // global.DomUtils is not defined when running our tests.
 
     // Create the blob in the background page so it isn't garbage collected when the page closes in FF.
     const bgWin = chrome.extension.getBackgroundPage();
-    const blob = new bgWin.Blob([ JSON.stringify(backup, null, 2) ]);
+    const blob = new bgWin.Blob([ JSON.stringify(backup, null, 2) + "\n" ]);
     $("backupLink").href = bgWin.URL.createObjectURL(blob);
   };
 
