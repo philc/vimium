@@ -271,10 +271,15 @@ const BackgroundCommands = {
     }
 
     if (request.registryEntry.options.incognito || request.registryEntry.options.window) {
+      // Firefox does not support about:newtab in chrome.windows.create.
+      const legalUrls = request.urls.filter((url) => url !== Settings.defaults.newTabUrl);
       const windowConfig = {
-        url: request.urls,
+        url: legalUrls,
         incognito: request.registryEntry.options.incognito || false
       };
+      if (windowConfig.url.length === 0) {
+        delete windowConfig.url;
+      }
       return chrome.windows.create(windowConfig, () => callback(request));
     } else {
       let openNextUrl;
