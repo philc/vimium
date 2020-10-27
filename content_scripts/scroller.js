@@ -61,7 +61,7 @@ const performScroll = function(element, direction, amount) {
   const axisName = scrollProperties[direction].axisName;
   const before = element[axisName];
   if (element.scrollBy) {
-    const scrollArg = {behavior: "instant"};
+    const scrollArg = {behavior: Settings.get("scrollBehaviorSmooth") ? "smooth" : "instant"};
     scrollArg[direction === "x" ? "left" : "top"] = amount;
     element.scrollBy(scrollArg);
   } else {
