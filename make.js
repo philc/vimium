@@ -62,6 +62,7 @@ function buildStorePackage() {
   // Chrome considers this key invalid in manifest.json, so we add it during the build phase.
   firefoxManifest["browser_specific_settings"] = {
     gecko: {
+      "id": "vimium@vimium.github.io",
       "strict_min_version": "62.0"
     }
   };
