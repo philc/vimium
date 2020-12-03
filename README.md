@@ -1,6 +1,8 @@
 Vimium - The Hacker's Browser
 =============================
 
+[English](README.md)  |  [中文](README_CN.md)
+
 [![Build Status](https://travis-ci.org/philc/vimium.svg?branch=master)](https://travis-ci.org/philc/vimium)
 
 Vimium is a browser extension that provides keyboard-based navigation and control of the web in the spirit of
