@@ -315,6 +315,7 @@ const defaultKeyMappings = {
   "F": "LinkHints.activateModeToOpenInNewTab",
   "<a-f>": "LinkHints.activateModeWithQueue",
   "yf": "LinkHints.activateModeToCopyLinkUrl",
+  "sl": "LinkHints.activateModeToFocusLinkUrl",
 
   // Using find
   "/": "enterFindMode",
@@ -403,6 +404,7 @@ const commandDescriptions = {
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"],
   "LinkHints.activateModeToDownloadLink": ["Download link url"],
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"],
+  "LinkHints.activateModeToFocusLinkUrl": ["Place focus on element"],
 
   enterFindMode: ["Enter find mode", { noRepeat: true }],
   performFind: ["Cycle forward to the next find match"],

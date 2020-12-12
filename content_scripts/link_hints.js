@@ -243,7 +243,8 @@ var LinkHints = {
   activateModeToCopyLinkUrl(count) { this.activateMode(count, {mode: COPY_LINK_URL}); },
   activateModeWithQueue() { this.activateMode(1, {mode: OPEN_WITH_QUEUE}); },
   activateModeToOpenIncognito(count) { this.activateMode(count, {mode: OPEN_INCOGNITO}); },
-  activateModeToDownloadLink(count) { this.activateMode(count, {mode: DOWNLOAD_LINK_URL}); }
+  activateModeToDownloadLink(count) { this.activateMode(count, {mode: DOWNLOAD_LINK_URL}); },
+  activateModeToFocusLinkUrl() { this.activateMode(1, {mode: FOCUS_LINK}); }
 };
 
 class LinkHintsMode {
