@@ -196,13 +196,12 @@ const toggleMuteTab = function({tab: currentTab, registryEntry, tabId, frameId})
       const audibleUnmutedTabs = tabs.filter(t => t.audible && !t.mutedInfo.muted);
       if (audibleUnmutedTabs.length >= 0) {
         chrome.tabs.sendMessage(tabId, {frameId, name: "showMessage", message: `Muting ${audibleUnmutedTabs.length} tab(s).`});
-        for (tab of audibleUnmutedTabs)
-          muteTab(tab);
+        	audibleUnmutedTabs.forEach(muteTab(tab));
       } else {
         chrome.tabs.sendMessage(tabId, {frameId, name: "showMessage", message: "Unmuting all muted tabs."});
-        for (tab of tabs)
-          if (tab.mutedInfo.muted)
-            muteTab(tab);
+        	tabs
+            .filter(tab => tab.mutedInfo.muted)
+            .forEach(muteTab);
       }
     });
   } else {
@@ -353,8 +352,9 @@ const BackgroundCommands = {
 var forCountTabs = (count, currentTab, callback) => chrome.tabs.query({currentWindow: true}, function(tabs) {
   const activeTabIndex = currentTab.index;
   const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
-  for (let tab of tabs.slice(startTabIndex, startTabIndex + count))
-    callback(tab);
+  tabs
+    .slice(startTabIndex, startTabIndex + count)
+    .forEach(callback);
 });
 
 // Remove tabs before, after, or either side of the currently active tab
