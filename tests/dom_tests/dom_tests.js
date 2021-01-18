@@ -612,6 +612,22 @@ context("Find prev / next links", () => {
     NormalModeCommands.goNext();
     assert.equal('#first', window.location.hash);
   });
+
+  should("find elements by title", () => {
+    document.getElementById("test-div").innerHTML = `\
+<a title='Next page' href='#first'>unhelpful text</a>\
+`;
+    NormalModeCommands.goNext();
+    assert.equal('#first', window.location.hash);
+  });
+
+  should("find elements by aria-label", () => {
+    document.getElementById("test-div").innerHTML = `\
+<a aria-label='Next page' href='#first'>unhelpful text</a>\
+`;
+    NormalModeCommands.goNext();
+    assert.equal('#first', window.location.hash);
+  });
 });
 
 context("Key mapping", () => {

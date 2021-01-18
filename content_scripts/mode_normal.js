@@ -347,7 +347,9 @@ var findAndFollowLink = function(linkStrings) {
     let linkMatches = false;
     for (linkString of linkStrings) {
       if ((link.innerText.toLowerCase().indexOf(linkString) !== -1) ||
-          (link.value && link.value.includes && link.value.includes(linkString))) {
+          (link.value && link.value.includes && link.value.includes(linkString)) ||
+          (link.hasAttribute("title") && link.getAttribute("title").toLowerCase().includes(linkString)) ||
+          (link.hasAttribute("aria-label") && link.getAttribute("aria-label").toLowerCase().includes(linkString))) {
         linkMatches = true;
         break;
       }
@@ -387,7 +389,9 @@ var findAndFollowLink = function(linkStrings) {
           : new RegExp(linkString, "i");
     for (let candidateLink of candidateLinks) {
       if (exactWordRegex.test(candidateLink.innerText) ||
-          (candidateLink.value && exactWordRegex.test(candidateLink.value))) {
+          (candidateLink.value && exactWordRegex.test(candidateLink.value)) ||
+          (link.hasAttribute("title") && exactWordRegex.test(link.getAttribute("title")) ||
+          (link.hasAttribute("aria-label") && exactWordRegex.test(link.getAttribute("aria-label"))))) {
         followLink(candidateLink);
         return true;
       }
