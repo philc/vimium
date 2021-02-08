@@ -38,9 +38,9 @@ class Movement {
 
   // Run a movement.  This is the core movement method, all movements happen here.  For convenience, the
   // following three argument forms are supported:
-  //   @runMovement "forward word"
-  //   @runMovement ["forward", "word"]
-  //   @runMovement "forward", "word"
+  //   runMovement("forward word")
+  //   runMovement(["forward", "word"])
+  //   runMovement("forward", "word")
   //
   // The granularities are word, "character", "line", "lineboundary", "sentence" and "paragraph".  In addition,
   // we implement the pseudo granularity "vimword", which implements vim-like word movement (e.g. "w").
@@ -56,10 +56,10 @@ class Movement {
     // character-by-character.
     if ((granularity === vimword) && (direction === forward)) {
       while (this.nextCharacterIsWordCharacter())
-        if (!this.runMovements([forward, character]))
+        if (this.extendByOneCharacter(forward) === 0)
           return;
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter())
-        if (!this.runMovements([forward, character]))
+        if (this.extendByOneCharacter(forward) === 0)
           return;
     } else if (granularity === vimword) {
       this.selection.modify(this.alterMethod, backward, word);
@@ -68,40 +68,14 @@ class Movement {
     // As above, we implement this character-by-character to get consistent behavior on Windows and Linux.
     if ((granularity === word) && (direction === forward)) {
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter())
-        if (!this.runMovements([forward, character]))
+        if (this.extendByOneCharacter(forward) === 0)
           return;
       while (this.nextCharacterIsWordCharacter())
-        if (!this.runMovements([forward, character]))
+        if (this.extendByOneCharacter(forward) === 0)
           return;
     } else {
       return this.selection.modify(this.alterMethod, direction, granularity);
     }
-  }
-
-  // Return a simple comparable value which depends on various aspects of the selection.  This is used to
-  // detect, after a movement, whether the selection has changed.
-  hashSelection() {
-    const range = this.selection.getRangeAt(0);
-    return [this.selection.toString().length,
-            range.anchorOffset,
-            range.focusOffset,
-            this.selection.extentOffset,
-            this.selection.baseOffset].join("/");
-  }
-
-  // Call a function; return true if the selection changed, false otherwise.
-  selectionChanged(func) {
-    const before = this.hashSelection();
-    func();
-    return this.hashSelection() !== before;
-  }
-
-  // Run a sequence of movements, stopping if a movement fails to change the selection.
-  runMovements(...movements) {
-    for (var movement of movements)
-      if (!this.selectionChanged(() => this.runMovement(movement)))
-        return false;
-    return true;
   }
 
   // Swap the anchor node/offset and the focus node/offset.  This allows us to work with both ends of the
