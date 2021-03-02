@@ -41,15 +41,15 @@
         "message": "Dies verwendet die reguläre Google-Vervollständigung, stellt aber den Text \"map of\" der Abfrage voran. Sie funktioniert gut für Orte, Länder, Staaten, geografische Regionen und Ähnliches, führt aber keine Adresssuche durch."
     },
     "pageExclusionsHeaderText1": {
-        "message": "Muster"
+        "message": "Pattern"
     },
     "pageExclusionsHeaderText2": {
         "message": "Schlüssel"
     },
     "pageExclusionsPlaceholder1": {
-        "message": "URL-Muster"
+        "message": "URL-Pattern"
     },
     "pageExclusionsPlaceholder2": {
-        "message": "Ausschließ-Schlüssel"
+        "message": "Exclude Schlüssel"
     }
 }
