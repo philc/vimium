@@ -1,0 +1,55 @@
+{
+    "extName": {
+        "message": "Vimium",
+        "description": "Extension Name" 
+    },
+    "extDescription": {
+        "message": "Der Hacker's Browser. Vimium bietet Tastaturkürzel für die Navigation und Steuerung im Stil von Vim.",
+        "description": "Extension Descriptionin" 
+    },
+    "pageCompletionEnginesTitle": {
+        "message": "Vimium Selbstergänzende Suche"
+    },
+    "pageCompletionEnginesDescription1": {
+        "message": "Die Suchvervollständigung ist für benutzerdefinierte Suchmaschinen verfügbar, deren Such-URL mit einer der in Vimium integrierten Vervollständigungs-Engines übereinstimmt; das heißt, die Such-URL stimmt mit einem der unten aufgeführten regulären Ausdrücke überein. Die Suchvervollständigung ist nicht für die Standardsuchmaschine verfügbar."
+    },
+    "pageCompletionEnginesDescription2": {
+        "message": "Benutzerdefinierte Suchmaschinen können auf der Seite"
+    },
+    "pageCompletionEnginesDescription3": {
+        "message": "Weitere Informationen finden Sie auf der Seite"
+    },
+    "options": {
+        "message": "optionen"
+    },
+    "wiki": {
+        "message": "wiki"
+    },
+    "page": {
+        "message": "Seite"
+    },
+    "pageCompletionEnginesAvailable": {
+        "message": "Verfügbare Suchvervollständigungen"
+    },
+    "example": {
+        "message": "Beispiel"
+    },
+    "pageCompletionEnginesAvailableDescription": {
+        "message": "Die Suchvervollständigung ist in dieser Version von Vimium für die folgenden benutzerdefinierten Suchmaschinen verfügbar."
+    },
+    "completionEnginesGoogleMapsDescription": {
+        "message": "Dies verwendet die reguläre Google-Vervollständigung, stellt aber den Text \"map of\" der Abfrage voran. Sie funktioniert gut für Orte, Länder, Staaten, geografische Regionen und Ähnliches, führt aber keine Adresssuche durch."
+    },
+    "pageExclusionsHeaderText1": {
+        "message": "Muster"
+    },
+    "pageExclusionsHeaderText2": {
+        "message": "Schlüssel"
+    },
+    "pageExclusionsPlaceholder1": {
+        "message": "URL-Muster"
+    },
+    "pageExclusionsPlaceholder2": {
+        "message": "Ausschließ-Schlüssel"
+    }
+}
