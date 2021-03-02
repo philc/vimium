@@ -132,6 +132,7 @@ class ExclusionRulesOption extends Option {
   appendRule(rule) {
     let element;
     const content = document.querySelector('#exclusionRuleTemplate').content;
+    translateRow(content);
     const row = document.importNode(content, true);
 
     for (let field of ["pattern", "passKeys"]) {
@@ -417,6 +418,26 @@ const initPopupPage = function() {
   $("versionNumber").textContent = manifest.version;
 };
 
+const translateResponse = function(responseText) {
+  let parser = new DOMParser();
+  let doc = parser.parseFromString(responseText, "text/html");
+  doc.querySelectorAll('[data-locale_text]').forEach(elem => {
+    elem.innerText = chrome.i18n.getMessage(elem.dataset.locale_text)
+  });
+  doc.querySelectorAll('[data-locale_placeholder]').forEach(elem => {
+    elem.placeholder = chrome.i18n.getMessage(elem.dataset.locale_placeholder)
+  });
+  return doc.body.innerHTML;
+}
+
+const translateRow = function(row) {
+  row.querySelectorAll('[data-locale_text]').forEach(elem => {
+    elem.innerText = chrome.i18n.getMessage(elem.dataset.locale_text)
+  });
+  row.querySelectorAll('[data-locale_placeholder]').forEach(elem => {
+    elem.placeholder = chrome.i18n.getMessage(elem.dataset.locale_placeholder)
+  });
+}
 
 //
 // Initialization.
@@ -426,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function() {
   xhr.open('GET', chrome.extension.getURL('pages/exclusions.html'), true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
-      $("exclusionScrollBox").innerHTML = xhr.responseText;
+      $("exclusionScrollBox").innerHTML = translateResponse(xhr.responseText);
       switch (location.pathname) {
         case "/pages/options.html": initOptionsPage(); break;
         case "/pages/popup.html": initPopupPage(); break;

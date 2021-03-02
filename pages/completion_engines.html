@@ -24,6 +24,7 @@
     <script src="../content_scripts/hud.js"></script>
     <script src="../content_scripts/mode_normal.js"></script>
     <script src="../content_scripts/vimium_frontend.js"></script>
+    <script src="../content_scripts/localize.js"></script>
     <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
     <script src="../background_scripts/completion_engines.js"></script>
@@ -32,19 +33,25 @@
 
   <body>
     <div id="wrapper">
-      <header>Vimium Search Completion</header>
-      <p>
+      <header data-locale_text="pageCompletionEnginesTitle">Vimium Search Completion</header>
+      <p data-locale_text="pageCompletionEnginesDescription1">
         Search completion is available for custom search engines whose search URL matches one of Vimium's
         built-in completion engines; that is, the search URL matches one of the regular expressions below.
         Search completion is not available for the default search engine.
       </p>
       <p>
-        Custom search engines can be configured on the <a href="options.html" target="_blank">options</a>
-        page. <br/>
-        Further information is available on the <a href="https://github.com/philc/vimium/wiki/Search-Completion" target="_blank">wiki</a>.
+        <span data-locale_text="pageCompletionEnginesDescription2">
+          Custom search engines can be configured on the
+        </span>
+        <span><a data-locale_text="options" href="options.html" target="_blank">options</a></span>
+        <span data-locale_text="page">page.</span>
+        <br/>
+        <span>
+          <span data-locale_text="pageCompletionEnginesDescription3">Further information is available on the</span>&nbsp;<span><a data-locale="wiki" href="https://github.com/philc/vimium/wiki/Search-Completion" target="_blank">wiki</a>.</span>
+        </span>
       </p>
-      <header>Available Completion Engines</header>
-      <p>
+      <header data-locale_text="pageCompletionEnginesAvailable">Available Completion Engines</header>
+      <p data-locale_text="pageCompletionEnginesAvailableDescription">
         Search completion is available in this version of Vimium for the the following custom search engines.
       </p>
       <p>

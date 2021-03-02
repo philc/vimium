@@ -1,0 +1,55 @@
+{
+    "extName": {
+        "message": "Vimium",
+        "description": "Extension Name" 
+    },
+    "extDescription": {
+        "message": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
+        "description": "Extension Descriptioni" 
+    },
+    "pageCompletionEnginesTitle": {
+        "message": "Vimium Search Completion"
+    },
+    "pageCompletionEnginesDescription1": {
+        "message": "Search completion is available for custom search engines whose search URL matches one of Vimium's built-in completion engines; that is, the search URL matches one of the regular expressions below. Search completion is not available for the default search engine."
+    },
+    "pageCompletionEnginesDescription2": {
+        "message": "Custom search engines can be configured on the"
+    },
+    "pageCompletionEnginesDescription3": {
+        "message": "Further information is available on the"
+    },
+    "options": {
+        "message": "options"
+    },
+    "wiki": {
+        "message": "wiki"
+    },
+    "page": {
+        "message": "page"
+    },
+    "pageCompletionEnginesAvailable": {
+        "message": "Available Completion Engines"
+    },
+    "example": {
+        "message": "Example"
+    },
+    "pageCompletionEnginesAvailableDescription": {
+        "message": "Search completion is available in this version of Vimium for the the following custom search engines."
+    },
+    "completionEnginesGoogleMapsDescription": {
+        "message": "This uses regular Google completion, but prepends the text \"map of\" to the query. It works well for places, countries, states, geographical regions and the like, but will not perform address search."
+    },
+    "pageExclusionsHeaderText1": {
+        "message": "Patterns"
+    },
+    "pageExclusionsHeaderText2": {
+        "message": "Keys"
+    },
+    "pageExclusionsPlaceholder1": {
+        "message": "URL pattern"
+    },
+    "pageExclusionsPlaceholder2": {
+        "message": "Exclude keys"
+    }
+}

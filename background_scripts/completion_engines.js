@@ -69,12 +69,7 @@ class GoogleMaps extends GoogleXMLBaseEngine {
       example: {
         searchUrl: "https://www.google.com/maps?q=%s",
         keyword: "m",
-        explanation:
-          `\
-This uses regular Google completion, but prepends the text "<tt>map of</tt>" to the query.  It works
-well for places, countries, states, geographical regions and the like, but will not perform address
-search.\
-`
+        explanation: chrome.i18n.getMessage('completionEnginesGoogleMapsDescription')
       }
     });
   }
