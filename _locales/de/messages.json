@@ -14,16 +14,16 @@
         "message": "Die Suchvervollständigung ist für benutzerdefinierte Suchmaschinen verfügbar, deren Such-URL mit einer der in Vimium integrierten Vervollständigungs-Engines übereinstimmt; das heißt, die Such-URL stimmt mit einem der unten aufgeführten regulären Ausdrücke überein. Die Suchvervollständigung ist nicht für die Standardsuchmaschine verfügbar."
     },
     "pageCompletionEnginesDescription2": {
-        "message": "Benutzerdefinierte Suchmaschinen können auf der Seite"
+        "message": "Benutzerdefinierte Suchmaschinen können auf der"
     },
     "pageCompletionEnginesDescription3": {
-        "message": "Weitere Informationen finden Sie auf der Seite"
+        "message": "Weitere Informationen finden Sie im"
     },
     "options": {
-        "message": "optionen"
+        "message": "Optionen"
     },
     "wiki": {
-        "message": "wiki"
+        "message": "Wiki"
     },
     "page": {
         "message": "Seite"
@@ -50,6 +50,6 @@
         "message": "URL-Pattern"
     },
     "pageExclusionsPlaceholder2": {
-        "message": "Exclude Schlüssel"
+        "message": "Exclude-Schlüssel"
     }
 }
