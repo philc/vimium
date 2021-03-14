@@ -7,6 +7,32 @@
               "48": "icons/icon48.png",
              "128": "icons/icon128.png" },
   "minimum_chrome_version": "69.0",
+  "commands": {
+    "jump-back-tab": {
+      "description": "Jump back in the tab stack."
+    },
+    "jump-forward-tab": {
+      "description": "Jump forward in the tab stack."
+    },
+    "open-vomnibox": {
+      "description": "Open the vomnibox for the same tab."
+    },
+    "open-vomnibox-new-tab": {
+      "description": "Open the vomnibox for a new tab."
+    },
+    "open-vomnibox-tab": {
+      "description": "Open the vomnibox with tabs."
+    },
+    "open-vomnibox-bookmark": {
+      "description": "Open the vomnibox with history."
+    },
+    "open-vomnibox-bookmark-new-tab": {
+      "description": "Open the vomnibox with history."
+    },
+    "switch-to-previous-tab": {
+      "description": "Switch to the previously used tab."
+    }
+  },
   "background": {
     "scripts": [
       "lib/utils.js",
