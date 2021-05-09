@@ -41,7 +41,7 @@ Navigating the current page:
     F       open a link in a new tab
     r       reload
     gs      view source
-    i       enter insert mode -- all commands will be ignored until you hit Esc to exit
+    i       enter insert mode -- all commands will be ignored until you hit Esc (or `<c-[>`) to exit
     yy      copy the current url to the clipboard
     yf      copy a link url to the clipboard
     gf      cycle forward to the next frame
@@ -72,7 +72,7 @@ Manipulating tabs:
 
     J, gT   go one tab left
     K, gt   go one tab right
-    g0      go to the first tab
+    g0      go to the first tab (ng0 for n-th tab)
     g$      go to the last tab
     ^       visit the previously-visited tab
     t       create tab
