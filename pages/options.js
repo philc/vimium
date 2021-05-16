@@ -251,6 +251,7 @@ const Options = {
   regexFindMode: CheckBoxOption,
   ignoreKeyboardLayout: CheckBoxOption,
   scrollStepSize: NumberOption,
+  numberMaxResult: NumberOption,
   smoothScroll: CheckBoxOption,
   grabBackFocus: CheckBoxOption,
   searchEngines: TextOption,

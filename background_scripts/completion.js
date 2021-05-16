@@ -685,7 +685,6 @@ SearchEngineCompleter.debug = false;
 
 // A completer which calls filter() on many completers, aggregates the results, ranks them, and returns the top
 // 10. All queries from the vomnibar come through a multi completer.
-const maxResults = 10;
 
 class MultiCompleter {
   constructor(completers) {
@@ -805,7 +804,7 @@ class MultiCompleter {
       const url = s.shortenUrl();
       if (s.deDuplicate && seenUrls[url])
         continue;
-      if (count++ === maxResults)
+      if (count++ === Settings.get("numberMaxResult"))
         break;
       seenUrls[url] = s;
       newSuggestions.push(s);
