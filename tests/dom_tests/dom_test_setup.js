@@ -1,5 +1,8 @@
 window.vimiumDomTestsAreRunning = true
 
+// Attach shoulda's functions, like setup, context, should, to the global namespace.
+Object.assign(window, shoulda);
+
 // Install frontend event handlers.
 Frame.registerFrameId({chromeFrameId: 0});
 
