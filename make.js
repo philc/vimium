@@ -2,8 +2,9 @@
 // Usage: ./make.js command. Use -h for help.
 // This is a set of tasks for building and testing Vimium in development.
 
-fs = require("fs");
-child_process = require("child_process");
+const fs = require("fs");
+const process = require("process");
+const child_process = require("child_process");
 
 // Spawns a new process and returns it.
 function spawn(procName, optArray, silent = false, sync = true) {
@@ -146,7 +147,7 @@ command(
   () => {
     const failed = runUnitTests() + runDomTests();
     if (failed > 0)
-      Process.exit(failed);
+      process.exit(1);
   });
 
 command(
@@ -155,7 +156,7 @@ command(
   () => {
     const failed = runUnitTests();
     if (failed > 0)
-      Process.exit(failed);
+      process.exit(1);
   });
 
 command(
@@ -164,7 +165,7 @@ command(
   () => {
     const failed = runDomTests();
     if (failed > 0)
-      Process.exit(failed);
+      process.exit(1);
   });
 
 command(
