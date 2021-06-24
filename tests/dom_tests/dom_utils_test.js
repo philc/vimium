@@ -1,4 +1,4 @@
-context("DOM content loaded",
+context("DOM content loaded", () => {
 
   // The DOM content has already loaded, this should be called immediately.
   should("call callback immediately.", () => {
@@ -8,31 +8,32 @@ context("DOM content loaded",
   }),
 
   // See ./dom_tests.html; the callback there was installed before the document was ready.
-  should("already have called callback embedded in test page.", () => assert.isTrue((window.documentReadyListenerCalled != null) && window.documentReadyListenerCalled))
-);
+  should("already have called callback embedded in test page.",
+         () => assert.isTrue((window.documentReadyListenerCalled != null) && window.documentReadyListenerCalled))
+});
 
-context("Check visibility",
+context("Check visibility", () => {
 
   should("detect visible elements as visible", () => {
     document.getElementById("test-div").innerHTML = `\
 <div id='foo'>test</div>\
 `;
     assert.isTrue((DomUtils.getVisibleClientRect((document.getElementById('foo')), true)) !== null);
-  }),
+  });
 
   should("detect display:none links as hidden", () => {
     document.getElementById("test-div").innerHTML = `\
 <a id='foo' style='display:none'>test</a>\
 `;
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('foo')), true)));
-  }),
+  });
 
   should("detect visibility:hidden links as hidden", () => {
     document.getElementById("test-div").innerHTML = `\
 <a id='foo' style='visibility:hidden'>test</a>\
 `;
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('foo')), true)));
-  }),
+  });
 
   should("detect elements nested in display:none elements as hidden", () => {
     document.getElementById("test-div").innerHTML = `\
@@ -41,7 +42,7 @@ context("Check visibility",
 </div>\
 `;
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('foo')), true)));
-  }),
+  });
 
   should("detect links nested in visibility:hidden elements as hidden", () => {
     document.getElementById("test-div").innerHTML = `\
@@ -50,7 +51,7 @@ context("Check visibility",
 </div>\
 `;
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('foo')), true)));
-  }),
+  });
 
   should("detect links outside viewport as hidden", () => {
     document.getElementById("test-div").innerHTML = `\
@@ -59,7 +60,7 @@ context("Check visibility",
 `;
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('foo')), true)));
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('bar')), true)));
-  }),
+  });
 
   should("detect links only partially outside viewport as visible", () => {
     document.getElementById("test-div").innerHTML = `\
@@ -68,7 +69,7 @@ context("Check visibility",
 `;
     assert.isTrue((DomUtils.getVisibleClientRect((document.getElementById('foo')), true)) !== null);
     assert.isTrue((DomUtils.getVisibleClientRect((document.getElementById('bar')), true)) !== null);
-  }),
+  });
 
   should("detect links that contain only floated / absolutely-positioned divs as visible", () => {
     document.getElementById("test-div").innerHTML = `\
@@ -84,7 +85,7 @@ context("Check visibility",
 </a>\
 `;
     assert.isTrue((DomUtils.getVisibleClientRect((document.getElementById('foo')), true)) !== null);
-  }),
+  });
 
   should("detect links that contain only invisible floated divs as invisible", () => {
     document.getElementById("test-div").innerHTML = `\
@@ -93,7 +94,7 @@ context("Check visibility",
 </a>\
 `;
     assert.equal(null, (DomUtils.getVisibleClientRect((document.getElementById('foo')), true)));
-  }),
+  });
 
   should("detect font-size: 0; and display: inline; links when their children are display: inline", () => {
     // This test represents the minimal test case covering issue #1554.
@@ -103,7 +104,7 @@ context("Check visibility",
 </a>\
 `;
     assert.isTrue((DomUtils.getVisibleClientRect((document.getElementById('foo')), true)) !== null);
-  }),
+  });
 
   should("detect links inside opacity:0 elements as visible", () => {
     // XXX This is an expected failure. See issue #16.
@@ -114,7 +115,7 @@ context("Check visibility",
 `;
     assert.isTrue((DomUtils.getVisibleClientRect((document.getElementById('foo')), true)) !== null);
   })
-);
+});
 
   // NOTE(philc): This test doesn't pass on puppeteer. It's unclear from the XXX comment if it's supposed to.
   // should("Detect links within SVGs as visible"), () => {
