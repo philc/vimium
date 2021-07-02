@@ -513,3 +513,7 @@ iframe.vimiumNonClickable {
     color: white;
   }
 }
+
+.vimiumUIComponentVisible {
+  color-scheme: light;
+}
