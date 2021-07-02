@@ -202,8 +202,8 @@ class VomnibarUI {
       this.updateSelection();
     } else if (action === "enter") {
       const c = this.completions[this.selection];
-      const isCustomSearchPrimarySuggestion = c && c.isCustomSearchPrimarySuggestion &&
-            this.lastResponse.engine && this.lastResponse.engine.searchUrl;
+      const isCustomSearchPrimarySuggestion = c && c.isPrimarySuggestion &&
+            this.lastReponse.engine && this.lastReponse.engine.searchUrl;
       if ((this.selection === -1) || isCustomSearchPrimarySuggestion) {
         let query = this.input.value.trim();
         // <Enter> on an empty query is a no-op.
