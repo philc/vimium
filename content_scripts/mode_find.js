@@ -32,6 +32,13 @@ class SuppressPrintable extends Mode {
 //      inheriting from SuppressPrintable.
 //   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 //
+var newPostFindMode = function() {
+  if (!document.activeElement || !DomUtils.isEditable(document.activeElement))
+    return;
+
+  return new PostFindMode();
+}
+
 class PostFindMode extends SuppressPrintable {
   constructor() {
     const element = document.activeElement;
@@ -46,9 +53,6 @@ class PostFindMode extends SuppressPrintable {
       keypress(event) { return InsertMode.suppressEvent(event); },
       keyup(event) { return InsertMode.suppressEvent(event); }
     });
-
-    if (!document.activeElement || !DomUtils.isEditable(document.activeElement))
-      return;
 
     // If the very-next keydown is Escape, then exit immediately, thereby passing subsequent keys to the
     // underlying insert-mode instance.
@@ -284,7 +288,7 @@ class FindMode extends Mode {
 
     if (FindMode.query.hasResults) {
       focusFoundLink();
-      return new PostFindMode();
+      return newPostFindMode();
     } else {
       return HUD.showForDuration(`No matches for '${FindMode.query.rawQuery}'`, 1000);
     }
