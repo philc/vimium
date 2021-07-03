@@ -121,7 +121,7 @@ const HUD = {
     if (exitEventIsEnter) {
       FindMode.handleEnter();
       if (FindMode.query.hasResults)
-        postExit = () => new PostFindMode;
+        postExit = () => newPostFindMode();
     } else if (exitEventIsEscape) {
       // We don't want FindMode to handle the click events that FindMode.handleEscape can generate, so we
       // wait until the mode is closed before running it.
