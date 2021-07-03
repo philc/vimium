@@ -34,7 +34,11 @@ global.tabLoadedHandlers = {}; // tabId -> function()
 
 // A secret, available only within the current instantiation of Vimium. The secret is big, likely unguessable
 // in practice, but less than 2^31.
-chrome.storage.local.set({vimiumSecret: Math.floor(Math.random() * 2000000000)});
+// Improvement of randomness used to crypto random: https://github.com/philc/vimium/issues/3832
+array = new Uint8Array(32); // 32-byte random token.
+rnd_arr = window.crypto.getRandomValues(array); // crypto random according to system choice.
+secretToken =  rnd_arr.reduce(function f(a,b) {return a.toString(16) + b.toString(16);});
+chrome.storage.local.set({vimiumSecret: secretToken});
 
 const completionSources = {
   bookmarks: new BookmarkCompleter,
