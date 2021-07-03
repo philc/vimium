@@ -67,7 +67,7 @@ class InsertMode extends Mode {
     return activeElement;
   }
 
-  static suppressEvent(event) { this.suppressedEvent = event; }
+  static suppressEvent(event) { return this.suppressedEvent = event; }
 }
 
 // This allows PostFindMode to suppress the permanently-installed InsertMode instance.
