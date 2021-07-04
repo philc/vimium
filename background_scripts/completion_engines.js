@@ -228,6 +228,21 @@ class UpToDate extends BaseEngine {
   parse(xhr) { return JSON.parse(xhr.responseText).data.searchTerms; }
 }
 
+class BraveSearch extends BaseEngine{
+  constructor() {
+    super({
+      engineUrl: "https://search.brave.com/api/suggest?rich=false&q=%s",
+      regexps: ["^https?://search\\.brave\\.com/"],
+      example: {
+        searchUrl: "https://search.brave.com/search?q=%s",
+        keyword: "br"
+      }
+    });
+  }
+
+  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+}
+
 // A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 // allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine extends BaseEngine {
@@ -252,6 +267,7 @@ const CompletionEngines = [
   Webster,
   Qwant,
   UpToDate,
+  BraveSearch,
   DummyCompletionEngine
 ];
 
