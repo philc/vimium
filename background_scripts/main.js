@@ -32,9 +32,11 @@ global.urlForTab = {};
 // This is exported for use by "marks.js".
 global.tabLoadedHandlers = {}; // tabId -> function()
 
-// A secret, available only within the current instantiation of Vimium. The secret is big, likely unguessable
-// in practice, but less than 2^31.
-chrome.storage.local.set({vimiumSecret: Math.floor(Math.random() * 2000000000)});
+// A secret, available only within the current instantiation of Vimium, for the duration of the browser
+// session. The secret is a generated strong random string.
+const randomArray = window.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
+const secretToken =  randomArray.reduce((a,b) => a.toString(16) + b.toString(16));
+chrome.storage.local.set({vimiumSecret: secretToken});
 
 const completionSources = {
   bookmarks: new BookmarkCompleter,

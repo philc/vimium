@@ -1,12 +1,29 @@
 //
-// This is a stub for chrome.strorage.sync for testing.
-// It does what chrome.storage.sync should do (roughly), but does so synchronously.
-// It also provides stubs for a number of other chrome APIs.
+// This file contains stubs for a number of browser and chrome APIs which are missing in
+// Node.js.
+// The chrome.storage.sync stub does roughly what chrome.storage.sync should do, but does so synchronously.
 //
 
-let XMLHttpRequest;
+const nodeCrypto = require("crypto");
+
 global.window = {};
 global.localStorage = {};
+
+window.crypto = {
+  // This polyfill was taken from
+  // https://github.com/KenanY/get-random-values
+  getRandomValues: (buffer) => {
+    if (!(buffer instanceof Uint8Array))
+      throw new TypeError('expected Uint8Array');
+    if (buffer.length > 65536)
+      throw new Error("Buffer length cannot be larger than 65536; this API doesn't support that much entropy.");
+    var bytes = nodeCrypto.randomBytes(buffer.length);
+    buffer.set(bytes);
+    return buffer;
+  }
+}
+
+let XMLHttpRequest;
 
 global.navigator =
   {appVersion: "5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36"};
