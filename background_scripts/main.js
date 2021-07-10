@@ -325,7 +325,9 @@ const BackgroundCommands = {
   },
 
   closeTabsOnLeft(request) { return removeTabsRelative("before", request); },
+  closeOneTabOnLeft(request) { return removeTabsRelative("beforeOne", request); },
   closeTabsOnRight(request) { return removeTabsRelative("after", request); },
+  closeOneTabOnRight(request) { return removeTabsRelative("afterOne", request); },
   closeOtherTabs(request) { return removeTabsRelative("both", request); },
 
   visitPreviousTab({count, tab}) {
@@ -365,8 +367,12 @@ var removeTabsRelative = (direction, {tab: activeTab}) => chrome.tabs.query({cur
     (() => { switch (direction) {
       case "before":
         return index => index < activeTab.index;
+      case "beforeOne":
+        return index => index == activeTab.index - 1;
       case "after":
         return index => index > activeTab.index;
+      case "afterOne":
+        return index => index == activeTab.index + 1;
       case "both":
         return index => index !== activeTab.index;
     } })();
