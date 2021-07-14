@@ -6,7 +6,7 @@ fs = require("fs");
 child_process = require("child_process");
 
 // Spawns a new process and returns it.
-function spawn(procName, optArray, silent = false, sync = false) {
+function spawn(procName, optArray, silent = false, sync = true) {
   if (process.platform == "win32") {
     // if win32, prefix arguments with "/c {original command}"
     // e.g. "mkdir c:\git\vimium" becomes "cmd.exe /c mkdir c:\git\vimium"
