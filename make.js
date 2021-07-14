@@ -85,14 +85,13 @@ function buildStorePackage() {
 // Returns how many tests failed.
 function runUnitTests() {
   console.log("Running unit tests...")
-  projectDir = "."
-  basedir = __dirname + "/tests/unit_tests/";
-  test_files = fs.readdirSync(basedir).filter((filename) => filename.indexOf("_test.js") > 0)
-  test_files = test_files.map((filename) => basedir + filename)
-  test_files.forEach((file) => {
-    path = (file[0] == '/' ? '' : './') + file;
-    require(path);
+  const basedir = __dirname + "/tests/unit_tests/";
+  fs.readdirSync(basedir).forEach((filename) => {
+    if (filename.endsWith("_test.js")) {
+      require(basedir + filename);
+    }
   });
+
   return Tests.run();
 }
 
@@ -140,19 +139,18 @@ command(
   "test",
   "Run all tests",
   () => {
-    let failed = runUnitTests();
-    failed += runDomTests();
+    const failed = runUnitTests() + runDomTests();
     if (failed > 0)
-      Process.exit(1);
+      Process.exit(failed);
   });
 
 command(
   "test-unit",
   "Run unit tests",
   () => {
-    const failed = runUnitTests() > 0;
+    const failed = runUnitTests();
     if (failed > 0)
-      Process.exit(1);
+      Process.exit(failed);
   });
 
 command(
@@ -161,7 +159,7 @@ command(
   () => {
     const failed = runDomTests();
     if (failed > 0)
-      Process.exit(1);
+      Process.exit(failed);
   });
 
 command(
