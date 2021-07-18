@@ -12,6 +12,10 @@
 // consists of a (non-empty) list of such mappings.
 
 class KeyHandlerMode extends Mode {
+  constructor(options) {
+    super();
+    this.init(options);
+  }
   setKeyMapping(keyMapping) { this.keyMapping = keyMapping; this.reset(); }
   setPassKeys(passKeys) { this.passKeys = passKeys; this.reset(); }
 

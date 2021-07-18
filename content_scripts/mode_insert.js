@@ -45,7 +45,7 @@ class InsertMode extends Mode {
       keydown: handleKeyEvent
     };
 
-    super.init(Object.assign(defaults, options));
+    this.init(Object.assign(defaults, options));
 
     // Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
     if (this.permanent)
@@ -82,7 +82,7 @@ class PassNextKeyMode extends Mode {
     let seenKeyDown = false;
     let keyDownCount = 0;
 
-    super.init({
+    this.init({
       name: "pass-next-key",
       indicator: "Pass next key.",
       // We exit on blur because, once we lose the focus, we can no longer track key events.

@@ -25,6 +25,10 @@
 // Debug only.
 let count = 0;
 
+// Note(2021/07/19):
+// A direct sub-class of `Mode` MUST CALL `this.init(...)` in its constructor.
+// An indirect sub-class of `Mode` MUST CALL `super(options?)` in its constructor.
+// And `new Mode().init(...)` is the only allowed way to call `Mode::init` out of class methods.
 class Mode {
   // This is a function rather than a constructor, becausae often subclasses need to reference `this` when
   // setting up the options argument. `this` can't be referenced in subclasses prior to calling their
@@ -274,7 +278,7 @@ class SuppressAllKeyboardEvents extends Mode {
       name: "suppressAllKeyboardEvents",
       suppressAllKeyboardEvents: true
     };
-    super.init(Object.assign(defaults, options));
+    this.init(Object.assign(defaults, options));
   }
 }
 

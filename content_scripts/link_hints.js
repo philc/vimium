@@ -1259,7 +1259,7 @@ class WaitForEnter extends Mode {
 class HoverMode extends Mode {
   constructor(link) {
     super();
-    super.init({name: "hover-mode", singleton: "hover-mode", exitOnEscape: true});
+    this.init({name: "hover-mode", singleton: "hover-mode", exitOnEscape: true});
     this.link = link;
     DomUtils.simulateHover(this.link);
     this.onExit(() => DomUtils.simulateUnhover(this.link));

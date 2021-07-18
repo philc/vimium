@@ -54,7 +54,7 @@ class GrabBackFocus extends Mode {
       });
     };
 
-    super.init({
+    this.init({
       name: "grab-back-focus",
       keydown: exitEventHandler
     });
@@ -150,7 +150,6 @@ const installModes = function() {
   // Install the permanent modes. The permanently-installed insert mode tracks focus/blur events, and
   // activates/deactivates itself accordingly.
   normalMode = new NormalMode();
-  normalMode.init();
   // Initialize components upon which normal mode depends.
   Scroller.init();
   FindModeHistory.init();

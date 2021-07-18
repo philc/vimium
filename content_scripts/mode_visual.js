@@ -292,7 +292,7 @@ class VisualMode extends KeyHandlerMode {
       }
 
       if ((DomUtils.getSelectionType(this.selection) !== "Range") && (this.name !== "caret")) {
-        new CaretMode().init();
+        new CaretMode;
         return HUD.showForDuration("No usable selection, entering caret mode...", 2500);
       }
     }
@@ -330,9 +330,7 @@ class VisualMode extends KeyHandlerMode {
     // The find was successfull. If we're in caret mode, then we should now have a selection, so we can
     // drop back into visual mode.
     if ((this.name === "caret") && (this.selection.toString().length > 0)) {
-      const mode = new VisualMode();
-      mode.init();
-      return mode;
+      new VisualMode;
     }
   }
 

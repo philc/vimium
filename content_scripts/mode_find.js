@@ -5,7 +5,7 @@
 class SuppressPrintable extends Mode {
   constructor(options) {
     super();
-    super.init(options);
+    this.init(options);
     const handler = event => KeyboardUtils.isPrintable(event) ? this.suppressEvent : this.continueBubbling;
     const type = DomUtils.getSelectionType();
 
@@ -94,7 +94,7 @@ class FindMode extends Mode {
       this.scrollY = window.scrollY;
     }
 
-    super.init(Object.assign(options, {
+    this.init(Object.assign(options, {
       name: "find",
       indicator: false,
       exitOnClick: true,

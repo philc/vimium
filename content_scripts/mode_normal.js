@@ -47,13 +47,12 @@ class NormalMode extends KeyHandlerMode {
 }
 
 const enterNormalMode = function(count) {
-  const mode = new NormalMode();
-  mode.init({
+  return new NormalMode({
     indicator: "Normal mode (pass keys disabled)",
     exitOnEscape: true,
     singleton: "enterNormalMode",
-    count});
-  return mode;
+    count
+  });
 };
 
 var NormalModeCommands = {
@@ -135,15 +134,11 @@ var NormalModeCommands = {
   },
 
   enterVisualMode() {
-    const mode = new VisualMode();
-    mode.init({userLaunchedMode: true});
-    return mode;
+    new VisualMode({userLaunchedMode: true});
   },
 
   enterVisualLineMode() {
-    const mode = new VisualLineMode();
-    mode.init({userLaunchedMode: true});
-    return mode;
+    new VisualLineMode({userLaunchedMode: true});
   },
 
   enterFindMode() {
@@ -411,8 +406,8 @@ var findAndFollowRel = function(value) {
 
 class FocusSelector extends Mode {
   constructor(hints, visibleInputs, selectedInputIndex) {
-    super(...arguments);
-    super.init({
+    super();
+    this.init({
       name: "focus-selector",
       exitOnClick: true,
       keydown: event => {
