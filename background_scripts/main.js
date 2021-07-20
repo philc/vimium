@@ -362,17 +362,17 @@ var forCountTabs = (count, currentTab, callback) => chrome.tabs.query({currentWi
 });
 
 // Remove tabs before, after, or either side of the currently active tab
-var removeTabsRelative = (direction, {tab: activeTab}) => chrome.tabs.query({currentWindow: true}, function(tabs) {
+var removeTabsRelative = (direction, {count, tab: activeTab}) => chrome.tabs.query({currentWindow: true}, function(tabs) {
   const shouldDelete =
     (() => { switch (direction) {
       case "before":
         return index => index < activeTab.index;
       case "beforeOne":
-        return index => index == activeTab.index - 1;
+        return index => index < activeTab.index && index >= activeTab.index - count;
       case "after":
         return index => index > activeTab.index;
       case "afterOne":
-        return index => index == activeTab.index + 1;
+        return index => index > activeTab.index && index <= activeTab.index + count;
       case "both":
         return index => index !== activeTab.index;
     } })();
