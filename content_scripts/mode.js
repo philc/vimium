@@ -75,6 +75,7 @@ class Mode {
       keydown: this.options.keydown || null,
       keypress: this.options.keypress || null,
       keyup: this.options.keyup || null,
+      focus: this.options.focus || null,
       indicator: () => {
         // Update the mode indicator.  Setting @options.indicator to a string shows a mode indicator in the
         // HUD.  Setting @options.indicator to 'false' forces no mode indicator.  If @options.indicator is

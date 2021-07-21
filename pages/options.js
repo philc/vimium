@@ -250,6 +250,7 @@ const Options = {
   previousPatterns: NonEmptyTextOption,
   regexFindMode: CheckBoxOption,
   ignoreKeyboardLayout: CheckBoxOption,
+  removeFocusAfterSwitchingTabs: CheckBoxOption,
   scrollStepSize: NumberOption,
   smoothScroll: CheckBoxOption,
   grabBackFocus: CheckBoxOption,

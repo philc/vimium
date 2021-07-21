@@ -25,11 +25,7 @@ class InsertMode extends Mode {
       if (Settings.get("passNextKeyKeys").includes(keyString)) {
         new PassNextKeyMode();
       } else if ((event.type === 'keydown') && KeyboardUtils.isEscape(event)) {
-        if (DomUtils.isFocusable(activeElement))
-          activeElement.blur();
-
-        if (!this.permanent)
-          this.exit();
+        this.removeFocusAndExit();
 
       } else {
         return this.passEventToPage;
@@ -42,7 +38,12 @@ class InsertMode extends Mode {
       name: "insert",
       indicator: !this.permanent && !Settings.get("hideHud")  ? "Insert mode" : null,
       keypress: handleKeyEvent,
-      keydown: handleKeyEvent
+      keydown: handleKeyEvent,
+      focus: (event) => {
+        if (Settings.get("removeFocusAfterSwitchingTabs") && event && event.target === window) {            
+          this.removeFocusAndExit();
+        }
+      }
     };
 
     super.init(Object.assign(defaults, options));
@@ -65,6 +66,19 @@ class InsertMode extends Mode {
     while (activeElement && activeElement.shadowRoot && activeElement.shadowRoot.activeElement)
       activeElement = activeElement.shadowRoot.activeElement;
     return activeElement;
+  }
+
+  removeFocusAndExit(element) {
+    element = element || this.getActiveElement();
+
+    if (element == null)
+      return;
+
+    if (DomUtils.isFocusable(element))
+      element.blur();
+
+    if (!this.permanent)
+      this.exit();
   }
 
   static suppressEvent(event) { return this.suppressedEvent = event; }
