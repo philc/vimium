@@ -160,7 +160,7 @@ class VomnibarUI {
     } else if ((key === "down") ||
         (event.ctrlKey && ((key === "j") || (key === "n")))) {
       return "down";
-    } else if (event.ctrlKey && (event.key === "Enter")) {
+    } else if (event.ctrlKey && (key === "enter")) {
       return "ctrl-enter";
     } else if (event.key === "Enter") {
       return "enter";
