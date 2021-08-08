@@ -402,6 +402,9 @@ chrome.webNavigation.onCommitted.addListener(function({tabId, frameId}) {
   };
   const callback = () => chrome.runtime.lastError;
   chrome.tabs.insertCSS(tabId, cssConf, callback);
+  if (Utils.isFirefox()) {
+    return;
+  }
   // Also on "document_end", in order to work around a race condition.
   // See https://github.com/philc/vimium/issues/3418#issuecomment-549160351 .
   cssConf.runAt = "document_end"
