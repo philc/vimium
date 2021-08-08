@@ -400,7 +400,12 @@ chrome.webNavigation.onCommitted.addListener(function({tabId, frameId}) {
     code: Settings.get("userDefinedLinkHintCss"),
     runAt: "document_start"
   };
-  return chrome.tabs.insertCSS(tabId, cssConf, () => chrome.runtime.lastError);
+  const callback = () => chrome.runtime.lastError;
+  chrome.tabs.insertCSS(tabId, cssConf, callback);
+  // Also on "document_end", in order to work around a race condition.
+  // See https://github.com/philc/vimium/issues/3418#issuecomment-549160351 .
+  cssConf.runAt = "document_end"
+  chrome.tabs.insertCSS(tabId, cssConf, callback);
 });
 
 // Symbolic names for the three browser-action icons.
