@@ -1,0 +1,566 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		115CE9C626C588EA00C0A4E1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115CE9C526C588EA00C0A4E1 /* AppDelegate.swift */; };
+		115CE9C926C588EA00C0A4E1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9C726C588EA00C0A4E1 /* Main.storyboard */; };
+		115CE9CB26C588EA00C0A4E1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115CE9CA26C588EA00C0A4E1 /* ViewController.swift */; };
+		115CE9CD26C588EC00C0A4E1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9CC26C588EC00C0A4E1 /* Assets.xcassets */; };
+		115CE9D426C588EC00C0A4E1 /* Vimium Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 115CE9D326C588EC00C0A4E1 /* Vimium Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		115CE9D926C588EC00C0A4E1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 115CE9D826C588EC00C0A4E1 /* Cocoa.framework */; };
+		115CE9DC26C588EC00C0A4E1 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115CE9DB26C588EC00C0A4E1 /* SafariWebExtensionHandler.swift */; };
+		115CE9FA26C588EE00C0A4E1 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9E926C588EE00C0A4E1 /* CHANGELOG.md */; };
+		115CE9FB26C588EE00C0A4E1 /* tests in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9EA26C588EE00C0A4E1 /* tests */; };
+		115CE9FC26C588EE00C0A4E1 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9EB26C588EE00C0A4E1 /* README.md */; };
+		115CE9FD26C588EE00C0A4E1 /* MIT-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9EC26C588EE00C0A4E1 /* MIT-LICENSE.txt */; };
+		115CE9FE26C588EE00C0A4E1 /* package-lock.json in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9ED26C588EE00C0A4E1 /* package-lock.json */; };
+		115CE9FF26C588EE00C0A4E1 /* package.json in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9EE26C588EE00C0A4E1 /* package.json */; };
+		115CEA0026C588EE00C0A4E1 /* CONTRIBUTING.md in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9EF26C588EE00C0A4E1 /* CONTRIBUTING.md */; };
+		115CEA0126C588EE00C0A4E1 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F026C588EE00C0A4E1 /* icons */; };
+		115CEA0226C588EE00C0A4E1 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F126C588EE00C0A4E1 /* manifest.json */; };
+		115CEA0326C588EE00C0A4E1 /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F226C588EE00C0A4E1 /* lib */; };
+		115CEA0426C588EE00C0A4E1 /* test_harnesses in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F326C588EE00C0A4E1 /* test_harnesses */; };
+		115CEA0526C588EE00C0A4E1 /* pages in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F426C588EE00C0A4E1 /* pages */; };
+		115CEA0626C588EE00C0A4E1 /* Vimium in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F526C588EE00C0A4E1 /* Vimium */; };
+		115CEA0726C588EE00C0A4E1 /* make.js in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F626C588EE00C0A4E1 /* make.js */; };
+		115CEA0826C588EE00C0A4E1 /* CREDITS in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F726C588EE00C0A4E1 /* CREDITS */; };
+		115CEA0926C588EE00C0A4E1 /* content_scripts in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F826C588EE00C0A4E1 /* content_scripts */; };
+		115CEA0A26C588EE00C0A4E1 /* background_scripts in Resources */ = {isa = PBXBuildFile; fileRef = 115CE9F926C588EE00C0A4E1 /* background_scripts */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		115CE9D526C588EC00C0A4E1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 115CE9B926C588EA00C0A4E1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 115CE9D226C588EC00C0A4E1;
+			remoteInfo = "Vimium Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		115CE9E426C588EC00C0A4E1 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				115CE9D426C588EC00C0A4E1 /* Vimium Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		115CE9C126C588EA00C0A4E1 /* Vimium.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vimium.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		115CE9C426C588EA00C0A4E1 /* Vimium.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Vimium.entitlements; sourceTree = "<group>"; };
+		115CE9C526C588EA00C0A4E1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		115CE9C826C588EA00C0A4E1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		115CE9CA26C588EA00C0A4E1 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		115CE9CC26C588EC00C0A4E1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		115CE9CE26C588EC00C0A4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		115CE9D326C588EC00C0A4E1 /* Vimium Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Vimium Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		115CE9D826C588EC00C0A4E1 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		115CE9DB26C588EC00C0A4E1 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		115CE9DD26C588EC00C0A4E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		115CE9DE26C588EC00C0A4E1 /* Vimium_Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Vimium_Extension.entitlements; sourceTree = "<group>"; };
+		115CE9E926C588EE00C0A4E1 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = CHANGELOG.md; path = ../../CHANGELOG.md; sourceTree = "<group>"; };
+		115CE9EA26C588EE00C0A4E1 /* tests */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tests; path = ../../tests; sourceTree = "<group>"; };
+		115CE9EB26C588EE00C0A4E1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../../README.md; sourceTree = "<group>"; };
+		115CE9EC26C588EE00C0A4E1 /* MIT-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = "MIT-LICENSE.txt"; path = "../../MIT-LICENSE.txt"; sourceTree = "<group>"; };
+		115CE9ED26C588EE00C0A4E1 /* package-lock.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "package-lock.json"; path = "../../package-lock.json"; sourceTree = "<group>"; };
+		115CE9EE26C588EE00C0A4E1 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = package.json; path = ../../package.json; sourceTree = "<group>"; };
+		115CE9EF26C588EE00C0A4E1 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = CONTRIBUTING.md; path = ../../CONTRIBUTING.md; sourceTree = "<group>"; };
+		115CE9F026C588EE00C0A4E1 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../icons; sourceTree = "<group>"; };
+		115CE9F126C588EE00C0A4E1 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../manifest.json; sourceTree = "<group>"; };
+		115CE9F226C588EE00C0A4E1 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../lib; sourceTree = "<group>"; };
+		115CE9F326C588EE00C0A4E1 /* test_harnesses */ = {isa = PBXFileReference; lastKnownFileType = folder; name = test_harnesses; path = ../../test_harnesses; sourceTree = "<group>"; };
+		115CE9F426C588EE00C0A4E1 /* pages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = pages; path = ../../pages; sourceTree = "<group>"; };
+		115CE9F526C588EE00C0A4E1 /* Vimium */ = {isa = PBXFileReference; lastKnownFileType = text; name = Vimium; sourceTree = SOURCE_ROOT; };
+		115CE9F626C588EE00C0A4E1 /* make.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = make.js; path = ../../make.js; sourceTree = "<group>"; };
+		115CE9F726C588EE00C0A4E1 /* CREDITS */ = {isa = PBXFileReference; lastKnownFileType = text; name = CREDITS; path = ../../CREDITS; sourceTree = "<group>"; };
+		115CE9F826C588EE00C0A4E1 /* content_scripts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = content_scripts; path = ../../content_scripts; sourceTree = "<group>"; };
+		115CE9F926C588EE00C0A4E1 /* background_scripts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = background_scripts; path = ../../background_scripts; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		115CE9BE26C588EA00C0A4E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		115CE9D026C588EC00C0A4E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				115CE9D926C588EC00C0A4E1 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		115CE9B826C588EA00C0A4E1 = {
+			isa = PBXGroup;
+			children = (
+				115CE9C326C588EA00C0A4E1 /* Vimium */,
+				115CE9DA26C588EC00C0A4E1 /* Vimium Extension */,
+				115CE9D726C588EC00C0A4E1 /* Frameworks */,
+				115CE9C226C588EA00C0A4E1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		115CE9C226C588EA00C0A4E1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				115CE9C126C588EA00C0A4E1 /* Vimium.app */,
+				115CE9D326C588EC00C0A4E1 /* Vimium Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		115CE9C326C588EA00C0A4E1 /* Vimium */ = {
+			isa = PBXGroup;
+			children = (
+				115CE9C426C588EA00C0A4E1 /* Vimium.entitlements */,
+				115CE9C526C588EA00C0A4E1 /* AppDelegate.swift */,
+				115CE9C726C588EA00C0A4E1 /* Main.storyboard */,
+				115CE9CA26C588EA00C0A4E1 /* ViewController.swift */,
+				115CE9CC26C588EC00C0A4E1 /* Assets.xcassets */,
+				115CE9CE26C588EC00C0A4E1 /* Info.plist */,
+			);
+			path = Vimium;
+			sourceTree = "<group>";
+		};
+		115CE9D726C588EC00C0A4E1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				115CE9D826C588EC00C0A4E1 /* Cocoa.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		115CE9DA26C588EC00C0A4E1 /* Vimium Extension */ = {
+			isa = PBXGroup;
+			children = (
+				115CE9E826C588EE00C0A4E1 /* Resources */,
+				115CE9DB26C588EC00C0A4E1 /* SafariWebExtensionHandler.swift */,
+				115CE9DD26C588EC00C0A4E1 /* Info.plist */,
+				115CE9DE26C588EC00C0A4E1 /* Vimium_Extension.entitlements */,
+			);
+			path = "Vimium Extension";
+			sourceTree = "<group>";
+		};
+		115CE9E826C588EE00C0A4E1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				115CE9E926C588EE00C0A4E1 /* CHANGELOG.md */,
+				115CE9EA26C588EE00C0A4E1 /* tests */,
+				115CE9EB26C588EE00C0A4E1 /* README.md */,
+				115CE9EC26C588EE00C0A4E1 /* MIT-LICENSE.txt */,
+				115CE9ED26C588EE00C0A4E1 /* package-lock.json */,
+				115CE9EE26C588EE00C0A4E1 /* package.json */,
+				115CE9EF26C588EE00C0A4E1 /* CONTRIBUTING.md */,
+				115CE9F026C588EE00C0A4E1 /* icons */,
+				115CE9F126C588EE00C0A4E1 /* manifest.json */,
+				115CE9F226C588EE00C0A4E1 /* lib */,
+				115CE9F326C588EE00C0A4E1 /* test_harnesses */,
+				115CE9F426C588EE00C0A4E1 /* pages */,
+				115CE9F526C588EE00C0A4E1 /* Vimium */,
+				115CE9F626C588EE00C0A4E1 /* make.js */,
+				115CE9F726C588EE00C0A4E1 /* CREDITS */,
+				115CE9F826C588EE00C0A4E1 /* content_scripts */,
+				115CE9F926C588EE00C0A4E1 /* background_scripts */,
+			);
+			name = Resources;
+			path = "Vimium Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		115CE9C026C588EA00C0A4E1 /* Vimium */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 115CE9E526C588EC00C0A4E1 /* Build configuration list for PBXNativeTarget "Vimium" */;
+			buildPhases = (
+				115CE9BD26C588EA00C0A4E1 /* Sources */,
+				115CE9BE26C588EA00C0A4E1 /* Frameworks */,
+				115CE9BF26C588EA00C0A4E1 /* Resources */,
+				115CE9E426C588EC00C0A4E1 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				115CE9D626C588EC00C0A4E1 /* PBXTargetDependency */,
+			);
+			name = Vimium;
+			productName = Vimium;
+			productReference = 115CE9C126C588EA00C0A4E1 /* Vimium.app */;
+			productType = "com.apple.product-type.application";
+		};
+		115CE9D226C588EC00C0A4E1 /* Vimium Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 115CE9E126C588EC00C0A4E1 /* Build configuration list for PBXNativeTarget "Vimium Extension" */;
+			buildPhases = (
+				115CE9CF26C588EC00C0A4E1 /* Sources */,
+				115CE9D026C588EC00C0A4E1 /* Frameworks */,
+				115CE9D126C588EC00C0A4E1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Vimium Extension";
+			productName = "Vimium Extension";
+			productReference = 115CE9D326C588EC00C0A4E1 /* Vimium Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		115CE9B926C588EA00C0A4E1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1250;
+				LastUpgradeCheck = 1250;
+				TargetAttributes = {
+					115CE9C026C588EA00C0A4E1 = {
+						CreatedOnToolsVersion = 12.5;
+					};
+					115CE9D226C588EC00C0A4E1 = {
+						CreatedOnToolsVersion = 12.5;
+					};
+				};
+			};
+			buildConfigurationList = 115CE9BC26C588EA00C0A4E1 /* Build configuration list for PBXProject "Vimium" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 115CE9B826C588EA00C0A4E1;
+			productRefGroup = 115CE9C226C588EA00C0A4E1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				115CE9C026C588EA00C0A4E1 /* Vimium */,
+				115CE9D226C588EC00C0A4E1 /* Vimium Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		115CE9BF26C588EA00C0A4E1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				115CE9CD26C588EC00C0A4E1 /* Assets.xcassets in Resources */,
+				115CE9C926C588EA00C0A4E1 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		115CE9D126C588EC00C0A4E1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				115CEA0626C588EE00C0A4E1 /* Vimium in Resources */,
+				115CEA0926C588EE00C0A4E1 /* content_scripts in Resources */,
+				115CE9FC26C588EE00C0A4E1 /* README.md in Resources */,
+				115CEA0126C588EE00C0A4E1 /* icons in Resources */,
+				115CEA0A26C588EE00C0A4E1 /* background_scripts in Resources */,
+				115CE9FB26C588EE00C0A4E1 /* tests in Resources */,
+				115CE9FF26C588EE00C0A4E1 /* package.json in Resources */,
+				115CEA0226C588EE00C0A4E1 /* manifest.json in Resources */,
+				115CE9FE26C588EE00C0A4E1 /* package-lock.json in Resources */,
+				115CEA0326C588EE00C0A4E1 /* lib in Resources */,
+				115CEA0726C588EE00C0A4E1 /* make.js in Resources */,
+				115CEA0026C588EE00C0A4E1 /* CONTRIBUTING.md in Resources */,
+				115CE9FA26C588EE00C0A4E1 /* CHANGELOG.md in Resources */,
+				115CEA0526C588EE00C0A4E1 /* pages in Resources */,
+				115CEA0826C588EE00C0A4E1 /* CREDITS in Resources */,
+				115CE9FD26C588EE00C0A4E1 /* MIT-LICENSE.txt in Resources */,
+				115CEA0426C588EE00C0A4E1 /* test_harnesses in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		115CE9BD26C588EA00C0A4E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				115CE9CB26C588EA00C0A4E1 /* ViewController.swift in Sources */,
+				115CE9C626C588EA00C0A4E1 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		115CE9CF26C588EC00C0A4E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				115CE9DC26C588EC00C0A4E1 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		115CE9D626C588EC00C0A4E1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 115CE9D226C588EC00C0A4E1 /* Vimium Extension */;
+			targetProxy = 115CE9D526C588EC00C0A4E1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		115CE9C726C588EA00C0A4E1 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				115CE9C826C588EA00C0A4E1 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		115CE9DF26C588EC00C0A4E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		115CE9E026C588EC00C0A4E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		115CE9E226C588EC00C0A4E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Vimium Extension/Vimium_Extension.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Vimium Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Vimium.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		115CE9E326C588EC00C0A4E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Vimium Extension/Vimium_Extension.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Vimium Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Vimium.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		115CE9E626C588EC00C0A4E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Vimium/Vimium.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Vimium/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Vimium;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		115CE9E726C588EC00C0A4E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Vimium/Vimium.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Vimium/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Vimium;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		115CE9BC26C588EA00C0A4E1 /* Build configuration list for PBXProject "Vimium" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				115CE9DF26C588EC00C0A4E1 /* Debug */,
+				115CE9E026C588EC00C0A4E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		115CE9E126C588EC00C0A4E1 /* Build configuration list for PBXNativeTarget "Vimium Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				115CE9E226C588EC00C0A4E1 /* Debug */,
+				115CE9E326C588EC00C0A4E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		115CE9E526C588EC00C0A4E1 /* Build configuration list for PBXNativeTarget "Vimium" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				115CE9E626C588EC00C0A4E1 /* Debug */,
+				115CE9E726C588EC00C0A4E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 115CE9B926C588EA00C0A4E1 /* Project object */;
+}
