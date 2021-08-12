@@ -101,8 +101,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 const onURLChange = details => chrome.tabs.sendMessage(details.tabId, {name: "checkEnabledAfterURLChange"});
 
 // Re-check whether Vimium is enabled for a frame when the url changes without a reload.
-chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
-chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
+
+if(chrome.webNavigation.onHistoryStateUpdated) {
+    chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
+}
+if(chrome.webNavigation.onReferenceFragmentUpdated) {
+    chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
+}
 
 // Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.
 (function() {
