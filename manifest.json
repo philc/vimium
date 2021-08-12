@@ -68,7 +68,7 @@
       "match_about_blank": true
     },
     {
-      "matches": ["file:///", "file:///*/"],
+      "matches": ["<all_urls>"],
       "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start",
       "all_frames": true
