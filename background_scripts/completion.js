@@ -702,8 +702,8 @@ class MultiCompleter {
 
   cancel(port) {
     for (let c of this.completers)
-      if (c.refresh)
-        c.refresh(port);
+      if (c.cancel)
+        c.cancel(port);
   }
 
   filter(request, onComplete) {
