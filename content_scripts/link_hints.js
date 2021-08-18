@@ -447,12 +447,13 @@ class LinkHintsMode {
 
   updateKeyState({hintKeystrokeQueue, linkTextKeystrokeQueue, tabCount}) {
     Object.assign(this.markerMatcher, {hintKeystrokeQueue, linkTextKeystrokeQueue});
-
     const {linksMatched, userMightOverType} =
           this.markerMatcher.getMatchingHints(this.hintMarkers, tabCount, this.getNextZIndex.bind(this));
     if (linksMatched.length === 0) {
       this.deactivateMode();
-    } else if (linksMatched.length === 1) {
+    }
+    // wswag: force exact match to follow a hint
+    else if (linksMatched.length === 1 && linksMatched[0].hintString == hintKeystrokeQueue.join("")) {
       this.activateLink(linksMatched[0], userMightOverType);
     } else {
       for (let marker of this.hintMarkers)
@@ -634,7 +635,12 @@ class AlphabetHints {
     const hintStrings = this.hintStrings(hintMarkers.length);
     for (let i = 0; i < hintMarkers.length; i++) {
       const marker = hintMarkers[i];
-      marker.hintString = hintStrings[i];
+
+      //marker.hintString = hintStrings[i];
+      // wswag: use the pregenerated linkText here
+      // TODO: make all of that configurable..
+      marker.hintString = marker.linkText;
+
       if (marker.isLocalMarker)
         marker.innerHTML = spanWrap(marker.hintString.toUpperCase());
     }
@@ -717,7 +723,7 @@ class FilterHints {
     const matchString = this.hintKeystrokeQueue.join("");
     let linksMatched = this.filterLinkHints(hintMarkers);
     linksMatched = linksMatched.filter(linkMarker => linkMarker.hintString.startsWith(matchString));
-
+    
     // Visually highlight of the active hint (that is, the one that will be activated if the user
     // types <Enter>).
     tabCount = ((linksMatched.length * Math.abs(tabCount)) + tabCount) % linksMatched.length;
@@ -1164,8 +1170,41 @@ var LocalHints = {
     if (Settings.get("filterLinkHints")) {
       for (hint of localHints)
         Object.assign(hint, this.generateLinkText(hint));
+    } else {
+      // always generate a linkText property containing an invariant element id
+      for (hint of localHints)
+        Object.assign(hint, this.generateHashLinkText(hint));
     }
     return localHints;
+  },
+
+  // compute 53bit hashes of strings.
+  // respectfully overtaken from a response of user bryc from stackoverflow.com concerning
+  // the availability of hash functions in javascript
+  cyrb53(str, seed = 0) {
+      let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+      for (let i = 0, ch; i < str.length; i++) {
+          ch = str.charCodeAt(i);
+          h1 = Math.imul(h1 ^ ch, 2654435761);
+          h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+      return 4294967296 * (2097151 & h2) + (h1>>>0);
+  },
+
+  // wswag: abuse linkText property to store a 3 char hash sequence identifying the element
+  generateHashLinkText(hint) {
+    const element = hint.element;
+    // wswag use element.id if present, or outerHTML otherwise to compute the hash, convert to base36 and take
+    // the first 3 chars
+    // TODO: use the allowed chars as base
+    // TODO: make the char count configurable?
+    if (element.id === "")
+      // no id so use outerHTML
+      return {linkText: this.cyrb53(element.outerHTML).toString(36).slice(0,3), showLinkText: false};
+    else // use the specific element id
+      return {linkText: this.cyrb53(element.id).toString(36).slice(0,3), showLinkText: false};
   },
 
   generateLinkText(hint) {
@@ -1174,7 +1213,7 @@ var LocalHints = {
     let showLinkText = false;
     // toLowerCase is necessary as html documents return "IMG" and xhtml documents return "img"
     const nodeName = element.nodeName.toLowerCase();
-
+    
     if (nodeName === "input") {
       if ((element.labels != null) && (element.labels.length > 0)) {
         linkText = element.labels[0].textContent.trim();
@@ -1207,7 +1246,9 @@ var LocalHints = {
       linkText = element.innerHTML.slice(0, 256);
     }
 
+    //linkText = this.cyrb53(element.id).toString(36).slice(0,3);
     return {linkText: linkText.trim(), showLinkText};
+    //return {linkText: linkText.trim(), showLinkText: true};
   }
 };
 
