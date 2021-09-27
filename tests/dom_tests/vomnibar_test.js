@@ -9,7 +9,6 @@ context("Keep selection within bounds",
     vomnibarFrame = Vomnibar.vomnibarUI.iframeElement.contentWindow;
 
     // The Vomnibar frame is dynamically injected, so inject our stubs here.
-    vomnibarFrame.Function.prototype.bind = Function.prototype.bind;
     vomnibarFrame.chrome = chrome;
 
     const oldGetCompleter = vomnibarFrame.Vomnibar.getCompleter.bind(vomnibarFrame.Vomnibar);

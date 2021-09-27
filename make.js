@@ -6,7 +6,7 @@ fs = require("fs");
 child_process = require("child_process");
 
 // Spawns a new process and returns it.
-function spawn(procName, optArray, silent = false, sync = false) {
+function spawn(procName, optArray, silent = false, sync = true) {
   if (process.platform == "win32") {
     // if win32, prefix arguments with "/c {original command}"
     // e.g. "mkdir c:\git\vimium" becomes "cmd.exe /c mkdir c:\git\vimium"
@@ -30,69 +30,73 @@ function spawn(procName, optArray, silent = false, sync = false) {
 
 // Builds a zip file for submission to the Chrome store. The output is in dist/.
 function buildStorePackage() {
-  const vimiumVersion = JSON.parse(fs.readFileSync("manifest.json").toString())["version"]
-
-  spawn("rm", ["-rf", "dist/vimium"], false, true);
-  spawn("mkdir", ["-p", "dist/vimium"], false, true);
-  spawn("mkdir", ["-p", "dist/chrome-store"], false, true);
-  spawn("mkdir", ["-p", "dist/chrome-canary"], false, true);
-  spawn("mkdir", ["-p", "dist/firefox"], false, true);
-
-  const blacklist = [".*", "*.md", "test_harnesses", "tests", "dist", "CREDITS", "node_modules",
-                     "MIT-LICENSE.txt", "package-lock.json", "make.js"];
-  const rsyncOptions = [].concat.apply(
-    ["-r", ".", "dist/vimium"],
-    blacklist.map((item) => ["--exclude", item]));
-
-  spawn("rsync", rsyncOptions, false, true);
-
-  const manifestContents = fs.readFileSync("dist/vimium/manifest.json").toString();
-  const chromeManifest = JSON.parse(manifestContents);
-  const firefoxManifest = JSON.parse(manifestContents);
+  const excludeList = [
+    "*.md",
+    ".*",
+    "CREDITS",
+    "MIT-LICENSE.txt",
+    "dist",
+    "make.js",
+    "node_modules",
+    "package-lock.json",
+    "test_harnesses",
+    "tests",
+  ];
+  const manifestContents = require("./dist/vimium/manifest.json");
+  const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
+    ...excludeList.map((item) => ["--exclude", item])
+  );
+  const vimiumVersion = require("./manifest.json").version;
   const writeDistManifest = (manifestObject) => {
     fs.writeFileSync("dist/vimium/manifest.json", JSON.stringify(manifestObject, null, 2));
   };
-
   // cd into "dist/vimium" before building the zip, so that the files in the zip don't each have the
   // path prefix "dist/vimium".
   // --filesync ensures that files in the archive which are no longer on disk are deleted. It's equivalent to
   // removing the zip file before the build.
   const zipCommand = "cd dist/vimium && zip -r --filesync ";
 
-  // Chrome considers this key invalid in manifest.json, so we add it during the build phase.
-  firefoxManifest["browser_specific_settings"] = {
-    gecko: {
-      "strict_min_version": "62.0"
-    }
-  };
+  spawn("rm", ["-rf", "dist/vimium"]);
+  spawn("mkdir", ["--parents", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
+  spawn("rsync", rsyncOptions);
 
-  writeDistManifest(firefoxManifest);
-  spawn("bash", ["-c", zipCommand + `../firefox/vimium-firefox-${vimiumVersion}.zip .`], false, true);
+  writeDistManifest(Object.assign({}, manifestContents, {
+    // Chrome considers this key invalid in manifest.json, so we add it during the build phase.
+    browser_specific_settings: {
+      gecko: {
+        strict_min_version: "62.0",
+      },
+    },
+  }));
+  spawn("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
 
   // Build the Chrome Store package. Chrome does not require the clipboardWrite permission.
-  chromeManifest.permissions = chromeManifest.permissions.filter((p) => p != "clipboardWrite");
-  writeDistManifest(chromeManifest);
-  spawn("bash", ["-c", zipCommand + `../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`], false, true);
+  const permissions = manifestContents.permissions.filter((p) => p != "clipboardWrite");
+  writeDistManifest(Object.assign({}, manifestContents, {
+    permissions,
+  }));
+  spawn("bash", ["-c", `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`]);
 
   // Build the Chrome Store dev package.
-  chromeManifest.name = "Vimium Canary";
-  chromeManifest.description = "This is the development branch of Vimium (it is beta software).";
-  writeDistManifest(chromeManifest);
-  spawn("bash", ["-c", zipCommand + `../chrome-canary/vimium-canary-${vimiumVersion}.zip .`], false, true);
+  writeDistManifest(Object.assign({}, manifestContents, {
+    name: "Vimium Canary",
+    description: "This is the development branch of Vimium (it is beta software).",
+    permissions,
+  }));
+  spawn("bash", ["-c", `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`]);
 }
 
 
 // Returns how many tests failed.
 function runUnitTests() {
   console.log("Running unit tests...")
-  projectDir = "."
-  basedir = __dirname + "/tests/unit_tests/";
-  test_files = fs.readdirSync(basedir).filter((filename) => filename.indexOf("_test.js") > 0)
-  test_files = test_files.map((filename) => basedir + filename)
-  test_files.forEach((file) => {
-    path = (file[0] == '/' ? '' : './') + file;
-    require(path);
+  const basedir = __dirname + "/tests/unit_tests/";
+  fs.readdirSync(basedir).forEach((filename) => {
+    if (filename.endsWith("_test.js")) {
+      require(basedir + filename);
+    }
   });
+
   return Tests.run();
 }
 
@@ -140,19 +144,18 @@ command(
   "test",
   "Run all tests",
   () => {
-    let failed = runUnitTests();
-    failed += runDomTests();
+    const failed = runUnitTests() + runDomTests();
     if (failed > 0)
-      Process.exit(1);
+      Process.exit(failed);
   });
 
 command(
   "test-unit",
   "Run unit tests",
   () => {
-    const failed = runUnitTests() > 0;
+    const failed = runUnitTests();
     if (failed > 0)
-      Process.exit(1);
+      Process.exit(failed);
   });
 
 command(
@@ -161,7 +164,7 @@ command(
   () => {
     const failed = runDomTests();
     if (failed > 0)
-      Process.exit(1);
+      Process.exit(failed);
   });
 
 command(
