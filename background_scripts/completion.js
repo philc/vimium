@@ -490,6 +490,67 @@ class TabCompleter {
   }
 }
 
+// Searches through all windows, matching on title and URL.
+class WindowCompleter {
+  filter({ name, queryTerms }, onComplete) {
+    if ((name !== "windows") && (queryTerms.length === 0))
+      return onComplete([]);
+
+    // chrome.tabs.query({}, tabs => {
+    //   const results = tabs.filter(tab => RankingUtils.matches(queryTerms, tab.url, tab.title));
+    //   const suggestions = results.map(tab => {
+    //     const suggestion = new Suggestion({
+    //       queryTerms,
+    //       type: "tab",
+    //       url: tab.url,
+    //       title: tab.title,
+    //       tabId: tab.id,
+    //       deDuplicate: false
+    //     });
+    //     suggestion.relevancy = this.computeRelevancy(suggestion);
+    //     return suggestion;
+    //   }).sort((a, b) => b.relevancy - a.relevancy);
+
+    chrome.windows.getAll({populate: true}, windows => {
+      const curTabId = chrome.tabs.getCurrent(tab => tab.id);
+      const results = windows.filter(window => RankingUtils.matches(queryTerms, window.tabs[0].url, window.tabs[0].title));
+      const suggestions = results.map(window => {
+        const suggestion = new Suggestion({
+          queryTerms,
+          type: "window",
+          url: window.tabs[0].url,
+          title: window.tabs[0].title,
+          tabId: curTabId,
+          windowId: window.id,
+          deDuplicate: false,
+        });
+        suggestion.relevancy = this.computeRelevancy(suggestion);
+        return suggestion;
+      }).sort((a, b) => b.relevancy - a.relevancy);
+      // Boost relevancy with a multiplier so a relevant tab doesn't
+      // get crowded out by results from competing completers. To
+      // prevent tabs from crowding out everything else in turn,
+      // penalize them for being further down the results list by
+      // scaling on a hyperbola starting at 1 and approaching 0
+      // asymptotically for higher indexes. The multiplier and the
+      // curve fall-off were objectively chosen on the grounds that
+      // they seem to work pretty well.
+      suggestions.forEach(function(suggestion,i) {
+        suggestion.relevancy *= 8;
+        return suggestion.relevancy /= ( (i / 4) + 1 );
+      });
+      onComplete(suggestions);
+    });
+  }
+
+  computeRelevancy(suggestion) {
+    if (suggestion.queryTerms.length)
+      return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
+    else
+      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
+  }
+}
+
 class SearchEngineCompleter {
   constructor() {
     this.previousSuggestions = null;
@@ -1091,6 +1152,7 @@ Object.assign(global, {
   HistoryCompleter,
   DomainCompleter,
   TabCompleter,
+  WindowCompleter,
   SearchEngineCompleter,
   HistoryCache,
   RankingUtils,

@@ -43,6 +43,7 @@ const completionSources = {
   history: new HistoryCompleter,
   domains: new DomainCompleter,
   tabs: new TabCompleter,
+  windows: new WindowCompleter,
   searchEngines: new SearchEngineCompleter
 };
 
@@ -52,10 +53,12 @@ const completers = {
     completionSources.history,
     completionSources.domains,
     completionSources.tabs,
-    completionSources.searchEngines
-    ]),
+    completionSources.windows,
+    completionSources.searchEngines,
+  ]),
   bookmarks: new MultiCompleter([completionSources.bookmarks]),
-  tabs: new MultiCompleter([completionSources.tabs])
+  tabs: new MultiCompleter([completionSources.tabs]),
+  windows: new MultiCompleter([completionSources.windows]),
 };
 
 const completionHandlers = {
@@ -223,6 +226,12 @@ const selectSpecificTab = request => chrome.tabs.get(request.id, function(tab) {
   if (chrome.windows != null)
     chrome.windows.update(tab.windowId, { focused: true });
   return chrome.tabs.update(request.id, { active: true });
+});
+
+const moveTabToSpecificWindow = request => chrome.tabs.move(request.tabId, {windowId: request.windowId, index: -1}, function(tab) {
+  if (chrome.windows != null)
+    chrome.windows.update(tab.windowId, { focused: true });
+  return chrome.tabs.update(request.tabId, { active: true });
 });
 
 const moveTab = function({count, tab, registryEntry}) {
@@ -641,6 +650,7 @@ var sendRequestHandlers = {
   frameFocused: handleFrameFocused,
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+  moveTabToSpecificWindow,
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks),
   // Send a message to all frames in the current tab.
