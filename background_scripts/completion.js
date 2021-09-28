@@ -497,17 +497,20 @@ class WindowCompleter {
       return onComplete([]);
 
     chrome.windows.getAll({populate: true}, windows => {
-      chrome.tabs.query({currentWindow: true, active : true}, tabs => {
+      chrome.tabs.query({currentWindow: true, active: true}, tabs => {
         const curTab = tabs[0];
-        const results = windows.filter(window => RankingUtils.matches(queryTerms, window.tabs[0].url, window.tabs[0].title));
-        const suggestions = results.map(window => {
+        // an array of active tabs for each window
+        const activeTabs = windows.filter(window => (curTab.windowId !== window.id) && (curTab.incognito === window.incognito))
+                                  .map(window => window.tabs.find(tab => tab.active));
+        const results = activeTabs.filter(activeTab => RankingUtils.matches(queryTerms, activeTab.url, activeTab.title));
+        const suggestions = results.map(activeTab => {
           const suggestion = new Suggestion({
             queryTerms,
             type: "window",
-            url: window.tabs[0].url,
-            title: window.tabs[0].title,
+            url: activeTab.url,
+            title: activeTab.title,
             tabId: curTab.id,
-            windowId: window.id,
+            windowId: activeTab.windowId,
             deDuplicate: false,
           });
           suggestion.relevancy = this.computeRelevancy(suggestion);
