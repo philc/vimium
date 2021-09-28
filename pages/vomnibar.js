@@ -388,7 +388,7 @@ class BackgroundCompleter {
             if (result.type === "tab") {
               completionAction = this.completionActions.switchToTab(result.tabId);
             } else if (result.type === "window") {
-              completionAction = this.completionActions.moveToWindow(result.tabId, 1);
+              completionAction = this.completionActions.moveToWindow(result.tabId, result.windowId);
             } else {
               completionAction = this.completionActions.navigateToUrl(result.url);
             }

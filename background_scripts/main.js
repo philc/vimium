@@ -228,11 +228,14 @@ const selectSpecificTab = request => chrome.tabs.get(request.id, function(tab) {
   return chrome.tabs.update(request.id, { active: true });
 });
 
-const moveTabToSpecificWindow = request => chrome.tabs.move(request.tabId, {windowId: request.windowId, index: -1}, function(tab) {
-  if (chrome.windows != null)
-    chrome.windows.update(tab.windowId, { focused: true });
-  return chrome.tabs.update(request.tabId, { active: true });
-});
+const moveTabToSpecificWindow = request => chrome.tabs.move(request.tabId, {windowId: request.windowId, index: -1});
+
+// const moveTabToSpecificWindow = request => chrome.tabs.move(request.tabId, {windowId: request.windowId, index: -1}, function(tab) {
+//   console.log(request.tabId, request.windowId);
+//   if (chrome.windows != null)
+//     chrome.windows.update(request.windowId, { focused: true });
+//   return chrome.tabs.update(request.tabId, { active: true });
+// });
 
 const moveTab = function({count, tab, registryEntry}) {
   if (registryEntry.command === "moveTabLeft")
