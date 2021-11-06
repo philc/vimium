@@ -19,17 +19,38 @@ const Commands = {
     this.mapKeyRegistry = {};
 
     const configLines = Object.keys(defaultKeyMappings).map((key) => `map ${key} ${defaultKeyMappings[key]}`);
-    configLines.push(...BgUtils.parseLines(customKeyMappings));
+    configLines.push(...BgUtils.parseLines(customKeyMappings).reverse());
 
     const seen = {};
     let unmapAll = false;
+    let escapes = { '': {"<escape>": true} };
+    let urlStack = [''];
+
+    function getCurrentEscapes() {
+      url = urlStack[urlStack.length - 1];
+      if (!(url in escapes)) {
+        escapes[url] = { "<escape>": true };
+      }
+      return escapes[url];
+    }
+
     for (let line of configLines.reverse()) {
-      const tokens = line.split(/\s+/);
+      const tokens = line.trim().split(/\s+/);
       switch (tokens[0].toLowerCase()) {
+      case "ifurlmatches":
+        urlStack.push(tokens[1]);
+        continue;
+      case "endif":
+        urlStack.pop();
+        continue;
       case "map":
         if ((3 <= tokens.length) && !unmapAll) {
           var _, optionList, registryEntry;
           [_, key, command, ...optionList] = tokens;
+          if (command == "<escape>") {
+            getCurrentEscapes()[key] = true;
+            continue;
+          }
           if (!seen[key] && (registryEntry = this.availableCommands[command])) {
             seen[key] = true;
             const keySequence = this.parseKeySequence(key);
@@ -40,8 +61,11 @@ const Commands = {
         }
         break;
       case "unmap":
-        if (tokens.length == 2)
+        if (tokens.length == 2) {
           seen[tokens[1]] = true;
+          let escapes = getCurrentEscapes()
+          delete escapes[tokens[1]];
+        }
         break;
       case "unmapall":
         unmapAll = true;
@@ -56,6 +80,8 @@ const Commands = {
           }
         }
         break;
+      default:
+        console.error(`Unparsable line ${line}`);
       }
     }
 
@@ -70,6 +96,8 @@ const Commands = {
     const passNextKeys = Object.keys(this.keyToCommandRegistry)
       .filter(key => (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1));
     Settings.set("passNextKeyKeys", passNextKeys);
+
+    chrome.storage.local.set({ "escapes": escapes });
   },
 
   // Lower-case the appropriate portions of named keys.
@@ -151,9 +179,6 @@ const Commands = {
       }
     }
     chrome.storage.local.set({normalModeKeyStateMapping: keyStateMapping});
-    // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it is by
-    // default).
-    chrome.storage.local.set({useVimLikeEscape: !("<c-[>" in keyStateMapping)});
   },
 
   // Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.

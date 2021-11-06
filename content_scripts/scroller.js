@@ -149,6 +149,9 @@ const checkVisibility = function(element) {
   // If the activated element has been scrolled completely offscreen, then subsequent changes in its scroll
   // position will not provide any more visual feedback to the user. Therefore, we deactivate it so that
   // subsequent scrolls affect the parent element.
+  if (!activatedElement) {
+    return false;
+  }
   const rect = activatedElement.getBoundingClientRect();
   if ((rect.bottom < 0) || (rect.top > window.innerHeight) || (rect.right < 0) || (rect.left > window.innerWidth)) {
     return activatedElement = element;
