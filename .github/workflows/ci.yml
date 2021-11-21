@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 10
+      - name: Test
+        run: |
+          npm install util puppeteer
+          ./make.js test
+      - name: Build
+        run: npx web-ext build --overwrite-dest
+      - name: Upload document
+        uses: actions/upload-artifact@v2
+        with:
+          name: vimium
+          path: web-ext-artifacts/
