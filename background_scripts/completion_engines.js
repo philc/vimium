@@ -228,6 +228,21 @@ class UpToDate extends BaseEngine {
   parse(xhr) { return JSON.parse(xhr.responseText).data.searchTerms; }
 }
 
+class Etymonline extends BaseEngine {
+  constructor() {
+    super({
+      engineUrl: "https://www.etymonline.com/api/etymology/fuzzy?key=%s",
+      regexps: ["^https?://www\\.etymonline\\.com/"],
+      example: {
+        searchUrl: "https://www.etymonline.com/search?q=%s",
+        keyword: "e"
+      }
+    });
+  }
+
+  parse(xhr) { return JSON.parse(xhr.responseText); }
+}
+
 // A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 // allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine extends BaseEngine {
@@ -252,6 +267,7 @@ const CompletionEngines = [
   Webster,
   Qwant,
   UpToDate,
+  Etymonline,
   DummyCompletionEngine
 ];
 
