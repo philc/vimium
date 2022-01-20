@@ -1,3 +1,7 @@
+1.67.1 (2022-01-19)
+
+- In Firefox 96+, make link hints open one tab, not two ([#3985](https://github.com/philc/vimium/pull/3985))
+
 1.67 (2021-07-09)
 
 - Dark mode: Vimium's UI (URL bar, help dialog, option page, etc.) are dark if the browser is configured for
