@@ -28,7 +28,7 @@ function spawn(procName, optArray, silent = false, sync = true) {
   return proc;
 }
 
-// Builds a zip file for submission to the Chrome store. The output is in dist/.
+// Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/.
 function buildStorePackage() {
   const excludeList = [
     "*.md",
@@ -42,7 +42,7 @@ function buildStorePackage() {
     "test_harnesses",
     "tests",
   ];
-  const manifestContents = require("./dist/vimium/manifest.json");
+  const manifestContents = require("./manifest.json");
   const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
     ...excludeList.map((item) => ["--exclude", item])
   );
@@ -64,7 +64,7 @@ function buildStorePackage() {
     // Chrome considers this key invalid in manifest.json, so we add it during the build phase.
     browser_specific_settings: {
       gecko: {
-        strict_min_version: "62.0",
+        strict_min_version: "62.0"
       },
     },
   }));
@@ -169,7 +169,7 @@ command(
 
 command(
   "package",
-  "Builds a zip file for submission to the Chrome store. The output is in dist/",
+  "Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/",
   buildStorePackage);
 
 if (process.argv.includes("-h") || process.argv.includes("--help") || process.argv.length == 2) {
