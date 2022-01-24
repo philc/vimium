@@ -238,6 +238,7 @@ const Commands = {
       "firstTab",
       "lastTab",
       "duplicateTab",
+      "openTabInIncognitoWindow",
       "togglePinTab",
       "toggleMuteTab",
       "removeTab",
@@ -278,7 +279,8 @@ const Commands = {
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
-    "passNextKey"]
+    "passNextKey",
+    "openTabInIncognitoWindow"]
 };
 
 const defaultKeyMappings = {
@@ -347,6 +349,7 @@ const defaultKeyMappings = {
   "W": "moveTabToNewWindow",
   "t": "createTab",
   "yt": "duplicateTab",
+  "yI": "openTabInIncognitoWindow",
   "x": "removeTab",
   "X": "restoreTab",
   "<a-p>": "togglePinTab",
@@ -400,7 +403,7 @@ const commandDescriptions = {
   "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"],
   "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"],
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }],
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"],
+  "LinkHints.activateModeToOpenIncognito": ["Open a link in a new incognito window"],
   "LinkHints.activateModeToDownloadLink": ["Download link url"],
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"],
 
@@ -428,6 +431,7 @@ const commandDescriptions = {
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }],
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }],
+  openTabInIncognitoWindow: ["Open current tab in a new incognito window"],
   removeTab: ["Close current tab", { background: true,
                                      repeatLimit: (chrome.session ? chrome.session.MAX_SESSION_RESULTS : null) || 25 }],
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }],

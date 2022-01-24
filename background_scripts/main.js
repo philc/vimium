@@ -297,6 +297,10 @@ const BackgroundCommands = {
                                  tab => callback(Object.assign(request, {tab, tabId: tab.id})))
   }),
 
+  openTabInIncognitoWindow(request) {
+    return chrome.windows.create({incognito: true, url: Utils.convertToUrl(request.tab.url)});
+  },
+
   moveTabToNewWindow({count, tab}) {
     chrome.tabs.query({currentWindow: true}, function(tabs) {
       const activeTabIndex = tab.index;
