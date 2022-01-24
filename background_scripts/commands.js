@@ -213,6 +213,7 @@ const Commands = {
       "LinkHints.activateModeToDownloadLink",
       "LinkHints.activateModeToOpenIncognito",
       "LinkHints.activateModeToCopyLinkUrl",
+      "LinkHints.activateModeToShowLinkUrl",
       "goPrevious",
       "goNext",
       "nextFrame",
@@ -267,6 +268,7 @@ const Commands = {
     "Vomnibar.activateEditUrlInNewTab",
     "LinkHints.activateModeToOpenIncognito",
     "LinkHints.activateModeToCopyLinkUrl",
+    "LinkHints.activateModeToShowLinkUrl",
     "goNext",
     "goPrevious",
     "Marks.activateCreateMode",
@@ -315,6 +317,7 @@ const defaultKeyMappings = {
   "F": "LinkHints.activateModeToOpenInNewTab",
   "<a-f>": "LinkHints.activateModeWithQueue",
   "yf": "LinkHints.activateModeToCopyLinkUrl",
+  "sf": "LinkHints.activateModeToShowLinkUrl",
 
   // Using find
   "/": "enterFindMode",
@@ -403,6 +406,7 @@ const commandDescriptions = {
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"],
   "LinkHints.activateModeToDownloadLink": ["Download link url"],
   "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"],
+  "LinkHints.activateModeToShowLinkUrl": ["Show the URL of a link, without opening it"],
 
   enterFindMode: ["Enter find mode", { noRepeat: true }],
   performFind: ["Cycle forward to the next find match"],
