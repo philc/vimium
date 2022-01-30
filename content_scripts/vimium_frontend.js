@@ -270,8 +270,11 @@ var Frame = {
     return HintCoordinator[request.messageType](request);
   },
 
-  registerFrameId({chromeFrameId}) {
-    frameId = (root.frameId = (window.frameId = chromeFrameId));
+  registerFrameId(request) {
+    frameId = (root.frameId = (window.frameId = request.chromeFrameId));
+    if (Utils.isFirefox()) {
+      Utils.firefoxVersion = () => request.firefoxVersion
+    }
     // We register a frame immediately only if it is focused or its window isn't tiny.  We register tiny
     // frames later, when necessary.  This affects focusFrame() and link hints.
     if (windowIsFocused() || !DomUtils.windowIsTooSmall()) {

@@ -161,7 +161,8 @@ const TabOperations = {
       delete tabConfig["url"];
 
     // Firefox <57 throws an error when openerTabId is used (issue 1238314).
-    const canUseOpenerTabId = !(Utils.isFirefox() && (Utils.compareVersions(Utils.firefoxVersion(), "57") < 0));
+    const canUseOpenerTabId = !Utils.isFirefox() || Utils.firefoxVersion() instanceof Promise
+        || (Utils.compareVersions(Utils.firefoxVersion(), "57") >= 0);
     if (canUseOpenerTabId)
       tabConfig.openerTabId = request.tab.id;
 
@@ -436,7 +437,20 @@ var Frames = {
   onConnect(sender, port) {
     const [tabId, frameId] = [sender.tab.id, sender.frameId];
     port.onDisconnect.addListener(() => Frames.unregisterFrame({tabId, frameId, port}));
-    port.postMessage({handler: "registerFrameId", chromeFrameId: frameId});
+    const message = {handler: "registerFrameId", chromeFrameId: frameId}
+    let firefoxVersion
+    if (Utils.isFirefox()) {
+      firefoxVersion = Utils.firefoxVersion()
+      message.firefoxVersion = firefoxVersion
+    }
+    if (typeof firefoxVersion === "object") {
+      firefoxVersion.then(() => {
+        message.firefoxVersion = Utils.firefoxVersion()
+        port.postMessage(message);
+      })
+    } else {
+      port.postMessage(message);
+    }
     (portsForTab[tabId] != null ? portsForTab[tabId] : (portsForTab[tabId] = {}))[frameId] = port;
 
     // Return our onMessage handler for this port.
