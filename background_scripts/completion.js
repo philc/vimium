@@ -59,8 +59,18 @@ class Suggestion {
       this.title = this.insertText;
     // NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     let favIcon = "";
-    if (this.type === "tab" && !Utils.isFirefox())
-        favIcon = `<img class="vimiumReset vomnibarIcon" src="chrome://favicon/size/16@1x/${BgUtils.escapeAttribute(this.url)}" />`
+    if (this.type === "tab") {
+      // Get the favicon
+			// If it's firefox search it through google otherwise use the built in chrome function
+			const iconFinder = Utils.isFirefox()
+				? "http://www.google.com/s2/favicons?domain="
+				: "chrome://favicon/size/16@1x/";
+
+			favIcon = `<img class="vimiumReset vomnibarIcon" src="${iconFinder}${BgUtils.escapeAttribute(
+				this.url
+			)}" />`;
+		}
+
     if (request.isCustomSearch)
       this.html = `\
 <div class="vimiumReset vomnibarTopHalf">
