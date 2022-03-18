@@ -135,7 +135,7 @@ class Amazon extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s",
-      regexps: ["^https?://www\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"],
+      regexps: ["^https?://(www|smile)\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"],
       example: {
         searchUrl: "https://www.amazon.com/s/?field-keywords=%s",
         keyword: "a"
