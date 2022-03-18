@@ -596,3 +596,108 @@ const filterCompleter = (completer, queryTerms) => {
 };
 
 const hours = n => 1000 * 60 * 60 * n;
+
+context("MultiCompleter filtering",
+  setup(() => {
+    this.bookmark3 = { title: "bookmark3", url: "bookmark3.com" };
+    this.bookmark2 = { title: "bookmark2", url: "bookmark2.com" };
+    this.bookmark1 = { title: "bookmark1", url: "bookmark1.com", children: [this.bookmark2] };
+    global.chrome.bookmarks =
+      {getTree: callback => callback([this.bookmark1])};
+
+    this.completer = new MultiCompleter([
+      new BookmarkCompleter,
+      new HistoryCompleter,
+      new TabCompleter,
+    ]);
+  }),
+
+  should("remove filter keys from a request", () => {
+    const request = { queryTerms: ["testing", "*", "#", "%", "$", "^"] };
+    const result = this.completer.extractFilterKeys(request);
+    assert.arrayEqual(["testing"], result.queryTerms);
+  }),
+
+  should("remove non-bookmarks", () => {
+    const s1 = { type: "bookmark", id: "1" };
+    const s2 = { type: "history", id: "2" };
+    const s3 = { type: "tab", id: "3" };
+    const s4 = { type: "bookmark", id: "4" };
+
+    this.completer = new MultiCompleter([
+      new BookmarkCompleter,
+      new HistoryCompleter,
+      new TabCompleter,
+    ]);
+
+    const result = [s1,s3,s2,s4].filter(this.completer.filterFunctions["*"]);
+    assert.arrayEqual([s1,s4], result)
+  }),
+
+  should("remove non-tabs", () => {
+    const s1 = { type: "bookmark", id: "1" };
+    const s2 = { type: "history", id: "2" };
+    const s3 = { type: "tab", id: "3" };
+    const s4 = { type: "bookmark", id: "4" };
+
+    this.completer = new MultiCompleter([
+      new BookmarkCompleter,
+      new HistoryCompleter,
+      new TabCompleter,
+    ]);
+
+    const result = [s1,s3,s2,s4].filter(this.completer.filterFunctions["%"]);
+    assert.arrayEqual([s3], result)
+  }),
+
+  should("remove partial title matches", () => {
+    const terms = ["foo", "bar"];
+    const s1 = { title: "foo", queryTerms: terms };
+    const s2 = { title: "bar", queryTerms: terms };
+    const s3 = { title: "baz", queryTerms: terms };
+    const s4 = { title: "foo bar baz", queryTerms: terms };
+
+    this.completer = new MultiCompleter([
+      new BookmarkCompleter,
+      new HistoryCompleter,
+      new TabCompleter,
+    ]);
+
+    const result = [s1,s3,s2,s4].filter(this.completer.filterFunctions["#"]);
+    assert.arrayEqual([s4], result)
+  }),
+
+
+  should("remove partial URL matches", () => {
+    const terms = ["foo", "baz"];
+    const s1 = { url: "foo", queryTerms: terms };
+    const s2 = { url: "bar", queryTerms: terms };
+    const s3 = { url: "baz", queryTerms: terms };
+    const s4 = { url: "foo bar baz", queryTerms: terms };
+
+    this.completer = new MultiCompleter([
+      new BookmarkCompleter,
+      new HistoryCompleter,
+      new TabCompleter,
+    ]);
+
+    const result = [s1,s3,s2,s4].filter(this.completer.filterFunctions["$"]);
+    assert.arrayEqual([s4], result)
+  }),
+
+  should("remove non-histories", () => {
+    const s1 = { type: "bookmark", id: "1" };
+    const s2 = { type: "history", id: "2" };
+    const s3 = { type: "tab", id: "3" };
+    const s4 = { type: "bookmark", id: "4" };
+
+    this.completer = new MultiCompleter([
+      new BookmarkCompleter,
+      new HistoryCompleter,
+      new TabCompleter,
+    ]);
+
+    const result = [s1,s3,s2,s4].filter(this.completer.filterFunctions["^"]);
+    assert.arrayEqual([s2], result)
+  })
+);

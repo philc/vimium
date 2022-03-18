@@ -33,7 +33,8 @@ class Suggestion {
     this.insertText = null;
     // @deDuplicate controls whether this suggestion is a candidate for deduplication.
     this.deDuplicate = true;
-
+    // @filterFunction can remove the suggestion based on the query terms.
+    this.filterFunction = null;
     // Other options set by individual completers include:
     // - tabId (TabCompleter)
     // - isSearchSuggestion, customSearchMode (SearchEngineCompleter)
@@ -692,6 +693,34 @@ class MultiCompleter {
     this.completers = completers;
     this.filterInProgress = false;
     this.mostRecentQuery = null;
+    // These filter functions are based on a Firefox address bar feature described here:
+    // https://support.mozilla.org/en-US/kb/address-bar-autocomplete-firefox#w_changing-results-on-the-fly
+    this.filterFunctions = {
+      // Only show suggestions to bookmarks.
+      "*": (({ type }) => type === "bookmark"),
+      // Only show suggestions from history.
+      "^": (({ type }) => type === "history"),
+      // Only show suggestions for open tabs.
+      "%": (({ type }) => type === "tab"),
+      // Only show suggestions whose title contains all the query terms (case-insensitive).
+      "#": (({ title, queryTerms }) => {
+        // This would also match against bookmark tags, but we can't access bookmark tags via the API.
+        return queryTerms.reduce((a, term) => {
+          return a && title.toLocaleLowerCase().includes(term.toLocaleLowerCase())
+        }, true)
+      }),
+      // Only show suggestions whose url contains all the query terms (case-insensitive).
+      "$": (({ url, queryTerms }) => {
+        return queryTerms.reduce((a, term) => {
+          return a && url.toLocaleLowerCase().includes(term.toLocaleLowerCase())
+        }, true)
+      }),
+      // Show only bookmarks whose tags match the query terms. The tags are not
+      // exposed via API, so this can't be implemented at this time.
+      // "+": "",
+      // Show only search suggestions. This isn't useful in the vomnibar.
+      // "?": (({ isCustomSearch }) => isCustomSearch),
+    };
   }
 
   refresh(port) {
@@ -706,12 +735,32 @@ class MultiCompleter {
         c.refresh(port);
   }
 
+  // Extract the filter keys from the query terms, and assign the filter function accordingly.
+  extractFilterKeys(request) {
+    let filterFunction;
+    const queryTerms = request.queryTerms.filter((term) => {
+      let hasFilter = this.filterFunctions[term];
+      if (hasFilter) {
+        filterFunction ||= hasFilter
+        return false
+      }
+      return true
+    });
+    return Object.assign(request, {filterFunction, queryTerms});
+  }
+
   filter(request, onComplete) {
     // Allow only one query to run at a time.
     if (this.filterInProgress) {
       this.mostRecentQuery = arguments;
       return
     }
+
+    Settings.use("filterOmnibarSuggestions", enabled => {
+      if (enabled) {
+        request = this.extractFilterKeys(request);
+      }
+    });
 
     // Provide each completer with an opportunity to see (and possibly alter) the request before it is
     // launched.
@@ -790,18 +839,25 @@ class MultiCompleter {
   }
 
   prepareSuggestions(request, queryTerms, suggestions) {
+    // Remove suggestions that don't match the requested filter.
+    let filteredSuggestions = suggestions.filter((suggestion) => {
+      return !request.filterFunction || request.filterFunction(suggestion);
+    });
+    // Delete the filterFunction so Firefox doesn't choke on it later.
+    delete request.filterFunction;
+
     // Compute suggestion relevancies and sort.
-    for (let s of suggestions)
+    for (let s of filteredSuggestions)
       s.computeRelevancy(queryTerms);
 
-    suggestions.sort((a, b) => b.relevancy - a.relevancy);
+    filteredSuggestions.sort((a, b) => b.relevancy - a.relevancy);
 
     // Simplify URLs and remove duplicates (duplicate simplified URLs, that is).
     let count = 0;
     const seenUrls = {};
 
     let newSuggestions = [];
-    for (let s of suggestions) {
+    for (let s of filteredSuggestions) {
       const url = s.shortenUrl();
       if (s.deDuplicate && seenUrls[url])
         continue;

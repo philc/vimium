@@ -255,7 +255,8 @@ const Options = {
   grabBackFocus: CheckBoxOption,
   searchEngines: TextOption,
   searchUrl: NonEmptyTextOption,
-  userDefinedLinkHintCss: NonEmptyTextOption
+  userDefinedLinkHintCss: NonEmptyTextOption,
+  filterOmnibarSuggestions: CheckBoxOption
 };
 
 const initOptionsPage = function() {
