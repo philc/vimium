@@ -910,7 +910,7 @@ var LocalHints = {
     if (element.hasAttribute("onclick")) {
       isClickable = true;
     } else if (((role = element.getAttribute("role")) != null) &&
-               ["button" , "tab" , "link", "checkbox", "menuitem", "menuitemcheckbox", "menuitemradio"].includes(role.toLowerCase())) {
+               ["button" , "tab" , "link", "checkbox", "menuitem", "menuitemcheckbox", "menuitemradio", "radio"].includes(role.toLowerCase())) {
       isClickable = true;
     } else if (((contentEditable = element.getAttribute("contentEditable")) != null) &&
                ["", "contenteditable", "true"].includes(contentEditable.toLowerCase())) {
