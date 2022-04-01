@@ -1141,7 +1141,7 @@ var LocalHints = {
       let foundElement = false;
       for (let verticalCoordinate of verticalCoordinates) {
         for (let horizontalCoordinate of horizontalCoordinates) {
-          const elementFromPoint = LocalHints.getElementFromPoint(verticalCoordinate, horizontalCoordinate);
+          const elementFromPoint = LocalHints.getElementFromPoint(horizontalCoordinate, verticalCoordinate);
           if (elementFromPoint && (element.contains(elementFromPoint) || elementFromPoint.contains(element))) {
             foundElement = true;
             break;
