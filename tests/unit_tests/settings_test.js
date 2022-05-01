@@ -1,6 +1,5 @@
 import "./test_helper.js";
 
-Utils.getCurrentVersion = () => '1.44';
 Utils.isBackgroundPage = () => true;
 Utils.isExtensionPage = () => true;
 

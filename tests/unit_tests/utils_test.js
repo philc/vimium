@@ -1,5 +1,4 @@
 import "./test_helper.js";
-Utils.getCurrentVersion = () => '1.43';
 import "../../lib/settings.js";
 
 context("isUrl", () => {
