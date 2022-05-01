@@ -1,5 +1,5 @@
-require("./test_helper.js");
-require("../../lib/rect.js");
+import "./test_helper.js";
+import "../../lib/rect.js";
 
 context("Rect", () => {
   should("set rect properties correctly", () => {
