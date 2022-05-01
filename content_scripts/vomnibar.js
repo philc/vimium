@@ -81,4 +81,4 @@ const Vomnibar = {
   }
 };
 
-global.Vomnibar = Vomnibar;
+window.Vomnibar = Vomnibar;

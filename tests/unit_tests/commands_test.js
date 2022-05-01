@@ -1,16 +1,18 @@
-require("./test_helper.js");
-require("../../background_scripts/bg_utils.js");
-global.Settings = {postUpdateHooks: {}, get() { return ""; }, set() {}};
-require("../../background_scripts/commands.js");
+import "./test_helper.js";
+import "../../background_scripts/bg_utils.js";
+window.Settings = {postUpdateHooks: {}, get() { return ""; }, set() {}};
+import "../../lib/settings.js";
+import "../../lib/keyboard_utils.js";
+import "../../background_scripts/commands.js";
 
+window.KeyboardUtils = {platform: ""}; // TODO(philc): Remove this line.
+import "../../content_scripts/mode.js";
+import "../../content_scripts/mode_key_handler.js";
 // Include mode_normal to check that all commands have been implemented.
-global.KeyboardUtils = {platform: ""};
-require("../../content_scripts/mode.js");
-require("../../content_scripts/mode_key_handler.js");
-require("../../content_scripts/mode_normal.js");
-require("../../content_scripts/link_hints.js");
-require("../../content_scripts/marks.js");
-require("../../content_scripts/vomnibar.js");
+import "../../content_scripts/mode_normal.js";
+import "../../content_scripts/link_hints.js";
+import "../../content_scripts/marks.js";
+import "../../content_scripts/vomnibar.js";
 
 context("Key mappings", () => {
   const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
