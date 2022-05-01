@@ -1,6 +1,6 @@
-require("./test_helper.js");
+import "./test_helper.js";
 Utils.getCurrentVersion = () => '1.43';
-require("../../lib/settings.js");
+import "../../lib/settings.js";
 
 context("isUrl", () => {
   should("accept valid URLs", () => {
@@ -130,36 +130,40 @@ context("compare versions", () => {
 });
 
 context("makeIdempotent", () => {
+
+  let func;
+  let count = 0;
+
   setup(() => {
-    this.count = 0;
-    this.func = Utils.makeIdempotent(n => {
+    count = 0;
+    func = Utils.makeIdempotent((n) => {
       if (n == null)
         n = 1;
-      this.count += n;
+      count += n;
     });
   });
 
   should("call a function once", () => {
-    this.func();
-    assert.equal(1, this.count);
+    func();
+    assert.equal(1, count);
   });
 
   should("call a function once with an argument", () => {
-    this.func(2);
-    assert.equal(2, this.count);
+    func(2);
+    assert.equal(2, count);
   });
 
   should("not call a function a second time", () => {
-    this.func();
-    assert.equal(1, this.count);
+    func();
+    assert.equal(1, count);
   });
 
   should("not call a function a second time", () => {
-    this.func();
-    assert.equal(1, this.count);
-    this.func();
-    assert.equal(1, this.count);
-  })
+    func();
+    assert.equal(1, count);
+    func();
+    assert.equal(1, count);
+  });
 });
 
 context("distinctCharacters", () => {
