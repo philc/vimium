@@ -63,6 +63,7 @@ var Exclusions = {
     Settings.set("exclusionRules", this.rules);
   },
 
+  // TODO(philc): Why does this take a `rules` argument if it's unused? Remove.
   postUpdateHook(rules) {
     // NOTE(mrmr1993): In FF, the |rules| argument will be garbage collected when the exclusions popup is
     // closed. Do NOT store it/use it asynchronously.
