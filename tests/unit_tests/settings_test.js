@@ -15,23 +15,23 @@ context("settings", () => {
 
   should("save settings in localStorage as JSONified strings", () => {
     Settings.set('dummy', "");
-    assert.equal(localStorage.dummy, '""');
+    assert.equal('""', localStorage.dummy);
   });
 
   should("obtain defaults if no key is stored", () => {
     assert.isFalse(Settings.has('scrollStepSize'));
-    assert.equal(Settings.get('scrollStepSize'), 60);
+    assert.equal(60, Settings.get('scrollStepSize'));
   });
 
   should("store values", () => {
     Settings.set('scrollStepSize', 20);
-    assert.equal(Settings.get('scrollStepSize'), 20);
+    assert.equal(20, Settings.get('scrollStepSize'));
   });
 
   should("revert to defaults if no key is stored", () => {
     Settings.set('scrollStepSize', 20);
     Settings.clear('scrollStepSize');
-    assert.equal(Settings.get('scrollStepSize'), 60);
+    assert.equal(60, Settings.get('scrollStepSize'));
   });
 
   tearDown(() => {
@@ -49,33 +49,33 @@ context("synced settings", () => {
 
   should("propagate non-default value via synced storage listener", () => {
     Settings.set('scrollStepSize', 20);
-    assert.equal(Settings.get('scrollStepSize'), 20);
+    assert.equal(20, Settings.get('scrollStepSize'));
     Settings.propagateChangesFromChromeStorage({ scrollStepSize: { newValue: "40" } });
-    assert.equal(Settings.get('scrollStepSize'), 40);
+    assert.equal(40, Settings.get('scrollStepSize'));
   });
 
   should("propagate default value via synced storage listener", () => {
     Settings.set('scrollStepSize', 20);
-    assert.equal(Settings.get('scrollStepSize'), 20);
+    assert.equal(20, Settings.get('scrollStepSize'));
     Settings.propagateChangesFromChromeStorage({ scrollStepSize: { newValue: "60" } });
-    assert.equal(Settings.get('scrollStepSize'), 60);
+    assert.equal(60, Settings.get('scrollStepSize'));
   });
 
   should("propagate non-default values from synced storage", () => {
     chrome.storage.sync.set({ scrollStepSize: JSON.stringify(20) });
-    assert.equal(Settings.get('scrollStepSize'), 20);
+    assert.equal(20, Settings.get('scrollStepSize'));
   });
 
   should("propagate default values from synced storage", () => {
     Settings.set('scrollStepSize', 20);
     chrome.storage.sync.set({ scrollStepSize: JSON.stringify(60) });
-    assert.equal(Settings.get('scrollStepSize'), 60);
+    assert.equal(60, Settings.get('scrollStepSize'));
   });
 
   should("clear a setting from synced storage", () => {
     Settings.set('scrollStepSize', 20);
     chrome.storage.sync.remove('scrollStepSize');
-    assert.equal(Settings.get('scrollStepSize'), 60);
+    assert.equal(60, Settings.get('scrollStepSize'));
   });
 
   should("trigger a postUpdateHook", () => {
