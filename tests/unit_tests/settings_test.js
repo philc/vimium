@@ -1,17 +1,17 @@
-require("./test_helper.js");
+import "./test_helper.js";
 
 Utils.getCurrentVersion = () => '1.44';
 Utils.isBackgroundPage = () => true;
 Utils.isExtensionPage = () => true;
-global.localStorage = {};
-require("../../lib/settings.js");
-require("../../pages/options.js");
+
+import "../../lib/settings.js";
+import "../../pages/options.js";
 
 context("settings", () => {
   setup(() => {
-    stub(global, 'localStorage', {});
+    localStorage.clear();
     // Point the settings cache to the new localStorage object.
-    Settings.cache = global.localStorage;
+    Settings.cache = window.localStorage;
     // Avoid running update hooks which include calls to outside of settings.
     Settings.postUpdateHooks = {};
   });
@@ -36,13 +36,16 @@ context("settings", () => {
     Settings.clear('scrollStepSize');
     assert.equal(Settings.get('scrollStepSize'), 60);
   });
+
+  tearDown(() => {
+    localStorage.clear();
+  });
 });
 
 context("synced settings", () => {
   setup(() => {
-    stub(global, 'localStorage', {});
     // Point the settings cache to the new localStorage object.
-    Settings.cache = global.localStorage;
+    Settings.cache = window.localStorage;
     // Avoid running update hooks which include calls to outside of settings.
     Settings.postUpdateHooks = {};
   });
@@ -89,9 +92,13 @@ context("synced settings", () => {
   should("sync a key which is not a known setting (without crashing)", () => {
     chrome.storage.sync.set({ notASetting: JSON.stringify("notAUsefullValue") });
   });
+
+  tearDown(() => {
+    localStorage.clear();
+  });
 });
 
-context("default valuess", () => {
+context("default values", () => {
   should("have a default value for every option", () => {
     for (let key of Object.keys(Options)) {
       assert.isTrue(key in Settings.defaults);
