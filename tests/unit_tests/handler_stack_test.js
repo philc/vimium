@@ -1,11 +1,11 @@
-require("./test_helper.js");
-require("../../lib/handler_stack.js");
+import "./test_helper.js";
+import "../../lib/handler_stack.js";
 
 context("handlerStack", () => {
   let handlerStack, handler1Called, handler2Called;
 
   setup(() => {
-    stub(global, "DomUtils", {});
+    stub(window, "DomUtils", {});
     stub(DomUtils, "consumeKeyup", () => {});
     stub(DomUtils, "suppressEvent", () => {});
     stub(DomUtils, "suppressPropagation", () => {});
