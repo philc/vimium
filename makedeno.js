@@ -1,4 +1,5 @@
 #!/usr/bin/env deno run --allow-read --allow-write --allow-env --allow-net --allow-run --unstable
+// --unstable is required for Puppeteer.
 /*
  * This file is used like a Makefile.
  */
@@ -8,14 +9,24 @@ import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
 import { delay } from 'https://deno.land/x/delay@v0.2.0/mod.ts';
 import { desc, run, task, sh } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@9.0.2/mod.ts";
+import * as shoulda from "./tests/vendor/shoulda.js";
+
+const projectPath = new URL(".", import.meta.url).pathname;
 
 const runUnitTests = async () => {
-  // TODO(philc): Require all of the test files.
+  // Import every test file.
+  const dir = path.join(projectPath, "tests/unit_tests");
+  const files = Array.from(Deno.readDirSync(dir)).map((f) => f.name).sort();
+  for (let f of files) {
+    if (f.endsWith("_test.js")) {
+      await import(path.join(dir, f));
+    }
+  }
+
   await shoulda.run();
 };
 
 const runDomTests = async () => {
-  const projectPath = new URL(".", import.meta.url).pathname;
   const testFile = `${projectPath}/tests/dom_tests/dom_tests.html`;
 
   await (async () => {
@@ -71,13 +82,14 @@ const runDomTests = async () => {
   })();
 };
 
-task("test", [], async () => {
-  const failed = await runDomTests();
-  console.log("Test task");
-  if (failed > 0)
-    console.log("Failed:", failed);
-});
+// task("test", [], async () => {
+//   const failed = await runDomTests();
+//   console.log("Test task");
+//   if (failed > 0)
+//     console.log("Failed:", failed);
+// });
 
-await runDomTests();
+await runUnitTests();
+// await runDomTests();
 
 // run();
