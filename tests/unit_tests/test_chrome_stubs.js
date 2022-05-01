@@ -1,46 +1,23 @@
 //
-// This file contains stubs for a number of browser and chrome APIs which are missing in
-// Node.js.
+// This file contains stubs for a number of browser and chrome APIs which are missing in Deno.
 // The chrome.storage.sync stub does roughly what chrome.storage.sync should do, but does so synchronously.
 //
 
-const nodeCrypto = require("crypto");
-
-global.window = {};
-global.localStorage = {};
-
-window.crypto = {
-  // This polyfill was taken from
-  // https://github.com/KenanY/get-random-values
-  getRandomValues: (buffer) => {
-    if (!(buffer instanceof Uint8Array))
-      throw new TypeError('expected Uint8Array');
-    if (buffer.length > 65536)
-      throw new Error("Buffer length cannot be larger than 65536; this API doesn't support that much entropy.");
-    var bytes = nodeCrypto.randomBytes(buffer.length);
-    buffer.set(bytes);
-    return buffer;
-  }
-}
-
 let XMLHttpRequest;
 
-global.navigator =
-  {appVersion: "5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36"};
-
-global.document = {
+window.document = {
   createElement() { return {}; },
   addEventListener() {}
 };
 
-global.XMLHttpRequest =
+window.XMLHttpRequest =
   (XMLHttpRequest = class XMLHttpRequest {
     open() {}
     onload() {}
     send() {}
   });
 
-global.chrome = {
+window.chrome = {
   areRunningVimiumTests: true,
 
   runtime: {
@@ -116,9 +93,9 @@ global.chrome = {
   storage: {
     // chrome.storage.local
     local: {
-      get(_, callback) { if (callback) callback(); },
-      set(_, callback) { if (callback) callback(); },
-      remove(_, callback) { if (callback) callback(); }
+      get(_, callback) { if (callback) callback({}); },
+      set(_, callback) { if (callback) callback({}); },
+      remove(_, callback) { if (callback) callback({}); }
     },
 
     // chrome.storage.onChanged
@@ -164,7 +141,7 @@ global.chrome = {
         // Now, generate (supposedly asynchronous) notifications for listeners.
         for (key of Object.keys(items)) {
           value = items[key];
-          global.chrome.storage.onChanged.call(key,value);
+          window.chrome.storage.onChanged.call(key,value);
         }
       },
 
@@ -193,7 +170,7 @@ global.chrome = {
         }
         if (callback) { callback(); }
         // Now, generate (supposedly asynchronous) notification for listeners.
-        global.chrome.storage.onChanged.callEmpty(key);
+        window.chrome.storage.onChanged.callEmpty(key);
       }
     }
   }
