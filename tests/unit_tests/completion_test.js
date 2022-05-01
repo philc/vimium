@@ -1,7 +1,7 @@
-require("./test_helper.js");
-require("../../background_scripts/bg_utils.js");
-require("../../background_scripts/completion_engines.js");
-require("../../background_scripts/completion.js");
+import "./test_helper.js";
+import "../../background_scripts/bg_utils.js";
+import "../../background_scripts/completion_engines.js";
+import "../../background_scripts/completion.js";
 
 const hours = n => 1000 * 60 * 60 * n;
 
@@ -13,14 +13,13 @@ const filterCompleter = (completer, queryTerms) => {
 };
 
 context("bookmark completer", () => {
-  // TODO(philc): Move these out of setup.
   const bookmark3 = { title: "bookmark3", url: "bookmark3.com" };
   const bookmark2 = { title: "bookmark2", url: "bookmark2.com" };
   const bookmark1 = { title: "bookmark1", url: "bookmark1.com", children: [bookmark2] };
   let completer;
 
   setup(() => {
-    global.chrome.bookmarks =
+    window.chrome.bookmarks =
       {getTree: callback => callback([bookmark1])};
 
     completer = new BookmarkCompleter();
@@ -104,7 +103,7 @@ context("HistoryCache", () => {
       onVisitedListener = null;
       onVisitRemovedListener = null;
 
-      global.chrome.history = {
+      window.chrome.history = {
         search(options, callback) { return callback(history); },
         onVisited: { addListener: newListener => {
           onVisitedListener = newListener;
@@ -174,7 +173,7 @@ context("history completer", () => {
 
   setup(() => {
     completer = new HistoryCompleter();
-    global.chrome.history = {
+    window.chrome.history = {
       search: (options, callback) => callback([history1, history2]),
       onVisited: { addListener() {} },
       onVisitRemoved: { addListener() {} }
@@ -199,11 +198,11 @@ context("domain completer", () => {
   const history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(1) };
   const history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) };
   const undef = { title: "history2", url: "http://undefined.net", lastVisitTime: hours(1) };
-  let completor = null;
+  let completer = null;
 
   setup(() => {
     stub(HistoryCache, "use", onComplete => onComplete([history1, history2, undef]));
-    global.chrome.history = {
+    window.chrome.history = {
       onVisited: { addListener() {} },
       onVisitRemoved: { addListener() {} }
     };
@@ -243,7 +242,7 @@ context("domain completer (removing entries)", () => {
     stub(HistoryCache, "use", onComplete => onComplete([history1, history2, history3]));
     onVisitedListener = null;
     onVisitRemovedListener = null;
-    global.chrome.history = {
+    window.chrome.history = {
       onVisited: {
         addListener: newListener => {
           onVisitedListener = newListener;

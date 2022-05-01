@@ -1084,7 +1084,7 @@ HistoryCache.binarySearch = function(targetElement, array, compareFunction) {
     return middle;
 };
 
-Object.assign(global, {
+Object.assign(window, {
   Suggestion,
   BookmarkCompleter,
   MultiCompleter,
