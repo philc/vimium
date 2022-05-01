@@ -1,11 +1,11 @@
-require("./test_helper.js");
+import "./test_helper.js";
 
 // FIXME:
 // Would like to do:
 // require("../../background_scripts/marks.js");
 // But it looks like marks.js has never been included in a test before!
 // Temporary fix...
-global.Marks = {
+window.Marks = {
   create() { return true; },
   goto: {
     bind() { return true; }
@@ -13,13 +13,14 @@ global.Marks = {
 };
 
 Utils.getCurrentVersion = () => "1.44";
-require("../../lib/settings.js");
-require("../../lib/clipboard.js");
-require("../../background_scripts/bg_utils.js");
-require("../../background_scripts/exclusions.js");
-require("../../background_scripts/commands.js");
 
-const isEnabledForUrl = request => Exclusions.isEnabledForUrl(request.url);
+import "../../lib/settings.js";
+import "../../lib/clipboard.js";
+import "../../background_scripts/bg_utils.js";
+import "../../background_scripts/exclusions.js";
+import "../../background_scripts/commands.js";
+
+const isEnabledForUrl = (request) => Exclusions.isEnabledForUrl(request.url);
 
 // These tests cover only the most basic aspects of excluded URLs and passKeys.
 context("Excluded URLs and pass keys", () => {
