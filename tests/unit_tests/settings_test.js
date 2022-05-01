@@ -1,13 +1,12 @@
 import "./test_helper.js";
-
-Utils.isBackgroundPage = () => true;
-Utils.isExtensionPage = () => true;
-
 import "../../lib/settings.js";
 import "../../pages/options.js";
 
 context("settings", () => {
   setup(() => {
+    stub(Utils, "isBackgroundPage", returns(true));
+    stub(Utils, "isExtensionPage", returns(true));
+
     localStorage.clear();
     Settings.init();
     // Avoid running update hooks which include calls to outside of settings.
