@@ -1,17 +1,5 @@
 import "./test_helper.js";
 
-// FIXME:
-// Would like to do:
-// require("../../background_scripts/marks.js");
-// But it looks like marks.js has never been included in a test before!
-// Temporary fix...
-window.Marks = {
-  create() { return true; },
-  goto: {
-    bind() { return true; }
-  }
-};
-
 Utils.getCurrentVersion = () => "1.44";
 
 import "../../lib/settings.js";
