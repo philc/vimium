@@ -1266,7 +1266,7 @@ class HoverMode extends Mode {
   }
 }
 
-Object.assign(global, {
+Object.assign(window, {
   LinkHints,
   HintCoordinator,
   // Exported for tests.

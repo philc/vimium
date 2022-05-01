@@ -127,4 +127,4 @@ const Marks = {
   }
 };
 
-global.Marks = Marks;
+window.Marks = Marks;
