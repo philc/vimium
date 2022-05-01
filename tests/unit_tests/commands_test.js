@@ -1,11 +1,8 @@
 import "./test_helper.js";
 import "../../background_scripts/bg_utils.js";
-window.Settings = {postUpdateHooks: {}, get() { return ""; }, set() {}};
 import "../../lib/settings.js";
 import "../../lib/keyboard_utils.js";
 import "../../background_scripts/commands.js";
-
-window.KeyboardUtils = {platform: ""}; // TODO(philc): Remove this line.
 import "../../content_scripts/mode.js";
 import "../../content_scripts/mode_key_handler.js";
 // Include mode_normal to check that all commands have been implemented.
