@@ -10,8 +10,7 @@ import "../../pages/options.js";
 context("settings", () => {
   setup(() => {
     localStorage.clear();
-    // Point the settings cache to the new localStorage object.
-    Settings.cache = window.localStorage;
+    Settings.init();
     // Avoid running update hooks which include calls to outside of settings.
     Settings.postUpdateHooks = {};
   });
@@ -44,8 +43,8 @@ context("settings", () => {
 
 context("synced settings", () => {
   setup(() => {
-    // Point the settings cache to the new localStorage object.
-    Settings.cache = window.localStorage;
+    localStorage.clear();
+    Settings.init();
     // Avoid running update hooks which include calls to outside of settings.
     Settings.postUpdateHooks = {};
   });

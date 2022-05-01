@@ -14,6 +14,7 @@ const isEnabledForUrl = (request) => Exclusions.isEnabledForUrl(request.url);
 context("Excluded URLs and pass keys", () => {
 
   setup(() => {
+    Settings.init();
     Settings.set("exclusionRules",
       [
         { pattern: "http*://mail.google.com/*", passKeys: "" },
