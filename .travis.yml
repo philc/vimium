@@ -1,9 +1,14 @@
 sudo: false
-language: node_js
-node_js: "10"
+language: default
 before_install:
-  - npm install util
-  - npm install puppeteer
+  # - npm install util
+  # - npm install puppeteer
+  - curl -fsSL https://deno.land/x/install/install.sh | sh
+  - ls -l $HOME/.deno
+  - export DENO_INSTALL="$HOME/.deno"
+  - export PATH="$DENO_INSTALL/bin:$PATH"
+  - deno run https://deno.land/std/examples/welcome.ts
+  - PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@9.0.2/install.ts
 script: ./make.js test
 notifications:
   email: false
