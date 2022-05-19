@@ -111,5 +111,5 @@ class PassNextKeyMode extends Mode {
   }
 }
 
-global.InsertMode = InsertMode;
-global.PassNextKeyMode = PassNextKeyMode;
+window.InsertMode = InsertMode;
+window.PassNextKeyMode = PassNextKeyMode;

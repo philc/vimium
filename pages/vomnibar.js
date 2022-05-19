@@ -453,4 +453,4 @@ document.addEventListener("DOMContentLoaded", function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-global.Vomnibar = Vomnibar;
+window.Vomnibar = Vomnibar;

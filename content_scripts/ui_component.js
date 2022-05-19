@@ -175,4 +175,4 @@ class UIComponent {
   }
 }
 
-global.UIComponent = UIComponent;
+window.UIComponent = UIComponent;
