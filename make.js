@@ -58,7 +58,7 @@ function buildStorePackage() {
   const zipCommand = "cd dist/vimium && zip -r --filesync ";
 
   spawn("rm", ["-rf", "dist/vimium"]);
-  spawn("mkdir", ["--parents", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
+  spawn("mkdir", ["-p", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
   spawn("rsync", rsyncOptions);
 
   writeDistManifest(Object.assign({}, manifestContents, {
