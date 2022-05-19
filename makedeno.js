@@ -1,17 +1,88 @@
 #!/usr/bin/env deno run --allow-read --allow-write --allow-env --allow-net --allow-run --unstable
 // --unstable is required for Puppeteer.
-/*
- * This file is used like a Makefile.
- */
+// Usage: ./make.js command. Use -l to list commands.
+// This is a set of tasks for building and testing Vimium in development.
 import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
 import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
-import { delay } from 'https://deno.land/x/delay@v0.2.0/mod.ts';
-import { desc, run, task, sh } from "https://deno.land/x/drake@v1.5.1/mod.ts";
+import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@9.0.2/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
 
 const projectPath = new URL(".", import.meta.url).pathname;
+
+async function shell(procName, argsArray = []) {
+  // NOTE(philc): Does drake's `sh` function work on Windows? If so, that can replace this function.
+  if (Deno.build.os == "windows") {
+    // if win32, prefix arguments with "/c {original command}"
+    // e.g. "mkdir c:\git\vimium" becomes "cmd.exe /c mkdir c:\git\vimium"
+    optArray.unshift("/c", procName)
+    procName = "cmd.exe"
+  }
+  const p = Deno.run({ cmd: [procName].concat(argsArray) });
+  const status = await p.status();
+  if (!status.success)
+    throw new Error(`${procName} ${argsArray} exited with status ${status.code}`);
+}
+
+// Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/.
+async function buildStorePackage() {
+  const excludeList = [
+    "*.md",
+    ".*",
+    "CREDITS",
+    "MIT-LICENSE.txt",
+    "dist",
+    "make.js",
+    "node_modules",
+    "package-lock.json",
+    "test_harnesses",
+    "tests",
+  ];
+  const fileContents = await Deno.readTextFile("./manifest.json");
+  const manifestContents = JSON.parse(fileContents);
+  const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
+    ...excludeList.map((item) => ["--exclude", item])
+  );
+  const vimiumVersion = manifestContents["version"];
+  const writeDistManifest = async (manifestObject) => {
+    await Deno.writeTextFile("dist/vimium/manifest.json", JSON.stringify(manifestObject, null, 2));
+  };
+  // cd into "dist/vimium" before building the zip, so that the files in the zip don't each have the
+  // path prefix "dist/vimium".
+  // --filesync ensures that files in the archive which are no longer on disk are deleted. It's equivalent to
+  // removing the zip file before the build.
+  const zipCommand = "cd dist/vimium && zip -r --filesync ";
+
+  await shell("rm", ["-rf", "dist/vimium"]);
+  await shell("mkdir", ["-p", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
+  await shell("rsync", rsyncOptions);
+
+  writeDistManifest(Object.assign({}, manifestContents, {
+    // Chrome considers this key invalid in manifest.json, so we add it only during the Firefox build phase.
+    browser_specific_settings: {
+      gecko: {
+        strict_min_version: "62.0"
+      },
+    },
+  }));
+  await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
+
+  // Build the Chrome Store package. Chrome does not require the clipboardWrite permission.
+  const permissions = manifestContents.permissions.filter((p) => p != "clipboardWrite");
+  writeDistManifest(Object.assign({}, manifestContents, {
+    permissions,
+  }));
+  await shell("bash", ["-c", `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`]);
+
+  // Build the Chrome Store dev package.
+  writeDistManifest(Object.assign({}, manifestContents, {
+    name: "Vimium Canary",
+    description: "This is the development branch of Vimium (it is beta software).",
+    permissions,
+  }));
+  await shell("bash", ["-c", `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`]);
+}
 
 const runUnitTests = async () => {
   // Import every test file.
@@ -82,14 +153,30 @@ const runDomTests = async () => {
   })();
 };
 
-// task("test", [], async () => {
-//   const failed = await runDomTests();
-//   console.log("Test task");
-//   if (failed > 0)
-//     console.log("Failed:", failed);
-// });
+desc("Run unit tests");
+task("test-unit", [], async () => {
+  const failed = await runUnitTests();
+  if (failed > 0)
+    console.log("Failed:", failed);
+});
 
-// await runUnitTests();
-// await runDomTests();
+desc("Run DOM tests");
+task("test-dom", [], async () => {
+  const failed = await runDomTests();
+  if (failed > 0)
+    console.log("Failed:", failed);
+});
 
-// run();
+desc("Run unit and DOM tests");
+task("test", [], async () => {
+  const failed = (await runUnitTests()) + (await runDomTests());
+  if (failed > 0)
+    console.log("Failed:", failed);
+});
+
+desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
+task("package", [], async () => {
+  await buildStorePackage();
+});
+
+run();
