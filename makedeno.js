@@ -43,12 +43,13 @@ const runDomTests = async () => {
     page.on('requestfailed', request =>
       console.log(console.log(`${request.failure().errorText} ${request.url()}`)));
 
-    // We're injecting the contents of shoulda.js into the page. We'll munge the file contents and assign it
-    // to a string, and then have the page itself document.write that string during load. This is a painful
-    // workaround because shouldaJs is an ECMASCript module, and those cannot be loaded over file:///
-    // protocols; this is a security restriction. This test suite loads the dom_tests.html page from the local
-    // file system. Another workaround would be to spin up a local file server here and load dom_tests from
-    // the network. Discussion: https://bugs.chromium.org/p/chromium/issues/detail?id=824651
+    // Shoulda.js is an ECMAScript module, and those cannot be loaded over file:/// protocols due to a Chrome
+    // security restriction, and this test suite loads the dom_tests.html page from the local file system. To
+    // (painfully) work around this, we're injecting the contents of shoulda.js into the page. We munge the
+    // file contents and assign it to a string (`shouldaJsContents`), and then have the page itself
+    // document.write that string during load (the document.write call is in dom_tests.html).
+    // Another workaround would be to spin up a local file server here and load dom_tests from the network.
+    // Discussion: https://bugs.chromium.org/p/chromium/issues/detail?id=824651
     let shouldaJsContents =
         (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
         "\n" +
@@ -56,15 +57,13 @@ const runDomTests = async () => {
         "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
 
     // Remove the `export` statement from the shoulda.js module. Because we're using document.write to add
-    // this, an export statement will cause a JS error and halt parsing.
+    // this, an export statement will cause a JS error and halt further parsing.
     shouldaJsContents = shouldaJsContents.replace(/export {[^}]+}/, "");
 
-    await page.evaluateOnNewDocument(
-      (content) => {
+    await page.evaluateOnNewDocument((content) => {
         window.shouldaJsContents = content;
       },
-      shouldaJsContents
-    );
+      shouldaJsContents);
 
     page.goto("file://" + testFile);
 
@@ -75,8 +74,9 @@ const runDomTests = async () => {
       return shoulda.getStats().failed;
     });
 
-    // NOTE(philc): At one point in development, I noticed that the tests would not finish before output
-    // suddenly paused, so it may be racy. If occurs again, we may need to add "await delay(200)".
+    // NOTE(philc): At one point in development, I noticed that the output from Deno would suddenly pause,
+    // prior to the tests fully finishing, so closing the browser here may be racy. If it occurs again, we may
+    // need to add "await delay(200)".
     await browser.close();
     return testsFailed;
   })();
@@ -89,7 +89,7 @@ const runDomTests = async () => {
 //     console.log("Failed:", failed);
 // });
 
-await runUnitTests();
+// await runUnitTests();
 // await runDomTests();
 
 // run();
