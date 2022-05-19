@@ -58,4 +58,4 @@ var UIComponentServer = {
   })()
 };
 
-global.UIComponentServer = UIComponentServer;
+window.UIComponentServer = UIComponentServer;

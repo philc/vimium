@@ -2,11 +2,11 @@
 // This content script must be run prior to domReady so that we perform some operations very early.
 //
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
+let root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
 // On Firefox, sometimes the variables assigned to window are lost (bug 1408996), so we reinstall them.
 // NOTE(mrmr1993): This bug leads to catastrophic failure (ie. nothing works and errors abound).
 DomUtils.documentReady(function() {
-  if (typeof global === 'undefined' || global === null) { return Object.assign(window, root); }
+  Object.assign(window, root);
 });
 
 let isEnabledForUrl = true;

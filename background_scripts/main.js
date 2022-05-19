@@ -26,11 +26,11 @@ chrome.runtime.onInstalled.addListener(function({ reason }) {
 });
 
 const frameIdsForTab = {};
-global.portsForTab = {};
-global.urlForTab = {};
+window.portsForTab = {};
+window.urlForTab = {};
 
 // This is exported for use by "marks.js".
-global.tabLoadedHandlers = {}; // tabId -> function()
+window.tabLoadedHandlers = {}; // tabId -> function()
 
 // A secret, available only within the current instantiation of Vimium, for the duration of the browser
 // session. The secret is a generated strong random string.
@@ -716,4 +716,4 @@ chrome.runtime.onInstalled.addListener(function({reason}) {
     chrome.storage.local.set({installDate: new Date().toString()});
 });
 
-Object.assign(global, {TabOperations, Frames});
+Object.assign(window, {TabOperations, Frames});

@@ -228,4 +228,4 @@ ${this.cssSelector} {
   }
 }
 
-global.HUD = HUD;
+window.HUD = HUD;

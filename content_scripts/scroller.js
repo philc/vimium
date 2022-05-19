@@ -417,4 +417,4 @@ var specialScrollingElementMap = {
   'web.telegram.org': '.MessageList',
 };
 
-global.Scroller = Scroller;
+window.Scroller = Scroller;

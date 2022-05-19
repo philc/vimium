@@ -347,5 +347,5 @@ var selectFoundInputElement = function() {
   }
 };
 
-global.PostFindMode = PostFindMode;
-global.FindMode = FindMode;
+window.PostFindMode = PostFindMode;
+window.FindMode = FindMode;
