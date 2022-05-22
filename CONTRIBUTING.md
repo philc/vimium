@@ -39,8 +39,7 @@ the user's current browsing habits.
 
 **Goals of the maintainers**
 
-The maintainers of Vimium are @smblott-github and @philc. We have limited bandwidth, which influences which
-PRs we can review and merge.
+The maintainers of Vimium have limited bandwidth, which influences which PRs we can review and merge.
 
 Our goals are generally to keep Vimium small, maintainable, and really nail the broad appeal use cases. This
 is in contrast to adding and maintaining an increasing number of complex or niche features. We recommend those
