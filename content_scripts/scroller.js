@@ -280,7 +280,10 @@ const CoreScroller = {
 
       if (delta && performScroll(element, direction, sign * delta)) {
         totalDelta += delta;
-        return requestAnimationFrame(animate);
+
+        setTimeout(() => { requestAnimationFrame(animate) }, 10);
+        return 1
+        // return requestAnimationFrame(animate);
       } else {
         // We're done.
         handlerStack.remove(cancelEventListener);
