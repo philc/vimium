@@ -1,7 +1,7 @@
 let vomnibarFrame = null;
 Vomnibar.init();
 
-context("Keep selection within bounds",
+context("Keep selection within bounds", () => {
 
   setup(() => {
     this.completions = [];
@@ -40,7 +40,7 @@ context("Keep selection within bounds",
     this.completions = [];
     ui.update(true);
     assert.equal(-1, ui.selection);
-  }),
+  });
 
   should("set selection to position 0 for bookmark completion if possible", () => {
     Vomnibar.activateBookmarks();
@@ -57,7 +57,7 @@ context("Keep selection within bounds",
     this.completions = [];
     ui.update(true);
     assert.equal(-1, ui.selection);
-  }),
+  });
 
   should("keep selection within bounds", () => {
     Vomnibar.activate(0, {options: {}});
@@ -81,4 +81,4 @@ context("Keep selection within bounds",
     ui.update(true);
     assert.equal(-1, ui.selection);
   })
-);
+});

@@ -2,8 +2,7 @@
 // Mock the Chrome extension API.
 //
 
-let root = window;
-root.chromeMessages = [];
+window.chromeMessages = [];
 
 document.hasFocus = () => true;
 
@@ -13,7 +12,7 @@ const fakeManifest = {
   version: "1.51"
 };
 
-root.chrome = {
+window.chrome = {
   runtime: {
     connect() {
       return {

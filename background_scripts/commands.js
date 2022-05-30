@@ -460,4 +460,4 @@ const commandDescriptions = {
 
 Commands.init();
 
-global.Commands = Commands;
+window.Commands = Commands;

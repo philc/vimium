@@ -27,6 +27,11 @@
       }
     </style>
     <link rel="stylesheet" type="text/css" href="../../content_scripts/vimium.css" />
+    <script type="text/javascript">
+      // We're injecting the contents of shoulda.js here, rather than loading it from a separate file, because
+      // Chrome security won't allow loading local files as ECMAScript modules. See make.js for more details.
+      document.write(`<script type='text/javascript'>` + window.shouldaJsContents + "</scr" + "ipt>");
+    </script>
     <script type="text/javascript" src="chrome.js"></script>
     <script type="text/javascript" src="../../lib/utils.js"></script>
     <script type="text/javascript" src="../../lib/keyboard_utils.js"></script>
@@ -51,7 +56,6 @@
     <script type="text/javascript" src="../../content_scripts/mode_normal.js"></script>
     <script type="text/javascript" src="../../content_scripts/vimium_frontend.js"></script>
 
-    <script type="text/javascript" src="../vendor/shoulda.js"></script>
     <script type="text/javascript" src="dom_test_setup.js"></script>
     <script type="text/javascript" src="dom_tests.js"></script>
     <script type="text/javascript" src="dom_utils_test.js"></script>

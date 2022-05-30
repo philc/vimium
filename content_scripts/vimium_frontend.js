@@ -2,11 +2,11 @@
 // This content script must be run prior to domReady so that we perform some operations very early.
 //
 
-root = typeof exports !== 'undefined' && exports !== null ? exports : (window.root != null ? window.root : (window.root = {}));
+const root = {};
 // On Firefox, sometimes the variables assigned to window are lost (bug 1408996), so we reinstall them.
 // NOTE(mrmr1993): This bug leads to catastrophic failure (ie. nothing works and errors abound).
 DomUtils.documentReady(function() {
-  if (typeof global === 'undefined' || global === null) { return Object.assign(window, root); }
+  Object.assign(window, root);
 });
 
 let isEnabledForUrl = true;
@@ -207,6 +207,7 @@ const initializePreDomReady = function() {
 
 // Wrapper to install event listeners.  Syntactic sugar.
 const installListener = (element, event, callback) => element.addEventListener(event, forTrusted(function() {
+  // TODO(philc): I think this workaround can be removed?
   if (typeof global === 'undefined' || global === null) { // See #2800.
     Object.assign(window, root);
   }
@@ -269,8 +270,11 @@ var Frame = {
     return HintCoordinator[request.messageType](request);
   },
 
-  registerFrameId({chromeFrameId}) {
-    frameId = (root.frameId = (window.frameId = chromeFrameId));
+  registerFrameId(request) {
+    frameId = (root.frameId = (window.frameId = request.chromeFrameId));
+    if (Utils.isFirefox()) {
+      Utils.firefoxVersion = () => request.firefoxVersion
+    }
     // We register a frame immediately only if it is focused or its window isn't tiny.  We register tiny
     // frames later, when necessary.  This affects focusFrame() and link hints.
     if (windowIsFocused() || !DomUtils.windowIsTooSmall()) {

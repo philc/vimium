@@ -702,8 +702,8 @@ class MultiCompleter {
 
   cancel(port) {
     for (let c of this.completers)
-      if (c.refresh)
-        c.refresh(port);
+      if (c.cancel)
+        c.cancel(port);
   }
 
   filter(request, onComplete) {
@@ -1084,7 +1084,7 @@ HistoryCache.binarySearch = function(targetElement, array, compareFunction) {
     return middle;
 };
 
-Object.assign(global, {
+Object.assign(window, {
   Suggestion,
   BookmarkCompleter,
   MultiCompleter,

@@ -1,8 +1,6 @@
 Vimium - The Hacker's Browser
 =============================
 
-[![Build Status](https://travis-ci.org/philc/vimium.svg?branch=master)](https://travis-ci.org/philc/vimium)
-
 Vimium is a browser extension that provides keyboard-based navigation and control of the web in the spirit of
 the Vim editor.
 
@@ -139,7 +137,7 @@ You can add comments to key mappings by starting a line with `"` or `#`.
 
 The following special keys are available for mapping:
 
-- `<c-*>`, `<a-*>`, `<m-*>` for ctrl, alt, and meta (command on Mac) respectively with any key. Replace `*`
+- `<c-*>`, `<a-*>`, `<s-*>`, `<m-*>` for ctrl, alt, shift, and meta (command on Mac) respectively with any key. Replace `*`
   with the key of choice.
 - `<left>`, `<right>`, `<up>`, `<down>` for the arrow keys.
 - `<f1>` through `<f12>` for the function keys.

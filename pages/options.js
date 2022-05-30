@@ -439,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 //
 // Backup and restore.
-if (global.DomUtils) { // global.DomUtils is not defined when running our tests.
+if (window.DomUtils) { // window.DomUtils is not defined when running our tests.
   DomUtils.documentReady(function() {
     // Only initialize backup/restore on the options page (not the popup).
     if (location.pathname !== "/pages/options.html")
@@ -505,5 +505,5 @@ if (global.DomUtils) { // global.DomUtils is not defined when running our tests.
 }
 
 // Exported for use by our tests.
-global.Options = Options
-global.isVimiumOptionsPage = true
+window.Options = Options
+window.isVimiumOptionsPage = true

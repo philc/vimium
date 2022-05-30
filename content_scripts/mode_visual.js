@@ -510,5 +510,5 @@ class CaretMode extends VisualMode {
   }
 }
 
-global.VisualMode = VisualMode;
-global.VisualLineMode = VisualLineMode;
+window.VisualMode = VisualMode;
+window.VisualLineMode = VisualLineMode;
