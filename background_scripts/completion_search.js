@@ -186,14 +186,14 @@ const CompletionSearch = {
         });
       }
 
-          // ... then use the suggestions.
-          this.inTransit[completionCacheKey].use(suggestions => {
-            this.mostRecentSearchUrl = searchUrl;
-            this.mostRecentQuery = query;
-            this.mostRecentSuggestions = suggestions;
-            // TODO(philc): Is this return necessary?
-            return callback(this.completionCache.set(completionCacheKey, suggestions));
-          });
+      // ... then use the suggestions.
+      this.inTransit[completionCacheKey].use(suggestions => {
+        this.mostRecentSearchUrl = searchUrl;
+        this.mostRecentQuery = query;
+        this.mostRecentSuggestions = suggestions;
+        // TODO(philc): Is this return necessary?
+        return callback(this.completionCache.set(completionCacheKey, suggestions));
+      });
     })));
   },
 
