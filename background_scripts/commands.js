@@ -429,7 +429,7 @@ const commandDescriptions = {
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }],
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }],
   removeTab: ["Close current tab", { background: true,
-                                     repeatLimit: (chrome.session ? chrome.session.MAX_SESSION_RESULTS : null) || 25 }],
+                                     repeatLimit: (chrome.sessions ? chrome.sessions.MAX_SESSION_RESULTS : null) || 25 }],
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }],
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }],
