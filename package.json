@@ -1,0 +1,16 @@
+{
+    "name": "vimium",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "fmt": "dprint fmt",
+        "tsc": "tsc ./lib/test.ts"
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+        "@types/chrome": "^0.0.193",
+        "dprint": "^0.30.0",
+        "typescript": "^4.0.0"
+    }
+}

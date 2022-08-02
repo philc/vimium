@@ -17,7 +17,7 @@ class Option {
     this.field = field;
     this.onUpdated = onUpdated;
     this.element = $(this.field);
-    this.element.addEventListener("change", this.onUpdated);
+    this.element.addEventListener('change', this.onUpdated);
     Option.all.push(this);
   }
 
@@ -31,8 +31,9 @@ class Option {
   // Write this option's new value back to localStorage, if necessary.
   save() {
     const value = this.readValueFromElement();
-    if (JSON.stringify(value) !== JSON.stringify(this.previous))
-      bgSettings.set(this.field, (this.previous = value));
+    if (JSON.stringify(value) !== JSON.stringify(this.previous)) {
+      bgSettings.set(this.field, this.previous = value);
+    }
   }
 
   restoreToDefault() {
@@ -51,57 +52,72 @@ class Option {
   }
 }
 
-  // Abstract method; only implemented in sub-classes.
-  // Populate the option's DOM element (@element) with the setting's current value.
-  // populateElement: (value) -> DO_SOMETHING
+// Abstract method; only implemented in sub-classes.
+// Populate the option's DOM element (@element) with the setting's current value.
+// populateElement: (value) -> DO_SOMETHING
 
-  // Abstract method; only implemented in sub-classes.
-  // Extract the setting's new value from the option's DOM element (@element).
-  // readValueFromElement: -> RETURN_SOMETHING
+// Abstract method; only implemented in sub-classes.
+// Extract the setting's new value from the option's DOM element (@element).
+// readValueFromElement: -> RETURN_SOMETHING
 
 Option.all = []; // Static. Array of all options.
 Option.onSaveCallbacks = [];
 
 class NumberOption extends Option {
-  populateElement(value) { this.element.value = value; }
-  readValueFromElement() { return parseFloat(this.element.value); }
+  populateElement(value) {
+    this.element.value = value;
+  }
+  readValueFromElement() {
+    return parseFloat(this.element.value);
+  }
 }
 
 class TextOption extends Option {
   constructor(...args) {
     super(...Array.from(args || []));
-    this.element.addEventListener("input", this.onUpdated);
+    this.element.addEventListener('input', this.onUpdated);
   }
-  populateElement(value) { this.element.value = value; }
-  readValueFromElement() { return this.element.value.trim(); }
+  populateElement(value) {
+    this.element.value = value;
+  }
+  readValueFromElement() {
+    return this.element.value.trim();
+  }
 }
 
 class NonEmptyTextOption extends Option {
   constructor(...args) {
     super(...Array.from(args || []));
-    this.element.addEventListener("input", this.onUpdated);
+    this.element.addEventListener('input', this.onUpdated);
   }
 
-  populateElement(value) { this.element.value = value; }
+  populateElement(value) {
+    this.element.value = value;
+  }
   // If the new value is not empty, then return it. Otherwise, restore the default value.
   readValueFromElement() {
     const value = this.element.value.trim();
-    if (value)
+    if (value) {
       return value;
-    else
+    } else {
       return this.restoreToDefault();
+    }
   }
 }
 
 class CheckBoxOption extends Option {
-  populateElement(value) { this.element.checked = value; }
-  readValueFromElement() { return this.element.checked; }
+  populateElement(value) {
+    this.element.checked = value;
+  }
+  readValueFromElement() {
+    return this.element.checked;
+  }
 }
 
 class ExclusionRulesOption extends Option {
   constructor(...args) {
     super(...Array.from(args || []));
-    $("exclusionAddButton").addEventListener("click", event => {
+    $('exclusionAddButton').addEventListener('click', event => {
       this.addRule();
     });
   }
@@ -110,11 +126,12 @@ class ExclusionRulesOption extends Option {
   // options page, there is no current URL, so there is no initial pattern.  This is the default.  On the popup
   // page (see ExclusionRulesOnPopupOption), the pattern is pre-populated based on the current tab's URL.
   addRule(pattern) {
-    if (pattern == null)
-      pattern = "";
-    const element = this.appendRule({ pattern, passKeys: "" });
+    if (pattern == null) {
+      pattern = '';
+    }
+    const element = this.appendRule({ pattern, passKeys: '' });
     this.getPattern(element).focus();
-    const exclusionScrollBox = $("exclusionScrollBox");
+    const exclusionScrollBox = $('exclusionScrollBox');
     exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight;
     this.onUpdated();
     return element;
@@ -122,10 +139,11 @@ class ExclusionRulesOption extends Option {
 
   populateElement(rules) {
     // For the case of restoring a backup, we first have to remove existing rules.
-    const exclusionRules = $("exclusionRules");
-    while (exclusionRules.rows[1]) { exclusionRules.deleteRow(1); }
-    for (let rule of rules)
+    const exclusionRules = $('exclusionRules');
+    while (exclusionRules.rows[1]) exclusionRules.deleteRow(1);
+    for (let rule of rules) {
       this.appendRule(rule);
+    }
   }
 
   // Append a row for a new rule.  Return the newly-added element.
@@ -134,36 +152,42 @@ class ExclusionRulesOption extends Option {
     const content = document.querySelector('#exclusionRuleTemplate').content;
     const row = document.importNode(content, true);
 
-    for (let field of ["pattern", "passKeys"]) {
+    for (let field of ['pattern', 'passKeys']) {
       element = row.querySelector(`.${field}`);
       element.value = rule[field];
-      for (let event of [ "input", "change" ])
+      for (let event of ['input', 'change']) {
         element.addEventListener(event, this.onUpdated);
+      }
     }
 
-    this.getRemoveButton(row).addEventListener("click", event => {
+    this.getRemoveButton(row).addEventListener('click', event => {
       rule = event.target.parentNode.parentNode;
       rule.parentNode.removeChild(rule);
       this.onUpdated();
     });
 
     this.element.appendChild(row);
-    return this.element.children[this.element.children.length-1];
+    return this.element.children[this.element.children.length - 1];
   }
 
   readValueFromElement() {
-    const rules =
-      Array.from(this.element.getElementsByClassName("exclusionRuleTemplateInstance")).map((element) => ({
-        pattern: this.getPattern(element).value.trim(),
-        passKeys: this.getPassKeys(element).value.trim()
-      }));
+    const rules = Array.from(this.element.getElementsByClassName('exclusionRuleTemplateInstance')).map((element) => ({
+      pattern: this.getPattern(element).value.trim(),
+      passKeys: this.getPassKeys(element).value.trim(),
+    }));
     return rules.filter(rule => rule.pattern);
   }
 
   // Accessors for the three main sub-elements of an "exclusionRuleTemplateInstance".
-  getPattern(element) { return element.querySelector(".pattern"); }
-  getPassKeys(element) { return element.querySelector(".passKeys"); }
-  getRemoveButton(element) { return element.querySelector(".exclusionRemoveButton"); }
+  getPattern(element) {
+    return element.querySelector('.pattern');
+  }
+  getPassKeys(element) {
+    return element.querySelector('.passKeys');
+  }
+  getRemoveButton(element) {
+    return element.querySelector('.exclusionRemoveButton');
+  }
 }
 
 // ExclusionRulesOnPopupOption is ExclusionRulesOption, extended with some UI tweeks suitable for use in the
@@ -188,9 +212,10 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
   populateElement(rules) {
     let element;
     super.populateElement(rules);
-    const elements = this.element.getElementsByClassName("exclusionRuleTemplateInstance");
-    for (element of Array.from(elements))
+    const elements = this.element.getElementsByClassName('exclusionRuleTemplateInstance');
+    for (element of Array.from(elements)) {
       this.activatePatternWatcher(element);
+    }
 
     let haveMatch = false;
     for (element of Array.from(elements)) {
@@ -202,19 +227,20 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
         element.style.display = 'none';
       }
     }
-    if (!haveMatch)
+    if (!haveMatch) {
       return this.addRule();
+    }
   }
 
   // Provide visual feedback (make it red) when a pattern does not match the current tab's URL.
   activatePatternWatcher(element) {
     const patternElement = element.children[0].firstChild;
-    patternElement.addEventListener("keyup", () => {
+    patternElement.addEventListener('keyup', () => {
       if (this.url.match(bgExclusions.RegexpCache.get(patternElement.value))) {
-        patternElement.title = (patternElement.style.color = "");
+        patternElement.title = patternElement.style.color = '';
       } else {
-        patternElement.style.color = "red";
-        patternElement.title = "Red text means that the pattern does not\nmatch the current URL.";
+        patternElement.style.color = 'red';
+        patternElement.title = 'Red text means that the pattern does not\nmatch the current URL.';
       }
     });
   }
@@ -226,13 +252,13 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
       // The common use case is to disable Vimium at the domain level.
       // Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
       // Note: IPV6 host addresses will contain "[" and "]" (which must be escaped).
-      const hostname = this.url.split("/",3).slice(1).join("/").replace("[", "\\[").replace("]", "\\]");
-      return "https?:/" + hostname + "/*";
+      const hostname = this.url.split('/', 3).slice(1).join('/').replace('[', '\\[').replace(']', '\\]');
+      return 'https?:/' + hostname + '/*';
     } else if (/^[a-z]{3,}:\/\/./.test(this.url)) {
       // Anything else which seems to be a URL.
-      return this.url.split("/",3).join("/") + "/*";
+      return this.url.split('/', 3).join('/') + '/*';
     } else {
-      return this.url + "*";
+      return this.url + '*';
     }
   }
 }
@@ -255,75 +281,76 @@ const Options = {
   grabBackFocus: CheckBoxOption,
   searchEngines: TextOption,
   searchUrl: NonEmptyTextOption,
-  userDefinedLinkHintCss: NonEmptyTextOption
+  userDefinedLinkHintCss: NonEmptyTextOption,
 };
 
 const initOptionsPage = function() {
   const onUpdated = function() {
-    $("saveOptions").removeAttribute("disabled");
-    $("saveOptions").textContent = "Save Changes";
+    $('saveOptions').removeAttribute('disabled');
+    $('saveOptions').textContent = 'Save Changes';
   };
 
   // Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
   const maintainLinkHintsView = function() {
-    const hide = el => el.style.display = "none";
-    const show = el => el.style.display = "table-row";
-    if ($("filterLinkHints").checked) {
-      hide($("linkHintCharactersContainer"));
-      show($("linkHintNumbersContainer"));
-      show($("waitForEnterForFilteredHintsContainer"));
+    const hide = el => el.style.display = 'none';
+    const show = el => el.style.display = 'table-row';
+    if ($('filterLinkHints').checked) {
+      hide($('linkHintCharactersContainer'));
+      show($('linkHintNumbersContainer'));
+      show($('waitForEnterForFilteredHintsContainer'));
     } else {
-      show($("linkHintCharactersContainer"));
-      hide($("linkHintNumbersContainer"));
-      hide($("waitForEnterForFilteredHintsContainer"));
+      show($('linkHintCharactersContainer'));
+      hide($('linkHintNumbersContainer'));
+      hide($('waitForEnterForFilteredHintsContainer'));
     }
   };
 
   const maintainAdvancedOptions = function() {
-    if (bgSettings.get("optionsPage_showAdvancedOptions")) {
-      $("advancedOptions").style.display = "table-row-group";
-      return $("advancedOptionsButton").textContent = "Hide Advanced Options";
+    if (bgSettings.get('optionsPage_showAdvancedOptions')) {
+      $('advancedOptions').style.display = 'table-row-group';
+      return $('advancedOptionsButton').textContent = 'Hide Advanced Options';
     } else {
-      $("advancedOptions").style.display = "none";
-      return $("advancedOptionsButton").textContent = "Show Advanced Options";
+      $('advancedOptions').style.display = 'none';
+      return $('advancedOptionsButton').textContent = 'Show Advanced Options';
     }
   };
   maintainAdvancedOptions();
 
   const toggleAdvancedOptions = function(event) {
-    bgSettings.set("optionsPage_showAdvancedOptions", !bgSettings.get("optionsPage_showAdvancedOptions"));
+    bgSettings.set('optionsPage_showAdvancedOptions', !bgSettings.get('optionsPage_showAdvancedOptions'));
     maintainAdvancedOptions();
-    $("advancedOptionsButton").blur();
+    $('advancedOptionsButton').blur();
     event.preventDefault();
   };
 
   const activateHelpDialog = function() {
-    HelpDialog.toggle({showAllCommandDetails: true});
+    HelpDialog.toggle({ showAllCommandDetails: true });
   };
 
   const saveOptions = function() {
-    $("linkHintCharacters").value = $("linkHintCharacters").value.toLowerCase();
+    $('linkHintCharacters').value = $('linkHintCharacters').value.toLowerCase();
     Option.saveOptions();
-    $("saveOptions").disabled = true;
-    $("saveOptions").textContent = "Saved";
+    $('saveOptions').disabled = true;
+    $('saveOptions').textContent = 'Saved';
   };
 
-  $("saveOptions").addEventListener("click", saveOptions);
-  $("advancedOptionsButton").addEventListener("click", toggleAdvancedOptions);
-  $("showCommands").addEventListener("click", activateHelpDialog);
-  $("filterLinkHints").addEventListener("click", maintainLinkHintsView);
+  $('saveOptions').addEventListener('click', saveOptions);
+  $('advancedOptionsButton').addEventListener('click', toggleAdvancedOptions);
+  $('showCommands').addEventListener('click', activateHelpDialog);
+  $('filterLinkHints').addEventListener('click', maintainLinkHintsView);
 
-  for (let element of Array.from(document.getElementsByClassName("nonEmptyTextOption"))) {
-    element.className = element.className + " example info";
-    element.textContent = "Leave empty to reset this option.";
+  for (let element of Array.from(document.getElementsByClassName('nonEmptyTextOption'))) {
+    element.className = element.className + ' example info';
+    element.textContent = 'Leave empty to reset this option.';
   }
 
   window.onbeforeunload = function() {
-    if (!$("saveOptions").disabled)
-      return "You have unsaved changes to options.";
+    if (!$('saveOptions').disabled) {
+      return 'You have unsaved changes to options.';
+    }
   };
 
-  document.addEventListener("keyup", function(event) {
+  document.addEventListener('keyup', function(event) {
     if (event.ctrlKey && (event.keyCode === 13)) {
       if (document && document.activeElement && document.activeElement.blur) {
         document.activeElement.blur();
@@ -346,7 +373,7 @@ const initPopupPage = function() {
   chrome.tabs.query({ active: true, currentWindow: true }, function(...args) {
     const [tab] = Array.from(args[0]);
     let exclusions = null;
-    document.getElementById("optionsLink").setAttribute("href", chrome.runtime.getURL("pages/options.html"));
+    document.getElementById('optionsLink').setAttribute('href', chrome.runtime.getURL('pages/options.html'));
 
     const tabPorts = chrome.extension.getBackgroundPage().portsForTab[tab.id];
     if (!tabPorts || !(Object.keys(tabPorts).length > 0)) {
@@ -375,29 +402,30 @@ const initPopupPage = function() {
 
     const updateState = function() {
       const rule = bgExclusions.getRule(url, exclusions.readValueFromElement());
-      $("state").innerHTML = "Vimium will " +
-        (rule && rule.passKeys ?
-         `exclude <span class='code'>${rule.passKeys}</span>`
-         : (rule ? "be disabled" : "be enabled"));
+      $('state').innerHTML = 'Vimium will '
+        + (rule && rule.passKeys
+          ? `exclude <span class='code'>${rule.passKeys}</span>`
+          : (rule ? 'be disabled' : 'be enabled'));
     };
 
     const onUpdated = function() {
-      $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close.";
-      $("saveOptions").removeAttribute("disabled");
-      $("saveOptions").textContent = "Save Changes";
-      if (exclusions)
+      $('helpText').innerHTML = 'Type <strong>Ctrl-Enter</strong> to save and close.';
+      $('saveOptions').removeAttribute('disabled');
+      $('saveOptions').textContent = 'Save Changes';
+      if (exclusions) {
         return updateState();
+      }
     };
 
     const saveOptions = function() {
       Option.saveOptions();
-      $("saveOptions").textContent = "Saved";
-      $("saveOptions").disabled = true;
+      $('saveOptions').textContent = 'Saved';
+      $('saveOptions').disabled = true;
     };
 
-    $("saveOptions").addEventListener("click", saveOptions);
+    $('saveOptions').addEventListener('click', saveOptions);
 
-    document.addEventListener("keyup", function(event) {
+    document.addEventListener('keyup', function(event) {
       if (event.ctrlKey && (event.keyCode === 13)) {
         saveOptions();
         window.close();
@@ -405,31 +433,34 @@ const initPopupPage = function() {
     });
 
     // Populate options. Just one, here.
-    exclusions = new ExclusionRulesOnPopupOption(url, "exclusionRules", onUpdated);
+    exclusions = new ExclusionRulesOnPopupOption(url, 'exclusionRules', onUpdated);
     exclusions.fetch();
 
     updateState();
-    document.addEventListener("keyup", updateState);
+    document.addEventListener('keyup', updateState);
   });
 
   // Install version number.
   const manifest = chrome.runtime.getManifest();
-  $("versionNumber").textContent = manifest.version;
+  $('versionNumber').textContent = manifest.version;
 };
-
 
 //
 // Initialization.
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
   const xhr = new XMLHttpRequest();
   xhr.open('GET', chrome.extension.getURL('pages/exclusions.html'), true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
-      $("exclusionScrollBox").innerHTML = xhr.responseText;
+      $('exclusionScrollBox').innerHTML = xhr.responseText;
       switch (location.pathname) {
-        case "/pages/options.html": initOptionsPage(); break;
-        case "/pages/popup.html": initPopupPage(); break;
+        case '/pages/options.html':
+          initOptionsPage();
+          break;
+        case '/pages/popup.html':
+          initPopupPage();
+          break;
       }
     }
   };
@@ -442,68 +473,72 @@ document.addEventListener("DOMContentLoaded", function() {
 if (window.DomUtils) { // window.DomUtils is not defined when running our tests.
   DomUtils.documentReady(function() {
     // Only initialize backup/restore on the options page (not the popup).
-    if (location.pathname !== "/pages/options.html")
+    if (location.pathname !== '/pages/options.html') {
       return;
+    }
 
     let restoreSettingsVersion = null;
 
-  const populateBackupLinkUrl = function() {
-    const backup = {settingsVersion: bgSettings.get("settingsVersion")};
-    for (let option of Array.from(Option.all))
-      backup[option.field] = option.readValueFromElement();
+    const populateBackupLinkUrl = function() {
+      const backup = { settingsVersion: bgSettings.get('settingsVersion') };
+      for (let option of Array.from(Option.all)) {
+        backup[option.field] = option.readValueFromElement();
+      }
 
-    // Create the blob in the background page so it isn't garbage collected when the page closes in FF.
-    const bgWin = chrome.extension.getBackgroundPage();
-    const blob = new bgWin.Blob([ JSON.stringify(backup, null, 2) + "\n" ]);
-    $("backupLink").href = bgWin.URL.createObjectURL(blob);
-  };
+      // Create the blob in the background page so it isn't garbage collected when the page closes in FF.
+      const bgWin = chrome.extension.getBackgroundPage();
+      const blob = new bgWin.Blob([JSON.stringify(backup, null, 2) + '\n']);
+      $('backupLink').href = bgWin.URL.createObjectURL(blob);
+    };
 
-  $("backupLink").addEventListener("mousedown", populateBackupLinkUrl, true);
+    $('backupLink').addEventListener('mousedown', populateBackupLinkUrl, true);
 
-  $("chooseFile").addEventListener("change", function(event) {
-    if (document.activeElement)
-      document.activeElement.blur();
+    $('chooseFile').addEventListener('change', function(event) {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
 
-    const files = event.target.files;
-    if (files.length === 1) {
-      const file = files[0];
-      const reader = new FileReader;
-      reader.readAsText(file);
-      reader.onload = function(event) {
-        let backup;
-        try {
-          backup = JSON.parse(reader.result);
-        } catch (error) {
-          alert("Failed to parse Vimium backup.");
-          return;
-        }
-
-        if ("settingsVersion" in backup)
-          restoreSettingsVersion = backup["settingsVersion"];
-        for (let option of Array.from(Option.all)) {
-          if (option.field in backup) {
-            option.populateElement(backup[option.field]);
-            option.onUpdated();
+      const files = event.target.files;
+      if (files.length === 1) {
+        const file = files[0];
+        const reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function(event) {
+          let backup;
+          try {
+            backup = JSON.parse(reader.result);
+          } catch (error) {
+            alert('Failed to parse Vimium backup.');
+            return;
           }
-        }
-      };
-    }
-  });
 
-  Option.onSave(function() {
-    // If we're restoring a backup, then restore the backed up settingsVersion.
-    if (restoreSettingsVersion != null) {
-      bgSettings.set("settingsVersion", restoreSettingsVersion);
-      restoreSettingsVersion = null;
-    }
-    // Reset the restore-backup input.
-    $("chooseFile").value = "";
-    // We need to apply migrations in case we are restoring an old backup.
-    bgSettings.applyMigrations();
+          if ('settingsVersion' in backup) {
+            restoreSettingsVersion = backup['settingsVersion'];
+          }
+          for (let option of Array.from(Option.all)) {
+            if (option.field in backup) {
+              option.populateElement(backup[option.field]);
+              option.onUpdated();
+            }
+          }
+        };
+      }
+    });
+
+    Option.onSave(function() {
+      // If we're restoring a backup, then restore the backed up settingsVersion.
+      if (restoreSettingsVersion != null) {
+        bgSettings.set('settingsVersion', restoreSettingsVersion);
+        restoreSettingsVersion = null;
+      }
+      // Reset the restore-backup input.
+      $('chooseFile').value = '';
+      // We need to apply migrations in case we are restoring an old backup.
+      bgSettings.applyMigrations();
+    });
   });
-});
 }
 
 // Exported for use by our tests.
-window.Options = Options
-window.isVimiumOptionsPage = true
+window.Options = Options;
+window.isVimiumOptionsPage = true;

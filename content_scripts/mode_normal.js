@@ -1,47 +1,57 @@
 class NormalMode extends KeyHandlerMode {
   init(options) {
-    if (options == null)
+    if (options == null) {
       options = {};
+    }
 
     const defaults = {
-      name: "normal",
+      name: 'normal',
       indicator: false, // There is normally no mode indicator in normal mode.
-      commandHandler: this.commandHandler.bind(this)
+      commandHandler: this.commandHandler.bind(this),
     };
 
     super.init(Object.assign(defaults, options));
 
-    chrome.storage.local.get("normalModeKeyStateMapping",
-                             (items) => this.setKeyMapping(items.normalModeKeyStateMapping));
+    chrome.storage.local.get(
+      'normalModeKeyStateMapping',
+      (items) => this.setKeyMapping(items.normalModeKeyStateMapping),
+    );
 
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === "local" && changes.normalModeKeyStateMapping && changes.normalModeKeyStateMapping.newValue)
+      if (area === 'local' && changes.normalModeKeyStateMapping && changes.normalModeKeyStateMapping.newValue) {
         this.setKeyMapping(changes.normalModeKeyStateMapping.newValue);
+      }
     });
   }
 
-  commandHandler({command: registryEntry, count}) {
+  commandHandler({ command: registryEntry, count }) {
     count *= registryEntry.options.count != null ? registryEntry.options.count : 1;
 
-    if (registryEntry.noRepeat)
+    if (registryEntry.noRepeat) {
       count = 1;
+    }
 
     if ((registryEntry.repeatLimit != null) && (registryEntry.repeatLimit < count)) {
-      const result = confirm(`You have asked Vimium to perform ${count} repetitions of the ` +
-                             `command: ${registryEntry.description}.\n Are you sure you want to continue?`);
-      if (!result)
+      const result = confirm(
+        `You have asked Vimium to perform ${count} repetitions of the `
+          + `command: ${registryEntry.description}.\n Are you sure you want to continue?`,
+      );
+      if (!result) {
         return;
+      }
     }
 
     if (registryEntry.topFrame) {
       // We never return to a UI-component frame (e.g. the help dialog), it might have lost the focus.
       const sourceFrameId = window.isVimiumUIComponent ? 0 : frameId;
       chrome.runtime.sendMessage({
-        handler: "sendMessageToFrames", message: {name: "runInTopFrame", sourceFrameId, registryEntry}});
+        handler: 'sendMessageToFrames',
+        message: { name: 'runInTopFrame', sourceFrameId, registryEntry },
+      });
     } else if (registryEntry.background) {
-      chrome.runtime.sendMessage({handler: "runBackgroundCommand", registryEntry, count});
+      chrome.runtime.sendMessage({ handler: 'runBackgroundCommand', registryEntry, count });
     } else {
-      NormalModeCommands[registryEntry.command](count, {registryEntry});
+      NormalModeCommands[registryEntry.command](count, { registryEntry });
     }
   }
 }
@@ -49,10 +59,11 @@ class NormalMode extends KeyHandlerMode {
 const enterNormalMode = function(count) {
   const mode = new NormalMode();
   mode.init({
-    indicator: "Normal mode (pass keys disabled)",
+    indicator: 'Normal mode (pass keys disabled)',
     exitOnEscape: true,
-    singleton: "enterNormalMode",
-    count});
+    singleton: 'enterNormalMode',
+    count,
+  });
   return mode;
 };
 
@@ -60,34 +71,59 @@ var NormalModeCommands = {
   // Scrolling.
   scrollToBottom() {
     Marks.setPreviousPosition();
-    Scroller.scrollTo("y", "max");
+    Scroller.scrollTo('y', 'max');
   },
   scrollToTop(count) {
     Marks.setPreviousPosition();
-    Scroller.scrollTo("y", (count - 1) * Settings.get("scrollStepSize"));
+    Scroller.scrollTo('y', (count - 1) * Settings.get('scrollStepSize'));
   },
-  scrollToLeft() { Scroller.scrollTo("x", 0); },
-  scrollToRight() { Scroller.scrollTo("x", "max"); },
-  scrollUp(count) { Scroller.scrollBy("y", -1 * Settings.get("scrollStepSize") * count); },
-  scrollDown(count) { Scroller.scrollBy("y", Settings.get("scrollStepSize") * count); },
-  scrollPageUp(count) { Scroller.scrollBy("y", "viewSize", (-1/2) * count); },
-  scrollPageDown(count) { Scroller.scrollBy("y", "viewSize", (1/2) * count); },
-  scrollFullPageUp(count) { Scroller.scrollBy("y", "viewSize", -1 * count); },
-  scrollFullPageDown(count) { Scroller.scrollBy("y", "viewSize", 1 * count); },
-  scrollLeft(count) { Scroller.scrollBy("x", -1 * Settings.get("scrollStepSize") * count); },
-  scrollRight(count) { Scroller.scrollBy("x", Settings.get("scrollStepSize") * count); },
+  scrollToLeft() {
+    Scroller.scrollTo('x', 0);
+  },
+  scrollToRight() {
+    Scroller.scrollTo('x', 'max');
+  },
+  scrollUp(count) {
+    Scroller.scrollBy('y', -1 * Settings.get('scrollStepSize') * count);
+  },
+  scrollDown(count) {
+    Scroller.scrollBy('y', Settings.get('scrollStepSize') * count);
+  },
+  scrollPageUp(count) {
+    Scroller.scrollBy('y', 'viewSize', (-1 / 2) * count);
+  },
+  scrollPageDown(count) {
+    Scroller.scrollBy('y', 'viewSize', (1 / 2) * count);
+  },
+  scrollFullPageUp(count) {
+    Scroller.scrollBy('y', 'viewSize', -1 * count);
+  },
+  scrollFullPageDown(count) {
+    Scroller.scrollBy('y', 'viewSize', 1 * count);
+  },
+  scrollLeft(count) {
+    Scroller.scrollBy('x', -1 * Settings.get('scrollStepSize') * count);
+  },
+  scrollRight(count) {
+    Scroller.scrollBy('x', Settings.get('scrollStepSize') * count);
+  },
 
   // Tab navigation: back, forward.
-  goBack(count) { history.go(-count); },
-  goForward(count) { history.go(count); },
+  goBack(count) {
+    history.go(-count);
+  },
+  goForward(count) {
+    history.go(count);
+  },
 
   // Url manipulation.
   goUp(count) {
     let url = window.location.href;
-    if (url.endsWith("/"))
+    if (url.endsWith('/')) {
       url = url.substring(0, url.length - 1);
+    }
 
-    let urlsplit = url.split("/");
+    let urlsplit = url.split('/');
     // make sure we haven't hit the base domain yet
     if (urlsplit.length > 3) {
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count));
@@ -100,49 +136,50 @@ var NormalModeCommands = {
   },
 
   toggleViewSource() {
-    chrome.runtime.sendMessage({ handler: "getCurrentTabUrl" }, function(url) {
-      if (url.substr(0, 12) === "view-source:") {
+    chrome.runtime.sendMessage({ handler: 'getCurrentTabUrl' }, function(url) {
+      if (url.substr(0, 12) === 'view-source:') {
         url = url.substr(12, url.length - 12);
       } else {
-        url = "view-source:" + url;
+        url = 'view-source:' + url;
       }
-      return chrome.runtime.sendMessage({handler: "openUrlInNewTab", url});
-  });
+      return chrome.runtime.sendMessage({ handler: 'openUrlInNewTab', url });
+    });
   },
 
   copyCurrentUrl() {
-    chrome.runtime.sendMessage({ handler: "getCurrentTabUrl" }, function(url) {
+    chrome.runtime.sendMessage({ handler: 'getCurrentTabUrl' }, function(url) {
       HUD.copyToClipboard(url);
-      if (28 < url.length)
-        url = url.slice(0, 26) + "....";
+      if (28 < url.length) {
+        url = url.slice(0, 26) + '....';
+      }
       HUD.showForDuration(`Yanked ${url}`, 2000);
     });
   },
 
   openCopiedUrlInNewTab(count) {
-    HUD.pasteFromClipboard(url => chrome.runtime.sendMessage({ handler: "openUrlInNewTab", url, count }));
+    HUD.pasteFromClipboard(url => chrome.runtime.sendMessage({ handler: 'openUrlInNewTab', url, count }));
   },
 
   openCopiedUrlInCurrentTab() {
-    HUD.pasteFromClipboard(url => chrome.runtime.sendMessage({ handler: "openUrlInCurrentTab", url }));
+    HUD.pasteFromClipboard(url => chrome.runtime.sendMessage({ handler: 'openUrlInCurrentTab', url }));
   },
 
   // Mode changes.
   enterInsertMode() {
     // If a focusable element receives the focus, then we exit and leave the permanently-installed insert-mode
     // instance to take over.
-    return new InsertMode({global: true, exitOnFocus: true});
+    return new InsertMode({ global: true, exitOnFocus: true });
   },
 
   enterVisualMode() {
     const mode = new VisualMode();
-    mode.init({userLaunchedMode: true});
+    mode.init({ userLaunchedMode: true });
     return mode;
   },
 
   enterVisualLineMode() {
     const mode = new VisualLineMode();
-    mode.init({userLaunchedMode: true});
+    mode.init({ userLaunchedMode: true });
     return mode;
   },
 
@@ -153,18 +190,24 @@ var NormalModeCommands = {
 
   // Find.
   performFind(count) {
-    for (let i = 0, end = count; i < end; i++)
+    for (let i = 0, end = count; i < end; i++) {
       FindMode.findNext(false);
+    }
   },
 
   performBackwardsFind(count) {
-    for (let i = 0, end = count; i < end; i++)
+    for (let i = 0, end = count; i < end; i++) {
       FindMode.findNext(true);
+    }
   },
 
   // Misc.
-  mainFrame() { return focusThisFrame({highlight: true, forceFocusThisFrame: true}); },
-  showHelp(sourceFrameId) { return HelpDialog.toggle({sourceFrameId, showAllCommandDetails: false}); },
+  mainFrame() {
+    return focusThisFrame({ highlight: true, forceFocusThisFrame: true });
+  },
+  showHelp(sourceFrameId) {
+    return HelpDialog.toggle({ sourceFrameId, showAllCommandDetails: false });
+  },
 
   passNextKey(count, options) {
     // TODO(philc): OK to remove return statement?
@@ -176,15 +219,15 @@ var NormalModeCommands = {
   },
 
   goPrevious() {
-    const previousPatterns = Settings.get("previousPatterns") || "";
-    const previousStrings = previousPatterns.split(",").filter(s => s.trim().length);
-    return findAndFollowRel("prev") || findAndFollowLink(previousStrings);
+    const previousPatterns = Settings.get('previousPatterns') || '';
+    const previousStrings = previousPatterns.split(',').filter(s => s.trim().length);
+    return findAndFollowRel('prev') || findAndFollowLink(previousStrings);
   },
 
   goNext() {
-    const nextPatterns = Settings.get("nextPatterns") || "";
-    const nextStrings = nextPatterns.split(",").filter( s => s.trim().length);
-    return findAndFollowRel("next") || findAndFollowLink(nextStrings);
+    const nextPatterns = Settings.get('nextPatterns') || '';
+    const nextStrings = nextPatterns.split(',').filter(s => s.trim().length);
+    return findAndFollowRel('next') || findAndFollowLink(nextStrings);
   },
 
   focusInput(count) {
@@ -197,12 +240,13 @@ var NormalModeCommands = {
 
     for (let i = 0, end = resultSet.snapshotLength; i < end; i++) {
       element = resultSet.snapshotItem(i);
-      if (!DomUtils.getVisibleClientRect(element, true))
+      if (!DomUtils.getVisibleClientRect(element, true)) {
         continue;
+      }
       visibleInputs.push({ element, index: i, rect: Rect.copy(element.getBoundingClientRect()) });
     }
 
-    visibleInputs.sort(function({element: element1, index: i1}, {element: element2, index: i2}) {
+    visibleInputs.sort(function({ element: element1, index: i1 }, { element: element2, index: i2 }) {
       // Put elements with a lower positive tabIndex first, keeping elements in DOM order.
       if (element1.tabIndex > 0) {
         if (element2.tabIndex > 0) {
@@ -223,14 +267,13 @@ var NormalModeCommands = {
     });
 
     if (visibleInputs.length === 0) {
-      HUD.showForDuration("There are no inputs to focus.", 1000);
+      HUD.showForDuration('There are no inputs to focus.', 1000);
       return;
     }
 
     // This is a hack to improve usability on the Vimium options page.  We prime the recently-focused input
     // to be the key-mappings input.  Arguably, this is the input that the user is most likely to use.
     const recentlyFocusedElement = lastFocusedInput();
-
 
     if (count === 1) {
       // As the starting index, we pick that of the most recently focused input element (or 0).
@@ -241,50 +284,50 @@ var NormalModeCommands = {
     }
 
     const hints = visibleInputs.map((tuple) => {
-      const hint = DomUtils.createElement("div");
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint";
+      const hint = DomUtils.createElement('div');
+      hint.className = 'vimiumReset internalVimiumInputHint vimiumInputHint';
 
       // minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px";
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY  + "px";
-      hint.style.width = tuple.rect.width + "px";
-      hint.style.height = tuple.rect.height + "px";
+      hint.style.left = (tuple.rect.left - 1) + window.scrollX + 'px';
+      hint.style.top = (tuple.rect.top - 1) + window.scrollY + 'px';
+      hint.style.width = tuple.rect.width + 'px';
+      hint.style.height = tuple.rect.height + 'px';
 
       return hint;
     });
 
     return new FocusSelector(hints, visibleInputs, selectedInputIndex);
-  }
+  },
 };
 
 if (typeof LinkHints !== 'undefined') {
   Object.assign(NormalModeCommands, {
-    "LinkHints.activateMode": LinkHints.activateMode.bind(LinkHints),
-    "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab.bind(LinkHints),
-    "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab.bind(LinkHints),
-    "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue.bind(LinkHints),
-    "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito.bind(LinkHints),
-    "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind(LinkHints),
-    "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl.bind(LinkHints)
+    'LinkHints.activateMode': LinkHints.activateMode.bind(LinkHints),
+    'LinkHints.activateModeToOpenInNewTab': LinkHints.activateModeToOpenInNewTab.bind(LinkHints),
+    'LinkHints.activateModeToOpenInNewForegroundTab': LinkHints.activateModeToOpenInNewForegroundTab.bind(LinkHints),
+    'LinkHints.activateModeWithQueue': LinkHints.activateModeWithQueue.bind(LinkHints),
+    'LinkHints.activateModeToOpenIncognito': LinkHints.activateModeToOpenIncognito.bind(LinkHints),
+    'LinkHints.activateModeToDownloadLink': LinkHints.activateModeToDownloadLink.bind(LinkHints),
+    'LinkHints.activateModeToCopyLinkUrl': LinkHints.activateModeToCopyLinkUrl.bind(LinkHints),
   });
 }
 
 if (typeof Vomnibar !== 'undefined') {
   Object.assign(NormalModeCommands, {
-    "Vomnibar.activate": Vomnibar.activate.bind(Vomnibar),
-    "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind(Vomnibar),
-    "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
-    "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
-    "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
-    "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
-    "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar)
+    'Vomnibar.activate': Vomnibar.activate.bind(Vomnibar),
+    'Vomnibar.activateInNewTab': Vomnibar.activateInNewTab.bind(Vomnibar),
+    'Vomnibar.activateTabSelection': Vomnibar.activateTabSelection.bind(Vomnibar),
+    'Vomnibar.activateBookmarks': Vomnibar.activateBookmarks.bind(Vomnibar),
+    'Vomnibar.activateBookmarksInNewTab': Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
+    'Vomnibar.activateEditUrl': Vomnibar.activateEditUrl.bind(Vomnibar),
+    'Vomnibar.activateEditUrlInNewTab': Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
   });
 }
 
 if (typeof Marks !== 'undefined') {
   Object.assign(NormalModeCommands, {
-    "Marks.activateCreateMode": Marks.activateCreateMode.bind(Marks),
-    "Marks.activateGotoMode": Marks.activateGotoMode.bind(Marks)
+    'Marks.activateCreateMode': Marks.activateCreateMode.bind(Marks),
+    'Marks.activateGotoMode': Marks.activateGotoMode.bind(Marks),
   });
 }
 
@@ -295,11 +338,14 @@ if (typeof Marks !== 'undefined') {
 
 // The corresponding XPath for such elements.
 var textInputXPath = (function() {
-  const textInputTypes = ["text", "search", "email", "url", "number", "password", "date", "tel"];
-  const inputElements = ["input[" +
-    "(" + textInputTypes.map(type => '@type="' + type + '"').join(" or ") + "or not(@type))" +
-    " and not(@disabled or @readonly)]",
-    "textarea", "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"];
+  const textInputTypes = ['text', 'search', 'email', 'url', 'number', 'password', 'date', 'tel'];
+  const inputElements = [
+    'input['
+    + '(' + textInputTypes.map(type => '@type="' + type + '"').join(' or ') + 'or not(@type))'
+    + ' and not(@disabled or @readonly)]',
+    'textarea',
+    "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']",
+  ];
   if (typeof DomUtils !== 'undefined' && DomUtils !== null) {
     return DomUtils.makeXPath(inputElements);
   }
@@ -307,7 +353,7 @@ var textInputXPath = (function() {
 
 // used by the findAndFollow* functions.
 const followLink = function(linkElement) {
-  if (linkElement.nodeName.toLowerCase() === "link") {
+  if (linkElement.nodeName.toLowerCase() === 'link') {
     return window.location.href = linkElement.href;
   } else {
     // if we can click on it, don't simply set location.href: some next/prev links are meant to trigger AJAX
@@ -325,7 +371,7 @@ const followLink = function(linkElement) {
 //
 var findAndFollowLink = function(linkStrings) {
   let link, linkString;
-  const linksXPath = DomUtils.makeXPath(["a", "*[@onclick or @role='link' or contains(@class, 'button')]"]);
+  const linksXPath = DomUtils.makeXPath(['a', "*[@onclick or @role='link' or contains(@class, 'button')]"]);
   const links = DomUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
   let candidateLinks = [];
 
@@ -336,34 +382,43 @@ var findAndFollowLink = function(linkStrings) {
 
     // ensure link is visible (we don't mind if it is scrolled offscreen)
     const boundingClientRect = link.getBoundingClientRect();
-    if ((boundingClientRect.width === 0) || (boundingClientRect.height === 0))
+    if ((boundingClientRect.width === 0) || (boundingClientRect.height === 0)) {
       continue;
+    }
 
     const computedStyle = window.getComputedStyle(link, null);
-    if ((computedStyle.getPropertyValue("visibility") !== "visible") ||
-        (computedStyle.getPropertyValue("display") === "none"))
+    if (
+      (computedStyle.getPropertyValue('visibility') !== 'visible')
+      || (computedStyle.getPropertyValue('display') === 'none')
+    ) {
       continue;
+    }
 
     let linkMatches = false;
     for (linkString of linkStrings) {
-      if ((link.innerText.toLowerCase().indexOf(linkString) !== -1) ||
-          (link.value && link.value.includes && link.value.includes(linkString))) {
+      if (
+        (link.innerText.toLowerCase().indexOf(linkString) !== -1)
+        || (link.value && link.value.includes && link.value.includes(linkString))
+      ) {
         linkMatches = true;
         break;
       }
     }
 
-    if (!linkMatches)
+    if (!linkMatches) {
       continue;
+    }
 
     candidateLinks.push(link);
   }
 
-  if (candidateLinks.length == 0)
+  if (candidateLinks.length == 0) {
     return;
+  }
 
-  for (link of candidateLinks)
+  for (link of candidateLinks) {
     link.wordCount = link.innerText.trim().split(/\s+/).length;
+  }
 
   // We can use this trick to ensure that Array.sort is stable. We need this property to retain the reverse
   // in-page order of the links.
@@ -373,21 +428,23 @@ var findAndFollowLink = function(linkStrings) {
   // favor shorter links, and ignore those that are more than one word longer than the shortest link
   candidateLinks = candidateLinks
     .sort(function(a, b) {
-      if (a.wordCount === b.wordCount)
+      if (a.wordCount === b.wordCount) {
         return a.originalIndex - b.originalIndex;
-      else
+      } else {
         return a.wordCount - b.wordCount;
+      }
     })
     .filter(a => a.wordCount <= (candidateLinks[0].wordCount + 1));
 
   for (linkString of linkStrings) {
-    const exactWordRegex =
-          /\b/.test(linkString[0]) || /\b/.test(linkString[linkString.length - 1]) ?
-          new RegExp("\\b" + linkString + "\\b", "i")
-          : new RegExp(linkString, "i");
+    const exactWordRegex = /\b/.test(linkString[0]) || /\b/.test(linkString[linkString.length - 1])
+      ? new RegExp('\\b' + linkString + '\\b', 'i')
+      : new RegExp(linkString, 'i');
     for (let candidateLink of candidateLinks) {
-      if (exactWordRegex.test(candidateLink.innerText) ||
-          (candidateLink.value && exactWordRegex.test(candidateLink.value))) {
+      if (
+        exactWordRegex.test(candidateLink.innerText)
+        || (candidateLink.value && exactWordRegex.test(candidateLink.value))
+      ) {
         followLink(candidateLink);
         return true;
       }
@@ -397,11 +454,11 @@ var findAndFollowLink = function(linkStrings) {
 };
 
 var findAndFollowRel = function(value) {
-  const relTags = ["link", "a", "area"];
+  const relTags = ['link', 'a', 'area'];
   for (let tag of relTags) {
     const elements = document.getElementsByTagName(tag);
     for (let element of Array.from(elements)) {
-      if (element.hasAttribute("rel") && (element.rel.toLowerCase() === value)) {
+      if (element.hasAttribute('rel') && (element.rel.toLowerCase() === value)) {
         followLink(element);
         return true;
       }
@@ -413,26 +470,27 @@ class FocusSelector extends Mode {
   constructor(hints, visibleInputs, selectedInputIndex) {
     super(...arguments);
     super.init({
-      name: "focus-selector",
+      name: 'focus-selector',
       exitOnClick: true,
       keydown: event => {
-        if (event.key === "Tab") {
+        if (event.key === 'Tab') {
           hints[selectedInputIndex].classList.remove('internalVimiumSelectedInputHint');
           selectedInputIndex += hints.length + (event.shiftKey ? -1 : 1);
           selectedInputIndex %= hints.length;
           hints[selectedInputIndex].classList.add('internalVimiumSelectedInputHint');
           DomUtils.simulateSelect(visibleInputs[selectedInputIndex].element);
           return this.suppressEvent;
-        } else if (event.key !== "Shift") {
+        } else if (event.key !== 'Shift') {
           this.exit();
           // Give the new mode the opportunity to handle the event.
           return this.restartBubbling;
         }
-      }});
+      },
+    });
 
     this.hintContainingDiv = DomUtils.addElementList(hints, {
-      id: "vimiumInputMarkerContainer",
-      className: "vimiumReset"
+      id: 'vimiumInputMarkerContainer',
+      className: 'vimiumReset',
     });
 
     DomUtils.simulateSelect(visibleInputs[selectedInputIndex].element);
@@ -449,9 +507,9 @@ class FocusSelector extends Mode {
     DomUtils.removeElement(this.hintContainingDiv);
     if (document.activeElement && DomUtils.isEditable(document.activeElement)) {
       return new InsertMode({
-        singleton: "post-find-mode/focus-input",
+        singleton: 'post-find-mode/focus-input',
         targetElement: document.activeElement,
-        indicator: false
+        indicator: false,
       });
     }
   }

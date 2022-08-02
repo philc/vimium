@@ -32,8 +32,9 @@ class Mode {
   init(options) {
     // Constants; short, readable names for the return values expected by handlerStack.bubbleEvent, used here
     // and by subclasses.
-    if (options == null)
+    if (options == null) {
       options = {};
+    }
     this.options = options;
     this.continueBubbling = handlerStack.continueBubbling;
     this.suppressEvent = handlerStack.suppressEvent;
@@ -48,27 +49,31 @@ class Mode {
     this.exitHandlers = [];
     this.modeIsActive = true;
     this.modeIsExiting = false;
-    this.name = this.options.name || "anonymous";
+    this.name = this.options.name || 'anonymous';
 
     this.count = ++count;
     this.id = `${this.name}-${this.count}`;
-    this.log("activate:", this.id);
+    this.log('activate:', this.id);
 
     // If options.suppressAllKeyboardEvents is truthy, then all keyboard events are suppressed.  This avoids
     // the need for modes which suppress all keyboard events 1) to provide handlers for all of those events,
     // or 2) to worry about event suppression and event-handler return values.
     if (this.options.suppressAllKeyboardEvents) {
       // TODO(philc): Make a let statement.
-      const downHanlder = this.options["keydown"];
-      this.options["keydown"] = (event) => this.alwaysSuppressPropagation(() => {
-        if (downHanlder)
-          return downHanlder(event);
-      });
-      const pressHandler = this.options["keypress"];
-      this.options["keypress"] = (event) => this.alwaysSuppressPropagation(() => {
-        if (pressHandler)
-          return pressHandler(event);
-      });
+      const downHanlder = this.options['keydown'];
+      this.options['keydown'] = (event) =>
+        this.alwaysSuppressPropagation(() => {
+          if (downHanlder) {
+            return downHanlder(event);
+          }
+        });
+      const pressHandler = this.options['keypress'];
+      this.options['keypress'] = (event) =>
+        this.alwaysSuppressPropagation(() => {
+          if (pressHandler) {
+            return pressHandler(event);
+          }
+        });
     }
 
     this.push({
@@ -90,7 +95,7 @@ class Mode {
         } else {
           return this.continueBubbling;
         }
-      }
+      },
     });
 
     // If @options.exitOnEscape is truthy, then the mode will exit when the escape key is pressed.
@@ -99,12 +104,13 @@ class Mode {
       // priority.
       this.push({
         _name: `mode-${this.id}/exitOnEscape`,
-        "keydown": event => {
-          if (!KeyboardUtils.isEscape(event))
+        'keydown': event => {
+          if (!KeyboardUtils.isEscape(event)) {
             return this.continueBubbling;
+          }
           this.exit(event, event.target);
           return this.suppressEvent;
-        }
+        },
       });
     }
 
@@ -113,10 +119,12 @@ class Mode {
     if (this.options.exitOnBlur) {
       this.push({
         _name: `mode-${this.id}/exitOnBlur`,
-        "blur": event => this.alwaysContinueBubbling(() => {
-          if (event.target === this.options.exitOnBlur)
-            return this.exit(event);
-        })
+        'blur': event =>
+          this.alwaysContinueBubbling(() => {
+            if (event.target === this.options.exitOnBlur) {
+              return this.exit(event);
+            }
+          }),
       });
     }
 
@@ -124,18 +132,20 @@ class Mode {
     if (this.options.exitOnClick) {
       this.push({
         _name: `mode-${this.id}/exitOnClick`,
-        "click": event => this.alwaysContinueBubbling(() => this.exit(event))
+        'click': event => this.alwaysContinueBubbling(() => this.exit(event)),
       });
     }
 
-    //If @options.exitOnFocus is truthy, then the mode will exit whenever a focusable element is activated.
+    // If @options.exitOnFocus is truthy, then the mode will exit whenever a focusable element is activated.
     if (this.options.exitOnFocus) {
       this.push({
         _name: `mode-${this.id}/exitOnFocus`,
-        "focus": event => this.alwaysContinueBubbling(() => {
-          if (DomUtils.isFocusable(event.target))
-            return this.exit(event);
-        })
+        'focus': event =>
+          this.alwaysContinueBubbling(() => {
+            if (DomUtils.isFocusable(event.target)) {
+              return this.exit(event);
+            }
+          }),
       });
     }
 
@@ -143,7 +153,7 @@ class Mode {
     if (this.options.exitOnScroll) {
       this.push({
         _name: `mode-${this.id}/exitOnScroll`,
-        "scroll": event => this.alwaysContinueBubbling(() => this.exit(event))
+        'scroll': event => this.alwaysContinueBubbling(() => this.exit(event)),
       });
     }
 
@@ -154,8 +164,9 @@ class Mode {
       const singletons = Mode.singletons || (Mode.singletons = {});
       const key = this.options.singleton;
       this.onExit(() => delete singletons[key]);
-      if (singletons[key] != null)
+      if (singletons[key] != null) {
         singletons[key].exit();
+      }
       singletons[key] = this;
     }
 
@@ -175,9 +186,9 @@ class Mode {
         };
 
         return handlerStack.push({
-          name: "suppress-trailing-key-events",
+          name: 'suppress-trailing-key-events',
           keydown: handler,
-          keypress: handler
+          keypress: handler,
         });
       });
     }
@@ -186,27 +197,30 @@ class Mode {
     this.setIndicator();
     this.logModes();
   }
-    // End of Mode constructor.
+  // End of Mode constructor.
 
   setIndicator(indicator) {
-    if (indicator)
+    if (indicator) {
       this.options.indicator = indicator;
+    }
     return Mode.setIndicator();
   }
 
   static setIndicator() {
-    return handlerStack.bubbleEvent("indicator");
+    return handlerStack.bubbleEvent('indicator');
   }
 
   push(handlers) {
-    if (!handlers._name)
+    if (!handlers._name) {
       handlers._name = `mode-${this.id}`;
+    }
     return this.handlers.push(handlerStack.push(handlers));
   }
 
   unshift(handlers) {
-    if (!handlers._name)
+    if (!handlers._name) {
       handlers._name = `mode-${this.id}`;
+    }
     this.handlers.push(handlerStack.unshift(handlers));
   }
 
@@ -215,18 +229,21 @@ class Mode {
   }
 
   exit(...args) {
-    if (this.modeIsExiting || !this.modeIsActive)
+    if (this.modeIsExiting || !this.modeIsActive) {
       return;
+    }
 
-    this.log("deactivate:", this.id);
+    this.log('deactivate:', this.id);
     this.modeIsExiting = true;
 
-    for (let handler of this.exitHandlers)
+    for (let handler of this.exitHandlers) {
       // TODO(philc): Is this array.from necessary?
       handler(...Array.from(args || []));
+    }
 
-    for (let handlerId of this.handlers)
+    for (let handlerId of this.handlers) {
       handlerStack.remove(handlerId);
+    }
 
     Mode.modes = Mode.modes.filter((mode) => mode !== this);
 
@@ -237,26 +254,29 @@ class Mode {
   // Debugging routines.
   logModes() {
     if (Mode.debug) {
-      this.log("active modes (top to bottom):");
-      for (let mode of Mode.modes.slice().reverse())
-        this.log(" ", mode.id);
+      this.log('active modes (top to bottom):');
+      for (let mode of Mode.modes.slice().reverse()) {
+        this.log(' ', mode.id);
+      }
     }
   }
 
   log(...args) {
-    if (Mode.debug)
+    if (Mode.debug) {
       console.log(...Array.from(args || []));
+    }
   }
 
   // For tests only.
   static top() {
-    return this.modes[this.modes.length-1];
+    return this.modes[this.modes.length - 1];
   }
 
   // For tests only.
   static reset() {
-    for (let mode of this.modes)
+    for (let mode of this.modes) {
       mode.exit();
+    }
     this.modes = [];
   }
 }
@@ -267,12 +287,13 @@ Mode.modes = [];
 
 class SuppressAllKeyboardEvents extends Mode {
   constructor(options) {
-    if (options == null)
+    if (options == null) {
       options = {};
+    }
     super();
     const defaults = {
-      name: "suppressAllKeyboardEvents",
-      suppressAllKeyboardEvents: true
+      name: 'suppressAllKeyboardEvents',
+      suppressAllKeyboardEvents: true,
     };
     super.init(Object.assign(defaults, options));
   }
@@ -280,20 +301,23 @@ class SuppressAllKeyboardEvents extends Mode {
 
 class CacheAllKeydownEvents extends SuppressAllKeyboardEvents {
   constructor(options) {
-    if (options == null)
+    if (options == null) {
       options = {};
+    }
     const keydownEvents = [];
     const defaults = {
-      name: "cacheAllKeydownEvents",
-      keydown(event) { return keydownEvents.push(event); }
+      name: 'cacheAllKeydownEvents',
+      keydown(event) {
+        return keydownEvents.push(event);
+      },
     };
     super(Object.assign(defaults, options));
     this.keydownEvents = [];
   }
 
   replayKeydownEvents() {
-    return this.keydownEvents.map((event) => handlerStack.bubbleEvent("keydown", event));
+    return this.keydownEvents.map((event) => handlerStack.bubbleEvent('keydown', event));
   }
 }
 
-Object.assign(window, {Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents});
+Object.assign(window, { Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents });

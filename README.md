@@ -1,10 +1,9 @@
-Vimium - The Hacker's Browser
-=============================
+# Vimium - The Hacker's Browser
 
 Vimium is a browser extension that provides keyboard-based navigation and control of the web in the spirit of
 the Vim editor.
 
-__Installation instructions:__
+**Installation instructions:**
 
 Install via the
 [Chrome web store](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb) or
@@ -15,8 +14,7 @@ To install from source, see [here](CONTRIBUTING.md#installing-from-source).
 Vimium's Options page can be reached via a link on the help dialog (type `?`) or via the button next to Vimium
 on the extension pages of Chrome (`chrome://extensions`) or Firefox (`about:addons`).
 
-Keyboard Bindings
------------------
+## Keyboard Bindings
 
 Modifier keys are specified as `<c-x>`, `<m-x>`, and `<a-x>` for ctrl+x, meta+x, and alt+x
 respectively. For shift+x and ctrl-shift-x, just type `X` and `<c-X>`. See the next section for how to
@@ -109,8 +107,7 @@ Vimium supports command repetition so, for example, hitting `5t` will open 5 tab
 There are some advanced commands which aren't documented here; refer to the help dialog (type `?`) for a full
 list.
 
-Custom Key Mappings
--------------------
+## Custom Key Mappings
 
 You may remap or unmap any of the default key bindings in the "Custom key mappings" on the options page.
 
@@ -146,21 +143,20 @@ The following special keys are available for mapping:
 
 Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+shift+7 on an English keyboard.
 
-More documentation
-------------------
+## More documentation
+
 Many of the more advanced or involved features are documented on
 [Vimium's GitHub wiki](https://github.com/philc/vimium/wiki). Also
 see the [FAQ](https://github.com/philc/vimium/wiki/FAQ).
 
-Contributing
-------------
+## Contributing
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-Release Notes
--------------
+## Release Notes
 
 See [CHANGELOG](CHANGELOG.md) for the major changes in each release.
 
-License
--------
+## License
+
 Copyright (c) Phil Crosby, Ilya Sukhar. See [MIT-LICENSE.txt](MIT-LICENSE.txt) for details.

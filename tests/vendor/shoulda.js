@@ -40,58 +40,68 @@
  */
 const assert = {
   isTrue: function(value) {
-    if (!value)
-      this.fail("Expected true, but got " + value);
+    if (!value) {
+      this.fail('Expected true, but got ' + value);
+    }
   },
 
   isFalse: function(value) {
-    if (value)
-      this.fail("Expected false, but got " + value);
+    if (value) {
+      this.fail('Expected false, but got ' + value);
+    }
   },
 
   // Does a deep-equal check on complex objects.
   equal: function(expected, actual) {
-    const areEqual = (typeof(expected) === "object" ?
-                      JSON.stringify(expected) === JSON.stringify(actual) :
-                      expected === actual);
-    if (!areEqual)
+    const areEqual = (typeof (expected) === 'object'
+      ? JSON.stringify(expected) === JSON.stringify(actual)
+      : expected === actual);
+    if (!areEqual) {
       this.fail(`\nExpected:\n${this._print(expected)}\nGot:\n${this._print(actual)}\n`);
+    }
   },
 
   // We cannot name this function simply "throws", because it's a reserved Javascript keyword.
   throwsException: function(expression, expectedExceptionName) {
     try {
       expression();
-    } catch(exception) {
+    } catch (exception) {
       if (expectedExceptionName) {
         if (exception.name === expectedExceptionName) return;
         else {
-          assert.fail("Expected exception " + expectedExceptionName + " to be thrown but exception " +
-            exception.name + " was thrown instead.");
+          assert.fail(
+            'Expected exception ' + expectedExceptionName + ' to be thrown but exception '
+              + exception.name + ' was thrown instead.',
+          );
         }
       } else return;
     }
-    if (expectedExceptionName)
+    if (expectedExceptionName) {
       assert.fail(`Expected exception ${expectedExceptionName} but no exception was thrown.`);
-    else
-      assert.fail("Expected exception but none was thrown.");
+    } else {
+      assert.fail('Expected exception but none was thrown.');
+    }
   },
 
-  fail: function(message) { throw new AssertionError(message); },
+  fail: function(message) {
+    throw new AssertionError(message);
+  },
 
   /* Used for printing the arguments passed to assertions. */
   _print: function(object) {
-    if (object === null) return "null";
-    else if (object === undefined) return "undefined";
-    else if (typeof object === "string") return '"' + object + '"';
+    if (object === null) return 'null';
+    else if (object === undefined) return 'undefined';
+    else if (typeof object === 'string') return '"' + object + '"';
     else {
-      try { return JSON.stringify(object, undefined, 2); } // Pretty-prints with indentation.
+      try {
+        return JSON.stringify(object, undefined, 2);
+      } // Pretty-prints with indentation.
       catch (exception) {
         // object might not be stringifiable (e.g. DOM nodes), or JSON.stringify may not exist.
         return object.toString();
       }
     }
-  }
+  },
 };
 
 /*
@@ -101,10 +111,12 @@ const assert = {
 const ensureCalled = function(toExecute) {
   const wrappedFunction = function() {
     const i = Tests.requiredCallbacks.indexOf(wrappedFunction);
-    if (i >= 0)
+    if (i >= 0) {
       Tests.requiredCallbacks.splice(i, 1); // Delete.
-    if (toExecute)
+    }
+    if (toExecute) {
       return toExecute.apply(null, arguments);
+    }
   };
   Tests.requiredCallbacks.push(wrappedFunction);
   return wrappedFunction;
@@ -116,7 +128,6 @@ const AssertionError = function(message) {
 };
 AssertionError.prototype = new Error();
 AssertionError.prototype.constructor = AssertionError;
-
 
 /*
  * A Context is a named set of test methods and nested contexts, with optional setup and tearDown blocks.
@@ -137,13 +148,15 @@ const contextStack = [];
  * See the usage documentation for details on how to use the "context" and "should" functions.
  */
 const context = (name, fn) => {
-  if (typeof(fn) != "function")
-    throw("context() requires a function argument.");
+  if (typeof (fn) != 'function') {
+    throw ('context() requires a function argument.');
+  }
   const newContext = new Context(name);
-  if (contextStack.length > 0)
+  if (contextStack.length > 0) {
     contextStack[contextStack.length - 1].tests.push(newContext);
-  else
+  } else {
     Tests.topLevelContexts.push(newContext);
+  }
   contextStack.push(newContext);
   fn();
   contextStack.pop();
@@ -154,14 +167,14 @@ context.only = (name, fn) => {
   const c = context(name, fn);
   c.isFocused = true;
   Tests.focusIsUsed = true;
-}
+};
 
 const setup = (fn) => contextStack[contextStack.length - 1].setupMethod = fn;
 
 const tearDown = (fn) => contextStack[contextStack.length - 1].tearDownMethod = fn;
 
 const should = (name, fn) => {
-  const test = {name, fn};
+  const test = { name, fn };
   contextStack[contextStack.length - 1].tests.push(test);
   return test;
 };
@@ -170,7 +183,7 @@ should.only = (name, fn) => {
   const test = should(name, fn);
   test.isFocused = true;
   Tests.focusIsUsed = true;
-}
+};
 
 /*
  * Tests is used to run tests and keep track of the success and failure counts.
@@ -197,13 +210,14 @@ const Tests = {
   run: async function(testNameFilter) {
     // Pick an output method based on whether we're running in a browser or via a command-line js shell.
     if (!this.outputMethod) {
-      const isShell = typeof("window") === "undefined";
-      if (isShell)
+      const isShell = typeof ('window') === 'undefined';
+      if (isShell) {
         this.outputMethod = print;
-      else if (typeof(console) != "undefined") // Available in browsers.
+      } else if (typeof (console) != 'undefined') { // Available in browsers.
         this.outputMethod = console.log;
-      else
+      } else {
         this.outputMethod = print; // print is available in all command-line shells.
+      }
     }
 
     // Run all of the top level contexts (those not defined within another context) which will in turn run
@@ -212,8 +226,9 @@ const Tests = {
     // must themselves be top level contexts.
     this.testsRun = 0;
     this.testsFailed = 0;
-    for (let context of this.topLevelContexts)
+    for (let context of this.topLevelContexts) {
       await this.runContext(context, [], testNameFilter);
+    }
     this.printTestSummary();
     return this.testsFailed == 0;
   },
@@ -236,10 +251,11 @@ const Tests = {
     const testMethods = context.tests;
     parentContexts = parentContexts.concat([context]);
     for (let test of context.tests) {
-      if (test instanceof Context)
+      if (test instanceof Context) {
         await this.runContext(test, parentContexts, testNameFilter);
-      else
+      } else {
         await this.runTest(test, parentContexts, testNameFilter);
+      }
     }
   },
 
@@ -250,11 +266,13 @@ const Tests = {
    * - testNameFilter: A String. If provided, only run the test if it matches the testNameFilter.
    */
   runTest: async function(testMethod, contexts, testNameFilter) {
-    if (this.focusIsUsed && !testMethod.isFocused && !contexts.some((c) => c.isFocused))
+    if (this.focusIsUsed && !testMethod.isFocused && !contexts.some((c) => c.isFocused)) {
       return;
+    }
     const fullTestName = this.fullyQualifiedName(testMethod.name, contexts);
-    if (testNameFilter && !fullTestName.includes(testNameFilter))
+    if (testNameFilter && !fullTestName.includes(testNameFilter)) {
       return;
+    }
 
     this.testsRun++;
     let failureMessage = null;
@@ -263,24 +281,29 @@ const Tests = {
 
     try {
       try {
-        for (const context of contexts)
-          if (context.setupMethod)
+        for (const context of contexts) {
+          if (context.setupMethod) {
             await context.setupMethod.call(testScope, testScope);
+          }
+        }
         await testMethod.fn.call(testScope, testScope);
-      }
-      finally {
-        for (const context of contexts)
-          if (context.tearDownMethod)
+      } finally {
+        for (const context of contexts) {
+          if (context.tearDownMethod) {
             await context.tearDownMethod.call(testScope, testScope);
+          }
+        }
       }
-    } catch(exception) {
+    } catch (exception) {
       failureMessage = exception.message;
-      if (!(exception instanceof AssertionError) && exception.stack)
-        failureMessage += ("\n" + exception.stack);
+      if (!(exception instanceof AssertionError) && exception.stack) {
+        failureMessage += '\n' + exception.stack;
+      }
     }
 
-    if (!failureMessage && this.requiredCallbacks.length > 0)
+    if (!failureMessage && this.requiredCallbacks.length > 0) {
       failureMessage = "A callback function should have been called during this test, but it wasn't.";
+    }
     if (failureMessage) {
       Tests.testsFailed++;
       Tests.printFailure(fullTestName, failureMessage);
@@ -292,23 +315,28 @@ const Tests = {
 
   /* The fully-qualified name of the test or context, e.g. "context1: context2: testName". */
   fullyQualifiedName: function(testName, contexts) {
-    return contexts.map((c) => c.name).concat(testName).join(": ");
+    return contexts.map((c) => c.name).concat(testName).join(': ');
   },
 
   printTestSummary: function() {
-    if (this.testsFailed > 0)
+    if (this.testsFailed > 0) {
       this.outputMethod(`Fail (${Tests.testsFailed}/${Tests.testsRun})`);
-    else
+    } else {
       this.outputMethod(`Pass (${Tests.testsRun}/${Tests.testsRun})`);
+    }
   },
 
   printFailure: function(testName, failureMessage) {
     this.outputMethod(`Fail "${testName}"`, failureMessage);
-  }
+  },
 };
 
-const run = async function(testNameFilter) { return Tests.run(testNameFilter); }
-const reset = async function() { return Tests.reset(); }
+const run = async function(testNameFilter) {
+  return Tests.run(testNameFilter);
+};
+const reset = async function() {
+  return Tests.reset();
+};
 
 /*
  * Stats of the latest test run.
@@ -316,7 +344,7 @@ const reset = async function() { return Tests.reset(); }
 const getStats = () => {
   return {
     failed: Tests.testsFailed,
-    run: Tests.testsRun
+    run: Tests.testsRun,
   };
 };
 
@@ -333,7 +361,11 @@ const stub = function(object, propertyName, returnValue) {
  * want to hard code its return value, for example:
  * stub(shoppingCart, "calculateTotal", returns(4.0))
  */
-const returns = function(value) { return function() { return value; } };
+const returns = function(value) {
+  return function() {
+    return value;
+  };
+};
 
 const Stubs = {
   stubbedObjects: [],
@@ -344,10 +376,10 @@ const Stubs = {
       const stubProperties = Stubs.stubbedObjects[i];
       stubProperties.object[stubProperties.propertyName] = stubProperties.original;
     }
-  }
+  },
 };
 
 // It's not possible to support CommonJS modules (NodeJS's default module syntax) and ECMAScript modules (the
 // default for Deno, and browsers) in the same file, so we're going with the ECMAScript module syntax, since
 // NodeJS can that as well.
-export {assert, context, ensureCalled, getStats, reset, returns, run, setup, should, stub, tearDown};
+export { assert, context, ensureCalled, getStats, reset, returns, run, setup, should, stub, tearDown };

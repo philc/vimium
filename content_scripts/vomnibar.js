@@ -14,58 +14,59 @@ const Vomnibar = {
 
   activate(sourceFrameId, registryEntry) {
     return this.extractOptionsFromRegistryEntry(registryEntry, options => {
-      return this.open(sourceFrameId, Object.assign(options, {completer:"omni"}));
+      return this.open(sourceFrameId, Object.assign(options, { completer: 'omni' }));
     });
   },
 
   activateInNewTab(sourceFrameId, registryEntry) {
     return this.extractOptionsFromRegistryEntry(registryEntry, options => {
-      return this.open(sourceFrameId, Object.assign(options, {completer:"omni", newTab: true}));
+      return this.open(sourceFrameId, Object.assign(options, { completer: 'omni', newTab: true }));
     });
   },
 
   activateTabSelection(sourceFrameId) {
     return this.open(sourceFrameId, {
-      completer: "tabs",
-      selectFirst: true
+      completer: 'tabs',
+      selectFirst: true,
     });
   },
 
   activateBookmarks(sourceFrameId) {
     return this.open(sourceFrameId, {
-      completer: "bookmarks",
-      selectFirst: true
+      completer: 'bookmarks',
+      selectFirst: true,
     });
   },
 
   activateBookmarksInNewTab(sourceFrameId) {
     return this.open(sourceFrameId, {
-      completer: "bookmarks",
+      completer: 'bookmarks',
       selectFirst: true,
-      newTab: true
+      newTab: true,
     });
   },
 
   activateEditUrl(sourceFrameId) {
     return this.open(sourceFrameId, {
-      completer: "omni",
+      completer: 'omni',
       selectFirst: false,
-      query: window.location.href
+      query: window.location.href,
     });
   },
 
   activateEditUrlInNewTab(sourceFrameId) {
     return this.open(sourceFrameId, {
-      completer: "omni",
+      completer: 'omni',
       selectFirst: false,
       query: window.location.href,
-      newTab: true
+      newTab: true,
     });
   },
 
   init() {
-    if (!this.vomnibarUI)
-      this.vomnibarUI = new UIComponent("pages/vomnibar.html", "vomnibarFrame", function() {})
+    if (!this.vomnibarUI) {
+      this.vomnibarUI = new UIComponent('pages/vomnibar.html', 'vomnibarFrame', function() {});
+    }
   },
 
   // This function opens the vomnibar. It accepts options, a map with the values:
@@ -77,8 +78,8 @@ const Vomnibar = {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
-    return this.vomnibarUI.activate(Object.assign(options, { name: "activate", sourceFrameId, focus: true }));
-  }
+    return this.vomnibarUI.activate(Object.assign(options, { name: 'activate', sourceFrameId, focus: true }));
+  },
 };
 
 window.Vomnibar = Vomnibar;

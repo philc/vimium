@@ -12,6 +12,7 @@ Include a clear bug description.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to URL '...'
 2. Click on '....'
 
