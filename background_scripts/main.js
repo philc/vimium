@@ -179,7 +179,7 @@ const TabOperations = {
 
     // Firefox <57 throws an error when openerTabId is used (issue 1238314).
     const canUseOpenerTabId = !Utils.isFirefox() || Utils.firefoxVersion() instanceof Promise
-      || (Utils.compareVersions(Utils.firefoxVersion(), '57') >= 0);
+      || (compareVersions(Utils.firefoxVersion(), '57') >= 0);
     if (canUseOpenerTabId) {
       tabConfig.openerTabId = request.tab.id;
     }
@@ -772,14 +772,14 @@ window.runTests = () => open(chrome.runtime.getURL('tests/dom_tests/dom_tests.ht
 
 // Show notification on upgrade.
 (showUpgradeMessage = function() {
-  const currentVersion = Utils.getCurrentVersion();
+  const currentVersion = getCurrentVersion();
   // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for new
   // installs.
   if (!Settings.has('previousVersion')) {
     Settings.set('previousVersion', currentVersion);
   }
   const previousVersion = Settings.get('previousVersion');
-  if (Utils.compareVersions(currentVersion, previousVersion) === 1) {
+  if (compareVersions(currentVersion, previousVersion) === 1) {
     const currentVersionNumbers = currentVersion.split('.');
     const previousVersionNumbers = previousVersion.split('.');
     if (currentVersionNumbers.slice(0, 2).join('.') === previousVersionNumbers.slice(0, 2).join('.')) {
