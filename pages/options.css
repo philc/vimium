@@ -4,6 +4,7 @@ body {
   font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
   margin: 0 auto;
+  padding: 0 6px;
 }
 a, a:visited { color: #15c; }
 a:active { color: #052577; }
@@ -213,6 +214,8 @@ input.pattern, input.passKeys, .exclusionHeaderText {
   position: fixed;
   bottom: 0px;
   z-index: 10;
+  margin-left: -6px;
+  padding-right: 6px;
 }
 #footer, #footerTable, #footerTableData {
   width: 100%;
