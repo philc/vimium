@@ -63,6 +63,15 @@ const Vomnibar = {
     });
   },
 
+  searchCurrentHost(sourceFrameId) {
+    return this.open(sourceFrameId, {
+      completer: "omni",
+      selectFirst: false,
+      query: `site:${window.location.host} `,
+      newTab: true
+    });
+  },
+
   init() {
     if (!this.vomnibarUI)
       this.vomnibarUI = new UIComponent("pages/vomnibar.html", "vomnibarFrame", function() {})
