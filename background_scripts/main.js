@@ -493,7 +493,7 @@ var Frames = {
         const enabledStateIcon =
           !enabledState.isEnabledForUrl ?
             DISABLED_ICON
-          : enabledState.passKeys.length >= 0 ?
+          : enabledState.passKeys.length > 0 ?
             PARTIAL_ICON
           :
             ENABLED_ICON;
