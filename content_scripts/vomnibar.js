@@ -31,6 +31,21 @@ const Vomnibar = {
     });
   },
 
+  activateTabMarkSelection(sourceFrameId) {
+    return this.open(sourceFrameId, {
+      completer: "tabMarks",
+      selectFirst: true
+    });
+  },
+
+  activateTabMarkSelectionInNewTab(sourceFrameId) {
+    return this.open(sourceFrameId, {
+      completer: "tabMarks",
+      selectFirst: true,
+      newTab: true
+    });
+  },
+
   activateBookmarks(sourceFrameId) {
     return this.open(sourceFrameId, {
       completer: "bookmarks",

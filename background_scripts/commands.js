@@ -446,6 +446,8 @@ const commandDescriptions = {
   "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }],
   "Vomnibar.activateInNewTab": ["Open URL, bookmark or history entry in a new tab", { topFrame: true }],
   "Vomnibar.activateTabSelection": ["Search through your open tabs", { topFrame: true }],
+  "Vomnibar.activateTabMarkSelection": ["Search through your open tabs v2", { topFrame: true }],
+  "Vomnibar.activateTabMarkSelectionInNewTab": ["Search through your open tabs v2", { topFrame: true }],
   "Vomnibar.activateBookmarks": ["Open a bookmark", { topFrame: true }],
   "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { topFrame: true }],
   "Vomnibar.activateEditUrl": ["Edit the current URL", { topFrame: true }],

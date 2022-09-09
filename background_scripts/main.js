@@ -43,6 +43,7 @@ const completionSources = {
   history: new HistoryCompleter,
   domains: new DomainCompleter,
   tabs: new TabCompleter,
+  tabMarks: new TabMarkCompleter,
   searchEngines: new SearchEngineCompleter
 };
 
@@ -55,7 +56,8 @@ const completers = {
     completionSources.searchEngines
     ]),
   bookmarks: new MultiCompleter([completionSources.bookmarks]),
-  tabs: new MultiCompleter([completionSources.tabs])
+  tabs: new MultiCompleter([completionSources.tabs]),
+  tabMarks: new MultiCompleter([completionSources.tabMarks])
 };
 
 const completionHandlers = {

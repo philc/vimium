@@ -274,6 +274,8 @@ if (typeof Vomnibar !== 'undefined') {
     "Vomnibar.activate": Vomnibar.activate.bind(Vomnibar),
     "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind(Vomnibar),
     "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
+    "Vomnibar.activateTabMarkSelection": Vomnibar.activateTabMarkSelection.bind(Vomnibar),
+    "Vomnibar.activateTabMarkSelectionInNewTab": Vomnibar.activateTabMarkSelectionInNewTab.bind(Vomnibar),
     "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
     "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
     "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),

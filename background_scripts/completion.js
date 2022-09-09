@@ -490,6 +490,125 @@ class TabCompleter {
   }
 }
 
+class TabMarkCompleter {
+  filter({ name, queryTerms }, onComplete) {
+    this.name = name;
+    this.queryTerms = queryTerms;
+    this.onComplete = onComplete;
+    this.currentSearch = { queryTerms: this.queryTerms, onComplete: this.onComplete };
+
+    if (this.bookmarks)
+      return this.performSearch();
+  }
+
+  performSearch() {
+    if ((this.name !== "tabMarks") && (this.queryTerms.length === 0))
+      return this.onComplete([]);
+
+    chrome.tabs.query({}, tabs => {
+      const tabResults = tabs.filter(tab => RankingUtils.matches(this.queryTerms, tab.url, tab.title));
+
+      const bookmarkSuggestions = this
+          .searchBookmarks()
+          .filter(e => tabResults.filter(x => x.url === e.url).length === 0);
+
+      const suggestions = tabResults
+          .map(tab => {
+        const suggestion = new Suggestion({
+          queryTerms: this.queryTerms,
+          type: "tab",
+          url: tab.url,
+          title: tab.title,
+          tabId: tab.id,
+          deDuplicate: false
+        });
+        suggestion.relevancy = this.computeRelevancy(suggestion);
+        return suggestion;
+      })
+          .sort((a, b) => b.relevancy - a.relevancy)
+          .concat(bookmarkSuggestions);
+
+      suggestions.forEach(function(suggestion,i) {
+        suggestion.relevancy *= 8;
+        return suggestion.relevancy /= ( (i / 4) + 1 );
+      });
+      this.onComplete(suggestions);
+    });
+  }
+
+  searchBookmarks() {
+    // If the folder separator character the first character in any query term, then we'll use the bookmark's
+    // full path as its title. Otherwise, we'll just use the its regular title.
+    let results;
+    const usePathAndTitle = this.currentSearch.queryTerms.reduce(((prev,term) => prev || term.startsWith(folderSeparator)), false);
+    if (this.currentSearch.queryTerms.length > 0) {
+      results = this.bookmarks.filter(bookmark => {
+        const suggestionTitle = usePathAndTitle ? bookmark.pathAndTitle : bookmark.title;
+        if (bookmark.hasJavascriptPrefix == null)
+          bookmark.hasJavascriptPrefix = Utils.hasJavascriptPrefix(bookmark.url);
+        if (bookmark.hasJavascriptPrefix && bookmark.shortUrl == null)
+          bookmark.shortUrl = "javascript:...";
+        const suggestionUrl = bookmark.shortUrl != null ? bookmark.shortUrl : bookmark.url;
+        return RankingUtils.matches(this.currentSearch.queryTerms, suggestionUrl, suggestionTitle);
+      });
+    } else {
+      results = [];
+    }
+
+    return results.map(bookmark => {
+      return new Suggestion({
+        queryTerms: this.currentSearch.queryTerms,
+        type: "bookmark",
+        url: bookmark.url,
+        title: usePathAndTitle ? bookmark.pathAndTitle : bookmark.title,
+        relevancyFunction: this.computeRelevancy,
+        shortUrl: bookmark.shortUrl,
+        deDuplicate: (bookmark.shortUrl == null)
+      });
+    });
+  }
+
+  refresh() {
+    this.bookmarks = null;
+    chrome.bookmarks.getTree(bookmarks => {
+      this.bookmarks = this.traverseBookmarks(bookmarks).filter(bookmark => bookmark.url != null);
+      this.onBookmarksLoaded();
+    });
+  }
+
+  traverseBookmarks(bookmarks)
+  {
+    const results = [];
+    bookmarks.forEach(folder => this.traverseBookmarksRecursive(folder, results));
+    return results;
+  }
+
+  traverseBookmarksRecursive(bookmark, results, parent) {
+    if (parent == null)
+      parent = {pathAndTitle:""};
+    if (bookmark.title && !((parent.pathAndTitle === "") && ignoredTopLevelBookmarks[bookmark.title])) {
+      bookmark.pathAndTitle = parent.pathAndTitle + folderSeparator + bookmark.title;
+    } else {
+      bookmark.pathAndTitle = parent.pathAndTitle;
+    }
+    results.push(bookmark);
+    if (bookmark.children)
+      bookmark.children.forEach(child => this.traverseBookmarksRecursive(child, results, bookmark));
+  }
+
+  onBookmarksLoaded() {
+    if (this.currentSearch)
+      this.performSearch();
+  }
+
+  computeRelevancy(suggestion) {
+    if (suggestion.queryTerms.length)
+      return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
+    else
+      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
+  }
+}
+
 class SearchEngineCompleter {
   constructor() {
     this.previousSuggestions = null;
@@ -1091,6 +1210,7 @@ Object.assign(window, {
   HistoryCompleter,
   DomainCompleter,
   TabCompleter,
+  TabMarkCompleter,
   SearchEngineCompleter,
   HistoryCache,
   RankingUtils,
