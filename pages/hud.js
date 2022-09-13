@@ -142,9 +142,9 @@ const handlers = {
   },
 
   copyToClipboard(data) {
-    Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, function() {
+    Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function() {
       const focusedElement = document.activeElement;
-      Clipboard.copy(data);
+      await Clipboard.copy(data);
       if (focusedElement != null)
         focusedElement.focus();
       window.parent.focus();
