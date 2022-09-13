@@ -36,6 +36,9 @@ const HUD = {
       this.hudUI.toggleIframeElementClasses("vimiumUIComponentHidden", "vimiumUIComponentVisible");
       // Force the re-computation of styles, so Chrome sends a visibility change message to the child frame.
       // See https://github.com/philc/vimium/pull/3277#issuecomment-487363284
+
+      // Allow to access the clipboard through iframes.
+      this.hudUI.iframeElement.allow = "clipboard-read";
       getComputedStyle(this.hudUI.iframeElement).display;
     } else {
       this.hudUI.toggleIframeElementClasses("vimiumClickable", "vimiumNonClickable");
