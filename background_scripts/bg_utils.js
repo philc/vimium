@@ -162,5 +162,5 @@ const SearchEngines = {
 
 BgUtils.TIME_DELTA = TIME_DELTA; // Referenced by our tests.
 
-global.SearchEngines = SearchEngines;
-global.BgUtils = BgUtils;
+window.SearchEngines = SearchEngines;
+window.BgUtils = BgUtils;

@@ -26,15 +26,17 @@ chrome.runtime.onInstalled.addListener(function({ reason }) {
 });
 
 const frameIdsForTab = {};
-global.portsForTab = {};
-global.urlForTab = {};
+window.portsForTab = {};
+window.urlForTab = {};
 
 // This is exported for use by "marks.js".
-global.tabLoadedHandlers = {}; // tabId -> function()
+window.tabLoadedHandlers = {}; // tabId -> function()
 
-// A secret, available only within the current instantiation of Vimium. The secret is big, likely unguessable
-// in practice, but less than 2^31.
-chrome.storage.local.set({vimiumSecret: Math.floor(Math.random() * 2000000000)});
+// A secret, available only within the current instantiation of Vimium, for the duration of the browser
+// session. The secret is a generated strong random string.
+const randomArray = window.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
+const secretToken =  randomArray.reduce((a,b) => a.toString(16) + b.toString(16));
+chrome.storage.local.set({vimiumSecret: secretToken});
 
 const completionSources = {
   bookmarks: new BookmarkCompleter,
@@ -159,7 +161,8 @@ const TabOperations = {
       delete tabConfig["url"];
 
     // Firefox <57 throws an error when openerTabId is used (issue 1238314).
-    const canUseOpenerTabId = !(Utils.isFirefox() && (Utils.compareVersions(Utils.firefoxVersion(), "57") < 0));
+    const canUseOpenerTabId = !Utils.isFirefox() || Utils.firefoxVersion() instanceof Promise
+        || (Utils.compareVersions(Utils.firefoxVersion(), "57") >= 0);
     if (canUseOpenerTabId)
       tabConfig.openerTabId = request.tab.id;
 
@@ -434,7 +437,20 @@ var Frames = {
   onConnect(sender, port) {
     const [tabId, frameId] = [sender.tab.id, sender.frameId];
     port.onDisconnect.addListener(() => Frames.unregisterFrame({tabId, frameId, port}));
-    port.postMessage({handler: "registerFrameId", chromeFrameId: frameId});
+    const message = {handler: "registerFrameId", chromeFrameId: frameId}
+    let firefoxVersion
+    if (Utils.isFirefox()) {
+      firefoxVersion = Utils.firefoxVersion()
+      message.firefoxVersion = firefoxVersion
+    }
+    if (typeof firefoxVersion === "object") {
+      firefoxVersion.then(() => {
+        message.firefoxVersion = Utils.firefoxVersion()
+        port.postMessage(message);
+      })
+    } else {
+      port.postMessage(message);
+    }
     (portsForTab[tabId] != null ? portsForTab[tabId] : (portsForTab[tabId] = {}))[frameId] = port;
 
     // Return our onMessage handler for this port.
@@ -714,4 +730,4 @@ chrome.runtime.onInstalled.addListener(function({reason}) {
     chrome.storage.local.set({installDate: new Date().toString()});
 });
 
-Object.assign(global, {TabOperations, Frames});
+Object.assign(window, {TabOperations, Frames});

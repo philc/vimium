@@ -1,8 +1,6 @@
 Vimium - The Hacker's Browser
 =============================
 
-[![Build Status](https://travis-ci.org/philc/vimium.svg?branch=master)](https://travis-ci.org/philc/vimium)
-
 Vimium is a browser extension that provides keyboard-based navigation and control of the web in the spirit of
 the Vim editor.
 
@@ -72,7 +70,7 @@ Manipulating tabs:
 
     J, gT   go one tab left
     K, gt   go one tab right
-    g0      go to the first tab
+    g0      go to the first tab. Use ng0 to go to n-th tab
     g$      go to the last tab
     ^       visit the previously-visited tab
     t       create tab
@@ -95,7 +93,7 @@ Additional advanced browsing commands:
     ]], [[  Follow the link labeled 'next' or '>' ('previous' or '<')
               - helpful for browsing paginated sites
     <a-f>   open multiple links in a new tab
-    gi      focus the first (or n-th) text input box on the page
+    gi      focus the first (or n-th) text input box on the page. Use <tab> to cycle through options.
     gu      go up one level in the URL hierarchy
     gU      go up to root of the URL hierarchy
     ge      edit the current URL
@@ -105,8 +103,8 @@ Additional advanced browsing commands:
     v       enter visual mode; use p/P to paste-and-go, use y to yank
     V       enter visual line mode
 
-Vimium supports command repetition so, for example, hitting `5t` will open 5 tabs in rapid succession. `<Esc>` (or
-`<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
+Vimium supports command repetition so, for example, hitting `5t` will open 5 tabs in rapid succession. `<Esc>`
+(or `<c-[>`) will clear any partial commands in the queue and will also exit insert and find modes.
 
 There are some advanced commands which aren't documented here; refer to the help dialog (type `?`) for a full
 list.
@@ -139,7 +137,7 @@ You can add comments to key mappings by starting a line with `"` or `#`.
 
 The following special keys are available for mapping:
 
-- `<c-*>`, `<a-*>`, `<m-*>` for ctrl, alt, and meta (command on Mac) respectively with any key. Replace `*`
+- `<c-*>`, `<a-*>`, `<s-*>`, `<m-*>` for ctrl, alt, shift, and meta (command on Mac) respectively with any key. Replace `*`
   with the key of choice.
 - `<left>`, `<right>`, `<up>`, `<down>` for the arrow keys.
 - `<f1>` through `<f12>` for the function keys.

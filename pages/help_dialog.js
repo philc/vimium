@@ -23,7 +23,7 @@ const compareKeys = function(a,b) {
 
 // This overrides the HelpDialog implementation in vimium_frontend.js.  We provide aliases for the two
 // HelpDialog methods required by normalMode (isShowing() and toggle()).
-var HelpDialog = {
+const HelpDialog = {
   dialogElement: null,
   isShowing() { return true; },
 
@@ -192,5 +192,5 @@ document.addEventListener("DOMContentLoaded", function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-global.HelpDialog = HelpDialog;
-global.isVimiumHelpDialog = true;
+window.HelpDialog = HelpDialog;
+window.isVimiumHelpDialog = true;

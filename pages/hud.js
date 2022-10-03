@@ -134,6 +134,8 @@ const handlers = {
     if (countElement == null) // Don't do anything if we're not in find mode.
       return;
 
+    if (Utils.isFirefox())
+      document.getElementById("hud-find-input").focus()
     const countText = matchCount > 0 ?
       ` (${matchCount} Match${matchCount === 1 ? "" : "es"})` : " (No matches)";
     countElement.textContent = showMatchText ? countText : "";

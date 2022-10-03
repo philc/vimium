@@ -457,5 +457,5 @@ class FocusSelector extends Mode {
   }
 }
 
-global.NormalMode = NormalMode;
-global.NormalModeCommands = NormalModeCommands;
+window.NormalMode = NormalMode;
+window.NormalModeCommands = NormalModeCommands;

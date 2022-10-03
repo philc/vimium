@@ -118,7 +118,7 @@ class VomnibarUI {
   updateSelection() {
     // For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms") within the
     // vomnibar input.
-    if (this.lastReponse.isCustomSearch && (this.customSearchMode == null)) {
+    if (this.lastResponse.isCustomSearch && (this.customSearchMode == null)) {
       const queryTerms = this.input.value.trim().split(/\s+/);
       this.customSearchMode = queryTerms[0];
       this.input.value = queryTerms.slice(1).join(" ");
@@ -160,7 +160,7 @@ class VomnibarUI {
     } else if ((key === "down") ||
         (event.ctrlKey && ((key === "j") || (key === "n")))) {
       return "down";
-    } else if (event.ctrlKey && (event.key === "Enter")) {
+    } else if (event.ctrlKey && (key === "enter")) {
       return "ctrl-enter";
     } else if (event.key === "Enter") {
       return "enter";
@@ -202,7 +202,7 @@ class VomnibarUI {
       this.updateSelection();
     } else if (action === "enter") {
       const c = this.completions[this.selection];
-      const isCustomSearchPrimarySuggestion = c && c.isCustomSearchPrimarySuggestion &&
+      const isCustomSearchPrimarySuggestion = c && c.isPrimarySuggestion &&
             this.lastResponse.engine && this.lastResponse.engine.searchUrl;
       if ((this.selection === -1) || isCustomSearchPrimarySuggestion) {
         let query = this.input.value.trim();
@@ -221,7 +221,7 @@ class VomnibarUI {
         // text than that which is included in the URL associated with the primary suggestion.  Therefore, to
         // avoid a race condition, we construct the query from the actual contents of the input (query).
         if (isCustomSearchPrimarySuggestion)
-          query = Utils.createSearchUrl(query, this.lastReponse.engine.searchUrl);
+          query = Utils.createSearchUrl(query, this.lastResponse.engine.searchUrl);
         this.hide(() => Vomnibar.getCompleter().launchUrl(query, openInNewTab));
       } else {
         completion = this.completions[this.selection];
@@ -269,9 +269,9 @@ class VomnibarUI {
     return this.completer.filter({
       query: this.getInputValueAsQuery(),
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
-      callback: lastReponse => {
-        this.lastReponse = lastReponse;
-        const { results } = this.lastReponse;
+      callback: lastResponse => {
+        this.lastResponse = lastResponse;
+        const { results } = this.lastResponse;
         this.completions = results;
         this.selection = (this.completions[0] != null ? this.completions[0].autoSelect : undefined) ? 0 : this.initialSelectionValue;
         // Update completion list with the new suggestions.
@@ -453,4 +453,4 @@ document.addEventListener("DOMContentLoaded", function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-global.Vomnibar = Vomnibar;
+window.Vomnibar = Vomnibar;

@@ -1,8 +1,18 @@
-(unreleased)
+1.67.1 (2022-01-19)
 
-- Converted the code base from coffeescript to Javascript, to allow more developers to work on Vimium. This
-  has likely introduced small bugs, so if you see one, please file them
-  [here](https://github.com/philc/vimium/issues).
+- In Firefox 96+, make link hints open one tab, not two ([#3985](https://github.com/philc/vimium/pull/3985))
+
+1.67 (2021-07-09)
+
+- Dark mode: Vimium's UI (URL bar, help dialog, option page, etc.) are dark if the browser is configured for
+  dark mode. Vimium's dark mode is also compatible when using the popular
+  [DarkReader extension](https://github.com/darkreader/darkreader).
+- Convert the code base from Coffeescript to Javascript, to simplify the dev experience and allow more
+  developers to work on Vimium.
+- Make search mode work in newer versions of Firefox (#3801)
+- Make buttons on the Vimium options page work again in newer versions of Firefox (#3624)
+- Allow Vimium to work in LibreWolf (a Firefox fork)
+- Fixes to visual mode (#3568, #3779)
 
 1.66 (2020-03-02)
 
