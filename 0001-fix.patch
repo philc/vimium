@@ -1,0 +1,40 @@
+From 64ae838b490b5e37faa23f5cfdd3ba4cafa69e4c Mon Sep 17 00:00:00 2001
+From: liuzenglu <zenglu.liu@gmail.com>
+Date: Thu, 26 Nov 2020 21:23:58 +0800
+Subject: [PATCH] fix
+
+---
+ content_scripts/vimium.css | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/content_scripts/vimium.css b/content_scripts/vimium.css
+index be43a606..221c310b 100644
+--- a/content_scripts/vimium.css
++++ b/content_scripts/vimium.css
+@@ -325,9 +325,9 @@ iframe.vimiumHUDFrame {
+   position: fixed;
+   width: 20%;
+   min-width: 300px;
+-  height: 58px;
+-  bottom: -14px;
+-  right: 20px;
++  height: 80px;
++  top: 140px;
++  right: 200px;
+   margin: 0 0 0 -40%;
+   border: none;
+   z-index: 2139999998; /* Two less than the reference value. */
+@@ -344,8 +344,8 @@ div.vimiumHUD .vimiumHUDSearchArea {
+ div.vimiumHUD .vimiumHUDSearchAreaInner {
+   color: #777;
+   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+-  font-size: 14px;
+-  height: 30px;
++  font-size: 30px;
++  height: 32px;
+   margin-bottom: 0;
+   padding: 2px 4px;
+   border-radius: 3px;
+-- 
+2.36.1
+

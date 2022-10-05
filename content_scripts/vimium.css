@@ -325,9 +325,9 @@ iframe.vimiumHUDFrame {
   position: fixed;
   width: 20%;
   min-width: 300px;
-  height: 58px;
-  bottom: -14px;
-  right: 20px;
+  height: 80px;
+  top: 140px;
+  right: 200px;
   margin: 0 0 0 -40%;
   border: none;
   z-index: 2139999998; /* Two less than the reference value. */
@@ -344,8 +344,8 @@ div.vimiumHUD .vimiumHUDSearchArea {
 div.vimiumHUD .vimiumHUDSearchAreaInner {
   color: #777;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  height: 30px;
+  font-size: 30px;
+  height: 32px;
   margin-bottom: 0;
   padding: 2px 4px;
   border-radius: 3px;
