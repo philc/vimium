@@ -1,3 +1,13 @@
+1.67.2 (2022-10-17)
+
+- In Firefox, remove use of deprecated InstallTrigger, which was issuing a console warning
+  ([#4033](https://github.com/philc/vimium/issues/4033))
+- Fix the Vimium toolbar icon to accurately reflect whether keys are excluded
+  ([#4118](https://github.com/philc/vimium/pull/4118))
+- Fix usage of deprecated clipboard APIs, which affected commands using copy and paste
+  ([#4120](https://github.com/philc/vimium/issues/4120))
+- Fix bug preventing going into caret mode ([#3877](https://github.com/philc/vimium/pull/3877))
+
 1.67.1 (2022-01-19)
 
 - In Firefox 96+, make link hints open one tab, not two ([#3985](https://github.com/philc/vimium/pull/3985))
