@@ -379,7 +379,7 @@ VisualMode.prototype.movements = {
   "N"(count) { return this.find(count, true); },
   "/"() {
     this.exit();
-    return new FindMode({returnToViewport: true}).onExit(() => new VisualMode());
+    return new FindMode({returnToViewport: true}).onExit(() => new VisualMode().init());
   },
 
   "y"() { return this.yank(); },
