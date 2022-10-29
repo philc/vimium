@@ -1,3 +1,8 @@
+1.67.3 (2022-10-29)
+
+- Fix copy-to-clipboard issue ([#4147](https://github.com/philc/vimium/issues/4147)) in visual mode.
+- Fix Vimium's dark mode styling in latest Firefox ([#4148](https://github.com/philc/vimium/issues/4148))
+
 1.67.2 (2022-10-17)
 
 - In Firefox, remove use of deprecated InstallTrigger, which was issuing a console warning
