@@ -309,6 +309,29 @@ const BackgroundCommands = {
     });
   },
 
+  moveTabToNextWindow({count, tab}) {
+    chrome.tabs.query({currentWindow: true}, function(tabs) {
+      const activeTabIndex = tab.index;
+      const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
+      [ tab, ...tabs ] = tabs.slice(startTabIndex, startTabIndex + count);
+      if (chrome.windows != null) {
+        chrome.windows.getAll(null, function(windows) {
+          nextWindowId = null;
+          for (var i=0; i<windows.length; i++){
+            if (windows[i].id == tab.windowId) {
+                  nextWindowId = windows[(i+1) % windows.length].id;
+                  break;
+              }
+          }
+          if (nextWindowId != null && nextWindowId != tab.windowId) {
+            chrome.tabs.move(tab.id, {windowId: nextWindowId, index: -1});
+            chrome.tabs.move(tabs.map(t => t.id), {windowId: nextWindowId, index: -1});
+          }  
+        }
+      )};
+    });
+  },
+
   nextTab(request) { return selectTab("next", request); },
   previousTab(request) { return selectTab("previous", request); },
   firstTab(request) { return selectTab("first", request); },

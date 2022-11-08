@@ -243,6 +243,7 @@ const Commands = {
       "removeTab",
       "restoreTab",
       "moveTabToNewWindow",
+      "moveTabToNextWindow",
       "closeTabsOnLeft","closeTabsOnRight",
       "closeOtherTabs",
       "moveTabLeft",
@@ -259,6 +260,7 @@ const Commands = {
     "scrollToLeft",
     "scrollToRight",
     "moveTabToNewWindow",
+    "moveTabToNextWindow",
     "goUp",
     "goToRoot",
     "LinkHints.activateModeWithQueue",
@@ -347,6 +349,7 @@ const defaultKeyMappings = {
   "W": "moveTabToNewWindow",
   "t": "createTab",
   "yt": "duplicateTab",
+  "Y": "moveTabToNextWindow",
   "x": "removeTab",
   "X": "restoreTab",
   "<a-p>": "togglePinTab",
@@ -433,6 +436,7 @@ const commandDescriptions = {
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }],
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }],
+  moveTabToNextWindow: ["Move tab to next window", { background: true }],
   togglePinTab: ["Pin or unpin current tab", { background: true }],
   toggleMuteTab: ["Mute or unmute current tab", { background: true, noRepeat: true }],
 
