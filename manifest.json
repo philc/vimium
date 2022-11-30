@@ -30,8 +30,6 @@
     "tabs",
     "bookmarks",
     "history",
-    "clipboardRead",
-    "clipboardWrite",
     "storage",
     "sessions",
     "notifications",

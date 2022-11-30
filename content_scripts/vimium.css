@@ -425,6 +425,7 @@ iframe.vimiumUIComponentHidden {
 
 iframe.vimiumUIComponentVisible {
   display: block;
+  color-scheme: light dark;
 }
 
 iframe.vimiumUIComponentReactivated {
@@ -512,8 +513,4 @@ iframe.vimiumNonClickable {
     box-shadow: none;
     color: white;
   }
-}
-
-.vimiumUIComponentVisible {
-  color-scheme: normal;
 }
