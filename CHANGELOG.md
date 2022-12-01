@@ -1,3 +1,9 @@
+1.67.4 (2022-12-01)
+
+- Remove clipboard read/write permissions. We no longer need them since 1.67.2 (see #4120).
+- Fix Vimium's dark mode styling, take 2 (see [#4156](https://github.com/philc/vimium/issues/4156),
+  [#4159](https://github.com/philc/vimium/pull/4159))
+
 1.67.3 (2022-10-29)
 
 - Fix copy-to-clipboard issue ([#4147](https://github.com/philc/vimium/issues/4147)) in visual mode.
