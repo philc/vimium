@@ -228,6 +228,23 @@ class UpToDate extends BaseEngine {
   parse(xhr) { return JSON.parse(xhr.responseText).data.searchTerms; }
 }
 
+class StartPage extends BaseEngine {
+  constructor() {
+    super({
+      engineUrl: "https://www.startpage.com/suggestions?q=%s",
+      regexps: ["^https?://([a-z]+\\.)?startpage\\.com/"],
+      example: {
+        searchUrl: "https://www.startpage.com/sp/search?query=%s",
+        keyword: "d"
+      }
+    });
+  }
+
+  parse(xhr) {
+    return Array.from(JSON.parse(xhr.responseText)).map((suggestion) => suggestion.phrase);
+  }
+}
+
 // A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 // allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine extends BaseEngine {
@@ -251,6 +268,7 @@ const CompletionEngines = [
   AmazonJapan,
   Webster,
   Qwant,
+  StartPage,
   UpToDate,
   DummyCompletionEngine
 ];
