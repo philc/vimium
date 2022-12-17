@@ -60,7 +60,7 @@ async function buildStorePackage() {
 
   // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome does not.
   // See #4186.
-  const firefoxPermissions = manifestContents.permissions;
+  const firefoxPermissions = Array.from(manifestContents.permissions);
   firefoxPermissions.push("clipboardRead");
   firefoxPermissions.push("clipboardWrite");
 
@@ -75,18 +75,14 @@ async function buildStorePackage() {
   }));
   await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
 
-  // Build the Chrome Store package. Chrome does not require the clipboardWrite permission.
-  const permissions = manifestContents.permissions.filter((p) => p != "clipboardWrite");
-  writeDistManifest(Object.assign({}, manifestContents, {
-    permissions,
-  }));
+  // Build the Chrome Store package.
+  writeDistManifest(manifestContents);
   await shell("bash", ["-c", `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`]);
 
   // Build the Chrome Store dev package.
   writeDistManifest(Object.assign({}, manifestContents, {
     name: "Vimium Canary",
     description: "This is the development branch of Vimium (it is beta software).",
-    permissions,
   }));
   await shell("bash", ["-c", `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`]);
 }
