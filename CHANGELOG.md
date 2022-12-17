@@ -1,3 +1,8 @@
+1.67.5 (2022-12-17)
+
+- For Firefox only, add back the clipboard read and write permissions. This fixes the Vimium commands which
+  use the clipboard in Firefox ([#4186](https://github.com/philc/vimium/pull/4186))
+
 1.67.4 (2022-12-01)
 
 - Remove clipboard read/write permissions. We no longer need them since 1.67.2 (see #4120).
