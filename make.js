@@ -58,6 +58,8 @@ async function buildStorePackage() {
   await shell("mkdir", ["-p", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
   await shell("rsync", rsyncOptions);
 
+  // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome does not.
+  // See #4186.
   const firefoxPermissions = manifestContents.permissions;
   firefoxPermissions.push("clipboardRead");
   firefoxPermissions.push("clipboardWrite");
@@ -69,7 +71,6 @@ async function buildStorePackage() {
         strict_min_version: "62.0"
       },
     },
-    // Adding needed permission for Firefox to access the clipboard
     permissions: firefoxPermissions,
   }));
   await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
