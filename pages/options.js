@@ -423,10 +423,12 @@ const initPopupPage = function() {
 document.addEventListener("DOMContentLoaded", function() {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
   const xhr = new XMLHttpRequest();
+  xhr.responseType = "document";
   xhr.open('GET', chrome.extension.getURL('pages/exclusions.html'), true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
-      $("exclusionScrollBox").innerHTML = xhr.responseText;
+      const fragment = xhr.response.querySelector("#exclusionsFragment");
+      $("exclusionScrollBox").appendChild(fragment);
       switch (location.pathname) {
         case "/pages/options.html": initOptionsPage(); break;
         case "/pages/popup.html": initPopupPage(); break;
