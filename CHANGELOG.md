@@ -1,3 +1,8 @@
+1.67.6 (2022-12-19)
+
+- Fix a spurious issue preventing approval on the Mozilla addons site
+  ([#4195](https://github.com/philc/vimium/issues/4195))
+
 1.67.5 (2022-12-17)
 
 - For Firefox only, add back the clipboard read and write permissions. This fixes the Vimium commands which
