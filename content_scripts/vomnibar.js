@@ -31,6 +31,13 @@ const Vomnibar = {
     });
   },
 
+  moveTabToWindow(sourceFrameId) {
+    return this.open(sourceFrameId, {
+      completer: "windows",
+      selectFirst: true,
+    });
+  },
+
   activateBookmarks(sourceFrameId) {
     return this.open(sourceFrameId, {
       completer: "bookmarks",

@@ -365,7 +365,8 @@ class BackgroundCompleter {
     this.name = name;
     this.completionActions = {
       navigateToUrl(url) { return openInNewTab => Vomnibar.getCompleter().launchUrl(url, openInNewTab); },
-      switchToTab(tabId) { return () => chrome.runtime.sendMessage({handler: "selectSpecificTab", id: tabId}); }
+      switchToTab(tabId) { return () => chrome.runtime.sendMessage({handler: "selectSpecificTab", id: tabId}); },
+      moveToWindow(tabId, windowId) { return () => chrome.runtime.sendMessage({handler: "moveTabToSpecificWindow", tabId: tabId, windowId: windowId}); }
     };
 
     this.port = chrome.runtime.connect({name: "completions"});
@@ -381,14 +382,17 @@ class BackgroundCompleter {
         if (msg.id === this.messageId) {
           // The result objects coming from the background page will be of the form:
           //   { html: "", type: "", url: "", ... }
-          // Type will be one of [tab, bookmark, history, domain, search], or a custom search engine description.
+          // Type will be one of [tab, bookmark, history, domain, search, window], or a custom search engine description.
           for (let result of msg.results) {
-            Object.assign(result, {
-              performAction:
-              result.type === "tab" ?
-                this.completionActions.switchToTab(result.tabId) :
-                this.completionActions.navigateToUrl(result.url)
-            });
+            let completionAction;
+            if (result.type === "tab") {
+              completionAction = this.completionActions.switchToTab(result.tabId);
+            } else if (result.type === "window") {
+              completionAction = this.completionActions.moveToWindow(result.tabId, result.windowId);
+            } else {
+              completionAction = this.completionActions.navigateToUrl(result.url);
+            }
+            Object.assign(result, { performAction: completionAction });
           }
 
           // Handle the message, but only if it hasn't arrived too late.

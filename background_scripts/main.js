@@ -43,6 +43,7 @@ const completionSources = {
   history: new HistoryCompleter,
   domains: new DomainCompleter,
   tabs: new TabCompleter,
+  windows: new WindowCompleter,
   searchEngines: new SearchEngineCompleter
 };
 
@@ -52,10 +53,12 @@ const completers = {
     completionSources.history,
     completionSources.domains,
     completionSources.tabs,
-    completionSources.searchEngines
-    ]),
+    completionSources.windows,
+    completionSources.searchEngines,
+  ]),
   bookmarks: new MultiCompleter([completionSources.bookmarks]),
-  tabs: new MultiCompleter([completionSources.tabs])
+  tabs: new MultiCompleter([completionSources.tabs]),
+  windows: new MultiCompleter([completionSources.windows]),
 };
 
 const completionHandlers = {
@@ -226,6 +229,16 @@ const selectSpecificTab = request => chrome.tabs.get(request.id, function(tab) {
   return chrome.tabs.update(request.id, { active: true });
 });
 
+//
+// Move the tab with request.tabId to the window with request.windowId
+//
+const moveTabToSpecificWindow = request => {
+  // must focus window first, otherwise focus will shift to address bar
+  chrome.windows.update(request.windowId, { focused: true });
+  chrome.tabs.move(request.tabId, {windowId: request.windowId, index: -1});
+  chrome.tabs.update(request.tabId, { active: true });
+};
+
 const moveTab = function({count, tab, registryEntry}) {
   if (registryEntry.command === "moveTabLeft")
     count = -count;
@@ -326,7 +339,11 @@ const BackgroundCommands = {
   },
 
   closeTabsOnLeft(request) { return removeTabsRelative("before", request); },
+  closeOneTabOnLeft(request) { return removeTabsRelative("beforeOne", request); },
+  closeOneTabOnLeftAndSelf(request) { return removeTabsRelative("beforeOneAndSelf", request); },
   closeTabsOnRight(request) { return removeTabsRelative("after", request); },
+  closeOneTabOnRight(request) { return removeTabsRelative("afterOne", request); },
+  closeOneTabOnRightAndSelf(request) { return removeTabsRelative("afterOneAndSelf", request); },
   closeOtherTabs(request) { return removeTabsRelative("both", request); },
 
   visitPreviousTab({count, tab}) {
@@ -361,13 +378,21 @@ var forCountTabs = (count, currentTab, callback) => chrome.tabs.query({currentWi
 });
 
 // Remove tabs before, after, or either side of the currently active tab
-var removeTabsRelative = (direction, {tab: activeTab}) => chrome.tabs.query({currentWindow: true}, function(tabs) {
+var removeTabsRelative = (direction, {count, tab: activeTab}) => chrome.tabs.query({currentWindow: true}, function(tabs) {
   const shouldDelete =
     (() => { switch (direction) {
       case "before":
         return index => index < activeTab.index;
+      case "beforeOne":
+        return index => index < activeTab.index && index >= activeTab.index - count;
+      case "beforeOneAndSelf":
+        return index => index <= activeTab.index && index >= activeTab.index - count;
       case "after":
         return index => index > activeTab.index;
+      case "afterOne":
+        return index => index > activeTab.index && index <= activeTab.index + count;
+      case "afterOneAndSelf":
+        return index => index >= activeTab.index && index <= activeTab.index + count;
       case "both":
         return index => index !== activeTab.index;
     } })();
@@ -643,6 +668,7 @@ var sendRequestHandlers = {
   frameFocused: handleFrameFocused,
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+  moveTabToSpecificWindow,
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks),
   // Send a message to all frames in the current tab.

@@ -490,6 +490,57 @@ class TabCompleter {
   }
 }
 
+// Searches through all windows, matching on title and URL.
+class WindowCompleter {
+  filter({ name, queryTerms }, onComplete) {
+    if ((name !== "windows") && (queryTerms.length === 0))
+      return onComplete([]);
+
+    chrome.windows.getAll({populate: true}, windows => {
+      chrome.tabs.query({currentWindow: true, active: true}, tabs => {
+        const curTab = tabs[0];
+        // an array of active tabs for each window
+        const activeTabs = windows.filter(window => (curTab.windowId !== window.id) && (curTab.incognito === window.incognito))
+                                  .map(window => window.tabs.find(tab => tab.active));
+        const results = activeTabs.filter(activeTab => RankingUtils.matches(queryTerms, activeTab.url, activeTab.title));
+        const suggestions = results.map(activeTab => {
+          const suggestion = new Suggestion({
+            queryTerms,
+            type: "window",
+            url: activeTab.url,
+            title: activeTab.title,
+            tabId: curTab.id,
+            windowId: activeTab.windowId,
+            deDuplicate: false,
+          });
+          suggestion.relevancy = this.computeRelevancy(suggestion);
+          return suggestion;
+        }).sort((a, b) => b.relevancy - a.relevancy);
+        // Boost relevancy with a multiplier so a relevant tab doesn't
+        // get crowded out by results from competing completers. To
+        // prevent tabs from crowding out everything else in turn,
+        // penalize them for being further down the results list by
+        // scaling on a hyperbola starting at 1 and approaching 0
+        // asymptotically for higher indexes. The multiplier and the
+        // curve fall-off were objectively chosen on the grounds that
+        // they seem to work pretty well.
+        suggestions.forEach(function(suggestion,i) {
+          suggestion.relevancy *= 8;
+          return suggestion.relevancy /= ( (i / 4) + 1 );
+        });
+        onComplete(suggestions);
+      });
+    });
+  }
+
+  computeRelevancy(suggestion) {
+    if (suggestion.queryTerms.length)
+      return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
+    else
+      return BgUtils.tabRecency.recencyScore(suggestion.windowId);
+  }
+}
+
 class SearchEngineCompleter {
   constructor() {
     this.previousSuggestions = null;
@@ -1091,6 +1142,7 @@ Object.assign(window, {
   HistoryCompleter,
   DomainCompleter,
   TabCompleter,
+  WindowCompleter,
   SearchEngineCompleter,
   HistoryCache,
   RankingUtils,
