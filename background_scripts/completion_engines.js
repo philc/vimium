@@ -39,10 +39,12 @@ class BaseEngine {
 
 // Several Google completion engines package responses as XML. This parses such XML.
 class GoogleXMLBaseEngine extends BaseEngine {
-  parse(xhr) {
-    return Array.from(xhr.responseXML.getElementsByTagName("suggestion"))
-    .map(suggestion => suggestion.getAttribute("data"))
-    .filter(suggestion => suggestion);
+  parse(body) {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(body, 'application/xml');
+    return Array.from(xml.getElementsByTagName("suggestion"))
+      .map(suggestion => suggestion.getAttribute("data"))
+      .filter(suggestion => suggestion);
   }
 }
 
@@ -70,7 +72,7 @@ class GoogleMaps extends GoogleXMLBaseEngine {
         searchUrl: "https://www.google.com/maps?q=%s",
         keyword: "m",
         explanation:
-          `\
+        `\
 This uses regular Google completion, but prepends the text "<tt>map of</tt>" to the query.  It works
 well for places, countries, states, geographical regions and the like, but will not perform address
 search.\
@@ -79,8 +81,8 @@ search.\
     });
   }
 
-  parse(xhr) {
-    return Array.from(super.parse(xhr))
+  parse(body) {
+    return Array.from(super.parse(body))
     .filter(suggestion => suggestion.startsWith(GoogleMaps.prefix))
     .map(suggestion => suggestion.slice(GoogleMaps.prefix.length));
   }
@@ -100,6 +102,22 @@ class Youtube extends GoogleXMLBaseEngine {
     });
   }
 }
+class ManKier extends BaseEngine {
+  constructor() {
+    super({
+      engineUrl: "https://www.mankier.com/api/v2/mans/?q=%s",
+      regexps: ["^https?://www\\.mankier\\.com"],
+      example: {
+        searchUrl: "https://www.mankier.com/?q=%s",
+        keyword: "ma"
+      }
+    });
+  }
+
+  parse(body) {
+    return JSON.parse(body).results.map((res) => res.name);
+  }
+}
 
 class Wikipedia extends BaseEngine {
   constructor() {
@@ -113,7 +131,7 @@ class Wikipedia extends BaseEngine {
     });
   }
 
-  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+  parse(body) { return JSON.parse(body)[1]; }
 }
 
 class Bing extends BaseEngine {
@@ -128,7 +146,7 @@ class Bing extends BaseEngine {
     });
   }
 
-  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+  parse(body) { return JSON.parse(body)[1]; }
 }
 
 class Amazon extends BaseEngine {
@@ -143,7 +161,7 @@ class Amazon extends BaseEngine {
     });
   }
 
-  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+  parse(body) { return JSON.parse(body)[1]; }
 }
 
 class AmazonJapan extends BaseEngine {
@@ -158,7 +176,7 @@ class AmazonJapan extends BaseEngine {
     });
   }
 
-  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+  parse(body) { return JSON.parse(body)[1]; }
 }
 
 class DuckDuckGo extends BaseEngine {
@@ -173,8 +191,8 @@ class DuckDuckGo extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return Array.from(JSON.parse(xhr.responseText)).map((suggestion) => suggestion.phrase);
+  parse(body) {
+    return Array.from(JSON.parse(body)).map((suggestion) => suggestion.phrase);
   }
 }
 
@@ -191,8 +209,8 @@ class Webster extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return Array.from(JSON.parse(xhr.responseText).docs).map((suggestion) => suggestion.word);
+  parse(body) {
+    return Array.from(JSON.parse(body).docs).map((suggestion) => suggestion.word);
   }
 }
 
@@ -208,8 +226,8 @@ class Qwant extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return Array.from(JSON.parse(xhr.responseText).data.items).map((suggestion) => suggestion.value);
+  parse(body) {
+    return Array.from(JSON.parse(body).data.items).map((suggestion) => suggestion.value);
   }
 }
 
@@ -225,7 +243,7 @@ class UpToDate extends BaseEngine {
     });
   }
 
-  parse(xhr) { return JSON.parse(xhr.responseText).data.searchTerms; }
+  parse(body) { return JSON.parse(body).data.searchTerms; }
 }
 
 // A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
@@ -252,6 +270,7 @@ const CompletionEngines = [
   Webster,
   Qwant,
   UpToDate,
+  ManKier,
   DummyCompletionEngine
 ];
 

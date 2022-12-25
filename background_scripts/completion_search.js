@@ -33,8 +33,8 @@ class EnginePrefixWrapper {
     return this.engine.getUrl(queryTerms);
   }
 
-  parse(xhr) {
-    return this.postprocessSuggestions(this.engine.parse(xhr));
+  parse(body) {
+    return this.postprocessSuggestions(this.engine.parse(body));
   }
 
   postprocessSuggestions(suggestions) { return suggestions; }
@@ -46,22 +46,17 @@ const CompletionSearch = {
   completionCache: new SimpleCache(2 * 60 * 60 * 1000, 5000), // Two hours, 5000 entries.
   engineCache:new SimpleCache(1000 * 60 * 60 * 1000), // 1000 hours.
 
+
   // The amount of time to wait for new requests before launching the current request (for example, if the user
   // is still typing).
   delay: 100,
 
   get(searchUrl, url, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.timeout = 2500;
-    // According to https://xhr.spec.whatwg.org/#request-error-steps,
-    // readystatechange always gets called whether a request succeeds or not,
-    // and the `readyState == 4` means an associated `state` is "done", which is true even if any error happens
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4)
-        return callback(xhr.status === 200 ? xhr : null);
-    };
-    return xhr.send();
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 2500);
+    return fetch(url, { method: 'GET', mode: 'cors', signal: controller.signal })
+    .then((response) => clearTimeout(id) && response.status !== 200 ? callback(null) : response.text())
+    .then((body) => callback(body));
   },
 
   // Look up the completion engine for this searchUrl.  Because of DummyCompletionEngine, we know there will
@@ -163,13 +158,13 @@ const CompletionSearch = {
           const url = engine.getUrl(queryTerms);
 
           // TODO(philc): Do we need to return the result of this.get here, or can we remove this return statement?
-          return this.get(searchUrl, url, (xhr = null) => {
+          return this.get(searchUrl, url, (body = null) => {
             // Parsing the response may fail if we receive an unexpected or an unexpectedly-formatted response.
             // In all cases, we fall back to the catch clause, below.  Therefore, we "fail safe" in the case of
             // incorrect or out-of-date completion engines.
             let suggestions;
             try {
-              suggestions = engine.parse(xhr)
+              suggestions = engine.parse(body)
                 // Make all suggestions lower case. It looks odd when suggestions from one completion engine are
                 // upper case, and those from another are lower case.
                 .map(s => s.toLowerCase())
