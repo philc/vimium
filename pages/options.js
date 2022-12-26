@@ -252,6 +252,7 @@ const Options = {
   ignoreKeyboardLayout: CheckBoxOption,
   scrollStepSize: NumberOption,
   smoothScroll: CheckBoxOption,
+  scrollBehaviorSmooth: CheckBoxOption,
   grabBackFocus: CheckBoxOption,
   searchEngines: TextOption,
   searchUrl: NonEmptyTextOption,
