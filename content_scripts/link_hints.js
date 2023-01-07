@@ -48,6 +48,20 @@ const COPY_LINK_URL = {
     }
   }
 };
+const SHOW_LINK_URL = {
+  name: "link",
+  indicator: "Show link URL",
+  linkActivator(link) {
+    if (link.href != null) {
+      let url = link.href;
+      if (url.slice(0, 7) === "mailto:") { url = url.slice(7); }
+      if (28 < url.length) { url = url.slice(0, 23) + "...."; }
+      HUD.showForDuration(`Link URL: ${url}`, 5000);
+    } else {
+      HUD.showForDuration("No link to show.", 2000);
+    }
+  }
+};
 const OPEN_INCOGNITO = {
   name: "incognito",
   indicator: "Open link in incognito window",
@@ -91,7 +105,7 @@ const FOCUS_LINK = {
 };
 
 const availableModes = [OPEN_IN_CURRENT_TAB, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB, OPEN_WITH_QUEUE, COPY_LINK_URL,
-  OPEN_INCOGNITO, DOWNLOAD_LINK_URL, COPY_LINK_TEXT, HOVER_LINK, FOCUS_LINK];
+  SHOW_LINK_URL, OPEN_INCOGNITO, DOWNLOAD_LINK_URL, COPY_LINK_TEXT, HOVER_LINK, FOCUS_LINK];
 
 const HintCoordinator = {
   onExit: [],
@@ -134,7 +148,7 @@ const HintCoordinator = {
   getHintDescriptors({modeIndex, isVimiumHelpDialog}) {
     // Ensure that the document is ready and that the settings are loaded.
     DomUtils.documentReady(() => { return Settings.onLoaded(() => {
-      const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
+      const requireHref = [COPY_LINK_URL, SHOW_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
       // If link hints is launched within the help dialog, then we only offer hints from that frame.  This
       // improves the usability of the help dialog on the options page (particularly for selecting command
       // names).
@@ -241,6 +255,7 @@ var LinkHints = {
   activateModeToOpenInNewTab(count) { this.activateMode(count, {mode: OPEN_IN_NEW_BG_TAB}); },
   activateModeToOpenInNewForegroundTab(count) { this.activateMode(count, {mode: OPEN_IN_NEW_FG_TAB}); },
   activateModeToCopyLinkUrl(count) { this.activateMode(count, {mode: COPY_LINK_URL}); },
+  activateModeToShowLinkUrl(count) { this.activateMode(count, {mode: SHOW_LINK_URL}); },
   activateModeWithQueue() { this.activateMode(1, {mode: OPEN_WITH_QUEUE}); },
   activateModeToOpenIncognito(count) { this.activateMode(count, {mode: OPEN_INCOGNITO}); },
   activateModeToDownloadLink(count) { this.activateMode(count, {mode: DOWNLOAD_LINK_URL}); }
