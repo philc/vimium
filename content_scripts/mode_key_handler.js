@@ -25,6 +25,7 @@ class KeyHandlerMode extends Mode {
     if (countPrefix == null) { countPrefix = 0; }
     this.countPrefix = countPrefix;
     this.keyState = [this.keyMapping];
+    this.stopTimeout();
   }
 
   init(options) {
@@ -68,6 +69,7 @@ class KeyHandlerMode extends Mode {
     } else if (this.isCountKey(keyChar)) {
       const digit = parseInt(keyChar);
       this.reset(this.keyState.length === 1 ? (this.countPrefix * 10) + digit : digit);
+      this.refreshTimeout();
       return this.suppressEvent;
     } else {
       if (keyChar) { this.reset(); }
@@ -105,11 +107,23 @@ class KeyHandlerMode extends Mode {
     return (this.countPrefix === 0) && (this.keyState.length === 1);
   }
 
+  refreshTimeout() {
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(() => this.reset(), 30000);
+  }
+
+  stopTimeout() {
+    clearTimeout(this.timeout);
+    this.timeout = null;
+  }
+
   handleKeyChar(keyChar) {
     bgLog(`handle key ${keyChar} (${this.name})`);
     // A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     if (!(keyChar in this.keyState[0]))
       this.countPrefix = 0;
+
+    this.refreshTimeout();
 
     // Advance the key state. The new key state is the current mappings of keyChar, plus @keyMapping.
     const state = (this.keyState.filter((mapping) => keyChar in mapping).map((mapping) => mapping[keyChar]));
@@ -122,8 +136,10 @@ class KeyHandlerMode extends Mode {
       bgLog(`  invoke ${command.command} count=${count} `);
       this.reset();
       this.commandHandler({command, count});
-      if ((this.options.count != null) && (--this.options.count <= 0))
+      if ((this.options.count != null) && (--this.options.count <= 0)) {
+        this.stopTimeout();
         this.exit();
+      }
     }
     return this.suppressEvent;
   }
