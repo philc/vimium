@@ -116,6 +116,21 @@ class Wikipedia extends BaseEngine {
   parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
 }
 
+class Wiktionary extends BaseEngine {
+  constructor() {
+    super({
+      engineUrl: "https://en.wiktionary.org/w/api.php?action=opensearch&format=json&search=%s",
+      regexps: ["^https?://[a-z]+\\.wiktionary\\.org/"],
+      example: {
+        searchUrl: "https://en.wiktionary.org/wiki/Special:Search?search=%s",
+        keyword: "wk"
+      }
+    });
+  }
+
+  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+}
+
 class Bing extends BaseEngine {
   constructor() {
     super({
@@ -246,6 +261,7 @@ const CompletionEngines = [
   Google,
   DuckDuckGo,
   Wikipedia,
+  Wiktionary,
   Bing,
   Amazon,
   AmazonJapan,
