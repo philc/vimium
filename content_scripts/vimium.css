@@ -1,17 +1,19 @@
 /*
- * Many CSS class names in this file use the verbose "vimiumXYZ" as the class name. This is so we don't
- * use the same CSS class names that the page is using, so the page's CSS doesn't mess with the style of our
- * Vimium dialogs.
+ * Many CSS class names in this file use the verbose "vimiumXYZ" as the class name. This is so we
+ * don't use the same CSS class names that the page is using, so the page's CSS doesn't mess with
+ * the style of our Vimium dialogs.
  *
- * The z-indexes of Vimium elements are very large, because we always want them to show on top.  We know
- * that Chrome supports z-index values up to about 2^31.  The values we use are large numbers approaching
- * that bound.  However, we must leave headroom for link hints.  Hint marker z-indexes start at 2140000001.
+ * The z-indexes of Vimium elements are very large, because we always want them to show on top. We
+ * know that Chrome supports z-index values up to about 2^31. The values we use are large numbers
+ * approaching that bound. However, we must leave headroom for link hints. Hint marker z-indexes
+ * start at 2140000001.
  */
 
 /*
- * This vimiumReset class can be added to any of our UI elements to give it a clean slate. This is useful in
- * case the page has declared a broad rule like "a { padding: 50px; }" which will mess up our UI. These
- * declarations contain more specifiers than necessary to increase their specificity (precedence).
+ * This vimiumReset class can be added to any of our UI elements to give it a clean slate. This is
+ * useful in case the page has declared a broad rule like "a { padding: 50px; }" which will mess up
+ * our UI. These declarations contain more specifiers than necessary to increase their specificity
+ * (precedence).
  */
 .vimiumReset,
 div.vimiumReset,
@@ -437,9 +439,9 @@ iframe.vimiumNonClickable {
 }
 
 @media (prefers-color-scheme: dark) {
-  /* DarkReader is a popular dark mode browser extension. It can apply an invert filter to the whole page to
-   * make the page dark, when used in Filter and Filter+ modes. We want to reverse/invert that filter again
-   * for Vimium's UI elements, because Vimium is already dark mode aware. */
+  /* DarkReader is a popular dark mode browser extension. It can apply an invert filter to the whole
+   * page to make the page dark, when used in Filter and Filter+ modes. We want to reverse/invert
+   * that filter again for Vimium's UI elements, because Vimium is already dark mode aware. */
   iframe.reverseDarkReaderFilter {
     -webkit-filter: invert(100%) hue-rotate(180deg) !important;
     filter: invert(100%) hue-rotate(180deg) !important;
