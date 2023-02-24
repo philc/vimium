@@ -76,7 +76,6 @@ context("Key mappings", () => {
   });
 });
 
-
 context("Validate commands and options", () => {
   // TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
   // of the offending command appears in the output, if the test fails?
@@ -113,21 +112,23 @@ context("Validate commands and options", () => {
 
   should("have valid commands for each default key mapping", () => {
     const count = Object.keys(Commands.keyToCommandRegistry).length;
-    assert.isTrue((0 < count));
+    assert.isTrue(0 < count);
     for (let key of Object.keys(Commands.keyToCommandRegistry)) {
       const command = Commands.keyToCommandRegistry[key];
       assert.equal("object", typeof command);
       assert.isTrue(Commands.availableCommands[command.command]);
     }
-  })
+  });
 });
 
 context("Validate advanced commands", () => {
   should("include each advanced command in a command group", () => {
-    let allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k]).flat(1);
-    for (let command of Commands.advancedCommands)
+    let allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k])
+      .flat(1);
+    for (let command of Commands.advancedCommands) {
       assert.isTrue(allCommands.includes(command));
-  })
+    }
+  });
 });
 
 context("Parse commands", () => {
@@ -136,7 +137,7 @@ context("Parse commands", () => {
   });
 
   should("omit comments", () => {
-    assert.equal(0, BgUtils.parseLines(" # comment   \n \" comment   \n   ").length);
+    assert.equal(0, BgUtils.parseLines(' # comment   \n " comment   \n   ').length);
   });
 
   should("join lines", () => {
@@ -148,5 +149,5 @@ context("Parse commands", () => {
     assert.equal(2, BgUtils.parseLines("  a  \n  b").length);
     assert.equal("a", BgUtils.parseLines("  a  \n  b")[0]);
     assert.equal("b", BgUtils.parseLines("  a  \n  b")[1]);
-  })
+  });
 });

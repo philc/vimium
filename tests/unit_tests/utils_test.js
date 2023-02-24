@@ -20,7 +20,9 @@ context("isUrl", () => {
     assert.isTrue(Utils.isUrl("eqt5g4fuenphqinx.onion"));
 
     // Internal URLs.
-    assert.isTrue(Utils.isUrl("moz-extension://c66906b4-3785-4a60-97bc-094a6366017e/pages/options.html"));
+    assert.isTrue(
+      Utils.isUrl("moz-extension://c66906b4-3785-4a60-97bc-094a6366017e/pages/options.html"),
+    );
   });
 
   should("reject invalid URLs", () => {
@@ -38,34 +40,67 @@ context("convertToUrl", () => {
     assert.equal("http://localhost", Utils.convertToUrl("localhost"));
     assert.equal("http://xyz.museum", Utils.convertToUrl("xyz.museum"));
     assert.equal("chrome://extensions", Utils.convertToUrl("chrome://extensions"));
-    assert.equal("http://user:pass@ftp.xyz.com/test", Utils.convertToUrl("user:pass@ftp.xyz.com/test"));
+    assert.equal(
+      "http://user:pass@ftp.xyz.com/test",
+      Utils.convertToUrl("user:pass@ftp.xyz.com/test"),
+    );
     assert.equal("http://127.0.0.1", Utils.convertToUrl("127.0.0.1"));
     assert.equal("http://127.0.0.1:8080", Utils.convertToUrl("127.0.0.1:8080"));
     assert.equal("http://[::]:8080", Utils.convertToUrl("[::]:8080"));
     assert.equal("view-source:    0.0.0.0", Utils.convertToUrl("view-source:    0.0.0.0"));
-    assert.equal("javascript:alert('25 % 20 * 25 ');", Utils.convertToUrl("javascript:alert('25 % 20 * 25%20');"));
+    assert.equal(
+      "javascript:alert('25 % 20 * 25 ');",
+      Utils.convertToUrl("javascript:alert('25 % 20 * 25%20');"),
+    );
   });
 
   should("convert non-URL terms into search queries", () => {
     assert.equal("https://www.google.com/search?q=google", Utils.convertToUrl("google"));
     assert.equal("https://www.google.com/search?q=go+ogle.com", Utils.convertToUrl("go ogle.com"));
     assert.equal("https://www.google.com/search?q=%40twitter", Utils.convertToUrl("@twitter"));
-  })
+  });
 });
 
 context("createSearchUrl", () => {
   should("replace %S without encoding", () => {
-    assert.equal("https://www.github.com/philc/vimium/pulls", Utils.createSearchUrl("vimium/pulls", "https://www.github.com/philc/%S"))
-  })
+    assert.equal(
+      "https://www.github.com/philc/vimium/pulls",
+      Utils.createSearchUrl("vimium/pulls", "https://www.github.com/philc/%S"),
+    );
+  });
 });
 
 context("extractQuery", () => {
   should("extract queries from search URLs", () => {
-    assert.equal("bbc sport 1", Utils.extractQuery("https://www.google.ie/search?q=%s", "https://www.google.ie/search?q=bbc+sport+1"));
-    assert.equal("bbc sport 2", Utils.extractQuery("http://www.google.ie/search?q=%s", "https://www.google.ie/search?q=bbc+sport+2"));
-    assert.equal("bbc sport 3", Utils.extractQuery("https://www.google.ie/search?q=%s", "http://www.google.ie/search?q=bbc+sport+3"));
-    assert.equal("bbc sport 4", Utils.extractQuery("https://www.google.ie/search?q=%s", "http://www.google.ie/search?q=bbc+sport+4&blah"));
-  })
+    assert.equal(
+      "bbc sport 1",
+      Utils.extractQuery(
+        "https://www.google.ie/search?q=%s",
+        "https://www.google.ie/search?q=bbc+sport+1",
+      ),
+    );
+    assert.equal(
+      "bbc sport 2",
+      Utils.extractQuery(
+        "http://www.google.ie/search?q=%s",
+        "https://www.google.ie/search?q=bbc+sport+2",
+      ),
+    );
+    assert.equal(
+      "bbc sport 3",
+      Utils.extractQuery(
+        "https://www.google.ie/search?q=%s",
+        "http://www.google.ie/search?q=bbc+sport+3",
+      ),
+    );
+    assert.equal(
+      "bbc sport 4",
+      Utils.extractQuery(
+        "https://www.google.ie/search?q=%s",
+        "http://www.google.ie/search?q=bbc+sport+4&blah",
+      ),
+    );
+  });
 });
 
 context("hasChromePrefix", () => {
@@ -81,14 +116,14 @@ context("hasChromePrefix", () => {
     assert.isFalse(Utils.hasChromePrefix("chrome-extension"));
     assert.isFalse(Utils.hasChromePrefix("data"));
     assert.isFalse(Utils.hasChromePrefix("data :foobar"));
-  })
+  });
 });
 
 context("hasJavascriptPrefix", () => {
   should("detect javascript: URLs", () => {
     assert.isTrue(Utils.hasJavascriptPrefix("javascript:foobar"));
     assert.isFalse(Utils.hasJavascriptPrefix("http:foobar"));
-  })
+  });
 });
 
 context("decodeURIByParts", () => {
@@ -96,21 +131,24 @@ context("decodeURIByParts", () => {
     assert.equal("foobar", Utils.decodeURIByParts("foobar"));
     assert.equal(" ", Utils.decodeURIByParts("%20"));
     assert.equal("25 % 20 25 ", Utils.decodeURIByParts("25 % 20 25%20"));
-  })
+  });
 });
 
 context("isUrl", () => {
   should("identify URLs as URLs", () => assert.isTrue(Utils.isUrl("http://www.example.com/blah")));
 
-  should("identify non-URLs and non-URLs", () => assert.isFalse(Utils.isUrl("http://www.example.com/ blah")));
+  should(
+    "identify non-URLs and non-URLs",
+    () => assert.isFalse(Utils.isUrl("http://www.example.com/ blah")),
+  );
 });
 
 context("Function currying", () => {
   should("Curry correctly", () => {
     const foo = (a, b) => `${a},${b}`;
-    assert.equal("1,2", foo.curry()(1,2));
+    assert.equal("1,2", foo.curry()(1, 2));
     assert.equal("1,2", foo.curry(1)(2));
-    assert.equal("1,2", foo.curry(1,2)());
+    assert.equal("1,2", foo.curry(1, 2)());
   });
 });
 
@@ -129,15 +167,15 @@ context("compare versions", () => {
 });
 
 context("makeIdempotent", () => {
-
   let func;
   let count = 0;
 
   setup(() => {
     count = 0;
     func = Utils.makeIdempotent((n) => {
-      if (n == null)
+      if (n == null) {
         n = 1;
+      }
       count += n;
     });
   });
@@ -166,7 +204,10 @@ context("makeIdempotent", () => {
 });
 
 context("distinctCharacters", () => {
-  should("eliminate duplicate characters", () => assert.equal("abc", Utils.distinctCharacters("bbabaabbacabbbab")))
+  should(
+    "eliminate duplicate characters",
+    () => assert.equal("abc", Utils.distinctCharacters("bbabaabbacabbbab")),
+  );
 });
 
 context("escapeRegexSpecialCharacters", () => {

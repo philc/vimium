@@ -1,21 +1,23 @@
 //
 // This file contains stubs for a number of browser and chrome APIs which are missing in Deno.
-// The chrome.storage.sync stub does roughly what chrome.storage.sync should do, but does so synchronously.
+// The chrome.storage.sync stub does roughly what chrome.storage.sync should do, but does so
+// synchronously.
 //
 
 let XMLHttpRequest;
 
 window.document = {
-  createElement() { return {}; },
-  addEventListener() {}
+  createElement() {
+    return {};
+  },
+  addEventListener() {},
 };
 
-window.XMLHttpRequest =
-  (XMLHttpRequest = class XMLHttpRequest {
-    open() {}
-    onload() {}
-    send() {}
-  });
+window.XMLHttpRequest = XMLHttpRequest = class XMLHttpRequest {
+  open() {}
+  onload() {}
+  send() {}
+};
 
 window.chrome = {
   areRunningVimiumTests: true,
@@ -23,79 +25,115 @@ window.chrome = {
   runtime: {
     getURL() {},
     getManifest() {
-      return {version: "1.2.3"};
+      return { version: "1.2.3" };
     },
     onConnect: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onMessage: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onInstalled: {
-      addListener() {}
-    }
+      addListener() {},
+    },
   },
 
   extension: {
-    getURL(path) { return path; },
-    getBackgroundPage() { return {}; },
-    getViews() { return []; }
+    getURL(path) {
+      return path;
+    },
+    getBackgroundPage() {
+      return {};
+    },
+    getViews() {
+      return [];
+    },
   },
 
   tabs: {
     onUpdated: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onAttached: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onMoved: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onRemoved: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onActivated: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
     onReplaced: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
-    query() { return true; }
+    query() {
+      return true;
+    },
   },
 
   webNavigation: {
     onHistoryStateUpdated: {
-      addListener() {}
+      addListener() {},
     },
     onReferenceFragmentUpdated: {
-      addListener() {}
+      addListener() {},
     },
     onCommitted: {
-      addListener() {}
-    }
+      addListener() {},
+    },
   },
 
   windows: {
     onRemoved: {
-      addListener() { return true; }
+      addListener() {
+        return true;
+      },
     },
-    getAll() { return true; },
+    getAll() {
+      return true;
+    },
     onFocusChanged: {
-      addListener() { return true; }
-    }
+      addListener() {
+        return true;
+      },
+    },
   },
 
   browserAction: {
-    setBadgeBackgroundColor() {}
+    setBadgeBackgroundColor() {},
   },
 
   storage: {
     // chrome.storage.local
     local: {
-      get(_, callback) { if (callback) callback({}); },
-      set(_, callback) { if (callback) callback({}); },
-      remove(_, callback) { if (callback) callback({}); }
+      get(_, callback) {
+        if (callback) callback({});
+      },
+      set(_, callback) {
+        if (callback) callback({});
+      },
+      remove(_, callback) {
+        if (callback) callback({});
+      },
     },
 
     // chrome.storage.onChanged
@@ -109,7 +147,7 @@ window.chrome = {
         chrome.runtime.lastError = undefined;
         const key_value = {};
         key_value[key] = { newValue: value };
-        if (this.func) { return this.func(key_value,'sync'); }
+        if (this.func) return this.func(key_value, "sync");
       },
 
       callEmpty(key) {
@@ -117,13 +155,13 @@ window.chrome = {
         if (this.func) {
           const items = {};
           items[key] = {};
-          this.func(items,'sync');
+          this.func(items, "sync");
         }
-      }
+      },
     },
 
     session: {
-      MAX_SESSION_RESULTS: 25
+      MAX_SESSION_RESULTS: 25,
     },
 
     // chrome.storage.sync
@@ -137,11 +175,11 @@ window.chrome = {
           value = items[key];
           this.store[key] = value;
         }
-        if (callback) { callback(); }
+        if (callback) callback();
         // Now, generate (supposedly asynchronous) notifications for listeners.
         for (key of Object.keys(items)) {
           value = items[key];
-          window.chrome.storage.onChanged.call(key,value);
+          window.chrome.storage.onChanged.call(key, value);
         }
       },
 
@@ -160,7 +198,7 @@ window.chrome = {
           items[key] = this.store[key];
         }
         // Now, generate (supposedly asynchronous) callback
-        if (callback) { return callback(items); }
+        if (callback) return callback(items);
       },
 
       remove(key, callback) {
@@ -168,10 +206,10 @@ window.chrome = {
         if (key in this.store) {
           delete this.store[key];
         }
-        if (callback) { callback(); }
+        if (callback) callback();
         // Now, generate (supposedly asynchronous) notification for listeners.
         window.chrome.storage.onChanged.callEmpty(key);
-      }
-    }
-  }
+      },
+    },
+  },
 };

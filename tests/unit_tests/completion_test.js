@@ -3,12 +3,15 @@ import "../../background_scripts/bg_utils.js";
 import "../../background_scripts/completion_engines.js";
 import "../../background_scripts/completion.js";
 
-const hours = n => 1000 * 60 * 60 * n;
+const hours = (n) => 1000 * 60 * 60 * n;
 
 // A convenience wrapper around completer.filter() so it can be called synchronously in tests.
 const filterCompleter = (completer, queryTerms) => {
   let results = [];
-  completer.filter({ queryTerms, query: queryTerms.join(" ") }, completionResults => results = completionResults);
+  completer.filter(
+    { queryTerms, query: queryTerms.join(" ") },
+    (completionResults) => results = completionResults,
+  );
   return results;
 };
 
@@ -19,8 +22,7 @@ context("bookmark completer", () => {
   let completer;
 
   setup(() => {
-    window.chrome.bookmarks =
-      {getTree: callback => callback([bookmark1])};
+    window.chrome.bookmarks = { getTree: (callback) => callback([bookmark1]) };
 
     completer = new BookmarkCompleter();
   });
@@ -33,13 +35,13 @@ context("bookmark completer", () => {
   should("return matching bookmarks when searching", () => {
     completer.refresh();
     const results = filterCompleter(completer, ["mark2"]);
-    assert.equal([bookmark2.url], results.map(suggestion => suggestion.url));
+    assert.equal([bookmark2.url], results.map((suggestion) => suggestion.url));
   });
 
   should("return *no* matching bookmarks when there is no match", () => {
     completer.refresh();
     const results = filterCompleter(completer, ["does-not-match"]);
-    assert.equal([], results.map(suggestion => suggestion.url));
+    assert.equal([], results.map((suggestion) => suggestion.url));
   });
 
   should("construct bookmark paths correctly", () => {
@@ -48,23 +50,28 @@ context("bookmark completer", () => {
     assert.equal("/bookmark1/bookmark2", bookmark2.pathAndTitle);
   });
 
-  should("return matching bookmark *titles* when searching *without* the folder separator character", () => {
-    completer.refresh();
-    const results = filterCompleter(completer, ["mark2"]);
-    assert.equal(["bookmark2"], results.map(suggestion => suggestion.title));
-  });
+  should(
+    "return matching bookmark *titles* when searching *without* the folder separator character",
+    () => {
+      completer.refresh();
+      const results = filterCompleter(completer, ["mark2"]);
+      assert.equal(["bookmark2"], results.map((suggestion) => suggestion.title));
+    },
+  );
 
-  should("return matching bookmark *paths* when searching with the folder separator character", () => {
-    completer.refresh();
-    const results = filterCompleter(completer, ["/bookmark1", "mark2"]);
-    assert.equal(["/bookmark1/bookmark2"], results.map(suggestion => suggestion.title));
-  });
+  should(
+    "return matching bookmark *paths* when searching with the folder separator character",
+    () => {
+      completer.refresh();
+      const results = filterCompleter(completer, ["/bookmark1", "mark2"]);
+      assert.equal(["/bookmark1/bookmark2"], results.map((suggestion) => suggestion.title));
+    },
+  );
 });
 
 context("HistoryCache", () => {
   const compare = (a, b) => a - b;
   context("binary search", () => {
-
     should("find elements to the left of the middle", () => {
       assert.equal(0, HistoryCache.binarySearch(3, [3, 5, 8], compare));
     });
@@ -76,20 +83,20 @@ context("HistoryCache", () => {
     context("unfound elements", () => {
       should("return 0 if it should be the head of the list", () => {
         assert.equal(0, HistoryCache.binarySearch(1, [3, 5, 8], compare));
-      }),
-
+      });
       should("return length - 1 if it should be at the end of the list", () => {
         assert.equal(0, HistoryCache.binarySearch(3, [3, 5, 8], compare));
-      }),
-
-      should("return one passed end of array (so: array.length) if greater than last element in array", () => {
-        assert.equal(3, HistoryCache.binarySearch(10, [3, 5, 8], compare));
-      }),
-
+      });
+      should(
+        "return one passed end of array (so: array.length) if greater than last element in array",
+        () => {
+          assert.equal(3, HistoryCache.binarySearch(10, [3, 5, 8], compare));
+        },
+      );
       should("found return the position if it's between two elements", () => {
         assert.equal(1, HistoryCache.binarySearch(4, [3, 5, 8], compare));
         assert.equal(2, HistoryCache.binarySearch(7, [3, 5, 8], compare));
-      })
+      });
     });
   });
 
@@ -104,13 +111,19 @@ context("HistoryCache", () => {
       onVisitRemovedListener = null;
 
       window.chrome.history = {
-        search(options, callback) { return callback(history); },
-        onVisited: { addListener: newListener => {
-          onVisitedListener = newListener;
-        } },
-        onVisitRemoved: { addListener: newListener => {
-          onVisitRemovedListener = newListener;
-        } }
+        search(options, callback) {
+          return callback(history);
+        },
+        onVisited: {
+          addListener: (newListener) => {
+            onVisitedListener = newListener;
+          },
+        },
+        onVisitRemoved: {
+          addListener: (newListener) => {
+            onVisitRemovedListener = newListener;
+          },
+        },
       };
       HistoryCache.reset();
     });
@@ -137,19 +150,22 @@ context("HistoryCache", () => {
       assert.equal([newSite, history1], results);
     });
 
-    should("(not) remove page from the history, when page is not in history (it should be a no-op)", () => {
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, history1], results);
-      const toRemove = { urls: [ "x.com" ], allHistory: false };
-      onVisitRemovedListener(toRemove);
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, history1], results);
-    });
+    should(
+      "(not) remove page from the history, when page is not in history (it should be a no-op)",
+      () => {
+        HistoryCache.use((newResults) => results = newResults);
+        assert.equal([history2, history1], results);
+        const toRemove = { urls: ["x.com"], allHistory: false };
+        onVisitRemovedListener(toRemove);
+        HistoryCache.use((newResults) => results = newResults);
+        assert.equal([history2, history1], results);
+      },
+    );
 
     should("remove pages from the history", () => {
       HistoryCache.use((newResults) => results = newResults);
       assert.equal([history2, history1], results);
-      const toRemove = { urls: [ "a.com" ], allHistory: false };
+      const toRemove = { urls: ["a.com"], allHistory: false };
       onVisitRemovedListener(toRemove);
       HistoryCache.use((newResults) => results = newResults);
       assert.equal([history1], results);
@@ -163,7 +179,7 @@ context("HistoryCache", () => {
       HistoryCache.use((newResults) => results = newResults);
       assert.equal([], results);
     });
-  })
+  });
 });
 
 context("history completer", () => {
@@ -176,21 +192,21 @@ context("history completer", () => {
     window.chrome.history = {
       search: (options, callback) => callback([history1, history2]),
       onVisited: { addListener() {} },
-      onVisitRemoved: { addListener() {} }
+      onVisitRemoved: { addListener() {} },
     };
     HistoryCache.reset();
   });
 
   should("return matching history entries when searching", () => {
-    assert.equal([history1.url], filterCompleter(completer, ["story1"]).map(entry => entry.url));
+    assert.equal([history1.url], filterCompleter(completer, ["story1"]).map((entry) => entry.url));
   });
 
   should("rank recent results higher than nonrecent results", () => {
     stub(Date, "now", returns(hours(24)));
     const results = filterCompleter(completer, ["hist"]);
-    results.forEach(result => result.computeRelevancy());
+    results.forEach((result) => result.computeRelevancy());
     results.sort((a, b) => b.relevancy - a.relevancy);
-    assert.equal([history2.url, history1.url], results.map(result => result.url));
+    assert.equal([history2.url, history1.url], results.map((result) => result.url));
   });
 });
 
@@ -201,10 +217,10 @@ context("domain completer", () => {
   let completer = null;
 
   setup(() => {
-    stub(HistoryCache, "use", onComplete => onComplete([history1, history2, undef]));
+    stub(HistoryCache, "use", (onComplete) => onComplete([history1, history2, undef]));
     window.chrome.history = {
       onVisited: { addListener() {} },
-      onVisitRemoved: { addListener() {} }
+      onVisitRemoved: { addListener() {} },
     };
     stub(Date, "now", returns(hours(24)));
 
@@ -213,7 +229,7 @@ context("domain completer", () => {
 
   should("return only a single matching domain", () => {
     const results = filterCompleter(completer, ["story"]);
-    assert.equal(["http://history1.com"], results.map(result => result.url));
+    assert.equal(["http://history1.com"], results.map((result) => result.url));
   });
 
   should("pick domains which are more recent", () => {
@@ -223,9 +239,12 @@ context("domain completer", () => {
     assert.equal("http://history2.com", filterCompleter(completer, ["story"])[0].url);
   });
 
-  should("returns no results when there's more than one query term, because clearly it's not a domain", () => {
-    assert.equal([], filterCompleter(completer, ["his", "tory"]));
-  });
+  should(
+    "returns no results when there's more than one query term, because clearly it's not a domain",
+    () => {
+      assert.equal([], filterCompleter(completer, ["his", "tory"]));
+    },
+  );
 
   should("not return any results for empty queries", () => {
     assert.equal([], filterCompleter(completer, []));
@@ -235,24 +254,28 @@ context("domain completer", () => {
 context("domain completer (removing entries)", () => {
   const history1 = { title: "history1", url: "http://history1.com", lastVisitTime: hours(2) };
   const history2 = { title: "history2", url: "http://history2.com", lastVisitTime: hours(1) };
-  const history3 = { title: "history2something", url: "http://history2.com/something", lastVisitTime: hours(0) };
+  const history3 = {
+    title: "history2something",
+    url: "http://history2.com/something",
+    lastVisitTime: hours(0),
+  };
   let onVisitedListener, onVisitRemovedListener, completer;
 
   setup(() => {
-    stub(HistoryCache, "use", onComplete => onComplete([history1, history2, history3]));
+    stub(HistoryCache, "use", (onComplete) => onComplete([history1, history2, history3]));
     onVisitedListener = null;
     onVisitRemovedListener = null;
     window.chrome.history = {
       onVisited: {
-        addListener: newListener => {
+        addListener: (newListener) => {
           onVisitedListener = newListener;
-        }
+        },
       },
       onVisitRemoved: {
-        addListener: newListener => {
+        addListener: (newListener) => {
           onVisitRemovedListener = newListener;
-        }
-      }
+        },
+      },
     };
     stub(Date, "now", returns(hours(24)));
 
@@ -283,7 +306,7 @@ context("domain completer (removing entries)", () => {
   });
 
   should("remove 3 (all) matching domain entries, and do it all at once", () => {
-    onVisitRemovedListener({ allHistory: false, urls: [history2.url, history1.url, history3.url ] });
+    onVisitRemovedListener({ allHistory: false, urls: [history2.url, history1.url, history3.url] });
     assert.equal(0, filterCompleter(completer, ["story"]).length);
   });
 
@@ -296,7 +319,7 @@ context("domain completer (removing entries)", () => {
 context("tab completer", () => {
   const tabs = [
     { url: "tab1.com", title: "tab1", id: 1 },
-    { url: "tab2.com", title: "tab2", id: 2 }
+    { url: "tab2.com", title: "tab2", id: 2 },
   ];
   let completer;
 
@@ -307,8 +330,8 @@ context("tab completer", () => {
 
   should("return matching tabs", () => {
     const results = filterCompleter(completer, ["tab2"]);
-    assert.equal(["tab2.com"], results.map(tab => tab.url));
-    assert.equal([2], results.map(tab => tab.tabId));
+    assert.equal(["tab2.com"], results.map((tab) => tab.url));
+    assert.equal([2], results.map((tab) => tab.tabId));
   });
 });
 
@@ -319,7 +342,7 @@ context("suggestions", () => {
       type: "tab",
       url: "url",
       title: "title <span>",
-      relevancyFunction: returns(1)
+      relevancyFunction: returns(1),
     });
     assert.isTrue(suggestion.generateHtml({}).indexOf("title &lt;span&gt;") >= 0);
   });
@@ -330,9 +353,10 @@ context("suggestions", () => {
       type: "tab",
       url: "url",
       title: "ninjawords",
-      relevancyFunction: returns(1)
+      relevancyFunction: returns(1),
     });
-    const expected = "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>";
+    const expected =
+      "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
   });
 
@@ -342,7 +366,7 @@ context("suggestions", () => {
       type: "tab",
       url: "url",
       title: "ninjawords",
-      relevancyFunction: returns(1)
+      relevancyFunction: returns(1),
     });
     const expected = "<span class='vomnibarMatch'>ninjaword</span>s";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
@@ -354,7 +378,7 @@ context("suggestions", () => {
       type: "history",
       url: "http://ninjawords.com",
       title: "ninjawords",
-      relevancyFunction: returns(1)
+      relevancyFunction: returns(1),
     });
     assert.equal(-1, suggestion.generateHtml({}).indexOf("http://ninjawords.com"));
   });
@@ -362,53 +386,77 @@ context("suggestions", () => {
 
 context("RankingUtils.wordRelevancy", () => {
   should("score higher in shorter URLs", () => {
-    const highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/short",  "a-title");
-    const lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/longer", "a-title");
+    const highScore = RankingUtils.wordRelevancy(
+      ["stack"],
+      "http://stackoverflow.com/short",
+      "a-title",
+    );
+    const lowScore = RankingUtils.wordRelevancy(
+      ["stack"],
+      "http://stackoverflow.com/longer",
+      "a-title",
+    );
     assert.isTrue(highScore > lowScore);
   });
 
   should("score higher in shorter titles", () => {
     const highScore = RankingUtils.wordRelevancy(["milk"], "a-url", "Milkshakes");
-    const lowScore  = RankingUtils.wordRelevancy(["milk"], "a-url", "Milkshakes rocks");
+    const lowScore = RankingUtils.wordRelevancy(["milk"], "a-url", "Milkshakes rocks");
     assert.isTrue(highScore > lowScore);
   });
 
   should("score higher for matching the start of a word (in a URL)", () => {
-    const lowScore  = RankingUtils.wordRelevancy(["stack"], "http://Xstackoverflow.com/same", "a-title");
-    const highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflowX.com/same", "a-title");
+    const lowScore = RankingUtils.wordRelevancy(
+      ["stack"],
+      "http://Xstackoverflow.com/same",
+      "a-title",
+    );
+    const highScore = RankingUtils.wordRelevancy(
+      ["stack"],
+      "http://stackoverflowX.com/same",
+      "a-title",
+    );
     assert.isTrue(highScore > lowScore);
   });
 
   should("score higher for matching the start of a word (in a title)", () => {
-    const lowScore  = RankingUtils.wordRelevancy(["te"], "a-url", "Dist racted");
+    const lowScore = RankingUtils.wordRelevancy(["te"], "a-url", "Dist racted");
     const highScore = RankingUtils.wordRelevancy(["te"], "a-url", "Distrac ted");
     assert.isTrue(highScore > lowScore);
   });
 
   should("score higher for matching a whole word (in a URL)", () => {
-    const lowScore  = RankingUtils.wordRelevancy(["com"], "http://stackoverflow.comX/same", "a-title");
-    const highScore = RankingUtils.wordRelevancy(["com"], "http://stackoverflowX.com/same", "a-title");
+    const lowScore = RankingUtils.wordRelevancy(
+      ["com"],
+      "http://stackoverflow.comX/same",
+      "a-title",
+    );
+    const highScore = RankingUtils.wordRelevancy(
+      ["com"],
+      "http://stackoverflowX.com/same",
+      "a-title",
+    );
     assert.isTrue(highScore > lowScore);
   });
 
   should("score higher for matching a whole word (in a title)", () => {
-    const lowScore  = RankingUtils.wordRelevancy(["com"], "a-url", "abc comX");
+    const lowScore = RankingUtils.wordRelevancy(["com"], "a-url", "abc comX");
     const highScore = RankingUtils.wordRelevancy(["com"], "a-url", "abcX com");
     assert.isTrue(highScore > lowScore);
   });
 });
 
-  // TODO: (smblott)
-  // Word relevancy should take into account the number of matches (it doesn't currently).
-  // should "score higher for multiple matches (in a URL)", ->
-  //   lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xxxxxx", "a-title")
-  //   highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xstack", "a-title")
-  //   assert.isTrue highScore > lowScore
+// TODO: (smblott)
+// Word relevancy should take into account the number of matches (it doesn't currently). should
+// "score higher for multiple matches (in a URL)", ->
+//   lowScore  = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xxxxxx", "a-title")
+//   highScore = RankingUtils.wordRelevancy(["stack"], "http://stackoverflow.com/Xstack", "a-title")
+//   assert.isTrue highScore > lowScore
 
-  // should "score higher for multiple matches (in a title)", ->
-  //   lowScore  = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (XBCr4)")
-  //   highScore = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
-  //   assert.isTrue highScore > lowScore
+// should "score higher for multiple matches (in a title)", ->
+//   lowScore  = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (XBCr4)")
+//   highScore = RankingUtils.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
+//   assert.isTrue highScore > lowScore
 
 context("Suggestion.pushMatchingRanges", () => {
   should("extract ranges matching term (simple case, two matches)", () => {
@@ -416,7 +464,12 @@ context("Suggestion.pushMatchingRanges", () => {
     const [one, two, three] = ["one", "two", "three"];
     const suggestion = new Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${one}${two}${three}${two}${one}`, two, ranges);
-    assert.equal(2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter(pair => (pair[0][0] === pair[1][0]) && (pair[0][1] === pair[1][1])).length);
+    assert.equal(
+      2,
+      Utils.zip([ranges, [[3, 6], [11, 14]]]).filter((pair) =>
+        (pair[0][0] === pair[1][0]) && (pair[0][1] === pair[1][1])
+      ).length,
+    );
   });
 
   should("extract ranges matching term (two matches, one at start of string)", () => {
@@ -424,15 +477,25 @@ context("Suggestion.pushMatchingRanges", () => {
     const [one, two, three] = ["one", "two", "three"];
     const suggestion = new Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${two}${three}${two}${one}`, two, ranges);
-    assert.equal(2, Utils.zip([ ranges, [ [0,3], [8,11] ] ]).filter(pair => (pair[0][0] === pair[1][0]) && (pair[0][1] === pair[1][1])).length);
+    assert.equal(
+      2,
+      Utils.zip([ranges, [[0, 3], [8, 11]]]).filter((pair) =>
+        (pair[0][0] === pair[1][0]) && (pair[0][1] === pair[1][1])
+      ).length,
+    );
   });
 
   should("extract ranges matching term (two matches, one at end of string)", () => {
     const ranges = [];
-    const [one, two, three] = ["one", "two", "three" ];
+    const [one, two, three] = ["one", "two", "three"];
     const suggestion = new Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${one}${two}${three}${two}`, two, ranges);
-    assert.equal(2, Utils.zip([ ranges, [ [3,6], [11,14] ] ]).filter(pair => (pair[0][0] === pair[1][0]) && (pair[0][1] === pair[1][1])).length);
+    assert.equal(
+      2,
+      Utils.zip([ranges, [[3, 6], [11, 14]]]).filter((pair) =>
+        (pair[0][0] === pair[1][0]) && (pair[0][1] === pair[1][1])
+      ).length,
+    );
   });
 
   should("extract ranges matching term (no matches)", () => {
@@ -454,7 +517,9 @@ context("RankingUtils", () => {
   });
 
   should("do a case insensitive match on several terms", () => {
-    assert.isTrue(RankingUtils.matches(["ari"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio"));
+    assert.isTrue(
+      RankingUtils.matches(["ari"], "DOES_NOT_MATCH", "DOES_NOT_MATCH_EITHER", "MARio"),
+    );
   });
 
   should("do a smartcase match (positive)", () => {
@@ -492,7 +557,7 @@ context("RankingUtils", () => {
 
   should("every query term must match at least one thing (not matching)", () => {
     assert.isTrue(!RankingUtils.matches(["cat", "dog", "wolf"], "catapult", "hound dog"));
-  })
+  });
 });
 
 context("RegexpCache", () => {
@@ -526,7 +591,7 @@ context("RegexpCache", () => {
 
   should("search for a string with a prefix/suffix (negative case)", () => {
     assert.isTrue("hound dog".search(RegexpCache.get("do", "\\b", "\\b")) === -1);
-  })
+  });
 });
 
 let fakeTimeDeltaElapsing = () => {};
@@ -587,5 +652,5 @@ context("TabRecency", () => {
     assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(3));
     assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(1));
     assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(2));
-  })
+  });
 });
