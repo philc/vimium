@@ -1,11 +1,12 @@
-// Fetch the Vimium secret, register the port received from the parent window, and stop listening for messages
-// on the window object. vimiumSecret is accessible only within the current instance of Vimium.  So a
-// malicious host page trying to register its own port can do no better than guessing.
+// Fetch the Vimium secret, register the port received from the parent window, and stop listening
+// for messages on the window object. vimiumSecret is accessible only within the current instance of
+// Vimium. So a malicious host page trying to register its own port can do no better than guessing.
 
-var registerPort = function(event) {
-  chrome.storage.local.get("vimiumSecret", function({vimiumSecret: secret}) {
-    if ((event.source !== window.parent) || (event.data !== secret))
+var registerPort = function (event) {
+  chrome.storage.local.get("vimiumSecret", function ({ vimiumSecret: secret }) {
+    if ((event.source !== window.parent) || (event.data !== secret)) {
       return;
+    }
     UIComponentServer.portOpen(event.ports[0]);
     window.removeEventListener("message", registerPort);
   });
@@ -18,9 +19,10 @@ var UIComponentServer = {
 
   portOpen(ownerPagePort) {
     this.ownerPagePort = ownerPagePort;
-    this.ownerPagePort.onmessage = event => {
-      if (this.handleMessage)
+    this.ownerPagePort.onmessage = (event) => {
+      if (this.handleMessage) {
         return this.handleMessage(event);
+      }
     };
     this.registerIsReady();
   },
@@ -30,16 +32,19 @@ var UIComponentServer = {
   },
 
   postMessage(message) {
-    if (this.ownerPagePort)
+    if (this.ownerPagePort) {
       this.ownerPagePort.postMessage(message);
+    }
   },
 
-  hide() { this.postMessage("hide"); },
+  hide() {
+    this.postMessage("hide");
+  },
 
-  // We require both that the DOM is ready and that the port has been opened before the UI component is ready.
-  // These events can happen in either order.  We count them, and notify the content script when we've seen
-  // both.
-  registerIsReady: (function() {
+  // We require both that the DOM is ready and that the port has been opened before the UI component
+  // is ready. These events can happen in either order. We count them, and notify the content script
+  // when we've seen both.
+  registerIsReady: (function () {
     let uiComponentIsReadyCount;
     if (document.readyState === "loading") {
       window.addEventListener("DOMContentLoaded", () => UIComponentServer.registerIsReady());
@@ -48,14 +53,15 @@ var UIComponentServer = {
       uiComponentIsReadyCount = 1;
     }
 
-    return function() {
+    return function () {
       if (++uiComponentIsReadyCount === 2) {
-        if (window.frameId != null)
-          this.postMessage({name: "setIframeFrameId", iframeFrameId: window.frameId});
+        if (window.frameId != null) {
+          this.postMessage({ name: "setIframeFrameId", iframeFrameId: window.frameId });
+        }
         this.postMessage("uiComponentIsReady");
       }
     };
-  })()
+  })(),
 };
 
 window.UIComponentServer = UIComponentServer;
