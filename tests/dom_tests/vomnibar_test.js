@@ -2,7 +2,6 @@ let vomnibarFrame = null;
 Vomnibar.init();
 
 context("Keep selection within bounds", () => {
-
   setup(() => {
     this.completions = [];
 
@@ -12,28 +11,37 @@ context("Keep selection within bounds", () => {
     vomnibarFrame.chrome = chrome;
 
     const oldGetCompleter = vomnibarFrame.Vomnibar.getCompleter.bind(vomnibarFrame.Vomnibar);
-    stub(vomnibarFrame.Vomnibar, 'getCompleter', name => {
+    stub(vomnibarFrame.Vomnibar, "getCompleter", (name) => {
       const completer = oldGetCompleter(name);
-      stub(completer, 'filter', ({ callback }) => callback({results: this.completions}));
+      stub(completer, "filter", ({ callback }) => callback({ results: this.completions }));
       return completer;
     });
 
     // Shoulda.js doesn't support async tests, so we have to hack around.
     stub(Vomnibar.vomnibarUI, "hide", () => {});
-    stub(Vomnibar.vomnibarUI, "postMessage", data => vomnibarFrame.UIComponentServer.handleMessage({data}));
-    stub(vomnibarFrame.UIComponentServer, "postMessage", data => UIComponent.handleMessage({data}));}),
+    stub(
+      Vomnibar.vomnibarUI,
+      "postMessage",
+      (data) => vomnibarFrame.UIComponentServer.handleMessage({ data }),
+    );
+    stub(
+      vomnibarFrame.UIComponentServer,
+      "postMessage",
+      (data) => UIComponent.handleMessage({ data }),
+    );
+  });
 
-  tearDown(() => Vomnibar.vomnibarUI.hide()),
+  tearDown(() => Vomnibar.vomnibarUI.hide());
 
   should("set selection to position -1 for omni completion by default", () => {
-    Vomnibar.activate(0, {options: {}});
+    Vomnibar.activate(0, { options: {} });
     const ui = vomnibarFrame.Vomnibar.vomnibarUI;
 
     this.completions = [];
     ui.update(true);
     assert.equal(-1, ui.selection);
 
-    this.completions = [{html:'foo',type:'tab',url:'http://example.com'}];
+    this.completions = [{ html: "foo", type: "tab", url: "http://example.com" }];
     ui.update(true);
     assert.equal(-1, ui.selection);
 
@@ -50,7 +58,7 @@ context("Keep selection within bounds", () => {
     ui.update(true);
     assert.equal(-1, ui.selection);
 
-    this.completions = [{html:'foo',type:'bookmark',url:'http://example.com'}];
+    this.completions = [{ html: "foo", type: "bookmark", url: "http://example.com" }];
     ui.update(true);
     assert.equal(0, ui.selection);
 
@@ -60,7 +68,7 @@ context("Keep selection within bounds", () => {
   });
 
   should("keep selection within bounds", () => {
-    Vomnibar.activate(0, {options: {}});
+    Vomnibar.activate(0, { options: {} });
     const ui = vomnibarFrame.Vomnibar.vomnibarUI;
 
     this.completions = [];
@@ -68,10 +76,10 @@ context("Keep selection within bounds", () => {
 
     const eventMock = {
       preventDefault() {},
-      stopImmediatePropagation() {}
+      stopImmediatePropagation() {},
     };
 
-    this.completions = [{html:'foo',type:'tab',url:'http://example.com'}];
+    this.completions = [{ html: "foo", type: "tab", url: "http://example.com" }];
     ui.update(true);
     stub(ui, "actionFromKeyEvent", () => "down");
     ui.onKeyEvent(eventMock);
@@ -80,5 +88,5 @@ context("Keep selection within bounds", () => {
     this.completions = [];
     ui.update(true);
     assert.equal(-1, ui.selection);
-  })
+  });
 });

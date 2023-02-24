@@ -6,10 +6,10 @@ window.chromeMessages = [];
 
 document.hasFocus = () => true;
 
-window.forTrusted = handler => handler;
+window.forTrusted = (handler) => handler;
 
 const fakeManifest = {
-  version: "1.51"
+  version: "1.51",
 };
 
 window.chrome = {
@@ -17,36 +17,46 @@ window.chrome = {
     connect() {
       return {
         onMessage: {
-          addListener() {}
+          addListener() {},
         },
         onDisconnect: {
-          addListener() {}
+          addListener() {},
         },
-        postMessage() {}
+        postMessage() {},
       };
     },
     onMessage: {
-      addListener() {}
+      addListener() {},
     },
-    sendMessage(message) { return chromeMessages.unshift(message); },
-    getManifest() { return fakeManifest; },
-    getURL(url) { return `../../${url}`; }
+    sendMessage(message) {
+      return chromeMessages.unshift(message);
+    },
+    getManifest() {
+      return fakeManifest;
+    },
+    getURL(url) {
+      return `../../${url}`;
+    },
   },
   storage: {
     local: {
       get() {},
-      set() {}
+      set() {},
     },
     sync: {
-      get(_, callback) { return callback ? callback({}) : null; },
-      set() {}
+      get(_, callback) {
+        return callback ? callback({}) : null;
+      },
+      set() {},
     },
     onChanged: {
-      addListener() {}
-    }
+      addListener() {},
+    },
   },
   extension: {
     inIncognitoContext: false,
-    getURL(url) { return chrome.runtime.getURL(url); }
-  }
+    getURL(url) {
+      return chrome.runtime.getURL(url);
+    },
+  },
 };

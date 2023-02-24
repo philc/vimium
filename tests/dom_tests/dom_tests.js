@@ -1,8 +1,9 @@
 let commandCount = null;
 let commandName = null;
 
-// Some tests have side effects on the handler stack and the active mode, so these are reset on setup.  Also,
-// some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has the focus.
+// Some tests have side effects on the handler stack and the active mode, so these are reset on
+// setup. Also, some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has
+// the focus.
 const initializeModeState = () => {
   window.focus();
   Mode.reset();
@@ -12,9 +13,9 @@ const initializeModeState = () => {
   normalMode.setKeyMapping({
     m: { options: {}, command: "m" }, // A mapped key.
     p: { options: {}, command: "p" }, // A pass key.
-    z: {p: {options: {}, command: "zp"} } // Not a pass key.
+    z: { p: { options: {}, command: "zp" } }, // Not a pass key.
   });
-  normalMode.setCommandHandler(({command, count}) => {
+  normalMode.setCommandHandler(({ command, count }) => {
     [commandName, commandCount] = [command.command, count];
   });
   commandName = null;
@@ -29,22 +30,28 @@ Settings.isLoaded = true;
 // Retrieve the hint markers as an array object.
 //
 const getHintMarkers = () => {
-  return Array.prototype.slice.call(document.getElementsByClassName("vimiumHintMarker"), 0)
+  return Array.prototype.slice.call(document.getElementsByClassName("vimiumHintMarker"), 0);
 };
 
 const stubSettings = (key, value) => stub(Settings.cache, key, JSON.stringify(value));
 
 HintCoordinator.sendMessage = (name, request) => {
-  if (request == null)
+  if (request == null) {
     request = {};
-  if (HintCoordinator[name])
+  }
+  if (HintCoordinator[name]) {
     HintCoordinator[name](request);
+  }
   return request;
 };
 
 const activateLinkHintsMode = () => {
-  HintCoordinator.getHintDescriptors({modeIndex: 0});
-  return HintCoordinator.activateMode({hintDescriptors: {}, modeIndex: 0, originatingFrameId: frameId});
+  HintCoordinator.getHintDescriptors({ modeIndex: 0 });
+  return HintCoordinator.activateMode({
+    hintDescriptors: {},
+    modeIndex: 0,
+    originatingFrameId: frameId,
+  });
 };
 
 //
@@ -55,7 +62,6 @@ const createGeneralHintTests = (isFilteredMode) => {
   window.vimiumOnClickAttributeName = "does-not-matter";
 
   context("Link hints", () => {
-
     setup(() => {
       initializeModeState();
       const testContent = "<a>test</a><a>tress</a>";
@@ -70,9 +76,9 @@ const createGeneralHintTests = (isFilteredMode) => {
 
     should("create hints when activated, discard them when deactivated", () => {
       const linkHints = activateLinkHintsMode();
-      assert.isFalse((linkHints.hintMarkerContainingDiv == null));
+      assert.isFalse(linkHints.hintMarkerContainingDiv == null);
       linkHints.deactivateMode();
-      assert.isTrue((linkHints.hintMarkerContainingDiv == null));
+      assert.isTrue(linkHints.hintMarkerContainingDiv == null);
     });
 
     should("position items correctly", () => {
@@ -100,10 +106,9 @@ createGeneralHintTests(false);
 createGeneralHintTests(true);
 
 context("False positives in link-hint", () => {
-
   setup(() => {
-    const testContent = "<span class=\"buttonWrapper\">false positive<a>clickable</a></span>" +
-          "<span class=\"buttonWrapper\">clickable</span>";
+    const testContent = '<span class="buttonWrapper">false positive<a>clickable</a></span>' +
+      '<span class="buttonWrapper">clickable</span>';
     document.getElementById("test-div").innerHTML = testContent;
     stubSettings("filterLinkHints", true);
     stubSettings("linkHintNumbers", "12");
@@ -117,8 +122,9 @@ context("False positives in link-hint", () => {
     const hintMarkers = getHintMarkers();
     linkHints.deactivateMode();
     assert.equal(2, hintMarkers.length);
-    for (let hintMarker of hintMarkers)
+    for (let hintMarker of hintMarkers) {
       assert.equal("clickable", hintMarker.linkText);
+    }
   });
 });
 
@@ -136,7 +142,7 @@ context("jsaction matching", () => {
     for (let text of ["click:namespace.actionName", "namespace.actionName"]) {
       this.element.setAttribute("jsaction", text);
       const linkHints = activateLinkHintsMode();
-      const hintMarkers = getHintMarkers().filter(marker => marker.linkText !== "Frame.");
+      const hintMarkers = getHintMarkers().filter((marker) => marker.linkText !== "Frame.");
       linkHints.deactivateMode();
       assert.equal(1, hintMarkers.length);
       assert.equal("clickable", hintMarkers[0].linkText);
@@ -145,10 +151,12 @@ context("jsaction matching", () => {
   });
 
   should("not select inactive jsaction elements", () => {
-    for (let text of ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"]) {
+    for (
+      let text of ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"]
+    ) {
       this.element.setAttribute("jsaction", text);
       const linkHints = activateLinkHintsMode();
-      const hintMarkers = getHintMarkers().filter(marker => marker.linkText !== "Frame.");
+      const hintMarkers = getHintMarkers().filter((marker) => marker.linkText !== "Frame.");
       linkHints.deactivateMode();
       assert.equal(0, hintMarkers.length);
     }
@@ -156,19 +164,23 @@ context("jsaction matching", () => {
 });
 
 const sendKeyboardEvent = (key, type, extra) => {
-  if (type == null) { type = "keydown"; }
-  if (extra == null) { extra = {}; }
-  handlerStack.bubbleEvent(type, Object.assign(extra, {
+  if (type == null) type = "keydown";
+  if (extra == null) extra = {};
+  handlerStack.bubbleEvent(
     type,
-    key,
-    preventDefault() {},
-    stopImmediatePropagation() {}
-  }));
+    Object.assign(extra, {
+      type,
+      key,
+      preventDefault() {},
+      stopImmediatePropagation() {},
+    }),
+  );
 };
 
 const sendKeyboardEvents = (keys) => {
-  for (let key of keys.split(""))
+  for (let key of keys.split("")) {
     sendKeyboardEvent(key);
+  }
 };
 
 const inputs = [];
@@ -265,7 +277,7 @@ context("Test link hints for changing mode", () => {
   });
 });
 
-const createLinks = function(n) {
+const createLinks = function (n) {
   for (let i = 0, end = n; i < end; i++) {
     const link = document.createElement("a");
     link.textContent = "test";
@@ -310,7 +322,7 @@ context("Alphabetical link hints", () => {
   });
 
   should("generate the correct number of alphabet hints", () => {
-    const alphabetHints = new AlphabetHints;
+    const alphabetHints = new AlphabetHints();
     for (let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       const hintStrings = alphabetHints.hintStrings(n);
       assert.equal(n, hintStrings.length);
@@ -318,21 +330,24 @@ context("Alphabetical link hints", () => {
   });
 
   should("generate non-overlapping alphabet hints", () => {
-    const alphabetHints = new AlphabetHints;
+    const alphabetHints = new AlphabetHints();
     for (let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       const hintStrings = alphabetHints.hintStrings(n);
-      for (let h1 of hintStrings)
-        for (let h2 of hintStrings)
-          if (h1 !== h2)
+      for (let h1 of hintStrings) {
+        for (let h2 of hintStrings) {
+          if (h1 !== h2) {
             assert.isFalse(0 === h1.indexOf(h2));
+          }
+        }
+      }
     }
-  })
+  });
 });
 
 context("Filtered link hints", () => {
-  // Note. In all of these tests, the order of the elements returned by getHintMarkers() may be different from
-  // the order they are listed in the test HTML content. This is because LinkHints.activateMode() sorts the
-  // elements.
+  // Note. In all of these tests, the order of the elements returned by getHintMarkers() may be
+  // different from the order they are listed in the test HTML content. This is because
+  // LinkHints.activateMode() sorts the elements.
 
   setup(() => {
     stubSettings("filterLinkHints", true);
@@ -355,11 +370,12 @@ context("Filtered link hints", () => {
 
     should("label the hints", () => {
       const hintMarkers = getHintMarkers();
-      const expectedMarkers = [1, 2, 3, 4].map(m => m.toString());
-      const actualMarkers = [0, 1, 2, 3].map(i => hintMarkers[i].textContent.toLowerCase());
+      const expectedMarkers = [1, 2, 3, 4].map((m) => m.toString());
+      const actualMarkers = [0, 1, 2, 3].map((i) => hintMarkers[i].textContent.toLowerCase());
       assert.equal(expectedMarkers.length, actualMarkers.length);
-      for (let marker of expectedMarkers)
+      for (let marker of expectedMarkers) {
         assert.isTrue(actualMarkers.includes(marker));
+      }
     });
 
     should("narrow the hints", () => {
@@ -405,9 +421,9 @@ context("Filtered link hints", () => {
     });
 
     should("label the images", () => {
-      let hintMarkers = getHintMarkers().map(marker => marker.textContent.toLowerCase());
+      let hintMarkers = getHintMarkers().map((marker) => marker.textContent.toLowerCase());
       // We don't know the actual hint numbers which will be assigned, so we replace them with "N".
-      hintMarkers = hintMarkers.map(str => str.replace(/^[1-4]/, "N"));
+      hintMarkers = hintMarkers.map((str) => str.replace(/^[1-4]/, "N"));
       assert.equal(4, hintMarkers.length);
       assert.isTrue(hintMarkers.includes("N: alt text"));
       assert.isTrue(hintMarkers.includes("N: some title"));
@@ -419,7 +435,8 @@ context("Filtered link hints", () => {
   context("Input hints", () => {
     setup(() => {
       initializeModeState();
-      const testContent = `<input type='text' value='some value'/><input type='password' value='some value'/> \
+      const testContent =
+        `<input type='text' value='some value'/><input type='password' value='some value'/> \
 <textarea>some text</textarea><label for='test-input'/>a label</label> \
 <input type='text' id='test-input' value='some value'/> \
 <label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>`;
@@ -434,9 +451,9 @@ context("Filtered link hints", () => {
 
     should("label the input elements", () => {
       let hintMarkers = getHintMarkers();
-      hintMarkers = getHintMarkers().map(marker => marker.textContent.toLowerCase());
+      hintMarkers = getHintMarkers().map((marker) => marker.textContent.toLowerCase());
       // We don't know the actual hint numbers which will be assigned, so we replace them with "N".
-      hintMarkers = hintMarkers.map(str => str.replace(/^[0-9]+/, "N"));
+      hintMarkers = hintMarkers.map((str) => str.replace(/^[0-9]+/, "N"));
       assert.equal(5, hintMarkers.length);
       assert.isTrue(hintMarkers.includes("N"));
       assert.isTrue(hintMarkers.includes("N"));
@@ -450,21 +467,23 @@ context("Filtered link hints", () => {
     setup(() => {
       initializeModeState();
       const testContent = [
-        {id: 0, text: "the xboy stood on the xburning deck"}, // Noise.
-        {id: 1, text: "the boy stood on the xburning deck"},  // Whole word (boy).
-        {id: 2, text: "on the xboy stood the xburning deck"}, // Start of text (on).
-        {id: 3, text: "the xboy stood on the xburning deck"}, // Noise.
-        {id: 4, text: "the xboy stood on the xburning deck"}, // Noise.
-        {id: 5, text: "the xboy stood on the xburning"},      // Shortest text..
-        {id: 6, text: "the xboy stood on the burning xdeck"}, // Start of word (bu)
-        {id: 7, text: "test abc one - longer"},               // For tab test - 2.
-        {id: 8, text: "test abc one"},                        // For tab test - 1.
-        {id: 9, text: "test abc one - longer still"}         // For tab test - 3.
-      ].map(({id,text}) => `<a id=\"${id}\">${text}</a>`).join(" ");
+        { id: 0, text: "the xboy stood on the xburning deck" }, // Noise.
+        { id: 1, text: "the boy stood on the xburning deck" }, // Whole word (boy).
+        { id: 2, text: "on the xboy stood the xburning deck" }, // Start of text (on).
+        { id: 3, text: "the xboy stood on the xburning deck" }, // Noise.
+        { id: 4, text: "the xboy stood on the xburning deck" }, // Noise.
+        { id: 5, text: "the xboy stood on the xburning" }, // Shortest text..
+        { id: 6, text: "the xboy stood on the burning xdeck" }, // Start of word (bu)
+        { id: 7, text: "test abc one - longer" }, // For tab test - 2.
+        { id: 8, text: "test abc one" }, // For tab test - 1.
+        { id: 9, text: "test abc one - longer still" }, // For tab test - 3.
+      ].map(({ id, text }) => `<a id=\"${id}\">${text}</a>`).join(" ");
       document.getElementById("test-div").innerHTML = testContent;
       this.linkHints = activateLinkHintsMode();
       this.getActiveHintMarker = () => {
-        return HintCoordinator.getLocalHintMarker(this.linkHints.markerMatcher.activeHintMarker.hintDescriptor).element.id;
+        return HintCoordinator.getLocalHintMarker(
+          this.linkHints.markerMatcher.activeHintMarker.hintDescriptor,
+        ).element.id;
       };
     });
 
@@ -513,11 +532,10 @@ context("Input focus", () => {
   });
 
   tearDown(() => document.getElementById("test-div").innerHTML = ""),
-
-  should("focus the first element", () => {
-    NormalModeCommands.focusInput(1);
-    assert.equal("first", document.activeElement.id);
-  });
+    should("focus the first element", () => {
+      NormalModeCommands.focusInput(1);
+      assert.equal("first", document.activeElement.id);
+    });
 
   should("focus the nth element", () => {
     NormalModeCommands.focusInput(100);
@@ -547,10 +565,10 @@ context("Input focus", () => {
   });
 });
 
-// TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
-// a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
-// don't need to construct external state many times over just to test that.
-// i.e. these tests should look something like:
+// TODO: these find prev/next link tests could be refactored into unit tests which invoke a function
+// which has a tighter contract than goNext(), since they test minor aspects of goNext()'s link
+// matching behavior, and we don't need to construct external state many times over just to test
+// that. i.e. these tests should look something like:
 // assert.equal(findLink(html("<a href=...">))[0].href, "first")
 // These could then move outside of the dom_tests file.
 context("Find prev / next links", () => {
@@ -566,7 +584,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", "next");
     NormalModeCommands.goNext();
-    assert.equal('#second', window.location.hash);
+    assert.equal("#second", window.location.hash);
   });
 
   should("match against non-word patterns", () => {
@@ -575,7 +593,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", ">>");
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 
   should("favor matches with fewer words", () => {
@@ -585,7 +603,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", "next");
     NormalModeCommands.goNext();
-    assert.equal('#second', window.location.hash);
+    assert.equal("#second", window.location.hash);
   });
 
   should("find link relation in header", () => {
@@ -593,7 +611,7 @@ context("Find prev / next links", () => {
 <link rel='next' href='#first'>\
 `;
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 
   should("favor link relation to text matching", () => {
@@ -602,7 +620,7 @@ context("Find prev / next links", () => {
 <a href='#second'>next</a>\
 `;
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 
   should("match mixed case link relation", () => {
@@ -610,7 +628,7 @@ context("Find prev / next links", () => {
 <link rel='Next' href='#first'>\
 `;
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 });
 
@@ -619,7 +637,7 @@ context("Key mapping", () => {
     this.normalMode = initializeModeState();
     this.handlerCalled = false;
     this.handlerCalledCount = 0;
-    this.normalMode.setCommandHandler(({count}) => {
+    this.normalMode.setCommandHandler(({ count }) => {
       this.handlerCalled = true;
       this.handlerCalledCount = count;
     });
@@ -832,13 +850,13 @@ context("Normal mode", () => {
   should("not handle unmapped keys", () => {
     sendKeyboardEvent("u");
     assert.equal(null, commandCount);
-  })
+  });
 });
 
 context("Insert mode", () => {
   setup(() => {
     initializeModeState();
-    this.insertMode = new InsertMode({global: true});
+    this.insertMode = new InsertMode({ global: true });
   });
 
   should("exit on escape", () => {
@@ -852,7 +870,7 @@ context("Insert mode", () => {
     this.insertMode.exit();
     sendKeyboardEvent("m");
     assert.equal(1, commandCount);
-  })
+  });
 });
 
 context("Triggering insert mode", () => {
@@ -899,9 +917,9 @@ context("Triggering insert mode", () => {
   });
 });
 
-// NOTE(philc): I'm disabling the caret and visual mode tests because I think they're fallen into disrepair,
-// or we merged changes to master and neglected to update the tests. We should return to these and
-// fix+re-enable them.
+// NOTE(philc): I'm disabling the caret and visual mode tests because I think they're fallen into
+// disrepair, or we merged changes to master and neglected to update the tests. We should return to
+// these and fix+re-enable them.
 
 // context("Caret mode",
 //   setup(() => {
@@ -1080,7 +1098,7 @@ context("Mode utilities", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
+  tearDown(() => document.getElementById("test-div").innerHTML = "");
 
   should("not have duplicate singletons", () => {
     let mode;
@@ -1089,9 +1107,12 @@ context("Mode utilities", () => {
       constructor() {
         count += 1;
         super();
-        super.init({singleton: "test"});
+        super.init({ singleton: "test" });
       }
-      exit() { count -= 1; return super.exit(); }
+      exit() {
+        count -= 1;
+        return super.exit();
+      }
     }
     assert.isTrue(count === 0);
     for (let i = 1; i <= 10; i++) {
@@ -1103,14 +1124,14 @@ context("Mode utilities", () => {
   });
 
   should("exit on escape", () => {
-    const test = createMode({exitOnEscape: true});
+    const test = createMode({ exitOnEscape: true });
     assert.isTrue(test.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
     assert.isFalse(test.modeIsActive);
   });
 
   should("not exit on escape if not enabled", () => {
-    const test = createMode({exitOnEscape: false});
+    const test = createMode({ exitOnEscape: false });
     assert.isTrue(test.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
     assert.isTrue(test.modeIsActive);
@@ -1119,7 +1140,7 @@ context("Mode utilities", () => {
   should("exit on blur", () => {
     const element = document.getElementById("first");
     element.focus();
-    const test = createMode({exitOnBlur: element});
+    const test = createMode({ exitOnBlur: element });
     assert.isTrue(test.modeIsActive);
     element.blur();
     assert.isFalse(test.modeIsActive);
@@ -1128,7 +1149,7 @@ context("Mode utilities", () => {
   should("not exit on blur if not enabled", () => {
     const element = document.getElementById("first");
     element.focus();
-    const test = createMode({exitOnBlur: false});
+    const test = createMode({ exitOnBlur: false });
     assert.isTrue(test.modeIsActive);
     element.blur();
     assert.isTrue(test.modeIsActive);
@@ -1145,12 +1166,11 @@ context("PostFindMode", () => {
   });
 
   tearDown(() => document.getElementById("test-div").innerHTML = ""),
-
-  should("be a singleton", () => {
-    assert.isTrue(this.postFindMode.modeIsActive);
-    new PostFindMode();
-    assert.isFalse(this.postFindMode.modeIsActive);
-  });
+    should("be a singleton", () => {
+      assert.isTrue(this.postFindMode.modeIsActive);
+      new PostFindMode();
+      assert.isFalse(this.postFindMode.modeIsActive);
+    });
 
   should("suppress unmapped printable keys", () => {
     sendKeyboardEvent("a");
@@ -1158,7 +1178,7 @@ context("PostFindMode", () => {
   });
 
   should("be deactivated on click events", () => {
-    handlerStack.bubbleEvent("click", {target: document.activeElement});
+    handlerStack.bubbleEvent("click", { target: document.activeElement });
     assert.isFalse(this.postFindMode.modeIsActive);
   });
 
@@ -1172,14 +1192,16 @@ context("PostFindMode", () => {
     sendKeyboardEvent("a");
     sendKeyboardEvent("Escape", "keydown");
     assert.isTrue(this.postFindMode.modeIsActive);
-  })
+  });
 });
 
 context("WaitForEnter", () => {
   setup(() => {
     initializeModeState();
     this.isSuccess = null;
-    this.waitForEnter = new WaitForEnter(isSuccess => { this.isSuccess = isSuccess; });
+    this.waitForEnter = new WaitForEnter((isSuccess) => {
+      this.isSuccess = isSuccess;
+    });
   });
 
   should("exit with success on Enter", () => {
@@ -1215,15 +1237,14 @@ context("GrabBackFocus", () => {
   });
 
   tearDown(() => document.getElementById("test-div").innerHTML = ""),
-
-  should("blur an already focused input", () => {
-    document.getElementById("input").focus();
-    assert.isTrue(document.activeElement);
-    assert.isTrue(DomUtils.isEditable(document.activeElement));
-    initializeModeState();
-    assert.isTrue(document.activeElement);
-    assert.isFalse(DomUtils.isEditable(document.activeElement));
-  });
+    should("blur an already focused input", () => {
+      document.getElementById("input").focus();
+      assert.isTrue(document.activeElement);
+      assert.isTrue(DomUtils.isEditable(document.activeElement));
+      initializeModeState();
+      assert.isTrue(document.activeElement);
+      assert.isFalse(DomUtils.isEditable(document.activeElement));
+    });
 
   should("blur a newly focused input", () => {
     initializeModeState();
@@ -1242,7 +1263,7 @@ context("GrabBackFocus", () => {
 
   should("exit on a mousedown event", () => {
     initializeModeState();
-    handlerStack.bubbleEvent("mousedown", {target: document.body});
+    handlerStack.bubbleEvent("mousedown", { target: document.body });
     document.getElementById("input").focus();
     assert.isTrue(document.activeElement);
     assert.isTrue(DomUtils.isEditable(document.activeElement));

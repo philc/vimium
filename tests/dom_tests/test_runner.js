@@ -1,10 +1,14 @@
-Tests.outputMethod = function(...args) {
+Tests.outputMethod = function (...args) {
   let newOutput = args.join("\n");
   // Escape html
   newOutput = newOutput.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   // Highlight the source of the error
-  newOutput = newOutput.replace(/\/([^:/]+):([0-9]+):([0-9]+)/, "/<span class='errorPosition'>$1:$2</span>:$3");
-  document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput + "</div>";
+  newOutput = newOutput.replace(
+    /\/([^:/]+):([0-9]+):([0-9]+)/,
+    "/<span class='errorPosition'>$1:$2</span>:$3",
+  );
+  document.getElementById("output-div").innerHTML += "<div class='output-section'>" + newOutput +
+    "</div>";
   console.log.apply(console, args);
 };
 
