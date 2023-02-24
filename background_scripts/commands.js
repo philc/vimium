@@ -6,7 +6,7 @@ const Commands = {
   init() {
     for (let command of Object.keys(commandDescriptions)) {
       const [description, options] = commandDescriptions[command];
-      this.availableCommands[command] = Object.assign((options || {}), {description});
+      this.availableCommands[command] = Object.assign(options || {}, { description });
     }
 
     Settings.postUpdateHooks["keyMappings"] = this.loadKeyMappings.bind(this);
@@ -18,7 +18,9 @@ const Commands = {
     this.keyToCommandRegistry = {};
     this.mapKeyRegistry = {};
 
-    const configLines = Object.keys(defaultKeyMappings).map((key) => `map ${key} ${defaultKeyMappings[key]}`);
+    const configLines = Object.keys(defaultKeyMappings).map((key) =>
+      `map ${key} ${defaultKeyMappings[key]}`
+    );
     configLines.push(...BgUtils.parseLines(customKeyMappings));
 
     const seen = {};
@@ -26,81 +28,93 @@ const Commands = {
     for (let line of configLines.reverse()) {
       const tokens = line.split(/\s+/);
       switch (tokens[0].toLowerCase()) {
-      case "map":
-        if ((3 <= tokens.length) && !unmapAll) {
-          var _, optionList, registryEntry;
-          [_, key, command, ...optionList] = tokens;
-          if (!seen[key] && (registryEntry = this.availableCommands[command])) {
-            seen[key] = true;
-            const keySequence = this.parseKeySequence(key);
-            const options = this.parseCommandOptions(command, optionList);
-            this.keyToCommandRegistry[key] =
-              Object.assign({keySequence, command, options, optionList}, this.availableCommands[command]);
+        case "map":
+          if ((3 <= tokens.length) && !unmapAll) {
+            var _, optionList, registryEntry;
+            [_, key, command, ...optionList] = tokens;
+            if (!seen[key] && (registryEntry = this.availableCommands[command])) {
+              seen[key] = true;
+              const keySequence = this.parseKeySequence(key);
+              const options = this.parseCommandOptions(command, optionList);
+              this.keyToCommandRegistry[key] = Object.assign({
+                keySequence,
+                command,
+                options,
+                optionList,
+              }, this.availableCommands[command]);
+            }
           }
-        }
-        break;
-      case "unmap":
-        if (tokens.length == 2)
-          seen[tokens[1]] = true;
-        break;
-      case "unmapall":
-        unmapAll = true;
-        break;
-      case "mapkey":
-        if (tokens.length === 3) {
-          const fromChar = this.parseKeySequence(tokens[1]);
-          const toChar = this.parseKeySequence(tokens[2]);
-          if ((fromChar.length === toChar.length && toChar.length === 1)
-              && this.mapKeyRegistry[fromChar[0]] == null) {
-            this.mapKeyRegistry[fromChar[0]] = toChar[0];
+          break;
+        case "unmap":
+          if (tokens.length == 2) {
+            seen[tokens[1]] = true;
           }
-        }
-        break;
+          break;
+        case "unmapall":
+          unmapAll = true;
+          break;
+        case "mapkey":
+          if (tokens.length === 3) {
+            const fromChar = this.parseKeySequence(tokens[1]);
+            const toChar = this.parseKeySequence(tokens[2]);
+            if (
+              (fromChar.length === toChar.length && toChar.length === 1) &&
+              this.mapKeyRegistry[fromChar[0]] == null
+            ) {
+              this.mapKeyRegistry[fromChar[0]] = toChar[0];
+            }
+          }
+          break;
       }
     }
 
-    chrome.storage.local.set({mapKeyRegistry: this.mapKeyRegistry});
+    chrome.storage.local.set({ mapKeyRegistry: this.mapKeyRegistry });
     this.installKeyStateMapping();
     this.prepareHelpPageData();
 
-    // Push the key mapping for passNextKey into Settings so that it's available in the front end for insert
-    // mode.  We exclude single-key mappings (that is, printable keys) because when users press printable keys
-    // in insert mode they expect the character to be input, not to be droppped into some special Vimium
-    // mode.
+    // Push the key mapping for passNextKey into Settings so that it's available in the front end
+    // for insert mode. We exclude single-key mappings (that is, printable keys) because when users
+    // press printable keys in insert mode they expect the character to be input, not to be droppped
+    // into some special Vimium mode.
     const passNextKeys = Object.keys(this.keyToCommandRegistry)
-      .filter(key => (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1));
+      .filter((key) =>
+        (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1)
+      );
     Settings.set("passNextKeyKeys", passNextKeys);
   },
 
   // Lower-case the appropriate portions of named keys.
   //
-  // A key name is one of three forms exemplified by <c-a> <left> or <c-f12>
-  // (prefixed normal key, named key, or prefixed named key). Internally, for
-  // simplicity, we would like prefixes and key names to be lowercase, though
-  // humans may prefer other forms <Left> or <C-a>.
-  // On the other hand, <c-a> and <c-A> are different named keys - for one of
-  // them you have to press "shift" as well.
+  // A key name is one of three forms exemplified by <c-a> <left> or <c-f12> (prefixed normal key,
+  // named key, or prefixed named key). Internally, for simplicity, we would like prefixes and key
+  // names to be lowercase, though humans may prefer other forms <Left> or <C-a>.
+  // On the other hand, <c-a> and <c-A> are different named keys - for one of them you have to press
+  // "shift" as well.
   // We sort modifiers here to match the order used in keyboard_utils.js.
   // The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
-  parseKeySequence: (function() {
-    const modifier = "(?:[acms]-)";                            // E.g. "a-", "c-", "m-", "s-".
-    const namedKey = "(?:[a-z][a-z0-9]+)";                     // E.g. "left" or "f12" (always two characters or more).
-    const modifiedKey = `(?:${modifier}+(?:.|${namedKey}))`;   // E.g. "c-*" or "c-left".
+  parseKeySequence: (function () {
+    const modifier = "(?:[acms]-)"; // E.g. "a-", "c-", "m-", "s-".
+    const namedKey = "(?:[a-z][a-z0-9]+)"; // E.g. "left" or "f12" (always two characters or more).
+    const modifiedKey = `(?:${modifier}+(?:.|${namedKey}))`; // E.g. "c-*" or "c-left".
     const specialKeyRegexp = new RegExp(`^<(${namedKey}|${modifiedKey})>(.*)`, "i");
-    return function(key) {
+    return function (key) {
       if (key.length === 0) {
         return [];
-      // Parse "<c-a>bcd" as "<c-a>" and "bcd".
+        // Parse "<c-a>bcd" as "<c-a>" and "bcd".
       } else if (0 === key.search(specialKeyRegexp)) {
         const array = RegExp.$1.split("-");
-        const adjustedLength = Math.max(array.length, 1)
+        const adjustedLength = Math.max(array.length, 1);
         let modifiers = array.slice(0, adjustedLength - 1);
         let keyChar = array[adjustedLength - 1];
-        if (keyChar.length !== 1)
+        if (keyChar.length !== 1) {
           keyChar = keyChar.toLowerCase();
-        modifiers = modifiers.map(m => m.toLowerCase());
+        }
+        modifiers = modifiers.map((m) => m.toLowerCase());
         modifiers.sort();
-        return ["<" + modifiers.concat([keyChar]).join("-") + ">", ...this.parseKeySequence(RegExp.$2)];
+        return [
+          "<" + modifiers.concat([keyChar]).join("-") + ">",
+          ...this.parseKeySequence(RegExp.$2),
+        ];
       } else {
         return [key[0], ...this.parseKeySequence(key.slice(1))];
       }
@@ -120,8 +134,9 @@ const Commands = {
     // We parse any `count` option immediately (to avoid having to parse it repeatedly later).
     if ("count" in options) {
       options.count = parseInt(options.count);
-      if (isNaN(options.count) || this.availableCommands[command].noRepeat)
+      if (isNaN(options.count) || this.availableCommands[command].noRepeat) {
         delete options.count;
+      }
     }
 
     return options;
@@ -137,31 +152,37 @@ const Commands = {
       for (let index = 0; index < registryEntry.keySequence.length; index++) {
         const key = registryEntry.keySequence[index];
         if (currentMapping[key] != null ? currentMapping[key].command : undefined) {
-          // Do not overwrite existing command bindings, they take priority.  NOTE(smblott) This is the legacy
-          // behaviour.
+          // Do not overwrite existing command bindings, they take priority. NOTE(smblott) This is
+          // the legacy behaviour.
           break;
         } else if (index < (registryEntry.keySequence.length - 1)) {
-          currentMapping = currentMapping[key] != null ? currentMapping[key] : (currentMapping[key] = {});
+          currentMapping = currentMapping[key] != null
+            ? currentMapping[key]
+            : (currentMapping[key] = {});
         } else {
           currentMapping[key] = Object.assign({}, registryEntry);
           // We don't need these properties in the content scripts.
-          for (let prop of ["keySequence", "description"])
+          for (let prop of ["keySequence", "description"]) {
             delete currentMapping[key][prop];
+          }
         }
       }
     }
-    chrome.storage.local.set({normalModeKeyStateMapping: keyStateMapping});
-    // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it is by
-    // default).
-    chrome.storage.local.set({useVimLikeEscape: !("<c-[>" in keyStateMapping)});
+    chrome.storage.local.set({ normalModeKeyStateMapping: keyStateMapping });
+    // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it
+    // is by default).
+    chrome.storage.local.set({ useVimLikeEscape: !("<c-[>" in keyStateMapping) });
   },
 
-  // Build the "helpPageData" data structure which the help page needs and place it in Chrome storage.
+  // Build the "helpPageData" data structure which the help page needs and place it in Chrome
+  // storage.
   prepareHelpPageData() {
     const commandToKey = {};
     for (let key of Object.keys(this.keyToCommandRegistry || {})) {
       const registryEntry = this.keyToCommandRegistry[key];
-      (commandToKey[registryEntry.command] != null ? commandToKey[registryEntry.command] : (commandToKey[registryEntry.command] = [])).push(key);
+      (commandToKey[registryEntry.command] != null
+        ? commandToKey[registryEntry.command]
+        : (commandToKey[registryEntry.command] = [])).push(key);
     }
     const commandGroups = {};
     for (let group of Object.keys(this.commandGroups || {})) {
@@ -172,18 +193,18 @@ const Commands = {
           command,
           description: this.availableCommands[command].description,
           keys: commandToKey[command] != null ? commandToKey[command] : [],
-          advanced: this.advancedCommands.includes(command)
+          advanced: this.advancedCommands.includes(command),
         });
       }
     }
-    chrome.storage.local.set({helpPageData: commandGroups});
+    chrome.storage.local.set({ helpPageData: commandGroups });
   },
 
-  // An ordered listing of all available commands, grouped by type. This is the order they will
-  // be shown in the help page.
+  // An ordered listing of all available commands, grouped by type. This is the order they will be
+  // shown in the help page.
   commandGroups: {
-    pageNavigation:
-      ["scrollDown",
+    pageNavigation: [
+      "scrollDown",
       "scrollUp",
       "scrollToTop",
       "scrollToBottom",
@@ -218,20 +239,21 @@ const Commands = {
       "nextFrame",
       "mainFrame",
       "Marks.activateCreateMode",
-      "Marks.activateGotoMode"],
-    vomnibarCommands:
-      ["Vomnibar.activate",
+      "Marks.activateGotoMode",
+    ],
+    vomnibarCommands: [
+      "Vomnibar.activate",
       "Vomnibar.activateInNewTab",
       "Vomnibar.activateBookmarks",
       "Vomnibar.activateBookmarksInNewTab",
       "Vomnibar.activateTabSelection",
       "Vomnibar.activateEditUrl",
-      "Vomnibar.activateEditUrlInNewTab"],
+      "Vomnibar.activateEditUrlInNewTab",
+    ],
     findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
-    historyNavigation:
-      ["goBack", "goForward"],
-    tabManipulation:
-      ["createTab",
+    historyNavigation: ["goBack", "goForward"],
+    tabManipulation: [
+      "createTab",
       "previousTab",
       "nextTab",
       "visitPreviousTab",
@@ -243,18 +265,18 @@ const Commands = {
       "removeTab",
       "restoreTab",
       "moveTabToNewWindow",
-      "closeTabsOnLeft","closeTabsOnRight",
+      "closeTabsOnLeft",
+      "closeTabsOnRight",
       "closeOtherTabs",
       "moveTabLeft",
-      "moveTabRight"],
-    misc:
-      ["showHelp",
-      "toggleViewSource"]
+      "moveTabRight",
+    ],
+    misc: ["showHelp", "toggleViewSource"],
   },
 
-  // Rarely used commands are not shown by default in the help dialog or in the README. The goal is to present
-  // a focused, high-signal set of commands to the new and casual user. Only those truly hungry for more power
-  // from Vimium will uncover these gems.
+  // Rarely used commands are not shown by default in the help dialog or in the README. The goal is
+  // to present a focused, high-signal set of commands to the new and casual user. Only those truly
+  // hungry for more power from Vimium will uncover these gems.
   advancedCommands: [
     "scrollToLeft",
     "scrollToRight",
@@ -278,7 +300,8 @@ const Commands = {
     "closeOtherTabs",
     "enterVisualLineMode",
     "toggleViewSource",
-    "passNextKey"]
+    "passNextKey",
+  ],
 };
 
 const defaultKeyMappings = {
@@ -358,9 +381,8 @@ const defaultKeyMappings = {
 
   // Misc
   "?": "showHelp",
-  "gs": "toggleViewSource"
+  "gs": "toggleViewSource",
 };
-
 
 // This is a mapping of: commandIdentifier => [description, options].
 // If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
@@ -428,34 +450,40 @@ const commandDescriptions = {
 
   createTab: ["Create new tab", { background: true, repeatLimit: 20 }],
   duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }],
-  removeTab: ["Close current tab", { background: true,
-                                     repeatLimit: (chrome.sessions ? chrome.sessions.MAX_SESSION_RESULTS : null) || 25 }],
+  removeTab: ["Close current tab", {
+    background: true,
+    repeatLimit: (chrome.sessions ? chrome.sessions.MAX_SESSION_RESULTS : null) || 25,
+  }],
   restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }],
 
   moveTabToNewWindow: ["Move tab to new window", { background: true }],
   togglePinTab: ["Pin or unpin current tab", { background: true }],
   toggleMuteTab: ["Mute or unmute current tab", { background: true, noRepeat: true }],
 
-  closeTabsOnLeft: ["Close tabs on the left", {background: true, noRepeat: true}],
-  closeTabsOnRight: ["Close tabs on the right", {background: true, noRepeat: true}],
-  closeOtherTabs: ["Close all other tabs", {background: true, noRepeat: true}],
+  closeTabsOnLeft: ["Close tabs on the left", { background: true, noRepeat: true }],
+  closeTabsOnRight: ["Close tabs on the right", { background: true, noRepeat: true }],
+  closeOtherTabs: ["Close all other tabs", { background: true, noRepeat: true }],
 
   moveTabLeft: ["Move tab to the left", { background: true }],
   moveTabRight: ["Move tab to the right", { background: true }],
 
   "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }],
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark or history entry in a new tab", { topFrame: true }],
+  "Vomnibar.activateInNewTab": ["Open URL, bookmark or history entry in a new tab", {
+    topFrame: true,
+  }],
   "Vomnibar.activateTabSelection": ["Search through your open tabs", { topFrame: true }],
   "Vomnibar.activateBookmarks": ["Open a bookmark", { topFrame: true }],
   "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { topFrame: true }],
   "Vomnibar.activateEditUrl": ["Edit the current URL", { topFrame: true }],
-  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", { topFrame: true }],
+  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", {
+    topFrame: true,
+  }],
 
   nextFrame: ["Select the next frame on the page", { background: true }],
   mainFrame: ["Select the page's main/top frame", { topFrame: true, noRepeat: true }],
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }],
-  "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }]
+  "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }],
 };
 
 Commands.init();
