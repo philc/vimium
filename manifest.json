@@ -10,6 +10,7 @@
     "type": "module"
   },
   // TODO(philc): Manifest v3
+  "options_page": "pages/options.html",
   // "options_ui": {
   //   "page": "pages/options.html",
   //   "chrome_style": false,
@@ -35,6 +36,7 @@
         "lib/rect.js",
         "lib/handler_stack.js",
         "lib/settings.js",
+        "lib/settings2.js",
         "lib/find_mode_history.js",
         "content_scripts/mode.js",
         "content_scripts/ui_component.js",

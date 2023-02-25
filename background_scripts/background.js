@@ -1,5 +1,6 @@
 import "/lib/utils.js";
 import "/lib/settings.js";
+import "/lib/settings2.js";
 import "/background_scripts/bg_utils.js";
 import "/background_scripts/commands.js";
 import "/background_scripts/exclusions.js";
