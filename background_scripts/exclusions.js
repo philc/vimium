@@ -82,4 +82,4 @@ var Exclusions = {
 // Register postUpdateHook for exclusionRules setting.
 Settings.postUpdateHooks["exclusionRules"] = Exclusions.postUpdateHook.bind(Exclusions);
 
-window.Exclusions = Exclusions;
+globalThis.Exclusions = Exclusions;

@@ -792,7 +792,6 @@ class MultiCompleter {
 
     // Provide each completer with an opportunity to see (and possibly alter) the request before it is
     // launched.
-    console.log(">>>> this.completers:", this.completers);
     for (let completer of this.completers) {
       if (completer.preprocessRequest) {
         completer.preprocessRequest(request);
@@ -1191,7 +1190,7 @@ HistoryCache.binarySearch = function (targetElement, array, compareFunction) {
   }
 };
 
-Object.assign(window, {
+Object.assign(globalThis, {
   Suggestion,
   BookmarkCompleter,
   MultiCompleter,

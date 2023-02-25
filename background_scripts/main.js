@@ -1,11 +1,12 @@
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
-// converting from coffeescript to es6. Many can be removed, but I didn't take the time to diligently
-// track down precisely which return statements could be removed when I was doing the conversion.
+// converting from coffeescript to es6. Many can be removed, but I didn't take the time to
+// diligently track down precisely which return statements could be removed when I was doing the
+// conversion.
 
 let showUpgradeMessage;
 
-// The browser may have tabs already open. We inject the content scripts immediately so that they work straight
-// away.
+// The browser may have tabs already open. We inject the content scripts immediately so that they
+// work straight away.
 chrome.runtime.onInstalled.addListener(function ({ reason }) {
   // See https://developer.chrome.com/extensions/runtime#event-onInstalled
   if (["chrome_update", "shared_module_update"].includes(reason)) return;
@@ -13,10 +14,17 @@ chrome.runtime.onInstalled.addListener(function ({ reason }) {
   const manifest = chrome.runtime.getManifest();
   // Content scripts loaded on every page should be in the same group. We assume it is the first.
   const contentScripts = manifest.content_scripts[0];
-  const jobs = [[chrome.tabs.executeScript, contentScripts.js], [
-    chrome.tabs.insertCSS,
-    contentScripts.css,
-  ]];
+  const jobs = [
+    [
+      chrome.tabs.executeScript,
+      contentScripts.js,
+    ],
+    [
+      // TODO(philc): manifest v3
+      // chrome.tabs.insertCSS,
+      contentScripts.css,
+    ],
+  ];
   // Chrome complains if we don't evaluate chrome.runtime.lastError on errors (and we get errors for tabs on
   // which Vimium cannot run).
   const checkLastRuntimeError = () => chrome.runtime.lastError;
@@ -32,15 +40,15 @@ chrome.runtime.onInstalled.addListener(function ({ reason }) {
 });
 
 const frameIdsForTab = {};
-window.portsForTab = {};
-window.urlForTab = {};
+globalThis.portsForTab = {};
+globalThis.urlForTab = {};
 
 // This is exported for use by "marks.js".
-window.tabLoadedHandlers = {}; // tabId -> function()
+globalThis.tabLoadedHandlers = {}; // tabId -> function()
 
 // A secret, available only within the current instantiation of Vimium, for the duration of the browser
 // session. The secret is a generated strong random string.
-const randomArray = window.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
+const randomArray = globalThis.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
 const secretToken = randomArray.reduce((a, b) => a.toString(16) + b.toString(16));
 chrome.storage.local.set({ vimiumSecret: secretToken });
 
@@ -119,15 +127,12 @@ chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Has
 
 // Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.
 (function () {
-  const req = new XMLHttpRequest();
-  req.open("GET", chrome.runtime.getURL("content_scripts/vimium.css"), true); // true -> asynchronous.
-  req.onload = function () {
-    const { status, responseText } = req;
-    if (status === 200) {
-      return chrome.storage.local.set({ vimiumCSSInChromeStorage: responseText });
+  const url = chrome.runtime.getURL("content_scripts/vimium.css");
+  fetch(url).then(async (response) => {
+    if (response.ok) {
+      chrome.storage.local.set({ vimiumCSSInChromeStorage: await response.text() });
     }
-  };
-  return req.send();
+  });
 })();
 
 const TabOperations = {
@@ -492,7 +497,8 @@ chrome.webNavigation.onCommitted.addListener(function ({ tabId, frameId }) {
     code: Settings.get("userDefinedLinkHintCss"),
     runAt: "document_start",
   };
-  return chrome.tabs.insertCSS(tabId, cssConf, () => chrome.runtime.lastError);
+  // TODO(philc): manifest v3
+  // return chrome.tabs.insertCSS(tabId, cssConf, () => chrome.runtime.lastError);
 });
 
 // Symbolic names for the three browser-action icons.
@@ -502,7 +508,9 @@ const PARTIAL_ICON = "icons/browser_action_partial.png";
 
 // Convert the three icon PNGs to image data.
 const iconImageData = {};
-for (let icon of [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]) {
+// TODO(philc): needs to be redone manifest v3.
+// for (let icon of [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]) {
+for (let icon of []) {
   iconImageData[icon] = {};
   for (let scale of [19, 38]) {
     (function (icon, scale) {
@@ -582,19 +590,22 @@ var Frames = {
     const enabledState = Exclusions.isEnabledForUrl(request.url);
 
     if (request.frameIsFocused) {
-      if (chrome.browserAction.setIcon) {
-        chrome.browserAction.setIcon({
-          tabId,
-          imageData: (function () {
-            const enabledStateIcon = !enabledState.isEnabledForUrl
-              ? DISABLED_ICON
-              : enabledState.passKeys.length > 0
-              ? PARTIAL_ICON
-              : ENABLED_ICON;
-            return iconImageData[enabledStateIcon];
-          })(),
-        });
-      }
+      // TODO(philc): manifest v3
+      // if (chrome.browserAction.setIcon) {
+      //   chrome.browserAction.setIcon({
+      //     tabId,
+      //     imageData: (function () {
+      //       const enabledStateIcon = !enabledState.isEnabledForUrl
+      //         ? DISABLED_ICON
+      //         : enabledState.passKeys.length > 0
+      //         ? PARTIAL_ICON
+      //         : ENABLED_ICON;
+      //       // TODO(philc): manifest v3
+      //       // return iconImageData[enabledStateIcon];
+      //       return null;
+      //     })(),
+      //   });
+      // }
     }
 
     return port.postMessage(Object.assign(request, enabledState));
@@ -808,7 +819,7 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
 });
 
 // Convenience function for development use.
-window.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_tests.html"));
+globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_tests.html"));
 
 //
 // Begin initialization.
@@ -875,4 +886,4 @@ chrome.runtime.onInstalled.addListener(function ({ reason }) {
   }
 });
 
-Object.assign(window, { TabOperations, Frames });
+Object.assign(globalThis, { TabOperations, Frames });
