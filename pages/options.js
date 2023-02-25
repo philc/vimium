@@ -311,27 +311,6 @@ const initOptionsPage = function () {
     }
   };
 
-  const maintainAdvancedOptions = function () {
-    if (bgSettings.get("optionsPage_showAdvancedOptions")) {
-      $("advancedOptions").style.display = "table-row-group";
-      return $("advancedOptionsButton").textContent = "Hide Advanced Options";
-    } else {
-      $("advancedOptions").style.display = "none";
-      return $("advancedOptionsButton").textContent = "Show Advanced Options";
-    }
-  };
-  maintainAdvancedOptions();
-
-  const toggleAdvancedOptions = function (event) {
-    bgSettings.set(
-      "optionsPage_showAdvancedOptions",
-      !bgSettings.get("optionsPage_showAdvancedOptions"),
-    );
-    maintainAdvancedOptions();
-    $("advancedOptionsButton").blur();
-    event.preventDefault();
-  };
-
   const activateHelpDialog = function () {
     HelpDialog.toggle({ showAllCommandDetails: true });
   };
@@ -344,7 +323,6 @@ const initOptionsPage = function () {
   };
 
   $("saveOptions").addEventListener("click", saveOptions);
-  $("advancedOptionsButton").addEventListener("click", toggleAdvancedOptions);
   $("showCommands").addEventListener("click", activateHelpDialog);
   $("filterLinkHints").addEventListener("click", maintainLinkHintsView);
 

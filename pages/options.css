@@ -136,8 +136,6 @@ input#searchUrl {
   white-space: nowrap;
 }
 #buttonsPanel { width: 100%; }
-#advancedOptions { display: none; }
-#advancedOptionsButton { width: 170px; }
 .help {
   position: absolute;
   right: -320px;
