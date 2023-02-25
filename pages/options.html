@@ -1,341 +1,350 @@
 <html>
-  <head>
-    <title>Vimium Options</title>
-    <link rel="stylesheet" type="text/css" href="options.css">
-    <script src="../lib/utils.js"></script>
-    <script src="../lib/keyboard_utils.js"></script>
-    <script src="../lib/dom_utils.js"></script>
-    <script src="../lib/rect.js"></script>
-    <script src="../lib/handler_stack.js"></script>
-    <script src="../lib/settings.js"></script>
-    <script src="../lib/find_mode_history.js"></script>
-    <script src="../content_scripts/mode.js"></script>
-    <script src="../content_scripts/ui_component.js"></script>
-    <script src="../content_scripts/link_hints.js"></script>
-    <script src="../content_scripts/vomnibar.js"></script>
-    <script src="../content_scripts/scroller.js"></script>
-    <script src="../content_scripts/marks.js"></script>
-    <script src="../content_scripts/mode_insert.js"></script>
-    <script src="../content_scripts/mode_find.js"></script>
-    <script src="../content_scripts/mode_key_handler.js"></script>
-    <script src="../content_scripts/mode_visual.js"></script>
-    <script src="../content_scripts/hud.js"></script>
-    <script src="../content_scripts/mode_normal.js"></script>
-    <script src="../content_scripts/vimium_frontend.js"></script>
-    <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
-    <script type="text/javascript" src="options.js"></script>
-  </head>
+<head>
+  <title>Vimium Options</title>
+  <link rel="stylesheet" type="text/css" href="options.css">
+  <script src="../lib/utils.js"></script>
+  <script src="../lib/keyboard_utils.js"></script>
+  <script src="../lib/dom_utils.js"></script>
+  <script src="../lib/rect.js"></script>
+  <script src="../lib/handler_stack.js"></script>
+  <script src="../lib/settings.js"></script>
+  <script src="../lib/settings2.js"></script>
+  <script src="../lib/find_mode_history.js"></script>
+  <script src="../content_scripts/mode.js"></script>
+  <script src="../content_scripts/ui_component.js"></script>
+  <script src="../content_scripts/link_hints.js"></script>
+  <script src="../content_scripts/vomnibar.js"></script>
+  <script src="../content_scripts/scroller.js"></script>
+  <script src="../content_scripts/marks.js"></script>
+  <script src="../content_scripts/mode_insert.js"></script>
+  <script src="../content_scripts/mode_find.js"></script>
+  <script src="../content_scripts/mode_key_handler.js"></script>
+  <script src="../content_scripts/mode_visual.js"></script>
+  <script src="../content_scripts/hud.js"></script>
+  <script src="../content_scripts/mode_normal.js"></script>
+  <script src="../content_scripts/vimium_frontend.js"></script>
+  <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
 
-  <body class="vimiumBody">
-    <div id="wrapper">
-      <header>Vimium Options</header>
-      <table id="options">
-        <tr>
-          <td class="caption">Excluded URLs<br/>and keys</td>
-          <td>
-            <div class="help">
-              <div class="example">
-                Wholly or partially disable Vimium.  "Patterns" are URL regular expressions;
-                additionally, "*" matches any zero or more characters.
-                <br/><br/>
-                If "Keys" is left empty, then Vimium is wholly disabled.
-                Otherwise, just the listed keys are disabled (they are passed through).
-              </div>
+  <script type="text/javascript" src="options.js"></script>
+</head>
+
+<body class="vimiumBody">
+  <div id="wrapper">
+    <header>Vimium Options</header>
+    <table id="options">
+      <tr>
+        <td class="caption">Excluded URLs<br />and keys</td>
+        <td>
+          <div class="help">
+            <div class="example">
+              Wholly or partially disable Vimium. "Patterns" are URL regular expressions;
+              additionally, "*" matches any zero or more characters.
+              <br /><br />
+              If "Keys" is left empty, then Vimium is wholly disabled.
+              Otherwise, just the listed keys are disabled (they are passed through).
             </div>
-            <div>
-               <div id="exclusionScrollBox">
-                  <!-- Populated from exclusions.html by options.js. -->
-               </div>
-               <button id="exclusionAddButton">Add Rule</button>
+          </div>
+          <div>
+            <div id="exclusionScrollBox">
+              <!-- Populated from exclusions.html by options.js. -->
             </div>
-          </td>
-        </tr>
-        <tr>
-          <td class="caption">Custom key<br/>mappings</td>
-          <td id="mappingsHelp" verticalAlign="top">
-            <div class="help">
-              <div class="example">
-                <!-- TODO(ilya/philc): Expand this and style it better. -->
-                Enter commands to remap your keys. Available commands:<br/>
-                <pre id="exampleKeyMapping">
+            <button id="exclusionAddButton">Add Rule</button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="caption">Custom key<br />mappings</td>
+        <td id="mappingsHelp" verticalAlign="top">
+          <div class="help">
+            <div class="example">
+              <!-- TODO(ilya/philc): Expand this and style it better. -->
+              Enter commands to remap your keys. Available commands:<br />
+              <pre id="exampleKeyMapping">
 map j scrollDown
 unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-                <a href="#" id="showCommands">Show available commands</a>.
-              </div>
+              <a href="#" id="showCommands">Show available commands</a>.
             </div>
-            <textarea id="keyMappings" type="text" tabIndex="1"></textarea>
-          </td>
-        </tr>
-        <tr>
-          <td class="caption">Custom search<br/>engines</td>
-          <td verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  Add search-engine shortcuts to the Vomnibar. Format:<br/>
-                  <pre>
+          </div>
+          <textarea id="keyMappings" type="text" tabIndex="1"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td class="caption">Custom search<br />engines</td>
+        <td verticalAlign="top">
+          <div class="help">
+            <div class="example">
+              Add search-engine shortcuts to the Vomnibar. Format:<br />
+              <pre>
 a: http://a.com/?q=%s
 b: http://b.com/?q=%s description
 " this is a comment
 # this is also a comment</pre>
-                  %s is replaced with the search terms. <br/>
-                  For search completion, see <a href="completion_engines.html" target="_blank">here</a>.
-                </div>
-              </div>
-              <textarea id="searchEngines"></textarea>
+              %s is replaced with the search terms. <br />
+              For search completion, see <a href="completion_engines.html" target="_blank">here</a>.
+            </div>
+          </div>
+          <textarea id="searchEngines"></textarea>
+        </td>
+      </tr>
+      <tbody id='advancedOptions'>
+        <tr>
+          <td colspan="2">
+            <header>Advanced Options</header>
           </td>
         </tr>
-        <tbody id='advancedOptions'>
-          <tr>
-            <td colspan="2"><header>Advanced Options</header></td>
-          </tr>
-          <tr>
-            <td class="caption">Scroll step size</td>
-            <td>
-                <div class="help">
-                  <div class="example">
-                    The size for basic movements (usually j/k/h/l).
-                  </div>
-                </div>
-              <input id="scrollStepSize" type="number" />px
-            </td>
-          </tr>
-          <tr id="linkHintCharactersContainer">
-            <td class="caption">Characters used<br/> for link hints</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The characters placed next to each link after typing "f" to enter link-hint mode.
-                  </div>
-                </div>
-                <input id="linkHintCharacters" type="text" />
-                <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr id="linkHintNumbersContainer">
-            <td class="caption">Characters used<br/> for link hints</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The characters placed next to each link after typing "f" to enter link-hint mode.
-                  </div>
-                </div>
-                <input id="linkHintNumbers" type="text" />
-                <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr>
-            <td class="caption" verticalAlign="top">Miscellaneous<br/>options</td>
-            <td verticalAlign="top" class="booleanOption">
-              <label>
-                <input id="smoothScroll" type="checkbox"/>
-                Use smooth scrolling
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  In link-hint mode, this option lets you select a link by typing its text.
-                </div>
+        <tr>
+          <td class="caption">Scroll step size</td>
+          <td>
+            <div class="help">
+              <div class="example">
+                The size for basic movements (usually j/k/h/l).
               </div>
-              <label>
-                <input id="filterLinkHints" type="checkbox"/>
-                Use the link's name and characters for link-hint filtering
-              </label>
-            </td>
-          </tr>
-          <tr id="waitForEnterForFilteredHintsContainer">
-            <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  You activate the link with <tt>Enter</tt>, <em>always</em>; so you never accidentally type Vimium
-                  commands.
-                </div>
+            </div>
+            <input id="scrollStepSize" type="number" />px
+          </td>
+        </tr>
+        <tr id="linkHintCharactersContainer">
+          <td class="caption">Characters used<br /> for link hints</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The characters placed next to each link after typing "f" to enter link-hint mode.
               </div>
-              <label>
-                <input id="waitForEnterForFilteredHints" type="checkbox"/>
-                Require <tt>Enter</tt> when filtering hints
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  Prevent pages from focusing an input on load (e.g. Google, Bing, etc.).
-                </div>
+            </div>
+            <input id="linkHintCharacters" type="text" />
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
+        <tr id="linkHintNumbersContainer">
+          <td class="caption">Characters used<br /> for link hints</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The characters placed next to each link after typing "f" to enter link-hint mode.
               </div>
-              <label>
-                <input id="grabBackFocus" type="checkbox"/>
-                Don't let pages steal the focus on load
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  When enabled, the HUD will not be displayed in insert mode.
-                </div>
+            </div>
+            <input id="linkHintNumbers" type="text" />
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption" verticalAlign="top">Miscellaneous<br />options</td>
+          <td verticalAlign="top" class="booleanOption">
+            <label>
+              <input id="smoothScroll" type="checkbox" />
+              Use smooth scrolling
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
+            <div class="help">
+              <div class="example">
+                In link-hint mode, this option lets you select a link by typing its text.
               </div>
-              <label>
-                <input id="hideHud" type="checkbox"/>
-                Hide the Heads Up Display (HUD) in insert mode
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  Switch back to plain find mode by using the <code>\R</code> escape sequence.
-                </div>
+            </div>
+            <label>
+              <input id="filterLinkHints" type="checkbox" />
+              Use the link's name and characters for link-hint filtering
+            </label>
+          </td>
+        </tr>
+        <tr id="waitForEnterForFilteredHintsContainer">
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
+            <div class="help">
+              <div class="example">
+                You activate the link with <tt>Enter</tt>, <em>always</em>; so you never accidentally type
+                Vimium
+                commands.
               </div>
-              <label>
-                <input id="regexFindMode" type="checkbox"/>
-                Treat find queries as JavaScript regular expressions
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption"></td>
-            <td verticalAlign="top" class="booleanOption">
-              <div class="help">
-                <div class="example">
-                  This forces the use of <code>en-US</code> QWERTY layout and
-                  can be helpful for non-Latin keyboards.
-                </div>
+            </div>
+            <label>
+              <input id="waitForEnterForFilteredHints" type="checkbox" />
+              Require <tt>Enter</tt> when filtering hints
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
+            <div class="help">
+              <div class="example">
+                Prevent pages from focusing an input on load (e.g. Google, Bing, etc.).
               </div>
-              <label>
-                <input id="ignoreKeyboardLayout" type="checkbox"/>
-                Ignore keyboard layout
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">Previous patterns</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The "navigate to previous page" command uses these patterns to find the link to follow.
-                  </div>
-                </div>
-                <input id="previousPatterns" type="text" />
-                <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">Next patterns</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                    The "navigate to next page" command uses these patterns to find the link to follow.
-                  </div>
-                </div>
-                <input id="nextPatterns" type="text" />
-                <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">New tab URL</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                      The page to open with the "create new tab" command.
-                      Set this to "<tt>pages/blank.html</tt>" for a blank page (except incognito mode).<br />
-                  </div>
-                </div>
-                <input id="newTabUrl" type="text" />
-                <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">Default search<br/>engine</td>
-            <td verticalAlign="top">
-                <div class="help">
-                  <div class="example">
-                     The search engine to use in the Vomnibar <br> (e.g.: "https://duckduckgo.com/?q=").
-                  </div>
-                </div>
-                <input id="searchUrl" type="text" />
-                <div class="nonEmptyTextOption">
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">CSS for Vimium UI</td>
-            <td verticalAlign="top">
-              <div class="help">
-                <div class="example">
-                  These styles are applied to link hints, the Vomnibar, the help dialog, the exclusions pop-up and the HUD.<br />
-                  By default, this CSS is used to style the characters next to each link hint.<br/><br/>
-                  These styles are used in addition to and take precedence over Vimium's
-                  default styles.
-                </div>
+            </div>
+            <label>
+              <input id="grabBackFocus" type="checkbox" />
+              Don't let pages steal the focus on load
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
+            <div class="help">
+              <div class="example">
+                When enabled, the HUD will not be displayed in insert mode.
               </div>
-              <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
-              <div class="nonEmptyTextOption">
-            </td>
-          </tr>
+            </div>
+            <label>
+              <input id="hideHud" type="checkbox" />
+              Hide the Heads Up Display (HUD) in insert mode
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
+            <div class="help">
+              <div class="example">
+                Switch back to plain find mode by using the <code>\R</code> escape sequence.
+              </div>
+            </div>
+            <label>
+              <input id="regexFindMode" type="checkbox" />
+              Treat find queries as JavaScript regular expressions
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption"></td>
+          <td verticalAlign="top" class="booleanOption">
+            <div class="help">
+              <div class="example">
+                This forces the use of <code>en-US</code> QWERTY layout and
+                can be helpful for non-Latin keyboards.
+              </div>
+            </div>
+            <label>
+              <input id="ignoreKeyboardLayout" type="checkbox" />
+              Ignore keyboard layout
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">Previous patterns</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The "navigate to previous page" command uses these patterns to find the link to follow.
+              </div>
+            </div>
+            <input id="previousPatterns" type="text" />
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">Next patterns</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The "navigate to next page" command uses these patterns to find the link to follow.
+              </div>
+            </div>
+            <input id="nextPatterns" type="text" />
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">New tab URL</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The page to open with the "create new tab" command.
+                Set this to "<tt>pages/blank.html</tt>" for a blank page (except incognito mode).<br />
+              </div>
+            </div>
+            <input id="newTabUrl" type="text" />
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">Default search<br />engine</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                The search engine to use in the Vomnibar <br> (e.g.: "https://duckduckgo.com/?q=").
+              </div>
+            </div>
+            <input id="searchUrl" type="text" />
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">CSS for Vimium UI</td>
+          <td verticalAlign="top">
+            <div class="help">
+              <div class="example">
+                These styles are applied to link hints, the Vomnibar, the help dialog, the exclusions pop-up
+                and the HUD.<br />
+                By default, this CSS is used to style the characters next to each link hint.<br /><br />
+                These styles are used in addition to and take precedence over Vimium's
+                default styles.
+              </div>
+            </div>
+            <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+            <div class="nonEmptyTextOption example info">Leave empty to reset this option.</div>
+          </td>
+        </tr>
 
-          <tr>
-            <td colspan="2"><header>Backup and Restore</header></td>
-          </tr>
-          <tr>
-            <td class="caption">Backup</td>
-            <td>
-                <div class="help">
-                  <div class="example">
-                    Click to backup your settings, or right-click and select <i>Save As</i>.
-                  </div>
-                </div>
-              <a id="backupLink" download="vimium-options.json">Click to download backup</a>
-            </td>
-          </tr>
-          <tr>
-            <td class="caption">Restore</td>
-            <td>
-                <div class="help">
-                  <div class="example">
-                    Choose a backup file to restore, then click <i>Save Changes</i>, below, to confirm.
-                  </div>
-                </div>
-              <input id="chooseFile" type="file" accept=".json" />
-            </td>
-          </tr>
-        </tbody>
+        <tr>
+          <td colspan="2">
+            <header>Backup and Restore</header>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">Backup</td>
+          <td>
+            <div class="help">
+              <div class="example">
+                Click to backup your settings.
+              </div>
+            </div>
+            <a id="downloadBackup" download="vimium-options.json" href="#">Download backup</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="caption">Restore</td>
+          <td>
+            <div class="help">
+              <div class="example">
+                Choose a backup file to restore.
+              </div>
+            </div>
+            <input id="uploadBackup" type="file" accept=".json" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Some extra space which is hidden underneath the footer. -->
+  <div id="endSpace" />
+
+  <div id="footer">
+    <div id="footerWrapper">
+      <table id="footerTable">
+        <tr>
+          <td id="footerTableData">
+            <span id="helpText">
+              Type <strong>?</strong> to show the help dialog.
+              <br />
+              Type <strong>Ctrl-Enter</strong> to save <i>all</i> options.
+            </span>
+          </td>
+          <td id="saveOptionsTableData" nowrap>
+            <button id="saveOptions" disabled="true">No Changes</button>
+          </td>
+        </tr>
       </table>
     </div>
+  </div>
+</body>
 
-    <!-- Some extra space which is hidden underneath the footer. -->
-    <div id="endSpace"/>
-
-    <div id="footer">
-      <div id="footerWrapper">
-        <table id="footerTable">
-          <tr>
-            <td id="footerTableData">
-              <span id="helpText">
-                Type <strong>?</strong> to show the help dialog.
-                <br/>
-                Type <strong>Ctrl-Enter</strong> to save <i>all</i> options.
-              </span>
-            </td>
-            <td id="saveOptionsTableData" nowrap>
-              <button id="saveOptions" disabled="true">No Changes</button>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </body>
 </html>

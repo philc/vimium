@@ -1,117 +1,40 @@
+// TODO(philc): Exclusions logic needs to be fixed, and custom styles.
 const $ = (id) => document.getElementById(id);
-const bgExclusions = chrome.extension.getBackgroundPage().Exclusions;
+// TODO(philc): manifest v3
+const bgExclusions = null; // chrome.extension.getBackgroundPage().Exclusions;
 
-// We have to use Settings from the background page here (not Settings, directly) to avoid a race
-// condition for the page popup. Specifically, we must ensure that the settings have been updated on
-// the background page *before* the popup closes. This ensures that any exclusion-rule changes are
-// in place before the page regains the focus.
-const bgSettings = chrome.extension.getBackgroundPage().Settings;
-
-//
-// Class hierarchy for various types of option.
-// Call "fetch" after constructing an Option object, to fetch it from localStorage.
+// TODO(philc): Remove once we revisit exclusion rules
 class Option {
-  // Base class for all option classes.
-  // Abstract. Option does not define @populateElement or @readValueFromElement.
   constructor(field, onUpdated) {
     this.field = field;
-    this.onUpdated = onUpdated;
+    // this.onUpdated = onUpdated;
     this.element = $(this.field);
-    this.element.addEventListener("change", this.onUpdated);
-    Option.all.push(this);
+    // this.element.addEventListener("change", this.onUpdated);
+    // Option.all.push(this);
   }
 
   // Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
   // Return the fetched value.
   fetch() {
-    this.populateElement(this.previous = bgSettings.get(this.field));
-    return this.previous;
+    // // return; // TODO(philc): manifest v3
+    // this.populateElement(this.previous = bgSettings[this.field]);
+    // return this.previous;
   }
 
   // Write this option's new value back to localStorage, if necessary.
   save() {
-    const value = this.readValueFromElement();
-    if (JSON.stringify(value) !== JSON.stringify(this.previous)) {
-      bgSettings.set(this.field, this.previous = value);
-    }
-  }
-
-  restoreToDefault() {
-    bgSettings.clear(this.field);
-    return this.fetch();
-  }
-
-  static onSave(callback) {
-    this.onSaveCallbacks.push(callback);
+    // const value = this.readValueFromElement();
+    // if (JSON.stringify(value) !== JSON.stringify(this.previous)) {
+    //   bgSettings[this.field] = this.previous = value;
+    // }
   }
 
   // Static method.
-  static saveOptions() {
-    Option.all.map((option) => option.save());
-    this.onSaveCallbacks.map((callback) => callback());
-  }
-}
-
-// Abstract method; only implemented in sub-classes.
-// Populate the option's DOM element (@element) with the setting's current value.
-// populateElement: (value) -> DO_SOMETHING
-
-// Abstract method; only implemented in sub-classes.
-// Extract the setting's new value from the option's DOM element (@element).
-// readValueFromElement: -> RETURN_SOMETHING
-
-Option.all = []; // Static. Array of all options.
-Option.onSaveCallbacks = [];
-
-class NumberOption extends Option {
-  populateElement(value) {
-    this.element.value = value;
-  }
-  readValueFromElement() {
-    return parseFloat(this.element.value);
-  }
-}
-
-class TextOption extends Option {
-  constructor(...args) {
-    super(...Array.from(args || []));
-    this.element.addEventListener("input", this.onUpdated);
-  }
-  populateElement(value) {
-    this.element.value = value;
-  }
-  readValueFromElement() {
-    return this.element.value.trim();
-  }
-}
-
-class NonEmptyTextOption extends Option {
-  constructor(...args) {
-    super(...Array.from(args || []));
-    this.element.addEventListener("input", this.onUpdated);
-  }
-
-  populateElement(value) {
-    this.element.value = value;
-  }
-  // If the new value is not empty, then return it. Otherwise, restore the default value.
-  readValueFromElement() {
-    const value = this.element.value.trim();
-    if (value) {
-      return value;
-    } else {
-      return this.restoreToDefault();
-    }
-  }
-}
-
-class CheckBoxOption extends Option {
-  populateElement(value) {
-    this.element.checked = value;
-  }
-  readValueFromElement() {
-    return this.element.checked;
-  }
+  // static saveOptions() {
+  //   Option.all.map((option) => option.save());
+  //   Settings2.set(bgSettings);
+  //   this.onSaveCallbacks.map((callback) => callback());
+  // }
 }
 
 class ExclusionRulesOption extends Option {
@@ -153,7 +76,7 @@ class ExclusionRulesOption extends Option {
     const content = document.querySelector("#exclusionRuleTemplate").content;
     const row = document.importNode(content, true);
 
-    for (let field of ["pattern", "passKeys"]) {
+    for (let field of ["passKeys", "pattern"]) {
       element = row.querySelector(`.${field}`);
       element.value = rule[field];
       for (let event of ["input", "change"]) {
@@ -174,8 +97,9 @@ class ExclusionRulesOption extends Option {
   readValueFromElement() {
     const rules = Array.from(this.element.getElementsByClassName("exclusionRuleTemplateInstance"))
       .map((element) => ({
-        pattern: this.getPattern(element).value.trim(),
+        // The ordering of these keys should match the order in defaultOptins in Settings.js
         passKeys: this.getPassKeys(element).value.trim(),
+        pattern: this.getPattern(element).value.trim(),
       }));
     return rules.filter((rule) => rule.pattern);
   }
@@ -239,12 +163,13 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
   activatePatternWatcher(element) {
     const patternElement = element.children[0].firstChild;
     patternElement.addEventListener("keyup", () => {
-      if (this.url.match(bgExclusions.RegexpCache.get(patternElement.value))) {
-        patternElement.title = patternElement.style.color = "";
-      } else {
-        patternElement.style.color = "red";
-        patternElement.title = "Red text means that the pattern does not\nmatch the current URL.";
-      }
+      // TODO(philc): manifest v3
+      // if (this.url.match(bgExclusions.RegexpCache.get(patternElement.value))) {
+      //   patternElement.title = patternElement.style.color = "";
+      // } else {
+      //   patternElement.style.color = "red";
+      //   patternElement.title = "Red text means that the pattern does not\nmatch the current URL.";
+      // }
     });
   }
 
@@ -269,35 +194,133 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
   }
 }
 
-const Options = {
-  exclusionRules: ExclusionRulesOption,
-  filterLinkHints: CheckBoxOption,
-  waitForEnterForFilteredHints: CheckBoxOption,
-  hideHud: CheckBoxOption,
-  keyMappings: TextOption,
-  linkHintCharacters: NonEmptyTextOption,
-  linkHintNumbers: NonEmptyTextOption,
-  newTabUrl: NonEmptyTextOption,
-  nextPatterns: NonEmptyTextOption,
-  previousPatterns: NonEmptyTextOption,
-  regexFindMode: CheckBoxOption,
-  ignoreKeyboardLayout: CheckBoxOption,
-  scrollStepSize: NumberOption,
-  smoothScroll: CheckBoxOption,
-  grabBackFocus: CheckBoxOption,
-  searchEngines: TextOption,
-  searchUrl: NonEmptyTextOption,
-  userDefinedLinkHintCss: NonEmptyTextOption,
+const options = {
+  // TODO(philc):
+  // exclusionRules: ExclusionRulesOption,
+  filterLinkHints: "boolean",
+  waitForEnterForFilteredHints: "boolean",
+  hideHud: "boolean",
+  keyMappings: "string",
+  linkHintCharacters: "string",
+  linkHintNumbers: "string",
+  newTabUrl: "string",
+  nextPatterns: "string",
+  previousPatterns: "string",
+  regexFindMode: "boolean",
+  ignoreKeyboardLayout: "boolean",
+  scrollStepSize: "number",
+  smoothScroll: "boolean",
+  grabBackFocus: "boolean",
+  searchEngines: "string",
+  searchUrl: "string",
+  userDefinedLinkHintCss: "string",
 };
 
-const initOptionsPage = function () {
-  const onUpdated = function () {
-    $("saveOptions").removeAttribute("disabled");
-    $("saveOptions").textContent = "Save Changes";
-  };
+const OptionsPage = {
+  init: async () => {
+    await Settings2.load();
 
-  // Display either "linkHintNumbers" or "linkHintCharacters", depending upon "filterLinkHints".
-  const maintainLinkHintsView = function () {
+    const onUpdated = function () {
+      $("saveOptions").removeAttribute("disabled");
+      $("saveOptions").textContent = "Save Changes";
+    };
+
+    for (const el of document.querySelectorAll("input, textarea")) {
+      el.addEventListener("change", () => onUpdated());
+    }
+
+    $("saveOptions").addEventListener("click", () => OptionsPage.saveOptions());
+    $("showCommands").addEventListener(
+      "click",
+      () => HelpDialog.toggle({ showAllCommandDetails: true }),
+    );
+    $("filterLinkHints").addEventListener("click", () => OptionsPage.maintainLinkHintsView());
+
+    $("downloadBackup").addEventListener(
+      "mousedown",
+      () => OptionsPage.onDownloadBackupClicked(),
+      true,
+    );
+    $("uploadBackup").addEventListener("change", () => OptionsPage.onUploadBackupClicked());
+
+    window.onbeforeunload = () => {
+      if (!$("saveOptions").disabled) {
+        return "You have unsaved changes to options.";
+      }
+    };
+
+    document.addEventListener("keyup", (event) => {
+      if (event.ctrlKey && (event.keyCode === 13)) {
+        if (document && document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+          OptionsPage.saveOptions();
+        }
+      }
+    });
+
+    const settings = await Settings2.getSettings();
+    OptionsPage.setFormFromSettings(settings);
+  },
+
+  setFormFromSettings: (settings) => {
+    for (const [optionName, optionType] of Object.entries(options)) {
+      const el = $(optionName);
+      const value = settings[optionName];
+      switch (optionType) {
+        case "boolean":
+          el.checked = value;
+          break;
+        case "number":
+          el.value = value;
+          break;
+        case "string":
+          el.value = value;
+          break;
+        default:
+          throw `Unrecognized option type ${optionType}`;
+      }
+    }
+    $("uploadBackup").value = "";
+    OptionsPage.maintainLinkHintsView();
+  },
+
+  getSettingsFromForm: () => {
+    const settings = {};
+    for (const [optionName, optionType] of Object.entries(options)) {
+      const el = $(optionName);
+      let value;
+      switch (optionType) {
+        case "boolean":
+          value = el.checked;
+          break;
+        case "number":
+          value = parseFloat(el.value);
+          break;
+        case "string":
+          value = el.value.trim();
+          break;
+        default:
+          throw `Unrecognized option type ${optionType}`;
+      }
+      if (value !== null && value !== "") {
+        settings[optionName] = value;
+      }
+    }
+    if (settings["linkHintCharacters"] != null) {
+      settings["linkHintCharacters"] = settings["linkHintCharacters"].toLowerCase();
+    }
+    return settings;
+  },
+
+  saveOptions: () => {
+    Settings2.setSettings(OptionsPage.getSettingsFromForm());
+    $("saveOptions").disabled = true;
+    $("saveOptions").textContent = "Saved";
+  },
+
+  // Display either "linkHintNumbers" or "linkHintCharacters", depending upon the value of
+  // "filterLinkHints".
+  maintainLinkHintsView: () => {
     const hide = (el) => el.style.display = "none";
     const show = (el) => el.style.display = "table-row";
     if ($("filterLinkHints").checked) {
@@ -309,61 +332,55 @@ const initOptionsPage = function () {
       hide($("linkHintNumbersContainer"));
       hide($("waitForEnterForFilteredHintsContainer"));
     }
-  };
+  },
 
-  const activateHelpDialog = function () {
-    HelpDialog.toggle({ showAllCommandDetails: true });
-  };
+  onDownloadBackupClicked: () => {
+    let backup = OptionsPage.getSettingsFromForm();
+    backup = Settings2.pruneOutDefaultValues(backup);
+    // TODO(philc):
+    // backup.settingsVersion = settings["settingsVersion"];
+    const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
+    $("downloadBackup").href = URL.createObjectURL(settingsBlob);
+  },
 
-  const saveOptions = function () {
-    $("linkHintCharacters").value = $("linkHintCharacters").value.toLowerCase();
-    Option.saveOptions();
-    $("saveOptions").disabled = true;
-    $("saveOptions").textContent = "Saved";
-  };
-
-  $("saveOptions").addEventListener("click", saveOptions);
-  $("showCommands").addEventListener("click", activateHelpDialog);
-  $("filterLinkHints").addEventListener("click", maintainLinkHintsView);
-
-  for (let element of Array.from(document.getElementsByClassName("nonEmptyTextOption"))) {
-    element.className = element.className + " example info";
-    element.textContent = "Leave empty to reset this option.";
-  }
-
-  window.onbeforeunload = function () {
-    if (!$("saveOptions").disabled) {
-      return "You have unsaved changes to options.";
+  onUploadBackupClicked: () => {
+    if (document.activeElement) {
+      document.activeElement.blur();
     }
-  };
 
-  document.addEventListener("keyup", function (event) {
-    if (event.ctrlKey && (event.keyCode === 13)) {
-      if (document && document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-        return saveOptions();
-      }
+    // TODO(philc): This settings version needs to be handled as part of Settings.set.
+    let restoreSettingsVersion = null;
+    const files = event.target.files;
+    if (files.length === 1) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = async () => {
+        let backup;
+        try {
+          backup = JSON.parse(reader.result);
+        } catch (error) {
+          console.log("parsing error:", error);
+          alert("Failed to parse Vimium backup: " + error);
+          return;
+        }
+
+        await Settings2.setSettings(backup);
+        OptionsPage.setFormFromSettings(await Settings2.getSettings());
+        $("saveOptions").disabled = true;
+        $("saveOptions").textContent = "Saved";
+        alert("Settings have been restored from the backup.");
+      };
     }
-  });
-
-  // Populate options. The constructor adds each new object to "Option.all".
-  for (let name of Object.keys(Options)) {
-    const type = Options[name];
-    const option = new type(name, onUpdated);
-    option.fetch();
-  }
-
-  maintainLinkHintsView();
+  },
 };
 
 const initPopupPage = function () {
   chrome.tabs.query({ active: true, currentWindow: true }, function (...args) {
     const [tab] = Array.from(args[0]);
     let exclusions = null;
-    document.getElementById("optionsLink").setAttribute(
-      "href",
-      chrome.runtime.getURL("pages/options.html"),
-    );
+    const optionsUrl = chrome.runtime.getURL("pages/options.html");
+    document.getElementById("optionsLink").setAttribute("href", optionsUrl);
 
     const tabPorts = chrome.extension.getBackgroundPage().portsForTab[tab.id];
     if (!tabPorts || !(Object.keys(tabPorts).length > 0)) {
@@ -379,8 +396,8 @@ const initPopupPage = function () {
     usually for security reasons.
   </p>
   <p>
-    Unless your browser's developers change their policy, then unfortunately it is not possible to make Vimium (or any other
-    web extension, for that matter) work on this page.
+    Unless your browser's developers change their policy, then unfortunately it is not possible to
+    make Vimium (or any other web extension, for that matter) work on this page.
   </p>
 </div>\
 `;
@@ -392,11 +409,12 @@ const initPopupPage = function () {
     const url = chrome.extension.getBackgroundPage().urlForTab[tab.id] || tab.url;
 
     const updateState = function () {
-      const rule = bgExclusions.getRule(url, exclusions.readValueFromElement());
-      $("state").innerHTML = "Vimium will " +
-        (rule && rule.passKeys
-          ? `exclude <span class='code'>${rule.passKeys}</span>`
-          : (rule ? "be disabled" : "be enabled"));
+      // TODO(philc): manifest v3
+      // const rule = bgExclusions.getRule(url, exclusions.readValueFromElement());
+      // $("state").innerHTML = "Vimium will " +
+      //   (rule && rule.passKeys
+      //     ? `exclude <span class='code'>${rule.passKeys}</span>`
+      //     : (rule ? "be disabled" : "be enabled"));
     };
 
     const onUpdated = function () {
@@ -438,100 +456,27 @@ const initPopupPage = function () {
 
 //
 // Initialization.
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
-  const xhr = new XMLHttpRequest();
-  xhr.responseType = "document";
-  xhr.open("GET", chrome.extension.getURL("pages/exclusions.html"), true);
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      const fragment = xhr.response.querySelector("#exclusionsFragment");
-      $("exclusionScrollBox").appendChild(fragment);
-      switch (location.pathname) {
-        case "/pages/options.html":
-          initOptionsPage();
-          break;
-        case "/pages/popup.html":
-          initPopupPage();
-          break;
-      }
-    }
-  };
+  const url = chrome.runtime.getURL("pages/exclusions.html");
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error("Couldn't fetch %s", url);
+    return;
+  }
 
-  xhr.send();
+  const div = document.createElement("div");
+  div.innerHTML = await response.text();
+  $("exclusionScrollBox").appendChild(div);
+  switch (location.pathname) {
+    case "/pages/options.html":
+      await OptionsPage.init();
+      break;
+    case "/pages/popup.html":
+      initPopupPage();
+      break;
+  }
 });
 
-//
-// Backup and restore.
-if (window.DomUtils) { // window.DomUtils is not defined when running our tests.
-  DomUtils.documentReady(function () {
-    // Only initialize backup/restore on the options page (not the popup).
-    if (location.pathname !== "/pages/options.html") {
-      return;
-    }
-
-    let restoreSettingsVersion = null;
-
-    const populateBackupLinkUrl = function () {
-      const backup = { settingsVersion: bgSettings.get("settingsVersion") };
-      for (let option of Array.from(Option.all)) {
-        backup[option.field] = option.readValueFromElement();
-      }
-
-      // Create the blob in the background page so it isn't garbage collected when the page closes in FF.
-      const bgWin = chrome.extension.getBackgroundPage();
-      const blob = new bgWin.Blob([JSON.stringify(backup, null, 2) + "\n"]);
-      $("backupLink").href = bgWin.URL.createObjectURL(blob);
-    };
-
-    $("backupLink").addEventListener("mousedown", populateBackupLinkUrl, true);
-
-    $("chooseFile").addEventListener("change", function (event) {
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
-
-      const files = event.target.files;
-      if (files.length === 1) {
-        const file = files[0];
-        const reader = new FileReader();
-        reader.readAsText(file);
-        reader.onload = function (event) {
-          let backup;
-          try {
-            backup = JSON.parse(reader.result);
-          } catch (error) {
-            alert("Failed to parse Vimium backup.");
-            return;
-          }
-
-          if ("settingsVersion" in backup) {
-            restoreSettingsVersion = backup["settingsVersion"];
-          }
-          for (let option of Array.from(Option.all)) {
-            if (option.field in backup) {
-              option.populateElement(backup[option.field]);
-              option.onUpdated();
-            }
-          }
-        };
-      }
-    });
-
-    Option.onSave(function () {
-      // If we're restoring a backup, then restore the backed up settingsVersion.
-      if (restoreSettingsVersion != null) {
-        bgSettings.set("settingsVersion", restoreSettingsVersion);
-        restoreSettingsVersion = null;
-      }
-      // Reset the restore-backup input.
-      $("chooseFile").value = "";
-      // We need to apply migrations in case we are restoring an old backup.
-      bgSettings.applyMigrations();
-    });
-  });
-}
-
 // Exported for use by our tests.
-window.Options = Options;
 window.isVimiumOptionsPage = true;
