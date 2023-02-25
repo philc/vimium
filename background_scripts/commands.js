@@ -488,4 +488,4 @@ const commandDescriptions = {
 
 Commands.init();
 
-window.Commands = Commands;
+globalThis.Commands = Commands;

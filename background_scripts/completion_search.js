@@ -213,4 +213,4 @@ const CompletionSearch = {
   }
 };
 
-window.CompletionSearch = CompletionSearch;
+globalThis.CompletionSearch = CompletionSearch;

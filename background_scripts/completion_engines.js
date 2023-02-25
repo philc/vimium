@@ -278,4 +278,4 @@ const CompletionEngines = [
   DummyCompletionEngine,
 ];
 
-window.CompletionEngines = CompletionEngines;
+globalThis.CompletionEngines = CompletionEngines;

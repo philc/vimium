@@ -143,4 +143,4 @@ const Marks = {
   },
 };
 
-window.Marks = Marks;
+globalThis.Marks = Marks;
