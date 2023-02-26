@@ -20,15 +20,17 @@ chrome.runtime.onInstalled.addListener(function ({ reason }) {
   const contentScripts = manifest.content_scripts[0];
   const jobs = [
     [
-      chrome.tabs.executeScript,
-      contentScripts.js,
+      // TODO(philc): manifest v3. chrome.tabs.executeScript is no longer available in manifest v2.
+      // chrome.tabs.executeScript,
+      // contentScripts.js,
     ],
     [
       // TODO(philc): manifest v3
       // chrome.tabs.insertCSS,
-      contentScripts.css,
+      // contentScripts.css,
     ],
   ];
+  return; // TODO(philc): manifest v3
   // Chrome complains if we don't evaluate chrome.runtime.lastError on errors (and we get errors for tabs on
   // which Vimium cannot run).
   const checkLastRuntimeError = () => chrome.runtime.lastError;
