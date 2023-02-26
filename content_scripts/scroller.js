@@ -222,7 +222,7 @@ const CoreScroller = {
 
   // Return true if CoreScroller would not initiate a new scroll right now.
   wouldNotInitiateScroll() {
-    return this.lastEvent && this.lastEvent.repeat && Settings.get("smoothScroll");
+    return this.lastEvent && this.lastEvent.repeat && Settings2.get("smoothScroll");
   },
 
   // Calibration fudge factors for continuous scrolling. The calibration value starts at 1.0. We
@@ -244,7 +244,7 @@ const CoreScroller = {
       return;
     }
 
-    if (!Settings.get("smoothScroll")) {
+    if (!Settings2.get("smoothScroll")) {
       // Jump scrolling.
       performScroll(element, direction, amount);
       checkVisibility(element);

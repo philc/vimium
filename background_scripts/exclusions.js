@@ -27,7 +27,7 @@ var Exclusions = {
   // Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
   RegexpCache: ExclusionRegexpCache,
 
-  rules: Settings.get("exclusionRules"),
+  rules: Settings2.get("exclusionRules"),
 
   // Merge the matching rules for URL, or null. In the normal case, we use the configured @rules;
   // hence, this is the default. However, when called from the page popup, we are testing what
@@ -67,14 +67,14 @@ var Exclusions = {
   setRules(rules) {
     // Callers map a rule to null to have it deleted, and rules without a pattern are useless.
     this.rules = rules.filter((rule) => rule && rule.pattern);
-    Settings.set("exclusionRules", this.rules);
+    Settings2.set("exclusionRules", this.rules);
   },
 
   // TODO(philc): Why does this take a `rules` argument if it's unused? Remove.
   postUpdateHook(rules) {
     // NOTE(mrmr1993): In FF, the |rules| argument will be garbage collected when the exclusions
     // popup is closed. Do NOT store it/use it asynchronously.
-    this.rules = Settings.get("exclusionRules");
+    this.rules = Settings2.get("exclusionRules");
     ExclusionRegexpCache.clear();
   },
 };
