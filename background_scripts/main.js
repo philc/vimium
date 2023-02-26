@@ -5,6 +5,10 @@
 
 let showUpgradeMessage;
 
+// TODO(philc): We need to block on this somewhere in the background execution context, to avoid
+// a possible race condition.
+Settings2.load();
+
 // The browser may have tabs already open. We inject the content scripts immediately so that they
 // work straight away.
 chrome.runtime.onInstalled.addListener(function ({ reason }) {
