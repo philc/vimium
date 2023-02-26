@@ -168,7 +168,6 @@ const TabOperations = {
 
     let tabIndex = null;
 
-    // TODO(philc): Convert to a switch statement ES6.
     switch (position) {
       case "start":
         tabIndex = 0;
@@ -191,7 +190,7 @@ const TabOperations = {
       tabConfig.active = request.active;
     }
     // Firefox does not support "about:newtab" in chrome.tabs.create.
-    if (tabConfig["url"] === Settings.defaults.newTabUrl) {
+    if (tabConfig["url"] === Utils.chromeNewTabUrl) {
       delete tabConfig["url"];
     }
 
@@ -223,7 +222,7 @@ const TabOperations = {
       winConfig.active = request.active;
     }
     // Firefox does not support "about:newtab" in chrome.tabs.create.
-    if (winConfig["url"] === Settings.defaults.newTabUrl) {
+    if (tabConfig["url"] === Utils.chromeNewTabUrl) {
       delete winConfig["url"];
     }
     return chrome.windows.create(winConfig, callback);
