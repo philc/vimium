@@ -27,15 +27,13 @@ var Exclusions = {
   // Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
   RegexpCache: ExclusionRegexpCache,
 
-  rules: Settings2.get("exclusionRules"),
-
   // Merge the matching rules for URL, or null. In the normal case, we use the configured @rules;
   // hence, this is the default. However, when called from the page popup, we are testing what
   // effect candidate new rules would have on the current tab. In this case, the candidate rules are
   // provided by the caller.
   getRule(url, rules) {
     if (rules == null) {
-      rules = this.rules;
+      rules = Settings2.get("exclusionRules");
     }
     const matchingRules = rules.filter((r) =>
       r.pattern && (url.search(ExclusionRegexpCache.get(r.pattern)) >= 0)
@@ -66,15 +64,13 @@ var Exclusions = {
 
   setRules(rules) {
     // Callers map a rule to null to have it deleted, and rules without a pattern are useless.
-    this.rules = rules.filter((rule) => rule && rule.pattern);
-    Settings2.set("exclusionRules", this.rules);
+    const newRules = rules.filter((rule) => rule && rule.pattern);
+    Settings2.set("exclusionRules", newRules);
   },
 
-  // TODO(philc): Why does this take a `rules` argument if it's unused? Remove.
-  postUpdateHook(rules) {
+  postUpdateHook() {
     // NOTE(mrmr1993): In FF, the |rules| argument will be garbage collected when the exclusions
     // popup is closed. Do NOT store it/use it asynchronously.
-    this.rules = Settings2.get("exclusionRules");
     ExclusionRegexpCache.clear();
   },
 };
