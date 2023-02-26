@@ -96,6 +96,10 @@ const Marks = {
       exitOnEscape: true,
       suppressAllKeyboardEvents: true,
       keydown: (event) => {
+        // TODO(philc): manifest v3. This needs some work before re-enabling given how it's using
+        // Settings.storage.
+        console.log("Activate goto mode keydown");
+        return;
         if (KeyboardUtils.isPrintable(event)) {
           this.exit(() => {
             const keyChar = KeyboardUtils.getKeyChar(event);
