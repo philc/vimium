@@ -81,24 +81,20 @@ class GrabBackFocus extends Mode {
       mousedown: exitEventHandler,
     });
 
-    Settings.use("grabBackFocus", (grabBackFocus) => {
-      // It is possible that this mode exits (e.g. due to a key event) before the settings are ready
-      // -- in which case we should not install this grab-back-focus watcher.
-      if (this.modeIsActive) {
-        if (grabBackFocus) {
-          this.push({
-            _name: "grab-back-focus-focus",
-            focus: (event) => this.grabBackFocus(event.target),
-          });
-          // An input may already be focused. If so, grab back the focus.
-          if (document.activeElement) {
-            this.grabBackFocus(document.activeElement);
-          }
-        } else {
-          this.exit();
+    if (this.modeIsActive) {
+      if (Settings2.get("grabBackFocus")) {
+        this.push({
+          _name: "grab-back-focus-focus",
+          focus: (event) => this.grabBackFocus(event.target),
+        });
+        // An input may already be focused. If so, grab back the focus.
+        if (document.activeElement) {
+          this.grabBackFocus(document.activeElement);
         }
+      } else {
+        this.exit();
       }
-    });
+    }
 
     // This mode is active in all frames. A user might have begun interacting with one frame without
     // other frames detecting this. When one GrabBackFocus mode exits, we broadcast a message to
@@ -187,7 +183,10 @@ const installModes = function () {
 //
 // Complete initialization work that should be done prior to DOMReady.
 //
-const initializePreDomReady = function () {
+const initializePreDomReady = async function () {
+  // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
+  // we could allow other tasks to run concurrently.
+  await Settings2.load();
   installListeners();
   Frame.init();
   checkIfEnabledForUrl(document.hasFocus());
