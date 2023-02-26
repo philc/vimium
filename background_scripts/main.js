@@ -5,10 +5,6 @@
 
 let showUpgradeMessage;
 
-// TODO(philc): We need to block on this somewhere in the background execution context, to avoid
-// a possible race condition.
-Settings2.load();
-
 // The browser may have tabs already open. We inject the content scripts immediately so that they
 // work straight away.
 chrome.runtime.onInstalled.addListener(function ({ reason }) {
@@ -107,6 +103,7 @@ const handleCompletions = (sender) => (request, port) =>
   completionHandlers[request.handler](completers[request.name], request, port);
 
 chrome.runtime.onConnect.addListener(function (port) {
+  // TODO(philc): This probably needs to be reworked for manifest v3
   if (portHandlers[port.name]) {
     return port.onMessage.addListener(portHandlers[port.name](port.sender, port));
   }
@@ -124,8 +121,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   return false;
 });
 
-const onURLChange = (details) =>
+const onURLChange = (details) => {
   chrome.tabs.sendMessage(details.tabId, { name: "checkEnabledAfterURLChange" });
+};
 
 // Re-check whether Vimium is enabled for a frame when the url changes without a reload.
 chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
@@ -321,7 +319,7 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          const newTabUrl = Settings.get("newTabUrl");
+          const newTabUrl = Settings2.get("newTabUrl");
           if (newTabUrl === "pages/blank.html") {
             // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
             request.urls = [
@@ -499,7 +497,7 @@ var selectTab = (direction, { count, tab }) =>
 chrome.webNavigation.onCommitted.addListener(function ({ tabId, frameId }) {
   const cssConf = {
     frameId,
-    code: Settings.get("userDefinedLinkHintCss"),
+    code: Settings2.get("userDefinedLinkHintCss"),
     runAt: "document_start",
   };
   // TODO(philc): manifest v3
@@ -831,64 +829,70 @@ globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_test
 //
 
 // Show notification on upgrade.
-(showUpgradeMessage = function () {
+let showUpgradeMessageIfNecessary;
+showUpgradeMessageIfNecessary = function () {
   const currentVersion = Utils.getCurrentVersion();
-  // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for
-  // new installs.
-  if (!Settings.has("previousVersion")) {
-    Settings.set("previousVersion", currentVersion);
+  const previousVersion = Settings2.get("previousVersion");
+
+  if (Utils.compareVersions(currentVersion, previousVersion) != 1) {
+    return;
   }
-  const previousVersion = Settings.get("previousVersion");
-  if (Utils.compareVersions(currentVersion, previousVersion) === 1) {
-    const currentVersionNumbers = currentVersion.split(".");
-    const previousVersionNumbers = previousVersion.split(".");
-    if (
-      currentVersionNumbers.slice(0, 2).join(".") === previousVersionNumbers.slice(0, 2).join(".")
-    ) {
-      // We do not show an upgrade message for patch/silent releases. Such releases have the same
-      // major and minor version numbers. We do, however, update the recorded previous version.
-      Settings.set("previousVersion", currentVersion);
-    } else {
-      const notificationId = "VimiumUpgradeNotification";
-      const notification = {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icons/vimium.png"),
-        title: "Vimium Upgrade",
-        message:
-          `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
-        isClickable: true,
-      };
-      if (chrome.notifications && chrome.notifications.create) {
-        chrome.notifications.create(notificationId, notification, function () {
-          if (!chrome.runtime.lastError) {
-            Settings.set("previousVersion", currentVersion);
-            chrome.notifications.onClicked.addListener(function (id) {
-              if (id === notificationId) {
-                chrome.tabs.query({ active: true, currentWindow: true }, function (...args) {
-                  const [tab] = args[0];
-                  return TabOperations.openUrlInNewTab({
-                    tab,
-                    tabId: tab.id,
-                    url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
-                  });
+  const currentVersionNumbers = currentVersion.split(".");
+  const previousVersionNumbers = previousVersion.split(".");
+  if (
+    currentVersionNumbers.slice(0, 2).join(".") === previousVersionNumbers.slice(0, 2).join(".")
+  ) {
+    // We do not show an upgrade message for patch/silent releases. Such releases have the same
+    // major and minor version numbers. We do, however, update the recorded previous version.
+    Settings2.set("previousVersion", currentVersion);
+  } else {
+    const notificationId = "VimiumUpgradeNotification";
+    const notification = {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("icons/vimium.png"),
+      title: "Vimium Upgrade",
+      message:
+        `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
+      isClickable: true,
+    };
+    if (chrome.notifications && chrome.notifications.create) {
+      chrome.notifications.create(notificationId, notification, function () {
+        if (!chrome.runtime.lastError) {
+          Settings2.set("previousVersion", currentVersion);
+          chrome.notifications.onClicked.addListener(function (id) {
+            if (id === notificationId) {
+              chrome.tabs.query({ active: true, currentWindow: true }, function (...args) {
+                const [tab] = args[0];
+                return TabOperations.openUrlInNewTab({
+                  tab,
+                  tabId: tab.id,
+                  url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
                 });
-              }
-            });
-          }
-        });
-      } else {
-        // We need to wait for the user to accept the "notifications" permission.
-        chrome.permissions.onAdded.addListener(showUpgradeMessage);
-      }
+              });
+            }
+          });
+        }
+      });
+    } else {
+      // We need to wait for the user to accept the "notifications" permission.
+      chrome.permissions.onAdded.addListener(showUpgradeMessageIfNecessary);
     }
   }
-})();
+};
 
 // The install date is shown on the logging page.
-chrome.runtime.onInstalled.addListener(function ({ reason }) {
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   if (!["chrome_update", "shared_module_update"].includes(reason)) {
     chrome.storage.local.set({ installDate: new Date().toString() });
   }
+
+  await Settings2.load();
+  // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for
+  // new installs.
+  if (Settings2.get("previousVersion") == null) {
+    await Settings2.set("previousVersion", Utils.getCurrentVersion());
+  }
+  showUpgradeMessageIfNecessary();
 });
 
 Object.assign(globalThis, { TabOperations, Frames });
