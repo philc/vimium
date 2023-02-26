@@ -39,8 +39,9 @@ const Marks = {
 
   saveMark(markInfo) {
     const item = {};
+    // TODO(philc): manifest v3 re-enable
     item[this.getLocationKey(markInfo.markName)] = markInfo;
-    return Settings.storage.set(item);
+    // return Settings.storage.set(item);
   },
 
   // Goto a global mark. We try to find the original tab. If we can't find that, then we try to find
