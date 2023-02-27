@@ -26,7 +26,8 @@ const HUD = {
       focusable = true;
     }
     if (this.hudUI == null) {
-      this.hudUI = new UIComponent("pages/hud.html", "vimiumHUDFrame", ({ data }) => {
+      const queryString = window.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
+      this.hudUI = new UIComponent(`pages/hud.html${queryString}`, "vimiumHUDFrame", ({ data }) => {
         if (this[data.name]) {
           return this[data.name](data);
         }
