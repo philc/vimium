@@ -19,7 +19,10 @@ const setTextInInputElement = function (inputElement, text) {
 };
 
 // Manually inject custom user styles.
-document.addEventListener("DOMContentLoaded", () => DomUtils.injectUserCss());
+document.addEventListener("DOMContentLoaded", async () => {
+  await Settings.onLoaded();
+  DomUtils.injectUserCss()
+});
 
 const onKeyEvent = function (event) {
   // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK

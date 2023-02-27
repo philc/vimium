@@ -33,7 +33,7 @@ var Exclusions = {
   // provided by the caller.
   getRule(url, rules) {
     if (rules == null) {
-      rules = Settings2.get("exclusionRules");
+      rules = Settings.get("exclusionRules");
     }
     const matchingRules = rules.filter((r) =>
       r.pattern && (url.search(ExclusionRegexpCache.get(r.pattern)) >= 0)
@@ -65,7 +65,7 @@ var Exclusions = {
   setRules(rules) {
     // Callers map a rule to null to have it deleted, and rules without a pattern are useless.
     const newRules = rules.filter((rule) => rule && rule.pattern);
-    Settings2.set("exclusionRules", newRules);
+    Settings.set("exclusionRules", newRules);
   },
 
   postUpdateHook() {

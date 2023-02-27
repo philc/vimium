@@ -82,7 +82,7 @@ class GrabBackFocus extends Mode {
     });
 
     if (this.modeIsActive) {
-      if (Settings2.get("grabBackFocus")) {
+      if (Settings.get("grabBackFocus")) {
         this.push({
           _name: "grab-back-focus-focus",
           focus: (event) => this.grabBackFocus(event.target),
@@ -186,7 +186,7 @@ const installModes = function () {
 const initializePreDomReady = async function () {
   // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
   // we could allow other tasks to run concurrently.
-  await Settings2.load();
+  await Settings.onLoaded();
   installListeners();
   Frame.init();
   checkIfEnabledForUrl(document.hasFocus());

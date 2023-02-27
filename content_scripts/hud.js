@@ -20,7 +20,8 @@ const HUD = {
   // limitation of our HUD display is that it doesn't sit on top of horizontal scrollbars like
   // Chrome's HUD does.
 
-  init(focusable) {
+  async init(focusable) {
+    await Settings.onLoaded();
     if (focusable == null) {
       focusable = true;
     }
@@ -61,9 +62,9 @@ const HUD = {
   },
 
   show(text) {
-    DomUtils.documentComplete(() => {
+    DomUtils.documentComplete(async () => {
       // @hudUI.activate will take charge of making it visible
-      this.init(false);
+      await this.init(false);
       clearTimeout(this._showForDurationTimerId);
       this.hudUI.activate({ name: "show", text });
       this.tween.fade(1.0, 150);
@@ -72,8 +73,8 @@ const HUD = {
 
   showFindMode(findMode = null) {
     this.findMode = findMode;
-    DomUtils.documentComplete(() => {
-      this.init();
+    DomUtils.documentComplete(async () => {
+      await this.init();
       this.hudUI.activate({ name: "showFindMode" });
       this.tween.fade(1.0, 150);
     });
@@ -162,16 +163,16 @@ const HUD = {
   // * events.
   // * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
   copyToClipboard(text) {
-    DomUtils.documentComplete(() => {
-      this.init();
+    DomUtils.documentComplete(async () => {
+      await this.init();
       this.hudUI.postMessage({ name: "copyToClipboard", data: text });
     });
   },
 
   pasteFromClipboard(pasteListener) {
     this.pasteListener = pasteListener;
-    DomUtils.documentComplete(() => {
-      this.init();
+    DomUtils.documentComplete(async () => {
+      await this.init();
       this.tween.fade(0, 0);
       this.hudUI.postMessage({ name: "pasteFromClipboard" });
     });

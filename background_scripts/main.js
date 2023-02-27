@@ -319,7 +319,7 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          const newTabUrl = Settings2.get("newTabUrl");
+          const newTabUrl = Settings.get("newTabUrl");
           if (newTabUrl === "pages/blank.html") {
             // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
             request.urls = [
@@ -497,7 +497,7 @@ var selectTab = (direction, { count, tab }) =>
 chrome.webNavigation.onCommitted.addListener(function ({ tabId, frameId }) {
   const cssConf = {
     frameId,
-    code: Settings2.get("userDefinedLinkHintCss"),
+    code: Settings.get("userDefinedLinkHintCss"),
     runAt: "document_start",
   };
   // TODO(philc): manifest v3
@@ -832,7 +832,7 @@ globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_test
 let showUpgradeMessageIfNecessary;
 showUpgradeMessageIfNecessary = function () {
   const currentVersion = Utils.getCurrentVersion();
-  const previousVersion = Settings2.get("previousVersion");
+  const previousVersion = Settings.get("previousVersion");
 
   if (Utils.compareVersions(currentVersion, previousVersion) != 1) {
     return;
@@ -844,7 +844,7 @@ showUpgradeMessageIfNecessary = function () {
   ) {
     // We do not show an upgrade message for patch/silent releases. Such releases have the same
     // major and minor version numbers. We do, however, update the recorded previous version.
-    Settings2.set("previousVersion", currentVersion);
+    Settings.set("previousVersion", currentVersion);
   } else {
     const notificationId = "VimiumUpgradeNotification";
     const notification = {
@@ -858,7 +858,7 @@ showUpgradeMessageIfNecessary = function () {
     if (chrome.notifications && chrome.notifications.create) {
       chrome.notifications.create(notificationId, notification, function () {
         if (!chrome.runtime.lastError) {
-          Settings2.set("previousVersion", currentVersion);
+          Settings.set("previousVersion", currentVersion);
           chrome.notifications.onClicked.addListener(function (id) {
             if (id === notificationId) {
               chrome.tabs.query({ active: true, currentWindow: true }, function (...args) {
@@ -886,11 +886,11 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     chrome.storage.local.set({ installDate: new Date().toString() });
   }
 
-  await Settings2.load();
+  await Settings2.onLoaded();
   // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for
   // new installs.
-  if (Settings2.get("previousVersion") == null) {
-    await Settings2.set("previousVersion", Utils.getCurrentVersion());
+  if (Settings.get("previousVersion") == null) {
+    await Settings.set("previousVersion", Utils.getCurrentVersion());
   }
   showUpgradeMessageIfNecessary();
 });
