@@ -184,11 +184,11 @@ const installModes = function () {
 // Complete initialization work that should be done prior to DOMReady.
 //
 const initializePreDomReady = async function () {
+  Frame.init();
   // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
   // we could allow other tasks to run concurrently.
   await Settings.onLoaded();
   installListeners();
-  Frame.init();
   checkIfEnabledForUrl(document.hasFocus());
 
   const requestHandlers = {
