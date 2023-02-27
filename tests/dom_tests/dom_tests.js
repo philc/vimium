@@ -23,8 +23,6 @@ const initializeModeState = () => {
   return normalMode;
 };
 
-await Settings.onLoaded();
-
 //
 // Retrieve the hint markers as an array object.
 //
@@ -32,7 +30,7 @@ const getHintMarkers = () => {
   return Array.prototype.slice.call(document.getElementsByClassName("vimiumHintMarker"), 0);
 };
 
-const stubSettings = (key, value) => stub(Settings.cache, key, JSON.stringify(value));
+const stubSettings = (key, value) => stub(Settings._settings, key, value);
 
 HintCoordinator.sendMessage = (name, request) => {
   if (request == null) {
