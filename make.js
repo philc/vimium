@@ -124,11 +124,26 @@ const runDomTests = async () => {
     });
 
     const page = await browser.newPage();
-    page.on("console", msg => console.log(msg.text()));
-    page.on("error", (err) => console.log(err));
-    page.on("pageerror", (err) => console.log(err));
-    page.on('requestfailed', request =>
-      console.log(console.log(`${request.failure().errorText} ${request.url()}`)));
+    let receivedErrorOutput = false;
+
+    page.on("console", async (msg) => {
+      const args = await Promise.all(msg.args().map((a) => a.jsonValue()));
+      console.log(...args);
+    });
+    page.on("error", (err) => {
+      // As far as I can tell, this handler never gets executed.
+      console.error(err);
+    });
+    // pageerror catches the same events that window.onerror would, like JavaScript parsing errors.
+    page.on("pageerror", (error) => {
+      receivedErrorOutput = true;
+      // Whatever type error is, it requires toString() to print the message.
+      console.log(error.toString());
+    });
+    page.on(
+      "requestfailed",
+      (request) => console.log(console.log(`${request.failure().errorText} ${request.url()}`)),
+    );
 
     // Shoulda.js is an ECMAScript module, and those cannot be loaded over file:/// protocols due to a Chrome
     // security restriction, and this test suite loads the dom_tests.html page from the local file system. To
@@ -163,6 +178,9 @@ const runDomTests = async () => {
     // prior to the tests fully finishing, so closing the browser here may be racy. If it occurs again, we may
     // need to add "await delay(200)".
     await browser.close();
+    if (receivedErrorOutput) {
+      throw "The tests fail because there was a page-level error.";
+    }
     return testsFailed;
   })();
 };
