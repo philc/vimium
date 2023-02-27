@@ -11,6 +11,8 @@ import "../../content_scripts/link_hints.js";
 import "../../content_scripts/marks.js";
 import "../../content_scripts/vomnibar.js";
 
+await Commands.init();
+
 context("Key mappings", () => {
   const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
     const keySequence = Commands.parseKeySequence(key);

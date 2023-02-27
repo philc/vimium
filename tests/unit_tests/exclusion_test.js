@@ -12,8 +12,8 @@ const isEnabledForUrl = (request) => Exclusions.isEnabledForUrl(request.url);
 
 // These tests cover only the most basic aspects of excluded URLs and passKeys.
 context("Excluded URLs and pass keys", () => {
-  setup(() => {
-    Settings.init();
+  setup(async () => {
+    await Settings.onLoaded();
     Settings.set("exclusionRules", [
       { pattern: "http*://mail.google.com/*", passKeys: "" },
       { pattern: "http*://www.facebook.com/*", passKeys: "abab" },

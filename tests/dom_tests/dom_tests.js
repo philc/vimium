@@ -23,8 +23,7 @@ const initializeModeState = () => {
   return normalMode;
 };
 
-// Tell Settings that it's been loaded.
-Settings.isLoaded = true;
+await Settings.onLoaded();
 
 //
 // Retrieve the hint markers as an array object.

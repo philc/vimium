@@ -63,7 +63,7 @@ const Vomnibar = {
     });
   },
 
-  init() {
+  async init() {
     if (!this.vomnibarUI) {
       this.vomnibarUI = new UIComponent("pages/vomnibar.html", "vomnibarFrame", function () {});
     }
