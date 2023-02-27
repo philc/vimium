@@ -308,7 +308,7 @@ const Tests = {
 };
 
 const run = async function(testNameFilter) { return Tests.run(testNameFilter); }
-const reset = async function() { return Tests.reset(); }
+const reset = function() { return Tests.reset(); }
 
 /*
  * Stats of the latest test run.
