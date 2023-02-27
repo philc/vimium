@@ -488,6 +488,4 @@ const commandDescriptions = {
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }],
 };
 
-await Commands.init();
-
 globalThis.Commands = Commands;
