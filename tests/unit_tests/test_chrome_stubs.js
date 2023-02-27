@@ -1,7 +1,5 @@
 //
 // This file contains stubs for a number of browser and chrome APIs which are missing in Deno.
-// The chrome.storage.sync stub does roughly what chrome.storage.sync should do, but does so
-// synchronously.
 //
 
 let XMLHttpRequest;
@@ -168,22 +166,20 @@ window.chrome = {
     sync: {
       store: {},
 
-      set(items, callback) {
+      async set(items) {
         let key, value;
         chrome.runtime.lastError = undefined;
         for (key of Object.keys(items)) {
           value = items[key];
           this.store[key] = value;
         }
-        if (callback) callback();
-        // Now, generate (supposedly asynchronous) notifications for listeners.
         for (key of Object.keys(items)) {
           value = items[key];
           window.chrome.storage.onChanged.call(key, value);
         }
       },
 
-      get(keys, callback) {
+      async get(keys) {
         let key;
         chrome.runtime.lastError = undefined;
         if (keys === null) {
@@ -197,17 +193,14 @@ window.chrome = {
         for (key of keys) {
           items[key] = this.store[key];
         }
-        // Now, generate (supposedly asynchronous) callback
-        if (callback) return callback(items);
+        return items;
       },
 
-      remove(key, callback) {
+      async remove(key) {
         chrome.runtime.lastError = undefined;
         if (key in this.store) {
           delete this.store[key];
         }
-        if (callback) callback();
-        // Now, generate (supposedly asynchronous) notification for listeners.
         window.chrome.storage.onChanged.callEmpty(key);
       },
     },
