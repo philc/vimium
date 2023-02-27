@@ -6,7 +6,7 @@ import * as fs from "https://deno.land/std/fs/mod.ts";
 import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
 import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
 import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
-import puppeteer from "https://deno.land/x/puppeteer@9.0.2/mod.ts";
+import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
 
 const projectPath = new URL(".", import.meta.url).pathname;
