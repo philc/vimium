@@ -886,7 +886,10 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     chrome.storage.local.set({ installDate: new Date().toString() });
   }
 
-  await Settings2.onLoaded();
+  // Setup code for the background service worker.
+  await Settings.onLoaded();
+  await Commands.init();
+
   // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for
   // new installs.
   if (Settings.get("previousVersion") == null) {
