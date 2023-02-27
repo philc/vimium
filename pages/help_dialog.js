@@ -32,7 +32,7 @@ const HelpDialog = {
 
   // This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands() {
-    return Settings2.get("helpDialog_showAdvancedCommands");
+    return Settings.get("helpDialog_showAdvancedCommands");
   },
 
   init() {
@@ -180,7 +180,7 @@ const HelpDialog = {
     event.preventDefault();
     const showAdvanced = HelpDialog.getShowAdvancedCommands();
     HelpDialog.showAdvancedCommands(!showAdvanced);
-    Settings2.set("helpDialog_showAdvancedCommands", !showAdvanced);
+    Settings.set("helpDialog_showAdvancedCommands", !showAdvanced);
     // Try to keep the "show advanced commands" button in the same scroll position.
     const scrollHeightDelta = vimiumHelpDialogContainer.scrollHeight - scrollHeightBefore;
     if (scrollHeightDelta > 0) {

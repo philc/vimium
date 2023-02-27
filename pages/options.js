@@ -32,7 +32,7 @@ class Option {
   // Static method.
   // static saveOptions() {
   //   Option.all.map((option) => option.save());
-  //   Settings2.set(bgSettings);
+  //   Settings.set(bgSettings);
   //   this.onSaveCallbacks.map((callback) => callback());
   // }
 }
@@ -218,7 +218,7 @@ const options = {
 
 const OptionsPage = {
   init: async () => {
-    await Settings2.load();
+    await Settings.onLoaded();
 
     const onUpdated = function () {
       $("saveOptions").removeAttribute("disabled");
@@ -258,7 +258,7 @@ const OptionsPage = {
       }
     });
 
-    const settings = await Settings2.getSettings();
+    const settings = await Settings.getSettings();
     OptionsPage.setFormFromSettings(settings);
   },
 
@@ -313,7 +313,7 @@ const OptionsPage = {
   },
 
   saveOptions: () => {
-    Settings2.setSettings(OptionsPage.getSettingsFromForm());
+    Settings.setSettings(OptionsPage.getSettingsFromForm());
     $("saveOptions").disabled = true;
     $("saveOptions").textContent = "Saved";
   },
@@ -336,7 +336,7 @@ const OptionsPage = {
 
   onDownloadBackupClicked: () => {
     let backup = OptionsPage.getSettingsFromForm();
-    backup = Settings2.pruneOutDefaultValues(backup);
+    backup = Settings.pruneOutDefaultValues(backup);
     // TODO(philc):
     // backup.settingsVersion = settings["settingsVersion"];
     const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
@@ -365,8 +365,8 @@ const OptionsPage = {
           return;
         }
 
-        await Settings2.setSettings(backup);
-        OptionsPage.setFormFromSettings(await Settings2.getSettings());
+        await Settings.setSettings(backup);
+        OptionsPage.setFormFromSettings(await Settings.getSettings());
         $("saveOptions").disabled = true;
         $("saveOptions").textContent = "Saved";
         alert("Settings have been restored from the backup.");

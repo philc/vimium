@@ -157,7 +157,7 @@ class FindMode extends Mode {
     // the query can be treated differently (e.g. as a plain string versus regex depending on the
     // presence of escape sequences. '\' is the escape character and needs to be escaped itself to
     // be used as a normal character. here we grep for the relevant escape sequences.
-    this.query.isRegex = Settings2.get("regexFindMode");
+    this.query.isRegex = Settings.get("regexFindMode");
     this.query.parsedQuery = this.query.rawQuery.replace(
       /(\\{1,2})([rRI]?)/g,
       (match, slashes, flag) => {

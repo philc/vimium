@@ -3,13 +3,15 @@ const Commands = {
   keyToCommandRegistry: null,
   mapKeyRegistry: null,
 
-  init() {
+  async init() {
+    await Settings.onLoaded();
     for (let command of Object.keys(commandDescriptions)) {
       const [description, options] = commandDescriptions[command];
       this.availableCommands[command] = Object.assign(options || {}, { description });
     }
 
-    Settings.postUpdateHooks["keyMappings"] = this.loadKeyMappings.bind(this);
+    // TODO(philc): manifest v3 re-enable reloading key mappings when they've been modified.
+    // Settings.postUpdateHooks["keyMappings"] = this.loadKeyMappings.bind(this);
     this.loadKeyMappings(Settings.get("keyMappings"));
   },
 
@@ -486,6 +488,6 @@ const commandDescriptions = {
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }],
 };
 
-Commands.init();
+await Commands.init();
 
 globalThis.Commands = Commands;

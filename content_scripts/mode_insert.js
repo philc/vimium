@@ -26,7 +26,7 @@ class InsertMode extends Mode {
 
       // Check for a pass-next-key key.
       const keyString = KeyboardUtils.getKeyCharString(event);
-      if (Settings2.get("passNextKeyKeys").includes(keyString)) {
+      if (Settings.get("passNextKeyKeys").includes(keyString)) {
         new PassNextKeyMode();
       } else if ((event.type === "keydown") && KeyboardUtils.isEscape(event)) {
         if (DomUtils.isFocusable(activeElement)) {
@@ -45,7 +45,7 @@ class InsertMode extends Mode {
 
     const defaults = {
       name: "insert",
-      indicator: !this.permanent && !Settings2.get("hideHud") ? "Insert mode" : null,
+      indicator: !this.permanent && !Settings.get("hideHud") ? "Insert mode" : null,
       keypress: handleKeyEvent,
       keydown: handleKeyEvent,
     };

@@ -144,25 +144,22 @@ const HintCoordinator = {
   //   localIndex: the index in @localHints for the full hint descriptor for this hint
   //   linkText: the link's text for filtered hints (this is null for alphabet hints)
   getHintDescriptors({ modeIndex, isVimiumHelpDialog }) {
-    // Ensure that the document is ready and that the settings are loaded.
     DomUtils.documentReady(() => {
-      return Settings.onLoaded(() => {
-        const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
-        // If link hints is launched within the help dialog, then we only offer hints from that
-        // frame. This improves the usability of the help dialog on the options page (particularly
-        // for selecting command names).
-        if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
-          this.localHints = [];
-        } else {
-          this.localHints = LocalHints.getLocalHints(requireHref);
-        }
-        this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
-          frameId,
-          localIndex,
-          linkText,
-        }));
-        this.sendMessage("postHintDescriptors", { hintDescriptors: this.localHintDescriptors });
-      });
+      const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
+      // If link hints is launched within the help dialog, then we only offer hints from that
+      // frame. This improves the usability of the help dialog on the options page (particularly
+      // for selecting command names).
+      if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
+        this.localHints = [];
+      } else {
+        this.localHints = LocalHints.getLocalHints(requireHref);
+      }
+      this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
+        frameId,
+        localIndex,
+        linkText,
+      }));
+      this.sendMessage("postHintDescriptors", { hintDescriptors: this.localHintDescriptors });
     });
   },
 
@@ -181,25 +178,22 @@ const HintCoordinator = {
       .map((frame) => hintDescriptors[frame])
       .flat(1);
 
-    // Ensure that the document is ready and that the settings are loaded.
     return DomUtils.documentReady(() => {
-      return Settings.onLoaded(() => {
-        if (
-          this.cacheAllKeydownEvents != null ? this.cacheAllKeydownEvents.modeIsActive : undefined
-        ) {
-          this.cacheAllKeydownEvents.exit();
-        }
-        if (frameId !== originatingFrameId) {
-          this.onExit = [];
-        }
-        this.linkHintsMode = new LinkHintsMode(hintDescriptors, availableModes[modeIndex]);
-        // Replay keydown events which we missed (but for filtered hints only).
-        if (Settings.get("filterLinkHints" && this.cacheAllKeydownEvents)) {
-          this.cacheAllKeydownEvents.replayKeydownEvents();
-        }
-        this.cacheAllKeydownEvents = null;
-        return this.linkHintsMode;
-      });
+      if (
+        this.cacheAllKeydownEvents != null ? this.cacheAllKeydownEvents.modeIsActive : undefined
+      ) {
+        this.cacheAllKeydownEvents.exit();
+      }
+      if (frameId !== originatingFrameId) {
+        this.onExit = [];
+      }
+      this.linkHintsMode = new LinkHintsMode(hintDescriptors, availableModes[modeIndex]);
+      // Replay keydown events which we missed (but for filtered hints only).
+      if (Settings.get("filterLinkHints" && this.cacheAllKeydownEvents)) {
+        this.cacheAllKeydownEvents.replayKeydownEvents();
+      }
+      this.cacheAllKeydownEvents = null;
+      return this.linkHintsMode;
     });
   }, // Return this (for tests).
 
