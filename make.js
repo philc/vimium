@@ -16,13 +16,14 @@ async function shell(procName, argsArray = []) {
   if (Deno.build.os == "windows") {
     // if win32, prefix arguments with "/c {original command}"
     // e.g. "mkdir c:\git\vimium" becomes "cmd.exe /c mkdir c:\git\vimium"
-    optArray.unshift("/c", procName)
-    procName = "cmd.exe"
+    optArray.unshift("/c", procName);
+    procName = "cmd.exe";
   }
   const p = Deno.run({ cmd: [procName].concat(argsArray) });
   const status = await p.status();
-  if (!status.success)
+  if (!status.success) {
     throw new Error(`${procName} ${argsArray} exited with status ${status.code}`);
+  }
 }
 
 // Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/.
@@ -42,7 +43,7 @@ async function buildStorePackage() {
   const fileContents = await Deno.readTextFile("./manifest.json");
   const manifestContents = JSON.parse(fileContents);
   const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
-    ...excludeList.map((item) => ["--exclude", item])
+    ...excludeList.map((item) => ["--exclude", item]),
   );
   const vimiumVersion = manifestContents["version"];
   const writeDistManifest = async (manifestObject) => {
@@ -55,7 +56,13 @@ async function buildStorePackage() {
   const zipCommand = "cd dist/vimium && zip -r --filesync ";
 
   await shell("rm", ["-rf", "dist/vimium"]);
-  await shell("mkdir", ["-p", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
+  await shell("mkdir", [
+    "-p",
+    "dist/vimium",
+    "dist/chrome-canary",
+    "dist/chrome-store",
+    "dist/firefox",
+  ]);
   await shell("rsync", rsyncOptions);
 
   // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome does not.
@@ -68,7 +75,7 @@ async function buildStorePackage() {
     // Chrome considers this key invalid in manifest.json, so we add it only during the Firefox build phase.
     browser_specific_settings: {
       gecko: {
-        strict_min_version: "62.0"
+        strict_min_version: "62.0",
       },
     },
     permissions: firefoxPermissions,
@@ -77,14 +84,20 @@ async function buildStorePackage() {
 
   // Build the Chrome Store package.
   writeDistManifest(manifestContents);
-  await shell("bash", ["-c", `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`]);
+  await shell("bash", [
+    "-c",
+    `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`,
+  ]);
 
   // Build the Chrome Store dev package.
   writeDistManifest(Object.assign({}, manifestContents, {
     name: "Vimium Canary",
     description: "This is the development branch of Vimium (it is beta software).",
   }));
-  await shell("bash", ["-c", `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`]);
+  await shell("bash", [
+    "-c",
+    `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`,
+  ]);
 }
 
 const runUnitTests = async () => {
@@ -107,7 +120,7 @@ const runDomTests = async () => {
     const browser = await puppeteer.launch({
       // NOTE(philc): "Disabling web security" is required for vomnibar_test.js, because we have a file://
       // page accessing an iframe, and Chrome prevents this because it's a cross-origin request.
-      args: ['--disable-web-security']
+      args: ["--disable-web-security"],
     });
 
     const page = await browser.newPage();
@@ -124,8 +137,7 @@ const runDomTests = async () => {
     // document.write that string during load (the document.write call is in dom_tests.html).
     // Another workaround would be to spin up a local file server here and load dom_tests from the network.
     // Discussion: https://bugs.chromium.org/p/chromium/issues/detail?id=824651
-    let shouldaJsContents =
-      (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
+    let shouldaJsContents = (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
       "\n" +
       // Export the module contents to window.shoulda, which is what the tests expect.
       "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
@@ -136,8 +148,7 @@ const runDomTests = async () => {
 
     await page.evaluateOnNewDocument((content) => {
       window.shouldaJsContents = content;
-    },
-      shouldaJsContents);
+    }, shouldaJsContents);
 
     page.goto("file://" + testFile);
 
@@ -159,22 +170,25 @@ const runDomTests = async () => {
 desc("Run unit tests");
 task("test-unit", [], async () => {
   const failed = await runUnitTests();
-  if (failed > 0)
+  if (failed > 0) {
     console.log("Failed:", failed);
+  }
 });
 
 desc("Run DOM tests");
 task("test-dom", [], async () => {
   const failed = await runDomTests();
-  if (failed > 0)
+  if (failed > 0) {
     console.log("Failed:", failed);
+  }
 });
 
 desc("Run unit and DOM tests");
 task("test", [], async () => {
   const failed = (await runUnitTests()) + (await runDomTests());
-  if (failed > 0)
+  if (failed > 0) {
     console.log("Failed:", failed);
+  }
 });
 
 desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
