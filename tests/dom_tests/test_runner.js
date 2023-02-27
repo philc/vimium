@@ -16,5 +16,5 @@ Tests.outputMethod = function (...args) {
 if (!navigator.userAgent.includes("HeadlessChrome")) {
   console.log("we're not in headless chrome");
   // ensure the extension has time to load before commencing the tests
-  document.addEventListener("DOMContentLoaded", () => setTimeout(Tests.run, 200));
+  document.addEventListener("DOMContentLoaded", () => setTimeout(() => Tests.run(), 200));
 }
