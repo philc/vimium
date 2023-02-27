@@ -1,8 +1,13 @@
-let vomnibarFrame = null;
-Vomnibar.init();
+// NOTE(philc): I've disabled these tests for now because the circuitous way they interact with the page
+// inside the Vomnibar iframeElement doesn't currently work in Puppeteer, and it's not obvious how to fix it.
+// We probably want a less brittle and more direct way to test this functionality.
 
+/*
+let vomnibarFrame = null;
 context("Keep selection within bounds", () => {
-  setup(() => {
+  setup(async () => {
+    await Settings.onLoaded();
+    Vomnibar.init();
     this.completions = [];
 
     vomnibarFrame = Vomnibar.vomnibarUI.iframeElement.contentWindow;
@@ -90,3 +95,4 @@ context("Keep selection within bounds", () => {
     assert.equal(-1, ui.selection);
   });
 });
+*/
