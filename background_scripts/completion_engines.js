@@ -228,6 +228,36 @@ class UpToDate extends BaseEngine {
   parse(xhr) { return JSON.parse(xhr.responseText).data.searchTerms; }
 }
 
+class RuneScapeWiki extends BaseEngine {
+  constructor() {
+    super({
+      engineUrl: "https://runescape.wiki/api.php?action=opensearch&format=json&search=%s",
+      regexps: ["^https?://\\.runescape\\.wiki/"],
+      example: {
+        searchUrl: "https://runescape.wiki/?search=%s",
+        keyword: "rs"
+      }
+    });
+  }
+  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+}
+
+class OldSchoolRuneScapeWiki extends BaseEngine {
+  constructor() {
+    super({
+      engineUrl: "https://oldschool.runescape.wiki/api.php?action=opensearch&format=json&search=%s",
+      regexps: ["^https?://oldschool\\.runescape\\.wiki/"],
+      example: {
+        searchUrl: "https://oldschool.runescape.wiki/?search=%s",
+        keyword: "os"
+      }
+    });
+  }
+  parse(xhr) { return JSON.parse(xhr.responseText)[1]; }
+}
+
+
+
 // A dummy search engine which is guaranteed to match any search URL, but never produces completions.  This
 // allows the rest of the logic to be written knowing that there will always be a completion engine match.
 class DummyCompletionEngine extends BaseEngine {
@@ -252,6 +282,8 @@ const CompletionEngines = [
   Webster,
   Qwant,
   UpToDate,
+  RuneScapeWiki,
+  OldSchoolRuneScapeWiki,
   DummyCompletionEngine
 ];
 
