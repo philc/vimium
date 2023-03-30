@@ -633,6 +633,7 @@ var sendRequestHandlers = {
   // getCurrentTabUrl is used by the content scripts to get their full URL, because window.location cannot help
   // with Chrome-specific URLs like "view-source:http:..".
   getCurrentTabUrl({tab}) { return tab.url; },
+  getCurrentTabMarkdown({tab}) { return `[${tab.title}](${tab.url})` },
   openUrlInNewTab: mkRepeatCommand((request, callback) => TabOperations.openUrlInNewTab(request, callback)),
   openUrlInNewWindow(request) { return TabOperations.openUrlInNewWindow(request); },
   openUrlInIncognito(request) { return chrome.windows.create({incognito: true, url: Utils.convertToUrl(request.url)}); },

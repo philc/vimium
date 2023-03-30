@@ -197,6 +197,7 @@ const Commands = {
       "scrollToRight",
       "reload",
       "copyCurrentUrl",
+      "copyCurrentMarkdown",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
       "goUp",
@@ -297,6 +298,7 @@ const defaultKeyMappings = {
   "u": "scrollPageUp",
   "r": "reload",
   "yy": "copyCurrentUrl",
+  "ym": "copyCurrentMarkdown",
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
   "gi": "focusInput",
@@ -386,6 +388,7 @@ const commandDescriptions = {
   toggleViewSource: ["View page source", { noRepeat: true }],
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }],
+  copyCurrentMarkdown: ["Copy the current title and URL as markdown link to the clipboard", { noRepeat: true }],
   openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { noRepeat: true }],
   openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { repeatLimit: 20 }],
 
