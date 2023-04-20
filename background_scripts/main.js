@@ -494,7 +494,8 @@ var selectTab = (direction, { count, tab }) =>
     }
   });
 
-chrome.webNavigation.onCommitted.addListener(function ({ tabId, frameId }) {
+chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
+  await Settings.onLoaded();
   const cssConf = {
     frameId,
     code: Settings.get("userDefinedLinkHintCss"),
