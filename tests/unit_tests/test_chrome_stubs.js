@@ -21,7 +21,7 @@ window.chrome = {
   areRunningVimiumTests: true,
 
   runtime: {
-    getURL() {},
+    getURL() { return ""; },
     getManifest() {
       return { version: "1.2.3" };
     },

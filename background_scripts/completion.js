@@ -65,11 +65,12 @@ class Suggestion {
       this.title = this.insertText;
     }
     // NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
-    let favIcon = "";
+    let faviconHtml = "";
     if (this.type === "tab" && !Utils.isFirefox()) {
-      favIcon = `<img class="vimiumReset vomnibarIcon" src="chrome://favicon/size/16@1x/${
-        BgUtils.escapeAttribute(this.url)
-      }" />`;
+      const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
+      faviconUrl.searchParams.set("pageUrl", this.url);
+      faviconUrl.searchParams.set("size", "16");
+      faviconHtml = `<img class="vimiumReset vomnibarIcon" src="${faviconUrl.toString()}" />`;
     }
     if (request.isCustomSearch) {
       this.html = `\
@@ -90,7 +91,7 @@ class Suggestion {
       }</span>
  </div>
  <div class="vimiumReset vomnibarBottomHalf">
-  <span class="vimiumReset vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${favIcon}<span class="vimiumReset vomnibarUrl">${
+  <span class="vimiumReset vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vimiumReset vomnibarUrl">${
         this.highlightUrlTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}

@@ -23,7 +23,8 @@
     "storage",
     "sessions",
     "notifications",
-    "webNavigation"
+    "webNavigation",
+    "favicon"
     // "<all_urls>"
   ],
   "content_scripts": [
@@ -75,7 +76,8 @@
         "content_scripts/vimium.css",
         "pages/hud.html",
         "pages/help_dialog.html",
-        "pages/completion_engines.html"
+        "pages/completion_engines.html",
+        "_favicon/*"
       ],
       "matches": ["<all_urls>"]
     }

@@ -336,6 +336,10 @@ context("tab completer", () => {
 });
 
 context("suggestions", () => {
+  setup(() => {
+    stub(chrome.runtime, "getURL", returns("https://test/"));
+  });
+
   should("escape html in page titles", () => {
     const suggestion = new Suggestion({
       queryTerms: ["queryterm"],
