@@ -21,7 +21,7 @@ const setTextInInputElement = function (inputElement, text) {
 // Manually inject custom user styles.
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
-  DomUtils.injectUserCss()
+  DomUtils.injectUserCss();
 });
 
 const onKeyEvent = function (event) {
