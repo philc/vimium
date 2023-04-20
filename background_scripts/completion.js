@@ -1139,7 +1139,7 @@ var HistoryCache = {
     if (newPage.title == null) newPage.title = "";
     const i = HistoryCache.binarySearch(newPage, this.history, this.compareHistoryByUrl);
     const pageWasFound =
-      ((this.history[i] != null ? this.history[i].url : undefined) === newPage.url);
+      (this.history[i] != null ? this.history[i].url : undefined) === newPage.url;
     if (pageWasFound) {
       this.history[i] = newPage;
     } else {
