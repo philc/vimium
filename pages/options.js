@@ -276,87 +276,6 @@ const OptionsPage = {
   },
 };
 
-const initPopupPage = function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (...args) {
-    const [tab] = Array.from(args[0]);
-    let exclusions = null;
-    const optionsUrl = chrome.runtime.getURL("pages/options.html");
-    document.getElementById("optionsLink").setAttribute("href", optionsUrl);
-
-    const tabPorts = chrome.extension.getBackgroundPage().portsForTab[tab.id];
-    if (!tabPorts || !(Object.keys(tabPorts).length > 0)) {
-      // The browser has disabled Vimium on this page. Place a message explaining this into the
-      // popup.
-      document.body.innerHTML = `\
-<div style="width: 400px; margin: 5px;">
-  <p style="margin-bottom: 5px;">
-    Vimium is not running on this page.
-  </p>
-  <p style="margin-bottom: 5px;">
-    Your browser does not run web extensions like Vimium on certain pages,
-    usually for security reasons.
-  </p>
-  <p>
-    Unless your browser's developers change their policy, then unfortunately it is not possible to
-    make Vimium (or any other web extension, for that matter) work on this page.
-  </p>
-</div>\
-`;
-      return;
-    }
-
-    // As the active URL, we choose the most recently registered URL from a frame in the tab, or the
-    // tab's own URL.
-    const url = chrome.extension.getBackgroundPage().urlForTab[tab.id] || tab.url;
-
-    const updateState = function () {
-      // TODO(philc): manifest v3
-      // const rule = bgExclusions.getRule(url, exclusions.readValueFromElement());
-      // $("state").innerHTML = "Vimium will " +
-      //   (rule && rule.passKeys
-      //     ? `exclude <span class='code'>${rule.passKeys}</span>`
-      //     : (rule ? "be disabled" : "be enabled"));
-    };
-
-    const onUpdated = function () {
-      $("helpText").innerHTML = "Type <strong>Ctrl-Enter</strong> to save and close.";
-      $("saveOptions").removeAttribute("disabled");
-      $("saveOptions").textContent = "Save Changes";
-      if (exclusions) {
-        return updateState();
-      }
-    };
-
-    const saveOptions = function () {
-      Option.saveOptions();
-      $("saveOptions").textContent = "Saved";
-      $("saveOptions").disabled = true;
-    };
-
-    $("saveOptions").addEventListener("click", saveOptions);
-
-    document.addEventListener("keyup", function (event) {
-      if (event.ctrlKey && (event.keyCode === 13)) {
-        saveOptions();
-        window.close();
-      }
-    });
-
-    // Populate options. Just one, here.
-    exclusions = new ExclusionRulesOnPopupOption(url, "exclusionRules", onUpdated);
-    exclusions.fetch();
-
-    updateState();
-    document.addEventListener("keyup", updateState);
-  });
-
-  // Install version number.
-  const manifest = chrome.runtime.getManifest();
-  $("versionNumber").textContent = manifest.version;
-};
-
-//
-// Initialization.
 document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 
@@ -364,9 +283,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     case "/pages/options.html":
       await OptionsPage.init();
       break;
-    case "/pages/popup.html":
-      initPopupPage();
-      break;
+    // TODO(philc): manifest v3: Fix the options page
+    // case "/pages/popup.html":
+    //   initPopupPage();
+    //   break;
   }
 });
 
