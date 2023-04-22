@@ -3,8 +3,6 @@
 // diligently track down precisely which return statements could be removed when I was doing the
 // conversion.
 
-let showUpgradeMessage;
-
 // The browser may have tabs already open. We inject the content scripts immediately so that they
 // work straight away.
 chrome.runtime.onInstalled.addListener(function ({ reason }) {
