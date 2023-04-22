@@ -103,7 +103,9 @@ const CompletionSearch = {
     const query = queryTerms.join(" ").toLowerCase();
 
     const returnResultsOnlyFromCache = callback == null;
-    if (callback == null) callback = (suggestions) => suggestions;
+    if (callback == null) {
+      callback = (suggestions) => suggestions;
+    }
 
     // We don't complete queries which are too short: the results are usually useless.
     if (query.length < 4) {
@@ -142,7 +144,7 @@ const CompletionSearch = {
           // Note: @mostRecentSuggestions may also be empty, in which case we drop though. The
           // effect is that previous queries with no suggestions suppress subsequent no-hope HTTP
           // requests as the user continues to type.
-          for (let suggestion of this.mostRecentSuggestions) {
+          for (const suggestion of this.mostRecentSuggestions) {
             if (!suggestion.includes(query)) {
               return false;
             }
