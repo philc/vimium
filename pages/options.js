@@ -37,7 +37,8 @@ const ExclusionRulesEditor = {
   setForm(exclusionRules = []) {
     const rulesTable = document.querySelector("#exclusionRules");
     // Remove any previous rows.
-    rulesTable.innerHTML = "";
+    const existingRuleEls = rulesTable.querySelectorAll(".rule");
+    for (const el of existingRuleEls) el.remove();
 
     const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
     for (const rule of exclusionRules) {
@@ -51,15 +52,15 @@ const ExclusionRulesEditor = {
     const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
     const rowEl = rowTemplate.cloneNode(true);
 
-    const patternEl = rowEl.querySelector(".pattern");
+    const patternEl = rowEl.querySelector("[name=pattern]");
     patternEl.value = pattern ?? "";
     patternEl.addEventListener("input", () => this.dispatchEvent("change"));
 
-    const keysEl = rowEl.querySelector(".passKeys");
+    const keysEl = rowEl.querySelector("[name=passKeys]");
     keysEl.value = passKeys ?? "";
     keysEl.addEventListener("input", () => this.dispatchEvent("change"));
 
-    rowEl.querySelector(".exclusionRemove").addEventListener("click", (e) => {
+    rowEl.querySelector(".remove").addEventListener("click", (e) => {
       e.target.closest("tr").remove();
       this.dispatchEvent("change");
     });
@@ -68,13 +69,13 @@ const ExclusionRulesEditor = {
 
   // Returns an array of rules, which can be stored in Settings.
   getRules() {
-    const rows = Array.from(document.querySelectorAll("#exclusionRules tr"));
+    const rows = Array.from(document.querySelectorAll("#exclusionRules tr.rule"));
     const rules = rows
       .map((el) => {
         return {
           // The ordering of these keys should match the order in defaultOptions in Settings.js.
-          passKeys: el.querySelector(".passKeys").value.trim(),
-          pattern: el.querySelector(".pattern").value.trim(),
+          passKeys: el.querySelector("[name=passKeys]").value.trim(),
+          pattern: el.querySelector("[name=pattern]").value.trim(),
         };
       })
       // Exclude blank patterns.
@@ -277,7 +278,10 @@ const OptionsPage = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  DomUtils.injectUserCss(); // Manually inject custom user styles.
+  await Settings.onLoaded();
+
+  // TODO(philc): manifest v3
+  // DomUtils.injectUserCss(); // Manually inject custom user styles.
 
   switch (location.pathname) {
     case "/pages/options.html":
