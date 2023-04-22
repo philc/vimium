@@ -159,24 +159,6 @@ class Amazon extends BaseEngine {
   }
 }
 
-class AmazonJapan extends BaseEngine {
-  constructor() {
-    super({
-      engineUrl:
-        "https://completion.amazon.co.jp/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=6&q=%s",
-      regexps: ["^https?://www\\.amazon\\.co\\.jp/(s/|gp/search)"],
-      example: {
-        searchUrl: "https://www.amazon.co.jp/s/?field-keywords=%s",
-        keyword: "aj",
-      },
-    });
-  }
-
-  parse(xhr) {
-    return JSON.parse(xhr.responseText)[1];
-  }
-}
-
 class DuckDuckGo extends BaseEngine {
   constructor() {
     super({
@@ -271,7 +253,6 @@ const CompletionEngines = [
   Wikipedia,
   Bing,
   Amazon,
-  AmazonJapan,
   Webster,
   Qwant,
   UpToDate,
