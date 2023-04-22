@@ -23,7 +23,7 @@ const ExclusionRegexpCache = {
 
 // The Exclusions class manages the exclusion rule setting. An exclusion is an object with two
 // attributes: pattern and passKeys. The exclusion rules are an array of such objects.
-var Exclusions = {
+const Exclusions = {
   // Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
   RegexpCache: ExclusionRegexpCache,
 
@@ -46,6 +46,7 @@ var Exclusions = {
     }
     // Strip whitespace from all matching passKeys strings, and join them together.
     const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");
+    // TODO(philc): Remove this commented out code.
     // passKeys = (rule.passKeys.split(/\s+/).join "" for rule in matchingRules).join ""
     if (matchingRules.length > 0) {
       return { passKeys: Utils.distinctCharacters(passKeys) };
@@ -64,7 +65,7 @@ var Exclusions = {
 
   setRules(rules) {
     // Callers map a rule to null to have it deleted, and rules without a pattern are useless.
-    const newRules = rules.filter((rule) => rule && rule.pattern);
+    const newRules = rules.filter((rule) => rule?.pattern);
     Settings.set("exclusionRules", newRules);
   },
 

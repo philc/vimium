@@ -1,201 +1,91 @@
-// TODO(philc): Exclusions logic needs to be fixed, and custom styles.
-// TODO(philc): manifest v3
-const bgExclusions = null; // chrome.extension.getBackgroundPage().Exclusions;
+// TODO(philc): manifest v3 - custom styles needs to be fixed.
 
-// TODO(philc): Remove once we revisit exclusion rules
-class Option {
-  constructor(field, onUpdated) {
-    this.field = field;
-    // this.onUpdated = onUpdated;
-    this.element = document.getElementById(this.field);
-    // this.element.addEventListener("change", this.onUpdated);
-    // Option.all.push(this);
-  }
+// Mixin-functions for enabling a class to dispatch methods.
+const EventDispatcher = {
+  addEventListener: (eventName, listener) => {
+    this.events = this.events || [];
+    this.events[eventName] = this.events[eventName] || [];
+    this.events[eventName].push(listener);
+  },
 
-  // Fetch a setting from localStorage, remember the @previous value and populate the DOM element.
-  // Return the fetched value.
-  fetch() {
-    // // return; // TODO(philc): manifest v3
-    // this.populateElement(this.previous = bgSettings[this.field]);
-    // return this.previous;
-  }
+  dispatchEvent: (eventName) => {
+    this.events = this.events || [];
+    for (const listener of this.events[eventName] || []) {
+      listener();
+    }
+  },
 
-  // Write this option's new value back to localStorage, if necessary.
-  save() {
-    // const value = this.readValueFromElement();
-    // if (JSON.stringify(value) !== JSON.stringify(this.previous)) {
-    //   bgSettings[this.field] = this.previous = value;
-    // }
-  }
+  removeEventListener: (eventName, listener) => {
+    const events = this.events || {};
+    const listeners = events[eventName] || [];
+    if (listeners.length > 0) {
+      events[eventName] = listeners.filter((l) => l != listener);
+    }
+  },
+};
 
-  // Static method.
-  // static saveOptions() {
-  //   Option.all.map((option) => option.save());
-  //   Settings.set(bgSettings);
-  //   this.onSaveCallbacks.map((callback) => callback());
-  // }
-}
-
-class ExclusionRulesOption extends Option {
-  constructor(...args) {
-    super(...Array.from(args || []));
-    document.getElementById("exclusionAddButton").addEventListener("click", (event) => {
-      this.addRule();
+// The table-editor used for exclusion rules.
+const ExclusionRulesEditor = {
+  init() {
+    document.querySelector("#exclusionAddButton").addEventListener("click", () => {
+      this.addRow();
+      this.dispatchEvent("change");
     });
-  }
+  },
 
-  // Add a new rule, focus its pattern, scroll it into view, and return the newly-added element. On
-  // the options page, there is no current URL, so there is no initial pattern. This is the default.
-  // On the popup page (see ExclusionRulesOnPopupOption), the pattern is pre-populated based on the
-  // current tab's URL.
-  addRule(pattern) {
-    if (pattern == null) {
-      pattern = "";
+  // - exclusionRules: the value obtained from settings, with the shape [{pattern, passKeys}].
+  setForm(exclusionRules = []) {
+    const rulesTable = document.querySelector("#exclusionRules");
+    // Remove any previous rows.
+    rulesTable.innerHTML = "";
+
+    const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
+    for (const rule of exclusionRules) {
+      this.addRow(rule.pattern, rule.passKeys);
     }
-    const element = this.appendRule({ pattern, passKeys: "" });
-    this.getPattern(element).focus();
-    const exclusionScrollBox = document.getElementById("exclusionScrollBox");
-    exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight;
-    this.onUpdated();
-    return element;
-  }
+  },
 
-  populateElement(rules) {
-    // For the case of restoring a backup, we first have to remove existing rules.
-    const exclusionRules = document.getElementById("exclusionRules");
-    while (exclusionRules.rows[1]) exclusionRules.deleteRow(1);
-    for (let rule of rules) {
-      this.appendRule(rule);
-    }
-  }
+  // `pattern` and `passKeys` are optional.
+  addRow(pattern, passKeys) {
+    const rulesTable = document.querySelector("#exclusionRules");
+    const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
+    const rowEl = rowTemplate.cloneNode(true);
 
-  // Append a row for a new rule.  Return the newly-added element.
-  appendRule(rule) {
-    let element;
-    const content = document.querySelector("#exclusionRuleTemplate").content;
-    const row = document.importNode(content, true);
+    const patternEl = rowEl.querySelector(".pattern");
+    patternEl.value = pattern ?? "";
+    patternEl.addEventListener("input", () => this.dispatchEvent("change"));
 
-    for (let field of ["passKeys", "pattern"]) {
-      element = row.querySelector(`.${field}`);
-      element.value = rule[field];
-      for (let event of ["input", "change"]) {
-        element.addEventListener(event, this.onUpdated);
-      }
-    }
+    const keysEl = rowEl.querySelector(".passKeys");
+    keysEl.value = passKeys ?? "";
+    keysEl.addEventListener("input", () => this.dispatchEvent("change"));
 
-    this.getRemoveButton(row).addEventListener("click", (event) => {
-      rule = event.target.parentNode.parentNode;
-      rule.parentNode.removeChild(rule);
-      this.onUpdated();
+    rowEl.querySelector(".exclusionRemove").addEventListener("click", (e) => {
+      e.target.closest("tr").remove();
+      this.dispatchEvent("change");
     });
+    rulesTable.appendChild(rowEl);
+  },
 
-    this.element.appendChild(row);
-    return this.element.children[this.element.children.length - 1];
-  }
+  // Returns an array of rules, which can be stored in Settings.
+  getRules() {
+    const rows = Array.from(document.querySelectorAll("#exclusionRules tr"));
+    const rules = rows
+      .map((el) => {
+        return {
+          // The ordering of these keys should match the order in defaultOptions in Settings.js.
+          passKeys: el.querySelector(".passKeys").value.trim(),
+          pattern: el.querySelector(".pattern").value.trim(),
+        };
+      })
+      // Exclude blank patterns.
+      .filter((rule) => rule.pattern);
+    return rules;
+  },
+};
 
-  readValueFromElement() {
-    const rules = Array.from(this.element.getElementsByClassName("exclusionRuleTemplateInstance"))
-      .map((element) => ({
-        // The ordering of these keys should match the order in defaultOptions in Settings.js
-        passKeys: this.getPassKeys(element).value.trim(),
-        pattern: this.getPattern(element).value.trim(),
-      }));
-    return rules.filter((rule) => rule.pattern);
-  }
-
-  // Accessors for the three main sub-elements of an "exclusionRuleTemplateInstance".
-  getPattern(element) {
-    return element.querySelector(".pattern");
-  }
-  getPassKeys(element) {
-    return element.querySelector(".passKeys");
-  }
-  getRemoveButton(element) {
-    return element.querySelector(".exclusionRemoveButton");
-  }
-}
-
-// ExclusionRulesOnPopupOption is ExclusionRulesOption, extended with some UI tweeks suitable for
-// use in the page popup. This also differs from ExclusionRulesOption in that, on the page popup,
-// there is always a URL (@url) associated with the current tab.
-class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
-  constructor(url, ...args) {
-    super(...Array.from(args || []));
-    this.url = url;
-  }
-
-  addRule() {
-    const element = super.addRule(this.generateDefaultPattern());
-    this.activatePatternWatcher(element);
-    // ExclusionRulesOption.addRule()/super() has focused the pattern. Here, focus the passKeys
-    // instead; because, in the popup, we already have a pattern, so the user is more likely to edit
-    // the passKeys.
-    this.getPassKeys(element).focus();
-    // Return element (for consistency with ExclusionRulesOption.addRule()).
-    return element;
-  }
-
-  populateElement(rules) {
-    let element;
-    super.populateElement(rules);
-    const elements = this.element.getElementsByClassName("exclusionRuleTemplateInstance");
-    for (element of Array.from(elements)) {
-      this.activatePatternWatcher(element);
-    }
-
-    let haveMatch = false;
-    for (element of Array.from(elements)) {
-      const pattern = this.getPattern(element).value.trim();
-      if (0 <= this.url.search(bgExclusions.RegexpCache.get(pattern))) {
-        haveMatch = true;
-        this.getPassKeys(element).focus();
-      } else {
-        element.style.display = "none";
-      }
-    }
-    if (!haveMatch) {
-      return this.addRule();
-    }
-  }
-
-  // Provide visual feedback (make it red) when a pattern does not match the current tab's URL.
-  activatePatternWatcher(element) {
-    const patternElement = element.children[0].firstChild;
-    patternElement.addEventListener("keyup", () => {
-      // TODO(philc): manifest v3
-      // if (this.url.match(bgExclusions.RegexpCache.get(patternElement.value))) {
-      //   patternElement.title = patternElement.style.color = "";
-      // } else {
-      //   patternElement.style.color = "red";
-      //   patternElement.title = "Red text means that the pattern does not\nmatch the current URL.";
-      // }
-    });
-  }
-
-  // Generate a default exclusion-rule pattern from a URL. This is then used to pre-populate the
-  // pattern on the page popup.
-  generateDefaultPattern() {
-    if (/^https?:\/\/./.test(this.url)) {
-      // The common use case is to disable Vimium at the domain level.
-      // Generate "https?://www.example.com/*" from "http://www.example.com/path/to/page.html".
-      // Note: IPV6 host addresses will contain "[" and "]" (which must be escaped).
-      const hostname = this.url.split("/", 3).slice(1).join("/").replace("[", "\\[").replace(
-        "]",
-        "\\]",
-      );
-      return "https?:/" + hostname + "/*";
-    } else if (/^[a-z]{3,}:\/\/./.test(this.url)) {
-      // Anything else which seems to be a URL.
-      return this.url.split("/", 3).join("/") + "/*";
-    } else {
-      return this.url + "*";
-    }
-  }
-}
+Object.assign(ExclusionRulesEditor, EventDispatcher);
 
 const options = {
-  // TODO(philc): manifest v3
-  // exclusionRules: ExclusionRulesOption,
   filterLinkHints: "boolean",
   waitForEnterForFilteredHints: "boolean",
   hideHud: "boolean",
@@ -221,7 +111,7 @@ const OptionsPage = {
 
     const saveOptionsEl = document.querySelector("#saveOptions");
 
-    const onUpdated = function () {
+    const onUpdated = () => {
       saveOptionsEl.removeAttribute("disabled");
       saveOptionsEl.textContent = "Save Changes";
     };
@@ -266,6 +156,9 @@ const OptionsPage = {
       }
     });
 
+    ExclusionRulesEditor.init();
+    ExclusionRulesEditor.addEventListener("change", onUpdated);
+
     const settings = Settings.getSettings();
     OptionsPage.setFormFromSettings(settings);
   },
@@ -288,6 +181,9 @@ const OptionsPage = {
           throw `Unrecognized option type ${optionType}`;
       }
     }
+
+    ExclusionRulesEditor.setForm(Settings.get("exclusionRules"));
+
     document.querySelector("#uploadBackup").value = "";
     OptionsPage.maintainLinkHintsView();
   },
@@ -317,6 +213,7 @@ const OptionsPage = {
     if (settings["linkHintCharacters"] != null) {
       settings["linkHintCharacters"] = settings["linkHintCharacters"].toLowerCase();
     }
+    settings["exclusionRules"] = ExclusionRulesEditor.getRules();
     return settings;
   },
 
@@ -369,7 +266,7 @@ const OptionsPage = {
         }
 
         await Settings.setSettings(backup);
-        OptionsPage.setFormFromSettings(await Settings.getSettings());
+        OptionsPage.setFormFromSettings(Settings.getSettings());
         const saveOptionsEl = document.querySelector("#saveOptions");
         saveOptionsEl.disabled = true;
         saveOptionsEl.textContent = "Saved";
@@ -462,16 +359,7 @@ const initPopupPage = function () {
 // Initialization.
 document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
-  const url = chrome.runtime.getURL("pages/exclusions.html");
-  const response = await fetch(url);
-  if (!response.ok) {
-    console.error("Couldn't fetch %s", url);
-    return;
-  }
 
-  const div = document.createElement("div");
-  div.innerHTML = await response.text();
-  document.querySelector("#exclusionScrollBox").appendChild(div);
   switch (location.pathname) {
     case "/pages/options.html":
       await OptionsPage.init();

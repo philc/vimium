@@ -46,7 +46,12 @@
           </div>
           <div>
             <div id="exclusionScrollBox">
-              <!-- Populated from exclusions.html by options.js. -->
+              <table id="exclusionRules">
+                <tr>
+                  <td><span class="exclusionHeaderText">Patterns</span></td>
+                  <td><span class="exclusionHeaderText">Keys</span></td>
+                </tr>
+              </table>
             </div>
             <button id="exclusionAddButton">Add Rule</button>
           </div>
@@ -343,12 +348,23 @@ b: http://b.com/?q=%s description
             </span>
           </td>
           <td id="saveOptionsTableData" nowrap>
-            <button id="saveOptions" disabled="true">No Changes</button>
+            <button id="saveOptions">No Changes</button>
           </td>
         </tr>
       </table>
     </div>
   </div>
+
+  <template id="exclusionRuleTemplate">
+    <tr class="exclusionRuleTemplateInstance">
+      <td><input / type="text" class="pattern" spellcheck="false" placeholder="URL pattern"></td>
+      <td class="exclusionRulePassKeys"><input / type="text" class="passKeys" spellcheck="false"
+          placeholder="Exclude keys"></td>
+      <td class="exclusionRemove"><input / type="button" class="exclusionRemoveButton"
+          value="&#x2716;"></td>
+    </tr>
+  </template>
+
 </body>
 
 </html>
