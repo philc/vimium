@@ -1,5 +1,4 @@
 // TODO(philc): Exclusions logic needs to be fixed, and custom styles.
-const $ = (id) => document.getElementById(id);
 // TODO(philc): manifest v3
 const bgExclusions = null; // chrome.extension.getBackgroundPage().Exclusions;
 
@@ -8,7 +7,7 @@ class Option {
   constructor(field, onUpdated) {
     this.field = field;
     // this.onUpdated = onUpdated;
-    this.element = $(this.field);
+    this.element = document.getElementById(this.field);
     // this.element.addEventListener("change", this.onUpdated);
     // Option.all.push(this);
   }
@@ -40,7 +39,7 @@ class Option {
 class ExclusionRulesOption extends Option {
   constructor(...args) {
     super(...Array.from(args || []));
-    $("exclusionAddButton").addEventListener("click", (event) => {
+    document.getElementById("exclusionAddButton").addEventListener("click", (event) => {
       this.addRule();
     });
   }
@@ -55,7 +54,7 @@ class ExclusionRulesOption extends Option {
     }
     const element = this.appendRule({ pattern, passKeys: "" });
     this.getPattern(element).focus();
-    const exclusionScrollBox = $("exclusionScrollBox");
+    const exclusionScrollBox = document.getElementById("exclusionScrollBox");
     exclusionScrollBox.scrollTop = exclusionScrollBox.scrollHeight;
     this.onUpdated();
     return element;
@@ -63,7 +62,7 @@ class ExclusionRulesOption extends Option {
 
   populateElement(rules) {
     // For the case of restoring a backup, we first have to remove existing rules.
-    const exclusionRules = $("exclusionRules");
+    const exclusionRules = document.getElementById("exclusionRules");
     while (exclusionRules.rows[1]) exclusionRules.deleteRow(1);
     for (let rule of rules) {
       this.appendRule(rule);
@@ -97,7 +96,7 @@ class ExclusionRulesOption extends Option {
   readValueFromElement() {
     const rules = Array.from(this.element.getElementsByClassName("exclusionRuleTemplateInstance"))
       .map((element) => ({
-        // The ordering of these keys should match the order in defaultOptins in Settings.js
+        // The ordering of these keys should match the order in defaultOptions in Settings.js
         passKeys: this.getPassKeys(element).value.trim(),
         pattern: this.getPattern(element).value.trim(),
       }));
@@ -195,7 +194,7 @@ class ExclusionRulesOnPopupOption extends ExclusionRulesOption {
 }
 
 const options = {
-  // TODO(philc):
+  // TODO(philc): manifest v3
   // exclusionRules: ExclusionRulesOption,
   filterLinkHints: "boolean",
   waitForEnterForFilteredHints: "boolean",
@@ -220,31 +219,40 @@ const OptionsPage = {
   init: async () => {
     await Settings.onLoaded();
 
+    const saveOptionsEl = document.querySelector("#saveOptions");
+
     const onUpdated = function () {
-      $("saveOptions").removeAttribute("disabled");
-      $("saveOptions").textContent = "Save Changes";
+      saveOptionsEl.removeAttribute("disabled");
+      saveOptionsEl.textContent = "Save Changes";
     };
 
     for (const el of document.querySelectorAll("input, textarea")) {
       el.addEventListener("change", () => onUpdated());
     }
 
-    $("saveOptions").addEventListener("click", () => OptionsPage.saveOptions());
-    $("showCommands").addEventListener(
+    saveOptionsEl.addEventListener("click", () => OptionsPage.saveOptions());
+    document.querySelector("#showCommands").addEventListener(
       "click",
       () => HelpDialog.toggle({ showAllCommandDetails: true }),
     );
-    $("filterLinkHints").addEventListener("click", () => OptionsPage.maintainLinkHintsView());
 
-    $("downloadBackup").addEventListener(
+    document.querySelector("#filterLinkHints").addEventListener(
+      "click",
+      () => OptionsPage.maintainLinkHintsView(),
+    );
+
+    document.querySelector("#downloadBackup").addEventListener(
       "mousedown",
       () => OptionsPage.onDownloadBackupClicked(),
       true,
     );
-    $("uploadBackup").addEventListener("change", () => OptionsPage.onUploadBackupClicked());
+    document.querySelector("#uploadBackup").addEventListener(
+      "change",
+      () => OptionsPage.onUploadBackupClicked(),
+    );
 
     window.onbeforeunload = () => {
-      if (!$("saveOptions").disabled) {
+      if (!saveOptionsEl.disabled) {
         return "You have unsaved changes to options.";
       }
     };
@@ -258,13 +266,13 @@ const OptionsPage = {
       }
     });
 
-    const settings = await Settings.getSettings();
+    const settings = Settings.getSettings();
     OptionsPage.setFormFromSettings(settings);
   },
 
   setFormFromSettings: (settings) => {
     for (const [optionName, optionType] of Object.entries(options)) {
-      const el = $(optionName);
+      const el = document.getElementById(optionName);
       const value = settings[optionName];
       switch (optionType) {
         case "boolean":
@@ -280,14 +288,14 @@ const OptionsPage = {
           throw `Unrecognized option type ${optionType}`;
       }
     }
-    $("uploadBackup").value = "";
+    document.querySelector("#uploadBackup").value = "";
     OptionsPage.maintainLinkHintsView();
   },
 
   getSettingsFromForm: () => {
     const settings = {};
     for (const [optionName, optionType] of Object.entries(options)) {
-      const el = $(optionName);
+      const el = document.getElementById(optionName);
       let value;
       switch (optionType) {
         case "boolean":
@@ -314,24 +322,19 @@ const OptionsPage = {
 
   saveOptions: () => {
     Settings.setSettings(OptionsPage.getSettingsFromForm());
-    $("saveOptions").disabled = true;
-    $("saveOptions").textContent = "Saved";
+    const el = document.querySelector("#saveOptions");
+    el.disabled = true;
+    el.textContent = "Saved";
   },
 
-  // Display either "linkHintNumbers" or "linkHintCharacters", depending upon the value of
+  // Display the UI for link hint numbers vs. characters, depending upon the value of
   // "filterLinkHints".
   maintainLinkHintsView: () => {
-    const hide = (el) => el.style.display = "none";
-    const show = (el) => el.style.display = "table-row";
-    if ($("filterLinkHints").checked) {
-      hide($("linkHintCharactersContainer"));
-      show($("linkHintNumbersContainer"));
-      show($("waitForEnterForFilteredHintsContainer"));
-    } else {
-      show($("linkHintCharactersContainer"));
-      hide($("linkHintNumbersContainer"));
-      hide($("waitForEnterForFilteredHintsContainer"));
-    }
+    const show = (el, visible) => el.style.display = visible ? "table-row" : "none";
+    const isFilteredLinkhints = document.querySelector("#filterLinkHints").checked;
+    show(document.querySelector("#linkHintCharactersContainer"), !isFilteredLinkhints);
+    show(document.querySelector("#linkHintNumbersContainer"), isFilteredLinkhints);
+    show(document.querySelector("#waitForEnterForFilteredHintsContainer"), isFilteredLinkhints);
   },
 
   onDownloadBackupClicked: () => {
@@ -340,7 +343,7 @@ const OptionsPage = {
     // TODO(philc):
     // backup.settingsVersion = settings["settingsVersion"];
     const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
-    $("downloadBackup").href = URL.createObjectURL(settingsBlob);
+    document.querySelector("#downloadBackup").href = URL.createObjectURL(settingsBlob);
   },
 
   onUploadBackupClicked: () => {
@@ -367,8 +370,9 @@ const OptionsPage = {
 
         await Settings.setSettings(backup);
         OptionsPage.setFormFromSettings(await Settings.getSettings());
-        $("saveOptions").disabled = true;
-        $("saveOptions").textContent = "Saved";
+        const saveOptionsEl = document.querySelector("#saveOptions");
+        saveOptionsEl.disabled = true;
+        saveOptionsEl.textContent = "Saved";
         alert("Settings have been restored from the backup.");
       };
     }
@@ -467,7 +471,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const div = document.createElement("div");
   div.innerHTML = await response.text();
-  $("exclusionScrollBox").appendChild(div);
+  document.querySelector("#exclusionScrollBox").appendChild(div);
   switch (location.pathname) {
     case "/pages/options.html":
       await OptionsPage.init();
