@@ -503,37 +503,6 @@ chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   // return chrome.tabs.insertCSS(tabId, cssConf, () => chrome.runtime.lastError);
 });
 
-// Symbolic names for the three browser-action icons.
-const ENABLED_ICON = "icons/browser_action_enabled.png";
-const DISABLED_ICON = "icons/browser_action_disabled.png";
-const PARTIAL_ICON = "icons/browser_action_partial.png";
-
-// Convert the three icon PNGs to image data.
-const iconImageData = {};
-// TODO(philc): needs to be redone manifest v3.
-// for (let icon of [ENABLED_ICON, DISABLED_ICON, PARTIAL_ICON]) {
-for (let icon of []) {
-  iconImageData[icon] = {};
-  for (let scale of [19, 38]) {
-    (function (icon, scale) {
-      const canvas = document.createElement("canvas");
-      canvas.width = canvas.height = scale;
-      // We cannot do the rest of this in the tests.
-      if ((chrome.areRunningVimiumTests == null) || !chrome.areRunningVimiumTests) {
-        const context = canvas.getContext("2d");
-        const image = new Image();
-        image.src = icon;
-        image.onload = function () {
-          context.drawImage(image, 0, 0, scale, scale);
-          iconImageData[icon][scale] = context.getImageData(0, 0, scale, scale);
-          return document.body.removeChild(canvas);
-        };
-        return document.body.appendChild(canvas);
-      }
-    })(icon, scale);
-  }
-}
-
 var Frames = {
   onConnect(sender, port) {
     const [tabId, frameId] = [sender.tab.id, sender.frameId];
@@ -592,22 +561,30 @@ var Frames = {
     const enabledState = Exclusions.isEnabledForUrl(request.url);
 
     if (request.frameIsFocused) {
-      // TODO(philc): manifest v3
-      // if (chrome.browserAction.setIcon) {
-      //   chrome.browserAction.setIcon({
-      //     tabId,
-      //     imageData: (function () {
-      //       const enabledStateIcon = !enabledState.isEnabledForUrl
-      //         ? DISABLED_ICON
-      //         : enabledState.passKeys.length > 0
-      //         ? PARTIAL_ICON
-      //         : ENABLED_ICON;
-      //       // TODO(philc): manifest v3
-      //       // return iconImageData[enabledStateIcon];
-      //       return null;
-      //     })(),
-      //   });
-      // }
+      let whichIcon;
+      if (!enabledState.isEnabledForUrl) {
+        whichIcon = "disabled";
+      } else if (enabledState.passKeys.length > 0) {
+        whichIcon = "partial";
+      } else {
+        whichIcon = "enabled";
+      }
+
+      const iconSet = {
+        "enabled": {
+          "16": "../icons/action_enabled_16.png",
+          "32": "../icons/action_enabled_32.png",
+        },
+        "partial": {
+          "16": "../icons/action_partial_16.png",
+          "32": "../icons/action_partial_32.png",
+        },
+        "disabled": {
+          "16": "../icons/action_disabled_16.png",
+          "32": "../icons/action_disabled_32.png",
+        },
+      };
+      chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tabId });
     }
 
     return port.postMessage(Object.assign(request, enabledState));
