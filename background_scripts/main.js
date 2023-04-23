@@ -503,7 +503,7 @@ chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   // return chrome.tabs.insertCSS(tabId, cssConf, () => chrome.runtime.lastError);
 });
 
-var Frames = {
+const Frames = {
   onConnect(sender, port) {
     const [tabId, frameId] = [sender.tab.id, sender.frameId];
     port.onDisconnect.addListener(() => Frames.unregisterFrame({ tabId, frameId, port }));

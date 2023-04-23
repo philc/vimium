@@ -505,17 +505,15 @@ root.lastFocusedInput = (function () {
 // Checks if Vimium should be enabled or not in this frame. As a side effect, it also informs the
 // background page whether this frame has the focus, allowing the background page to track the
 // active frame's URL and set the page icon.
-var checkIfEnabledForUrl = (function () {
+const checkIfEnabledForUrl = (function () {
   Frame.addEventListener("isEnabledForUrl", function (response) {
-    let frameIsFocused, isFirefox, passKeys;
-    ({ isEnabledForUrl, passKeys, frameIsFocused, isFirefox } = response);
-    Utils.isFirefox = () => isFirefox;
+    Utils.isFirefox = () => response.isFirefox;
     if (!normalMode) {
       installModes();
     }
-    normalMode.setPassKeys(passKeys);
+    normalMode.setPassKeys(response.passKeys);
     // Hide the HUD if we're not enabled.
-    if (!isEnabledForUrl) {
+    if (!response.isEnabledForUrl) {
       return HUD.hide(true, false);
     }
   });
