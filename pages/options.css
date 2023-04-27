@@ -162,7 +162,15 @@ button:focus, input[type="text"]:focus, textarea:focus {
 }
 /* Boolean options have a tighter form representation than text options. */
 td.booleanOption { font-size: 12px; }
+
 /* Ids and classes for rendering exclusionRules */
+
+#exclusionRulesSection #exclusionScrollBox {
+  /* When there are no rules, we want to enforce a minimum height for this section, or the help text
+     will run together.*/
+  min-height: 45px;
+}
+
 #exclusionScrollBox {
   overflow: scroll;
   overflow-x: hidden;

@@ -32,16 +32,15 @@
   <div id="wrapper">
     <header>Vimium Options</header>
     <table id="options">
-      <tr>
+      <tr id="exclusionRulesSection">
         <td class="caption">Excluded URLs<br />and keys</td>
         <td>
           <div class="help">
             <div class="example">
-              Wholly or partially disable Vimium. "Patterns" are URL regular expressions;
-              additionally, "*" matches any zero or more characters.
-              <br /><br />
-              If "Keys" is left empty, then Vimium is wholly disabled.
-              Otherwise, just the listed keys are disabled (they are passed through).
+              Disable Vimium on URLs.<br />
+              "Patterns" are URL regular expressions. <code>*</code> will match zero or more
+              characters. <br />
+              "Keys": Vimium will exclude these keys and pass them through to the page.
             </div>
           </div>
           <div>
@@ -49,7 +48,7 @@
               <table id="exclusionRules">
                 <tr>
                   <td><span class="exclusionHeaderText">Patterns</span></td>
-                  <td><span class="exclusionHeaderText">Keys</span></td>
+                  <td><span class="exclusionHeaderText">Keys to exclude</span></td>
                 </tr>
               </table>
             </div>
@@ -361,7 +360,7 @@ b: http://b.com/?q=%s description
         <input type="text" name="pattern" spellcheck="false" placeholder="URL pattern" />
       </td>
       <td>
-        <input type="text" name="passKeys" spellcheck="false" placeholder="Exclude keys" />
+        <input type="text" name="passKeys" spellcheck="false" placeholder="All" />
       </td>
       <td>
         <input type="button" class="remove" value="&#x2716;" />
