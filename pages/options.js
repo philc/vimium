@@ -113,7 +113,7 @@ const OptionsPage = {
     const saveOptionsEl = document.querySelector("#saveOptions");
 
     const onUpdated = () => {
-      saveOptionsEl.removeAttribute("disabled");
+      saveOptionsEl.disabled = false;
       saveOptionsEl.textContent = "Save Changes";
     };
 
